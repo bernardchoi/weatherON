@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "WeatherON",
+    "slug": "weatheron",
+    "scheme": "weatheron",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "../../assets/icon/icon-primary-1024.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "../../assets/icon/icon-primary-512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10243F"
+    },
+    "assetBundlePatterns": [
+      "../../assets/icon/*",
+      "../../assets/outfits/*",
+      "../../assets/onboarding/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.weatheron.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다."
+      }
+    },
+    "android": {
+      "package": "com.weatheron.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "../../assets/icon/icon-primary-512.png",
+        "backgroundColor": "#10243F"
+      }
+    },
+    "web": {
+      "favicon": "../../assets/icon/icon-primary-32.png"
+    },
+    "extra": {
+      "ruleVersion": "weatheron-rules-0.1.0",
+      "eas": {
+        "projectId": "3bf39144-92a4-48a9-8bd8-ae09daf2a817"
+      }
+    },
+    "owner": "weatheron"
+  }
+}

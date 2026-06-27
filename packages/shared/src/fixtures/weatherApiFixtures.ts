@@ -1,0 +1,47 @@
+import type { KmaForecastItem, OpenMeteoResponse } from "../weather/types";
+
+export const kmaForecastFixture: KmaForecastItem[] = [
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "TMP", fcstValue: "23" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "SKY", fcstValue: "4" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "PTY", fcstValue: "1" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "POP", fcstValue: "70" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "PCP", fcstValue: "2.0mm" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "WSD", fcstValue: "5.4" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "REH", fcstValue: "84" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "TMP", fcstValue: "24" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "SKY", fcstValue: "4" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "PTY", fcstValue: "1" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "POP", fcstValue: "65" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "PCP", fcstValue: "1mm 미만" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0900", category: "WSD", fcstValue: "5.8" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "TMP", fcstValue: "26" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "SKY", fcstValue: "3" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "PTY", fcstValue: "0" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "POP", fcstValue: "35" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "PCP", fcstValue: "강수없음" },
+  { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "1200", category: "WSD", fcstValue: "4.1" },
+];
+
+export const openMeteoFixture: OpenMeteoResponse = {
+  current: {
+    time: "2026-06-26T08:00",
+    temperature_2m: 28,
+    apparent_temperature: 31,
+    precipitation: 0,
+    weather_code: 0,
+    wind_speed_10m: 11.5,
+    relative_humidity_2m: 70,
+    uv_index: 7,
+  },
+  hourly: {
+    time: ["2026-06-26T10:00", "2026-06-26T13:00", "2026-06-26T17:00"],
+    temperature_2m: [29, 31, 28],
+    apparent_temperature: [31, 34, 30],
+    precipitation_probability: [18, 21, 24],
+    precipitation: [0, 0, 0],
+    weather_code: [0, 1, 3],
+    wind_speed_10m: [11.2, 17.3, 18.7],
+    relative_humidity_2m: [69, 66, 72],
+    uv_index: [7, 8, 4],
+  },
+};

@@ -1,0 +1,130 @@
+[
+  {
+    "id": "cardigan",
+    "category": "outer",
+    "nameKo": "오버핏 가디건",
+    "asset": "weatheron-outfit-cardigan-v1.png",
+    "source": "weatheron-outfit-cardigan-source-v1.png",
+    "weatherTags": ["coolMorning", "layering", "spring", "fall"]
+  },
+  {
+    "id": "linenTshirt",
+    "category": "top",
+    "nameKo": "린넨 티셔츠",
+    "asset": "weatheron-outfit-linen-tshirt-v1.png",
+    "source": "weatheron-outfit-linen-tshirt-source-v1.png",
+    "weatherTags": ["warmDay", "breathable", "summer"]
+  },
+  {
+    "id": "slimSlacks",
+    "category": "bottom",
+    "nameKo": "슬림 슬랙스",
+    "asset": "weatheron-outfit-slim-slacks-v1.png",
+    "source": "weatheron-outfit-slim-slacks-source-v1.png",
+    "weatherTags": ["cityWalk", "windLight", "allSeason"]
+  },
+  {
+    "id": "lowSneakers",
+    "category": "shoes",
+    "nameKo": "로우 스니커즈",
+    "asset": "weatheron-outfit-low-sneakers-v1.png",
+    "source": "weatheron-outfit-low-sneakers-source-v1.png",
+    "weatherTags": ["dry", "walking", "travel"]
+  },
+  {
+    "id": "trenchCoat",
+    "category": "outer",
+    "nameKo": "라이트 트렌치코트",
+    "asset": "weatheron-outfit-trench-coat-v1.png",
+    "source": "weatheron-outfit-trench-coat-source-v1.png",
+    "weatherTags": ["cool", "windLight", "spring", "fall"]
+  },
+  {
+    "id": "windbreaker",
+    "category": "outer",
+    "nameKo": "패커블 윈드브레이커",
+    "asset": "weatheron-outfit-windbreaker-v1.png",
+    "source": "weatheron-outfit-windbreaker-source-v1.png",
+    "weatherTags": ["rainLight", "wind", "travel", "layering"]
+  },
+  {
+    "id": "zipHoodie",
+    "category": "outer",
+    "nameKo": "집업 후디",
+    "asset": "weatheron-outfit-zip-hoodie-v1.png",
+    "source": "weatheron-outfit-zip-hoodie-source-v1.png",
+    "weatherTags": ["cool", "casual", "layering"]
+  },
+  {
+    "id": "stripedLongSleeve",
+    "category": "top",
+    "nameKo": "스트라이프 롱슬리브",
+    "asset": "weatheron-outfit-striped-long-sleeve-v1.png",
+    "source": "weatheron-outfit-striped-long-sleeve-source-v1.png",
+    "weatherTags": ["mild", "spring", "fall", "casual"]
+  },
+  {
+    "id": "wideDenim",
+    "category": "bottom",
+    "nameKo": "와이드 데님",
+    "asset": "weatheron-outfit-wide-denim-v1.png",
+    "source": "weatheron-outfit-wide-denim-source-v1.png",
+    "weatherTags": ["casual", "cityWalk", "allSeason"]
+  },
+  {
+    "id": "pleatedSkirt",
+    "category": "bottom",
+    "nameKo": "플리츠 미디 스커트",
+    "asset": "weatheron-outfit-pleated-skirt-v1.png",
+    "source": "weatheron-outfit-pleated-skirt-source-v1.png",
+    "weatherTags": ["mild", "cityWalk", "spring", "fall"]
+  },
+  {
+    "id": "chelseaBoots",
+    "category": "shoes",
+    "nameKo": "첼시 부츠",
+    "asset": "weatheron-outfit-chelsea-boots-v1.png",
+    "source": "weatheron-outfit-chelsea-boots-source-v1.png",
+    "weatherTags": ["cool", "rainLight", "cityWalk", "fall"]
+  },
+  {
+    "id": "navyCap",
+    "category": "accessory",
+    "nameKo": "네이비 볼캡",
+    "asset": "weatheron-outfit-navy-cap-v1.png",
+    "source": "weatheron-outfit-navy-cap-source-v1.png",
+    "weatherTags": ["sun", "uv", "casual", "travel"]
+  },
+  {
+    "id": "lightRainJacket",
+    "category": "outer",
+    "nameKo": "라이트 레인 재킷",
+    "asset": "weatheron-outfit-light-rain-jacket-v1.png",
+    "source": "weatheron-outfit-light-rain-jacket-source-v1.png",
+    "weatherTags": ["rain", "wind", "cool", "travel"]
+  },
+  {
+    "id": "compactUmbrella",
+    "category": "accessory",
+    "nameKo": "컴팩트 우산",
+    "asset": "weatheron-outfit-compact-umbrella-v1.png",
+    "source": "weatheron-outfit-compact-umbrella-source-v1.png",
+    "weatherTags": ["rain", "commute", "travel"]
+  },
+  {
+    "id": "knitSweater",
+    "category": "top",
+    "nameKo": "소프트 니트 스웨터",
+    "asset": "weatheron-outfit-knit-sweater-v1.png",
+    "source": "weatheron-outfit-knit-sweater-source-v1.png",
+    "weatherTags": ["cold", "layering", "fall", "winter"]
+  },
+  {
+    "id": "waterproofSneakers",
+    "category": "shoes",
+    "nameKo": "방수 로우 스니커즈",
+    "asset": "weatheron-outfit-waterproof-sneakers-v1.png",
+    "source": "weatheron-outfit-waterproof-sneakers-source-v1.png",
+    "weatherTags": ["rainLight", "walking", "commute", "travel"]
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "baseball",
+    "nameKo": "야구장",
+    "asset": "weatheron-place-baseball-v1.png",
+    "lightAsset": "weatheron-place-baseball-light-v2.png",
+    "usage": ["P2", "P3", "destinationCategory"]
+  },
+  {
+    "id": "mountain",
+    "nameKo": "산/등산",
+    "asset": "weatheron-place-mountain-v1.png",
+    "lightAsset": "weatheron-place-mountain-light-v2.png",
+    "usage": ["P2", "P3", "destinationCategory"]
+  },
+  {
+    "id": "beach",
+    "nameKo": "해변",
+    "asset": "weatheron-place-beach-v1.png",
+    "lightAsset": "weatheron-place-beach-light-v2.png",
+    "usage": ["P2", "P3", "destinationCategory"]
+  },
+  {
+    "id": "airport",
+    "nameKo": "공항",
+    "asset": "weatheron-place-airport-v1.png",
+    "usage": ["O6", "P1", "P2", "P3", "destinationCategory"]
+  },
+  {
+    "id": "hotel",
+    "nameKo": "숙소",
+    "asset": "weatheron-place-hotel-v1.png",
+    "usage": ["O6", "P1", "P2", "P3", "destinationCategory"]
+  }
+]

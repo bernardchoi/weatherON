@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherON · ON Square 원소 마스코트 아바타 시안</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0A1730;font-family:'Noto Sans KR',sans-serif;padding:40px;color:#fff;max-width:1180px;margin:0 auto;}
+  h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:23px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em;}
+  .sub{color:rgba(168,196,224,0.68);font-size:13px;margin-bottom:30px;line-height:1.7;}
+  .sub b{color:#F0A020;font-weight:600;}
+
+  /* 범례 */
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px;}
+  .lg{display:flex;align-items:center;gap:8px;background:#11254A;border-radius:12px;padding:8px 12px;}
+  .lg .dot{width:13px;height:13px;border-radius:50%;}
+  .lg .nm{font-size:12px;font-weight:600;}
+  .lg .en{font-size:9.5px;color:rgba(168,196,224,0.6);font-family:'DM Mono',monospace;}
+
+  /* 단계 헤더 */
+  .stage-head{display:grid;grid-template-columns:150px repeat(3,1fr);gap:14px;margin-bottom:10px;align-items:end;}
+  .stage-head .sp{font-size:0;}
+  .sh{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,196,224,0.62);text-align:center;}
+  .sh b{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;letter-spacing:0;text-transform:none;color:#fff;margin-top:2px;}
+
+  /* 원소 행 */
+  .row{display:grid;grid-template-columns:150px repeat(3,1fr);gap:14px;align-items:stretch;margin-bottom:14px;}
+  .elmeta{display:flex;flex-direction:column;justify-content:center;gap:6px;padding:4px 6px;}
+  .elmeta .swatch{width:26px;height:26px;border-radius:9px;}
+  .elmeta .knm{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;}
+  .elmeta .desc{font-size:10.5px;color:rgba(168,196,224,0.62);line-height:1.5;}
+  .cell{background:#11254A;border-radius:18px;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .cell svg{width:88px;height:88px;display:block;}
+  .cap{font-size:11px;font-weight:600;}
+  .meta{font-size:9px;color:rgba(168,196,224,0.55);font-family:'DM Mono',monospace;}
+
+  h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;margin:40px 0 14px;}
+
+  /* S0 미리보기 */
+  .preview-wrap{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+  .phone{width:300px;background:linear-gradient(175deg,#15294D 0%,#1E3B6E 55%,#2C5491 100%);border-radius:30px;padding:20px 16px 22px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 18px 40px rgba(0,0,0,0.45);}
+  .phone .title{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;}
+  .phone .ptag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:rgba(168,196,224,0.55);text-transform:uppercase;margin-bottom:2px;}
+  .phone .pdesc{font-size:10.5px;color:rgba(232,237,246,0.7);line-height:1.5;margin:6px 0 16px;}
+  .chips{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+  .chip{background:#102140;border:1px solid rgba(232,237,246,0.12);border-radius:16px;padding:10px 8px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .chip.sel{background:rgba(74,143,212,0.13);border:1.5px solid #4A8FD4;}
+  .chip svg{width:46px;height:46px;}
+  .chip .cn{font-size:11.5px;font-weight:600;color:rgba(232,237,246,0.82);}
+  .chip.sel .cn{color:#4A8FD4;font-weight:700;}
+  .enter{margin-top:14px;background:#F0A020;color:#15294D;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;padding:12px;border-radius:14px;}
+
+  .note{background:#16305C;border-radius:14px;padding:18px 20px;font-size:12.5px;line-height:1.85;color:rgba(232,237,246,0.85);max-width:520px;}
+  .note h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:8px;color:#fff;}
+  .note b{color:#F0A020;font-weight:600;}
+  .note .k{font-family:'DM Mono',monospace;font-size:11px;color:#A6CEF2;}
+  footer{margin-top:40px;font-size:11px;color:rgba(168,196,224,0.5);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:18px;}
+</style>
+</head>
+<body>
+
+<h1>WeatherON · ON Square 원소 마스코트 아바타</h1>
+<p class="sub">
+  S0(소셜 탭 최초 진입) 캐릭터 선택용 마스코트 시안 · <b>6원소 × 3진화 단계 = 18종</b><br>
+  미니멀 기하(원·호·선·삼각형) + Quiet Horizon 무드 + 공유 글리프(골드 태양노브)를 모든 단계에 관통.
+  원소색은 기존 디자인 토큰 재사용 — 현재 S0의 이모지(☀🌧⛈💨❄🌫) 플레이스홀더를 대체함.
+</p>
+
+<!-- 범례 -->
+<div class="legend">
+  <div class="lg"><span class="dot" style="background:#F0A020"></span><span class="nm">Solar</span><span class="en">#F0A020</span></div>
+  <div class="lg"><span class="dot" style="background:#4A8FD4"></span><span class="nm">Rain</span><span class="en">#4A8FD4</span></div>
+  <div class="lg"><span class="dot" style="background:#AB8EDD"></span><span class="nm">Storm</span><span class="en">#AB8EDD</span></div>
+  <div class="lg"><span class="dot" style="background:#3ABFA0"></span><span class="nm">Wind</span><span class="en">#3ABFA0</span></div>
+  <div class="lg"><span class="dot" style="background:#8FD0E0"></span><span class="nm">Frost</span><span class="en">#8FD0E0</span></div>
+  <div class="lg"><span class="dot" style="background:#869EBC"></span><span class="nm">Mist</span><span class="en">#869EBC</span></div>
+</div>
+
+<!-- 단계 헤더 -->
+<div class="stage-head">
+  <div class="sp">.</div>
+  <div class="sh">Lv.1<b>Seed · 씨앗</b></div>
+  <div class="sh">Lv.2<b>Rise · 성장</b></div>
+  <div class="sh">Lv.3<b>Aura · 완성</b></div>
+</div>
+
+<!-- ───────────── SOLAR ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#F0A020"></span>
+    <span class="knm" style="color:#F0A020">Solar</span>
+    <span class="desc">태양 광선 · 폭염/맑음 체크인 XP</span>
+  </div>
+  <!-- Solar Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <g stroke="#F0A020" stroke-width="2.6" stroke-linecap="round"><line x1="50" y1="26" x2="50" y2="15"/><line x1="36" y1="30" x2="29" y2="22"/><line x1="64" y1="30" x2="71" y2="22"/></g>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#F0A020" fill-opacity="0.16" stroke="#F0A020" stroke-width="2.4"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 솔라</span><span class="meta">solar-1</span>
+  </div>
+  <!-- Solar Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#F0A020" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <g stroke="#F0A020" stroke-width="2.6" stroke-linecap="round"><line x1="50" y1="25" x2="50" y2="13"/><line x1="42" y1="27" x2="37" y2="16"/><line x1="58" y1="27" x2="63" y2="16"/><line x1="33" y1="31" x2="25" y2="23"/><line x1="67" y1="31" x2="75" y2="23"/></g>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#F0A020" fill-opacity="0.18" stroke="#F0A020" stroke-width="2.4"/>
+      <circle cx="50" cy="44" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 솔라</span><span class="meta">solar-2</span>
+  </div>
+  <!-- Solar Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="40" fill="none" stroke="#F0A020" stroke-width="1.4" stroke-opacity="0.16"/>
+      <circle cx="50" cy="57" r="33" fill="none" stroke="#F0A020" stroke-width="1.2" stroke-opacity="0.30"/>
+      <g stroke="#F0A020" stroke-width="2.6" stroke-linecap="round"><line x1="50" y1="24" x2="50" y2="8"/><line x1="41" y1="26" x2="35" y2="11"/><line x1="59" y1="26" x2="65" y2="11"/><line x1="33" y1="31" x2="24" y2="20"/><line x1="67" y1="31" x2="76" y2="20"/><line x1="27" y1="40" x2="16" y2="33"/><line x1="73" y1="40" x2="84" y2="33"/></g>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#F0A020" fill-opacity="0.22" stroke="#F0A020" stroke-width="2.4"/>
+      <g stroke="#F0A020" stroke-width="1.3" stroke-linecap="round"><line x1="50" y1="39" x2="50" y2="36.5"/><line x1="55" y1="44" x2="57.5" y2="44"/><line x1="45" y1="44" x2="42.5" y2="44"/></g>
+      <circle cx="50" cy="44" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="57" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="57" r="2.9" fill="#EAF1FA"/>
+      <path d="M44 64 Q50 69 56 64" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 솔라</span><span class="meta">solar-3</span>
+  </div>
+</div>
+
+<!-- ───────────── RAIN ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#4A8FD4"></span>
+    <span class="knm" style="color:#4A8FD4">Rain</span>
+    <span class="desc">빗방울 · 강수 체크인 XP</span>
+  </div>
+  <!-- Rain Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <path d="M50 11 C53 16 56 19 56 23 a6 6 0 0 1 -12 0 C44 19 47 16 50 11 Z" fill="#4A8FD4" fill-opacity="0.30" stroke="#4A8FD4" stroke-width="2"/>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#4A8FD4" fill-opacity="0.16" stroke="#4A8FD4" stroke-width="2.4"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 레인</span><span class="meta">rain-1</span>
+  </div>
+  <!-- Rain Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#4A8FD4" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <path d="M50 9 C53 14 56 17 56 21 a6 6 0 0 1 -12 0 C44 17 47 14 50 9 Z" fill="#4A8FD4" fill-opacity="0.34" stroke="#4A8FD4" stroke-width="2"/>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#4A8FD4" fill-opacity="0.18" stroke="#4A8FD4" stroke-width="2.4"/>
+      <g stroke="#4A8FD4" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.85"><line x1="29" y1="62" x2="26" y2="70"/><line x1="71" y1="62" x2="74" y2="70"/></g>
+      <circle cx="50" cy="44" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 레인</span><span class="meta">rain-2</span>
+  </div>
+  <!-- Rain Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="40" fill="none" stroke="#4A8FD4" stroke-width="1.4" stroke-opacity="0.16"/>
+      <circle cx="50" cy="57" r="33" fill="none" stroke="#4A8FD4" stroke-width="1.2" stroke-opacity="0.28"/>
+      <ellipse cx="50" cy="20" rx="16" ry="7.5" fill="#4A8FD4" fill-opacity="0.24" stroke="#4A8FD4" stroke-width="2"/>
+      <g stroke="#4A8FD4" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.85"><line x1="42" y1="29" x2="40" y2="35"/><line x1="50" y1="29" x2="48" y2="35"/><line x1="58" y1="29" x2="56" y2="35"/></g>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#4A8FD4" fill-opacity="0.22" stroke="#4A8FD4" stroke-width="2.4"/>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="59" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="59" r="2.9" fill="#EAF1FA"/>
+      <path d="M44 66 Q50 71 56 66" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 레인</span><span class="meta">rain-3</span>
+  </div>
+</div>
+
+<!-- ───────────── STORM ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#AB8EDD"></span>
+    <span class="knm" style="color:#AB8EDD">Storm</span>
+    <span class="desc">번개 · 뇌우/돌풍 체크인 XP</span>
+  </div>
+  <!-- Storm Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <path d="M53 10 L44 24 L50 24 L46 34 L58 19 L52 19 Z" fill="#AB8EDD" fill-opacity="0.34" stroke="#AB8EDD" stroke-width="1.8" stroke-linejoin="round"/>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#AB8EDD" fill-opacity="0.16" stroke="#AB8EDD" stroke-width="2.4"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 스톰</span><span class="meta">storm-1</span>
+  </div>
+  <!-- Storm Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#AB8EDD" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <ellipse cx="50" cy="19" rx="15" ry="6.5" fill="#AB8EDD" fill-opacity="0.24" stroke="#AB8EDD" stroke-width="2"/>
+      <path d="M52 24 L45 35 L50 35 L47 43 L57 31 L52 31 Z" fill="#AB8EDD" fill-opacity="0.40" stroke="#AB8EDD" stroke-width="1.6" stroke-linejoin="round"/>
+      <rect x="25" y="36" width="50" height="46" rx="18" fill="#AB8EDD" fill-opacity="0.18" stroke="#AB8EDD" stroke-width="2.4"/>
+      <circle cx="50" cy="47" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="60" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="60" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 스톰</span><span class="meta">storm-2</span>
+  </div>
+  <!-- Storm Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="40" fill="none" stroke="#AB8EDD" stroke-width="1.3" stroke-opacity="0.16" stroke-dasharray="3 4"/>
+      <circle cx="50" cy="57" r="33" fill="none" stroke="#AB8EDD" stroke-width="1.2" stroke-opacity="0.28"/>
+      <path d="M52 7 L43 21 L49 21 L45 31 L58 15 L52 15 Z" fill="#AB8EDD" fill-opacity="0.42" stroke="#AB8EDD" stroke-width="1.8" stroke-linejoin="round"/>
+      <g stroke="#AB8EDD" stroke-width="2" stroke-linecap="round" stroke-opacity="0.7"><path d="M22 40 l5 4 -4 4" fill="none"/><path d="M78 40 l-5 4 4 4" fill="none"/></g>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#AB8EDD" fill-opacity="0.22" stroke="#AB8EDD" stroke-width="2.4"/>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="59" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="59" r="2.9" fill="#EAF1FA"/>
+      <path d="M44 66 Q50 71 56 66" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 스톰</span><span class="meta">storm-3</span>
+  </div>
+</div>
+
+<!-- ───────────── WIND ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#3ABFA0"></span>
+    <span class="knm" style="color:#3ABFA0">Wind</span>
+    <span class="desc">바람 결 · 강풍/쾌청 체크인 XP</span>
+  </div>
+  <!-- Wind Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <path d="M38 22 Q50 11 60 19 Q64 24 57 27" fill="none" stroke="#3ABFA0" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#3ABFA0" fill-opacity="0.16" stroke="#3ABFA0" stroke-width="2.4"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 윈드</span><span class="meta">wind-1</span>
+  </div>
+  <!-- Wind Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#3ABFA0" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <path d="M34 19 Q49 7 61 16 Q66 22 58 26" fill="none" stroke="#3ABFA0" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M40 30 Q52 23 60 30" fill="none" stroke="#3ABFA0" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.75"/>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#3ABFA0" fill-opacity="0.18" stroke="#3ABFA0" stroke-width="2.4"/>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="59" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="59" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 윈드</span><span class="meta">wind-2</span>
+  </div>
+  <!-- Wind Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="40" fill="none" stroke="#3ABFA0" stroke-width="1.4" stroke-opacity="0.16"/>
+      <circle cx="50" cy="57" r="33" fill="none" stroke="#3ABFA0" stroke-width="1.2" stroke-opacity="0.28"/>
+      <path d="M50 30 C39 30 39 17 50 17 C63 17 63 33 47 33 C32 33 33 11 53 12" fill="none" stroke="#3ABFA0" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M24 46 Q31 42 37 46" fill="none" stroke="#3ABFA0" stroke-width="2" stroke-linecap="round" stroke-opacity="0.6"/>
+      <path d="M63 46 Q69 42 76 46" fill="none" stroke="#3ABFA0" stroke-width="2" stroke-linecap="round" stroke-opacity="0.6"/>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#3ABFA0" fill-opacity="0.22" stroke="#3ABFA0" stroke-width="2.4"/>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="59" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="59" r="2.9" fill="#EAF1FA"/>
+      <path d="M44 66 Q50 71 56 66" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 윈드</span><span class="meta">wind-3</span>
+  </div>
+</div>
+
+<!-- ───────────── FROST ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#8FD0E0"></span>
+    <span class="knm" style="color:#8FD0E0">Frost</span>
+    <span class="desc">결정 · 한파/눈 체크인 XP</span>
+  </div>
+  <!-- Frost Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <path d="M50 11 L57 15 L57 23 L50 27 L43 23 L43 15 Z" fill="#8FD0E0" fill-opacity="0.28" stroke="#8FD0E0" stroke-width="1.8" stroke-linejoin="round"/>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#8FD0E0" fill-opacity="0.16" stroke="#8FD0E0" stroke-width="2.4"/>
+      <circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 프로스트</span><span class="meta">frost-1</span>
+  </div>
+  <!-- Frost Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#8FD0E0" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <g stroke="#8FD0E0" stroke-width="2" stroke-linecap="round"><line x1="50" y1="8" x2="50" y2="32"/><line x1="40" y1="14" x2="60" y2="26"/><line x1="60" y1="14" x2="40" y2="26"/><line x1="50" y1="13" x2="46" y2="11"/><line x1="50" y1="13" x2="54" y2="11"/><line x1="50" y1="27" x2="46" y2="29"/><line x1="50" y1="27" x2="54" y2="29"/></g>
+      <rect x="25" y="36" width="50" height="46" rx="18" fill="#8FD0E0" fill-opacity="0.18" stroke="#8FD0E0" stroke-width="2.4"/>
+      <circle cx="50" cy="47" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="60" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="60" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 프로스트</span><span class="meta">frost-2</span>
+  </div>
+  <!-- Frost Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="40" fill="none" stroke="#8FD0E0" stroke-width="1.4" stroke-opacity="0.16"/>
+      <circle cx="50" cy="57" r="33" fill="none" stroke="#8FD0E0" stroke-width="1.2" stroke-opacity="0.28"/>
+      <path d="M40 26 L44 17 L50 22 L56 17 L60 26 Z" fill="#8FD0E0" fill-opacity="0.30" stroke="#8FD0E0" stroke-width="1.8" stroke-linejoin="round"/>
+      <g stroke="#8FD0E0" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"><line x1="22" y1="44" x2="30" y2="44"/><line x1="26" y1="40" x2="26" y2="48"/><line x1="78" y1="44" x2="70" y2="44"/><line x1="74" y1="40" x2="74" y2="48"/></g>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#8FD0E0" fill-opacity="0.22" stroke="#8FD0E0" stroke-width="2.4"/>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="59" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="59" r="2.9" fill="#EAF1FA"/>
+      <path d="M44 66 Q50 71 56 66" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 프로스트</span><span class="meta">frost-3</span>
+  </div>
+</div>
+
+<!-- ───────────── MIST ───────────── -->
+<div class="row">
+  <div class="elmeta">
+    <span class="swatch" style="background:#869EBC"></span>
+    <span class="knm" style="color:#869EBC">Mist</span>
+    <span class="desc">안개 결 · 박무/흐림 체크인 XP</span>
+  </div>
+  <!-- Mist Lv1 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.7"><line x1="34" y1="22" x2="66" y2="22"/></g>
+      <rect x="25" y="32" width="50" height="50" rx="18" fill="#869EBC" fill-opacity="0.16" stroke="#869EBC" stroke-width="2.4"/>
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.6"><line x1="36" y1="70" x2="64" y2="70"/></g>
+      <circle cx="43.5" cy="56" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="56" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">씨앗 미스트</span><span class="meta">mist-1</span>
+  </div>
+  <!-- Mist Lv2 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#869EBC" stroke-width="1.4" stroke-opacity="0.30" stroke-dasharray="2 5"/>
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.72"><line x1="32" y1="18" x2="62" y2="18"/><line x1="40" y1="25" x2="68" y2="25"/></g>
+      <rect x="25" y="34" width="50" height="48" rx="18" fill="#869EBC" fill-opacity="0.18" stroke="#869EBC" stroke-width="2.4"/>
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.6"><line x1="33" y1="66" x2="61" y2="66"/><line x1="39" y1="73" x2="67" y2="73"/></g>
+      <circle cx="50" cy="46" r="3" fill="#F0A020"/>
+      <circle cx="43.5" cy="56" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="56" r="2.9" fill="#EAF1FA"/>
+    </svg>
+    <span class="cap">성장 미스트</span><span class="meta">mist-2</span>
+  </div>
+  <!-- Mist Lv3 -->
+  <div class="cell">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="55" r="42" fill="#869EBC" fill-opacity="0.07"/>
+      <circle cx="50" cy="55" r="40" fill="none" stroke="#869EBC" stroke-width="1.4" stroke-opacity="0.16"/>
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.72"><line x1="30" y1="16" x2="58" y2="16"/><line x1="38" y1="23" x2="70" y2="23"/><line x1="34" y1="30" x2="60" y2="30"/></g>
+      <rect x="25" y="36" width="50" height="46" rx="18" fill="#869EBC" fill-opacity="0.22" stroke="#869EBC" stroke-width="2.4"/>
+      <g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.55"><line x1="31" y1="70" x2="59" y2="70"/><line x1="39" y1="77" x2="69" y2="77"/></g>
+      <circle cx="50" cy="48" r="3" fill="#F0A020"/>
+      <g stroke="#EAF1FA" stroke-width="2.2" stroke-linecap="round"><line x1="40" y1="59" x2="47" y2="59"/><line x1="53" y1="59" x2="60" y2="59"/></g>
+      <path d="M44 66 Q50 70 56 66" fill="none" stroke="#EAF1FA" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="cap">완성 미스트</span><span class="meta">mist-3</span>
+  </div>
+</div>
+
+<!-- ───────────── S0 적용 미리보기 ───────────── -->
+<h2>S0 캐릭터 선택 화면 적용 미리보기</h2>
+<div class="preview-wrap">
+  <div class="phone">
+    <div class="ptag">S0 · 캐릭터 원소 타입 선택</div>
+    <div class="title">나의 날씨 원소를 골라줘</div>
+    <div class="pdesc">선택한 원소의 날씨를 체크인하면 XP가 쌓이고 마스코트가 진화함. 시작은 Lv.1 씨앗 단계.</div>
+    <div class="chips">
+      <div class="chip"><svg viewBox="0 0 100 100"><g stroke="#F0A020" stroke-width="2.6" stroke-linecap="round"><line x1="50" y1="26" x2="50" y2="15"/><line x1="36" y1="30" x2="29" y2="22"/><line x1="64" y1="30" x2="71" y2="22"/></g><rect x="25" y="32" width="50" height="50" rx="18" fill="#F0A020" fill-opacity="0.16" stroke="#F0A020" stroke-width="2.4"/><circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Solar</span></div>
+      <div class="chip sel"><svg viewBox="0 0 100 100"><path d="M50 11 C53 16 56 19 56 23 a6 6 0 0 1 -12 0 C44 19 47 16 50 11 Z" fill="#4A8FD4" fill-opacity="0.30" stroke="#4A8FD4" stroke-width="2"/><rect x="25" y="32" width="50" height="50" rx="18" fill="#4A8FD4" fill-opacity="0.16" stroke="#4A8FD4" stroke-width="2.4"/><circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Rain</span></div>
+      <div class="chip"><svg viewBox="0 0 100 100"><path d="M53 10 L44 24 L50 24 L46 34 L58 19 L52 19 Z" fill="#AB8EDD" fill-opacity="0.34" stroke="#AB8EDD" stroke-width="1.8" stroke-linejoin="round"/><rect x="25" y="32" width="50" height="50" rx="18" fill="#AB8EDD" fill-opacity="0.16" stroke="#AB8EDD" stroke-width="2.4"/><circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Storm</span></div>
+      <div class="chip"><svg viewBox="0 0 100 100"><path d="M38 22 Q50 11 60 19 Q64 24 57 27" fill="none" stroke="#3ABFA0" stroke-width="2.6" stroke-linecap="round"/><rect x="25" y="32" width="50" height="50" rx="18" fill="#3ABFA0" fill-opacity="0.16" stroke="#3ABFA0" stroke-width="2.4"/><circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Wind</span></div>
+      <div class="chip"><svg viewBox="0 0 100 100"><path d="M50 11 L57 15 L57 23 L50 27 L43 23 L43 15 Z" fill="#8FD0E0" fill-opacity="0.28" stroke="#8FD0E0" stroke-width="1.8" stroke-linejoin="round"/><rect x="25" y="32" width="50" height="50" rx="18" fill="#8FD0E0" fill-opacity="0.16" stroke="#8FD0E0" stroke-width="2.4"/><circle cx="43.5" cy="58" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="58" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Frost</span></div>
+      <div class="chip"><svg viewBox="0 0 100 100"><g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.7"><line x1="34" y1="22" x2="66" y2="22"/></g><rect x="25" y="32" width="50" height="50" rx="18" fill="#869EBC" fill-opacity="0.16" stroke="#869EBC" stroke-width="2.4"/><g stroke="#869EBC" stroke-width="3" stroke-linecap="round" stroke-opacity="0.6"><line x1="36" y1="70" x2="64" y2="70"/></g><circle cx="43.5" cy="56" r="2.9" fill="#EAF1FA"/><circle cx="56.5" cy="56" r="2.9" fill="#EAF1FA"/></svg><span class="cn">Mist</span></div>
+    </div>
+    <div class="enter">Rain 원소로 시작하기</div>
+  </div>
+
+  <div class="note">
+    <h3>설계 원칙</h3>
+    <b>공통 골격</b> — 모든 마스코트는 동일한 squircle 몸체(rx18) + 차분한 두 눈을 공유함. 원소 정체성은 머리 위 피처(광선·빗방울·번개·바람결·결정·안개띠)로만 구분 → S0 작은 칩에서도 식별 가능.<br><br>
+    <b>공유 글리프</b> — Lv.2부터 이마에 <b>골드 태양노브</b> 점을 부여해 앱 아이콘·워드마크의 ON 스위치 모티프와 연결. 원소색이 달라도 골드 한 점이 브랜드를 묶음.<br><br>
+    <b>진화 문법</b> — Lv.1 씨앗(피처 최소) → Lv.2 성장(피처 확장 + 골드노브 + 점선 오라) → Lv.3 완성(풀 피처 + 더블 오라 + 미소). 면적이 아니라 디테일/오라의 증가로 성장을 표현.<br><br>
+    <b>토큰</b> — <span class="k">Solar #F0A020 · Rain #4A8FD4 · Storm #AB8EDD · Wind #3ABFA0 · Frost #8FD0E0 · Mist #869EBC</span>. stroke 2.4 / round cap·join, 아이콘 시스템과 동일.
+  </div>
+</div>
+
+<footer>
+  WeatherON · ON Square 원소 마스코트 아바타 시안 · 2026-06-21<br>
+  기준: brand/WeatherON_디자인_정체성_가이드.md (Quiet Horizon · 미니멀 기하 · 공유 글리프) · 원소 정의 mockups/WeatherON_S0_mockup.jsx<br>
+  다음 단계 후보: 방향 확정 시 ① 단계별 SVG를 컴포넌트화해 S0/S1 목업의 이모지 교체 ② ON Square 프로필/순위 카드 적용 ③ 레어 변형(희귀 기상 이벤트 드랍)
+</footer>
+
+</body>
+</html>

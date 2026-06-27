@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherON 대표 마스코트 2D 모션 프로토타입</title>
+<style>
+:root{--navy:#15294D;--gold:#F0A020;--sky:#447FC1;--surface:#fff;--muted:#68758a}
+*{box-sizing:border-box} body{margin:0;background:#eef3f9;color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}
+main{width:min(920px,100%);display:grid;grid-template-columns:minmax(300px,1.1fr) minmax(280px,.9fr);gap:20px}
+.panel{background:var(--surface);border:1px solid rgba(21,41,77,.1);border-radius:24px;box-shadow:0 18px 50px rgba(21,41,77,.10);overflow:hidden}
+.stage{position:relative;min-height:560px;display:grid;place-items:center;background:linear-gradient(160deg,#dbeafa,#f6f2e9);isolation:isolate;transition:background .35s ease}
+.stage::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 56%,rgba(255,255,255,.05),rgba(21,41,77,.12));z-index:-1;pointer-events:none}
+.aura{position:absolute;width:330px;height:330px;border-radius:50%;background:radial-gradient(circle,rgba(240,160,32,.34),transparent 66%);filter:blur(7px);animation:aura 2.8s ease-in-out infinite}
+.character{position:relative;width:min(390px,82%);aspect-ratio:1;display:grid;place-items:center;animation:breathe 3.2s ease-in-out infinite;transform-origin:50% 88%;filter:drop-shadow(0 18px 18px rgba(21,41,77,.2))}
+.character img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;transition:opacity .16s ease}
+.particle{position:absolute;display:none;z-index:2;pointer-events:none}
+.status{position:absolute;left:18px;top:18px;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);border:1px solid rgba(21,41,77,.08);padding:8px 11px;border-radius:10px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.08em}
+.controls{padding:28px}.controls h1{font-size:22px;margin:0 0 6px}.controls p{margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.65}.group{margin-top:20px}.group h2{font-size:12px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.buttons{display:flex;flex-wrap:wrap;gap:8px}button{appearance:none;border:1px solid rgba(21,41,77,.13);background:#f5f7fb;color:var(--navy);border-radius:10px;padding:9px 12px;font:700 12px inherit;cursor:pointer;transition:.18s ease}button:hover{transform:translateY(-1px);border-color:rgba(21,41,77,.3)}button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}button.event{background:#fff8e9;border-color:rgba(240,160,32,.35)}
+.spec{margin-top:24px;padding-top:18px;border-top:1px solid rgba(21,41,77,.1);display:grid;gap:8px;font-size:12px;color:var(--muted)}.spec b{color:var(--navy)}
+.stage.cloud{background:linear-gradient(160deg,#cad3df,#f0f1f2)}.stage.cloud .character{filter:saturate(.9) drop-shadow(0 18px 18px rgba(21,41,77,.2))}
+.stage.rain{background:linear-gradient(160deg,#7895b8,#d7e2ee)}.stage.rain .rainFx{display:block;inset:0;background:repeating-linear-gradient(105deg,transparent 0 22px,rgba(255,255,255,.35) 23px 25px,transparent 26px 52px);animation:rain .7s linear infinite}
+.stage.heat{background:linear-gradient(160deg,#ffd28f,#fff1d1)}.stage.heat .character{animation:heat 3.8s ease-in-out infinite}
+.stage.cold{background:linear-gradient(160deg,#b7e4f4,#eefaff)}.stage.cold .snowFx{display:block;inset:0;background-image:radial-gradient(circle,#fff 0 3px,transparent 4px),radial-gradient(circle,#fff 0 2px,transparent 3px);background-size:54px 54px,38px 38px;animation:snow 5s linear infinite}
+.stage.storm{background:linear-gradient(160deg,#344565,#9aa9bc)}.stage.storm .character{animation:storm 3s ease-in-out infinite}.stage.storm .flashFx{display:block;inset:0;background:#fff;opacity:0;animation:flash 4s linear infinite}
+.stage.night{background:linear-gradient(160deg,#17274c,#514b76)}.stage.night .starFx{display:block;inset:0;background-image:radial-gradient(circle,#fff 0 1px,transparent 2px);background-size:42px 42px;animation:stars 2.4s ease-in-out infinite}.stage.night .character{animation:breathe 4.8s ease-in-out infinite}
+.stage.event-checkIn .character{animation:checkIn .72s cubic-bezier(.34,1.56,.64,1) 1}.stage.event-missionJump .character{animation:missionJump .86s cubic-bezier(.34,1.56,.64,1) 1}.stage.event-missionClap .character{animation:missionClap 1.02s ease-in-out 1}.stage.event-missionThumbsUp .character{animation:missionThumbsUp 1.08s cubic-bezier(.34,1.56,.64,1) 1}.stage.event-rareReward .character{animation:reward 1.25s cubic-bezier(.34,1.56,.64,1) 1}.stage.event-rareReward .aura,.stage.event-missionJump .aura,.stage.event-missionClap .aura,.stage.event-missionThumbsUp .aura{animation:rewardAura .65s ease-in-out 2}
+@keyframes breathe{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-6px) scaleY(1.01)}}@keyframes aura{50%{opacity:.55;transform:scale(1.04)}}
+@keyframes rain{to{background-position:0 70px}}@keyframes snow{to{background-position:20px 108px,-18px 76px}}@keyframes heat{50%{transform:translateY(5px) scaleY(.985)}}@keyframes storm{25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}@keyframes flash{8%,13%{opacity:.24}10%,16%{opacity:0}}@keyframes stars{50%{opacity:.45}}
+@keyframes checkIn{0%,100%{transform:translateY(0)}42%{transform:translateY(-28px) scale(1.02)}70%{transform:translateY(3px) scale(.99,1.01)}}
+@keyframes missionJump{0%,100%{transform:translateY(0) scale(1)}38%{transform:translateY(-34px) scale(1.03)}64%{transform:translateY(4px) scale(.985,1.015)}}
+@keyframes missionClap{0%,100%{transform:rotate(0) scale(1)}18%{transform:rotate(-3deg) scale(1.02)}36%{transform:rotate(3deg) scale(1.03)}54%{transform:rotate(-2deg) scale(1.02)}72%{transform:rotate(2deg) scale(1.025)}}
+@keyframes missionThumbsUp{0%,100%{transform:translateY(0) rotate(0) scale(1)}34%{transform:translateY(-8px) rotate(-2deg) scale(1.025)}56%{transform:translateY(-4px) rotate(2deg) scale(1.03)}78%{transform:translateY(1px) rotate(0) scale(1.01)}}
+@keyframes reward{0%,100%{transform:rotate(0) scale(1)}38%{transform:rotate(-5deg) scale(1.04)}68%{transform:rotate(3deg) scale(1.02)}}@keyframes rewardAura{50%{transform:scale(1.28);opacity:1}}
+@media(max-width:760px){main{grid-template-columns:1fr}.stage{min-height:430px}.controls{padding:22px}}
+.paused .character,.paused .aura,.paused .particle{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.character,.aura,.particle{animation:none!important}.stage{transition:none}.stage.event-checkIn .aura,.stage.event-missionJump .aura,.stage.event-missionClap .aura,.stage.event-missionThumbsUp .aura,.stage.event-rareReward .aura{animation:reducedPulse .15s linear 1!important}@keyframes reducedPulse{50%{opacity:1}}}
+</style>
+</head>
+<body>
+<main>
+  <section class="panel stage clear" id="stage" aria-label="대표 마스코트 모션 미리보기">
+    <span class="status" id="status">WEATHER · CLEAR</span>
+    <div class="aura" aria-hidden="true"></div>
+    <div class="particle rainFx" aria-hidden="true"></div><div class="particle snowFx" aria-hidden="true"></div><div class="particle flashFx" aria-hidden="true"></div><div class="particle starFx" aria-hidden="true"></div>
+    <div class="character"><img id="mascotArt" src="ON Square 대표마스코트_날씨-clear-v1.png" alt="맑음 상태의 WeatherON 대표 마스코트"></div>
+  </section>
+  <section class="panel controls">
+    <h1>2D Living Mascot</h1>
+    <p>날씨 상태 PNG와 이벤트 반응 PNG를 개별 에셋으로 전환하는 동작 검증용 프로토타입. 날씨+이벤트 조합 에셋이 있으면 우선 출력하고, 없으면 기본 이벤트 에셋으로 대체함.</p>
+    <div class="group"><h2>Weather state</h2><div class="buttons" id="weatherButtons">
+      <button aria-pressed="true" data-weather="clear">맑음</button><button aria-pressed="false" data-weather="cloud">흐림</button><button aria-pressed="false" data-weather="rain">비</button><button aria-pressed="false" data-weather="heat">폭염</button><button aria-pressed="false" data-weather="cold">한파/눈</button><button aria-pressed="false" data-weather="storm">폭풍</button><button aria-pressed="false" data-weather="night">밤</button>
+    </div></div>
+    <div class="group"><h2>Event one-shot</h2><div class="buttons">
+      <button class="event" data-event="eventIdle">기본 Idle</button><button class="event" data-event="checkIn">체크인 점프</button><button class="event" data-event="missionJump">미션 점프</button><button class="event" data-event="missionClap">미션 박수</button><button class="event" data-event="missionThumbsUp">미션 엄지</button><button class="event" data-event="rareReward">희귀 보상</button>
+    </div></div>
+    <div class="spec"><span><b>Weather Art</b> 7개 날씨 상태 PNG</span><span><b>Weather+Event</b> Rain 3종 · Cold 3종 · Night Clap · Storm Thumbs-up 우선 적용</span><span><b>Fallback</b> 조합 에셋 없으면 기본 이벤트 PNG</span><span><b>Return</b> 이벤트 후 현재 날씨 PNG로 복귀</span><span><b>Accessibility</b> Reduced Motion 시 이동 정지</span></div>
+  </section>
+</main>
+<script>
+const stage=document.getElementById('stage');const status=document.getElementById('status');const mascotArt=document.getElementById('mascotArt');const weatherButtons=[...document.querySelectorAll('[data-weather]')];const weatherNames={clear:'CLEAR',cloud:'CLOUD',rain:'RAIN',heat:'HEAT',cold:'COLD',storm:'STORM',night:'NIGHT'};const weatherLabels={clear:'맑음',cloud:'흐림',rain:'비',heat:'폭염',cold:'한파와 눈',storm:'폭풍',night:'밤'};const eventLabels={eventIdle:'IDLE',checkIn:'CHECK-IN · JUMP',missionJump:'MISSION · JUMP',missionClap:'MISSION · CLAP',missionThumbsUp:'MISSION · THUMBS UP',rareReward:'RARE REWARD · THUMBS UP'};const eventDurations={eventIdle:1100,checkIn:900,missionJump:1000,missionClap:1160,missionThumbsUp:1220,rareReward:1350};const weatherArt=Object.fromEntries(Object.keys(weatherNames).map(key=>[key,`ON Square 대표마스코트_날씨-${key}-v1.png`]));const eventArt={eventIdle:'ON Square 대표마스코트_이벤트-idle-v1.png',checkIn:'ON Square 대표마스코트_이벤트-mission-jump-v1.png',missionJump:'ON Square 대표마스코트_이벤트-mission-jump-v1.png',missionClap:'ON Square 대표마스코트_이벤트-mission-clap-v1.png',missionThumbsUp:'ON Square 대표마스코트_이벤트-mission-thumbsUp-v1.png',rareReward:'ON Square 대표마스코트_이벤트-mission-thumbsUp-v1.png'};const weatherEventArt={'rain-checkIn':'ON Square 대표마스코트_날씨이벤트-rain-mission-jump-v1.png','rain-missionJump':'ON Square 대표마스코트_날씨이벤트-rain-mission-jump-v1.png','rain-missionClap':'ON Square 대표마스코트_날씨이벤트-rain-mission-clap-v1.png','rain-missionThumbsUp':'ON Square 대표마스코트_날씨이벤트-rain-mission-thumbsUp-v1.png','rain-rareReward':'ON Square 대표마스코트_날씨이벤트-rain-mission-thumbsUp-v1.png','cold-checkIn':'ON Square 대표마스코트_날씨이벤트-cold-mission-jump-v1.png','cold-missionJump':'ON Square 대표마스코트_날씨이벤트-cold-mission-jump-v1.png','cold-missionClap':'ON Square 대표마스코트_날씨이벤트-cold-mission-clap-v1.png','cold-missionThumbsUp':'ON Square 대표마스코트_날씨이벤트-cold-mission-thumbsUp-v1.png','cold-rareReward':'ON Square 대표마스코트_날씨이벤트-cold-mission-thumbsUp-v1.png','night-missionClap':'ON Square 대표마스코트_날씨이벤트-night-mission-clap-v1.png','storm-missionThumbsUp':'ON Square 대표마스코트_날씨이벤트-storm-mission-thumbsUp-v1.png','storm-rareReward':'ON Square 대표마스코트_날씨이벤트-storm-mission-thumbsUp-v1.png'};let weather='clear';let eventTimer;
+[...Object.values(weatherArt),...Object.values(eventArt),...Object.values(weatherEventArt)].forEach(src=>{const image=new Image();image.src=src});
+function showWeather(){mascotArt.src=weatherArt[weather];mascotArt.alt=`${weatherLabels[weather]} 상태의 WeatherON 대표 마스코트`;stage.className=`panel stage ${weather}`;status.textContent=`WEATHER · ${weatherNames[weather]}`}
+weatherButtons.forEach(button=>button.addEventListener('click',()=>{clearTimeout(eventTimer);weather=button.dataset.weather;showWeather();weatherButtons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));}));
+document.querySelectorAll('[data-event]').forEach(button=>button.addEventListener('click',()=>{clearTimeout(eventTimer);const event=button.dataset.event;const comboKey=`${weather}-${event}`;const comboSrc=weatherEventArt[comboKey];mascotArt.src=comboSrc||eventArt[event];mascotArt.alt=`${comboSrc?weatherLabels[weather]+' 날씨 + ':''}${eventLabels[event]} 반응의 WeatherON 대표 마스코트`;stage.className=`panel stage ${weather} event-${event}`;status.textContent=`EVENT · ${comboSrc?'WEATHER COMBO · ':''}${eventLabels[event]||event.toUpperCase()}`;eventTimer=setTimeout(showWeather,eventDurations[event]||1350);}));
+document.addEventListener('visibilitychange',()=>document.body.classList.toggle('paused',document.hidden));
+</script>
+</body>
+</html>

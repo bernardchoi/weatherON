@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 80">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;800&amp;display=swap');
+    .wm-weather{font-family:'Manrope',sans-serif;font-weight:300;}
+    .wm-n{font-family:'Manrope',sans-serif;font-weight:800;}</style>
+  <text x="0" y="60" class="wm-weather" font-size="44" letter-spacing="-1" fill="#F4F7FC">weather</text>
+  <g>
+        <circle cx="182.5" cy="42.5" r="17.5" fill="#F0A020"/>
+        <line x1="182.5" y1="25" x2="182.5" y2="14" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="172.5" y1="28.2" x2="166.1" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="192.5" y1="28.2" x2="198.9" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+  <text x="208" y="60" class="wm-n" font-size="44" fill="#F0A020">N</text>
+</svg>

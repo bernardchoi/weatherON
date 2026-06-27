@@ -1,0 +1,47 @@
+{
+  "name": "weatheron-design-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mockups": "vite --host 127.0.0.1",
+    "build:brand": "node scripts/build-brand-assets.js",
+    "build:android-store-assets": "node scripts/build-android-store-assets.mjs",
+    "report:android-release-readiness": "node scripts/generate-android-release-readiness-report.mjs",
+    "build:mockups": "vite build",
+    "preview:mockups": "vite preview --host 127.0.0.1",
+    "build:flowchart": "mmdc -i docs/wireframes/UIUX_플로우차트.mmd -o docs/wireframes/UIUX_플로우차트_개요.svg -b transparent --puppeteerConfigFile scripts/mermaid-puppeteer-config.json",
+    "check:shared": "node scripts/check-shared-rules.mjs",
+    "check:weather-live": "node scripts/check-weather-live.mjs",
+    "check:weather-proxy": "node scripts/check-weather-proxy.mjs",
+    "check:place-search": "node scripts/check-place-search.mjs",
+    "check:android-release": "node scripts/check-android-release-config.mjs",
+    "check:android-build-ready": "node scripts/check-android-build-ready.mjs",
+    "check:android-local-release-ready": "node scripts/check-android-local-release-ready.mjs",
+    "check:android-store-submit-ready": "node scripts/check-android-store-submit-ready.mjs",
+    "check:eas-login-state": "node scripts/check-eas-login-state.mjs",
+    "eas:login": "npm --workspace @weatheron/mobile run eas:login",
+    "eas:whoami": "npm --workspace @weatheron/mobile run eas:whoami",
+    "eas:init": "npm --workspace @weatheron/mobile run eas:init",
+    "build:android:development": "npm --workspace @weatheron/mobile run build:android:development",
+    "build:android:preview": "npm --workspace @weatheron/mobile run build:android:preview",
+    "build:android:production": "npm --workspace @weatheron/mobile run build:android:production",
+    "dev:weather-server": "node apps/server/src/index.mjs"
+  },
+  "dependencies": {
+    "@fontsource/manrope": "^5.2.8",
+    "fontkit": "^2.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.4.0",
+    "@napi-rs/canvas": "^1.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^6.0.0"
+  }
+}

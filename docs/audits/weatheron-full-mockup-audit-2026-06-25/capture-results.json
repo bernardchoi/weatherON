@@ -1,0 +1,1285 @@
+{
+  "capturedAt": "2026-06-25T06:03:50.762Z",
+  "count": 43,
+  "results": [
+    {
+      "id": "A1",
+      "title": "스플래시",
+      "ok": true,
+      "file": "01-A1-스플래시.png",
+      "bytes": 17228,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 2,
+      "textLength": 85,
+      "textSample": "9:41●●● 5GweatherN오늘 뭐 입고, 언제 나갈지5초 안에 결정해드려요바로 시작하기계정 없이 먼저 확인할 수 있어요언어는 기기 설정을 따릅니다"
+    },
+    {
+      "id": "H1",
+      "title": "게스트 홈",
+      "ok": true,
+      "file": "02-H1-게스트-홈.png",
+      "bytes": 36030,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 126
+      },
+      "smallButtonsCount": 12,
+      "textLength": 285,
+      "textSample": "9:41ON · 개인화서울 마포구 합정동▾22°맑음체감 21° · 최고 26° · 최저 15°65%2.3m/sUV 30mm계정동기화 ON위치정상알림맞춤 케어AI 장소 추천오늘 이 날씨엔 합정동 카페 어때요?맑음 · 기온 22°C · 목적지 가이드 보기 → 코디 추천아침엔 가디건, 낮엔 티셔츠옷장 4개 매칭 · 15°→26° →OUTTOPBTMSHOONPERSONAL HOME저장한 기준으로 오늘 준비 중코디·목적지·알림 기준이 계정에 동기화됨옷장 42목적지 3알림 ON동기화지금 날씨 제보하기홈코디출발MY소셜"
+    },
+    {
+      "id": "A2",
+      "title": "계정 연결",
+      "ok": true,
+      "file": "03-A2-계정-연결.png",
+      "bytes": 27706,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 5,
+      "textLength": 187,
+      "textSample": "9:41●●● 5G계정 연결계정 연결하면준비 설정을 이어갈 수 있어요추천 확인은 계속 가능하고,저장·동기화·알림 추가만 계정에 연결돼요추천 방법자동 추천된 방법을 먼저 보여줘요설정 이어보기알림 저장카카오로 시작하기자동 추천네이버로 시작하기계정 선택지 보완다른 방법 보기나중에 할래요최초 계정 연결 시 다음 단계에서약관 동의를 진행합니다"
+    },
+    {
+      "id": "A3",
+      "title": "약관 동의",
+      "ok": true,
+      "file": "04-A3-약관-동의.png",
+      "bytes": 32345,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 10,
+      "textLength": 204,
+      "textSample": "9:41●●● 5G약관 동의약관 확인 후바로 이어서 진행해요필수 항목만 동의하면 계정 연결이 완료돼요AGREEMENT필수 항목이 준비됐어요4/4동의 후 사용자가 하던 저장·알림 흐름으로 이어져요.필수 완료마케팅 OFF전체 동의필수만 14세 이상입니다필수이용약관 동의필수개인정보 수집·이용 동의필수위치기반서비스 이용약관선택마케팅 정보 수신 동의동의하고 계정 연결 계속"
+    },
+    {
+      "id": "C1",
+      "title": "코디 메인",
+      "ok": true,
+      "file": "05-C1-코디-메인.png",
+      "bytes": 39763,
+      "overflows": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 50.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "상세 보기 셔플",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 878.734375
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(21, 41, 77)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 50.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "상세 보기",
+          "visibility": "visible",
+          "width": 171.5,
+          "x": 566,
+          "y": 878.734375
+        },
+        {
+          "background": "rgb(21, 41, 77)",
+          "color": "rgb(21, 41, 77)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 50.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 171.5,
+          "x": 566,
+          "y": 878.734375
+        },
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 50.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "셔플",
+          "visibility": "visible",
+          "width": 173.5,
+          "x": 745.5,
+          "y": 878.734375
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 48.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 171.5,
+          "x": 746.5,
+          "y": 879.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "inline-flex",
+          "fontSize": "14px",
+          "height": 20,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "SPAN",
+          "text": "셔플",
+          "visibility": "visible",
+          "width": 44.765625,
+          "x": 809.859375,
+          "y": 893.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 13,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "svg",
+          "text": "",
+          "visibility": "visible",
+          "width": 13,
+          "x": 809.859375,
+          "y": 897.234375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "inline",
+          "fontSize": "14px",
+          "height": 3.25,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "polyline",
+          "text": "",
+          "visibility": "visible",
+          "width": 3.25,
+          "x": 810.4010620117188,
+          "y": 904.8176879882812
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 334,
+      "textSample": "9:41●●● 5G코디 21° 맑음 · 일교차 11° 기준 추천RECOMMENDATION기본 날씨 기준으로 먼저 추천해요기준 수정옷장4개 매칭스타일미니멀저장계정 필요오늘 입을 세트WARDROBE 4/42OUTER오버핏 가디건아침 15° 대응TOP린넨 티셔츠낮 26° 대응BOTTOM슬림 슬랙스바람 2.3m/sSHOES로우 스니커즈비 없음15°→26°비 없음옷장 4개92% 매칭오늘의 판단NO RAIN가디건은 챙기고, 낮엔 티셔츠로 충분해요08시 15°는 쌀쌀하고, 14시 26°부터는 더워져요.08시 가디건 ON14시 이너 OK추위 민감 +1상세 보기 셔플내 옷장 관리42벌 등록됨홈코디출발MY소셜"
+    },
+    {
+      "id": "C2",
+      "title": "내 옷장",
+      "ok": true,
+      "file": "06-C2-내-옷장.png",
+      "bytes": 34289,
+      "overflows": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 899,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "내 옷장＋전체상의하의아우터신발액세서리WARDROBE전체 기준 8개 아이템으로 추천 정확도 보정8/42추천으로 복귀옷 추가화이트 린넨 티셔츠스트라",
+          "visibility": "visible",
+          "width": 393,
+          "x": 546,
+          "y": 54
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "grid",
+          "fontSize": "16px",
+          "height": 698,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "WARDROBE전체 기준 8개 아이템으로 추천 정확도 보정8/42추천으로 복귀옷 추가화이트 린넨 티셔츠스트라이프 셔츠베이지 가디건슬레이트 슬랙스",
+          "visibility": "visible",
+          "width": 393,
+          "x": 546,
+          "y": 255
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 147,
+      "textSample": "9:41●●● 5G내 옷장＋전체상의하의아우터신발액세서리WARDROBE전체 기준 8개 아이템으로 추천 정확도 보정8/42추천으로 복귀옷 추가화이트 린넨 티셔츠스트라이프 셔츠베이지 가디건슬레이트 슬랙스데님 팬츠라이트 트렌치화이트 스니커즈첼시 부츠＋추가홈코디출발MY소셜"
+    },
+    {
+      "id": "C3",
+      "title": "옷 등록",
+      "ok": true,
+      "file": "07-C3-옷-등록.png",
+      "bytes": 36957,
+      "overflows": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "grid",
+          "fontSize": "16px",
+          "height": 801,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "베이지 가디건아우터 · 아침 쌀쌀라이트 트렌치아우터 · 바람 보통라이트 바람막이아우터 · 가벼운 비집업 후디아우터 · 일교차화이트 린넨 티셔츠상",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 677
+        },
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 126,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "집업 후디아우터 · 일교차",
+          "visibility": "visible",
+          "width": 111.65625,
+          "x": 566,
+          "y": 812
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 124,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 109.65625,
+          "x": 567,
+          "y": 813
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 29.125,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "집업 후디아우터 · 일교차",
+          "visibility": "visible",
+          "width": 93.65625,
+          "x": 575,
+          "y": 899.875
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(232, 237, 246, 0.9)",
+          "display": "block",
+          "fontSize": "10.5px",
+          "height": 13.125,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "집업 후디",
+          "visibility": "visible",
+          "width": 93.65625,
+          "x": 575,
+          "y": 899.875
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(168, 196, 224, 0.58)",
+          "display": "block",
+          "fontSize": "9.5px",
+          "height": 14,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "아우터 · 일교차",
+          "visibility": "visible",
+          "width": 93.65625,
+          "x": 575,
+          "y": 915
+        },
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 126,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "화이트 린넨 티셔츠상의 · 낮 더움",
+          "visibility": "visible",
+          "width": 111.671875,
+          "x": 686.65625,
+          "y": 812
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 124,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 109.671875,
+          "x": 687.65625,
+          "y": 813
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 442,
+      "textSample": "9:41●●● 5G아이템 추가WARDROBE ADD베이지 가디건 선택됨READY프리셋 선택사진으로 등록아이템전체아우터상의하의신발액세서리계절전체봄가을여름겨울목적전체비바람출근여행SELECTED베이지 가디건봄가을 · 출근 · 바람 · 아침 쌀쌀베이지 가디건아우터 · 아침 쌀쌀라이트 트렌치아우터 · 바람 보통라이트 바람막이아우터 · 가벼운 비집업 후디아우터 · 일교차화이트 린넨 티셔츠상의 · 낮 더움스트라이프 셔츠상의 · 실내 단독라이트 니트상의 · 쌀쌀함쿨링 티셔츠상의 · 자외선 높음슬레이트 슬랙스하의 · 바람 약함와이드 데님하의 · 활동 많음플리츠 스커트하의 · 맑음웜 슬랙스하의 · 아침 추움화이트 스니커즈신발 · 노면 건조방수 스니커즈신발 · 노면 젖음첼시 부츠신발 · 바람 강함다크 로우 스니커즈신발 · 긴 외출네이비 캡액세서리 · 자외선컴팩트 우산액세서리 · 오후 비내 옷장에 추가"
+    },
+    {
+      "id": "C4",
+      "title": "코디 상세",
+      "ok": true,
+      "file": "08-C4-코디-상세.png",
+      "bytes": 39745,
+      "overflows": [
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 101.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "대화형 재추천아침 15도에는 가디건을 걸치고, 낮에는 린넨 티셔츠 단독 착용이 좋아요.",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 853.75
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 55.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "아침 15도에는 가디건을 걸치고, 낮에는 린넨 티셔츠 단독 착용이 좋아요.",
+          "visibility": "visible",
+          "width": 325,
+          "x": 580,
+          "y": 887.75
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 55.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "아침 15도에는 가디건을 걸치고, 낮에는 린넨 티셔츠 단독 착용이 좋아요.",
+          "visibility": "visible",
+          "width": 325,
+          "x": 580,
+          "y": 887.75
+        },
+        {
+          "background": "rgb(16, 33, 64)",
+          "color": "rgba(232, 237, 246, 0.88)",
+          "display": "block",
+          "fontSize": "12.5px",
+          "height": 55.5,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "아침 15도에는 가디건을 걸치고, 낮에는 린넨 티셔츠 단독 착용이 좋아요.",
+          "visibility": "visible",
+          "width": 266.5,
+          "x": 580,
+          "y": 887.75
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 48,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 965.25
+        },
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 48,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 301,
+          "x": 566,
+          "y": 965.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(255, 255, 255)",
+          "display": "inline-block",
+          "fontSize": "13.5px",
+          "height": 22,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "INPUT",
+          "text": "",
+          "visibility": "visible",
+          "width": 273,
+          "x": 580,
+          "y": 979.25
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 44,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "",
+          "visibility": "visible",
+          "width": 44,
+          "x": 875,
+          "y": 967.25
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 302,
+      "textSample": "9:41●●● 5G코디 상세OUTFIT아침엔 가디건, 낮엔 린넨 티셔츠92%08:00가디건 ON14:00티셔츠 단독18:00그대로 OKOUTER베이지 오버핏 가디건아침 15° 레이어TOP화이트 린넨 티셔츠낮 26° 통기성BOTTOM슬레이트 슬림 슬랙스바람 약함SHOES화이트 로우 스니커즈노면 건조15°→26°비 없음출근·외출추위 민감 +1DETAIL변경한 코디는 코디 탭에 바로 반영돼요C1 복귀재추천기본저장저장 전공유대기대화형 재추천아침 15도에는 가디건을 걸치고, 낮에는 린넨 티셔츠 단독 착용이 좋아요.코디 저장 공유홈코디출발MY소셜"
+    },
+    {
+      "id": "H2",
+      "title": "위치 변경",
+      "ok": true,
+      "file": "09-H2-위치-변경.png",
+      "bytes": 26579,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 147,
+      "textSample": "9:41●●● 5G위치 변경현재 위치 사용GPS로 자동 감지저장한 위치서울 강남구현재21° 맑음부산 해운대구23° 흐림Guest계정 연결됨＋위치 추가LOCATION서울 강남구 선택 · 저장 위치 2곳 · Guest는 임시 검색 가능 · 검색어 없음홈코디출발MY소셜"
+    },
+    {
+      "id": "H3",
+      "title": "알림 사이드바",
+      "ok": true,
+      "file": "10-H3-알림-사이드바.png",
+      "bytes": 25819,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 268,
+      "textSample": "9:41홈화면●●● 5G알림닫기읽지 않음 2개오늘의 외출 준비07:3021° 맑음 · 추천 코디: 반팔 + 얇은 가디건우산 불필요비 예보 사전 알림14:0018시 시작 · 시간당 4mm · 21시 그침탭하면 강수 타임라인(H5)신발 추천08:20출발 10분 전 · 오늘은 방수 신발 권장노면 습도 높음출발 알림08:30지금 출발하면 9:00 도착판교 · 40분 소요NOTIFICATION선택 알림 · 비 예보 사전 알림 · 딥링크 H5읽음 처리 · 최근 7일 보관홈코디출발MY소셜"
+    },
+    {
+      "id": "H4",
+      "title": "우산 추천",
+      "ok": true,
+      "file": "11-H4-우산-추천.png",
+      "bytes": 28318,
+      "overflows": [
+        {
+          "background": "rgb(26, 51, 96)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "block",
+          "fontSize": "13px",
+          "height": 49,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "우산 알림 시간 설정",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 916.59375
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgba(232, 237, 246, 0.85)",
+          "display": "block",
+          "fontSize": "13px",
+          "height": 47,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 351,
+          "x": 567,
+          "y": 917.59375
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 251,
+      "textSample": "9:41●●● 5G우산 추천오늘은 3단 우산강수량 보통바람 약함휴대성 우선추천 이유18시~21시 비 예보시간당 4mm · 보통 강도풍속 3m/s — 3단 우산으로 충분시간대별 강수확률10%15%40%80%85%60%20%15시21시우산 종류 비교1단 장우산— 강풍·장시간2단 우산— 균형·범용3단 우산— 휴대성·보통강도추천장우산— 폭우·전신 커버UMBRELLA3단 우산 추천 · 18~21시 강수 · 알림 설정 전우산 알림 시간 설정홈코디출발MY소셜"
+    },
+    {
+      "id": "H5",
+      "title": "강수 타임라인",
+      "ok": true,
+      "file": "12-H5-강수-타임라인.png",
+      "bytes": 29847,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 252,
+      "textSample": "9:41●●● 5G강수 타임라인18:00 비 시작 → 21:00 그침시간당 최대 4mm·보통 강도30분 단위 강수량0.20.51.83.54.23.82.510.317:0018:0019:0020:0021:00약함보통강함외출 가이드지금 나가면 비 전 도착 가능18시 이후 외출 시 우산 필수21시 이후는 비가 그칩니다비 그치면 알려줘비가 그칠 때 알림을 보내드려요RAIN18:00 시작 · 21:00 종료 · 그침 알림 OFF 비 알림 설정홈코디출발MY소셜"
+    },
+    {
+      "id": "O1",
+      "title": "스플래시",
+      "ok": true,
+      "file": "13-O1-스플래시.png",
+      "bytes": 14188,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 4,
+      "textLength": 43,
+      "textSample": "9:41●●● 5GweatherN오늘의 외출, 미리 준비하세요온보딩 시작홈으로"
+    },
+    {
+      "id": "O2",
+      "title": "기능 소개",
+      "ok": true,
+      "file": "14-O2-기능-소개.png",
+      "bytes": 34837,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 190,
+      "textSample": "9:41●●● 5G기능 소개 건너뛰기날씨 보고,입고, 나가세요코디·우산·신발·출발 알림까지 한 번에 준비해요코디 추천날씨에 맞는 오늘 옷우산 추천비 오는 시간에 맞는 우산신발 추천노면과 코디에 맞는 신발출발 알림나갈 시간을 놓치지 않게카드를 누르면 기능별로 더 자세히 볼 수 있어요추천 기준 설정하기다음 단계에서 권한과 추천 기준을 설정해요"
+    },
+    {
+      "id": "O3",
+      "title": "권한 요청",
+      "ok": true,
+      "file": "15-O3-권한-요청.png",
+      "bytes": 30606,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 9,
+      "textLength": 247,
+      "textSample": "9:41●●● 5G필요한 권한만 먼저 허용해 주세요나머지 알림 세부 설정은 다음 단계에서 간단히 정해요권한 요청거부 상태위치 권한현재 위치 날씨·출발지 파악에 사용돼요허용됨알림 권한강수·기상특보·외출 준비·여행·자기 전 확인 알림에 사용돼요허용됨PERMISSION허용된 권한은 바로 자동 케어에 반영됨2/2허용해도 모든 알림이 켜지는 건 아니며, 다음 단계에서 필요한 알림만 자동 케어로 묶어요강수·특보출근·외출자기 전 체크추천 기준 설정하기"
+    },
+    {
+      "id": "O4",
+      "title": "스타일 태그",
+      "ok": true,
+      "file": "16-O4-스타일-태그.png",
+      "bytes": 34064,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 257,
+      "textSample": "9:41●●● 5G1 / 3코디 추천 기준을 골라주세요스타일은 복수 선택 가능 · 핏과 연령대는 추천 보정에만 사용돼요스타일 태그오늘 입을 옷의 무드를 정해요캐주얼미니멀포멀스트릿로맨틱코디 핏 기준성별 정보가 아니라 추천 실루엣 기준이에요남성여성상관없음추천 연령대코디 톤과 브랜드 무드 보정용이에요10-20대20-30대30-40대40-50대50+STYLE2개 태그 · 상관없음 · 20-30대READY캐주얼 · 포멀 스타일로 추천해드려요핏 상관없음20-30대다음"
+    },
+    {
+      "id": "O5",
+      "title": "알림 시간",
+      "ok": true,
+      "file": "17-O5-알림-시간.png",
+      "bytes": 41993,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 9,
+      "textLength": 366,
+      "textSample": "9:41●●● 5G2 / 3알림이 알아서 챙기게 할까요?몇 가지만 고르면 강수·특보·출근·외출·여행·자기 전 확인을 상황에 맞춰 보내요AUTO CARE ON날씨 변화와 이동 패턴에 맞춰 알림 시간을 자동 보정상황 출근필수 날씨 ON목적지 확장 예정주 사용 상황출근외출여행강수·기상특보는 필수 알림비 시작, 폭염·한파·강풍 주의보는 별도 시간 설정 없이 자동 발송ON출근 준비 알림평일 첫 이동 전 날씨·코디·우산·신발을 한 번에 안내자동자동 적용자기 전 내일 날씨·코디 미확인 시 1회 리마인드목적지를 등록하면 출발·신발·여행 알림 자동 연결하루 최대 3건, 수면 시간대는 긴급 날씨만 허용세부 조정은 MY > 알림 설정의 고급 설정에서 할 수 있어요다음"
+    },
+    {
+      "id": "O6",
+      "title": "목적지 등록",
+      "ok": true,
+      "file": "18-O6-목적지-등록.png",
+      "bytes": 36222,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 11,
+      "textLength": 164,
+      "textSample": "9:41●●● 5G3 / 3자주 가는 곳을 등록하면 더 정확히 챙겨드려요목적지는 선택이에요. 등록하면 날씨·출발·신발 알림이 이동 상황에 맞춰 확장돼요목적지 날씨 비교출발 시각신발·우산 알림추천 라벨회사학교공항숙소건너뛰어도 현재 위치 기준 자동 케어는 계속 동작목적지 등록하고 시작나중에 할게요"
+    },
+    {
+      "id": "G1",
+      "title": "출발 메인",
+      "ok": true,
+      "file": "19-G1-출발-메인.png",
+      "bytes": 31120,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 229,
+      "textSample": "9:41●●● 5G출발＋TODAY CARE오늘 자동 케어 중케어 0/2날씨 비교출발 08:10신발·우산카드 탭 시 G2 케어 상세 · 검색/추가는 P1 목적지 추가로 연결회사— 판교READY21°19°−2°출발 08:30도착 09:00바람 강함 주의학교— 신촌READY21°21°±0°출발 09:00도착 09:45날씨 차이 없음＋목적지 추가여행 플래너Premium여행지 일정별 날씨 + 짐 추천홈코디출발MY소셜"
+    },
+    {
+      "id": "G2",
+      "title": "목적지 케어",
+      "ok": true,
+      "file": "20-G2-목적지-케어.png",
+      "bytes": 34316,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 298,
+      "textSample": "9:41●●● 5G회사 — 판교목적지 기준 자동 케어 미리보기SMART CARE목적지를 켜면 출발지와 목적지 날씨를 비교해 출발·신발·우산 알림이 자동으로 조정돼요SMART CARE켜면 오늘 출발·신발·우산 알림에 반영됨READY날씨 비교기온21°19°날씨맑음흐림출발지서울 삼성동판교강수0%30%출발시간 역산도착 희망 09:00− 소요시간 40분 − 여유 10분08:10출발자동 케어 체인 (목적지 등록 시)07:30외출 준비 통합 알림08:00신발 추천 — 출발 10분 전08:10출발 시각 알림이 목적지 케어 켜기홈코디출발MY소셜"
+    },
+    {
+      "id": "G3",
+      "title": "여행 플래너",
+      "ok": true,
+      "file": "21-G3-여행-플래너.png",
+      "bytes": 33010,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 248,
+      "textSample": "9:41●●● 5G여행 플래너Premium제주 2박 3일6/20 – 6/22무료 상태프리미엄 활성TRIP무료 사용자는 구독 후 전체 플래너 저장 가능구독Day 16/20맑음27°성산일출봉Day 26/21비24°우도 (우천 대비)Day 36/22흐림26°시내 · 귀가코디 · 짐 추천Day 1 기준 · 반팔 3 · 긴팔 1 · 우비/3단 우산 · 방수 신발 · 선크림일정 추가구독 후 공유무료 사용자는 여기서 구독 안내가 노출돼요홈코디출발MY소셜"
+    },
+    {
+      "id": "G4",
+      "title": "도보여행",
+      "ok": true,
+      "file": "22-G4-도보여행.png",
+      "bytes": 33457,
+      "overflows": [
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(0, 0, 0)",
+          "display": "flex",
+          "fontSize": "16px",
+          "height": 50,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "출발 전 알림 받기",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 873.6875
+        },
+        {
+          "background": "rgb(21, 41, 77)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 50,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 873.6875
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(21, 41, 77)",
+          "display": "block",
+          "fontSize": "14px",
+          "height": 19,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "SPAN",
+          "text": "출발 전 알림 받기",
+          "visibility": "visible",
+          "width": 92.234375,
+          "x": 696.375,
+          "y": 889.1875
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 295,
+      "textSample": "9:41●●● 5G도보여행COURSE무료 코스 날씨 확인 · 알림 등록 전READY계정 연결됨권한 정상저장 1/2OLLE제주 올레 1코스15km · 5시간FOREST북한산 둘레길 7코스8km · 3시간COAST해파랑길 1코스19km · 6시간코스 상세 — 제주 올레 1코스08:00 출발 기준 구간 날씨 타임라인08:00맑음22°시흥10:00흐림21°광치기12:00비20°성산WCI 78 · 양호최적 출발 시점① 06:30전 구간 쾌청 예상② 14:30오후 구간 흐림③ 내일 08:00대체 일정출발 전 알림 받기홈코디출발MY소셜"
+    },
+    {
+      "id": "G5",
+      "title": "AI 종주",
+      "ok": true,
+      "file": "23-G5-AI-종주.png",
+      "bytes": 30258,
+      "overflows": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "display": "grid",
+          "fontSize": "16px",
+          "height": 46,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "AI 플랜 저장여정 공유",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 887.375
+        },
+        {
+          "background": "rgb(240, 160, 32)",
+          "color": "rgb(21, 41, 77)",
+          "display": "block",
+          "fontSize": "12.5px",
+          "height": 46,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "AI 플랜 저장",
+          "visibility": "visible",
+          "width": 172.5,
+          "x": 566,
+          "y": 887.375
+        },
+        {
+          "background": "rgb(16, 33, 64)",
+          "color": "rgba(232, 237, 246, 0.82)",
+          "display": "block",
+          "fontSize": "12.5px",
+          "height": 46,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "BUTTON",
+          "text": "여정 공유",
+          "visibility": "visible",
+          "width": 172.5,
+          "x": 746.5,
+          "y": 887.375
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 264,
+      "textSample": "9:41●●● 5GAI 종주 플래너Premium여정 설정AI PLAN프리미엄 활성 · 예보 업데이트 시 재분석 알림 가능ACTIVE권한 전알림 권한 정상AI 분석 결과 (Gemini Flash)Day 17/5맑음28°출발 최적Day 37/7비24°우비 필수 · 단축 권장Day 77/11폭우22°일정 조정 권고짐 체크리스트반팔 5벌긴팔 2벌우비방수 등산화선크림보조배터리압박 스타킹예보 업데이트 알림 ON기상 변화 시 재분석 자동 발송AI 플랜 저장여정 공유홈코디출발MY소셜"
+    },
+    {
+      "id": "G6",
+      "title": "프리미엄",
+      "ok": true,
+      "file": "24-G6-프리미엄.png",
+      "bytes": 29670,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 254,
+      "textSample": "9:41●●● 5GWeatherON Premium기능 분리가 아닌 깊이 분리 —같은 기능을 더 깊게, 더 자유롭게무료 vs 프리미엄 비교알림1개 고정→무제한코디 추천오늘 기본→7일 플래닝도보여행기본 체크→AI 종주 플래너목적지1개→즐겨찾기 무제한PREMIUM미구독 · 플랜 선택 후 프리미엄 기능 활성MONTHLY₩2,900/월BEST · 43% 절약ANNUAL₩19,900/년 · ₩1,658/월연간 플랜 시작하기언제든 해지 가능 · Apple 인앱결제"
+    },
+    {
+      "id": "P1",
+      "title": "목적지 추가",
+      "ok": true,
+      "file": "25-P1-목적지-추가.png",
+      "bytes": 33990,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 10,
+      "textLength": 245,
+      "textSample": "9:41●●● 5G목적지 추가장소를 고르면 자동 케어가 확장돼요Guest계정 연결됨DESTINATION잠실종합운동장을 자동 케어 후보로 선택1건DESTINATION CARE등록한 장소는 출발 탭에 저장되고, 날씨 비교·출발 시각·신발/우산 알림에 자동 반영돼요잠실종합운동장야구장잠실종합운동장 선택됨스포츠 · 야구장으로 인식됨Guest는 미리보기 가능, G1/P3 저장과 알림 케어는 계정 연결 후 반영돼요목적지 케어에 추가홈코디출발MY소셜"
+    },
+    {
+      "id": "P2",
+      "title": "준비 가이드",
+      "ok": true,
+      "file": "26-P2-준비-가이드.png",
+      "bytes": 42548,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 290,
+      "textSample": "9:41●●● 5G목적지 · 잠실종합운동장등록 목적지 기반 준비 가이드GUIDE잠실종합운동장 기준 준비 가이드 · 케어 상세와 필터 목록으로 이동 가능READY서울 삼성동23°맑음 · 강수 0%잠실 야구장21°구름조금 · 강수 12%스포츠 준비 가이드자동 케어 확장경기 취소 확률 12%쿨링룩 추천내야 1루석 자외선 지수 9추천쿨링 티셔츠 + 모자 + SPF50 선크림AD스포츠 브랜드 협찬 카드등산·해변 등 다른 카테고리도 동일 패턴으로 제공돼요목적지 케어 보기출발·신발 알림다른 목적지 보기필터 목록홈코디출발MY소셜"
+    },
+    {
+      "id": "P3",
+      "title": "목적지 필터",
+      "ok": true,
+      "file": "27-P3-목적지-필터.png",
+      "bytes": 38523,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 235,
+      "textSample": "9:41●●● 5G목적지저장한 목적지별 자동 케어와 준비 가이드전체스포츠아웃도어계절문화DESTINATION CARE카테고리별 날씨 리스크와 코디·신발·준비물을 목적지 카드에서 바로 확인해요DESTINATION CARE저장 목적지 기준으로 자동 케어 후보를 보여줌3곳추가잠실종합운동장경기 취소 확률 12% · 쿨링룩 추천북한산국립공원정상 낙뢰 위험 · 오전 하산 권장해운대해수욕장파도 보통 · 래시가드 추천홈코디출발MY소셜"
+    },
+    {
+      "id": "M1",
+      "title": "MY 메인",
+      "ok": true,
+      "file": "28-M1-MY-메인.png",
+      "bytes": 2866,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 205,
+      "textSample": "9:41●●● 5GMY카카오 계정da***@kakao.com편집현재 무료 플랜알림 1개 · 코디 기본 추천업그레이드설정알림 설정외출 준비·비·출발 알림 시간스타일 태그 설정캐주얼·미니멀·포멀 외 3종전역 설정위치·알림 권한, 온도 단위PROFILE계정 연결됨 · 무료 플랜 · 최근 선택 허브 대기정보개인정보처리방침앱 정보WeatherON v1.0.0홈코디출발MY소셜"
+    },
+    {
+      "id": "M2",
+      "title": "알림 설정",
+      "ok": true,
+      "file": "29-M2-알림-설정.png",
+      "bytes": 37505,
+      "overflows": [
+        {
+          "background": "rgb(16, 33, 64)",
+          "color": "rgb(0, 0, 0)",
+          "display": "block",
+          "fontSize": "16px",
+          "height": 53.46875,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "처음 2~3번의 기준 설정 이후에는 날씨·목적지·사용 패턴에 맞춰 자동 보정됨.",
+          "visibility": "visible",
+          "width": 353,
+          "x": 566,
+          "y": 915.421875
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgba(168, 196, 224, 0.52)",
+          "display": "block",
+          "fontSize": "10.8px",
+          "height": 33.46875,
+          "overflowX": false,
+          "overflowY": true,
+          "tag": "DIV",
+          "text": "처음 2~3번의 기준 설정 이후에는 날씨·목적지·사용 패턴에 맞춰 자동 보정됨.",
+          "visibility": "visible",
+          "width": 325,
+          "x": 580,
+          "y": 925.421875
+        }
+      ],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 402,
+      "textSample": "9:41●●● 5G스마트 알림 설정기본은 자동, 필요한 경우만 세부 조정SMART CARE알아서 챙기기위치·날씨·목적지·사용 패턴에 맞춰 발송 시간 자동 보정자동 케어 활성생활 루틴하루 최대 3건알림 권한 정상현재 기기에서 WeatherON 알림을 받을 수 있음권한 관리목적지 알림 조건계정/권한 준비 · 저장 목적지 자동 케어 가능계정 연결됨적용 중인 알림필수 날씨항상강수 임박, 폭염·한파·강풍 특보는 자동 발송생활 루틴자동출근·외출 준비와 자기 전 내일 체크를 자동으로 묶음목적지·여행등록 시목적지 등록 시 출발·신발·여행 날씨를 연결고급 설정ALERT SETTINGS자동 케어 ON · 고급 닫힘 · 세부 5/5 ON처음 2~3번의 기준 설정 이후에는 날씨·목적지·사용 패턴에 맞춰 자동 보정됨.홈코디출발MY소셜"
+    },
+    {
+      "id": "M3",
+      "title": "전역 설정",
+      "ok": true,
+      "file": "30-M3-전역-설정.png",
+      "bytes": 24832,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 157,
+      "textSample": "9:41●●● 5G전역 설정단위 설정온도°C°F무게kg/glb거리m/kmmi위치 관리2곳 저장됨테마시스템라이트다크알림 권한 관리알림 권한 정상GLOBAL°C · kg/g · m/km · 테마 시스템 · 위치 관리 · 권한 정상버전 정보 · 약관 · 오픈소스 라이선스홈코디출발MY소셜"
+    },
+    {
+      "id": "A4",
+      "title": "계정 관리",
+      "ok": true,
+      "file": "31-A4-계정-관리.png",
+      "bytes": 24026,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 8,
+      "textLength": 144,
+      "textSample": "9:41●●● 5G마이페이지카카오 계정으로 로그인됨da***@kakao.com구독 관리연결된 계정 관리데이터 내보내기ACCOUNT카카오 계정 연결됨 · 연결 계정 확인로그아웃회원 탈퇴회원 탈퇴 시 모든 데이터가 즉시 삭제되며 복구할 수 없어요홈코디출발MY소셜"
+    },
+    {
+      "id": "R1",
+      "title": "정책 허브",
+      "ok": true,
+      "file": "32-R1-정책-허브.png",
+      "bytes": 25014,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 8,
+      "textLength": 138,
+      "textSample": "9:41●●● 5G설정알림 설정계정 관리광고 및 맞춤 설정개인정보처리방침이용약관위치기반서비스 이용약관오픈소스 라이선스문의하기POLICYM3에서 진입 · 선택 항목 정책 허브 대기 · AdMob 심사 문서 허브앱 정보 · v1.0.0홈코디출발MY소셜"
+    },
+    {
+      "id": "R2",
+      "title": "개인정보",
+      "ok": true,
+      "file": "33-R2-개인정보.png",
+      "bytes": 34152,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 3,
+      "textLength": 401,
+      "textSample": "9:41●●● 5G개인정보처리방침최종 업데이트 2026.06.201. 수집하는 개인정보 항목광고 ID(ADID/IDFA), 기기정보, IP 기반 위치, 앱 사용 데이터2. 제3자 제공Google AdMob — 맞춤 광고 제공 목적3. 광고 식별자 안내Google 광고 정책 페이지 안내 — 설정에서 맞춤광고 수신을 거부할 수 있어요4. 보관기간 및 파기회원 탈퇴 시 즉시 파기5. 이용자 권리개인정보 열람·정정·삭제를 요청할 권리가 있어요6. 개인정보 보호책임자문의: privacy@weatheron.kr본 문서는 weatheron.kr 웹사이트에도 동일하게 게시됩니다. A3 약관 동의의 \"개인정보 수집·이용 동의\" 항목과 동일한 문서입니다.DOCUMENT개인정보 문서 · 6개 섹션 · A3 약관 동의와 동일 본문"
+    },
+    {
+      "id": "R3",
+      "title": "광고 동의",
+      "ok": true,
+      "file": "34-R3-광고-동의.png",
+      "bytes": 20865,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 170,
+      "textSample": "9:41●●● 5G서울 마포구 합정동 ▾22°맑음AI 장소 추천오늘 이 날씨엔 합정동 카페 어때요?광고 개인화 설정더 관련성 높은 광고를 위해 정보를 사용할까요?동의하지 않아도 광고는 계속 표시됩니다(비개인화 광고)동의동의하지 않음옵션 더보기CONSENT동의 대기 · 설정에서 재변경 가능홈코디출발MY소셜"
+    },
+    {
+      "id": "R4",
+      "title": "광고 배치",
+      "ok": true,
+      "file": "35-R4-광고-배치.png",
+      "bytes": 30616,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 10,
+      "textLength": 231,
+      "textSample": "9:41●●● 5G서울 마포구 합정동▾22°맑음AI 장소 추천오늘 이 날씨엔 합정동 카페 어때요?맑음 · 기온 22°C · 탭해서 더보기 →AD · 네이티브 광고콘텐츠와 동일한 톤이지만 \"AD\" 라벨로 명확히 구분코디 · 우산 · 신발트렌치코트 + 슬랙스우산 불필요 · 로우컷 스니커즈출발 시각목적지 등록 시 10:50 출발 안내AD STATUS네이티브 광고 1개 · AD 라벨 표시 · 노출 대기홈코디출발MY소셜"
+    },
+    {
+      "id": "W1",
+      "title": "날씨 제보 홈",
+      "ok": true,
+      "file": "36-W1-날씨-제보-홈.png",
+      "bytes": 27903,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 195,
+      "textSample": "9:41●●● 5G서울 마포구18°흐림코디 · 우산 · 신발가디건 + 청바지 · 접이식 우산 권장현장주변 날씨 제보반경 1km · 최근 30분 비 2명 흐림 1명미확정 (3건 미충족)오늘 이 날씨엔근처 인도어 카페 추천LOCAL REPORTv2.0 보조 참여 · 미확정 주변 제보 확인 · 제보 CTA는 W2로 연결지금 날씨 제보하기홈코디출발MY소셜"
+    },
+    {
+      "id": "W2",
+      "title": "날씨 제보",
+      "ok": true,
+      "file": "37-W2-날씨-제보.png",
+      "bytes": 23417,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 9,
+      "textLength": 126,
+      "textSample": "9:41●●● 5G지금 날씨 어때요?서울 마포구 합정동 (GPS 자동)위치 권한 정상계정 연결됨맑음흐림비 ← 선택눈강풍천둥제보하기60분 후 자동 만료 · 언제든 취소 가능REPORT선택 대기 · GPS 자동 · 배지/이력 반영"
+    },
+    {
+      "id": "W3",
+      "title": "제보 완료",
+      "ok": true,
+      "file": "38-W3-제보-완료.png",
+      "bytes": 20895,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 8,
+      "textLength": 182,
+      "textSample": "9:41●●● 5G제보 완료제보 감사합니다!합정동 · 비 · 오후 2:41주변 제보 현황확정됨 — 반경 500m · 4건\"비\" 제보 확정 · 홈 화면에 오버레이 표시 중배지배지 업데이트누적 확정 제보 12건 관측자 Lv.2다음 레벨까지 38건 → 기상 리포터BADGE확정 제보 · 홈 오버레이 표시 · 관측자 Lv.2 갱신확인"
+    },
+    {
+      "id": "W4",
+      "title": "제보 이력",
+      "ok": true,
+      "file": "39-W4-제보-이력.png",
+      "bytes": 23992,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 220,
+      "textSample": "9:41●●● 5G내 제보 이력 관측자 Lv.237이번달89%확정률12위지역 랭킹최근 제보비합정동오후 2:41확정맑음홍대입구오전 11:05확정흐림신촌오전 9:30만료내 제보가 맞았어요!어제 2:41 \"비\" 제보 → 기상청 데이터 일치HISTORY제보 기록 · 확정률 · 지역 랭킹 · MY에서 재진입저장 장소 제보 알림(Premium)은 MY > 알림 설정에서 관리할 수 있어요홈코디출발MY소셜"
+    },
+    {
+      "id": "S0",
+      "title": "ON Square 시작",
+      "ok": true,
+      "file": "40-S0-ON-Square-시작.png",
+      "bytes": 36017,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 204,
+      "textSample": "9:41●●● 5GON Square 입장원소 컴패니언을 만나보세요대표 마스코트와 함께 날씨를 체크인하면 작은 원소 친구를 수집할 수 있어요.SolarRainStormWindFrostMist대표로 시작+Mist 수집 가능ON SQUARE최초 진입 · 대표 마스코트 즉시 부여 · Mist 컴패니언 미리보기 선택 중대표 마스코트로 ON Square 시작홈코디출발MY소셜"
+    },
+    {
+      "id": "S1",
+      "title": "내 ON Square",
+      "ok": true,
+      "file": "41-S1-내-ON-Square.png",
+      "bytes": 2866,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 234,
+      "textSample": "9:41●●● 5G내 ON SquareCP 340MY HEROWeatherON 대표 마스코트모든 날씨를 함께 경험하는 나의 기본 캐릭터오늘의 동행 · Mist Lv.7안개XP 340 / 500오늘 날씨 체크인 완료 → Mist XP +20 적립SQUARE체크인 완료 · Mist 동행 활성 · Weather Note와 리액션 진입 가능Weather Note날씨 리액션선물희귀 기상 이벤트 배지 드랍 영역홈코디출발MY소셜"
+    },
+    {
+      "id": "S2",
+      "title": "Weather Note",
+      "ok": true,
+      "file": "42-S2-Weather-Note.png",
+      "bytes": 23624,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 10,
+      "textLength": 146,
+      "textSample": "9:41●●● 5GWeather Note실황 핀 6건핀 미리보기 — 서울 종로\"우산 필수, 빗줄기 강함\"3분 전 · 도움됨 12핀 작성내 위치 제보핀은 GPS로 자동 태그되고 24시간 후 만료돼요NOTE읽는 중 · 계정 연결됨 · 위치 권한 정상홈코디출발MY소셜"
+    },
+    {
+      "id": "S3",
+      "title": "날씨 리액션",
+      "ok": true,
+      "file": "43-S3-날씨-리액션.png",
+      "bytes": 25363,
+      "overflows": [],
+      "phone": {
+        "height": 852,
+        "width": 393,
+        "x": 546,
+        "y": 54
+      },
+      "smallButtonsCount": 12,
+      "textLength": 180,
+      "textSample": "9:41●●● 5G날씨 리액션현재 날씨 · 서울 — 폭우\"다들 고생중\"리액션 활성화 중이 도시 1,247명이 같은 날씨 중공감하기다른 도시 보기도시별 현황서울1,247명부산532명대구188명익명 집계 · 공감 1탭 → 개인 식별 없이 집계만 표시돼요REACTION서울 선택 · 공감 전 · 익명 집계만 표시홈코디출발MY소셜"
+    }
+  ]
+}

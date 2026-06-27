@@ -1,0 +1,18 @@
+[
+  {
+    "id": "o2Ready5Sec",
+    "screen": "O2",
+    "nameKo": "오늘 준비 5초 완결",
+    "asset": "weatheron-onboarding-o2-ready-5sec-v1.png",
+    "usage": ["featureIntro", "onboardingHero"],
+    "notes": "날씨, 코디, 우산, 신발, 출발 알림을 한 장면으로 묶은 기능 소개용 일러스트. MVP 목업용으로 적합하나 최종본에서는 실제 앱 화면처럼 보이는 인상을 줄이기 위해 더 추상화된 시나리오 구도로 polish 권장."
+  },
+  {
+    "id": "o6DestinationCare",
+    "screen": "O6",
+    "nameKo": "목적지 자동 케어",
+    "asset": "weatheron-onboarding-o6-destination-care-v1.png",
+    "usage": ["destinationSetup", "onboardingHero"],
+    "notes": "집-목적지 경로, 목적지 날씨 비교, 우산/신발/출발 케어를 표현한 일러스트. 방향은 맞으나 현재 목업 카드 높이에서 일부 요소가 잘릴 수 있어 최종본은 더 단순한 목적지 자동 케어 구도로 재제작 우선 검토."
+  }
+]

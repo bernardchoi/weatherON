@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WeatherON 개인정보처리방침</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7fbff;
+      --panel: #ffffff;
+      --ink: #10243f;
+      --muted: #54647a;
+      --line: #dce7f2;
+      --accent: #0f8f8a;
+      --accent-soft: #e4f7f5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+    header {
+      padding: 32px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 40px 0 12px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 24px 0 8px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+    p, li { color: var(--muted); }
+    .notice {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      color: var(--ink);
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #eef5fb;
+      color: var(--ink);
+    }
+    tr:last-child td { border-bottom: 0; }
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #edf2f7;
+      color: var(--ink);
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>WeatherON 개인정보처리방침</h1>
+      <p>시행일: [YYYY-MM-DD]</p>
+      <p>운영자: [회사명/개인사업자명]</p>
+      <p>문의: [고객센터 이메일/연락처]</p>
+      <div class="notice">
+        본 문서는 Google Play 제출용 공개 페이지 초안입니다. 정식 제출 전 운영자 정보, 문의처, 보유기간, 수탁사, 법무 검토 결과를 반드시 반영해야 합니다.
+      </div>
+    </header>
+
+    <section>
+      <h2>1. 수집하는 개인정보 항목</h2>
+      <table>
+        <thead>
+          <tr><th>구분</th><th>수집 항목</th><th>수집 방법</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>필수(회원)</td><td>로그인 식별자, 이메일, 프로필 식별값, Provider user ID, 닉네임</td><td>계정 연결 또는 회원가입 시 OAuth 제공자/이메일 코드 인증 과정에서 수신</td></tr>
+          <tr><td>필수</td><td>위치정보(GPS 좌표 또는 동/읍/면 단위), 저장 위치 목록</td><td>앱 내 위치 권한 허용 또는 이용자 직접 입력 시</td></tr>
+          <tr><td>자동 수집</td><td>기기정보(OS, 모델, 언어), 앱 사용 로그, 오류/성능 로그</td><td>앱 이용 중 자동 생성</td></tr>
+          <tr><td>광고 도입 시</td><td>광고 식별자(ADID/IDFA), 대략적 위치, 광고 상호작용 정보</td><td>Google AdMob SDK 및 동의 관리 도구 적용 시</td></tr>
+          <tr><td>선택</td><td>스타일 태그, 코디 핏 기준, 추천 연령대, 옷장 이미지·카테고리</td><td>온보딩 및 코디/옷장 등록 시</td></tr>
+          <tr><td>선택</td><td>목적지 정보, 자택/회사/학교 등 라벨, 좌표</td><td>목적지 등록 시</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>2. 개인정보 이용 목적</h2>
+      <ul>
+        <li>회원 식별, 로그인, 계정 관리, 데이터 동기화</li>
+        <li>현재 위치 기반 날씨, 목적지 비교, 출발 준비 정보 제공</li>
+        <li>날씨 기반 코디, 우산, 신발, 알림 추천 제공</li>
+        <li>서비스 안정성 개선, 오류 분석, 품질 관리</li>
+        <li>광고 도입 시 맞춤형 또는 비개인화 광고 제공과 광고 효과 분석</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. 보유 및 이용 기간</h2>
+      <ul>
+        <li>회원 정보와 저장 데이터는 회원 탈퇴 또는 삭제 요청 시 지체 없이 파기합니다.</li>
+        <li>법령상 보관 의무가 있는 정보는 해당 법령에서 정한 기간 동안 보관합니다.</li>
+        <li>광고 식별자 및 앱 사용 로그 보유기간은 정식 제출 전 [ ]개월로 확정합니다.</li>
+        <li>실시간 위치정보는 날씨/추천 처리 후 앱과 서버 정책에 따라 최소한으로 보관합니다.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. 제3자 제공 및 처리위탁</h2>
+      <table>
+        <thead>
+          <tr><th>수탁/제공 업체</th><th>목적</th><th>처리 항목</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Google AdMob</td><td>광고 제공, 비개인화 광고, 광고 효과 분석</td><td>광고 식별자, 기기정보, 대략적 위치 등. 실제 SDK 도입 시 적용</td></tr>
+          <tr><td>카카오/네이버/LINE/Google/Apple</td><td>소셜 로그인 인증</td><td>인증 토큰, 이메일, 프로필 식별값</td></tr>
+          <tr><td>Firebase/Google Cloud</td><td>인증, 서버 기능, 데이터 저장, 알림, Secret 관리</td><td>회원정보, 저장 위치, 알림/설정 정보</td></tr>
+          <tr><td>Kakao Local, 기상청, Open-Meteo, Google Maps 계열 API</td><td>날씨 및 장소 검색 기능 제공</td><td>좌표, 검색어, 요청 시점 등 기능 제공에 필요한 최소 정보</td></tr>
+          <tr><td>[이메일 인증 발송 서비스]</td><td>이메일 코드 발송 및 확인</td><td>이메일 주소, 인증 코드 발송 로그</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. 광고 식별자 및 맞춤광고</h2>
+      <p>WeatherON은 광고 기능 도입 시 Google AdMob SDK를 통해 광고를 제공할 수 있습니다. 맞춤형 광고가 적용되는 경우 이용자는 동의 화면 또는 설정 화면에서 광고 개인화 여부를 선택하거나 변경할 수 있습니다. 동의하지 않는 경우 비개인화 광고가 제공될 수 있으며, 기본 서비스 이용에는 제한이 없습니다.</p>
+    </section>
+
+    <section>
+      <h2>6. 이용자의 권리와 행사 방법</h2>
+      <p>이용자는 개인정보 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다. 앱 내 계정 관리 또는 고객센터를 통해 요청할 수 있으며, 계정 삭제 기능 도입 시 앱 내에서 삭제 절차를 제공합니다.</p>
+    </section>
+
+    <section>
+      <h2>7. 위치정보 처리</h2>
+      <p>WeatherON은 현재 위치 날씨, 목적지 케어, 출발 준비 추천을 위해 위치정보를 사용할 수 있습니다. 위치 권한을 거부해도 수동 목적지 검색 등 기본 기능은 사용할 수 있습니다. 위치정보의 세부 이용 조건은 위치기반서비스 이용약관을 따릅니다.</p>
+    </section>
+
+    <section>
+      <h2>8. 개인정보 보호책임자</h2>
+      <ul>
+        <li>성명: [담당자명]</li>
+        <li>직책: [직책]</li>
+        <li>연락처: [이메일/전화번호]</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>9. 변경 이력</h2>
+      <table>
+        <thead>
+          <tr><th>일자</th><th>내용</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-06-27</td><td>Google Play 제출용 개인정보처리방침 공개 페이지 초안 작성</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>WeatherON 개인정보처리방침 초안. 정식 서비스 적용 전 법무 검토 필요.</p>
+    </footer>
+  </main>
+</body>
+</html>

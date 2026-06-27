@@ -1,0 +1,32 @@
+{
+  "name": "@weatheron/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "web": "expo start --web",
+    "eas:login": "npx --yes --cache ../../.npm-cache eas-cli login",
+    "eas:whoami": "npx --yes --cache ../../.npm-cache eas-cli whoami",
+    "eas:init": "npx --yes --cache ../../.npm-cache eas-cli init",
+    "build:android:development": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile development",
+    "build:android:preview": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview",
+    "build:android:production": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~5.0.5",
+    "@weatheron/shared": "file:../../packages/shared",
+    "expo": "^53.0.0",
+    "expo-location": "~18.1.6",
+    "expo-status-bar": "^2.0.0",
+    "react": "^19.0.0",
+    "react-native": "^0.79.0",
+    "react-native-web": "^0.20.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

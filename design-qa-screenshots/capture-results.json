@@ -1,0 +1,498 @@
+{
+  "result": [
+    {
+      "theme": "Light",
+      "id": "A1",
+      "file": "design-qa-screenshots/light-A1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nA1 · 스플래시 · GUEST HOME ENTRY\n9:41\n●●● 5G\nweather\nN\n오늘 입을 옷과 나갈 시간을\n빠르게 정해드려요\n바로 시작하기\n계정 없이 먼저 확인할 수 있어요\n언어는 기기 설정을 따릅니다\nWeatherON · A1 스플래시",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "H1",
+      "file": "design-qa-screenshots/light-H1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\n\nWEATHERON · H1 홈 메인 · HYBRID CHROME (구조적 CHROME만 NAVY 토큰으로 채택)\n\n9:41\n게스트 · 한국어\n서울 마포구 합정동\n▾\n22°\n맑음\n체감 21° · 최고 26° · 최저 15°\n65%\n2.3m/s\nUV 3\n0mm\n게스트 열람\n저장만 제한\n위치\n정상\n알림\n설정 전\nAI 장소 추천\n오늘 이 날씨엔 합정동 카페 어때요?\n맑음 · 기온 22°C · 목적지 가이드 보기 →\n코디 추천\n아침엔 가디건, 낮엔 티셔츠\n옷장 4개 매칭 · 15°→26° →\nOUT\nTOP\nBTM\nSHO\nON\nA2 계정 연결 트리거\n연결하면 저장하고 이어서 볼 수 있어요\n날씨·코디 추천은 게스트로 계속 이용 가능\n코디 저장\n알림 추가\n여행 저장\n연결\n지금 날씨 제보하기\n홈\n코디\n출발\nMY\n소셜\n\nHybrid Chrome · Navy 브랜드 토큰 · WeatherON Design System",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "O2",
+      "file": "design-qa-screenshots/light-O2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nO2 · 온보딩 기능 소개 · HYBRID CHROME\n9:41\n●●● 5G\n기능 소개 건너뛰기\n날씨 보고,\n입고, 나가세요\n코디·우산·신발·출발 알림까지 한 번에 준비해요\n코디 추천\n날씨에 맞는 오늘 옷\n우산 추천\n비 오는 시간에 맞는 우산\n신발 추천\n노면과 코디에 맞는 신발\n출발 알림\n나갈 시간을 놓치지 않게\n카드를 누르면 기능별로 더 자세히 볼 수 있어요\n추천 기준 설정하기\n다음 단계에서 권한과 추천 기준을 설정해요\nWeatherON · O2 온보딩 기능 소개",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "O6",
+      "file": "design-qa-screenshots/light-O6.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nO6 · 목적지 등록(선택) · HYBRID CHROME\n9:41\n●●● 5G\n3 / 3\n자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요\n목적지는 선택이에요. 등록하면 날씨·출발·신발 알림을 이동 상황에 맞춰 받아볼 수 있어요\n목적지 날씨 비교\n출발 시각\n신발·우산 알림\n추천 라벨\n회사\n학교\n공항\n숙소\n목적지를 선택하면 더 정확하게 시작할 수 있어요\n목적지 등록하고 시작\n나중에 할게요\nWeatherON · O6 목적지 등록(선택)",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "C1",
+      "file": "design-qa-screenshots/light-C1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC1 · 코디 메인 (AI 추천) · HYBRID CHROME\n9:41\n●●● 5G\n코디\n21° 맑음 · 일교차 11° 기준 추천\nRECOMMENDATION\n기본 날씨 기준 추천\n기준 수정\n옷장\n4개 매칭\n스타일\n미니멀\n저장\n계정 필요\n오늘 입을 세트\nWARDROBE 4/42\nOUTER\n오버핏 가디건\n아침 15° 대응\nTOP\n린넨 티셔츠\n낮 26° 대응\nBOTTOM\n슬림 슬랙스\n바람 2.3m/s\nSHOES\n로우 스니커즈\n비 없음\n15°→26°\n비 없음\n옷장 4개\n92% 매칭\n오늘의 판단\nNO RAIN\n가디건은 챙기고, 낮엔 티셔츠로 충분해요\n08시 15°는 쌀쌀하고, 14시 26°부터는 더워져요.\n08시 가디건 ON\n14시 이너 OK\n추위 민감 +1\n상세 보기\n셔플\n내 옷장 관리\n42벌 등록됨\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C1 코디 메인",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "C2",
+      "file": "design-qa-screenshots/light-C2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC2 · 내 옷장 · HYBRID CHROME\n9:41\n●●● 5G\n내 옷장\n＋\n전체\n상의\n하의\n아우터\n신발\n액세서리\nWARDROBE\n옷장 확인 가능 · 저장 시 계정 연결\nVIEW\n추천으로 복귀\n옷 추가\n화이트 린넨 티셔츠\n스트라이프 셔츠\n베이지 가디건\n슬레이트 슬랙스\n데님 팬츠\n라이트 트렌치\n화이트 스니커즈\n첼시 부츠\n＋\n추가\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C2 내 옷장",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "C3",
+      "file": "design-qa-screenshots/light-C3.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC3 · 아이템 추가 · HYBRID CHROME\n9:41\n●●● 5G\n아이템 추가\nWARDROBE ADD\n베이지 가디건 선택됨\n준비\n프리셋 선택\n사진으로 등록\n아이템\n전체\n아우터\n상의\n하의\n신발\n액세서리\n계절\n전체\n봄가을\n여름\n겨울\n목적\n전체\n비\n바람\n출근\n여행\nSELECTED\n베이지 가디건\n봄가을 · 출근 · 바람 · 아침 쌀쌀\n프리셋 18개\n더 보기\n베이지 가디건\n아우터 · 아침 쌀쌀\n라이트 트렌치\n아우터 · 바람 보통\n라이트 바람막이\n아우터 · 가벼운 비\n집업 후디\n아우터 · 일교차\n화이트 린넨 티셔츠\n상의 · 낮 더움\n스트라이프 셔츠\n상의 · 실내 단독\n라이트 니트\n상의 · 쌀쌀함\n쿨링 티셔츠\n상의 · 자외선 높음\n슬레이트 슬랙스\n하의 · 바람 약함\n내 옷장에 추가\nWeatherON · C3 아이템 추가",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "C4",
+      "file": "design-qa-screenshots/light-C4.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC4 · 코디 상세 · 대화형 재추천 · HYBRID CHROME\n9:41\n●●● 5G\n코디 상세\nOUTFIT\n아침엔 가디건, 낮엔 린넨 티셔츠\n92%\n08:00\n가디건 ON\n14:00\n티셔츠 단독\n18:00\n그대로 OK\nOUTER\n베이지 오버핏 가디건\n아침 15° 레이어\nTOP\n화이트 린넨 티셔츠\n낮 26° 통기성\nBOTTOM\n슬레이트 슬림 슬랙스\n바람 약함\nSHOES\n화이트 로우 스니커즈\n노면 건조\n15°→26°\n비 없음\n출근·외출\n추위 민감 +1\nDETAIL\n변경한 코디는 코디 탭에 바로 반영돼요\nC1 복귀\n재추천\n기본\n저장\n저장 전\n공유\n대기\nRECOMMEND\n더 포멀한 조합으로 바꿀 수 있음\n대화형 추천은 필요할 때만 열어 쓰는 보조 액션으로 둠.\n포멀하게\n대화형 재추천\n열기\n코디 저장\n공유\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C4 코디 상세 · 대화형 재추천",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "G1",
+      "file": "design-qa-screenshots/light-G1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nG1 · 출발 메인 (목적지 목록) · HYBRID CHROME\n9:41\n●●● 5G\n출발\n＋\n오늘 준비\n알아서 챙기는 중\n알림 0/2\n날씨 비교\n출발 08:10\n신발·우산\n목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요\n회사— 판교\n준비\n21°\n19°\n−2°\n출발 08:30\n도착 09:00\n바람 강함 주의\n학교— 신촌\n준비\n21°\n21°\n±0°\n출발 09:00\n도착 09:45\n날씨 차이 없음\n＋\n목적지 추가\n여행 플래너\nPremium\n여행지 일정별 날씨 + 짐 추천\n홈\n코디\n출발\nMY\n소셜\nWeatherON · G1 출발 메인",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "G2",
+      "file": "design-qa-screenshots/light-G2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nG2 · 날씨 비교 · 출발시간 역산 · HYBRID CHROME\n9:41\n●●● 5G\n회사 — 판교\n목적지 기준 알림 미리보기\n알아서 챙기기\n목적지를 켜면 출발지와 목적지 날씨를 비교해 출발·신발·우산 알림이 자동으로 조정돼요\n알아서 챙기기\n알림 저장과 동기화를 위해 계정 연결이 필요함\n계정 필요\n날씨 비교\n기온\n21°\n19°\n날씨\n맑음\n흐림\n출발지\n서울 삼성동\n판교\n강수\n0%\n30%\n출발시간 역산\n도착 희망 09:00\n− 소요시간 40분 − 여유 10분\n08:10\n출발\n목적지 알림 흐름\n07:30\n외출 준비 통합 알림\n08:00\n신발 추천 — 출발 10분 전\n08:10\n출발 시각 알림\n계정 연결하고 케어 켜기\n홈\n코디\n출발\nMY\n소셜\nWeatherON · G2 날씨 비교 · 출발시간 역산",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "P3",
+      "file": "design-qa-screenshots/light-P3.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nP3 · 목적지 탭 · 카테고리 필터 · HYBRID CHROME\n9:41\n●●● 5G\n목적지\n저장한 목적지별 알림과 준비 가이드\n전체\n스포츠\n아웃도어\n계절\n문화\n준비 가이드\n카테고리별 날씨 변수와 코디·신발·준비물을 목적지 카드에서 바로 확인해요\n목적지 알림\n저장한 목적지별 준비 알림을 보여줌\n3곳\n추가\n잠실종합운동장\n경기 취소 확률 12% · 쿨링룩 추천\n북한산국립공원\n정상 낙뢰 위험 · 오전 하산 권장\n해운대해수욕장\n파도 보통 · 래시가드 추천\n홈\n코디\n출발\nMY\n소셜\nWeatherON · P3 목적지 탭 · 카테고리 필터",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Light",
+      "id": "M2",
+      "file": "design-qa-screenshots/light-M2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nM2 · 스마트 알림 설정 · HYBRID CHROME\n9:41\n●●● 5G\n스마트 알림 설정\n기본은 자동, 필요한 경우만 세부 조정\n알아서 챙기기\n알림 권한 확인 필요\n기기 알림 권한을 켜면 준비 알림이 자동 적용됨\n권한 필요\n대기 중\n하루 최대 3건\n알림 권한 확인 필요\n권한이 꺼지면 모든 알림이 중단됨\n권한 관리\n목적지 알림 조건\n알림 권한이 꺼지면 목적지 알림을 받을 수 없음\n계정 연결\n적용 중인 알림\n필수 날씨\n권한 필요\n권한 확인 전까지 앱 안에서만 확인\n생활 루틴\n권한 필요\n권한 확인 후 출근·외출 준비 알림 적용\n목적지·여행\n권한 필요\n권한 확인 후 목적지 알림 적용\n고급 설정\n알아서 챙기기 켬 · 권한 확인 필요 · 세부 조정 5/5 적용\n처음 2~3번만 기준을 잡으면 이후에는 상황에 맞춰 자동 보정됨.\n홈\n코디\n출발\nMY\n소셜\nWeatherON · M2 스마트 알림 설정",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "A1",
+      "file": "design-qa-screenshots/dark-A1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nA1 · 스플래시 · GUEST HOME ENTRY\n9:41\n●●● 5G\nweather\nN\n오늘 입을 옷과 나갈 시간을\n빠르게 정해드려요\n바로 시작하기\n계정 없이 먼저 확인할 수 있어요\n언어는 기기 설정을 따릅니다\nWeatherON · A1 스플래시",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "H1",
+      "file": "design-qa-screenshots/dark-H1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\n\nWEATHERON · H1 홈 메인 · HYBRID CHROME (구조적 CHROME만 NAVY 토큰으로 채택)\n\n9:41\n게스트 · 한국어\n서울 마포구 합정동\n▾\n22°\n맑음\n체감 21° · 최고 26° · 최저 15°\n65%\n2.3m/s\nUV 3\n0mm\n게스트 열람\n저장만 제한\n위치\n정상\n알림\n설정 전\nAI 장소 추천\n오늘 이 날씨엔 합정동 카페 어때요?\n맑음 · 기온 22°C · 목적지 가이드 보기 →\n코디 추천\n아침엔 가디건, 낮엔 티셔츠\n옷장 4개 매칭 · 15°→26° →\nOUT\nTOP\nBTM\nSHO\nON\nA2 계정 연결 트리거\n연결하면 저장하고 이어서 볼 수 있어요\n날씨·코디 추천은 게스트로 계속 이용 가능\n코디 저장\n알림 추가\n여행 저장\n연결\n지금 날씨 제보하기\n홈\n코디\n출발\nMY\n소셜\n\nHybrid Chrome · Navy 브랜드 토큰 · WeatherON Design System",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "O2",
+      "file": "design-qa-screenshots/dark-O2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nO2 · 온보딩 기능 소개 · HYBRID CHROME\n9:41\n●●● 5G\n기능 소개 건너뛰기\n날씨 보고,\n입고, 나가세요\n코디·우산·신발·출발 알림까지 한 번에 준비해요\n코디 추천\n날씨에 맞는 오늘 옷\n우산 추천\n비 오는 시간에 맞는 우산\n신발 추천\n노면과 코디에 맞는 신발\n출발 알림\n나갈 시간을 놓치지 않게\n카드를 누르면 기능별로 더 자세히 볼 수 있어요\n추천 기준 설정하기\n다음 단계에서 권한과 추천 기준을 설정해요\nWeatherON · O2 온보딩 기능 소개",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "O6",
+      "file": "design-qa-screenshots/dark-O6.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nO6 · 목적지 등록(선택) · HYBRID CHROME\n9:41\n●●● 5G\n3 / 3\n자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요\n목적지는 선택이에요. 등록하면 날씨·출발·신발 알림을 이동 상황에 맞춰 받아볼 수 있어요\n목적지 날씨 비교\n출발 시각\n신발·우산 알림\n추천 라벨\n회사\n학교\n공항\n숙소\n목적지를 선택하면 더 정확하게 시작할 수 있어요\n목적지 등록하고 시작\n나중에 할게요\nWeatherON · O6 목적지 등록(선택)",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "C1",
+      "file": "design-qa-screenshots/dark-C1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC1 · 코디 메인 (AI 추천) · HYBRID CHROME\n9:41\n●●● 5G\n코디\n21° 맑음 · 일교차 11° 기준 추천\nRECOMMENDATION\n기본 날씨 기준 추천\n기준 수정\n옷장\n4개 매칭\n스타일\n미니멀\n저장\n계정 필요\n오늘 입을 세트\nWARDROBE 4/42\nOUTER\n오버핏 가디건\n아침 15° 대응\nTOP\n린넨 티셔츠\n낮 26° 대응\nBOTTOM\n슬림 슬랙스\n바람 2.3m/s\nSHOES\n로우 스니커즈\n비 없음\n15°→26°\n비 없음\n옷장 4개\n92% 매칭\n오늘의 판단\nNO RAIN\n가디건은 챙기고, 낮엔 티셔츠로 충분해요\n08시 15°는 쌀쌀하고, 14시 26°부터는 더워져요.\n08시 가디건 ON\n14시 이너 OK\n추위 민감 +1\n상세 보기\n셔플\n내 옷장 관리\n42벌 등록됨\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C1 코디 메인",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "C2",
+      "file": "design-qa-screenshots/dark-C2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC2 · 내 옷장 · HYBRID CHROME\n9:41\n●●● 5G\n내 옷장\n＋\n전체\n상의\n하의\n아우터\n신발\n액세서리\nWARDROBE\n옷장 확인 가능 · 저장 시 계정 연결\nVIEW\n추천으로 복귀\n옷 추가\n화이트 린넨 티셔츠\n스트라이프 셔츠\n베이지 가디건\n슬레이트 슬랙스\n데님 팬츠\n라이트 트렌치\n화이트 스니커즈\n첼시 부츠\n＋\n추가\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C2 내 옷장",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "C3",
+      "file": "design-qa-screenshots/dark-C3.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC3 · 아이템 추가 · HYBRID CHROME\n9:41\n●●● 5G\n아이템 추가\nWARDROBE ADD\n베이지 가디건 선택됨\n준비\n프리셋 선택\n사진으로 등록\n아이템\n전체\n아우터\n상의\n하의\n신발\n액세서리\n계절\n전체\n봄가을\n여름\n겨울\n목적\n전체\n비\n바람\n출근\n여행\nSELECTED\n베이지 가디건\n봄가을 · 출근 · 바람 · 아침 쌀쌀\n프리셋 18개\n더 보기\n베이지 가디건\n아우터 · 아침 쌀쌀\n라이트 트렌치\n아우터 · 바람 보통\n라이트 바람막이\n아우터 · 가벼운 비\n집업 후디\n아우터 · 일교차\n화이트 린넨 티셔츠\n상의 · 낮 더움\n스트라이프 셔츠\n상의 · 실내 단독\n라이트 니트\n상의 · 쌀쌀함\n쿨링 티셔츠\n상의 · 자외선 높음\n슬레이트 슬랙스\n하의 · 바람 약함\n내 옷장에 추가\nWeatherON · C3 아이템 추가",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "C4",
+      "file": "design-qa-screenshots/dark-C4.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nC4 · 코디 상세 · 대화형 재추천 · HYBRID CHROME\n9:41\n●●● 5G\n코디 상세\nOUTFIT\n아침엔 가디건, 낮엔 린넨 티셔츠\n92%\n08:00\n가디건 ON\n14:00\n티셔츠 단독\n18:00\n그대로 OK\nOUTER\n베이지 오버핏 가디건\n아침 15° 레이어\nTOP\n화이트 린넨 티셔츠\n낮 26° 통기성\nBOTTOM\n슬레이트 슬림 슬랙스\n바람 약함\nSHOES\n화이트 로우 스니커즈\n노면 건조\n15°→26°\n비 없음\n출근·외출\n추위 민감 +1\nDETAIL\n변경한 코디는 코디 탭에 바로 반영돼요\nC1 복귀\n재추천\n기본\n저장\n저장 전\n공유\n대기\nRECOMMEND\n더 포멀한 조합으로 바꿀 수 있음\n대화형 추천은 필요할 때만 열어 쓰는 보조 액션으로 둠.\n포멀하게\n대화형 재추천\n열기\n코디 저장\n공유\n홈\n코디\n출발\nMY\n소셜\nWeatherON · C4 코디 상세 · 대화형 재추천",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "G1",
+      "file": "design-qa-screenshots/dark-G1.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nG1 · 출발 메인 (목적지 목록) · HYBRID CHROME\n9:41\n●●● 5G\n출발\n＋\n오늘 준비\n알아서 챙기는 중\n알림 0/2\n날씨 비교\n출발 08:10\n신발·우산\n목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요\n회사— 판교\n준비\n21°\n19°\n−2°\n출발 08:30\n도착 09:00\n바람 강함 주의\n학교— 신촌\n준비\n21°\n21°\n±0°\n출발 09:00\n도착 09:45\n날씨 차이 없음\n＋\n목적지 추가\n여행 플래너\nPremium\n여행지 일정별 날씨 + 짐 추천\n홈\n코디\n출발\nMY\n소셜\nWeatherON · G1 출발 메인",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "G2",
+      "file": "design-qa-screenshots/dark-G2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nG2 · 날씨 비교 · 출발시간 역산 · HYBRID CHROME\n9:41\n●●● 5G\n회사 — 판교\n목적지 기준 알림 미리보기\n알아서 챙기기\n목적지를 켜면 출발지와 목적지 날씨를 비교해 출발·신발·우산 알림이 자동으로 조정돼요\n알아서 챙기기\n알림 저장과 동기화를 위해 계정 연결이 필요함\n계정 필요\n날씨 비교\n기온\n21°\n19°\n날씨\n맑음\n흐림\n출발지\n서울 삼성동\n판교\n강수\n0%\n30%\n출발시간 역산\n도착 희망 09:00\n− 소요시간 40분 − 여유 10분\n08:10\n출발\n목적지 알림 흐름\n07:30\n외출 준비 통합 알림\n08:00\n신발 추천 — 출발 10분 전\n08:10\n출발 시각 알림\n계정 연결하고 케어 켜기\n홈\n코디\n출발\nMY\n소셜\nWeatherON · G2 날씨 비교 · 출발시간 역산",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "P3",
+      "file": "design-qa-screenshots/dark-P3.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nP3 · 목적지 탭 · 카테고리 필터 · HYBRID CHROME\n9:41\n●●● 5G\n목적지\n저장한 목적지별 알림과 준비 가이드\n전체\n스포츠\n아웃도어\n계절\n문화\n준비 가이드\n카테고리별 날씨 변수와 코디·신발·준비물을 목적지 카드에서 바로 확인해요\n목적지 알림\n저장한 목적지별 준비 알림을 보여줌\n3곳\n추가\n잠실종합운동장\n경기 취소 확률 12% · 쿨링룩 추천\n북한산국립공원\n정상 낙뢰 위험 · 오전 하산 권장\n해운대해수욕장\n파도 보통 · 래시가드 추천\n홈\n코디\n출발\nMY\n소셜\nWeatherON · P3 목적지 탭 · 카테고리 필터",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    },
+    {
+      "theme": "Dark",
+      "id": "M2",
+      "file": "design-qa-screenshots/dark-M2.png",
+      "metrics": {
+        "bodyText": "WeatherON\nMockups\nLight\nDark\nA1\n스플래시\nH1\n게스트 홈\nA2\n계정 연결\nA3\n약관 동의\nC1\n코디 메인\nC2\n내 옷장\nC3\n옷 등록\nC4\n코디 상세\nH2\n위치 변경\nH3\n알림 사이드바\nH4\n우산 추천\nH5\n강수 타임라인\nO1\n스플래시\nO2\n기능 소개\nO3\n권한 요청\nO4\n스타일 태그\nO5\n알림 시간\nO6\n목적지 등록\nG1\n출발 메인\nG2\n목적지 알림\nG3\n여행 플래너\nG4\n도보여행\nG5\nAI 종주\nG6\n프리미엄\nP1\n목적지 추가\nP2\n준비 가이드\nP3\n목적지 필터\nM1\nMY 메인\nM2\n알림 설정\nM3\n전역 설정\nA4\n계정 관리\nR1\n정책 허브\nR2\n개인정보\nR3\n광고 동의\nR4\n광고 배치\nW1\n날씨 제보 홈\nW2\n날씨 제보\nW3\n제보 완료\nW4\n제보 이력\nS0\nON Square 시작\nS1\n내 ON Square\nS2\nWeather Note\nS3\n날씨 리액션\nM2 · 스마트 알림 설정 · HYBRID CHROME\n9:41\n●●● 5G\n스마트 알림 설정\n기본은 자동, 필요한 경우만 세부 조정\n알아서 챙기기\n알림 권한 확인 필요\n기기 알림 권한을 켜면 준비 알림이 자동 적용됨\n권한 필요\n대기 중\n하루 최대 3건\n알림 권한 확인 필요\n권한이 꺼지면 모든 알림이 중단됨\n권한 관리\n목적지 알림 조건\n알림 권한이 꺼지면 목적지 알림을 받을 수 없음\n계정 연결\n적용 중인 알림\n필수 날씨\n권한 필요\n권한 확인 전까지 앱 안에서만 확인\n생활 루틴\n권한 필요\n권한 확인 후 출근·외출 준비 알림 적용\n목적지·여행\n권한 필요\n권한 확인 후 목적지 알림 적용\n고급 설정\n알아서 챙기기 켬 · 권한 확인 필요 · 세부 조정 5/5 적용\n처음 2~3번만 기준을 잡으면 이후에는 상황에 맞춰 자동 보정됨.\n홈\n코디\n출발\nMY\n소셜\nWeatherON · M2 스마트 알림 설정",
+        "phone": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 900
+        },
+        "scroll": {
+          "bodyH": 900,
+          "bodyW": 1280,
+          "innerH": 900,
+          "innerW": 1280
+        }
+      }
+    }
+  ],
+  "logs": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    }
+  ]
+}

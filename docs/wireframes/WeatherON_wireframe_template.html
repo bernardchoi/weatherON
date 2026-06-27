@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherON — 화면 와이어프레임 (Lo-Fi)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#f2f2f2;color:#333;line-height:1.5;}
+
+  /* 헤더 */
+  .hero{background:#fff;border-bottom:2px solid #333;padding:36px 40px;}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.5px;}
+  .hero h1 small{font-weight:400;color:#888;font-size:14px;margin-left:10px;}
+  .hero p{font-size:13px;color:#777;margin-top:6px;max-width:760px;}
+  .legend{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;font-size:11.5px;color:#666;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .lg-box{width:22px;height:14px;background:#e4e4e4;border:1px solid #bbb;}
+  .lg-img{width:22px;height:14px;border:1px solid #bbb;background:
+    linear-gradient(to top right,transparent 47%,#bbb 48%,#bbb 52%,transparent 53%),
+    linear-gradient(to bottom right,transparent 47%,#bbb 48%,#bbb 52%,transparent 53%),#f6f6f6;}
+  .lg-btn{width:22px;height:14px;background:#333;border-radius:3px;}
+  .lg-dash{width:22px;height:14px;border:1.5px dashed #999;background:#fff;}
+
+  /* 섹션 */
+  .wrap{max-width:1480px;margin:0 auto;padding:0 32px 80px;}
+  .sec{margin-top:56px;}
+  .sec-tag{display:inline-block;background:#333;color:#fff;font-size:11px;font-weight:700;letter-spacing:.12em;padding:4px 12px;border-radius:4px;}
+  .sec h2{font-size:19px;font-weight:700;margin:10px 0 4px;}
+  .sec .sec-desc{font-size:12.5px;color:#777;margin-bottom:22px;max-width:820px;}
+  .row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;}
+
+  /* 폰 프레임 */
+  .cell{width:268px;}
+  .phone{width:268px;min-height:560px;background:#fff;border:2px solid #333;border-radius:22px;padding:12px 12px 0;display:flex;flex-direction:column;overflow:hidden;}
+  .status{display:flex;justify-content:space-between;font-size:9px;color:#999;padding:0 4px 8px;}
+  .screen{flex:1;display:flex;flex-direction:column;gap:8px;padding-bottom:12px;}
+  .note{margin-top:10px;}
+  .note .nid{font-size:11px;font-weight:800;color:#fff;background:#666;border-radius:3px;padding:1px 7px;margin-right:6px;}
+  .note .nname{font-size:13px;font-weight:700;}
+  .note ul{margin:6px 0 0 4px;list-style:none;}
+  .note li{font-size:11px;color:#777;padding-left:10px;position:relative;margin-bottom:2px;}
+  .note li::before{content:'·';position:absolute;left:0;}
+
+  /* 공통 컴포넌트 */
+  .box{background:#e4e4e4;border:1px solid #ccc;border-radius:6px;padding:8px 10px;font-size:10.5px;color:#555;}
+  .box .t{font-weight:700;font-size:11px;color:#444;display:block;}
+  .dash{border:1.5px dashed #aaa;border-radius:6px;padding:8px 10px;font-size:10.5px;color:#888;background:#fff;}
+  .img{border:1px solid #bbb;border-radius:6px;background:
+    linear-gradient(to top right,transparent 48.5%,#ccc 49%,#ccc 51%,transparent 51.5%),
+    linear-gradient(to bottom right,transparent 48.5%,#ccc 49%,#ccc 51%,transparent 51.5%),#f6f6f6;
+    display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;}
+  .btn{background:#333;color:#fff;border-radius:8px;text-align:center;font-size:12px;font-weight:700;padding:11px;}
+  .btn-ghost{background:#fff;color:#555;border:1px solid #aaa;border-radius:8px;text-align:center;font-size:12px;padding:10px;}
+  .navbar{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:#444;padding:2px 2px 4px;}
+  .navbar .ic{width:20px;height:20px;border:1px solid #aaa;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888;font-weight:400;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{border:1px solid #999;border-radius:999px;font-size:10px;color:#666;padding:4px 10px;background:#fff;}
+  .chip.on{background:#555;color:#fff;border-color:#555;}
+  .lrow{display:flex;align-items:center;gap:8px;}
+  .lrow .grow{flex:1;}
+  .field{border:1px solid #aaa;border-radius:8px;padding:9px 10px;font-size:11px;color:#999;background:#fff;}
+  .seg{display:flex;border:1px solid #999;border-radius:8px;overflow:hidden;font-size:10.5px;text-align:center;}
+  .seg div{flex:1;padding:7px 0;color:#777;background:#fff;}
+  .seg div.on{background:#555;color:#fff;font-weight:700;}
+  .toggle{width:34px;height:18px;border-radius:999px;background:#bbb;position:relative;flex:none;}
+  .toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;right:2px;}
+  .toggle.off{background:#e0e0e0;}
+  .toggle.off::after{right:auto;left:2px;}
+  .chk{width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;flex:none;position:relative;background:#fff;}
+  .chk.on{background:#555;border-color:#555;}
+  .chk.on::after{content:'✓';position:absolute;top:-3px;left:1.5px;color:#fff;font-size:10px;font-weight:700;}
+  .arr{color:#bbb;margin-left:auto;}
+  .tag{font-size:9.5px;color:#999;}
+  .listitem{display:flex;align-items:center;gap:8px;border-bottom:1px solid #e8e8e8;padding:9px 2px;font-size:11px;color:#555;}
+  .listitem:last-child{border-bottom:none;}
+  .listitem .arr{margin-left:auto;color:#bbb;}
+  .bars{display:flex;align-items:flex-end;gap:4px;height:64px;border-bottom:1px solid #ccc;padding:0 4px;}
+  .bars i{flex:1;background:#d4d4d4;border:1px solid #c0c0c0;border-bottom:none;}
+  .small{font-size:9.5px;color:#999;}
+  .dots{text-align:center;font-size:9px;color:#bbb;letter-spacing:3px;}
+
+  /* 하단 탭바 */
+  .tabbar{display:flex;border-top:2px solid #333;margin:auto -12px 0;background:#fafafa;}
+  .tabbar div{flex:1;text-align:center;font-size:10px;color:#999;padding:9px 0 11px;}
+  .tabbar div b{display:block;width:18px;height:18px;border:1.5px solid #bbb;border-radius:5px;margin:0 auto 3px;}
+  .tabbar div.on{color:#222;font-weight:700;}
+  .tabbar div.on b{border-color:#222;background:#ddd;}
+
+  /* 모달 / 사이드 표현 */
+  .dim{background:#ececec;border-radius:10px;padding:8px;border:1px solid #ddd;}
+  .sheet{background:#fff;border:2px solid #333;border-radius:14px 14px 0 0;padding:12px;margin:auto -12px 0;}
+  .flow-arrow{font-size:11px;color:#999;align-self:center;padding:0 2px;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>WeatherON 화면 와이어프레임 <small>Lo-Fi · v1 · 2026.06 · UIUX_플로우차트.mmd 기반</small></h1>
+  <p>기기 언어 자동 적용 → 스플래시 → Guest 홈 우선 진입 → 계정 필요 기능에서 로그인 요청 → 홈 / 코디 / 출발 / MY / 소셜(ON Square) 5탭 전체 플로우. AUTH는 첫 관문이 아니라 저장·동기화·알림 확장·여행 플래너 등 계정 필요 기능의 보조 플로우로 동작한다. 로그인 수단은 한국/일본/일반 해외 3권역 기준으로 자동 추천하되, 현재 여행 위치보다 스토어 국가·SIM 국가·OS 지역·기기 언어 등 계정 환경 신호를 우선한다. 국가 선택을 가입 관문으로 만들지 않는다. 중국권 등 특수 인증·네트워크 환경 국가는 1차 범위에서 제외한다. PLACE·ADMOB은 출발·홈·MY·AUTH·온보딩에 부속되는 상세 확장 화면. 구조·정보 위계 검토용 로우파이 단계로, 컬러·그래픽은 CI/BI 가이드 적용 전 상태. MVP 기능 개발 기준은 docs/planning/WeatherON_MVP_기능_PRD.md, 기술 구현 기준은 docs/architecture/WeatherON_MVP_기술_ADR.md를 따른다.</p>
+  <p>목업 프리뷰 상태 기준: 로그인·권한·위치·프리미엄처럼 앱 전역에 남아야 하는 값은 Session State(accountLinked/permissionReady/locationReady/premiumActive)로 유지하고, 스타일 기준·핏·연령대·위치 관리 완료·스마트 알림 세부 토글처럼 설정에 남아야 하는 값은 Settings State(styleProfileSaved/selectedStyles/fit/age/locationManaged/smartCareEnabled/alertAdvancedOpen/rainDetail/routineAlert/bedtimeAlert/destinationAlert/quietHours)로 유지한다. 선택 목적지·코디 조합·복귀 액션처럼 특정 흐름에 필요한 값은 Route State로 전달한다. Session/Settings State 키는 전역값을 우선 적용해 오래된 화면 컨텍스트가 로그인·권한·구독·설정 완료 상태를 되돌리지 않게 한다. 따라서 A2/A3, O3, G6, O4, H2, M2를 거친 뒤 사이드바나 하단 탭으로 다른 화면에 이동해도 전역/설정 상태가 끊기지 않아야 한다.</p>
+  <div class="legend">
+    <span><i class="lg-box"></i> 콘텐츠 블록</span>
+    <span><i class="lg-img"></i> 이미지 영역</span>
+    <span><i class="lg-btn"></i> 주요 버튼(CTA)</span>
+    <span><i class="lg-dash"></i> 조건부 노출 요소</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ════════ 0. AUTH ════════ -->
+  <div class="sec">
+    <span class="sec-tag">00 · AUTH</span>
+    <h2>스플래시 & 계정 연결 — Guest 홈 우선 플로우</h2>
+    <p class="sec-desc">앱 최초 진입은 기기 언어를 자동 적용한 뒤 A1 스플래시 후 H1 홈(Guest)으로 바로 진행한다. A2 추천 로그인 방법(한국: 카카오·네이버, 일본: LINE, 일반 해외: Google·Apple·이메일 코드)은 저장·동기화·알림 확장·여행 플래너·프리미엄 등 계정 필요 기능을 탭했을 때 호출한다. 구체적 트리거는 계정 연결, 코디 저장, 옷장 저장, 장소 저장, 알림 추가, 여행 저장, 프리미엄 진입, Weather Note 작성, 날씨 제보 저장이다. 지역은 계정 환경 신호로 자동 추정하고, 국가/지역 선택 버튼은 계정 연결 화면에 노출하지 않는다. 계정 관리(A4)는 M1 MY 프로필 편집에서 진입한다. WeatherON_planning_v5.html 16-1 기준.</p>
+    <div class="row">
+
+      <!-- A1 스플래시 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen" style="justify-content:center;align-items:center;gap:14px;text-align:center;">
+            <div class="img" style="width:96px;height:96px;border-radius:22px;">로고마크</div>
+            <div style="font-size:22px;font-weight:300;color:#444;">weather<b style="font-weight:800;">ON</b></div>
+            <div class="small">오늘 뭐 입고, 언제 나갈지<br>5초 안에 결정해드려요</div>
+            <div style="margin-top:auto;"></div>
+            <div class="chip">기기 언어 자동 적용</div>
+            <div class="dash" style="width:100%;">자동으로 H1 홈(Guest) 진입</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">A1</span><span class="nname">스플래시</span>
+          <ul><li>신규 사용자도 가입 선택 없이 H1 홈(Guest)으로 자동 진입</li><li>목업에서는 자동 진입 의도를 검증할 수 있도록 홈으로 이동 액션 제공</li><li>UI 언어는 기기 언어를 기본 적용, 설정에서 수동 변경 가능</li><li>브랜드 로고/워드마크 1회 노출 후 홈에서 가치 경험</li><li>A2는 첫 화면이 아니라 계정 필요 기능 탭 시 호출</li><li>A4 로그아웃/탈퇴 확정 후에는 accountLinked/premiumActive를 해제하고 H1 Guest 홈으로 복귀</li></ul>
+        </div>
+      </div>
+
+      <!-- A2 계정 연결 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>계정 연결</span><span></span></div>
+            <div class="box" style="text-align:center;">
+              <span class="t">저장하려면 로그인이 필요해요</span>
+              현재 추천은 계속 이용 가능
+            </div>
+            <div class="small" style="text-align:center;margin-top:4px;">추천 로그인 방법</div>
+            <div class="small" style="text-align:center;margin-top:4px;">자동 추천된 방법을 먼저 보여줌</div>
+            <div class="btn-ghost">LINE으로 시작하기</div>
+            <div class="btn-ghost">Apple로 계속하기</div>
+            <div class="btn-ghost">다른 방법 보기</div>
+            <div class="btn-ghost">나중에 할래요</div>
+            <div style="margin-top:auto;"></div>
+            <div class="small" style="text-align:center;color:#bbb;display:block;">최초 계정 연결 시 다음 단계에서<br>약관 동의를 진행합니다</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">A2</span><span class="nname">계정 연결</span>
+          <ul><li>A2 실제 앱 화면은 계정 연결 이유, 자동 추천 로그인 1~2개, 다른 방법 보기, 나중에 하기, 약관 안내만 노출</li><li>국가/지역 자동추천은 유지하되 선택·변경 버튼은 노출하지 않고, 권역 자동 추정은 내부 추천 로직으로 사용</li><li>자동추천 우선순위는 스토어 국가, SIM/전화 국가, OS 지역, 기기 언어, 타임존, 현재 위치 순서로 판단해 여행 위치가 계정 환경을 덮어쓰지 않게 함</li><li>예: 일본어 기기·일본 스토어 사용자가 한국 여행 중 가입하면 현재 위치가 한국이어도 LINE/Apple/Google을 우선 추천</li><li>AUTH STATE, 호출 액션, 저장 대기, 약관 필요, Guest 유지 같은 검증용 정보는 문서/프리뷰 상태 설계에만 유지하고 실제 앱 UI에는 노출하지 않음</li><li>호출 액션은 계정 연결/코디 저장/옷장 저장/장소 저장/알림 추가/여행 저장/프리미엄 진입/Weather Note 작성/날씨 제보 저장 중 하나로 Route State에 유지하고 A3 완료 후 복귀 기준으로 사용</li><li>프리미엄 진입은 A3 완료 후 원래 화면에만 복귀하지 않고 G6 페이월로 이어진 뒤 returnTo 화면으로 돌아온다</li><li>한국: 카카오·네이버 우선 / 일본: LINE 우선 / 일반 해외: Google·Apple·이메일 코드</li><li>로그인 수단 선택 → A3 약관 동의, 뒤로/나중에/Guest 유지는 returnTo가 있으면 원래 화면 상태로 복귀하고 일반 진입이면 H1 Guest 홈 복귀</li><li>iOS는 Apple 로그인 제공 유지, 최초 로그인 시 → A3 약관 동의</li><li>호출 트리거: 계정 연결, 코디 저장, 옷장 저장, 장소 저장, 알림 추가, 여행 저장, 프리미엄 진입, Weather Note 작성, 날씨 제보 저장</li></ul>
+        </div>
+      </div>
+
+      <!-- A3 약관 동의 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>약관 동의</span><span></span></div>
+            <div style="font-size:14px;font-weight:700;text-align:center;margin:4px 0 6px;">서비스 이용을 위해<br>약관에 동의해주세요</div>
+            <div class="dash"><span class="t">AGREEMENT STATE</span>필수 완료/대기 · 선택 ON/OFF · 복귀 예정: 옷장 저장<br><span class="small">returnTo가 있으면 원래 액션으로 복귀</span></div>
+            <div class="lrow box" style="font-weight:700;"><span class="chk on"></span><span>전체 동의</span></div>
+            <div class="lrow"><span class="chk on"></span><span class="small">[필수]</span><span class="grow small" style="color:#555;">만 14세 이상입니다</span></div>
+            <div class="lrow"><span class="chk on"></span><span class="small">[필수]</span><span class="grow small" style="color:#555;">이용약관 동의</span><span class="arr">›</span></div>
+            <div class="lrow"><span class="chk on"></span><span class="small">[필수]</span><span class="grow small" style="color:#555;">개인정보 수집·이용 동의</span><span class="arr">›</span></div>
+            <div class="lrow"><span class="chk on"></span><span class="small">[필수]</span><span class="grow small" style="color:#555;">위치기반서비스 이용약관</span><span class="arr">›</span></div>
+            <div class="lrow"><span class="chk"></span><span class="small">[선택]</span><span class="grow small" style="color:#555;">마케팅 정보 수신 동의</span></div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">동의하고 옷장 저장 계속</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">A3</span><span class="nname">약관 동의</span>
+          <ul><li>AGREEMENT STATE 카드에서 필수 완료/대기, 선택 ON/OFF, 원래 액션 복귀 예정 상태 표시</li><li>필수 항목 미동의 시 진행 불가</li><li>뒤로가기 → A2 계정 연결로 복귀</li><li>항목 탭 → 전체 내용 인앱 페이지로 열림 (4종 약관 본문은 WeatherON_약관_정책.md 참고, R2와 동일 문서)</li><li>선택 항목은 가입 후 A4에서 변경 가능</li><li>동의하고 계속하기 → A2가 전달한 returnTo/선택 데이터를 유지해 원래 계정 필요 기능으로 복귀</li><li>일반 계정 연결 경로에서도 accountLinked를 Session State에 남기고 H1로 복귀</li></ul>
+        </div>
+      </div>
+
+      <!-- A4 마이페이지 · 계정 관리 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>마이페이지</span><span></span></div>
+            <div class="lrow box" style="padding:12px 10px;">
+              <div class="img" style="width:36px;height:36px;border-radius:50%;">👤</div>
+              <div class="grow"><b style="font-size:12px;color:#444;">카카오 계정으로 로그인됨</b><br><span class="small">da***@kakao.com</span></div>
+            </div>
+            <div class="listitem">⭐ 구독 관리<span class="arr">›</span></div>
+            <div class="listitem">🔗 연결된 계정 관리<span class="arr">›</span></div>
+            <div class="listitem">📤 데이터 내보내기<span class="arr">›</span></div>
+            <div class="dash"><span class="t">ACCOUNT STATE</span>연결 계정 · 데이터 내보내기 · 위험 액션 확인</div>
+            <div class="listitem">로그아웃<span class="arr">›</span></div>
+            <div class="listitem" style="font-weight:700;">회원 탈퇴<span class="arr">›</span></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">A4</span><span class="nname">마이페이지 · 계정 관리</span>
+          <ul><li>M1 프로필 편집에서 진입, 뒤로가기 → M1 복귀</li><li>A4는 계정 전용 화면으로 유지하고 알림 설정(M2), 스타일 태그 설정(O4)은 M1 설정 허브에서만 진입한다</li><li>ACCOUNT STATE에서 연결 계정, 구독 활성, 데이터 내보내기, 위험 액션 확인 상태 표시</li><li>구독 관리 → G6, 구독 완료 후 returnTo=A4로 돌아와 프리미엄 구독 활성 상태 표시</li><li>로그아웃은 확인 상태를 거쳐 accountLinked/premiumActive를 Session State에서 해제하고 H1 Guest 홈으로 복귀</li><li>로그아웃/탈퇴 확정 후 Saved Destination List와 Destination Care State 같은 계정 기반 프리뷰 데이터도 비워 Guest 상태와 충돌하지 않게 한다</li><li>회원 탈퇴 시 즉시 전체 데이터 삭제 (GDPR·개인정보보호법 준수) 후 accountLinked/premiumActive 해제</li><li>연결된 소셜 계정·로그인 기기 목록 관리 제공</li><li>"회원 탈퇴"는 위험 액션 — 확인 대기 상태를 먼저 표시</li></ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 화면 흐름 · 신규 사용자 -->
+    <div class="row" style="margin-top:20px;align-items:stretch;">
+      <div class="box" style="flex:1;text-align:center;"><span class="t">① 언어 적용</span>기기 언어 자동 감지</div>
+      <div class="flow-arrow">→</div>
+      <div class="box" style="flex:1;text-align:center;"><span class="t">② 스플래시</span>브랜드 1회 노출</div>
+      <div class="flow-arrow">→</div>
+      <div class="box" style="flex:1;text-align:center;"><span class="t">③ 홈 진입</span>H1 게스트 모드</div>
+      <div class="flow-arrow">→</div>
+      <div class="box" style="flex:1;text-align:center;"><span class="t">④ 계정 필요 기능</span>코디/옷장/장소 저장 · 알림 추가 · 여행 저장</div>
+      <div class="flow-arrow">→</div>
+      <div class="box" style="flex:1;text-align:center;"><span class="t">⑤ 계정 연결</span>자동 추천 + 약관 동의</div>
+    </div>
+  </div>
+
+  <!-- ════════ 1. 온보딩 ════════ -->
+  <div class="sec">
+    <span class="sec-tag">01 · ONBOARDING</span>
+    <h2>온보딩 — 선택형 개인화 플로우</h2>
+    <p class="sec-desc">기본 신규 진입은 A1 → H1 Guest 홈 직행. 사용자가 개인화 온보딩을 선택하면 기능 소개 → 권한 2종 → 스타일 태그·코디 핏 기준·추천 연령대 → 스마트 알림 기준 → 목적지 등록(건너뛰기 가능) → 홈 복귀로 진행한다.</p>
+    <div class="row">
+
+      <!-- O1 스플래시 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen" style="justify-content:center;align-items:center;gap:14px;">
+            <div class="img" style="width:96px;height:96px;border-radius:22px;">로고마크</div>
+            <div style="font-size:20px;font-weight:300;color:#444;">weather<b style="font-weight:800;">ON</b></div>
+            <div class="small">오늘의 외출, 미리 준비하세요</div>
+            <div class="seg" style="width:80%;margin-top:18px;"><div class="on">온보딩 시작</div><div>홈으로</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O1</span><span class="nname">스플래시</span>
+          <ul><li>브랜드 모먼트 — 다크(Horizon) 배경 적용 예정</li><li>선택 온보딩을 시작할 때 사용. 기본 신규 진입은 A1 → H1 게스트 홈</li><li>프리뷰에서 O2 온보딩 시작 / H1 홈 분기를 노출</li></ul>
+        </div>
+      </div>
+
+      <!-- O2 기능 소개 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span></span><span style="font-weight:400;color:#999;font-size:11px;">기능 소개 건너뛰기</span></div>
+            <div class="img" style="height:120px;">O2 전용 일러스트 · 날씨+코디+우산+신발+출발 시나리오</div>
+            <div style="text-align:center;font-size:14px;font-weight:700;">날씨 보고, 입고, 나가세요</div>
+            <div class="small" style="text-align:center;">코디·우산·신발·출발 알림까지 한 번에 준비</div>
+            <div class="box"><span class="t">4대 기능 카드</span>코디 추천 · 우산 추천 · 신발 추천 · 출발 알림</div>
+            <div class="box"><span class="t">상세 소개</span>카드 탭 또는 다음 버튼 → 무엇/언제/설정 안내</div>
+            <div class="dots">● ○ ○ ○</div>
+            <div class="btn">추천 기준 설정하기</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O2</span><span class="nname">온보딩 소개</span>
+          <ul><li>첫 화면에서 4대 기능을 한눈에 비교</li><li>O2 일러스트는 현재 목업용으로 적합하나 최종본에서는 실제 앱 화면과 혼동되지 않도록 더 추상화</li><li>각 카드 탭 시 기능별 상세 화면으로 전환</li><li>추천 기준 설정하기와 건너뛰기는 모두 O3 권한 요청으로 이동</li><li>건너뛰기는 기능 소개만 생략하고 권한 요청(O3)은 진행</li></ul>
+        </div>
+      </div>
+
+      <!-- O3 권한 요청 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div style="font-size:15px;font-weight:700;margin-top:8px;">필요한 권한만 먼저 허용해 주세요</div>
+            <div class="small">알림 세부 설정은 다음 단계에서 간단히 정해요</div>
+            <div class="seg"><div class="on">권한 요청</div><div>거부 상태</div></div>
+            <div class="box" style="padding:12px 10px;"><span class="t">📍 위치 권한</span>현재 위치 날씨·출발지 파악<div class="btn" style="margin-top:8px;padding:8px;">위치 허용</div></div>
+            <div class="box" style="padding:12px 10px;"><span class="t">🔔 알림 권한</span>강수·특보·외출·여행·자기 전 확인<div class="btn" style="margin-top:8px;padding:8px;">알림 허용</div></div>
+            <div class="dash"><b>PERMISSION STATE</b><br>0/2~2/2 또는 거부 · 허용된 권한은 필요한 알림에 반영</div>
+            <div class="dash">거부 시 검색 위치·앱 내 안내 유지<br>M3 전역 설정 > 권한 관리에서 재요청</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn-ghost">제한 상태로 계속</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O3</span><span class="nname">권한 요청 (위치 → 알림)</span>
+          <ul><li>허용/거부와 관계없이 O4 추천 기준 설정으로 진행 가능</li><li>위치·알림을 허용하면 CTA는 추천 기준 설정하기로 전환</li><li>권한 상태 카드는 0/2~2/2와 거부 상태, 필요한 알림 반영 범위를 표시</li><li>일반 온보딩 경로와 returnTo 복귀 경로 모두 locationReady/permissionReady를 Session State에 남긴다</li><li>거부 상태에서도 검색 위치와 앱 내 안내는 유지, 푸시·현재 위치 자동화만 제한</li><li>알림 권한은 강수·기상특보·생활 루틴 알림의 시스템 게이트</li><li>거부 상태는 MY > 전역 설정에서 재요청(Z4)</li></ul>
+        </div>
+      </div>
+
+      <!-- O4 스타일 태그 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span class="small">1 / 3</span></div>
+            <div style="font-size:15px;font-weight:700;">코디 추천 기준을 골라주세요</div>
+            <div class="small">스타일은 복수 선택 · 핏/연령대는 추천 보정용</div>
+            <div class="chips" style="margin-top:6px;">
+              <span class="chip on">캐주얼</span><span class="chip">미니멀</span><span class="chip on">포멀</span>
+              <span class="chip">스트릿</span><span class="chip">로맨틱</span>
+            </div>
+            <div class="small" style="margin-top:10px;">코디 핏 기준</div>
+            <div class="chips"><span class="chip">남성</span><span class="chip">여성</span><span class="chip on">상관없음</span></div>
+            <div class="small" style="margin-top:10px;">추천 연령대</div>
+            <div class="chips"><span class="chip">10-20대</span><span class="chip on">20-30대</span><span class="chip">30-40대</span><span class="chip">40-50대</span><span class="chip">50+</span></div>
+            <div class="img" style="height:116px;margin-top:6px;">STYLE STATE · 선택 기준 미리보기 콜라주</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">다음</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O4</span><span class="nname">스타일 태그 선택</span>
+          <ul><li>스타일 5종 멀티 선택 · 최소 1개 필수</li><li>남성/여성/상관없음, 10-20대~50+ 단일 선택</li><li>STYLE STATE에서 태그 수·핏·연령대·READY/WAIT를 표시</li><li>온보딩 진입은 다음 → O5, 뒤로 → O3</li><li>M1/C1에서 설정 모드로 진입하면 저장 후 returnTo로 복귀하고 styleProfileSaved/selectedStyles/fit/age를 Settings State에 반영</li><li>성별 정보가 아니라 코디 핏 기준으로 저장 · MY에서 변경 가능</li></ul>
+        </div>
+      </div>
+
+      <!-- O5 스마트 알림 기준 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span class="small">2 / 3</span></div>
+            <div style="font-size:15px;font-weight:700;">알림이 알아서 챙기게 할까요?</div>
+            <div class="small">몇 가지만 고르면 상황에 맞춰 자동 발송</div>
+            <div class="dash"><b>알아서 챙기기</b><br>상황 선택 · 필수 날씨 ON · 목적지 확장 예정 상태 표시</div>
+            <div class="small" style="font-weight:700;color:#444;">주 사용 상황 1개 선택</div>
+            <div class="seg"><div class="on">출근</div><div>외출</div><div>여행</div></div>
+            <div class="box"><span class="t">자동 적용</span>필수 날씨 · 생활 루틴 · 목적지 알림을 상황별로 묶어 적용</div>
+            <div class="box"><span class="t">피로도 제어</span>하루 최대 3건 · 수면 시간대는 긴급 날씨만 허용</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">다음</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O5</span><span class="nname">스마트 알림 기준</span>
+          <ul><li>정확한 시간 피커나 알림별 토글 대신 주 사용 상황 1개만 선택</li><li>알아서 챙기기 상태 칩으로 상황·필수 날씨·목적지 확장 여부를 표시</li><li>다음 → O6 목적지 등록, 뒤로 → O4</li><li>강수·기상특보는 필수 알림으로 유지</li><li>자기 전 내일 날씨·코디 미확인 리마인드는 자동 적용에 포함</li><li>세부 조정은 MY > 알림 설정(M2)의 고급 설정에서 제공</li></ul>
+        </div>
+      </div>
+
+      <!-- O6 목적지 등록 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span class="small">3 / 3</span></div>
+            <div style="font-size:15px;font-weight:700;">자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요</div>
+            <div class="small">목적지는 선택. 등록하면 날씨·출발·신발 알림 기준이 이동 상황에 맞춰져요</div>
+            <div class="img" style="height:92px;">O6 전용 일러스트 · 집-목적지 경로 + 목적지 알림</div>
+            <div class="chips"><span class="chip">목적지 날씨 비교</span><span class="chip">출발 시각</span><span class="chip">신발·우산 알림</span></div>
+            <div class="field">🔍 회사, 학교, 공항, 숙소 검색</div>
+            <div class="box"><span class="t">추천 라벨</span><div class="chips" style="margin-top:4px;"><span class="chip">[회사 아이콘] 회사</span><span class="chip">[학교 아이콘] 학교</span><span class="chip">[공항 아이콘] 공항</span><span class="chip">[숙소 아이콘] 숙소</span></div></div>
+            <div class="dash">등록 시 → 목적지 기준 알림 세분화<br>나중에 해도 현재 위치 기준 알림은 계속 동작</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">목적지 등록하고 시작</div>
+            <div class="btn-ghost">나중에 할게요</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">O6</span><span class="nname">목적지 등록 (선택)</span>
+          <ul><li>목적지 등록은 필수가 아닌 목적지 알림 기준 세분화 옵션</li><li>O6 일러스트는 방향은 맞으나 최종본에서는 좁은 카드 안에서 경로·목적지·목적지 알림이 더 명확한 단순 구도로 재제작 우선 검토</li><li>건너뛰기 → H1 홈 진입, Mode A 알아서 챙기기 유지</li><li>등록하고 시작 → G1 출발 메인으로 이동해 목적지 알림 기준 확장</li><li>뒤로 → O5 스마트 알림 기준</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 2. 홈 ════════ -->
+  <div class="sec">
+    <span class="sec-tag">02 · HOME — Weather ON</span>
+    <h2>홈 탭 — 날씨 · 우산 · 강수 플로우</h2>
+    <p class="sec-desc">홈 메인에서 5초 안에 오늘 외출 판단 완료. 홈 카드는 지금 결정해야 하는 실시간 액션만 노출하고, 알림 사이드바는 읽음/미읽음 이력과 딥링크 보관함으로 분리한다. 강수 확률 높음 → 미확인 상태에서만 우산 추천 카드 노출, 열람 후에는 H1에서 숨기고 H3 알림 이력은 유지한다.</p>
+    <div class="row">
+
+      <!-- H1 홈 메인 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>📍 서울 강남구 ▾</span><span class="ic">🔔</span></div>
+            <div class="box" style="text-align:center;padding:14px;">
+              <span style="font-size:34px;font-weight:300;color:#444;">21°</span>
+              <div class="small">맑음 · 최고 26° / 최저 15° · 체감 20°</div>
+              <div class="small">미세먼지 좋음 · 습도 40% · 바람 2m/s</div>
+            </div>
+            <div class="dash"><b>우산 챙기세요 — 3단 우산 추천</b><br>오후 6시부터 비 · 강수확률 80% <span class="small">미확인 시만 노출 → 탭 시 H4</span></div>
+            <div class="box"><span class="t">시간별 예보 (가로 스크롤)</span>
+              <div class="bars"><i style="height:30%;"></i><i style="height:35%;"></i><i style="height:45%;"></i><i style="height:60%;"></i><i style="height:80%;"></i><i style="height:70%;"></i><i style="height:50%;"></i><i style="height:40%;"></i></div>
+              <div class="small">지금 · 1시 · 2시 · 3시 · 4시 · 5시 · 6시 · 7시</div>
+            </div>
+            <div class="box"><span class="t">주간 예보</span>
+              <div class="small">금 ☀ 26°/15% &nbsp;·&nbsp; 토 🌧 22°/80% &nbsp;·&nbsp; 일 ☁ 24°/30% …</div>
+            </div>
+            <div class="dash"><span class="t">상태 요약</span>게스트 열람 · 위치 정상 · 알림 설정 전<br><span class="small">알림 설정 전 탭 시 O3 권한 단계로 연결</span></div>
+            <div class="box"><span class="t">오늘 입을 세트</span>가디건·티셔츠·슬랙스·스니커즈 실루엣<br><span class="small">탭 시 C1 옷장 아이템 카드 · 게스트 열람 가능</span></div>
+            <div class="dash"><span class="t">계정 연결 트리거</span>코디 저장 · 알림 추가 · 여행 저장<br><span class="small">탭 시 A2 계정 연결, 추천 기능은 게스트로 계속 이용</span></div>
+            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">H1</span><span class="nname">홈 메인</span>
+          <ul><li>현재 날씨 + 시간별/주간 예보 (D1·D2)</li><li>Guest/위치/알림 상태 요약을 홈에서 짧게 표시하고 알림 설정 전 상태는 O3 권한 단계로 연결</li><li>우산 추천 카드는 현재 위치/목적지 비 신호가 있고 사용자가 아직 확인하지 않은 경우에만 노출한다</li><li>우산 카드 탭 시 H4로 이동하며 umbrellaSignalReviewed 상태를 남기고, 홈 복귀 후에는 같은 카드를 반복 노출하지 않는다</li><li>대표코디 썸네일은 C1/C4의 outfitVariant와 동일 추천 조합을 사용하고, 탭 시 해당 상태를 유지한 채 C1 코디 메인으로 이동</li><li>C1 셔플 또는 C4 재추천 후 홈으로 복귀하면 H1 대표 코디도 같은 의류 컷과 카피로 갱신</li><li>AI 장소 추천 카드는 P3 목적지 필터/상세 허브로 직접 연결</li><li>하단 탭: 코디 → C1, 출발 → G1, MY → M1 설정 허브, 소셜 → S0/S1 ON Square</li><li>Guest는 추천·ON Square 읽기/탐색 가능, 코디/옷장/장소 저장·알림 추가·여행 저장·Weather Note 작성 탭 시 A2 호출</li><li>상단 위치명 탭 → H2 · 벨 → H3 사이드바</li></ul>
+        </div>
+      </div>
+
+      <!-- H2 위치 검색 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>위치 변경</span><span></span></div>
+            <div class="field">🔍 동/읍/면 검색</div>
+            <div class="listitem">◎ 현재 위치 사용 (GPS)<span class="arr">›</span></div>
+            <div class="box"><span class="t">저장한 위치</span></div>
+            <div class="listitem">서울 강남구 <span class="small">21° 맑음</span><span class="arr">›</span></div>
+            <div class="listitem">부산 해운대구 <span class="small">23° 흐림</span><span class="arr">›</span></div>
+            <div class="seg"><div class="on">Guest</div><div>계정 연결됨</div></div>
+            <div class="listitem" style="color:#999;">＋ 계정 연결하고 위치 저장</div>
+            <div class="dash"><span class="t">LOCATION STATE</span>선택 위치 · 검색어 · Guest 임시 검색 · 계정 저장 상태</div>
+            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">H2</span><span class="nname">위치 검색 · 변경</span>
+          <ul><li>D3 — 검색 / GPS / 저장 위치 전환</li><li>LOCATION STATE에서 선택 위치, 검색어, Guest 임시 검색, 계정 저장 상태를 표시</li><li>현재 위치 사용과 검색 위치 조회는 Guest 가능, 새 위치 저장은 A2 계정 연결 gate 호출</li><li>Guest 위치 저장 탭 → A2/A3 완료 후 returnTo=H2, 선택 위치/검색어, resumeLocationSave 상태로 복귀해 위치 저장 완료 피드백 표시</li><li>M3 위치 관리에서 진입한 경우 parentReturnTo=M3를 유지하고 뒤로가기 시 locationManaged 상태로 M3에 복귀</li><li>일반 진입의 뒤로가기와 홈 탭은 H1 복귀, 위치 관리 전체 편집은 전역 설정(M3 Z2)</li></ul>
+        </div>
+      </div>
+
+      <!-- H3 알림 사이드바 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="lrow" style="align-items:stretch;flex:1;">
+              <div class="dim" style="width:54px;font-size:9px;color:#aaa;display:flex;align-items:center;justify-content:center;">홈 (딤 처리)</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px;border-left:2px solid #333;padding-left:8px;">
+                <div class="navbar"><span>알림</span><span class="ic">✕</span></div>
+                <div class="box"><span class="t">오늘의 외출 준비 ☀ 07:30</span>21° 맑음 · 추천 코디 · 우산 불필요<span class="small"> (Mode A/B)</span></div>
+                <div class="box"><span class="t">비 예보 사전 알림 ☂ 14:00</span>18시 시작 · 시간당 4mm · 21시 그침<br><span class="small">탭 → 강수 타임라인(H5)</span></div>
+                <div class="box"><span class="t">우산 추천 08:20</span>목적지 오후 비 예보 · 3단 우산 권장<br><span class="small">탭 → 우산 추천 상세(H4)</span></div>
+                <div class="box"><span class="t">출발 알림 🚶 08:30</span>지금 출발하면 9:00 도착</div>
+                <div class="dash"><span class="t">NOTIFICATION STATE</span>선택 알림 · 읽음/미읽음 · 딥링크 대상</div>
+                <div class="dash">읽음 처리 · 최근 7일 보관</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">H3</span><span class="nname">알림 사이드바 (우측 슬라이드)</span>
+          <ul><li>K1~K3 — 외출 준비 / 비 예보 / 우산 추천 / 출발 알림</li><li>H3는 홈 카드와 달리 알림 센터 역할을 하며 읽음/미읽음, 예정/완료, 딥링크 이력을 보관한다</li><li>H1에서 우산 카드를 확인해 숨겨진 뒤에도 H3에는 우산 추천 이력이 남아 다시 H4로 진입할 수 있다</li><li>비 예보 → H5, 우산 추천 → H4, 출발 알림 → G2</li><li>닫기 → H1 홈 복귀</li></ul>
+        </div>
+      </div>
+
+      <!-- H4 우산 추천 상세 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>우산 추천</span><span></span></div>
+            <div class="box" style="text-align:center;padding:12px;"><span style="font-size:16px;font-weight:700;">☂ 오늘은 3단 우산</span><br><span class="small">강수량 보통 · 바람 약함 · 휴대성 우선</span></div>
+            <div class="box"><span class="t">추천 이유</span>18~21시 비 · 시간당 4mm · 풍속 3m/s<br><span class="small">기준: 강수량 · 지속시간 · 풍속</span></div>
+            <div class="box"><span class="t">시간대별 강수확률</span>
+              <div class="bars"><i style="height:10%;"></i><i style="height:15%;"></i><i style="height:40%;"></i><i style="height:80%;"></i><i style="height:85%;"></i><i style="height:60%;"></i><i style="height:20%;"></i></div>
+              <div class="small">15시 → 21시</div>
+            </div>
+            <div class="box"><span class="t">우산 종류 비교</span>
+              <div class="small">1단 — 강풍·장시간 ☔ / 2단 — 균형 / <b>3단 — 휴대성 ✓</b> / 장우산 — 폭우</div>
+            </div>
+            <div class="dash"><span class="t">UMBRELLA STATE</span>추천 우산 · 강수 시간 · 알림 설정 전/준비</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn-ghost">우산 알림 시간 설정 → M2b</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">H4</span><span class="nname">우산 추천 상세</span>
+          <ul><li>F·F1·F2 — 추천 이유 + 종류 비교</li><li>UMBRELLA STATE에서 추천 우산, 강수 시간, 알림 설정 전/준비 상태 표시</li><li>H4 열람은 umbrellaSignalReviewed로 처리되어 H1의 실시간 우산 카드를 숨긴다</li><li>뒤로가기 → H1, 알림 설정 CTA → M2로 이동하며 returnTo=H4, alertFocus=umbrella를 유지</li><li>M2에서 뒤로가기 시 H4로 복귀하고 알림 준비 상태를 반영</li><li>진입: 홈 카드 탭 / 우산 푸시 알림 탭 / H3 알림 딥링크</li></ul>
+        </div>
+      </div>
+
+      <!-- H5 강수 타임라인 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>강수 타임라인</span><span></span></div>
+            <div class="box" style="text-align:center;padding:12px;"><span style="font-size:14px;font-weight:700;">18:00 비 시작 → 21:00 그침</span><br><span class="small">시간당 최대 4mm · 보통 강도</span></div>
+            <div class="box"><span class="t">30분 단위 강수량 차트</span>
+              <div class="bars" style="height:80px;"><i style="height:5%;"></i><i style="height:10%;"></i><i style="height:35%;"></i><i style="height:70%;"></i><i style="height:90%;"></i><i style="height:75%;"></i><i style="height:45%;"></i><i style="height:15%;"></i><i style="height:5%;"></i></div>
+              <div class="small">17:00 → 21:30 (30분 간격)</div>
+            </div>
+            <div class="box"><span class="t">외출 가이드</span>지금 나가면 비 전 도착 가능 ·<br>18시 이후 외출 시 우산 필수</div>
+            <div class="dash">"그치면 알려줘" 신청 토글 → 설정은 M2c</div>
+            <div class="dash"><span class="t">RAIN STATE</span>시작/종료 시각 · 그침 알림 ON/OFF</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn-ghost">비 알림 설정 → M2c</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">H5</span><span class="nname">강수 타임라인</span>
+          <ul><li>D4b~D4d — 비 예보 푸시 알림에서 진입</li><li>30분 단위 차트 + 외출 가이드</li><li>RAIN STATE에서 시작/종료 시각과 그침 알림 ON/OFF 표시</li><li>뒤로가기 → H1, 비 알림 설정 CTA → M2로 이동하며 returnTo=H5, alertFocus=rain을 유지</li><li>M2에서 뒤로가기 시 H5로 복귀하고 그침 알림 준비 상태를 반영</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 3. 코디 ════════ -->
+  <div class="sec">
+    <span class="sec-tag">03 · OUTFIT — Outfit ON</span>
+    <h2>코디 탭 — 옷장 · AI 추천 플로우</h2>
+    <p class="sec-desc">내 옷장 + 날씨 기반 AI 코디 추천. 시간대별 착장 판단, 셔플 재추천, 저장/공유까지.</p>
+    <div class="row">
+
+      <!-- C1 코디 메인 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>코디</span><span class="ic">👕</span></div>
+            <div class="small">21° 맑음 · 일교차 11° 기준 추천</div>
+            <div class="dash"><span class="t">추천 상태</span>옷장 4개 매칭 · 스타일 미니멀 · 저장은 계정 필요/완료<br><span class="small">기준 수정 → O4, 저장 계정 필요 → A2 → C1 저장 완료 복귀</span></div>
+            <div class="img" style="height:180px;">의류 실루엣 카드 4개<br>오버핏 가디건 · 린넨 티셔츠 · 슬랙스 · 스니커즈</div>
+            <div class="box"><span class="t">오늘 판단</span>가디건은 챙기고, 낮엔 티셔츠로 충분</div>
+            <div class="box"><span class="t">요약 칩</span>15°→26° · 비 없음 · 옷장 4개 · 92% 매칭</div>
+            <div class="lrow">
+              <div class="btn grow" style="padding:9px;">상세 보기</div>
+              <div class="btn-ghost grow" style="padding:8px;">셔플</div>
+            </div>
+            <div class="listitem">👚 내 옷장 관리<span class="small">42벌 등록됨</span><span class="arr">›</span></div>
+            <div class="tabbar"><div><b></b>홈</div><div class="on"><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">C1</span><span class="nname">코디 메인 (AI 추천)</span>
+          <ul><li>E1 — 내 옷장 + 날씨 + 스타일 태그 기반</li><li>추천 상태 카드에서 옷장 매칭/스타일 기준/저장 계정 필요 또는 저장 완료 상태를 노출</li><li>기준 수정은 O4 스타일 기준으로 이동하고, 저장 후 returnTo=C1로 돌아와 스타일 기준 저장 상태를 표시</li><li>저장 계정 필요는 A2 계정 연결로 이동</li><li>Guest 코디 저장은 pendingAction=코디 저장, returnTo=C1, resumeSave=true로 A3 완료 후 C1 저장 완료 상태로 복귀</li><li>셔플은 outfitVariant를 토글해 C1 요약 카드·판단 카드·상세 진입 상태를 함께 변경</li><li>C4 재추천 결과는 outfitVariant로 C1 요약 카드와 H1 대표 코디까지 반영</li><li>H1 썸네일과 동일 조합을 C1에서 개별 옷 아이템 카드로 확장하고, 홈 탭 복귀 시 outfitVariant를 H1에 전달</li><li>상단 옷장 아이콘 또는 내 옷장 관리 행 탭 → C2 내 옷장으로 이동</li><li>코디 카드 또는 상세 보기 탭 → C4 코디 상세·대화형 재추천으로 이동</li><li>외부 유사 서비스 벤치마크 반영: 실제 옷장 기반, 시간대별 착장, 셔플 재추천, 착용 기록/여행 확장</li><li>MVP 목업은 생성형 PNG 의류 컷, 출시 단계는 사용자 옷장/상품 썸네일 우선</li><li>옷장 미등록 시 → C2 빈 상태에서 옷 등록 유도</li></ul>
+        </div>
+      </div>
+
+      <!-- C2 내 옷장 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>내 옷장</span><span class="ic">＋</span></div>
+            <div class="chips"><span class="chip on">전체</span><span class="chip">상의</span><span class="chip">하의</span><span class="chip">아우터</span><span class="chip">신발</span></div>
+            <div class="seg"><div class="on">Guest</div><div>계정 연결됨</div></div>
+            <div class="dash"><span class="t">WARDROBE STATE</span>전체 기준 8/42 · Guest/계정 저장 상태 · 옷 추가<br><span class="small">Guest는 조회 가능, 옷 추가/수정은 A2/A3 후 C3로 계속</span></div>
+            <div class="lrow"><div class="img grow" style="height:78px;">옷 1</div><div class="img grow" style="height:78px;">옷 2</div><div class="img grow" style="height:78px;">옷 3</div></div>
+            <div class="lrow"><div class="img grow" style="height:78px;">옷 4</div><div class="img grow" style="height:78px;">옷 5</div><div class="img grow" style="height:78px;">옷 6</div></div>
+            <div class="lrow"><div class="img grow" style="height:78px;">옷 7</div><div class="img grow" style="height:78px;">옷 8</div><div class="dash grow" style="height:78px;display:flex;align-items:center;justify-content:center;">＋ 추가</div></div>
+            <div class="dash">아이템 탭 → 수정/삭제 시트 (E0b) · 수정은 C3 등록 패턴 · 삭제 후 추천 재계산</div>
+            <div class="tabbar"><div><b></b>홈</div><div class="on"><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">C2</span><span class="nname">내 옷장 (목록 · 수정 · 삭제)</span>
+          <ul><li>E0·E0b — 카테고리 필터 + 3열 그리드</li><li>WARDROBE STATE 카드에서 아이템 수, 현재 필터, Guest/계정 저장 상태, 추천 복귀, 옷 추가 CTA 표시</li><li>Guest는 옷장 조회와 샘플 확인 가능, 옷 추가/수정은 pendingAction=옷장 저장, returnTo=C3로 A2/A3를 거친 뒤 C3 등록 화면에서 계속 진행</li><li>아이템 탭 시 수정/삭제 시트 노출, 수정은 C3 등록 패턴으로 이동</li><li>삭제 후에는 옷장 상태와 추천 기준을 즉시 재계산하고 빈 상태로 전환 가능</li><li>뒤로가기 → C1 코디 메인으로 복귀</li><li>우상단 ＋ 또는 추가 카드 → C3 옷 등록 또는 A2 계정 연결 후 C3 계속 진행</li><li>등록 옷이 없는 경우 빈 상태를 노출하고 기본 룰 추천이 계속 작동함을 안내</li><li>빈 상태의 첫 옷 등록 CTA → C3 옷 등록 또는 A2 계정 연결 후 C3 계속 진행</li></ul>
+        </div>
+      </div>
+
+      <!-- C3 옷 등록 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>✕</span><span>옷 등록</span><span></span></div>
+            <div class="seg"><div class="on">Guest</div><div>계정 연결됨</div></div>
+            <div class="dash"><span class="t">REGISTER STATE</span>사진 선택 · 카테고리 · Guest/계정 저장 상태 · 저장 가능/대기<br><span class="small">사진 미선택 비활성, Guest 저장 → A2/A3 → C3 저장 완료</span></div>
+            <div class="img" style="height:140px;">📷 사진 촬영 / 앨범 선택</div>
+            <div class="box"><span class="t">카테고리</span>
+              <div class="chips" style="margin-top:4px;"><span class="chip on">상의</span><span class="chip">하의</span><span class="chip">아우터</span><span class="chip">신발</span><span class="chip">액세서리</span></div>
+            </div>
+            <div class="field">이름 (선택) — 예: 베이지 가디건</div>
+            <div class="box"><span class="t">계절 태그 (선택)</span>
+              <div class="chips" style="margin-top:4px;"><span class="chip">봄가을</span><span class="chip on">여름</span><span class="chip">겨울</span></div>
+            </div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">계정 연결하고 저장 / 저장</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">C3</span><span class="nname">옷 등록</span>
+          <ul><li>E0a — 사진 + 카테고리 필수, 나머지 선택</li><li>REGISTER STATE 카드에서 사진 선택, 카테고리, Guest/계정 저장 상태, 저장 가능/대기 상태를 표시</li><li>사진 미선택 시 저장 버튼은 비활성, 사진 선택 후 Guest 저장 탭은 A2 계정 연결 gate 호출</li><li>Guest 저장은 사진/카테고리/이름/계절 상태를 보존하고 pendingAction=옷장 저장, returnTo=C3, resumeSave=true로 A3 완료 후 C3 저장 완료 상태로 복귀</li><li>계정 연결 상태에서 저장 후 추가 완료 상태를 보여주고 C2 옷장으로 복귀</li><li>닫기 → C2 내 옷장으로 복귀</li></ul>
+        </div>
+      </div>
+
+      <!-- C4 코디 상세 + 재추천 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>코디 상세</span><span class="ic">⤴</span></div>
+            <div class="img" style="height:120px;">코디 전체 뷰</div>
+            <div class="lrow"><div class="img grow" style="height:52px;">상의</div><div class="img grow" style="height:52px;">하의</div><div class="img grow" style="height:52px;">아우터</div></div>
+            <div class="box"><span class="t">대화형 재추천 (E1b)</span></div>
+            <div class="dash" style="margin-left:24px;">"좀 더 포멀하게 바꿔줘"</div>
+            <div class="box" style="margin-right:24px;">셔츠+슬랙스 조합으로 변경했어요.<br>일교차 대비 자켓을 추천해요.</div>
+            <div class="dash"><span class="t">상세 상태</span>재추천 반영 · 저장 전/완료 · 공유 대기<br><span class="small">C1 복귀 / 저장 계정 필요 / 공유 준비 상태 표시</span></div>
+            <div class="field">메시지 입력…</div>
+            <div class="lrow">
+              <div class="btn grow" style="padding:9px;">코디 저장</div>
+              <div class="btn-ghost grow" style="padding:8px;">공유</div>
+            </div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">C4</span><span class="nname">코디 상세 · 대화형 재추천</span>
+          <ul><li>E2·E1b·E3 — 상세 + 채팅 재추천 + 저장/공유</li><li>상단은 도면형 스펙보다 실제 의류 PNG 조합을 우선 보여주는 Outfit Hero로 구성</li><li>08시/14시/18시 등 시간대별 착용 판단을 히어로 안에서 짧게 표시</li><li>각 아이템 카드에 역할, 아이템명, 날씨 근거를 붙여 사용자가 실제 코디를 바로 이해하게 함</li><li>DETAIL STATE 카드에서 재추천 반영, 저장 전/완료, 공유 준비 상태를 표시</li><li>뒤로가기와 C1 복귀 CTA → C1 코디 메인으로 복귀하며 outfitVariant를 전달</li><li>홈 탭 복귀 → H1 대표 코디에도 outfitVariant를 전달해 상세 재추천 결과를 유지</li><li>재추천 결과는 상단 코디 뷰 즉시 갱신되고 C1 요약에도 이어짐</li><li>Guest 상태에서 코디 저장 탭 시 pendingAction=코디 저장, returnTo=C4, resumeSave=true로 A2/A3 계정 연결 gate 호출</li><li>A3 완료 후 C4 저장 완료 상태를 표시하고 C1 복귀 시 저장 완료 상태와 outfitVariant를 이어감</li><li>공유 탭 시 공유 준비 완료 상태를 먼저 표시하고 실제 OS 공유는 구현 단계에서 연결</li><li>로그인 후 저장 완료 상태로 CTA 피드백 제공</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 4. 출발 ════════ -->
+  <div class="sec">
+    <span class="sec-tag">04 · GO — Go ON</span>
+    <h2>출발 탭 — 목적지 비교 · 출발시간 · 여행 일정 (도보 특화)</h2>
+    <p class="sec-desc">목적지 등록 → 날씨 비교 → 출발시간 역산 → Mode B 알림 체인. 여행 일정은 도보 특화 — 당일 코스 날씨(G4 무료), 국토종주 AI 플래너(G5 Premium), 구독 페이월(G6) 포함.</p>
+    <div class="row">
+
+      <!-- G1 출발 메인 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>출발</span><span class="ic">＋</span></div>
+            <div class="field">🔍 목적지 검색 · 추가</div>
+            <div class="box"><span class="t">DEPART STATE · 오늘 알아서 챙기는 중</span>알림 0/2 · 날씨 비교 · 출발 08:10 · 신발/우산<br><span class="small">G2/P3에서 켜면 같은 목적지 ON 상태로 반영</span></div>
+            <div class="box"><span class="t">[회사 아이콘] 회사 — 판교 · READY/ON</span>출발지 21°☀ → 목적지 19°☁<br><span class="small">출발 추천 08:30 · 도착 09:00</span></div>
+            <div class="box"><span class="t">[학교 아이콘] 학교 — 신촌 · READY/ON</span>출발지 21°☀ → 목적지 21°☀<br><span class="small">날씨 차이 없음</span></div>
+            <div class="listitem" style="color:#999;">＋ 목적지 추가</div>
+            <div class="dash"><span class="t" style="font-weight:700;">✈ 여행 플래너 (프리미엄)</span>여행지 일정별 날씨 + 짐 추천 → G3</div>
+            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div class="on"><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G1</span><span class="nname">출발 메인 (목적지 목록)</span>
+          <ul><li>I·I1 — 목적지 카드 + 검색·추가 + 오늘 알아서 챙기기 요약</li><li>DEPART STATE에서 저장 목적지 수, 알림 ON 수, 날씨 비교, 출발·신발·우산 알림 적용 범위 표시</li><li>목적지별 READY/ON 배지는 G2/P3 상세의 Destination Care State와 동일 데이터로 동기화</li><li>검색창·상단 ＋·하단 목적지 추가 → P1 목적지 추가</li><li>P1에서 저장 완료한 목적지는 Saved Destination List에 추가되어 G1 목록과 P3 필터 목록에 동시에 반영</li><li>목적지 카드 탭 → G2 비교 상세</li><li>여행 플래너 배너는 프리미엄/계정 필요 기능으로 A2 또는 구독 흐름 호출</li><li>O6/P1에서 등록한 목적지가 이 목록에 추가</li></ul>
+        </div>
+      </div>
+
+      <!-- G2 비교 + 출발시간 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>[회사 아이콘] 회사 — 판교</span><span></span></div>
+            <div class="dash">목적지를 켜면 출발지와 목적지 날씨를 비교해 출발·신발·우산 알림을 자동 조정</div>
+            <div class="box"><span class="t">날씨 비교 (I2)</span>
+              <div class="small">기온&nbsp;&nbsp;21° → 19° (−2°)<br>날씨&nbsp;&nbsp;맑음 → 흐림<br>바람&nbsp;&nbsp;2m/s → 5m/s ⚠<br>강수&nbsp;&nbsp;0% → 30%</div>
+            </div>
+            <div class="box"><span class="t">출발시간 역산 (I3)</span>
+              <div class="small">도착 희망 09:00<br>− 소요시간 40분 − 여유 10분</div>
+              <div style="font-size:18px;font-weight:700;color:#444;margin-top:4px;">= 08:10 출발</div>
+            </div>
+            <div class="box"><span class="t">목적지 알림 흐름 (목적지 등록 시)</span>
+              <div class="small">07:30 외출 준비 통합 알림 (I4)<br>08:00 신발 추천 — 출발 10분 전 (I5)<br>08:10 출발 시각 알림 (I6)</div>
+            </div>
+            <div class="dash"><span class="t">CARE STATE</span>READY / ON 상태 표시<br><span class="small">ON 후 G1/P3 같은 목적지 알림 상태에 즉시 반영</span></div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">이 목적지 알림 켜기</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G2</span><span class="nname">날씨 비교 · 출발시간 역산</span>
+          <ul><li>I2~I6 — 비교 4항목 + 역산 + 목적지 알림 흐름</li><li>CARE STATE 카드에서 GUEST/PERM/READY/ON과 다음 알림 상태를 표시</li><li>알림 ON은 계정 연결과 알림 권한이 충족된 뒤 공유 Destination Care State에 저장되어 G1 목록과 P3 상세의 같은 목적지 ON 상태에 반영</li><li>계정 미연결 시 A2 → A3 → G2로 돌아오고, 알림 권한 전 상태는 O3 → G2로 돌아와 같은 destination/selectedDestination 컨텍스트를 유지</li><li>G2는 공유 careState와 M2/O3 복귀 routeState.careOn·resumeCare를 모두 확인하고, 조건 충족 시 공유 careState로 다시 동기화해 복귀 직후 상태 끊김을 방지</li><li>알림 ON 후 G1 목록으로 복귀 또는 M2 알림 설정으로 이동 가능</li><li>M2 진입 시 returnTo=G2, alertFocus=destination, destination 컨텍스트를 유지하고 뒤로가기는 G2로 복귀</li><li>뒤로가기 → returnTo(G1/P2/P3)로 복귀하며 P2/P3에서는 선택 목적지 상세 상태 유지</li><li>수동 알림 신청보다 목적지 알림 ON/OFF 개념으로 표현</li><li>도착 희망시각·여유시간은 인라인 편집</li></ul>
+        </div>
+      </div>
+
+      <!-- G3 여행 플래너 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>여행 플래너 ✈</span><span class="small">프리미엄</span></div>
+            <div class="box"><span class="t">제주 2박 3일 · 6/20 – 6/22</span></div>
+            <div class="seg"><div class="on">무료 상태</div><div>프리미엄 활성</div></div>
+            <div class="dash"><b>TRIP STATE</b><br>무료 상태=공유/일정 추가 탭 시 G6 · 프리미엄 활성=편집 가능</div>
+            <div class="listitem">Day 1 — 6/20 ☀ 27° <span class="small">성산일출봉</span><span class="arr">›</span></div>
+            <div class="listitem">Day 2 — 6/21 🌧 24° <span class="small">우도 (우천 대비)</span><span class="arr">›</span></div>
+            <div class="listitem">Day 3 — 6/22 ☁ 26° <span class="small">시내 · 귀가</span><span class="arr">›</span></div>
+            <div class="box"><span class="t">코디 · 짐 추천 (G3)</span>반팔 3 · 긴팔 1 · 우비/3단 우산 ·<br>방수 신발 · 선크림</div>
+            <div class="lrow">
+              <div class="btn grow" style="padding:9px;">일정 추가</div>
+              <div class="btn-ghost grow" style="padding:8px;">여정 공유</div>
+            </div>
+            <div class="dash">무료 사용자 → 페이월(구독 안내) 노출</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G3</span><span class="nname">여행 플래너 (프리미엄)</span>
+          <ul><li>I7·G1~G4 — 일정별 날씨 + 짐 추천 + 공유</li><li>TRIP STATE에서 무료 상태/프리미엄 활성/공유 준비/구독 유도 상태 표시</li><li>무료 상태에서 일정 추가·여정 공유 탭 → G6 페이월</li><li>G6 완료 후 returnTo=G3로 돌아와 일정 추가는 G4로 계속 진행하고, 여정 공유는 공유 준비 완료 상태로 복귀</li><li>뒤로가기 → G1, 프리미엄 활성 상태의 일정 추가 → G4, 구독 후 AI 종주 → G5</li><li>하단 탭은 H1/C1/G1/M1/S0로 실제 이동</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+      <!-- G4 도보여행 코스 날씨 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>도보여행 🥾</span><span></span></div>
+            <div class="field">🔍 코스 검색 (제주 올레길, 북한산 둘레길...)</div>
+            <div class="dash"><b>COURSE STATE</b><br>GUEST/PERM/READY/LIMIT/ON · 코스 저장 1/2 · 알림 권한 상태</div>
+            <div class="listitem">🗺 제주 올레 1코스 <span class="small">15km · 5시간</span><span class="arr">›</span></div>
+            <div class="listitem">🌿 북한산 둘레길 7코스 <span class="small">8km · 3시간</span><span class="arr">›</span></div>
+            <div class="listitem">🌊 해파랑길 1코스 <span class="small">19km · 6시간</span><span class="arr">›</span></div>
+            <div class="box" style="margin-top:4px;"><span class="t">코스 상세 — 제주 올레 1코스</span>
+              <div class="small">08:00 출발 기준 구간 날씨 타임라인</div>
+              <div class="small" style="margin-top:4px;">08:00 시흥 ☀ 22° → 10:00 광치기 ☁ 21° → 12:00 성산 🌧 20°</div>
+              <div class="small" style="margin-top:4px;">도보 컨디션 지수 (WCI) <b style="color:#0F6E56;">양호 ✅</b></div>
+            </div>
+            <div class="box"><span class="t">최적 출발 시점 (F4)</span>
+              <div class="small">① 06:30 · ② 14:30 · ③ 내일 08:00</div>
+              <div class="small" style="color:#0F6E56;">→ ①: 전 구간 쾌청 예상</div>
+            </div>
+            <div class="btn" style="padding:10px;">계정 연결하고 코스 저장 / 출발 전 알림 받기</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G4</span><span class="nname">도보여행 코스 날씨 (Scenario 2 · 무료)</span>
+          <ul><li>F1 한국 코스 DB + F2 구간 타임라인 + F3 WCI + F4 최적 출발</li><li>COURSE STATE에서 GUEST/PERM/READY/LIMIT/PLUS/PLUS·PERM/ON 상태를 표시</li><li>코스 날씨 조회는 무료, 코스 저장과 출발 전 알림은 계정 연결 + 알림 권한 필요</li><li>Guest 코스 저장 탭 → A2/A3 완료 후 returnTo=G4, selectedCourse, resumeCourseAlert 상태로 복귀</li><li>알림 권한 전 탭 → O3 완료 후 returnTo=G4로 복귀해 선택 코스와 계정 상태 유지</li><li>무료 기본 제공 — 코스 저장(F5) 무료 2개, 3번째 저장 시 G6 페이월 연결</li><li>G6 구독 완료 후 returnTo=G4, premiumActive=true로 돌아와 원래 코스 알림 저장을 계속 진행</li><li>뒤로가기/하단 출발 탭 → G1, 알림 등록 시 버튼 상태 ON</li></ul>
+        </div>
+      </div>
+
+      <!-- G5 국토종주 AI 플래너 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>AI 종주 플래너 🤖</span><span class="small" style="color:#7B4FCB;">Premium</span></div>
+            <div class="box"><span class="t">여정 설정 (F8)</span>
+              <div class="lrow" style="margin-top:6px;gap:6px;">
+                <div class="field" style="flex:1;padding:6px 8px;">출발지: 서울</div>
+                <span style="font-size:10px;color:#999;">→</span>
+                <div class="field" style="flex:1;padding:6px 8px;">목적지: 부산</div>
+              </div>
+              <div class="lrow" style="margin-top:6px;gap:6px;">
+                <div class="field" style="flex:1;padding:6px 8px;">출발일: 7/5</div>
+                <div class="field" style="flex:1;padding:6px 8px;">일수: 10일</div>
+              </div>
+            </div>
+            <div class="dash"><b>여정 점검 상태</b><br>프리미엄 활성 · 알림 권한 · 저장/공유 상태</div>
+            <div class="box"><span class="t">날씨 기반 일정 점검</span>
+              <div class="small" style="margin-top:4px;"><b>Day 1</b> 7/5 ☀ 28° / <span style="color:#0F6E56;">출발 최적</span></div>
+              <div class="small"><b>Day 3</b> 7/7 🌧 24° / <span style="color:#C96A1F;">우비 필수 · 단축 권장</span></div>
+              <div class="small"><b>Day 7</b> 7/11 ⛈ 22° / <span style="color:#CC3366;">⚠ 일정 조정 권고</span></div>
+            </div>
+            <div class="box"><span class="t">짐 체크리스트</span>
+              <div class="small">반팔 5벌 · 긴팔 2벌 · 우비 ✓ · 방수 등산화 ✓<br>선크림 · 보조배터리 · 압박 스타킹</div>
+            </div>
+            <div class="dash"><span class="t" style="color:#2563EB;">예보 업데이트 알림 ON / 권한 필요</span><br><span style="font-size:10px;color:#888;">권한 전이면 O3, 권한 정상 시 재분석 자동 발송</span></div>
+            <div class="lrow"><div class="btn grow" style="padding:9px;">AI 플랜 저장</div><div class="btn-ghost grow" style="padding:8px;">여정 공유</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G5</span><span class="nname">국토종주 AI 플래너 (F8 · Premium)</span>
+          <ul><li>AI 모델 기반 최대 14일 구간 날씨 종합 분석</li><li>여정 점검 상태에서 프리미엄 활성, 알림 권한, 저장/공유 상태를 표시</li><li>재분석 알림과 AI 플랜 저장은 알림 권한이 필요하며 권한 전 상태에서 O3 권한 단계로 연결</li><li>O3 완료 후 returnTo=G5로 여정 입력값과 저장 의도를 유지한 채 복귀</li><li>AI 플랜 저장 후 저장됨, 여정 공유 후 공유 준비 상태로 전환</li><li>일자별 코디·짐 체크리스트 자동 생성, 악화 구간 경보, 재분석 알림</li><li>뒤로가기 → G3, 하단 탭은 H1/C1/G1/M1/S0로 이동</li></ul>
+        </div>
+      </div>
+
+      <!-- G6 프리미엄 구독 페이월 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>✕</span><span></span><span></span></div>
+            <div style="text-align:center;padding:10px 4px 6px;">
+              <div style="font-size:22px;margin-bottom:4px;">⭐</div>
+              <div style="font-size:14px;font-weight:800;color:#333;">WeatherON Premium</div>
+              <div style="font-size:10.5px;color:#777;margin-top:4px;">기능 분리가 아닌 깊이 분리 —<br>같은 기능을 더 깊게, 더 자유롭게</div>
+            </div>
+            <div class="box" style="padding:10px 12px;">
+              <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:6px;">무료 vs 프리미엄 비교</div>
+              <div class="small" style="display:flex;justify-content:space-between;"><span>알림</span><span style="color:#C96A1F;">1개 고정 → <b>고급 설정</b></span></div>
+              <div class="small" style="display:flex;justify-content:space-between;"><span>코디 추천</span><span style="color:#C96A1F;">오늘 기본 → <b>7일 플래닝</b></span></div>
+              <div class="small" style="display:flex;justify-content:space-between;"><span>도보여행</span><span style="color:#C96A1F;">기본 체크 → <b>AI 종주 플래너</b></span></div>
+              <div class="small" style="display:flex;justify-content:space-between;"><span>목적지</span><span style="color:#C96A1F;">1개 → <b>즐겨찾기 한도 확대</b></span></div>
+            </div>
+            <div class="dash"><b>PAYWALL STATE</b><br>미구독 → 플랜 선택 → 구독 완료 시 G5 또는 returnTo 원래 액션 복귀</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <div class="btn-ghost" style="flex:1;padding:12px 4px;text-align:center;">
+                <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:.08em;">MONTHLY</div>
+                <div style="font-size:15px;font-weight:800;color:#333;">₩2,900</div>
+                <div style="font-size:9px;color:#999;">/월</div>
+              </div>
+              <div class="btn" style="flex:1;padding:12px 4px;text-align:center;position:relative;">
+                <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#C96A1F;color:#fff;font-size:8px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap;">BEST · 43% 절약</div>
+                <div style="font-size:9px;font-weight:700;letter-spacing:.08em;opacity:.8;">ANNUAL</div>
+                <div style="font-size:15px;font-weight:800;">₩19,900</div>
+                <div style="font-size:9px;opacity:.7;">/년 · ₩1,658/월</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#aaa;text-align:center;margin-top:6px;">언제든 해지 가능 · Apple 인앱결제</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">G6</span><span class="nname">프리미엄 구독 페이월</span>
+          <ul><li>깊이 분리 모델 — 무료/프리미엄 기능 비교 4행 표시</li><li>PAYWALL STATE에서 미구독/구독 완료 상태 표시</li><li>월간 ₩2,900 / 연간 ₩19,900 (43% 할인) 두 옵션</li><li>일반 진입은 닫기 → G1, 구독 완료 CTA → premiumActive/accountLinked를 Session State에 남기고 G5 AI 종주 플래너로 이동</li><li>G3/G4/M1/A4처럼 returnTo가 있는 진입은 구독 완료 후 premiumActive=true와 원래 선택 데이터를 유지해 해당 화면으로 복귀</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 5. MY ════════ -->
+  <div class="sec">
+    <span class="sec-tag">05 · MY</span>
+    <h2>MY 탭 — 회원 · 알림 설정 · 전역 설정</h2>
+    <p class="sec-desc">온보딩에서 정한 값(스마트 알림 기준·스타일)을 모두 재설정 가능. 단위는 섭씨 / kg·g / m·km 기준.</p>
+    <div class="row">
+
+      <!-- M1 MY 메인 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>MY</span><span></span></div>
+            <div class="lrow box" style="padding:12px 10px;">
+              <div class="img" style="width:44px;height:44px;border-radius:50%;">👤</div>
+              <div class="grow"><b style="font-size:12px;color:#444;">최대현</b><br><span class="small">daehyeon.choii@gmail.com</span></div>
+              <span class="arr small">›</span>
+            </div>
+            <div class="listitem">🔔 알림 설정<span class="arr">›</span></div>
+            <div class="listitem">👕 스타일 태그 변경<span class="small">캐주얼 · 포멀</span><span class="arr">›</span></div>
+            <div class="listitem">⚙ 전역 설정<span class="arr">›</span></div>
+            <div class="listitem">⭐ 프리미엄 구독<span class="small">여행 플래너</span><span class="arr">›</span></div>
+            <div class="dash"><span class="t">PROFILE STATE</span>계정 연결 · 플랜 · 최근 선택 메뉴</div>
+            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div class="on"><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">M1</span><span class="nname">MY 메인</span>
+          <ul><li>M0 — 프로필 · 설정 허브</li><li>PROFILE STATE에서 계정 연결/Guest, 플랜, 최근 선택 메뉴 표시</li><li>Guest 상태의 MY는 저장·동기화·구독 기능을 바로 실행하지 않고 A2 계정 연결 gate로 보낸다</li><li>프리미엄 업그레이드 → 계정 연결 상태면 G6, Guest면 A2/A3 후 G6로 이어지고 returnTo=M1로 복귀</li><li>구독 완료 후 returnTo=M1로 돌아와 Premium 플랜 상태 표시</li><li>스타일 태그 → O4 설정 모드, 저장 후 returnTo=M1로 돌아와 최근 선택 메뉴에 저장 완료 표시</li><li>프로필 편집 → Guest면 A2 계정 연결, 로그인 상태면 A4 계정 관리. 알림 설정 → M2, 전역 설정 → M3, 스타일 태그 → O4, 프리미엄 → G6/A2</li><li>로그아웃/회원 탈퇴는 M1 하단 CTA로 노출하지 않고 A4 계정 관리의 위험 액션 영역에서만 처리한다</li></ul>
+        </div>
+      </div>
+
+      <!-- M2 알림 설정 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>스마트 알림 설정</span><span></span></div>
+            <div class="dash"><b>알아서 챙기기</b><br>기본 화면은 적용 중인 알림만 확인하고 세부 토글은 고급 설정에 숨김</div>
+            <div class="dash">알림 권한 정상/확인 필요 상태 표시 · 권한 관리는 O3 권한 단계로 연결</div>
+            <div class="dash"><b>ALERT GATE</b><br>Guest 조회 가능 · 목적지 알림 저장/발송은 계정 연결 + 알림 권한 필요</div>
+            <div class="box"><span class="t">필수 날씨</span>강수 임박 · 폭염/한파/강풍 특보 <span class="small">항상</span></div>
+            <div class="box"><span class="t">생활 루틴</span>출근·외출 준비 + 자기 전 내일 체크 <span class="small">자동</span></div>
+            <div class="box"><span class="t">목적지·여행</span>목적지 조회 가능, 알림 저장은 계정 연결 후 적용 <span class="small">계정 필요</span></div>
+            <div class="btn-ghost">고급 설정</div>
+            <div class="dash">피로도 제어: 하루 최대 3건 · 수면 시간대는 긴급 날씨만 허용</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">M2</span><span class="nname">알림 설정</span>
+          <ul><li>기본 화면은 스마트 알림 ON/OFF와 적용 중인 알림 요약 중심</li><li>OFF 상태에서는 생활 루틴·목적지 알림은 중지하고 긴급성 높은 필수 날씨만 유지</li><li>H4/H5/G2 바로가기 진입 시 우산·비·목적지 알림 중 어떤 설정인지 먼저 표시</li><li>뒤로가기는 M1 고정이 아니라 originReturnTo가 있으면 H4/H5/G2 원래 화면으로 복귀하고 준비 상태를 반영</li><li>알림 권한 정상/확인 필요 상태는 Session State의 permissionReady를 기본값으로 표시하고 권한 관리는 O3로 연결</li><li>O3 완료 후 returnTo=M2, resumePermissionSettings=true로 돌아와 알림 설정 맥락과 originReturnTo를 유지</li><li>ALERT GATE 카드에서 목적지 알림 저장/발송 조건을 계정 연결 + 알림 권한으로 표시</li><li>Guest가 목적지 알림 계정 연결을 누르면 A2/A3 완료 후 returnTo=M2, resumeAlertSettings=true로 돌아와 고급 설정 영역을 유지</li><li>필수 날씨 / 생활 루틴 / 목적지·여행 3개 카드로 상태를 표시</li><li>ALERT SETTINGS STATE에서 알아서 챙기기, 고급 열림, 세부 토글 수를 요약</li><li>스마트 알림 ON/OFF와 고급 설정의 세부 토글은 Settings State에 남겨 화면 이동 후에도 유지</li><li>세부 on/off와 시간 조정은 고급 설정에 접힘 상태로 배치하고 완료 시 접힘</li><li>H4·H5·G2의 "알림 설정 바로가기" 도착 지점</li></ul>
+        </div>
+      </div>
+
+      <!-- M3 전역 설정 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>전역 설정</span><span></span></div>
+            <div class="box"><span class="t">단위 설정 (Z1)</span>
+              <div class="lrow" style="margin-top:6px;"><span class="small grow">온도</span><div class="seg" style="width:110px;"><div class="on">°C</div><div>°F</div></div></div>
+              <div class="lrow" style="margin-top:6px;"><span class="small grow">무게</span><div class="seg" style="width:110px;"><div class="on">kg/g</div><div>lb</div></div></div>
+              <div class="lrow" style="margin-top:6px;"><span class="small grow">거리</span><div class="seg" style="width:110px;"><div class="on">m/km</div><div>mi</div></div></div>
+            </div>
+            <div class="listitem">📍 위치 관리 (Z2)<span class="small">2곳 저장됨</span><span class="arr">›</span></div>
+            <div class="box"><span class="t">테마 (Z3)</span>
+              <div class="seg" style="margin-top:4px;"><div class="on">시스템</div><div>라이트</div><div>다크</div></div>
+            </div>
+            <div class="listitem">🔔 알림 권한 관리 (Z4)<span class="small">시스템 설정 이동</span><span class="arr">↗</span></div>
+            <div class="dash"><span class="t">GLOBAL STATE</span>단위 · 테마 · 위치/권한 관리 연결</div>
+            <div class="dash">버전 정보 · 약관 · 오픈소스 라이선스</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">M3</span><span class="nname">전역 설정</span>
+          <ul><li>Z1~Z4 — 단위 / 위치 / 테마 / 권한</li><li>GLOBAL STATE에서 현재 단위, 테마, 위치/권한 관리 연결 상태 표시</li><li>위치 관리 → H2, 뒤로가기 시 returnTo=M3로 복귀해 위치 관리 확인 상태 표시</li><li>알림 권한 관리 → O3, 권한 완료 후 returnTo=M3로 복귀해 권한 정상 상태 표시</li><li>뒤로가기 → M1</li><li>기본값: 섭씨 · kg/g · m/km</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 6. PLACE ════════ -->
+  <div class="sec">
+    <span class="sec-tag">06 · PLACE</span>
+    <h2>장소 카테고리 — 목적지 자동 분류 · 맞춤 가이드</h2>
+    <p class="sec-desc">목적지 검색 시 카카오 Local API 기반 카테고리 자동 인식 → 카테고리 전용 준비 가이드 → 목적지 탭 카테고리 필터. WeatherON_planning_v5.html 10-1 기준. 04·GO 출발 탭의 목적지 등록(G1)과 동일 데이터 흐름 — P1~P3는 G1의 상세 확장 화면으로 참고.</p>
+    <div class="row">
+
+      <!-- P1 목적지 입력 · 카테고리 자동 인식 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>목적지 추가</span><span></span></div>
+            <div class="field">🔍 장소명 또는 주소 검색</div>
+            <div class="seg"><div class="on">Guest</div><div>계정 연결됨</div></div>
+            <div class="dash"><span class="t">ADD STATE</span>검색 결과 수 · 선택된 목적지 · Guest/계정 저장 상태<br><span class="small">결과 없음 시 전체 보기/재검색 제공</span></div>
+            <div class="dash">Guest는 목적지 미리보기 가능. 계정 연결 후 저장 시 Saved Destination List와 Destination Care State ON에 반영</div>
+            <div class="listitem">잠실종합운동장<span class="chip" style="margin-left:auto;">[야구장 아이콘] 야구장</span></div>
+            <div class="listitem">북한산국립공원<span class="chip" style="margin-left:auto;">[등산 아이콘] 등산</span></div>
+            <div class="listitem">해운대해수욕장<span class="chip" style="margin-left:auto;">[해변 아이콘] 해변</span></div>
+            <div class="box" style="margin-top:6px;"><span class="t">잠실종합운동장 선택됨</span>[야구장 아이콘] 스포츠 · 야구장으로 인식됨<br>출발 탭 목적지 알림과 장소 맞춤 준비 가이드에 반영</div>
+            <div style="margin-top:auto;"></div>
+            <div class="btn">계정 연결하고 저장 / 목적지 알림에 추가</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">P1</span><span class="nname">목적지 입력 · 카테고리 자동 인식</span>
+          <ul><li>주소·장소명 검색 시 카카오 Local API 카테고리로 야구장·등산·해변 등 자동 분류</li><li>ADD STATE 카드에서 검색 결과 수, 선택됨, Guest/계정 저장 상태, 저장 완료 상태를 표시</li><li>검색 결과가 없으면 전체 보기와 재검색 흐름을 제공</li><li>분류 결과는 칩으로 표시</li><li>Guest는 목적지 조회와 미리보기 가능, 영구 저장 탭 시 A2 계정 연결 gate 호출</li><li>Guest 저장 탭 → A2/A3 완료 후 returnTo=P1, 선택 목적지, resumeSave 상태로 복귀해 원래 저장 액션 자동 완료</li><li>계정 연결 상태에서 "목적지 알림에 추가" → Saved Destination List에 추가하고 Destination Care State를 ON으로 저장</li><li>저장 완료 목적지는 G1 출발 메인 목록과 P3 목적지 필터에 동시에 반영</li><li>뒤로가기와 하단 출발 탭은 G1로 복귀</li></ul>
+        </div>
+      </div>
+
+      <!-- P2 카테고리 전용 준비 가이드 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>목적지 · 잠실 야구장</span><span></span></div>
+            <div class="lrow">
+              <div class="box grow" style="text-align:center;"><span class="t">[출발지 아이콘] 서울 삼성동</span>23° 맑음</div>
+              <div class="box grow" style="text-align:center;"><span class="t">[야구장 아이콘] 잠실 야구장</span>21° 구름조금</div>
+            </div>
+            <div class="dash"><b>GUIDE STATE</b><br>등록 목적지 기준 준비 가이드 · G2/P3 연결</div>
+            <div class="box"><span class="t">[야구장 아이콘] 오늘 경기 준비 가이드 · 목적지 기준</span>경기 취소 확률 12% (강수 적음)<br>내야 1루석 · 자외선 지수 9 (매우 높음)<br>추천: 쿨링 티셔츠 + 모자 + SPF50 선크림</div>
+            <div class="dash" style="text-align:center;"><b>AD</b><br>스포츠 브랜드 협찬 카드</div>
+            <div style="margin-top:auto;"></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">P2</span><span class="nname">카테고리 전용 준비 가이드</span>
+          <ul><li>야구장 인식 시 경기 취소 확률 + 좌석 자외선 + 코디를 한 카드로 안내</li><li>GUIDE STATE에서 등록 목적지 기반 가이드와 G2/P3 연결 상태 표시</li><li>등록 목적지 기반 알림에서 확장되는 장소 맞춤 가이드</li><li>목적지 알림 보기 → G2로 selectedDestination/accountLinked/permissionReady/careOn 상태 유지</li><li>다른 목적지 보기/뒤로 → P3 필터 목록 복귀</li><li>카테고리별 협찬 광고 슬롯 연결 (AD 영역)</li><li>다른 카테고리(등산·해변 등)도 동일 패턴으로 확장</li></ul>
+        </div>
+      </div>
+
+      <!-- P3 목적지 탭 · 카테고리 필터 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>목적지</span><span></span></div>
+            <div class="chips">
+              <span class="chip on">전체</span><span class="chip">[스포츠 아이콘] 스포츠</span><span class="chip">[아웃도어 아이콘] 아웃도어</span><span class="chip">[계절 아이콘] 계절</span><span class="chip">[문화 아이콘] 문화</span>
+            </div>
+            <div class="dash">저장한 목적지별 목적지 알림과 준비 가이드</div>
+            <div class="dash">CARE STATE: 현재 필터 목적지 수 + 목적지 추가 CTA</div>
+            <div class="box"><span class="t">[야구장 아이콘] 잠실종합운동장</span>경기 취소 확률 12% · 쿨링룩 추천</div>
+            <div class="box"><span class="t">[등산 아이콘] 북한산국립공원</span>정상 낙뢰 위험 · 오전 하산 권장</div>
+            <div class="box"><span class="t">[해변 아이콘] 해운대해수욕장</span>파도 보통 · 래시가드 추천</div>
+            <div class="dash">카드 탭 → DETAIL STATE<br>선택 목적지 컨텍스트 · GUEST/PERM/READY/ON · 날씨 비교 · 준비 추천 · 목적지 알림 ON/OFF</div>
+            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div class="on"><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">P3</span><span class="nname">목적지 탭 · 카테고리 필터</span>
+          <ul><li>저장된 목적지를 카테고리 칩으로 필터링</li><li>CARE STATE 카드에서 현재 필터의 목적지 수와 목적지 추가 CTA 표시</li><li>P1에서 저장 완료한 목적지는 Saved Destination List를 통해 P3 필터 목록에 즉시 추가</li><li>필터 결과가 없으면 빈 카테고리 상태를 보여주고 목적지 추가(P1) 또는 전체 보기로 연결</li><li>카테고리별 날씨 리스크와 코디·신발·준비물을 카드에서 확인</li><li>목적지 카드 탭 시 같은 화면 안에서 상세 상태로 전환: DETAIL STATE, 출발지/목적지 날씨 비교, 장소별 준비 추천, 목적지 알림 ON/OFF 제공</li><li>DETAIL STATE는 선택 목적지 컨텍스트와 GUEST/PERM/READY/ON으로 계정 연결과 알림 권한 gate를 표시</li><li>Guest 상태에서 알림 저장 탭 시 A2/A3 완료 후 returnTo=P3, selectedDestination, resumeCare 상태로 같은 상세에 복귀</li><li>알림 권한 전 상태에서 알림 ON 탭 시 O3 완료 후 returnTo=P3로 복귀해 선택 목적지와 계정 상태 유지</li><li>상세 상태 CTA는 선택 목적지 컨텍스트와 accountLinked/permissionReady/careOn 상태를 유지한 채 준비 가이드 보기 → P2, 출발 알림 상세 → G2로 이동</li><li>G2/P2에서 P3로 돌아올 때 selectedDestination을 유지해 같은 목적지 상세 상태로 복귀</li><li>뒤로가기 시 필터 리스트 상태로 복귀</li><li>새 카테고리는 콘텐츠 테이블 확장만으로 추가 가능 (Phase 4~)</li><li>G1 출발 메인의 목적지 목록과 동일 데이터 소스</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 7. ADMOB ════════ -->
+  <div class="sec">
+    <span class="sec-tag">07 · ADMOB</span>
+    <h2>AdMob 심사 대응 — 정책 페이지 · 동의(UMP) · 광고 배치</h2>
+    <p class="sec-desc">설정 메뉴의 정책 문서 진입점, 개인정보처리방침, 광고 개인화 동의(UMP), 홈 화면 네이티브 광고 배치, 이용약관, 위치기반서비스 이용약관, 오픈소스 라이선스. WeatherON_planning_v5.html 14-1 기준. R1↔05·MY 전역설정(M3), R2/R5/R6/R7↔정책 문서 열람, R3↔광고 동의, R4↔02·HOME 레이아웃 — 설정/정책 확장 화면.</p>
+    <div class="row">
+
+      <!-- R1 설정 메뉴 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>설정</span><span></span></div>
+            <div class="listitem">🔔 알림 설정<span class="arr">›</span></div>
+            <div class="listitem">👤 계정 관리<span class="arr">›</span></div>
+            <div class="listitem">📢 광고 및 맞춤 설정<span class="arr">›</span></div>
+            <div style="height:1px;background:#e4e4e4;margin:6px 0;"></div>
+            <div class="listitem">🔒 개인정보처리방침<span class="arr">›</span></div>
+            <div class="listitem">📄 이용약관<span class="arr">›</span></div>
+            <div class="listitem">📍 위치기반서비스 이용약관<span class="arr">›</span></div>
+            <div class="listitem">🧩 오픈소스 라이선스<span class="arr">›</span></div>
+            <div class="listitem">✉️ 문의하기<span class="arr">›</span></div>
+            <div class="dash"><b>POLICY STATE</b><br>M3 진입 · 선택 정책 · 문서 허브</div>
+            <div class="listitem" style="color:#999;">앱 정보 · v1.0.0</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">R1</span><span class="nname">설정 메뉴 — 정책 페이지 진입점</span>
+          <ul><li>AdMob 심사가 요구하는 모든 정책 문서를 설정 탭에서 인앱 접근</li><li>동일 문서를 weatheron.kr 웹에도 게시</li><li>M3 전역 설정에서 진입, 알림 설정(M2)·계정 관리(A4)·광고 동의(R3)·개인정보(R2)·이용약관(R5)·위치기반서비스 약관(R6)·오픈소스 라이선스(R7)로 분기</li><li>정책 허브에서 선택 문서와 설정 재진입 상태 확인</li></ul>
+        </div>
+      </div>
+
+      <!-- R2 개인정보처리방침 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>개인정보처리방침</span><span></span></div>
+            <div class="box" style="line-height:1.8;">
+              <b>1. 수집하는 개인정보 항목</b><br>광고 ID(ADID/IDFA), 기기정보, IP 기반 위치, 앱 사용 데이터<br><br>
+              <b>2. 제3자 제공</b><br>Google AdMob — 맞춤 광고 제공 목적<br><br>
+              <b>3. 광고 식별자 안내</b><br>Google 광고 정책 페이지 링크<br><br>
+              <b>4. 보관기간 및 파기</b><br>회원 탈퇴 시 즉시 파기<br><br>
+              <b>5. 이용자 권리</b><br>열람·정정·삭제 요청권<br><br>
+              <b>6. 개인정보 보호책임자</b><br>연락처 안내
+            </div>
+            <div class="dash"><b>DOCUMENT STATE</b><br>개인정보 문서 · 6개 섹션 · A3 동일 본문</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">R2</span><span class="nname">개인정보처리방침 페이지</span>
+          <ul><li>광고 SDK 수집 데이터 + Google 제3자 제공 고지</li><li>위치정보 수집 안내 + 보호책임자 연락처 포함</li><li>A3 약관 동의의 "개인정보 수집·이용 동의" 항목과 동일 문서 (본문: WeatherON_약관_정책.md)</li><li>뒤로가기 → R1 정책 허브</li></ul>
+        </div>
+      </div>
+
+      <!-- R3 광고 동의 관리(UMP) 모달 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="dim" style="opacity:.5;">
+              <div class="navbar" style="padding:0 0 6px;"><span>홈</span><span></span></div>
+              <div class="box" style="text-align:center;margin-bottom:6px;">📍 서울 삼성동 · 23° 맑음</div>
+              <div class="box"><span class="t">오늘 코디 추천</span>트렌치코트 + 슬랙스 · 우산 불필요</div>
+            </div>
+            <div class="sheet">
+              <div style="font-size:13px;font-weight:700;text-align:center;margin-bottom:6px;">광고 개인화 설정</div>
+              <div class="small" style="text-align:center;display:block;margin-bottom:10px;">더 관련성 높은 광고를 위해 정보를 사용할까요?<br>동의하지 않아도 광고는 계속 표시됩니다 (비개인화 광고)</div>
+              <div class="btn">동의</div>
+              <div class="btn-ghost" style="margin-top:6px;">동의하지 않음</div>
+              <div class="small" style="text-align:center;display:block;margin-top:6px;">옵션 더보기</div>
+              <div class="dash"><b>CONSENT STATE</b><br>동의 대기 · 맞춤 광고 · 비개인화 · 옵션 확인</div>
+            </div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">R3</span><span class="nname">광고 동의 관리(UMP) 모달</span>
+          <ul><li>Google UMP SDK로 GDPR/CCPA 대응</li><li>거부 시 비개인화 광고(NPA)로 자동 전환</li><li>iOS는 ATT 권한 팝업 별도 노출</li><li>최초 실행 시 1회 노출, 설정에서 재변경 가능 (R1)</li><li>CONSENT STATE로 동의/거부/옵션 확인 상태를 명시</li></ul>
+        </div>
+      </div>
+
+      <!-- R4 홈 화면 광고 배치 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>홈</span><span class="ic">🔔</span></div>
+            <div class="box" style="text-align:center;">📍 서울 삼성동 · 23° 맑음</div>
+            <div class="box"><span class="t">오늘 코디 · 우산 · 신발</span>트렌치코트 + 슬랙스 · 우산 불필요 · 로우컷 스니커즈</div>
+            <div class="box"><span class="t">출발 시각</span>목적지 등록 시 10:50 출발 안내</div>
+            <div class="box"><span class="t">오늘 이 날씨엔</span>근처 루프탑 카페 · 공원 산책로</div>
+            <div class="dash" style="text-align:center;"><b>AD</b><br>네이티브 광고 1개 · 콘텐츠와 구분선</div>
+            <div class="dash"><b>AD STATE</b><br>AD 라벨 · 구분선 · 클릭/노출 상태</div>
+            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">R4</span><span class="nname">홈 화면 광고 배치</span>
+          <ul><li>네이티브 광고는 AI 추천 카드 아래 1개, "AD" 라벨로 콘텐츠와 명확히 구분</li><li>버튼·인터랙티브 요소 인접 배치 금지</li><li>H1 홈 메인 레이아웃에 AD 슬롯 추가 반영</li><li>AI 장소 추천 → P3, 하단 탭 → H1/C1/G1/M1/S0로 연결</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 8. COMMUNITY REPORT ════════ -->
+  <div class="sec">
+    <span class="sec-tag">08 · COMMUNITY REPORT</span>
+    <h2>커뮤니티 날씨 제보 (CWR) — 탭 한 번으로 현지 날씨 공유</h2>
+    <p class="sec-desc">
+      티맵·웨이즈의 사고 제보처럼, 사용자가 현재 위치의 실제 날씨를 탭 한 번으로 제보한다.
+      반경 500m · 3건 이상 동일 제보 시 "확정 제보"로 승급되어 홈 화면에 오버레이 표시.
+      v2.0 출시 · MAU 5만 달성 후 활성화. CWR · F1~F6 기반 (WeatherON_planning_v5.html 11-3 기준).
+      W1↔02·HOME 홈 메인, W2↔홈 하단 보조 제보 버튼, W3·W4↔05·MY 제보 이력.
+    </p>
+    <div class="row">
+
+      <!-- C1 홈 화면 + 제보 버튼 + 주변 제보 카드 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>홈</span><span class="ic">🔔</span></div>
+            <div class="box" style="text-align:center;">📍 서울 마포구 · 18° ⛅ 흐림</div>
+            <div class="box"><span class="t">코디 · 우산 · 신발</span>가디건 + 청바지 · 접이식 우산 권장</div>
+            <div class="box" style="border-left:3px solid #C96A1F;">
+              <span class="t" style="color:#C96A1F;">📡 주변 날씨 제보 (F2)</span>
+              <div class="small" style="display:block;margin-top:4px;">반경 1km · 최근 30분</div>
+              <div style="display:flex;gap:6px;margin-top:6px;">
+                <div class="chip" style="font-size:10px;background:#FFF7EC;color:#C96A1F;">🌧 비 2명</div>
+                <div class="chip" style="font-size:10px;background:#FFF7EC;color:#C96A1F;">⛅ 흐림 1명</div>
+              </div>
+              <div class="small" style="display:block;margin-top:4px;color:#999;">→ 미확정 (3건 미충족)</div>
+            </div>
+            <div class="box"><span class="t">오늘 이 날씨엔</span>근처 인도어 카페 추천</div>
+            <div style="text-align:center;margin-top:6px;">
+              <div class="btn-ghost" style="font-size:12px;border-color:#C96A1F;color:#C96A1F;">지금 날씨 제보하기</div>
+            </div>
+            <div class="dash"><b>CWR STATE</b><br>미확정 주변 제보 · 상세 확인 · W2 진입</div>
+            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">W1</span><span class="nname">홈 화면 + 제보 버튼 + 주변 제보 카드</span>
+          <ul>
+            <li>F2 — 홈에 "주변 날씨 제보" 카드 항시 표시 (미확정=소프트, 확정=강조)</li>
+            <li>제보 버튼은 홈 하단 보조 pill 위계로 배치, 탭 → W2 제보 화면으로 이동</li>
+            <li>주변 제보 카드 탭 → 상세 오버레이 (CWR3 확정 시 홈 날씨 위에 표시)</li>
+            <li>CWR STATE에서 미확정/상세 확인/제보 진입 상태 확인</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- W2 제보 날씨 선택 화면 (F1) -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>✕</span><span>지금 날씨 어때요?</span><span></span></div>
+            <div class="small" style="display:block;text-align:center;margin:6px 0 10px;color:#888;">위치 권한 정상 · 서울 마포구 합정동 (GPS 자동)</div>
+            <div class="seg"><div class="on">위치 권한 정상</div><div>Guest 제보</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 4px;">
+              <div class="box" style="text-align:center;padding:12px 4px;"><div style="font-size:22px;">☀</div><div class="small" style="display:block;margin-top:4px;">맑음</div></div>
+              <div class="box" style="text-align:center;padding:12px 4px;"><div style="font-size:22px;">⛅</div><div class="small" style="display:block;margin-top:4px;">흐림</div></div>
+              <div class="box" style="text-align:center;padding:12px 4px;border:2px solid #0066FF;"><div style="font-size:22px;">🌧</div><div class="small" style="display:block;margin-top:4px;color:#0066FF;font-weight:700;">비 ← 선택</div></div>
+              <div class="box" style="text-align:center;padding:12px 4px;"><div style="font-size:22px;">🌨</div><div class="small" style="display:block;margin-top:4px;">눈</div></div>
+              <div class="box" style="text-align:center;padding:12px 4px;"><div style="font-size:22px;">💨</div><div class="small" style="display:block;margin-top:4px;">강풍</div></div>
+              <div class="box" style="text-align:center;padding:12px 4px;"><div style="font-size:22px;">🌩</div><div class="small" style="display:block;margin-top:4px;">천둥</div></div>
+            </div>
+            <div class="btn" style="margin-top:12px;">제보하기</div>
+            <div class="small" style="display:block;text-align:center;margin-top:6px;color:#aaa;">60분 후 자동 만료 · 언제든 취소 가능</div>
+            <div class="dash"><b>REPORT STATE</b><br>선택 대기 · 위치 권한 · Guest/계정 제보 · 완료 처리</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">W2</span><span class="nname">탭 제보 화면 (F1)</span>
+          <ul>
+            <li>6가지 날씨 아이콘 그리드 — 탭 1회 선택 → "제보하기" 탭 1회</li>
+            <li>GPS 자동 위치 표시, 3초 이내 완료 목표</li>
+            <li>위치 권한 전 상태에서 제보하기 탭 시 pendingAction=날씨 제보 저장, returnTo=W2로 O3 권한 단계 연결</li>
+            <li>O3 완료 후 returnTo=W2, selectedWeather, resumeWeatherReport 상태로 돌아와 선택 날씨와 GPS 제보 준비 상태 유지</li>
+            <li>Guest 제보는 익명 처리 가능, 배지/이력 반영은 A2 계정 연결 후 적용</li>
+            <li>배지/이력 저장 탭 → A2/A3 완료 후 returnTo=W2, resumeReportAccount 상태로 복귀해 계정 제보 상태 표시</li>
+            <li>유효시간 기본 60분 자동 만료 (강설 120분)</li>
+            <li>운전 중에도 쓸 수 있는 최소 UI — 텍스트 입력 없음</li>
+            <li>닫기 → W1, 제보하기 → W3 완료 화면</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- W3 제보 완료 + 배지 업데이트 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span></span><span>제보 완료</span><span></span></div>
+            <div style="text-align:center;padding:16px 8px;">
+              <div style="font-size:36px;margin-bottom:8px;">✅</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">제보 감사합니다!</div>
+              <div class="small" style="display:block;margin-bottom:12px;">합정동 · 🌧 비 · 오후 2:41</div>
+              <div class="box" style="text-align:left;">
+                <span class="t">주변 제보 현황 (F3)</span>
+                <div style="margin-top:6px;"><div class="chip" style="background:#E8F5E9;color:#2E7D32;">✅ 확정됨 — 반경 500m · 4건</div></div>
+                <div class="small" style="display:block;margin-top:6px;">"비" 제보 확정 · 홈 화면에 오버레이 표시 중</div>
+              </div>
+              <div class="box" style="margin-top:8px;text-align:left;border-left:3px solid #C96A1F;">
+                <span class="t" style="color:#C96A1F;">🏅 배지 업데이트 (F4)</span>
+                <div style="margin-top:6px;font-size:12px;"><span style="color:#888;">누적 확정 제보 </span><b>12건</b></div>
+                <div style="margin-top:4px;"><div class="chip" style="background:#FFF7EC;color:#C96A1F;">☁ 관측자 Lv.2</div></div>
+                <div class="small" style="display:block;margin-top:4px;color:#888;">다음 레벨까지 38건 → 🌦 기상 리포터</div>
+              </div>
+            </div>
+            <div class="btn-ghost" style="margin:0 8px;">확인</div>
+            <div class="dash"><b>BADGE STATE</b><br>확정 제보 · 홈 오버레이 · 기여 레벨</div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">W3</span><span class="nname">제보 완료 + 신뢰도 + 배지</span>
+          <ul>
+            <li>F3 — 신뢰도 알고리즘 결과 즉시 표시 (확정/미확정)</li>
+            <li>F4 — 현재 레벨 + 다음 레벨까지 남은 건수</li>
+            <li>확정 시 "홈에 오버레이 표시 중" 메시지로 기여 실감</li>
+            <li>레벨: 새싹(0~9) → 관측자(10~49) → 리포터(50~199) → 동네 관측왕(200~) → 날씨 도우미(500~)</li>
+            <li>확인 → W1 홈 제보 카드로 복귀</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- W4 MY 탭 — 제보 이력 & 랭킹 (F6) -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>←</span><span>내 제보 이력</span><span></span></div>
+            <div class="box" style="text-align:center;">
+              <div style="font-size:18px;font-weight:700;">☁ 관측자 Lv.2</div>
+              <div style="display:flex;justify-content:space-around;margin-top:8px;font-size:12px;">
+                <div><b style="font-size:15px;">37</b><br><span style="color:#888;">이번달</span></div>
+                <div><b style="font-size:15px;">89%</b><br><span style="color:#888;">확정률</span></div>
+                <div><b style="font-size:15px;">12위</b><br><span style="color:#888;">지역 랭킹</span></div>
+              </div>
+            </div>
+            <div class="box"><span class="t">최근 제보</span></div>
+            <div class="listitem">🌧 비 · 합정동 · 오후 2:41 <span style="font-size:10px;color:#2E7D32;">✅ 확정</span></div>
+            <div class="listitem">☀ 맑음 · 홍대입구 · 오전 11:05 <span style="font-size:10px;color:#2E7D32;">✅ 확정</span></div>
+            <div class="listitem">⛅ 흐림 · 신촌 · 오전 9:30 <span style="font-size:10px;color:#999;">⏳ 만료</span></div>
+            <div class="box" style="border-left:3px solid #2E7D32;">
+              <span class="t" style="color:#2E7D32;">✅ 내 제보가 맞았어요!</span>
+              <div class="small" style="display:block;margin-top:4px;">어제 2:41 "비" 제보 → 기상청 데이터 일치</div>
+            </div>
+            <div class="dash"><b>HISTORY STATE</b><br>제보 기록 · 확정률 · 지역 랭킹 · MY 재진입</div>
+            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div class="on"><b></b>MY</div><div><b></b>소셜</div></div>
+          </div>
+        </div>
+        <div class="note"><span class="nid">W4</span><span class="nname">MY 탭 — 제보 이력 & 반영 리포트 (F6 · v2.1)</span>
+          <ul>
+            <li>F6 — 제보 기록, 확정률, 지역 랭킹 조회</li>
+            <li>"✅ 내 제보가 맞았어요" 피드백으로 기여 보람 강화</li>
+            <li>v2.1 출시 예정 — v2.0은 배지·간단 이력까지만 제공</li>
+            <li>F5 Premium: 저장 장소 제보 알림은 MY→알림설정에서 관리</li>
+            <li>뒤로가기 → M1, 하단 탭 → H1/C1/G1/M1/S0</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ 9. 소셜 (ON Square) ════════ -->
+  <div class="sec">
+    <span class="sec-tag">09 · SOCIAL</span>
+    <h2>소셜 — ON Square</h2>
+    <p class="sec-desc">앱 런칭과 함께 ON Square Lite(S0~S3) 공개. S1은 오늘의 날씨 미션을 중심으로 체크인·제보·공감 행동을 1탭으로 유도하고, Weather Mail(S4)·CP 아이템샵(S5)은 출시 후 v1.1부터 순차 공개.</p>
+    <div class="row">
+
+      <!-- S0: 대표 마스코트 시작 + 컴패니언 미리보기 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>ON Square 입장</span></div>
+            <div class="box"><span class="t">원소 컴패니언을 만나보세요</span>대표 마스코트로 바로 시작하고, 날씨 체크인으로 작은 원소 친구를 수집합니다.</div>
+            <div class="chips">
+              <div class="chip">Solar</div>
+              <div class="chip">Rain</div>
+              <div class="chip">Storm</div>
+              <div class="chip">Wind</div>
+              <div class="chip">Frost</div>
+              <div class="chip">Mist</div>
+            </div>
+            <div class="dash">대표 마스코트 + 둘러보는 컴패니언 미리보기</div>
+            <div class="dash"><span class="t">ON SQUARE STATE</span>최초 진입 · 대표 마스코트 즉시 부여 · 선택 컴패니언 미리보기</div>
+            <div class="btn">대표 마스코트로 ON Square 시작</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S0</span><span class="nname">대표 마스코트 시작 · 컴패니언 미리보기</span>
+          <ul>
+            <li>대표 마스코트 자동 부여 — 선택 부담 없이 즉시 시작</li>
+            <li>Solar · Rain · Storm · Wind · Frost · Mist 6종은 수집 대상</li>
+            <li>날씨 체크인 시 해당 원소 컴패니언 해금·XP 적립</li>
+            <li>기존 유저는 내 ON Square(S1)로 바로 이동</li>
+            <li>CTA 탭 시 S1, 하단 소셜 탭도 ON Square 흐름으로 연결</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- S1: 내 ON Square — 대표 + 동행 컴패니언 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>내 ON Square</span></div>
+            <div class="box"><span class="t">오늘의 날씨 미션</span>비 오는 동네에 우산 제보가 필요해요 · 체크인 CTA</div>
+            <div class="img" style="height:88px;">대표 마스코트 — 체크인 후 젬 발광·상태 변화</div>
+            <div class="box"><span class="t">오늘의 동행 · Rain Lv.7</span>XP 340 / 500 <span class="tag">비옴</span></div>
+            <div class="dash"><span class="t">광장 상태</span>제보 6건 · 공감 1,247 · 도움 12 · Note/리액션 진입</div>
+            <div class="dash">체크인 후 배지 조각·XP·포인트 즉시 피드백</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S1</span><span class="nname">내 ON Square · 대표 + 동행 컴패니언</span>
+          <ul>
+            <li>대표 마스코트는 메인 캐릭터로 상시 노출</li>
+            <li>2D Living Mascot: 기본 미동 + 현재 날씨 상태 + 체크인/미션 1회 반응</li>
+            <li>첫 화면은 오늘의 날씨 미션을 우선 노출하고 체크인 CTA를 제공</li>
+            <li>오늘의 동행 컴패니언 레벨 · XP · 날씨 무드 표시</li>
+            <li>폭우 → Rain XP / 35°C↑ → Solar XP 등</li>
+            <li>체크인 후 XP·포인트·배지 조각·동네 도움 지표 즉시 반영</li>
+            <li>Weather Note(S2), 날씨 리액션(S3)으로 이어지는 소셜 허브 역할</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- S2: Weather Note 지도 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>Weather Note</span><div class="ic">✏</div></div>
+            <div class="img" style="height:140px;">ON Square 도시 맵 — 실황 핀 다수 표시</div>
+            <div class="box"><span class="t">핀 미리보기 — 서울 종로</span>"우산 필수, 빗줄기 강함" — 3분 전 · 도움됨 12 · 도움됨 CTA</div>
+            <div class="box"><span class="t">오늘 종로 날씨 도움 지수</span>12/20 · 도움 반응 시 신뢰도 상승</div>
+            <div class="lrow">
+              <div class="btn-ghost" style="flex:1;">핀 작성</div>
+              <div class="btn" style="flex:1;">내 위치 제보</div>
+            </div>
+            <div class="dash"><span class="t">NOTE STATE</span>읽기 가능 · 작성 계정 필요(A2) · 위치 제보 권한 필요(O3)</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S2</span><span class="nname">Weather Note 지도</span>
+          <ul>
+            <li>GPS 자동 태그 · 24시간 후 만료</li>
+            <li>'도움됨' 익명 집계 · MVP는 포인트 피드백과 지역 도움 지수 반영, 정식 CP 경제는 v1.1 이후 확장</li>
+            <li>CWR(커뮤니티 날씨 제보)와 연계 (점선)</li>
+            <li>Guest는 읽기 가능, 핀 작성은 A2 계정 연결 gate 호출</li>
+            <li>Guest 핀 작성 탭 → A2/A3 완료 후 returnTo=S2, resumeNoteWrite 상태로 복귀해 작성 준비 완료 표시</li>
+            <li>내 위치 제보는 O3 권한 gate 호출, 권한 허용 후 returnTo=S2, resumeLocationReport 상태로 복귀하고 CWR/W2와 연계</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- S3: 날씨 리액션 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>날씨 리액션</span></div>
+            <div class="box"><span class="t">현재 날씨 · 서울 — 폭우</span>"다들 고생중" 리액션 활성화 · 익명 동행 아바타 표시</div>
+            <div class="box">이 도시 <b>1,247명</b>이 같은 날씨 중</div>
+            <div class="lrow">
+              <div class="btn" style="flex:1;">공감하기</div>
+              <div class="btn-ghost" style="flex:1;">다른 도시 보기</div>
+            </div>
+            <div class="box"><span class="t">보상 피드백</span>공감 1탭 → 익명 집계 + 컴패니언 반응 + 배지 조각 표시</div>
+            <div class="dash"><span class="t">REACTION STATE</span>도시 선택 · 공감 전/완료 · 익명 동행 · 보상 반영</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S3</span><span class="nname">날씨 리액션 (익명 연대)</span>
+          <ul>
+            <li>현재 날씨 기반 리액션 자동 생성</li>
+            <li>1탭 공감 → 익명 집계 표시</li>
+            <li>공감 후 컴패니언 반응·포인트·배지 조각 피드백</li>
+            <li>동일 날씨 유저 도시별 현황</li>
+            <li>다른 도시 보기 또는 도시 행 탭으로 대상 도시 상태 전환</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- S4: Weather Mail -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>Weather Mail</span><div class="ic">✉</div></div>
+            <div class="lrow">
+              <div class="btn" style="flex:1;">✏ 메일 작성</div>
+              <div class="btn-ghost" style="flex:1;">📬 받은 메일함</div>
+            </div>
+            <div class="box"><span class="t">수신 조건 설정</span>다음 폭설 날 도착 / 1년 후 오늘 / 기온 35°C↑ 도달 시 …</div>
+            <div class="box"><span class="t">보관 중인 메일 1건</span>"내년 여름에 읽어봐" — 폭염(35°C↑) 트리거 대기 중</div>
+            <div class="dash">날씨 API 트리거 → 조건 충족 시 자동 발송</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S4</span><span class="nname">Weather Mail (출시 후 v1.1)</span>
+          <ul>
+            <li>메일 작성 + 수신 조건 설정</li>
+            <li>날씨 API 트리거 → 조건 충족 시 자동 발송</li>
+            <li>받은 Weather Mail 보관함</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- S5: CP 적립 / 아이템샵 -->
+      <div class="cell">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="screen">
+            <div class="navbar"><span>CP · 아이템샵</span></div>
+            <div class="box"><span class="t">CP 잔액 · 340 CP</span>날씨 체크인 +10 / Weather Note 도움됨 +1 / 리액션 기여 +2</div>
+            <div class="seg"><div class="on">코스메틱</div><div>배지</div><div>이모트</div></div>
+            <div class="box">Rain 캐릭터 스킨 · 우산 모자 · 120 CP</div>
+            <div class="box">Storm 이모트 세트 · 번개맨 · 80 CP</div>
+            <div class="dash" style="font-size:10px;">Pay-to-Win 없음 · CP는 날씨 앱 활동으로만 획득</div>
+          </div>
+          <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div class="on"><b></b>소셜</div></div>
+        </div>
+        <div class="note"><span class="nid">S5</span><span class="nname">CP 적립 현황 / 아이템샵 (출시 후 v1.1)</span>
+          <ul>
+            <li>CP 잔액 · 적립 내역 확인</li>
+            <li>코스메틱 아이템샵 (캐릭터 스킨 · 배지 · 이모트)</li>
+            <li>Pay-to-Win 없음 · 날씨 활동으로만 CP 획득</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="sec" style="margin-top:64px;border-top:1px solid #ddd;padding-top:20px;">
+    <p style="font-size:11px;color:#999;">
+      WeatherON 화면 와이어프레임 · Lo-Fi v1 · 2026.06 — 총 45개 화면 (AUTH 4 · 온보딩 6 · 홈 5 · 코디 4 · 출발 6 · MY 3 · PLACE 3 · ADMOB 4 · CWR 4 · 소셜 6)<br>
+      괄호 ID(D1, E1, I2…)는 UIUX_플로우차트.mmd 노드 참조 · 신규 섹션(AUTH/PLACE/ADMOB)은 WeatherON_planning_v5.html 16-1·10-1·14-1 내용을 로우파이로 변환 · AUTH는 한국/일본/일반 해외 3권역 로그인 전략을 자동 추천 방식으로 반영, 중국권 등 특수 환경 국가는 별도 검토 · 다음 단계: CI/BI 가이드 컬러 적용 미드파이
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

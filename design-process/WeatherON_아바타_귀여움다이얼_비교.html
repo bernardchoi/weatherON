@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherON · 귀여움 다이얼 비교 (권고3 결정용)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0A1730;font-family:'Noto Sans KR',sans-serif;padding:40px;color:#fff;max-width:1080px;margin:0 auto;}
+  h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:23px;font-weight:800;margin-bottom:8px;}
+  .sub{color:rgba(168,196,224,0.68);font-size:13px;margin-bottom:28px;line-height:1.7;}
+  .sub b{color:#F0A020;font-weight:600;}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:10px;}
+  .colhead{text-align:center;padding:12px 8px;border-radius:14px 14px 0 0;}
+  .colhead .ab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;color:rgba(168,196,224,0.7);}
+  .colhead .nm{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;margin-top:2px;}
+  .colhead .en{font-size:10px;color:rgba(168,196,224,0.55);font-family:'DM Mono',monospace;margin-top:2px;}
+  .colhead.rec{background:rgba(58,191,160,0.12);border:1px solid rgba(58,191,160,0.5);}
+  .colhead.rec .nm{color:#3ABFA0;}
+  .recpill{display:inline-block;font-size:9px;font-weight:700;color:#3ABFA0;font-family:'DM Mono',monospace;border:1px solid rgba(58,191,160,0.5);border-radius:6px;padding:1px 6px;margin-top:4px;}
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+  .cell{background:#11254A;border-radius:16px;padding:8px;display:flex;justify-content:center;}
+  .cell.rec{background:#123A38;border:1px solid rgba(58,191,160,0.35);}
+  .cell svg{width:100%;height:auto;max-width:170px;}
+  table{width:100%;border-collapse:collapse;margin:22px 0 8px;font-size:12px;}
+  th,td{border:1px solid rgba(255,255,255,0.1);padding:9px 11px;text-align:left;vertical-align:top;}
+  th{background:#16305C;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11.5px;}
+  td.lab{color:rgba(168,196,224,0.8);font-weight:600;width:130px;}
+  .reccol{background:rgba(58,191,160,0.08);}
+  .note{background:#16305C;border-radius:14px;padding:18px 20px;font-size:12.5px;line-height:1.85;color:rgba(232,237,246,0.85);margin-top:8px;}
+  .note h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:8px;color:#fff;}
+  .note b{color:#3ABFA0;font-weight:600;}
+  .note .g{color:#F0A020;font-weight:600;}
+  footer{margin-top:36px;font-size:11px;color:rgba(168,196,224,0.5);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:16px;}
+</style>
+</head>
+<body>
+
+<h1>WeatherON · 귀여움 다이얼 비교</h1>
+<p class="sub">
+  디자인 크리틱 <b>권고 3</b> 결정용. 같은 정령을 등신비·눈 크기·하이라이트·볼터치만 바꿔 3단계로 비교함.<br>
+  좌(절제) = 현재 바이블값(프리미엄 노선) · 우(맥시멀) = 2026 치비 시장 표준(3:1 머리·대형 반짝 눈). 어디에 다이얼을 고정할지 결정해 바이블에 못박는 게 목표.
+</p>
+
+<div class="cols">
+  <div class="colhead"><div class="ab">A</div><div class="nm">절제</div><div class="en">restrained · 현재값</div></div>
+  <div class="colhead rec"><div class="ab">B</div><div class="nm">균형</div><div class="en">balanced</div><div class="recpill">RECOMMEND</div></div>
+  <div class="colhead"><div class="ab">C</div><div class="nm">맥시멀 큐트</div><div class="en">maximal · 시장표준</div></div>
+</div>
+
+<div class="row">
+  <div class="cell"><div data-id="Solar" data-dial="restrained"></div></div>
+  <div class="cell rec"><div data-id="Solar" data-dial="balanced"></div></div>
+  <div class="cell"><div data-id="Solar" data-dial="maximal"></div></div>
+</div>
+<div class="row">
+  <div class="cell"><div data-id="Rain" data-dial="restrained"></div></div>
+  <div class="cell rec"><div data-id="Rain" data-dial="balanced"></div></div>
+  <div class="cell"><div data-id="Rain" data-dial="maximal"></div></div>
+</div>
+
+<table>
+  <tr><th>항목</th><th>A 절제</th><th class="reccol">B 균형 (권장)</th><th>C 맥시멀 큐트</th></tr>
+  <tr><td class="lab">등신비</td><td>2.4등신</td><td class="reccol">2.1등신</td><td>1.8등신 (3:1 느낌)</td></tr>
+  <tr><td class="lab">눈 크기</td><td>작게(절제)</td><td class="reccol">중간</td><td>초대형</td></tr>
+  <tr><td class="lab">눈 하이라이트</td><td>1점</td><td class="reccol">2점</td><td>2점 + 스파클 별</td></tr>
+  <tr><td class="lab">볼터치</td><td>옅게</td><td class="reccol">적당</td><td>진하게·크게</td></tr>
+  <tr><td class="lab">인상</td><td>차분·프리미엄·다소 성숙</td><td class="reccol">친근하면서 단정</td><td>최대 귀여움·키치</td></tr>
+  <tr><td class="lab">트렌드 정렬</td><td>낮음</td><td class="reccol">충분</td><td>최고</td></tr>
+  <tr><td class="lab">브랜드(Quiet Horizon) 정렬</td><td>최고</td><td class="reccol">양호</td><td>충돌 위험</td></tr>
+  <tr><td class="lab">차별성</td><td>또렷(절제가 차별)</td><td class="reccol">또렷(절제+귀여움 균형)</td><td>낮음(시장 평준화)</td></tr>
+</table>
+
+<div class="note">
+  <h3>권장: B 균형</h3>
+  <b>B를 기준값으로 고정</b> 권장함. 근거: 순수 A(절제)는 브랜드엔 최적이나 2026 치비 시장에서 "덜 귀엽다"로 읽혀 진입 매력이 떨어짐. 순수 C(맥시멀)는 귀엽지만 <span class="g">네이비/골드 절제라는 WeatherON 차별점이 희석</span>되고 흔한 가챠 룩으로 평준화됨. B는 시장이 기대하는 귀여움 기준선(중간 눈·2 하이라이트·적당 볼터치)을 충족하면서, 굵은 검정 외곽선 대신 네이비 아웃라인·가슴 골드 젬·골드 림라이트라는 절제 코드를 그대로 유지해 차별성을 지킴.<br><br>
+  <b>스파클 별(C 요소)은 상시 적용하지 않음</b> — Living Mascot의 "기쁨/맑음" 기분이나 레어 드랍 같은 <span class="g">강조 순간에만 한정 노출</span>해 평소 절제와 하이라이트 모먼트를 분리. 이러면 다이얼을 B에 두고도 필요할 때 C의 임팩트를 빌려옴.
+</div>
+
+<footer>
+  WeatherON · 귀여움 다이얼 비교 (권고3) · 2026-06-21<br>
+  결정 시 brand/WeatherON_ONSquare_캐릭터_아트바이블.md 2장(프로포션)·3장(페이스)·6.1(표정 슬롯) 기준값을 B로 갱신.<br>
+  ※ 본 시안은 파라메트릭 SVG 프로토타입으로 비율·표정 차이만 비교하기 위한 것. 최종 룩은 일러스트 티어(바이블 9장 프롬프트)에서 확정.
+</footer>
+
+<script>
+const PAL={
+  Solar:{base:'#F0A020',light:'#FFCB6B',dark:'#C77A12',out:'#7A4A0E'},
+  Rain :{base:'#4A8FD4',light:'#86BCEC',dark:'#2C68AE',out:'#1B3D6B'},
+};
+const DIAL={
+  restrained:{ head:{w:88,h:82,y:26,rx:34}, eye:{rx:5.6,ry:7,cy:74,dx:15.5,hl:1,spark:false}, body:{w:62,h:60,y:108}, arm:{ry:19,cy:132,dx:35}, feet:{rx:13,ry:9,cy:178,dx:14}, blush:{rx:6.5,ry:3.4,op:0.6,cy:84,dx:26}, mouthW:8, mouthD:7 },
+  balanced:{ head:{w:98,h:90,y:22,rx:40}, eye:{rx:7,ry:8.6,cy:78,dx:16.5,hl:2,spark:false}, body:{w:56,h:54,y:106}, arm:{ry:18,cy:130,dx:33}, feet:{rx:12,ry:8.5,cy:168,dx:13}, blush:{rx:7.5,ry:3.9,op:0.7,cy:88,dx:27}, mouthW:9, mouthD:7.5 },
+  maximal:{ head:{w:112,h:102,y:14,rx:46}, eye:{rx:9.5,ry:11.5,cy:84,dx:18.5,hl:2,spark:true}, body:{w:48,h:42,y:110}, arm:{ry:15,cy:129,dx:28}, feet:{rx:11,ry:8,cy:160,dx:12}, blush:{rx:9.5,ry:4.6,op:0.84,cy:93,dx:30}, mouthW:10, mouthD:8.5 },
+};
+function motif(id,c,dy){
+  const t=`transform="translate(0 ${dy})"`;
+  if(id==='Solar') return `<g ${t} stroke="${c.base}" stroke-width="3" stroke-linecap="round"><line x1="80" y1="20" x2="80" y2="6"/><line x1="64" y1="24" x2="56" y2="13"/><line x1="96" y1="24" x2="104" y2="13"/></g>`;
+  return `<path ${t} d="M80 4 C84 11 88 15 88 20 a8 8 0 0 1 -16 0 C72 15 76 11 80 4 Z" fill="${c.light}" stroke="${c.out}" stroke-width="1.6"/>`;
+}
+function eye(cx,cy,e){
+  let s=`<ellipse cx="${cx}" cy="${cy}" rx="${e.rx}" ry="${e.ry}" fill="#15294D"/>`;
+  s+=`<circle cx="${(cx-e.rx*0.32).toFixed(1)}" cy="${(cy-e.ry*0.38).toFixed(1)}" r="${(e.rx*0.34).toFixed(1)}" fill="#fff"/>`;
+  if(e.hl>1) s+=`<circle cx="${(cx+e.rx*0.32).toFixed(1)}" cy="${(cy+e.ry*0.32).toFixed(1)}" r="${(e.rx*0.18).toFixed(1)}" fill="#fff" fill-opacity="0.9"/>`;
+  if(e.spark){const sx=(cx-e.rx*0.05), sy=(cy-e.ry*0.62);
+    s+=`<path d="M${sx} ${sy-3} L${sx+1} ${sy} L${sx+4} ${sy} L${sx+1.4} ${sy+1.6} L${sx+2.4} ${sy+4.6} L${sx} ${sy+2.4} L${sx-2.4} ${sy+4.6} L${sx-1.4} ${sy+1.6} L${sx-4} ${sy} L${sx-1} ${sy} Z" fill="#fff" fill-opacity="0.95"/>`;}
+  return s;
+}
+function chibi(id,dialName){
+  const c=PAL[id], D=DIAL[dialName];
+  const H=D.head, hx=80-H.w/2, B=D.body, bx=80-B.w/2, g=id+dialName, dy=H.y-26, gemCy=B.y+B.h*0.4;
+  const mY=D.eye.cy+H.h*0.2;
+  const sheenCx=hx+H.w*0.33, sheenCy=H.y+H.h*0.4, sheenRx=H.w*0.29, sheenRy=H.h*0.26;
+  const rim=`M ${(hx+5).toFixed(1)} ${(H.y+H.h*0.42).toFixed(1)} A ${(H.w*0.55).toFixed(1)} ${(H.h*0.5).toFixed(1)} 0 0 1 ${(hx+H.w*0.46).toFixed(1)} ${(H.y+3).toFixed(1)}`;
+  return `<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hd${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.light}"/><stop offset="0.55" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <linearGradient id="bd${g}" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <radialGradient id="sh${g}" cx="0.32" cy="0.28" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="80" cy="190" rx="${(B.w*0.7).toFixed(1)}" ry="8" fill="#000" opacity="0.24"/>
+  <ellipse cx="${80-D.feet.dx}" cy="${D.feet.cy}" rx="${D.feet.rx}" ry="${D.feet.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80+D.feet.dx}" cy="${D.feet.cy}" rx="${D.feet.rx}" ry="${D.feet.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80-D.arm.dx}" cy="${D.arm.cy}" rx="10" ry="${D.arm.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80+D.arm.dx}" cy="${D.arm.cy}" rx="10" ry="${D.arm.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <rect x="${bx}" y="${B.y}" width="${B.w}" height="${B.h}" rx="${Math.min(B.w/2,27)}" fill="url(#bd${g})" stroke="${c.out}" stroke-width="2"/>
+  <g stroke="#F0A020" stroke-width="1.3" stroke-linecap="round"><line x1="80" y1="${(gemCy-6).toFixed(1)}" x2="80" y2="${(gemCy-8.5).toFixed(1)}"/><line x1="85" y1="${gemCy.toFixed(1)}" x2="87.5" y2="${gemCy.toFixed(1)}"/><line x1="75" y1="${gemCy.toFixed(1)}" x2="72.5" y2="${gemCy.toFixed(1)}"/></g>
+  <circle cx="80" cy="${gemCy.toFixed(1)}" r="4.2" fill="#F0A020"/>
+  ${motif(id,c,dy)}
+  <rect x="${hx}" y="${H.y}" width="${H.w}" height="${H.h}" rx="${H.rx}" fill="url(#hd${g})" stroke="${c.out}" stroke-width="2.2"/>
+  <ellipse cx="${sheenCx.toFixed(1)}" cy="${sheenCy.toFixed(1)}" rx="${sheenRx.toFixed(1)}" ry="${sheenRy.toFixed(1)}" fill="url(#sh${g})"/>
+  <path d="${rim}" fill="none" stroke="#F0A020" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.55"/>
+  <ellipse cx="${(80-D.blush.dx).toFixed(1)}" cy="${D.blush.cy}" rx="${D.blush.rx}" ry="${D.blush.ry}" fill="${c.light}" opacity="${D.blush.op}"/>
+  <ellipse cx="${(80+D.blush.dx).toFixed(1)}" cy="${D.blush.cy}" rx="${D.blush.rx}" ry="${D.blush.ry}" fill="${c.light}" opacity="${D.blush.op}"/>
+  ${eye(80-D.eye.dx,D.eye.cy,D.eye)}
+  ${eye(80+D.eye.dx,D.eye.cy,D.eye)}
+  <path d="M${80-D.mouthW} ${mY.toFixed(1)} Q80 ${(mY+D.mouthD).toFixed(1)} ${80+D.mouthW} ${mY.toFixed(1)}" fill="none" stroke="#15294D" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>`;
+}
+document.querySelectorAll('[data-id]').forEach(d=>{ d.innerHTML=chibi(d.getAttribute('data-id'), d.getAttribute('data-dial')); });
+</script>
+</body>
+</html>

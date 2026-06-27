@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherON — CI/BI 가이드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&family=Manrope:wght@300;600;800&display=swap');
+  :root {
+    --horizon:#0C1F3F; --dawn:#F0A020; --sky:#4A8FD4; --clear:#3ABFA0;
+    --rain:#E85A5A; --cloud:#E8EDF6; --mist:#6B80A0; --ink:#0C1F3F;
+    --paper:#F4F7FC; --border:rgba(12,31,63,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--paper);color:var(--ink);line-height:1.7;}
+
+  /* HERO */
+  .hero{background:var(--horizon);padding:72px 56px 64px;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;bottom:-80px;right:-60px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(240,160,32,.14) 0%,transparent 65%);}
+  .hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mist);text-transform:uppercase;margin-bottom:18px;}
+  .hero-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:48px;font-weight:300;color:#fff;line-height:1.1;letter-spacing:-1.5px;margin-bottom:14px;}
+  .hero-title span{color:var(--dawn);font-weight:800;}
+  .hero-sub{font-size:14px;color:var(--mist);max-width:600px;line-height:1.85;}
+  .hero-sub strong{color:#fff;font-weight:500;}
+  .hero-tagline{font-family:'DM Mono',monospace;font-size:12px;color:var(--dawn);letter-spacing:.06em;margin-top:18px;}
+
+  /* LAYOUT */
+  .doc{max-width:960px;margin:0 auto;padding:0 32px;}
+  .section{padding:72px 0 0;}
+  .section-label{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.22em;color:var(--sky);text-transform:uppercase;margin-bottom:6px;}
+  .section-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:27px;font-weight:700;color:var(--ink);letter-spacing:-.5px;margin-bottom:14px;line-height:1.3;}
+  .section-desc{font-size:13.5px;color:var(--mist);max-width:680px;margin-bottom:28px;line-height:1.85;}
+  .section-desc strong{color:var(--ink);font-weight:600;}
+
+  /* LOGO MARKS */
+  .mark-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .mark-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:24px;text-align:center;}
+  .mark-card svg{width:88px;height:88px;margin-bottom:14px;}
+  .mark-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;}
+  .mark-desc{font-size:12px;color:var(--mist);line-height:1.7;}
+
+  /* WORDMARK */
+  .word-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .word-card{border-radius:16px;padding:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:120px;}
+  .word-dark{background:var(--horizon);}
+  .word-light{background:#fff;border:1px solid var(--border);}
+  .wordmark-h{width:200px;height:64px;margin-bottom:14px;}
+  .wordmark-v{width:108px;height:90px;}
+  .word-tagline{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);letter-spacing:.08em;}
+
+  /* LOCKUP */
+  .lockup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .lockup-item{display:flex;flex-direction:column;}
+  .lockup-card{flex:1;border-radius:16px;border:1px solid var(--border);background:#fff;padding:28px;display:flex;align-items:center;justify-content:center;gap:16px;min-height:104px;}
+  .lockup-card.dark{background:var(--horizon);border-color:var(--horizon);}
+  .lockup-card.col{flex-direction:column;gap:10px;}
+  .lockup-icon{width:46px;height:46px;flex-shrink:0;}
+  .lockup-icon.lg{width:58px;height:58px;}
+  .lockup-wordmark{width:140px;height:45px;}
+  .lockup-caption{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);letter-spacing:.06em;margin-top:10px;text-align:center;}
+  .swatch-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .swatch-item{flex:1;min-width:80px;border-radius:14px;padding:18px;display:flex;align-items:center;justify-content:center;}
+  .swatch-item .lockup-icon{width:40px;height:40px;}
+
+  /* LIGHT / DARK MODE */
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .mode-card{border-radius:16px;border:1px solid var(--border);padding:32px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
+  .mode-card.light{background:#fff;}
+  .mode-card.dark{background:#0A1730;border-color:#0A1730;}
+  .mode-icon{width:64px;height:64px;border-radius:14px;box-shadow:0 8px 24px rgba(12,31,63,.18);}
+  .mode-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--ink);}
+  .mode-card.dark .mode-label{color:var(--paper);}
+  .mode-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);letter-spacing:.06em;}
+
+  .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .theme-card{border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+  .theme-card.light{background:#fff;color:var(--ink);}
+  .theme-card.dark{background:var(--horizon);color:var(--paper);border-color:var(--horizon);}
+  .theme-topbar{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border);}
+  .theme-card.dark .theme-topbar{border-bottom-color:rgba(255,255,255,.08);}
+  .theme-topbar svg:not(.topbar-wordmark){width:28px;height:28px;flex-shrink:0;}
+  .theme-topbar .topbar-wordmark{width:100px;height:32px;flex-shrink:0;}
+  .theme-body{padding:18px 18px 22px;display:flex;flex-direction:column;gap:10px;}
+  .theme-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;opacity:.85;}
+  .theme-pill{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.06em;padding:5px 10px;border-radius:10px;}
+  .theme-card.light .theme-pill{background:var(--cloud);color:var(--ink);}
+  .theme-card.dark .theme-pill{background:rgba(255,255,255,.08);color:var(--paper);}
+  .theme-caption{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);letter-spacing:.06em;text-align:center;}
+  .theme-caption-row{display:flex;gap:14px;margin-top:10px;}
+  .theme-caption-row > div{flex:1;}
+
+  /* iOS 26 LIQUID GLASS */
+  .glass-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .glass-layer-card{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:22px 14px;border-radius:16px;border:1px solid var(--border);background:#fff;}
+  .glass-layer-icon{width:72px;height:72px;border-radius:16px;}
+  .glass-layer-icon svg{width:100%;height:100%;display:block;}
+  .glass-checker{background-image:linear-gradient(45deg,#e4e9f2 25%,transparent 25%),linear-gradient(-45deg,#e4e9f2 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e4e9f2 75%),linear-gradient(-45deg,transparent 75%,#e4e9f2 75%);background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0px;background-color:#fff;}
+  .glass-layer-tag{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:var(--sky);text-transform:uppercase;margin-top:2px;}
+  .glass-layer-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--ink);}
+  .glass-layer-spec{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--mist);letter-spacing:.04em;}
+  .glass-preview-row{display:flex;gap:24px;align-items:center;}
+  .glass-preview{position:relative;width:120px;height:120px;border-radius:21.6px;overflow:hidden;flex-shrink:0;box-shadow:0 12px 32px rgba(12,31,63,.22);}
+  .glass-preview svg{width:100%;height:100%;display:block;}
+  .glass-sheen{position:absolute;inset:0;border-radius:21.6px;background:linear-gradient(135deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.18) 28%,rgba(255,255,255,0) 46%,rgba(255,255,255,0) 70%,rgba(255,255,255,.12) 100%);mix-blend-mode:overlay;pointer-events:none;}
+  .glass-preview-note{flex:1;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--mist);line-height:1.7;}
+  .glass-preview-note p{margin:0;}
+
+  /* COLOR PALETTE */
+  .pal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .pal-card{background:#fff;border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+  .pal-swatch{height:72px;}
+  .pal-info{padding:12px 14px;}
+  .pal-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px;}
+  .pal-hex{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);margin-bottom:6px;}
+  .pal-role{font-size:11.5px;color:var(--mist);line-height:1.6;}
+
+  /* COMBO */
+  .combo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .combo-card{border-radius:16px;border:1px solid var(--border);overflow:hidden;background:#fff;}
+  .combo-visual{padding:20px;min-height:120px;display:flex;align-items:center;}
+  .combo-visual.dark{background:var(--horizon);}
+  .combo-visual.light{background:var(--cloud);}
+  .combo-label{padding:14px 18px;border-top:1px solid var(--border);}
+  .combo-label .t{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;margin-bottom:3px;}
+  .combo-label .d{font-size:12px;color:var(--mist);line-height:1.7;}
+  .demo-card{background:var(--paper);border-radius:10px;padding:14px 16px;width:120px;}
+  .demo-temp{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:600;color:var(--ink);}
+  .demo-cond{font-size:11px;color:var(--mist);}
+  .demo-btn{margin-left:16px;background:var(--dawn);color:var(--horizon);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;padding:11px 22px;border-radius:18px;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-size:12px;font-weight:500;padding:7px 16px;border-radius:14px;color:#fff;}
+
+  /* COMPARISON TABLE */
+  .ctable-wrap{overflow-x:auto;}
+  .ctable{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
+  .ctable thead{background:var(--horizon);color:#fff;}
+  .ctable th{padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;text-align:left;font-weight:500;}
+  .ctable td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.7;}
+  .ctable tr:last-child td{border-bottom:none;}
+  .ctable tr:nth-child(even) td{background:var(--cloud);}
+  .ctable td.weatheron{background:rgba(240,160,32,.08)!important;font-weight:600;}
+  .ctable th.weatheron{background:var(--dawn);color:var(--horizon);}
+  .swatch-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
+
+  /* VERDICT */
+  .verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .verdict-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:24px;}
+  .verdict-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;}
+  .verdict-card p{font-size:13px;color:var(--mist);line-height:1.8;margin-bottom:8px;}
+  .verdict-card p:last-child{margin-bottom:0;}
+  .verdict-card p strong{color:var(--ink);font-weight:600;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:8px;font-size:11px;font-family:'DM Mono',monospace;margin-left:6px;}
+  .badge-g{background:#D4F5EC;color:#1A8060;}
+  .badge-o{background:#FDE8D8;color:#B05520;}
+
+  .strip{background:var(--horizon);border-radius:16px;padding:28px 32px;margin-bottom:0;}
+  .strip ol{padding-left:20px;}
+  .strip li{font-size:13.5px;color:var(--mist);line-height:1.9;margin-bottom:6px;}
+  .strip li strong{color:var(--dawn);font-weight:600;}
+  .strip li:last-child{margin-bottom:0;}
+
+  .divider{height:1px;background:var(--border);margin:60px 0 0;}
+  .footer{padding:36px 0 56px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-brand{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.5px;}
+  .footer-brand span{color:var(--dawn);}
+  .footer-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist);letter-spacing:.08em;}
+
+  @media(max-width:760px){
+    .hero{padding:48px 20px 52px;}.hero-title{font-size:34px;}
+    .doc{padding:0 16px;}
+    .mark-grid,.word-grid,.combo-grid,.verdict-grid,.lockup-grid,.mode-grid,.theme-grid,.glass-grid{grid-template-columns:1fr;}
+    .pal-grid{grid-template-columns:repeat(2,1fr);}
+    .section-title{font-size:22px;}
+    .glass-preview-row{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<svg style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
+  <defs>
+    <symbol id="icon-primary" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="21.6" fill="#0C1F3F"/>
+      <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#FDF6EB"/>
+      <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#0C1F3F"/>
+      <circle cx="88.8" cy="64.8" r="18.05" fill="#F0A020"/>
+      <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#F4F7FC"/>
+      <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#F4F7FC"/>
+      <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#F4F7FC"/>
+    </symbol>
+    <symbol id="icon-light" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="21.6" fill="#F4F7FC" stroke="#0C1F3F" stroke-width="0.8" stroke-opacity="0.15"/>
+      <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#0C1F3F"/>
+      <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#F4F7FC"/>
+      <circle cx="88.8" cy="64.8" r="18.05" fill="#F0A020"/>
+      <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#0C1F3F"/>
+      <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#0C1F3F"/>
+      <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#0C1F3F"/>
+    </symbol>
+    <symbol id="icon-mono" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="21.6" fill="#F4F7FC" stroke="#0C1F3F" stroke-width="0.8" stroke-opacity="0.15"/>
+      <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#0C1F3F"/>
+      <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#F4F7FC"/>
+      <circle cx="88.8" cy="64.8" r="18.05" fill="#0C1F3F"/>
+      <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#0C1F3F" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#0C1F3F" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#0C1F3F" stroke-width="2.88" stroke-linecap="round"/>
+      <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#0C1F3F"/>
+      <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#0C1F3F"/>
+      <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#0C1F3F"/>
+    </symbol>
+    <symbol id="icon-dark" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="21.6" fill="#070F1F"/>
+      <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#C9C2B4"/>
+      <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#070F1F"/>
+      <circle cx="88.8" cy="64.8" r="18.05" fill="#D9941F"/>
+      <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#D9941F" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#D9941F" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#D9941F" stroke-width="2.88" stroke-linecap="round"/>
+      <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#A9B6CC"/>
+      <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#A9B6CC"/>
+      <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#A9B6CC"/>
+    </symbol>
+    <symbol id="icon-lg-bg" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="21.6" fill="#0C1F3F"/>
+    </symbol>
+    <symbol id="icon-lg-mid" viewBox="0 0 120 120">
+      <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#FDF6EB"/>
+      <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#0C1F3F"/>
+    </symbol>
+    <symbol id="icon-lg-fg" viewBox="0 0 120 120">
+      <circle cx="88.8" cy="64.8" r="18.05" fill="#F0A020"/>
+      <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+      <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#F4F7FC"/>
+      <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#F4F7FC"/>
+      <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#F4F7FC"/>
+    </symbol>
+
+    <!-- WORDMARK LOGOTYPE: "weather" + sun/toggle glyph (O) + "N" -->
+    <symbol id="wordmark-h-dark" viewBox="0 0 250 80">
+      <text x="0" y="60" font-family="'Manrope',sans-serif" font-weight="300" font-size="44" letter-spacing="-1" fill="#F4F7FC">weather</text>
+      <g>
+        <circle cx="182.5" cy="42.5" r="17.5" fill="#F0A020"/>
+        <line x1="182.5" y1="25" x2="182.5" y2="14" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="172.5" y1="28.2" x2="166.1" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="192.5" y1="28.2" x2="198.9" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+      <text x="208" y="60" font-family="'Manrope',sans-serif" font-weight="800" font-size="44" fill="#F0A020">N</text>
+    </symbol>
+    <symbol id="wordmark-h-light" viewBox="0 0 250 80">
+      <text x="0" y="60" font-family="'Manrope',sans-serif" font-weight="300" font-size="44" letter-spacing="-1" fill="#0C1F3F">weather</text>
+      <g>
+        <circle cx="182.5" cy="42.5" r="17.5" fill="#F0A020"/>
+        <line x1="182.5" y1="25" x2="182.5" y2="14" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="172.5" y1="28.2" x2="166.1" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="192.5" y1="28.2" x2="198.9" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+      <text x="208" y="60" font-family="'Manrope',sans-serif" font-weight="800" font-size="44" fill="#F0A020">N</text>
+    </symbol>
+    <symbol id="wordmark-v-dark" viewBox="0 0 180 150">
+      <text x="90" y="42" text-anchor="middle" font-family="'Manrope',sans-serif" font-weight="300" font-size="27" letter-spacing="-0.5" fill="#F4F7FC">weather</text>
+      <g>
+        <circle cx="64.9" cy="106.65" r="23.35" fill="#F0A020"/>
+        <line x1="64.9" y1="83.3" x2="64.9" y2="68.6" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+        <line x1="51.5" y1="87.5" x2="43.1" y2="75.5" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+        <line x1="78.3" y1="87.5" x2="86.7" y2="75.5" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+      </g>
+      <text x="96.25" y="128" font-family="'Manrope',sans-serif" font-weight="800" font-size="58" fill="#F0A020">N</text>
+    </symbol>
+    <symbol id="wordmark-v-light" viewBox="0 0 180 150">
+      <text x="90" y="42" text-anchor="middle" font-family="'Manrope',sans-serif" font-weight="300" font-size="27" letter-spacing="-0.5" fill="#0C1F3F">weather</text>
+      <g>
+        <circle cx="64.9" cy="106.65" r="23.35" fill="#F0A020"/>
+        <line x1="64.9" y1="83.3" x2="64.9" y2="68.6" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+        <line x1="51.5" y1="87.5" x2="43.1" y2="75.5" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+        <line x1="78.3" y1="87.5" x2="86.7" y2="75.5" stroke="#F0A020" stroke-width="3.8" stroke-linecap="round"/>
+      </g>
+      <text x="96.25" y="128" font-family="'Manrope',sans-serif" font-weight="800" font-size="58" fill="#F0A020">N</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="hero">
+  <div class="doc">
+    <div class="hero-eyebrow">CI/BI Guide · WeatherON · 2026.06</div>
+    <div class="hero-title"><span style="font-weight:300;color:var(--paper);">weather</span><span>ON</span></div>
+    <div class="hero-sub">
+      <strong>Weather ON · Outfit ON · Go ON.</strong><br>
+      날씨를 켜고, 코디를 켜고, 오늘의 외출을 켠다 — 세 가지 의미를 하나의 이름에 담은 브랜드 아이덴티티.
+    </div>
+    <div class="hero-tagline">오늘의 외출, 미리 준비하세요</div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 · 브랜드 컨셉 -->
+  <div class="section">
+    <div class="section-label">01 · Concept</div>
+    <div class="section-title">브랜드 컨셉 — Weather ON / Outfit ON / Go ON</div>
+    <div class="section-desc">
+      세 단어 모두 "ON"으로 끝나는 워드플레이는 우연이 아니라 앱의 4탭 구조와 그대로 대응된다.
+      <strong>Weather ON → 홈</strong> (날씨·예보를 켠다), <strong>Outfit ON → 코디</strong> (오늘의 옷차림을 켠다),
+      <strong>Go ON → 출발</strong> (외출 준비를 켠다). 이름만으로 앱이 무엇을 하는지 설명되는 구조다.
+      MY는 워드플레이에서 빠지지만 계정/설정 허브는 보통 브랜드 네이밍과 분리되는 게 일반적이라 위화감은 없다.
+    </div>
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead><tr><th>워드플레이</th><th>대응 탭</th><th>핵심 의미</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Weather ON</strong></td><td>홈</td><td>날씨·예보·우산 정보를 "켠다" — 오늘 알아야 할 정보를 즉시 제공</td></tr>
+          <tr><td><strong>Outfit ON</strong></td><td>코디</td><td>날씨 기반 AI 코디 추천을 "켠다" — 오늘 입을 옷을 대신 골라줌</td></tr>
+          <tr><td><strong>Go ON</strong></td><td>출발</td><td>출발 시간·신발·목적지 비교를 "켠다" — 외출 의사결정을 자동화</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 02 · 로고마크 -->
+  <div class="section">
+    <div class="section-label">02 · Logo mark</div>
+    <div class="section-title">로고마크 — ON 토글 · 골드 태양</div>
+    <div class="section-desc">
+      가로형 토글(ON 스위치)에 골드 태양 노브를 결합해 "WeatherON = 날씨를 보고 오늘을 켠다"는 메시지를 하나의 형태로 압축한다.
+      좌상단의 구름은 날씨 앱임을 즉시 인지시키는 보조 요소다. 적용 맥락에 따라 세 가지 톤으로 분화해 사용한다.
+    </div>
+    <div class="mark-grid">
+      <div class="mark-card">
+        <svg viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+        <div class="mark-name">프라이머리 (다크)</div>
+        <div class="mark-desc">앱 아이콘 · 스플래시 등<br>브랜드 임팩트가 필요한 곳</div>
+      </div>
+      <div class="mark-card">
+        <svg viewBox="0 0 120 120"><use href="#icon-light"/></svg>
+        <div class="mark-name">아웃라인 (라이트)</div>
+        <div class="mark-desc">헤더 · 문서 등<br>밝은 배경 위에 적용</div>
+      </div>
+      <div class="mark-card">
+        <svg viewBox="0 0 120 120"><use href="#icon-mono"/></svg>
+        <div class="mark-name">모노크롬</div>
+        <div class="mark-desc">파비콘 · 워터마크 등<br>초소형 · 단색 적용</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 · 워드마크 -->
+  <div class="section">
+    <div class="section-label">03 · Wordmark</div>
+    <div class="section-title">워드마크 로고타입</div>
+    <div class="section-desc">
+      "weather"는 Light(300)의 차분한 본문체로 쓰고, "ON"의 <strong>"O"는 아이콘의 골드 노브·레이(태양/토글) 모티프를
+      그대로 옮긴 그래픽 글리프</strong>로 대체했다. CSS 텍스트가 아닌 벡터 이미지(SVG)로 제작되어 어떤 환경에서도
+      동일한 형태·비율을 유지한다.
+    </div>
+    <div class="word-grid">
+      <div class="word-card word-dark">
+        <svg class="wordmark-h" viewBox="0 0 250 80"><use href="#wordmark-h-dark"/></svg>
+        <div class="word-tagline">Weather ON · Outfit ON · Go ON</div>
+      </div>
+      <div class="word-card word-light">
+        <svg class="wordmark-h" viewBox="0 0 250 80"><use href="#wordmark-h-light"/></svg>
+        <div class="word-tagline">Weather ON · Outfit ON · Go ON</div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>배치별 레이아웃</strong> — 가로형은 헤더·내비게이션·스플래시처럼 폭이 넉넉한 곳에 기본으로 사용하고,
+      세로(스택)형은 인트로 화면·명함·정사각 소셜 프로필처럼 좁고 높은 영역에 사용한다. 글리프 비율과 컬러 체계는
+      두 형태가 동일하게 유지된다.
+    </div>
+    <div class="word-grid">
+      <div class="word-card word-dark" style="min-height:180px;">
+        <svg class="wordmark-v" viewBox="0 0 180 150"><use href="#wordmark-v-dark"/></svg>
+        <div class="word-tagline" style="margin-top:14px;">세로형 — 인트로 화면 · 명함 · 정사각 프로필</div>
+      </div>
+      <div class="word-card word-light" style="min-height:180px;">
+        <svg class="wordmark-v" viewBox="0 0 180 150"><use href="#wordmark-v-light"/></svg>
+        <div class="word-tagline" style="margin-top:14px;">세로형 — 문서 표지 · 인쇄물</div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>글리프 ↔ 아이콘 의미 정합성</strong> — 워드마크의 골드 "O"는 임의의 장식이 아니라
+      로고마크(아이콘)의 토글·태양 모티프를 1:1로 옮긴 동일 글리프다. 두 요소는 같은 "ON" 개념을
+      두 가지 적용 맥락(아이콘 = 픽토그램, 워드마크 = 타이포그래피)으로 표현한다.
+    </div>
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead><tr><th>아이콘 요소</th><th>워드마크 대응 요소</th><th>공유하는 의미</th></tr></thead>
+        <tbody>
+          <tr><td>골드 노브(원) — 토글이 켜진 위치</td><td>"O" 글리프의 골드 원</td><td>"ON" 상태 — 토글의 켜진 자리이자 ON의 "O" 그 자체</td></tr>
+          <tr><td>노브 위 3개의 광선(태양)</td><td>"O" 글리프 상단 3개의 광선</td><td>날씨(태양/햇살) — Weather ON의 "Weather"를 시각적으로 환기</td></tr>
+          <tr><td>크림색 토글 필(트랙)</td><td>"weather" 워드의 Light(300) 본문체</td><td>차분한 배경 역할 — 골드 글리프를 돋보이게 하는 낮은 채도의 베이스</td></tr>
+          <tr><td>좌상단 구름</td><td>(워드마크에는 없음)</td><td>아이콘은 "날씨 앱"임을 즉시 인지시키는 보조 요소를 추가로 가지지만,
+            워드마크는 타이포그래피 가독성을 위해 구름을 생략 — 정보량보다 글자 형태의 명료함을 우선</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section-desc" style="margin-top:14px;">
+      결론: 골드 원 + 3개 광선 조합은 <strong>아이콘과 워드마크 전체에서 "ON / 태양 / 날씨"를 가리키는 단일 비주얼 보캐뷸러리</strong>로
+      일관되게 사용된다. 두 자산을 나란히 두었을 때 "같은 그래픽 요소가 반복된다"는 인상을 주어 브랜드 리콜을 강화하며,
+      별도의 의미 충돌이나 중복 설계는 발견되지 않았다.
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>프로덕션용 아웃라인(텍스트→패스) 버전</strong> — 원본 워드마크 SVG(<code>assets/wordmark/*.svg</code>,
+      <code>assets/lockup/*.svg</code>)는 <code>&lt;text&gt;</code> 요소 + Manrope <code>@import</code>로 구성되어
+      에디터에서 수정이 쉽지만, Manrope 폰트가 로드되지 않는 환경(폰트 미설치 PC, 일부 인쇄소 RIP, 디자인 툴 등)에서는
+      "weather" 텍스트의 자간·렌더링이 달라질 수 있다. 외부 전달용(인쇄, 앱스토어 그래픽, 파트너사 전달 등)으로는
+      텍스트를 벡터 패스로 고정한 <strong>아웃라인 버전</strong>(<code>*-outline.svg</code>)을 사용한다.
+    </div>
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead><tr><th>항목</th><th>산출물 / 작업</th><th>검증 기준</th></tr></thead>
+        <tbody>
+          <tr><td>소스</td><td><code>assets/wordmark/*.svg</code>, <code>assets/lockup/*.svg</code></td><td>편집 가능한 원본, 텍스트 노드 허용</td></tr>
+          <tr><td>프로덕션</td><td><code>assets/wordmark/*-outline.svg</code>, <code>assets/lockup/*-outline.svg</code></td><td><code>&lt;text&gt;</code>·<code>font-family</code>·<code>@import</code> 없음</td></tr>
+          <tr><td>미리보기</td><td><code>assets/wordmark/*-preview.png</code>, <code>assets/lockup/*-preview.png</code></td><td>아웃라인 SVG 기준으로 렌더링, 글자 겹침 없음</td></tr>
+          <tr><td>재생성</td><td><code>npm run build:brand</code></td><td>outline SVG 8개 + preview PNG 8개 생성</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section-desc" style="margin-top:14px;">
+      2026-06-23 기준으로 <code>@fontsource/manrope</code> + <code>fontkit</code> 기반 생성 스크립트를 추가했으며,
+      기존 preview PNG에서 보이던 "weather" 글자 겹침은 아웃라인 SVG 기준 재생성으로 제거했다.
+      외부 전달·앱스토어·파트너 공유 시에는 원본 SVG보다 <code>*-outline.svg</code>를 우선한다.
+    </div>
+  </div>
+
+  <!-- 04 · 통합형 락업 -->
+  <div class="section">
+    <div class="section-label">04 · Lockup</div>
+    <div class="section-title">아이콘 + 워드마크 락업</div>
+    <div class="section-desc">
+      아이콘과 워드마크를 함께 배치할 때는 <strong>가로형을 기본</strong>으로 하며, 세로 공간이 제한적인 경우 세로형 또는
+      아이콘 단독(축약형)을 사용한다. 골드 노브는 항상 "ON" 상태를 의미하므로, 어떤 배경에서도 골드 포인트가 살아 보이도록 배치한다.
+    </div>
+    <div class="lockup-grid">
+      <div class="lockup-item">
+        <div class="lockup-card dark">
+          <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+          <svg class="lockup-wordmark" viewBox="0 0 250 80"><use href="#wordmark-h-dark"/></svg>
+        </div>
+        <div class="lockup-caption">가로형 — 다크 / 스플래시·헤더</div>
+      </div>
+      <div class="lockup-item">
+        <div class="lockup-card">
+          <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-light"/></svg>
+          <svg class="lockup-wordmark" viewBox="0 0 250 80"><use href="#wordmark-h-light"/></svg>
+        </div>
+        <div class="lockup-caption">가로형 — 라이트 / 문서·푸터</div>
+      </div>
+      <div class="lockup-item">
+        <div class="lockup-card dark col">
+          <svg class="lockup-icon lg" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+          <svg class="wordmark-v" viewBox="0 0 180 150"><use href="#wordmark-v-dark"/></svg>
+        </div>
+        <div class="lockup-caption">세로형 — 다크 / 명함·인트로 화면</div>
+      </div>
+      <div class="lockup-item">
+        <div class="lockup-card col">
+          <svg class="lockup-icon lg" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+        </div>
+        <div class="lockup-caption">축약형 — 앱 아이콘 · 파비콘 · 소셜 프로필</div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>단색·배경 활용</strong> — 프라이머리 마크는 자체 NAVY 배경을 포함하므로, 어떤 브랜드 컬러 위에 놓여도
+      톤 대비를 유지한 채 그대로 사용한다.
+    </div>
+    <div class="swatch-row">
+      <div class="swatch-item" style="background:var(--cloud);">
+        <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+      </div>
+      <div class="swatch-item" style="background:var(--dawn);">
+        <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+      </div>
+      <div class="swatch-item" style="background:var(--sky);">
+        <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+      </div>
+      <div class="swatch-item" style="background:var(--paper);border:1px solid var(--border);">
+        <svg class="lockup-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 · 라이트-다크 모드 -->
+  <div class="section">
+    <div class="section-label">05 · Light &amp; dark mode</div>
+    <div class="section-title">라이트 / 다크 모드 적용</div>
+    <div class="section-desc">
+      iOS·Android의 다크 모드 홈 화면에서는 NAVY 배경 위 크림 트랙·페이퍼 구름이 다소 과하게 밝아 보일 수 있다.
+      <strong>다크 모드 전용 아이콘</strong>은 배경을 한 톤 더 깊게, 트랙과 구름을 차분한 톤으로 낮춰 눈부심을 줄인다.
+      골드 노브("ON")는 두 모드 모두에서 동일한 강조 포인트로 유지한다. 인앱 UI도 같은 원칙으로 라이트/다크 테마를 분리한다.
+    </div>
+
+    <div class="mode-grid">
+      <div class="mode-card light">
+        <svg class="mode-icon" viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+        <div class="mode-label">라이트 모드 — 기본 아이콘</div>
+        <div class="mode-sub">icon-primary · NAVY bg / 크림 트랙 / 페이퍼 구름</div>
+      </div>
+      <div class="mode-card dark">
+        <svg class="mode-icon" viewBox="0 0 120 120"><use href="#icon-dark"/></svg>
+        <div class="mode-label">다크 모드 — 전용 아이콘</div>
+        <div class="mode-sub">icon-dark · 딥네이비 bg / 톤다운 트랙·구름</div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>인앱 UI 테마</strong> — 헤더 락업과 카드 컴포넌트는 라이트/다크 테마 전환 시에도 동일한 위계와 골드 포인트를 유지한다.
+    </div>
+    <div class="theme-grid">
+      <div class="theme-card light">
+        <div class="theme-topbar">
+          <svg viewBox="0 0 120 120"><use href="#icon-light"/></svg>
+          <svg class="topbar-wordmark" viewBox="0 0 250 80"><use href="#wordmark-h-light"/></svg>
+        </div>
+        <div class="theme-body">
+          <div class="theme-row"><span>오늘 · 서울</span><span class="theme-pill">☀ 22°C</span></div>
+          <div class="theme-row"><span>코디 추천</span><span class="theme-pill">라이트 아우터</span></div>
+          <div class="theme-row"><span>출발 알림</span><span class="theme-pill">08:40</span></div>
+        </div>
+      </div>
+      <div class="theme-card dark">
+        <div class="theme-topbar">
+          <svg viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+          <svg class="topbar-wordmark" viewBox="0 0 250 80"><use href="#wordmark-h-dark"/></svg>
+        </div>
+        <div class="theme-body">
+          <div class="theme-row"><span>오늘 · 서울</span><span class="theme-pill">☀ 22°C</span></div>
+          <div class="theme-row"><span>코디 추천</span><span class="theme-pill">라이트 아우터</span></div>
+          <div class="theme-row"><span>출발 알림</span><span class="theme-pill">08:40</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="theme-caption-row">
+      <div class="theme-caption">라이트 테마 — PAPER 배경 / NAVY 텍스트 / icon-light</div>
+      <div class="theme-caption">다크 테마 — HORIZON 배경 / PAPER 텍스트 / icon-primary</div>
+    </div>
+
+    <div class="section-desc" style="margin-top:20px;">
+      <strong>구체 토큰 매핑(2026-06-20 추가)</strong> — 카드·탭바·상태바 등 인앱 UI 컴포넌트 단위의 라이트/다크 색상 토큰 표,
+      시스템 설정 연동(MY &gt; 전역 설정), Gold·기능색 테마 불변 원칙은 <code>WeatherON_planning_v5.html</code> 20장(UI Design Guide)
+      "라이트 / 다크 모드" 섹션에 정의되어 있다. 이 문서(05장)는 런처 아이콘·로고 락업 레벨의 선언적 원칙을 유지하고,
+      실제 화면 구현 스펙은 20장을 1차 출처로 따른다.
+    </div>
+  </div>
+
+  <!-- 06 · 컬러 팔레트 -->
+  <div class="section">
+    <div class="section-label">06 · Color palette</div>
+    <div class="section-title">컬러 팔레트</div>
+    <div class="section-desc">
+      네이비(Horizon)+골드(Dawn)를 브랜드 주조색으로, 나머지 6색은 날씨 상태·UI 보조 용도의 기능 컬러로 구분한다.
+    </div>
+    <div class="pal-grid">
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#0C1F3F;"></div>
+        <div class="pal-info"><div class="pal-name">Horizon</div><div class="pal-hex">#0C1F3F</div><div class="pal-role">주조색 · 다크 모먼트(스플래시·헤더)</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#F0A020;"></div>
+        <div class="pal-info"><div class="pal-name">Dawn</div><div class="pal-hex">#F0A020</div><div class="pal-role">포인트 · CTA · 핵심 강조 전용</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#4A8FD4;"></div>
+        <div class="pal-info"><div class="pal-name">Sky</div><div class="pal-hex">#4A8FD4</div><div class="pal-role">날씨 상태 — 맑음/정보</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#3ABFA0;"></div>
+        <div class="pal-info"><div class="pal-name">Clear</div><div class="pal-hex">#3ABFA0</div><div class="pal-role">날씨 상태 — 쾌적/긍정</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#E85A5A;"></div>
+        <div class="pal-info"><div class="pal-name">Rain</div><div class="pal-hex">#E85A5A</div><div class="pal-role">날씨 상태 — 비/경고</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#E8EDF6;"></div>
+        <div class="pal-info"><div class="pal-name">Cloud</div><div class="pal-hex">#E8EDF6</div><div class="pal-role">라이트 배경 · 카드 보조면</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#6B80A0;"></div>
+        <div class="pal-info"><div class="pal-name">Mist</div><div class="pal-hex">#6B80A0</div><div class="pal-role">보조 텍스트 · 흐림 상태</div></div>
+      </div>
+      <div class="pal-card">
+        <div class="pal-swatch" style="background:#F4F7FC;"></div>
+        <div class="pal-info"><div class="pal-name">Paper</div><div class="pal-hex">#F4F7FC</div><div class="pal-role">기본 배경 (본문 UI)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 · 컬러 조합 가이드 -->
+  <div class="section">
+    <div class="section-label">07 · Color usage</div>
+    <div class="section-title">컬러 조합 가이드 — 두 트랙</div>
+    <div class="section-desc">
+      <strong>브랜드 페어링(Horizon+Dawn)</strong>은 브랜드를 각인시키는 자리에 한정하고,
+      <strong>기능 컬러(Sky/Clear/Rain/Mist/Dawn)</strong>는 정보 전달용으로 분리해서 쓴다.
+      이렇게 역할을 나눠야 골드를 과용해 화면이 무거워지는 것을 막을 수 있다.
+    </div>
+    <div class="combo-grid">
+      <div class="combo-card">
+        <div class="combo-visual dark" style="justify-content:space-between;">
+          <div class="demo-card">
+            <div class="demo-temp">21°</div>
+            <div class="demo-cond">맑음</div>
+          </div>
+          <div class="demo-btn">출발하기</div>
+        </div>
+        <div class="combo-label">
+          <div class="t">브랜드 페어링</div>
+          <div class="d">Horizon + Dawn + Paper — 스플래시 · 온보딩 · 핵심 CTA</div>
+        </div>
+      </div>
+      <div class="combo-card">
+        <div class="combo-visual light">
+          <div class="chip-row">
+            <span class="chip" style="background:#4A8FD4;">맑음</span>
+            <span class="chip" style="background:#3ABFA0;">쾌적</span>
+            <span class="chip" style="background:#E85A5A;">비</span>
+            <span class="chip" style="background:#6B80A0;">흐림</span>
+            <span class="chip" style="background:#F0A020;color:#0C1F3F;">주의</span>
+          </div>
+        </div>
+        <div class="combo-label">
+          <div class="t">기능 컬러</div>
+          <div class="d">날씨 상태 칩 · 배지 — 정보 전달용, 본문 UI 전반</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 · 경쟁 비교 -->
+  <div class="section">
+    <div class="section-label">08 · Competitive comparison</div>
+    <div class="section-title">컬러·톤 — 경쟁 앱 대비 포지션</div>
+    <div class="section-desc">
+      대부분의 날씨 앱·코디 앱은 하늘색·시안 계열(정보 신뢰 코드) 또는 파스텔(친근함 코드)에 머무른다.
+      WeatherON의 네이비+골드 조합은 이 컨벤션에서 의도적으로 벗어난 선택이다.
+    </div>
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>메인 톤</th>
+            <th>포지셔닝 키워드</th>
+            <th class="weatheron">WeatherON과의 차이</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>날씨돌</strong><br><span style="color:var(--mist);font-size:11.5px;">국내 · 캐릭터 기반</span></td>
+            <td><span class="swatch-dot" style="background:#A8D8F0;"></span>밝은 하늘색 + 파스텔, 캐릭터 일러스트</td>
+            <td>친근함 · 귀여움 · 캐주얼</td>
+            <td class="weatheron">네이비+골드의 정제된 톤은 정반대 인상 — "정보 과부하 없이 단정하게 결정만 도와준다"는 메시지와 시각적으로 일치</td>
+          </tr>
+          <tr>
+            <td><strong>일반 날씨 앱</strong><br><span style="color:var(--mist);font-size:11.5px;">기상청 · 웨더채널 등</span></td>
+            <td><span class="swatch-dot" style="background:#4A8FD4;"></span>하늘색 · 시안 계열 (정보 신뢰 코드)</td>
+            <td>신뢰성 · 정보성 · 표준적</td>
+            <td class="weatheron">카테고리 컨벤션에서 벗어나 차별화되지만, 첫인상에서 "날씨 앱"임을 빠르게 인지시키는 보완 장치(Sky/Clear 노출)가 필요</td>
+          </tr>
+          <tr>
+            <td><strong>AccuWeather</strong><br><span style="color:var(--mist);font-size:11.5px;">글로벌 1위 · 데이터 권위형</span></td>
+            <td><span class="swatch-dot" style="background:#F05514;"></span>다크 네이비/차콜 + 시그니처 레드오렌지(#F05514)</td>
+            <td>정밀성 · 권위 · 속보성</td>
+            <td class="weatheron">"다크 베이스 + 따뜻한 포인트색" 듀오톤 구조 자체는 유사 — 다만 WeatherON의 Dawn(#F0A020)은 레드 기가 빠진 옐로 골드 톤으로 "경보·속보"보다 "일출·여유" 무드를 전달. 구조적 유사성은 색상환 위치(Hue)와 적용 범위 차이로 분리 필요</td>
+          </tr>
+          <tr>
+            <td><strong>Stylix / Weather Fit</strong><br><span style="color:var(--mist);font-size:11.5px;">해외 · 코디 플래너</span></td>
+            <td><span class="swatch-dot" style="background:#F4D9E8;"></span>화이트 베이스 + 파스텔 포인트</td>
+            <td>패션 · 큐레이션 · 라이프스타일</td>
+            <td class="weatheron">"패션"보다 "데일리 루틴/효율"을 강조하는 WeatherON 포지셔닝과 다른 시각 언어 — 코디 탭에서도 패션지보다 실용 툴 인상 유지</td>
+          </tr>
+          <tr>
+            <td><strong>2025 UI 트렌드</strong><br><span style="color:var(--mist);font-size:11.5px;">듀오톤 · 빈티지 파스텔</span></td>
+            <td><span class="swatch-dot" style="background:#F0A020;"></span>두 톤 조합(듀오톤)이 주요 흐름</td>
+            <td>대비 · 개성 · 노스탤지어</td>
+            <td class="weatheron">네이비+골드 듀오톤 조합은 트렌드와 부합하면서도, 색 자체는 따뜻한 톤이라 차가운 빈티지 파스텔과도 구분됨</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>네이비+골드, AccuWeather와 얼마나 닮았나</strong> — "다크 베이스 + 따뜻한 포인트 컬러"라는 듀오톤 패턴 자체는 같지만, 색상환 위 위치가 다르다.
+      AccuWeather의 시그니처 컬러는 빨강에 가까운 고채도 레드오렌지(Hue 약 16°)로 "속보·경보"의 긴장감을 전달하는 반면,
+      WeatherON의 Dawn은 노랑에 가까운 웜 골드(Hue 약 36°)로 "일출·하루의 시작"이라는 따뜻하고 차분한 인상을 전달한다.
+    </div>
+    <div class="combo-grid">
+      <div class="combo-card">
+        <div class="combo-visual" style="background:#F05514;justify-content:center;">
+          <div style="color:#fff;text-align:center;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:700;">#F05514</div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;opacity:.85;margin-top:4px;">AccuWeather Orange · Hue 약 16°</div>
+          </div>
+        </div>
+        <div class="combo-label">
+          <div class="t">AccuWeather 시그니처 컬러</div>
+          <div class="d">레드오렌지 — "정확성·속보" 인상, 다크 UI 전반에 적용</div>
+        </div>
+      </div>
+      <div class="combo-card">
+        <div class="combo-visual" style="background:#F0A020;justify-content:center;">
+          <div style="color:#0C1F3F;text-align:center;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:700;">#F0A020</div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;opacity:.7;margin-top:4px;">WeatherON Dawn · Hue 약 36°</div>
+          </div>
+        </div>
+        <div class="combo-label">
+          <div class="t">WeatherON Dawn</div>
+          <div class="d">웜 골드 — "일출·시작" 인상, CTA 등 한정된 영역에만 적용</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 · 종합 평가 -->
+  <div class="section">
+    <div class="section-label">09 · Verdict</div>
+    <div class="section-title">종합 평가</div>
+    <div class="verdict-grid">
+      <div class="verdict-card">
+        <h3>컨셉 적합성<span class="badge badge-g">강점</span></h3>
+        <p><strong>Weather ON / Outfit ON / Go ON</strong> 워드플레이는 4탭 구조(홈·코디·출발·MY)와 1:1로 대응되어, 이름만으로 기능이 설명된다.</p>
+        <p>"ON"의 "켜다" 뉘앙스는 "오늘 외출 준비를 빠르게 켜준다"는 포지셔닝과 자연스럽게 연결된다.</p>
+        <p>브랜드 보이스(Decisive · Concise · Practical · Warm)도 "5초 완결 홈 UX", "출발알림/신발알림" 같은 차별화 포인트와 톤이 일치한다.</p>
+      </div>
+      <div class="verdict-card">
+        <h3>컬러 적합성<span class="badge badge-o">강점 + 보완 필요</span></h3>
+        <p>네이비+골드는 카테고리 컨벤션(하늘색)을 깨는 과감한 선택으로, <strong>날씨돌의 캐릭터·파스텔, 해외 코디앱의 화이트·파스텔</strong>과 모두 차별화된다.</p>
+        <p>다만 "신뢰성=하늘색" 코드에서 벗어난 만큼, 첫인상에서 "날씨 앱"임을 빠르게 인지시키는 보완 장치(Sky/Clear 등 기능색 노출)가 필요하다.</p>
+        <p><strong>AccuWeather</strong>도 "다크 네이비 + 따뜻한 포인트색" 듀오톤이라 구조적으로는 닮아 보일 수 있다. 다만 AccuWeather의 포인트는 빨강에 가까운 레드오렌지(#F05514, "속보·경보" 톤)이고 WeatherON의 Dawn(#F0A020)은 노랑에 가까운 골드("일출·여유" 톤)라 색상환 위 위치가 다르다. 이 차이를 유지하는 것이 핵심 — Dawn의 색상값이 레드 방향으로 이동하지 않도록 관리해야 한다.</p>
+        <p>다크 네이비를 본문 UI 전체에 깔면 무겁고 올드한 인상을 줄 수 있어, 적용 범위를 <strong>브랜드 모먼트로 한정</strong>하는 것이 핵심이다.</p>
+      </div>
+    </div>
+    <div class="strip">
+      <ol>
+        <li><strong>메인 가이드 채택</strong> — 프라이머리 마크(다크) + 라이트 워드마크 조합을 기본으로 사용</li>
+        <li><strong>다크 네이비 적용 범위 제한</strong> — 스플래시·헤더 등 브랜드 모먼트에 한정, 본문은 Paper 베이스 + 기능 컬러</li>
+        <li><strong>골드는 CTA 전용</strong> — 배지·아이콘 등에 분산 사용 금지, 핵심 액션에만 사용</li>
+        <li><strong>"날씨 앱" 인지 보강</strong> — 온보딩·홈 상단에 Sky/Clear 등 기능색과 날씨 아이콘을 적극 노출</li>
+        <li><strong>AccuWeather와 색상환 거리 유지</strong> — Dawn(#F0A020, Hue 36°)이 레드 방향(AccuWeather Orange #F05514, Hue 16°)으로 이동하지 않도록 관리하고, 네이비를 전체 배경이 아닌 브랜드 모먼트에만 적용해 "다크 UI 전면 적용" 방식과 차별화</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 10 · iOS 26 Liquid Glass -->
+  <div class="section">
+    <div class="section-label">10 · iOS 26 Liquid Glass</div>
+    <div class="section-title">iOS 26 리퀴드 글라스 아이콘 대응</div>
+    <div class="section-desc">
+      iOS 26부터 홈 화면 아이콘에 <strong>Liquid Glass</strong>가 적용되어, 단일 이미지가 아니라
+      <strong>배경(Background) · 미드(Mid) · 포그라운드(Foreground)</strong> 3개 레이어로 분리된 소스를
+      Icon Composer에 전달하면 시스템이 자동으로 굴절·블러·반사·스페큘러 하이라이트를 적용한다.
+      G-1은 색상별 요소가 이미 명확히 분리되어 있어 레이어 구조로 재구성하기 용이하다 — 레이어별 역할은 다음과 같다.
+    </div>
+
+    <div class="glass-grid">
+      <div class="glass-layer-card">
+        <div class="glass-layer-icon">
+          <svg viewBox="0 0 120 120"><use href="#icon-lg-bg"/></svg>
+        </div>
+        <div class="glass-layer-tag">L1 · Background</div>
+        <div class="glass-layer-name">NAVY 배경판</div>
+        <div class="glass-layer-spec">불투명 · 글래스 비활성 · 깊이 기준면</div>
+      </div>
+      <div class="glass-layer-card">
+        <div class="glass-layer-icon glass-checker">
+          <svg viewBox="0 0 120 120"><use href="#icon-lg-mid"/></svg>
+        </div>
+        <div class="glass-layer-tag">L2 · Mid</div>
+        <div class="glass-layer-name">크림 트랙 + 네이비 바</div>
+        <div class="glass-layer-spec">투명 배경 · 약한 글래스/블러 · 옅은 그림자</div>
+      </div>
+      <div class="glass-layer-card">
+        <div class="glass-layer-icon glass-checker">
+          <svg viewBox="0 0 120 120"><use href="#icon-lg-fg"/></svg>
+        </div>
+        <div class="glass-layer-tag">L3 · Foreground</div>
+        <div class="glass-layer-name">골드 노브·레이 + 페이퍼 구름</div>
+        <div class="glass-layer-spec">투명 배경 · 글래스 + 스페큘러 최대 · 가장 또렷한 그림자</div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-top:28px;margin-bottom:14px;">
+      <strong>적용 시뮬레이션</strong> — 3개 레이어가 합성되면 골드 노브("ON")에 가장 강한 유리 반사가 실리고,
+      트랙은 한 단계 떠 있는 듀얼 톤 글래스처럼 보인다. 배경은 평면으로 고정되어 깊이의 기준점이 된다.
+    </div>
+    <div class="glass-preview-row">
+      <div class="glass-preview">
+        <svg viewBox="0 0 120 120"><use href="#icon-primary"/></svg>
+        <div class="glass-sheen"></div>
+      </div>
+      <div class="glass-preview-note">
+        <div class="theme-caption" style="text-align:left;">Liquid Glass 합성 미리보기 (시뮬레이션)</div>
+        <p style="margin-top:8px;">실제 렌더링은 Icon Composer에서 각 레이어의 재질(Translucency · Blur · Specular)을
+        지정하면 시스템이 라이트/다크/클리어 모드별로 자동 생성한다. 본 미리보기는 디자인 의도 전달을 위한 근사치다.</p>
+      </div>
+    </div>
+
+    <div class="ctable-wrap" style="margin-top:24px;">
+      <table class="ctable">
+        <thead><tr><th>레이어</th><th>포함 요소</th><th>재질 설정 가이드</th></tr></thead>
+        <tbody>
+          <tr><td><strong>L1 배경</strong></td><td>NAVY 라운드 사각형</td><td>Liquid Glass Off · 불투명 · 깊이 기준면</td></tr>
+          <tr><td><strong>L2 미드</strong></td><td>크림 트랙 + 네이비 바 ("OFF")</td><td>투명 배경 · Glass 약하게 · Blur 낮음 · 그림자 옅게</td></tr>
+          <tr><td><strong>L3 포그라운드</strong></td><td>골드 노브·3레이 ("ON") + 페이퍼 구름</td><td>투명 배경 · Glass 강하게 · Specular 최대 · 그림자 또렷</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="strip" style="margin-top:20px;">
+      <ol>
+        <li><strong>레이어 분리 우선</strong> — 색상·깊이가 다른 요소는 한 레이어에 합치지 않는다 (배경 / 트랙·바 / 노브·구름 3분리 유지)</li>
+        <li><strong>골드 노브 = 최강 반사면</strong> — "ON"의 의미를 강화하기 위해 스페큘러 하이라이트를 가장 강하게 배치</li>
+        <li><strong>세밀한 라인·텍스트 지양</strong> — 블러·굴절로 가독성이 떨어질 수 있는 얇은 선/텍스트는 배제(G-1은 이미 충족)</li>
+        <li><strong>다크 모드도 동일 3레이어 구조</strong> — icon-dark 팔레트를 L1/L2/L3에 동일 적용해 다크 모드 Liquid Glass에도 대응</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="footer">
+    <div class="footer-brand"><span style="font-weight:300;">weather</span><span>ON</span></div>
+    <div class="footer-meta">CI/BI Guide · 2026.06 · v5</div>
+  </div>
+
+</div>
+
+</body>
+</html>

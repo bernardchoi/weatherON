@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;800&amp;display=swap');
+    .wm-weather{font-family:'Manrope',sans-serif;font-weight:300;}
+    .wm-n{font-family:'Manrope',sans-serif;font-weight:800;}</style>
+  <rect width="320" height="120" rx="16" fill="#0C1F3F"/>
+  <g transform="translate(12,12) scale(0.8)"><rect width="120" height="120" rx="21.6" fill="#0C1F3F"/>
+<rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#FDF6EB"/>
+<rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#0C1F3F"/>
+<circle cx="88.8" cy="64.8" r="18.05" fill="#F0A020"/>
+<line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+<line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+<line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+<rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#F4F7FC"/>
+<ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#F4F7FC"/>
+<ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#F4F7FC"/></g>
+  <g transform="translate(122,32) scale(0.7)"><text x="0" y="60" class="wm-weather" font-size="44" letter-spacing="-1" fill="#F4F7FC">weather</text>
+  <g>
+    <circle cx="182.5" cy="42.5" r="17.5" fill="#F0A020"/>
+    <line x1="182.5" y1="25" x2="182.5" y2="14" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+    <line x1="172.5" y1="28.2" x2="166.1" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+    <line x1="192.5" y1="28.2" x2="198.9" y2="19.2" stroke="#F0A020" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+  <text x="208" y="60" class="wm-n" font-size="44" fill="#F0A020">N</text></g>
+</svg>

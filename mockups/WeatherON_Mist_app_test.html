@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WeatherON · 컴패니언 6종 앱 적용 테스트</title>
+<style>
+:root{--navy:#15294D;--deep:#102140;--panel:#1A3360;--gold:#F0A020;--mist:#869EBC;--mist-light:#C5BCE8;--ink:#E8EDF6}
+*{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:#030810;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif}
+.phone{width:393px;height:852px;border-radius:40px;overflow:hidden;position:relative;background:linear-gradient(175deg,var(--navy),#1E3B6E 50%,#2C5491);box-shadow:0 0 0 1.5px #ffffff14,0 40px 80px #000b}
+.status{height:54px;padding:0 28px 10px;display:flex;align-items:flex-end;justify-content:space-between;font:700 15px monospace}.header{height:48px;padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;font-size:18px;font-weight:700}.cp{margin-top:-1px;padding:5px 10px;border:1px solid #f0a02059;border-radius:12px;background:#f0a02029;color:var(--gold);font-size:11px;font-weight:700}
+.content{height:calc(100% - 166px);overflow:auto;padding:14px 20px 100px;display:flex;flex-direction:column;gap:12px}.card{background:var(--panel);border-radius:18px;padding:14px 16px}.lead{font-size:14px;font-weight:700;margin-bottom:6px}.copy{font-size:12px;line-height:1.6;color:#e8edf6c7}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.chip{height:72px;border:1px solid #ffffff1f;border-radius:16px;background:var(--deep);color:#e8edf6c7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 12px inherit;cursor:pointer}.chip[data-selected="true"]{border:1.5px solid var(--mist-light);background:#c5bce822;color:var(--mist-light)}.emoji{font-size:22px}
+.companion-art,.hero-art{object-fit:cover;filter:drop-shadow(0 8px 14px #10214066)}.companion-chip{width:30px;height:30px;border-radius:34%}.preview{height:190px;border:1px dashed color-mix(in srgb,var(--active) 45%,transparent);border-radius:20px;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--active) 18%,transparent),transparent 55%),var(--deep);display:flex;align-items:center;justify-content:center;gap:14px}.preview-unit{display:flex;flex-direction:column;align-items:center;gap:5px}.hero-preview{width:100px;height:100px;border-radius:24%}.companion-preview{width:100px;height:100px;border-radius:24%}.preview-label{font-size:11.5px;font-weight:700;color:var(--active)}
+.cta{position:absolute;left:20px;right:20px;bottom:90px;height:52px;border:0;border-radius:18px;background:var(--gold);color:var(--navy);font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;z-index:3}.tabs{position:absolute;left:16px;right:16px;bottom:18px;height:64px;padding:0 4px;border-radius:24px;background:var(--deep);border:1px solid #ffffff14;display:flex;align-items:center;box-shadow:0 10px 24px #00000073;z-index:20}.tab{position:relative;overflow:hidden;flex:1;height:52px;border:0;border-radius:14px;background:transparent;color:#a8c4e0b3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:inherit;font-size:10.5px;font-weight:600}.tab.active{color:var(--gold)}.tab-dot{width:5px;height:5px;margin-bottom:1px;border-radius:50%;background:transparent}.tab.active .tab-dot{background:var(--gold)}.tab svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hero{height:190px;padding:0;display:flex;align-items:center;justify-content:center;gap:14px;border-left:3px solid var(--gold);background:radial-gradient(circle at 50% 38%,#f0a02033,transparent 48%),linear-gradient(160deg,var(--panel),#21407A)}.hero-main{width:142px;height:142px;border-radius:26%}.hero-copy{max-width:118px}.hero-copy b{display:block;color:var(--gold);font-size:11px;margin-bottom:6px}.hero-copy strong{display:block;font-size:14px;line-height:1.4}.hero-copy span{display:block;color:#a8c4e0ad;font-size:10.5px;line-height:1.5;margin-top:5px}.companion-row{display:flex;align-items:center;gap:12px}.companion-home{width:70px;height:70px;border-radius:24%;flex:0 0 auto}.companion-data{flex:1}.row{display:flex;align-items:center;justify-content:space-between}.level{font-size:14px;font-weight:800}.mood{font-size:10px;font-weight:700;color:var(--active);background:color-mix(in srgb,var(--active) 16%,transparent);padding:4px 7px;border-radius:10px}.bar{height:8px;border-radius:4px;background:var(--deep);overflow:hidden;margin:9px 0 6px}.bar>i{display:block;width:68%;height:100%;background:linear-gradient(90deg,var(--active-dark),var(--active))}.xp{font:11px monospace;color:#a8c4e099}
+@media(max-width:420px){.phone{width:100vw;height:100vh;border-radius:0}}
+</style>
+</head>
+<body>
+<main class="phone" aria-label="WeatherON 컴패니언 앱 적용 테스트" style="--active:#C5BCE8;--active-dark:#869EBC">
+  <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+  <section id="s0">
+    <div class="header">ON Square 입장</div>
+    <div class="content">
+      <div class="card"><div class="lead">원소 컴패니언을 만나보세요</div><div class="copy">대표 마스코트와 함께 날씨를 체크인하면 작은 원소 친구를 수집할 수 있어요.</div></div>
+      <div class="chips" id="chips">
+        <button class="chip" data-id="Solar"><img class="companion-art companion-chip" src="../brand/ON Square Solar_컴패니언_앱-v1.png" alt="">Solar</button><button class="chip" data-id="Rain"><img class="companion-art companion-chip" src="../brand/ON Square Rain_컴패니언_앱-v1.png" alt="">Rain</button><button class="chip" data-id="Storm"><img class="companion-art companion-chip" src="../brand/ON Square Storm_컴패니언_앱-v1.png" alt="">Storm</button>
+        <button class="chip" data-id="Wind"><img class="companion-art companion-chip" src="../brand/ON Square Wind_컴패니언_앱-v1.png" alt="">Wind</button><button class="chip" data-id="Frost"><img class="companion-art companion-chip" src="../brand/ON Square Frost_컴패니언_앱-v1.png" alt="">Frost</button><button class="chip" data-id="Mist" data-selected="true" aria-pressed="true"><img class="companion-art companion-chip" src="../brand/ON Square Mist_컴패니언_앱-v1.png" alt="">Mist</button>
+      </div>
+      <div class="preview"><div class="preview-unit"><img class="hero-art hero-preview" src="../brand/ON Square 대표마스코트_기본_투명-v1.png" alt="WeatherON 대표 마스코트"><div class="preview-label" style="color:var(--gold)">대표로 시작</div></div><span aria-hidden="true">+</span><div class="preview-unit"><img id="previewArt" class="companion-art companion-preview" src="../brand/ON Square Mist_컴패니언_앱-v1.png" alt="Mist 컴패니언 미리보기"><div class="preview-label" id="previewLabel">Mist 수집 가능</div></div></div>
+    </div>
+    <button class="cta" id="enter">대표 마스코트로 ON Square 시작</button>
+  </section>
+  <section id="s1" hidden>
+    <div class="header"><span>내 ON Square</span><span class="cp">CP 340</span></div>
+    <div class="content">
+      <div class="card hero"><img class="hero-art hero-main" src="../brand/ON Square 대표마스코트_기본_투명-v1.png" alt="WeatherON 대표 마스코트 홈"><div class="hero-copy"><b>MY HERO</b><strong>WeatherON 대표 마스코트</strong><span>모든 날씨를 함께 경험하는 나의 기본 캐릭터</span></div></div>
+      <div class="card companion-row"><img id="homeArt" class="companion-art companion-home" src="../brand/ON Square Mist_컴패니언_앱-v1.png" alt="오늘의 동행 Mist"><div class="companion-data"><div class="row"><span class="level" id="levelName">오늘의 동행 · Mist Lv.7</span><span class="mood" id="mood">안개 🌫️</span></div><div class="bar"><i></i></div><div class="xp">XP 340 / 500</div></div></div>
+      <div class="card copy">오늘 날씨 체크인 완료 → <b id="xpName" style="color:var(--active)">Mist XP +20</b> 적립</div>
+      <div class="card copy" style="text-align:center;border:1px dashed #ffffff24;background:#e8edf60a">🎁<br>희귀 기상 이벤트 배지 드랍 영역</div>
+    </div>
+  </section>
+  <nav class="tabs" aria-label="주요 메뉴">
+    <button class="tab" type="button"><span class="tab-dot"></span><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>홈</span></button>
+    <button class="tab" type="button"><span class="tab-dot"></span><svg viewBox="0 0 24 24"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"></path></svg><span>코디</span></button>
+    <button class="tab" type="button"><span class="tab-dot"></span><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg><span>출발</span></button>
+    <button class="tab" type="button"><span class="tab-dot"></span><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>MY</span></button>
+    <button class="tab active" type="button" aria-current="page"><span class="tab-dot"></span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path></svg><span>소셜</span></button>
+  </nav>
+</main>
+<script>
+const s0=document.querySelector('#s0'),s1=document.querySelector('#s1'),phone=document.querySelector('.phone');
+const companions={Solar:{color:'#F0A020',dark:'#C77A12',mood:'맑음 ☀️'},Rain:{color:'#86BCEC',dark:'#4A8FD4',mood:'비옴 🌧️'},Storm:{color:'#CDB6F0',dark:'#7E5FC0',mood:'폭풍 ⛈️'},Wind:{color:'#79E0C8',dark:'#3ABFA0',mood:'바람 💨'},Frost:{color:'#C2EAF2',dark:'#8FD0E0',mood:'서리 ❄️'},Mist:{color:'#C5BCE8',dark:'#869EBC',mood:'안개 🌫️'}};
+let selected='Mist';
+function asset(id){return `../brand/ON Square ${id}_컴패니언_앱-v1.png`}
+function apply(id){selected=id;const c=companions[id];phone.style.setProperty('--active',c.color);phone.style.setProperty('--active-dark',c.dark);document.querySelectorAll('.chip').forEach(b=>{const on=b.dataset.id===id;b.dataset.selected=on;b.setAttribute('aria-pressed',String(on))});previewArt.src=asset(id);previewArt.alt=`${id} 컴패니언 미리보기`;previewLabel.textContent=`${id} 수집 가능`;homeArt.src=asset(id);homeArt.alt=`오늘의 동행 ${id}`;levelName.textContent=`오늘의 동행 · ${id} Lv.7`;mood.textContent=c.mood;xpName.textContent=`${id} XP +20`}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.id)));
+document.querySelector('#enter').addEventListener('click',()=>{apply(selected);s0.hidden=true;s1.hidden=false});
+</script>
+</body>
+</html>

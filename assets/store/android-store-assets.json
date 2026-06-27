@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-06-27",
+  "assets": [
+    {
+      "id": "android-app-icon-512",
+      "path": "assets/store/android-app-icon-512.png",
+      "width": 512,
+      "height": 512,
+      "usage": "Google Play app icon candidate"
+    },
+    {
+      "id": "android-feature-graphic-v1",
+      "path": "assets/store/android-feature-graphic-v1.png",
+      "width": 1024,
+      "height": 500,
+      "usage": "Google Play feature graphic candidate"
+    }
+  ],
+  "sourceAssets": [
+    "assets/icon/icon-primary-512.png"
+  ]
+}

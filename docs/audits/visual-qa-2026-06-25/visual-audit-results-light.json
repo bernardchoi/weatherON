@@ -1,0 +1,1447 @@
+[
+  {
+    "id": "A1",
+    "title": "스플래시",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "H1",
+    "title": "게스트 홈",
+    "phone": {
+      "x": 546,
+      "y": 112,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "서울 마포구 합정동 ▾",
+        "w": 149,
+        "h": 36
+      },
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "게스트 열람 저장만 제한",
+        "w": 137,
+        "h": 34
+      },
+      {
+        "text": "위치 정상",
+        "w": 95,
+        "h": 34
+      },
+      {
+        "text": "알림 설정 전",
+        "w": 108,
+        "h": 34
+      }
+    ],
+    "imgCount": 4,
+    "filename": null
+  },
+  {
+    "id": "A2",
+    "title": "계정 연결",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "다른 방법 보기",
+        "w": 345,
+        "h": 38
+      },
+      {
+        "text": "나중에 할래요",
+        "w": 345,
+        "h": 38
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "A3",
+    "title": "약관 동의",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "C1",
+    "title": "코디 메인",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "기준 수정",
+        "w": 65,
+        "h": 28
+      },
+      {
+        "text": "옷장 4개 매칭",
+        "w": 106,
+        "h": 36
+      },
+      {
+        "text": "스타일 미니멀",
+        "w": 106,
+        "h": 36
+      },
+      {
+        "text": "저장 계정 필요",
+        "w": 106,
+        "h": 36
+      }
+    ],
+    "imgCount": 4,
+    "filename": null
+  },
+  {
+    "id": "C2",
+    "title": "내 옷장",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "＋",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "전체",
+        "w": 51,
+        "h": 35
+      },
+      {
+        "text": "상의",
+        "w": 53,
+        "h": 35
+      },
+      {
+        "text": "하의",
+        "w": 53,
+        "h": 35
+      },
+      {
+        "text": "아우터",
+        "w": 65,
+        "h": 35
+      },
+      {
+        "text": "신발",
+        "w": 53,
+        "h": 35
+      },
+      {
+        "text": "액세서리",
+        "w": 76,
+        "h": 35
+      }
+    ],
+    "imgCount": 8,
+    "filename": null
+  },
+  {
+    "id": "C3",
+    "title": "옷 등록",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [
+      {
+        "tag": "button",
+        "text": "집업 후디 아우터 · 일교차",
+        "w": 112,
+        "h": 112,
+        "side": {
+          "l": 20,
+          "r": -261,
+          "t": 752,
+          "b": 12
+        }
+      },
+      {
+        "tag": "div",
+        "text": "아우터 · 일교차",
+        "w": 96,
+        "h": 15,
+        "side": {
+          "l": 28,
+          "r": -269,
+          "t": 841,
+          "b": 4
+        }
+      },
+      {
+        "tag": "button",
+        "text": "화이트 린넨 티셔츠 상의 · 낮 더움",
+        "w": 112,
+        "h": 112,
+        "side": {
+          "l": 140,
+          "r": -140,
+          "t": 752,
+          "b": 12
+        }
+      },
+      {
+        "tag": "div",
+        "text": "상의 · 낮 더움",
+        "w": 96,
+        "h": 15,
+        "side": {
+          "l": 148,
+          "r": -148,
+          "t": 841,
+          "b": 4
+        }
+      },
+      {
+        "tag": "button",
+        "text": "스트라이프 셔츠 상의 · 실내 단독",
+        "w": 112,
+        "h": 112,
+        "side": {
+          "l": 261,
+          "r": -20,
+          "t": 752,
+          "b": 12
+        }
+      },
+      {
+        "tag": "div",
+        "text": "상의 · 실내 단독",
+        "w": 96,
+        "h": 15,
+        "side": {
+          "l": 269,
+          "r": -28,
+          "t": 841,
+          "b": 4
+        }
+      },
+      {
+        "tag": "button",
+        "text": "라이트 니트 상의 · 쌀쌀함",
+        "w": 112,
+        "h": 112,
+        "side": {
+          "l": 20,
+          "r": -261,
+          "t": 872,
+          "b": 132
+        }
+      },
+      {
+        "tag": "img",
+        "text": "",
+        "w": 94,
+        "h": 60,
+        "side": {
+          "l": 29,
+          "r": -270,
+          "t": 881,
+          "b": 89
+        }
+      },
+      {
+        "tag": "div",
+        "text": "라이트 니트",
+        "w": 96,
+        "h": 13,
+        "side": {
+          "l": 28,
+          "r": -269,
+          "t": 947,
+          "b": 108
+        }
+      },
+      {
+        "tag": "div",
+        "text": "상의 · 쌀쌀함",
+        "w": 96,
+        "h": 15,
+        "side": {
+          "l": 28,
+          "r": -269,
+          "t": 961,
+          "b": 124
+        }
+      },
+      {
+        "tag": "button",
+        "text": "쿨링 티셔츠 상의 · 자외선 높음",
+        "w": 112,
+        "h": 112,
+        "side": {
+          "l": 140,
+          "r": -140,
+          "t": 872,
+          "b": 132
+        }
+      },
+      {
+        "tag": "img",
+        "text": "",
+        "w": 94,
+        "h": 60,
+        "side": {
+          "l": 149,
+          "r": -149,
+          "t": 881,
+          "b": 89
+        }
+      }
+    ],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "프리셋 선택",
+        "w": 169,
+        "h": 38
+      },
+      {
+        "text": "사진으로 등록",
+        "w": 169,
+        "h": 38
+      },
+      {
+        "text": "전체",
+        "w": 45,
+        "h": 38
+      },
+      {
+        "text": "아우터",
+        "w": 58,
+        "h": 38
+      },
+      {
+        "text": "상의",
+        "w": 47,
+        "h": 38
+      },
+      {
+        "text": "하의",
+        "w": 47,
+        "h": 38
+      },
+      {
+        "text": "신발",
+        "w": 47,
+        "h": 38
+      }
+    ],
+    "imgCount": 10,
+    "filename": null
+  },
+  {
+    "id": "C4",
+    "title": "코디 상세",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [
+      {
+        "tag": "button",
+        "text": "대화형 재추천 열기",
+        "w": 325,
+        "h": 40,
+        "side": {
+          "l": 34,
+          "r": -34,
+          "t": 875,
+          "b": 63
+        }
+      },
+      {
+        "tag": "span",
+        "text": "열기",
+        "w": 20,
+        "h": 16,
+        "side": {
+          "l": 339,
+          "r": -34,
+          "t": 887,
+          "b": 51
+        }
+      }
+    ],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "C1 복귀",
+        "w": 58,
+        "h": 30
+      },
+      {
+        "text": "재추천 기본",
+        "w": 105,
+        "h": 40
+      },
+      {
+        "text": "저장 저장 전",
+        "w": 105,
+        "h": 40
+      },
+      {
+        "text": "공유 대기",
+        "w": 105,
+        "h": 40
+      },
+      {
+        "text": "포멀하게",
+        "w": 92,
+        "h": 40
+      },
+      {
+        "text": "대화형 재추천 열기",
+        "w": 325,
+        "h": 40
+      }
+    ],
+    "imgCount": 4,
+    "filename": null
+  },
+  {
+    "id": "H2",
+    "title": "위치 변경",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "게스트",
+        "w": 173,
+        "h": 34
+      },
+      {
+        "text": "계정 연결됨",
+        "w": 173,
+        "h": 34
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "H3",
+    "title": "알림 사이드바",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "닫기",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "H4",
+    "title": "우산 추천",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "H5",
+    "title": "강수 타임라인",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "",
+        "w": 48,
+        "h": 28
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "O1",
+    "title": "스플래시",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "O2",
+    "title": "기능 소개",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "기능 소개 건너뛰기",
+        "w": 103,
+        "h": 33
+      }
+    ],
+    "imgCount": 1,
+    "filename": null
+  },
+  {
+    "id": "O3",
+    "title": "권한 요청",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "권한 요청",
+        "w": 173,
+        "h": 34
+      },
+      {
+        "text": "거부 상태",
+        "w": 173,
+        "h": 34
+      },
+      {
+        "text": "위치 허용",
+        "w": 318,
+        "h": 42
+      },
+      {
+        "text": "알림 허용",
+        "w": 318,
+        "h": 42
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "O4",
+    "title": "스타일 태그",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "캐주얼",
+        "w": 66,
+        "h": 38
+      },
+      {
+        "text": "미니멀",
+        "w": 68,
+        "h": 38
+      },
+      {
+        "text": "포멀",
+        "w": 54,
+        "h": 38
+      },
+      {
+        "text": "스트릿",
+        "w": 68,
+        "h": 38
+      },
+      {
+        "text": "로맨틱",
+        "w": 68,
+        "h": 38
+      },
+      {
+        "text": "남성",
+        "w": 46,
+        "h": 32
+      },
+      {
+        "text": "여성",
+        "w": 46,
+        "h": 32
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "O5",
+    "title": "알림 시간",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "출근",
+        "w": 113,
+        "h": 38
+      },
+      {
+        "text": "외출",
+        "w": 113,
+        "h": 38
+      },
+      {
+        "text": "여행",
+        "w": 113,
+        "h": 38
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "O6",
+    "title": "목적지 등록",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "회사",
+        "w": 72,
+        "h": 39
+      },
+      {
+        "text": "학교",
+        "w": 72,
+        "h": 39
+      },
+      {
+        "text": "공항",
+        "w": 72,
+        "h": 39
+      },
+      {
+        "text": "숙소",
+        "w": 72,
+        "h": 39
+      }
+    ],
+    "imgCount": 1,
+    "filename": null
+  },
+  {
+    "id": "G1",
+    "title": "출발 메인",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "＋",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "G2",
+    "title": "목적지 알림",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "G3",
+    "title": "여행 플래너",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "무료 상태",
+        "w": 173,
+        "h": 34
+      },
+      {
+        "text": "프리미엄 활성",
+        "w": 173,
+        "h": 34
+      },
+      {
+        "text": "구독",
+        "w": 40,
+        "h": 30
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "G4",
+    "title": "도보여행",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "G5",
+    "title": "AI 종주",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "권한 확인",
+        "w": 68,
+        "h": 34
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "G6",
+    "title": "프리미엄",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "P1",
+    "title": "목적지 추가",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "게스트",
+        "w": 173,
+        "h": 36
+      },
+      {
+        "text": "계정 연결됨",
+        "w": 173,
+        "h": 36
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "P2",
+    "title": "준비 가이드",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 1,
+    "filename": null
+  },
+  {
+    "id": "P3",
+    "title": "목적지 필터",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "전체",
+        "w": 61,
+        "h": 36
+      },
+      {
+        "text": "스포츠",
+        "w": 75,
+        "h": 36
+      },
+      {
+        "text": "아웃도어",
+        "w": 86,
+        "h": 36
+      },
+      {
+        "text": "계절",
+        "w": 63,
+        "h": 36
+      },
+      {
+        "text": "문화",
+        "w": 63,
+        "h": 36
+      },
+      {
+        "text": "추가",
+        "w": 40,
+        "h": 30
+      }
+    ],
+    "imgCount": 3,
+    "filename": null
+  },
+  {
+    "id": "M1",
+    "title": "마이 메인",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "계정 연결",
+        "w": 66,
+        "h": 30
+      },
+      {
+        "text": "업그레이드",
+        "w": 77,
+        "h": 30
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "M2",
+    "title": "알림 설정",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "",
+        "w": 48,
+        "h": 28
+      },
+      {
+        "text": "권한 관리",
+        "w": 68,
+        "h": 30
+      },
+      {
+        "text": "계정 연결",
+        "w": 68,
+        "h": 30
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "M3",
+    "title": "전역 설정",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "A4",
+    "title": "계정 관리",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "R1",
+    "title": "정책 허브",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "R2",
+    "title": "개인정보",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "R3",
+    "title": "광고 동의",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "옵션 더보기",
+        "w": 345,
+        "h": 32
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "R4",
+    "title": "광고 배치",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "W1",
+    "title": "날씨 제보 홈",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "W2",
+    "title": "날씨 제보",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "위치 권한 전",
+        "w": 173,
+        "h": 36
+      },
+      {
+        "text": "게스트 제보",
+        "w": 173,
+        "h": 36
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "W3",
+    "title": "제보 완료",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "W4",
+    "title": "제보 이력",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [
+      {
+        "text": "",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "S0",
+    "title": "온스퀘어 시작",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 8,
+    "filename": null
+  },
+  {
+    "id": "S1",
+    "title": "내 온스퀘어",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 2,
+    "filename": null
+  },
+  {
+    "id": "S2",
+    "title": "날씨 노트",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  },
+  {
+    "id": "S3",
+    "title": "날씨 리액션",
+    "phone": {
+      "x": 546,
+      "y": 58,
+      "w": 393,
+      "h": 852
+    },
+    "tiny": [],
+    "clipped": [],
+    "scrollContinuation": [],
+    "lowContrast": [],
+    "shortButtons": [],
+    "imgCount": 0,
+    "filename": null
+  }
+]

@@ -1,0 +1,10 @@
+node_modules/
+.npm-cache/
+dist/
+apps/mobile/dist-web/
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.*.local

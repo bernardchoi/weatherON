@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherON · 다이얼 비교 — B 균형 + C 등신비</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0A1730;font-family:'Noto Sans KR',sans-serif;padding:40px;color:#fff;max-width:1000px;margin:0 auto;}
+  h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;}
+  .sub{color:rgba(168,196,224,0.68);font-size:13px;margin-bottom:26px;line-height:1.7;}
+  .sub b{color:#F0A020;font-weight:600;}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:10px;}
+  .colhead{text-align:center;padding:12px 8px;border-radius:14px;}
+  .colhead .ab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;color:rgba(168,196,224,0.7);}
+  .colhead .nm{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;margin-top:2px;}
+  .colhead .en{font-size:10px;color:rgba(168,196,224,0.55);font-family:'DM Mono',monospace;margin-top:2px;}
+  .colhead.rec{background:rgba(58,191,160,0.12);border:1px solid rgba(58,191,160,0.5);}
+  .colhead.rec .nm{color:#3ABFA0;}
+  .recpill{display:inline-block;font-size:9px;font-weight:700;color:#3ABFA0;font-family:'DM Mono',monospace;border:1px solid rgba(58,191,160,0.5);border-radius:6px;padding:1px 6px;margin-top:4px;}
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+  .cell{background:#11254A;border-radius:16px;padding:8px;display:flex;justify-content:center;}
+  .cell.rec{background:#123A38;border:1px solid rgba(58,191,160,0.35);}
+  .cell svg{width:100%;height:auto;max-width:175px;}
+  table{width:100%;border-collapse:collapse;margin:22px 0 8px;font-size:12px;}
+  th,td{border:1px solid rgba(255,255,255,0.1);padding:9px 11px;text-align:left;vertical-align:top;}
+  th{background:#16305C;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11.5px;}
+  td.lab{color:rgba(168,196,224,0.8);font-weight:600;width:120px;}
+  .reccol{background:rgba(58,191,160,0.08);}
+  .note{background:#16305C;border-radius:14px;padding:18px 20px;font-size:12.5px;line-height:1.85;color:rgba(232,237,246,0.85);margin-top:8px;}
+  .note h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:8px;color:#fff;}
+  .note b{color:#3ABFA0;font-weight:600;}
+  .note .g{color:#F0A020;font-weight:600;}
+  footer{margin-top:34px;font-size:11px;color:rgba(168,196,224,0.5);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:16px;}
+</style>
+</head>
+<body>
+
+<h1>WeatherON · 다이얼 비교 — B 균형 + C 등신비</h1>
+<p class="sub">
+  요청: <b>B(균형)의 눈·하이라이트·볼터치는 유지하고, 등신비만 C(맥시멀)로</b>. 가운데가 그 하이브리드임.<br>
+  좌(B 균형)·우(C 맥시멀)는 참조용. 가운데는 큰 머리·작은 몸(1.8등신) + B의 차분한 중간 눈(스파클 없음).
+</p>
+
+<div class="cols">
+  <div class="colhead"><div class="ab">B</div><div class="nm">균형</div><div class="en">2.1등신 · 눈2점</div></div>
+  <div class="colhead rec"><div class="ab">B + C등신</div><div class="nm">하이브리드</div><div class="en">1.8등신 · 눈2점(스파클X)</div><div class="recpill">요청안</div></div>
+  <div class="colhead"><div class="ab">C</div><div class="nm">맥시멀</div><div class="en">1.8등신 · 별 글린트</div></div>
+</div>
+
+<div class="row">
+  <div class="cell"><div data-id="Solar" data-dial="balanced"></div></div>
+  <div class="cell rec"><div data-id="Solar" data-dial="balancedTall"></div></div>
+  <div class="cell"><div data-id="Solar" data-dial="maximal"></div></div>
+</div>
+<div class="row">
+  <div class="cell"><div data-id="Rain" data-dial="balanced"></div></div>
+  <div class="cell rec"><div data-id="Rain" data-dial="balancedTall"></div></div>
+  <div class="cell"><div data-id="Rain" data-dial="maximal"></div></div>
+</div>
+
+<table>
+  <tr><th>항목</th><th>B 균형</th><th class="reccol">B + C등신 (요청)</th><th>C 맥시멀</th></tr>
+  <tr><td class="lab">등신비</td><td>2.1등신</td><td class="reccol">1.8등신 (큰 머리·작은 몸)</td><td>1.8등신</td></tr>
+  <tr><td class="lab">눈 크기</td><td>중간</td><td class="reccol">중간 (B 유지)</td><td>초대형</td></tr>
+  <tr><td class="lab">하이라이트</td><td>2점</td><td class="reccol">2점 (B 유지)</td><td>2점 + 별 글린트</td></tr>
+  <tr><td class="lab">볼터치</td><td>적당</td><td class="reccol">적당 (B 유지)</td><td>진하게</td></tr>
+  <tr><td class="lab">인상</td><td>친근·단정</td><td class="reccol">귀엽지만 눈은 차분 — 절제 유지</td><td>최대 귀여움·키치</td></tr>
+</table>
+
+<div class="note">
+  <h3>읽는 법</h3>
+  가운데는 <b>실루엣(등신비)은 C의 귀여움</b>을 가져오되 <span class="g">눈·볼터치는 B의 절제</span>를 유지함. 결과적으로 머리가 커서 "귀엽다"는 첫인상은 C에 가깝지만, 눈에 별 스파클이 없어 가챠 키치로 넘어가지 않고 단정함을 지킴 — 브랜드 절제와 시장 귀여움의 절충점으로 유효함.<br><br>
+  참고: 머리 비중이 커지면 작은 UI(순위·칩)에서 몸·아이템 영역이 줄어듦 → <span class="g">드레스업 노출 면적</span>은 B(2.1등신)가 약간 유리. 꾸미기 아이템 가시성을 더 본다면 등신비를 1.9~2.0 사이로 미세 조정하는 것도 선택지.
+</div>
+
+<footer>
+  WeatherON · 다이얼 비교(B 균형 + C 등신비) · 2026-06-21 · 파라메트릭 SVG 프로토타입(비율 비교용)<br>
+  확정 시 일러스트 티어(Gamma/일러스트레이터)에서 이 비율로 최종 렌더. 바이블 2장 등신비 기준값 갱신 대상.
+</footer>
+
+<script>
+const PAL={
+  Solar:{base:'#F0A020',light:'#FFCB6B',dark:'#C77A12',out:'#7A4A0E'},
+  Rain :{base:'#4A8FD4',light:'#86BCEC',dark:'#2C68AE',out:'#1B3D6B'},
+};
+const DIAL={
+  balanced:{ head:{w:98,h:90,y:22,rx:40}, eye:{rx:7,ry:8.6,cy:78,dx:16.5,hl:2,spark:false}, body:{w:56,h:54,y:106}, arm:{ry:18,cy:130,dx:33}, feet:{rx:12,ry:8.5,cy:168,dx:13}, blush:{rx:7.5,ry:3.9,op:0.7,cy:88,dx:27}, mouthW:9, mouthD:7.5 },
+  balancedTall:{ head:{w:112,h:102,y:14,rx:46}, eye:{rx:7,ry:8.6,cy:82,dx:16.5,hl:2,spark:false}, body:{w:48,h:42,y:110}, arm:{ry:15,cy:129,dx:28}, feet:{rx:11,ry:8,cy:160,dx:12}, blush:{rx:7.5,ry:3.9,op:0.7,cy:91,dx:28}, mouthW:9, mouthD:7.5 },
+  maximal:{ head:{w:112,h:102,y:14,rx:46}, eye:{rx:9.5,ry:11.5,cy:84,dx:18.5,hl:2,spark:true}, body:{w:48,h:42,y:110}, arm:{ry:15,cy:129,dx:28}, feet:{rx:11,ry:8,cy:160,dx:12}, blush:{rx:9.5,ry:4.6,op:0.84,cy:93,dx:30}, mouthW:10, mouthD:8.5 },
+};
+function motif(id,c,dy){
+  const t=`transform="translate(0 ${dy})"`;
+  if(id==='Solar') return `<g ${t} stroke="${c.base}" stroke-width="3" stroke-linecap="round"><line x1="80" y1="20" x2="80" y2="6"/><line x1="64" y1="24" x2="56" y2="13"/><line x1="96" y1="24" x2="104" y2="13"/></g>`;
+  return `<path ${t} d="M80 4 C84 11 88 15 88 20 a8 8 0 0 1 -16 0 C72 15 76 11 80 4 Z" fill="${c.light}" stroke="${c.out}" stroke-width="1.6"/>`;
+}
+function eye(cx,cy,e){
+  let s=`<ellipse cx="${cx}" cy="${cy}" rx="${e.rx}" ry="${e.ry}" fill="#15294D"/>`;
+  s+=`<circle cx="${(cx-e.rx*0.32).toFixed(1)}" cy="${(cy-e.ry*0.38).toFixed(1)}" r="${(e.rx*0.34).toFixed(1)}" fill="#fff"/>`;
+  if(e.hl>1) s+=`<circle cx="${(cx+e.rx*0.32).toFixed(1)}" cy="${(cy+e.ry*0.32).toFixed(1)}" r="${(e.rx*0.18).toFixed(1)}" fill="#fff" fill-opacity="0.9"/>`;
+  if(e.spark){const sx=(cx-e.rx*0.05), sy=(cy-e.ry*0.62);
+    s+=`<path d="M${sx} ${sy-3} L${sx+1} ${sy} L${sx+4} ${sy} L${sx+1.4} ${sy+1.6} L${sx+2.4} ${sy+4.6} L${sx} ${sy+2.4} L${sx-2.4} ${sy+4.6} L${sx-1.4} ${sy+1.6} L${sx-4} ${sy} L${sx-1} ${sy} Z" fill="#fff" fill-opacity="0.95"/>`;}
+  return s;
+}
+function chibi(id,dialName){
+  const c=PAL[id], D=DIAL[dialName];
+  const H=D.head, hx=80-H.w/2, B=D.body, bx=80-B.w/2, g=id+dialName, dy=H.y-26, gemCy=B.y+B.h*0.4;
+  const mY=D.eye.cy+H.h*0.2;
+  const sheenCx=hx+H.w*0.33, sheenCy=H.y+H.h*0.4, sheenRx=H.w*0.29, sheenRy=H.h*0.26;
+  const rim=`M ${(hx+5).toFixed(1)} ${(H.y+H.h*0.42).toFixed(1)} A ${(H.w*0.55).toFixed(1)} ${(H.h*0.5).toFixed(1)} 0 0 1 ${(hx+H.w*0.46).toFixed(1)} ${(H.y+3).toFixed(1)}`;
+  return `<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hd${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.light}"/><stop offset="0.55" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <linearGradient id="bd${g}" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <radialGradient id="sh${g}" cx="0.32" cy="0.28" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="80" cy="190" rx="${(B.w*0.7).toFixed(1)}" ry="8" fill="#000" opacity="0.24"/>
+  <ellipse cx="${80-D.feet.dx}" cy="${D.feet.cy}" rx="${D.feet.rx}" ry="${D.feet.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80+D.feet.dx}" cy="${D.feet.cy}" rx="${D.feet.rx}" ry="${D.feet.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80-D.arm.dx}" cy="${D.arm.cy}" rx="10" ry="${D.arm.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="${80+D.arm.dx}" cy="${D.arm.cy}" rx="10" ry="${D.arm.ry}" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <rect x="${bx}" y="${B.y}" width="${B.w}" height="${B.h}" rx="${Math.min(B.w/2,27)}" fill="url(#bd${g})" stroke="${c.out}" stroke-width="2"/>
+  <g stroke="#F0A020" stroke-width="1.3" stroke-linecap="round"><line x1="80" y1="${(gemCy-6).toFixed(1)}" x2="80" y2="${(gemCy-8.5).toFixed(1)}"/><line x1="85" y1="${gemCy.toFixed(1)}" x2="87.5" y2="${gemCy.toFixed(1)}"/><line x1="75" y1="${gemCy.toFixed(1)}" x2="72.5" y2="${gemCy.toFixed(1)}"/></g>
+  <circle cx="80" cy="${gemCy.toFixed(1)}" r="4.2" fill="#F0A020"/>
+  ${motif(id,c,dy)}
+  <rect x="${hx}" y="${H.y}" width="${H.w}" height="${H.h}" rx="${H.rx}" fill="url(#hd${g})" stroke="${c.out}" stroke-width="2.2"/>
+  <ellipse cx="${sheenCx.toFixed(1)}" cy="${sheenCy.toFixed(1)}" rx="${sheenRx.toFixed(1)}" ry="${sheenRy.toFixed(1)}" fill="url(#sh${g})"/>
+  <path d="${rim}" fill="none" stroke="#F0A020" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.55"/>
+  <ellipse cx="${(80-D.blush.dx).toFixed(1)}" cy="${D.blush.cy}" rx="${D.blush.rx}" ry="${D.blush.ry}" fill="${c.light}" opacity="${D.blush.op}"/>
+  <ellipse cx="${(80+D.blush.dx).toFixed(1)}" cy="${D.blush.cy}" rx="${D.blush.rx}" ry="${D.blush.ry}" fill="${c.light}" opacity="${D.blush.op}"/>
+  ${eye(80-D.eye.dx,D.eye.cy,D.eye)}
+  ${eye(80+D.eye.dx,D.eye.cy,D.eye)}
+  <path d="M${80-D.mouthW} ${mY.toFixed(1)} Q80 ${(mY+D.mouthD).toFixed(1)} ${80+D.mouthW} ${mY.toFixed(1)}" fill="none" stroke="#15294D" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>`;
+}
+document.querySelectorAll('[data-id]').forEach(d=>{ d.innerHTML=chibi(d.getAttribute('data-id'), d.getAttribute('data-dial')); });
+</script>
+</body>
+</html>

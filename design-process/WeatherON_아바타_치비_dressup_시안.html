@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherON · ON Square 치비 아바타 & 꾸미기 시스템 시안</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0A1730;font-family:'Noto Sans KR',sans-serif;padding:40px;color:#fff;max-width:1180px;margin:0 auto;}
+  h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:23px;font-weight:800;margin-bottom:8px;letter-spacing:-.01em;}
+  .sub{color:rgba(168,196,224,0.68);font-size:13px;margin-bottom:30px;line-height:1.7;}
+  .sub b{color:#F0A020;font-weight:600;}
+  h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;margin:42px 0 6px;}
+  .h2sub{color:rgba(168,196,224,0.6);font-size:12px;margin-bottom:16px;line-height:1.6;}
+  .tag{display:inline-block;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:rgba(240,160,32,0.16);color:#F0A020;margin-left:8px;vertical-align:middle;}
+
+  /* HERO */
+  .hero{display:flex;gap:20px;flex-wrap:wrap;}
+  .stage{background:linear-gradient(175deg,#15294D 0%,#1E3B6E 55%,#2C5491 100%);border-radius:24px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 18px 40px rgba(0,0,0,0.45);padding:24px 30px 18px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .stage .nm{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;}
+  .stage .mt{font-family:'DM Mono',monospace;font-size:9px;color:rgba(168,196,224,0.6);letter-spacing:.1em;text-transform:uppercase;}
+  .stage.big{flex:1;min-width:300px;}
+
+  /* generic chibi cards */
+  .grid{display:flex;flex-wrap:wrap;gap:14px;}
+  .card{background:#11254A;border-radius:18px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;}
+  .card .cn{font-size:11.5px;font-weight:600;}
+  .card .cm{font-size:9px;color:rgba(168,196,224,0.55);font-family:'DM Mono',monospace;}
+  .seq .card{position:relative;}
+  .seq .step{position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:9px;color:#F0A020;}
+
+  /* slot map */
+  .slotwrap{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start;}
+  .slotfig{position:relative;width:230px;background:#11254A;border-radius:20px;padding:14px;}
+  .slotfig .mk{position:absolute;width:22px;height:22px;border-radius:50%;background:#F0A020;color:#15294D;font-family:'DM Mono',monospace;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .slotlegend{font-size:12.5px;line-height:1.9;color:rgba(232,237,246,0.85);}
+  .slotlegend .n{display:inline-block;width:20px;height:20px;border-radius:50%;background:rgba(240,160,32,0.18);color:#F0A020;font-family:'DM Mono',monospace;font-weight:700;font-size:10px;text-align:center;line-height:20px;margin-right:8px;}
+  .slotlegend b{color:#fff;font-weight:600;}
+  .slotlegend .k{font-family:'DM Mono',monospace;font-size:10.5px;color:#A6CEF2;}
+
+  /* shop */
+  .shop{max-width:420px;background:linear-gradient(175deg,#15294D,#102140);border-radius:24px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 18px 40px rgba(0,0,0,0.45);overflow:hidden;}
+  .shop .top{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px;}
+  .shop .top .t{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;}
+  .coins{display:flex;align-items:center;gap:5px;background:rgba(240,160,32,0.16);border-radius:20px;padding:5px 11px;font-family:'DM Mono',monospace;font-size:12px;color:#F0A020;font-weight:600;}
+  .coins .c{width:13px;height:13px;border-radius:50%;background:#F0A020;display:inline-block;}
+  .shoptabs{display:flex;gap:6px;padding:0 18px 12px;flex-wrap:wrap;}
+  .shoptabs span{font-size:11px;padding:6px 11px;border-radius:12px;background:#1A3360;color:rgba(232,237,246,0.7);}
+  .shoptabs span.on{background:#F0A020;color:#15294D;font-weight:700;}
+  .shopgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 18px 20px;}
+  .it{background:#1A3360;border-radius:16px;padding:10px 8px 9px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;}
+  .it.eq{border:1.5px solid #3ABFA0;}
+  .it .th{width:54px;height:54px;background:#102140;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .it .inm{font-size:10.5px;font-weight:600;}
+  .it .pr{font-family:'DM Mono',monospace;font-size:10px;color:#F0A020;display:flex;align-items:center;gap:3px;}
+  .it .pr .c{width:9px;height:9px;border-radius:50%;background:#F0A020;display:inline-block;}
+  .it .pr.owned{color:#3ABFA0;}
+  .it .pr.owned .c{background:#3ABFA0;}
+  .it .badge{position:absolute;top:7px;right:7px;font-size:8px;font-weight:700;color:#3ABFA0;font-family:'DM Mono',monospace;}
+
+  .note{background:#16305C;border-radius:14px;padding:18px 20px;font-size:12.5px;line-height:1.85;color:rgba(232,237,246,0.85);}
+  .note h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:8px;color:#fff;}
+  .note b{color:#F0A020;font-weight:600;}
+  .note .k{font-family:'DM Mono',monospace;font-size:11px;color:#A6CEF2;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:760px){.cols{grid-template-columns:1fr;}}
+  footer{margin-top:42px;font-size:11px;color:rgba(168,196,224,0.5);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:18px;}
+</style>
+</head>
+<body>
+
+<h1>WeatherON · ON Square 치비 아바타 &amp; 꾸미기 시스템 <span class="tag">dress-up direction</span></h1>
+<p class="sub">
+  아이템 구매/장착 기반 꾸미기 UX를 위해 <b>풀바디 치비 마스코트</b>로 재설계함. 같은 네이비/골드/원소색 토큰과 차분한 얼굴은 유지하되, 셰이딩·볼륨·부착 슬롯을 추가해 아이템이 붙을 면적을 확보.<br>
+  브랜드 결정: ON Square는 <b>캐릭터 서브브랜드</b>로 허용 → 친근한 톤. 단 작은 UI(순위·리스트·칩)는 기존 미니멀 글리프를 유지하는 <b>2단 피델리티</b> 운용.
+</p>
+
+<!-- HERO -->
+<h2>내 캐릭터 · 히어로</h2>
+<div class="h2sub">기본 상태(좌)와 아이템을 장착한 꾸민 상태(우). 가슴 골드 젬 + 머리 골드 림라이트는 모든 상태에 유지되는 공유 글리프.</div>
+<div class="hero">
+  <div class="stage"><div data-el="Rain" data-w="170"></div><div class="nm">기본 · Rain</div><div class="mt">base</div></div>
+  <div class="stage big"><div data-el="Rain" data-items="aura,beanie,scarf,umbrella" data-w="210"></div><div class="nm">꾸민 상태 · 비니 + 머플러 + 우산 + 오라</div><div class="mt">equipped</div></div>
+</div>
+
+<!-- SLOT MAP -->
+<h2>부착 슬롯 맵</h2>
+<div class="h2sub">아이템은 정의된 슬롯에만 붙음 → 수백 개 아이템도 비율이 어긋나지 않음. 좌표는 160×196 캐릭터 그리드 기준.</div>
+<div class="slotwrap">
+  <div class="slotfig">
+    <div data-el="Rain" data-w="200"></div>
+    <div class="mk" style="left:50%;top:11%">1</div>
+    <div class="mk" style="left:50%;top:40%">2</div>
+    <div class="mk" style="left:50%;top:60%">3</div>
+    <div class="mk" style="left:50%;top:74%">4</div>
+    <div class="mk" style="left:23%;top:70%">5</div>
+    <div class="mk" style="left:77%;top:70%">6</div>
+    <div class="mk" style="left:85%;top:20%">7</div>
+    <div class="mk" style="left:13%;top:14%">8</div>
+  </div>
+  <div class="slotlegend">
+    <div><span class="n">1</span><b>HEAD_TOP</b> — 모자·왕관·날씨캡 <span class="k">x40 y8 / 80×28</span></div>
+    <div><span class="n">2</span><b>FACE</b> — 안경·표정·마스크 <span class="k">x56 y66 / 48×22</span></div>
+    <div><span class="n">3</span><b>NECK</b> — 머플러·목걸이 <span class="k">x52 y104 / 56×16</span></div>
+    <div><span class="n">4</span><b>BODY</b> — 의상·코스튬 <span class="k">x49 y118 / 62×48</span></div>
+    <div><span class="n">5</span><b>HAND_L</b> — 든 소품(좌) <span class="k">x35 y118</span></div>
+    <div><span class="n">6</span><b>HAND_R</b> — 든 소품(우)·우산 <span class="k">x115 y118</span></div>
+    <div><span class="n">7</span><b>AURA / FX</b> — 오라·파티클 이펙트 <span class="k">behind</span></div>
+    <div><span class="n">8</span><b>SCENE / BG</b> — 배경·프레임 <span class="k">full</span></div>
+  </div>
+</div>
+
+<!-- DRESS-UP SEQUENCE -->
+<h2>꾸미기 레이어 시퀀스</h2>
+<div class="h2sub">아이템을 하나씩 얹어가는 합성 순서. 각 아이템은 자기 슬롯에만 그려지고 베이스는 그대로 유지됨.</div>
+<div class="grid seq">
+  <div class="card"><span class="step">0</span><div data-el="Rain" data-w="120"></div><span class="cn">기본</span><span class="cm">base</span></div>
+  <div class="card"><span class="step">1</span><div data-el="Rain" data-items="beanie" data-w="120"></div><span class="cn">+ 비니</span><span class="cm">HEAD_TOP</span></div>
+  <div class="card"><span class="step">2</span><div data-el="Rain" data-items="beanie,scarf" data-w="120"></div><span class="cn">+ 머플러</span><span class="cm">NECK</span></div>
+  <div class="card"><span class="step">3</span><div data-el="Rain" data-items="beanie,scarf,umbrella" data-w="120"></div><span class="cn">+ 우산</span><span class="cm">HAND_R</span></div>
+  <div class="card"><span class="step">4</span><div data-el="Rain" data-items="aura,beanie,scarf,umbrella" data-w="120"></div><span class="cn">+ 오라</span><span class="cm">FX</span></div>
+</div>
+
+<!-- ROSTER -->
+<h2>6원소 로스터</h2>
+<div class="h2sub">동일 치비 골격 + 원소색 그라디언트 + 머리 위 원소 모티프. 셰이딩 톤은 원소별 light/base/dark 3스톱으로 자동 분기.</div>
+<div class="grid" id="roster"></div>
+
+<!-- SHOP -->
+<h2>아이템 상점 UX 목업</h2>
+<div class="h2sub">코인 재화 + 카테고리 탭 + 보유/구매 상태. 썸네일은 동일 아트 스타일로 제작.</div>
+<div class="shop">
+  <div class="top"><div class="t">ON Square 상점</div><div class="coins"><span class="c"></span> 1,240</div></div>
+  <div class="shoptabs"><span class="on">모자</span><span>의상</span><span>소품</span><span>이펙트</span><span>배경</span></div>
+  <div class="shopgrid" id="shopgrid"></div>
+</div>
+
+<!-- SPEC -->
+<h2>시스템 스펙</h2>
+<div class="cols">
+  <div class="note">
+    <h3>아트 디렉션</h3>
+    <b>프로포션</b> — 2등신 치비, 160×196 그리드. 큰 머리 + 작은 몸통 + 스터비 팔다리.<br>
+    <b>셰이딩</b> — 헤드/바디 3스톱 그라디언트(light→base→dark) + 좌상단 화이트 시안 + <b>골드 림라이트 아크</b>(Quiet Horizon "첫 빛" 차용).<br>
+    <b>아웃라인</b> — <span class="k">#15294D</span> 네이비, 1.6~2.2px. 가챠 특유의 굵은 검정 외곽선은 배제 → 절제 유지.<br>
+    <b>공유 글리프</b> — 가슴 <b>골드 젬 + 미니 광선</b>이 앱 아이콘/워드마크 ON 스위치 모티프를 계승.
+  </div>
+  <div class="note">
+    <h3>운용 규칙</h3>
+    <b>2단 피델리티</b> — 작은 UI(순위·리스트·탭 칩)는 기존 미니멀 엠블럼(<span class="k">WeatherON_아바타_시안.html</span>) 유지, 히어로·상점·프로필만 치비 고피델리티 노출.<br>
+    <b>서브브랜드 경계</b> — 친근한 캐릭터 톤은 ON Square 내부로 한정. 홈/날씨/CTA 등 브랜드 모먼트는 정체성 가이드 2장 그대로(침범 금지).<br>
+    <b>토큰</b> — <span class="k">Solar #F0A020 · Rain #4A8FD4 · Storm #AB8EDD · Wind #3ABFA0 · Frost #8FD0E0 · Mist #869EBC</span><br>
+    <b>제작 단위</b> — 신규 아이템 = 슬롯 좌표에 맞춘 SVG 1개. 비율 고정이라 양산 안전.
+  </div>
+</div>
+
+<footer>
+  WeatherON · ON Square 치비 아바타 &amp; 꾸미기 시스템 시안 · 2026-06-21<br>
+  기준: brand/WeatherON_디자인_정체성_가이드.md(서브브랜드 허용 결정 반영) · 원소 정의 mockups/WeatherON_S0_mockup.jsx · 미니멀 글리프 시안 design-process/WeatherON_아바타_시안.html<br>
+  다음 단계 후보: ① 원소별 전용 의상/이펙트 1세트씩 ② 진화 단계(Lv1~3)를 치비 체급·디테일로 재매핑 ③ S1 내 캐릭터 홈 목업에 치비 적용
+</footer>
+
+<script>
+const PAL={
+  Solar:{base:'#F0A020',light:'#FFCB6B',dark:'#C77A12',out:'#7A4A0E'},
+  Rain :{base:'#4A8FD4',light:'#86BCEC',dark:'#2C68AE',out:'#1B3D6B'},
+  Storm:{base:'#AB8EDD',light:'#CDB6F0',dark:'#7E5FC0',out:'#4A3678'},
+  Wind :{base:'#3ABFA0',light:'#79E0C8',dark:'#1F9079',out:'#155A4C'},
+  Frost:{base:'#8FD0E0',light:'#C2EAF2',dark:'#5BAAC2',out:'#2E6B7E'},
+  Mist :{base:'#869EBC',light:'#B6C7DC',dark:'#5E77A0',out:'#3A4A63'},
+};
+function motif(id,c){switch(id){
+  case 'Solar':return `<g stroke="${c.base}" stroke-width="3" stroke-linecap="round"><line x1="80" y1="20" x2="80" y2="6"/><line x1="64" y1="24" x2="56" y2="13"/><line x1="96" y1="24" x2="104" y2="13"/></g>`;
+  case 'Rain':return `<path d="M80 4 C84 11 88 15 88 20 a8 8 0 0 1 -16 0 C72 15 76 11 80 4 Z" fill="${c.light}" stroke="${c.out}" stroke-width="1.6"/>`;
+  case 'Storm':return `<path d="M84 3 L72 19 L80 19 L74 30 L90 12 L82 12 Z" fill="${c.light}" stroke="${c.out}" stroke-width="1.4" stroke-linejoin="round"/>`;
+  case 'Wind':return `<path d="M64 16 Q80 2 94 12 Q100 18 90 22" fill="none" stroke="${c.base}" stroke-width="3" stroke-linecap="round"/>`;
+  case 'Frost':return `<g stroke="${c.base}" stroke-width="2.4" stroke-linecap="round"><line x1="80" y1="2" x2="80" y2="24"/><line x1="70" y1="7" x2="90" y2="19"/><line x1="90" y1="7" x2="70" y2="19"/></g>`;
+  case 'Mist':return `<g stroke="${c.base}" stroke-width="3.4" stroke-linecap="round" stroke-opacity="0.8"><line x1="62" y1="10" x2="90" y2="10"/><line x1="70" y1="19" x2="98" y2="19"/></g>`;
+}return '';}
+function item(name,c){switch(name){
+  case 'beanie':return `<g><path d="M40 44 Q80 6 120 44 Z" fill="#E0573B"/><rect x="38" y="42" width="84" height="11" rx="5.5" fill="#C53F26"/><circle cx="80" cy="14" r="7" fill="#FFD9A0"/></g>`;
+  case 'scarf':return `<g><path d="M52 114 Q80 130 108 114 L108 124 Q80 140 52 124 Z" fill="#E0573B"/><path d="M96 120 l10 30 -12 0 -4 -26 Z" fill="#C53F26"/></g>`;
+  case 'umbrella':return `<g transform="translate(118,96) rotate(14)"><path d="M-22 0 a22 22 0 0 1 44 0 Z" fill="#F0A020" stroke="#C77A12" stroke-width="1.5"/><line x1="0" y1="0" x2="0" y2="40" stroke="#7A4A0E" stroke-width="3" stroke-linecap="round"/><path d="M0 40 q6 0 6 -6" fill="none" stroke="#7A4A0E" stroke-width="3" stroke-linecap="round"/></g>`;
+  case 'crown':return `<g><path d="M48 42 L58 22 L70 36 L80 18 L90 36 L102 22 L112 42 Z" fill="#F0A020" stroke="#C77A12" stroke-width="1.5" stroke-linejoin="round"/><circle cx="80" cy="18" r="3" fill="#FFE08A"/></g>`;
+  case 'specs':return `<g stroke="#15294D" stroke-width="2.4" fill="#cfe6ff" fill-opacity="0.25"><circle cx="65" cy="74" r="9"/><circle cx="95" cy="74" r="9"/></g><line x1="74" y1="74" x2="86" y2="74" stroke="#15294D" stroke-width="2.4"/>`;
+}return '';}
+function aura(c){return `<g><circle cx="80" cy="104" r="76" fill="${c.base}" opacity="0.10"/><circle cx="80" cy="104" r="60" fill="none" stroke="${c.base}" stroke-width="2" stroke-opacity="0.30" stroke-dasharray="3 7"/><g fill="#F0A020"><circle cx="26" cy="70" r="2.4"/><circle cx="134" cy="86" r="2.4"/><circle cx="120" cy="40" r="1.8"/><circle cx="40" cy="120" r="1.8"/></g></g>`;}
+function chibi(id,opts){
+  opts=opts||{}; const items=opts.items||[]; const w=opts.w||160; const c=PAL[id]; const g='g'+id+(opts.uid||'');
+  const hat=items.includes('beanie')||items.includes('crown');
+  return `<svg viewBox="0 0 160 196" width="${w}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="head${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.light}"/><stop offset="0.55" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <linearGradient id="body${g}" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>
+    <radialGradient id="sheen${g}" cx="0.32" cy="0.28" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  ${items.includes('aura')?aura(c):''}
+  <ellipse cx="80" cy="186" rx="42" ry="8.5" fill="#000" opacity="0.26"/>
+  <ellipse cx="66" cy="178" rx="13" ry="9" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="94" cy="178" rx="13" ry="9" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="45" cy="132" rx="10.5" ry="19" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <ellipse cx="115" cy="132" rx="10.5" ry="19" fill="${c.dark}" stroke="${c.out}" stroke-width="1.6"/>
+  <rect x="49" y="108" width="62" height="60" rx="27" fill="url(#body${g})" stroke="${c.out}" stroke-width="2"/>
+  <g stroke="#F0A020" stroke-width="1.4" stroke-linecap="round"><line x1="80" y1="126" x2="80" y2="123"/><line x1="85" y1="132" x2="88" y2="132"/><line x1="75" y1="132" x2="72" y2="132"/></g>
+  <circle cx="80" cy="132" r="4.4" fill="#F0A020"/>
+  ${items.includes('scarf')?item('scarf',c):''}
+  ${!hat?motif(id,c):''}
+  <rect x="36" y="26" width="88" height="82" rx="34" fill="url(#head${g})" stroke="${c.out}" stroke-width="2.2"/>
+  <ellipse cx="64" cy="58" rx="26" ry="22" fill="url(#sheen${g})"/>
+  <path d="M40 56 A40 40 0 0 1 66 28" fill="none" stroke="#F0A020" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.55"/>
+  <ellipse cx="54" cy="84" rx="6.5" ry="3.4" fill="${c.light}" opacity="0.6"/>
+  <ellipse cx="106" cy="84" rx="6.5" ry="3.4" fill="${c.light}" opacity="0.6"/>
+  ${items.includes('specs')?item('specs',c):`<ellipse cx="65" cy="74" rx="5.6" ry="7" fill="#15294D"/><circle cx="63.4" cy="71.5" r="1.7" fill="#fff"/><ellipse cx="95" cy="74" rx="5.6" ry="7" fill="#15294D"/><circle cx="93.4" cy="71.5" r="1.7" fill="#fff"/>`}
+  <path d="M72 90 Q80 97 88 90" fill="none" stroke="#15294D" stroke-width="2.4" stroke-linecap="round"/>
+  ${items.includes('umbrella')?item('umbrella',c):''}
+  ${items.includes('crown')?item('crown',c):''}
+  ${items.includes('beanie')?item('beanie',c):''}
+  </svg>`;
+}
+// render data-el placeholders
+let uid=0;
+document.querySelectorAll('[data-el]').forEach(d=>{
+  const id=d.getAttribute('data-el');
+  const items=(d.getAttribute('data-items')||'').split(',').filter(Boolean);
+  const w=+(d.getAttribute('data-w')||160);
+  d.innerHTML=chibi(id,{items,w,uid:uid++});
+});
+// roster
+const ros=['Solar','Rain','Storm','Wind','Frost','Mist'];
+document.getElementById('roster').innerHTML=ros.map(id=>
+  `<div class="card">${chibi(id,{w:120,uid:uid++})}<span class="cn">${id}</span><span class="cm">chibi-base</span></div>`).join('');
+// shop — hats category sample (item thumbnails as mini chibi-head or icon)
+function thumb(svgInner){return `<svg viewBox="0 0 60 60" width="50" xmlns="http://www.w3.org/2000/svg">${svgInner}</svg>`;}
+const shopItems=[
+  {nm:'레드 비니',pr:120,th:`<path d="M10 40 Q30 6 50 40 Z" fill="#E0573B"/><rect x="9" y="38" width="42" height="8" rx="4" fill="#C53F26"/><circle cx="30" cy="12" r="5" fill="#FFD9A0"/>`,owned:false,eq:false},
+  {nm:'골드 왕관',pr:480,th:`<path d="M12 44 L20 20 L30 36 L40 20 L48 44 Z" fill="#F0A020" stroke="#C77A12" stroke-width="1.5" stroke-linejoin="round"/><circle cx="30" cy="18" r="3" fill="#FFE08A"/>`,owned:true,eq:true},
+  {nm:'우비 후드',pr:300,th:`<path d="M14 46 Q30 10 46 46 L40 48 Q30 24 20 48 Z" fill="#4A8FD4" stroke="#1B3D6B" stroke-width="1.4"/>`,owned:false,eq:false},
+  {nm:'안경',pr:90,th:`<g stroke="#15294D" stroke-width="2.4" fill="#cfe6ff" fill-opacity="0.3"><circle cx="22" cy="30" r="8"/><circle cx="42" cy="30" r="8"/></g><line x1="30" y1="30" x2="34" y2="30" stroke="#15294D" stroke-width="2.4"/>`,owned:true,eq:false},
+  {nm:'태양 머리띠',pr:260,th:`<g stroke="#F0A020" stroke-width="2.6" stroke-linecap="round"><line x1="30" y1="22" x2="30" y2="10"/><line x1="18" y1="26" x2="11" y2="17"/><line x1="42" y1="26" x2="49" y2="17"/></g><path d="M14 34 Q30 26 46 34" fill="none" stroke="#F0A020" stroke-width="3"/>`,owned:false,eq:false},
+  {nm:'눈송이 귀마개',pr:200,th:`<circle cx="16" cy="30" r="7" fill="#C2EAF2" stroke="#2E6B7E" stroke-width="1.4"/><circle cx="44" cy="30" r="7" fill="#C2EAF2" stroke="#2E6B7E" stroke-width="1.4"/><path d="M16 23 Q30 12 44 23" fill="none" stroke="#8FD0E0" stroke-width="2.6"/>`,owned:false,eq:false},
+];
+document.getElementById('shopgrid').innerHTML=shopItems.map(it=>{
+  const price = it.owned
+    ? `<div class="pr owned">${it.eq?'장착됨':'보유'}</div>`
+    : `<div class="pr"><span class="c"></span>${it.pr}</div>`;
+  return `<div class="it ${it.eq?'eq':''}">${it.eq?'<span class="badge">EQUIP</span>':''}<div class="th">${thumb(it.th)}</div><div class="inm">${it.nm}</div>${price}</div>`;
+}).join('');
+</script>
+</body>
+</html>

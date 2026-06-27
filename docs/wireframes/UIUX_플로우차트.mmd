@@ -1,0 +1,328 @@
+flowchart TD
+    A([앱 실행]) --> LANG["기기 언어 자동 적용<br/>ko/ja/en 지원 · 미지원 시 en"]
+    LANG --> B{최초 실행 여부}
+    B -->|최초 실행| SPLASH["A1 스플래시<br/>브랜드 1회 노출"]
+    SPLASH --> TOKEN{유효 계정 토큰?}
+    TOKEN -->|없음| D["홈<br/>(Guest 모드 · 하단 탭)"]
+    TOKEN -->|있음| D
+    TOKEN -.->|계정·권한·구독 복원| SESSION["SESSION STATE<br/>accountLinked · permissionReady · locationReady · premiumActive"]
+    TOKEN -.->|설정 복원| SETTINGS["SETTINGS STATE<br/>styleProfileSaved · selectedStyles · fit · age · locationManaged<br/>smartCareEnabled · alert toggles"]
+    SPLASH -->|프리뷰 홈 이동| D
+    D --> AUTHGATE{계정 필요 기능 탭?}
+    AUTHGATE -->|계정 연결·코디 저장·옷장 저장·장소 저장·알림 추가·여행 저장·프리미엄·Weather Note 작성·날씨 제보 저장| AUTH2["A2 계정 연결<br/>계정 환경 기반 자동추천<br/>국가 선택 미노출 · 다른 방법 보기"]
+    AUTH2 --> AUTH2s["계정 연결 상태<br/>(Route State에 호출 액션 유지<br/>검증용 정보는 실제 UI 비노출)"]
+    AUTH2 -->|로그인 수단 선택| AUTH3["A3 약관 동의<br/>(필수 3종 + 선택 1종)"]
+    AUTH2 -->|나중에| D
+    AUTH3 --> AUTH3s["약관 상태<br/>(필수 완료/대기 · 선택 ON/OFF · 원래 액션 복귀 예정)"]
+    AUTH3 -->|동의하고 계속 · accountLinked| D
+    AUTH3s -.->|accountLinked 유지| SESSION
+    AUTH3s -.->|실제 구현 원래 액션 복귀| AUTHGATE
+    AUTH3s -.->|pendingAction=프리미엄 진입| SUB
+    AUTH3s -.->|returnTo=P1 · resumeSave| P1s
+    D -->|선택 온보딩| C[온보딩 시작]
+    C --> CSTART["O1 선택 온보딩 스플래시<br/>(온보딩 시작 / 홈으로)"]
+    CSTART -->|온보딩 시작| C0["온보딩 소개<br/>(4대 기능 한눈 비교 + 기능별 상세 안내)"]
+    CSTART -->|홈으로| D
+    C0 -->|추천 기준 설정·기능 소개 건너뛰기| C1[위치 권한 요청]
+    C1 -->|허용·나중에 설정 모두 진행| C2[알림 권한 요청]
+    C1 -->|거부| C1d["위치 거부 상태<br/>검색 위치·앱 내 안내 유지"]
+    C2 --> C2s["권한 상태<br/>(0/2~2/2 · 거부 · 허용 권한은 필요한 알림에 반영)"]
+    C2 -->|거부| C2d["알림 거부 상태<br/>푸시 제한 · M3/Z4에서 재요청"]
+    C2s -.->|locationReady · permissionReady 유지| SESSION
+    C2s --> C3["스타일 태그·코디 핏·추천 연령대 선택<br/>(스타일 복수 선택 + 남성/여성/상관없음 + 10-20대~50+)"]
+    C3 --> C3s["추천 기준 상태<br/>(태그 수 · 핏 · 연령대 · READY/WAIT)"]
+    C3s -.->|styleProfileSaved · selectedStyles · fit · age| SETTINGS
+    C3s --> C4["스마트 알림 기준 설정<br/>(주 사용 상황 1개 선택 + 자동 적용 요약)"]
+    C4 --> C4s["알아서 챙기기 상태<br/>(상황 · 필수 날씨 ON · 목적지 확장 예정)"]
+    C4s --> C5{목적지 등록 선택}
+    C5 -->|건너뛰기| D
+    C5 -->|등록| C6["O6 목적지 등록<br/>(선택 설정 + 목적지 알림 기준 세분화)"]
+    C6 -->|목적지 등록| I
+    B -->|기존 사용자| SPLASH
+
+    D --> D1[현재 날씨 정보 표시]
+    D --> D2["시간별 / 주간 예보"]
+    D --> D3[위치 검색 · 변경]
+    D3 --> D3s["LOCATION STATE<br/>선택 위치 · 검색어 · Guest 임시 검색 · 계정 저장 상태"]
+    D3s -.->|새 위치 저장| AUTH2
+    AUTH3s -.->|returnTo=H2 · 위치 저장 완료| D3s
+    D3s --> D
+    D --> D0s["홈 상태 요약<br/>(Guest 열람 · 위치 정상 · 알림 설정 전)"]
+    D0s -->|알림 설정 전 탭| C2
+    D -->|홈 코디 추천 카드 탭| E1
+    D -->|홈 AI 장소 추천 카드 탭| P3
+    D -.->|벨 아이콘| K["알림 사이드바<br/>(우측 슬라이드)"]
+    K --> Ks["NOTIFICATION STATE<br/>선택 알림 · 읽음/미읽음 · 딥링크 대상"]
+    K -->|우산 추천 알림 탭| F
+
+    D --> D4{강수 확률 높음?}
+    D4 -->|예 + 미확인| D5["홈 화면에 우산 추천 카드 표시<br/>(실시간 의사결정 카드)"]
+    D5 --> D5a["우산 추천 푸시/알림 이력<br/>(H3에 보관)"]
+    D5 -->|카드 탭 · umbrellaSignalReviewed| F[우산 추천 상세 화면]
+    F --> F1["추천 이유 · 시간대별 강수확률<br/>(강수량 · 지속시간 · 풍속 기준)"]
+    F1 --> F2[우산 종류 비교]
+    F2 --> Fs["UMBRELLA STATE<br/>추천 우산 · 강수 시간 · 알림 설정 전/준비"]
+    F2 -.->|알림 설정 바로가기<br/>returnTo=H4 · alertFocus=umbrella| M2b
+    M2b -.->|뒤로 · 알림 준비 반영| F2
+    F -.->|열람 후 홈 복귀| D5b["홈 우산 카드는 숨김<br/>H3 알림 이력은 유지"]
+    D5b --> D
+    D4 -->|아니오| D
+
+    D4 -->|예| D4a["강수 임박 필수 알림 발송<br/>(시작 시각 · 강도 · 그칠 시각)"]
+    D4a -->|푸시알림 탭| D4b[강수 타임라인 화면]
+    D4b --> D4c["30분 단위 강수량 차트"]
+    D4c --> D4d[외출 가이드]
+    D4d --> D4s["RAIN STATE<br/>시작/종료 시각 · 그침 알림 ON/OFF"]
+    D4d -.->|알림 설정 바로가기<br/>returnTo=H5 · alertFocus=rain| M2c
+    M2c -.->|뒤로 · 그침 알림 준비 반영| D4d
+
+    D --> D6{알림 발송 시 목적지 등록 여부}
+    D6 -->|미등록| D6a["Mode A: 생활 루틴 통합 알림<br/>(출근/외출 준비 + 자기 전 체크 자동 발송)"]
+    D6 -->|등록함| I
+
+    K --> K1["오늘의 외출 준비 알림<br/>(Mode A/B)"]
+    K --> K2[비 예보 사전 알림]
+    K --> K3["출발 · 신발 추천 알림"]
+    K --> K4["자기 전 내일 날씨·코디 확인 알림"]
+    K --> K5["폭염·한파·강풍 특보 알림"]
+
+    D -.->|제보 버튼| CWR["커뮤니티 날씨 제보 CWR<br/>(홈 화면 · v2.0 · 독립 기능)"]
+    CWR --> W1["W1 날씨 제보 홈<br/>(주변 제보 카드 · 보조 CTA)"]
+    W1 --> W1s["CWR STATE<br/>미확정 주변 제보 · 상세 확인 · W2 진입"]
+    W1 -->|지금 날씨 제보하기| W2["W2 탭 제보 화면<br/>(날씨 선택 · GPS 자동)"]
+    W2 --> W2s["REPORT STATE<br/>선택 대기 · 위치 권한 · Guest/계정 제보 · 완료 처리"]
+    W2s -.->|위치 권한 필요 · pendingAction=날씨 제보 저장| C1
+    W2s -.->|배지/이력 저장| AUTH2
+    C2s -.->|returnTo=W2 · GPS 제보 준비| W2s
+    AUTH3s -.->|returnTo=W2 · 배지/이력 반영| W2s
+    W2 -->|제보하기| W3["W3 제보 완료<br/>(신뢰도 · 배지 갱신)"]
+    W3 --> W3s["BADGE STATE<br/>확정 제보 · 홈 오버레이 · 기여 레벨"]
+    M --> W4["W4 제보 이력<br/>(MY · 반영 리포트)"]
+    W4 --> W4s["HISTORY STATE<br/>제보 기록 · 확정률 · 지역 랭킹"]
+    CWR --> CWR1["현재 날씨 선택<br/>☀ 맑음 · ⛅ 흐림 · 🌧 비 · 🌨 눈 · 💨 강풍 · 🌩 천둥번개"]
+    CWR1 --> CWR2["GPS 위치 자동 감지 → 제보 완료<br/>(3초 이내 · 자동 만료 60분)"]
+    CWR2 --> CWR3{신뢰도 검증 알고리즘}
+    CWR3 -->|반경 500m · 3건 미만| CWR4["소프트 표시<br/>'주변 N명이 날씨 제보 중 👀'"]
+    CWR3 -->|반경 500m · 3건 이상 + 기상청 정합| CWR5["확정 제보 → 홈 화면 오버레이 표시"]
+    CWR2 --> CWR6["기여 배지 업데이트<br/>(새싹 → 관측자 → 리포터 → 동네 관측왕 → 날씨 도우미)"]
+
+    D -->|하단 코디 탭| E["코디<br/>(하단 탭)"]
+    E -->|내 옷장 관리 탭| E0[내 옷장 관리]
+    E0 --> E0s["옷장 상태<br/>(아이템 수 · 필터 · Guest/계정 저장 상태 · 옷 추가)"]
+    E0s -->|추천으로 복귀| E1
+    E0 -->|+ 옷 등록| E0a["옷 등록<br/>(사진 · 카테고리 필수)"]
+    E0 -.->|Guest 옷 추가·수정| AUTH2
+    E0a --> E0a1["등록 상태<br/>(사진 선택 · 카테고리 · Guest/계정 저장 상태 · 저장 가능/대기)"]
+    E0a1 -.->|Guest 옷 저장| AUTH2
+    AUTH3s -.->|returnTo=C3 · 옷 저장 완료| E0a1
+    E0a1 -->|저장 완료 후 옷장 복귀| E0
+    E0 -->|아이템 탭| E0b["옷 목록 · 수정 · 삭제<br/>(수정은 C3 패턴 · 삭제 후 재계산)"]
+    E0b -->|수정| E0a
+    E0b -->|삭제| E0c
+    E0 -->|등록 옷 없음| E0c["옷장 빈 상태<br/>(첫 옷 등록 CTA + 기본 룰 추천 안내)"]
+    E0c --> E0a
+    E --> E1["AI 코디 추천<br/>(날씨 근거형 Style Card)"]
+    E1 --> E1s["추천 기준 상태<br/>(옷장 매칭 · 스타일 기준 · 저장 계정 필요)"]
+    E1s -->|기준 수정 · returnTo=C1| C3
+    C3 -.->|returnTo=C1 · styleProfileSaved| E1s
+    E1s -.->|저장 계정 필요| AUTH2
+    AUTH3s -.->|returnTo=C1 · 코디 저장 완료| E1s
+    E1 --> E1a[추천 이유 설명]
+    E1 --> E1b["대화형 재추천<br/>(채팅으로 스타일 요청)"]
+    E1 -->|셔플 · outfitVariant 토글| E1s
+    E1s -->|홈 복귀 · outfitVariant 유지| D
+    E1 -->|코디 카드·상세 보기 탭| E2[코디 상세 보기]
+    E2 -->|뒤로| E1
+    E2 --> E2s["상세 상태<br/>(실제 의류 Outfit Hero · 시간대 착용 판단 · 재추천 반영 · 저장 전 · 공유 준비)"]
+    E2s -->|C1 복귀 · outfitVariant 전달| E1
+    E2s -->|홈 복귀 · outfitVariant 유지| D
+    E2s -.->|저장 계정 필요| AUTH2
+    E2 --> E3[코디 저장 / 공유]
+    E3 -.->|계정 미연결 시 저장 탭| AUTH2
+    AUTH3s -.->|returnTo=C4 · 코디 저장 완료| E2s
+
+    D -->|하단 출발 탭| I["출발<br/>(하단 탭)"]
+    I --> I0["오늘 알아서 챙기는 중<br/>(저장 목적지 요약 + 출발/신발/우산)"]
+    I0 --> I0s["출발 상태<br/>(목적지 수 · 케어 ON 수 · 케어 적용 범위 · G2/P1 연결)"]
+    I -->|목적지 카드 탭| G2["G2 목적지 알림 상세<br/>(날씨 비교 + 출발시간 역산)"]
+    G2 -->|뒤로| I
+    G2 --> G2s["케어 상태<br/>(GUEST/PERM/READY/ON + 다음 알림 요약)"]
+    G2s -->|G1 목록으로| I
+    G2s -->|알림 설정<br/>returnTo=G2 · alertFocus=destination| M2b
+    G2s -.->|Guest 케어 ON · returnTo=G2| AUTH2
+    G2s -.->|알림 권한 확인 · returnTo=G2| C2
+    AUTH3s -.->|returnTo=G2 · destination 유지| G2s
+    C2s -.->|returnTo=G2 · resumeCare| G2s
+    M2b -.->|뒤로 · 목적지 컨텍스트 유지| G2s
+    G2s -->|ON 저장| I4
+    G2s -.->|공유 케어 상태 반영| I0
+    I -->|검색창·+ 목적지 추가| I1[목적지 검색 · 추가]
+    I1 --> P1["목적지 입력 · 카테고리 자동 인식<br/>(회사/학교/공항/숙소 + 장소 카테고리)"]
+    P1 --> P1s["추가 상태<br/>(검색 결과 수 · 선택됨 · Guest/계정 저장 상태)"]
+    P1s -->|검색 결과 없음| P1e["검색 없음 상태<br/>(전체 보기 · 재검색)"]
+    P1s -.->|Guest 영구 저장| AUTH2
+    P1s -->|계정 연결 후 목적지 알림에 추가| P1save["Saved Destination List<br/>(G1/P3 공통 목록 + Destination Care State ON)"]
+    P1save --> I
+    P1save -.-> P3
+    P1 --> I2["출발지 vs 목적지 날씨 비교<br/>(기온 · 날씨 · 바람 · 강수 차이)"]
+    I2 --> I3["출발시간 역산<br/>(도착 희망시각 − 소요시간 − 여유시간)"]
+    I3 --> I4["Mode B: 목적지 알림<br/>(출발 · 신발 · 우산 알림 자동 조정)"]
+    I4 --> I5["출발 10분 전 신발 추천 알림"]
+    I5 --> I6[출발 시각 알림]
+    P1 --> P2["카테고리 전용 준비 가이드<br/>(등록 목적지 기반 확장)"]
+    P2 --> P2s["준비 가이드 상태<br/>(등록 목적지 기준 · G2/P3 연결)"]
+    P2s -->|목적지 알림 보기 · selectedDestination 유지| G2
+    P2s -->|다른 목적지 보기 · 필터 목록 복귀| P3
+    I --> P3["목적지 필터<br/>(카테고리별 목적지 알림/준비 가이드)"]
+    P3 -->|필터 결과 없음| P3e["빈 카테고리 상태<br/>(목적지 추가 · 전체 보기)"]
+    P3e -->|목적지 추가| P1
+    P3e -->|전체 보기| P3
+    P3 -->|목적지 카드 탭| P3a["목적지 상세 상태<br/>(날씨 비교 + 준비 가이드 + 계정/권한 gate + 목적지 알림 ON/OFF)"]
+    P3a -->|선택 목적지·상태 유지해 준비 가이드 보기| P2
+    P3a -->|선택 목적지·상태 유지해 출발 케어 상세| G2
+    P3a -.->|Guest 케어 저장| AUTH2
+    P3a -.->|알림 권한 확인| C2
+    AUTH3s -.->|returnTo=P3 · 선택 목적지 유지| P3a
+    C2s -.->|returnTo=P3 · 권한 상태 반영| P3a
+    P3a -->|뒤로| P3
+    P3a -->|ON 저장| I4
+    P3a -.->|공유 케어 상태 반영| I0
+
+    I --> I7["G3 여행 일정<br/>(출발 탭 내 · 여행 플래너)"]
+    I7 --> I7s["여행 플래너 상태<br/>(프리미엄 활성 · 공유 준비 · 미구독 시 G6)"]
+    I7s -.->|미구독 CTA · returnTo=G3| SUB
+    SUB -.->|returnTo=G3 · 공유/일정 액션 계속| I7s
+    I7 --> I7s1["Scenario 1 · 일상 이동<br/>대중교통 + 도보 혼합 → Mode A/B 알아서 챙기기"]
+    I7 --> I7s2["Scenario 2 · 당일·단기 도보<br/>코스 날씨 타임라인 + WCI + 최적 출발 시점<br/>(무료 제공)"]
+    I7 --> I7s3["Scenario 3 · 장거리 국토종주<br/>서울→부산, 도쿄→오사카 등<br/>(프리미엄 전용)"]
+
+    I7s2 --> G4C["G4 도보여행 코스 선택<br/>(한국 코스 DB : 올레길·둘레길 등)"]
+    G4C --> G4T["구간별 시간대 날씨 타임라인 (F2)"]
+    G4T --> G4W["도보 컨디션 지수 WCI (F3)"]
+    G4W --> G4O["날씨 창 + 최적 출발 시점 추천 (F4)"]
+    G4O --> G4S["COURSE STATE<br/>(GUEST/PERM/READY/LIMIT/ON)"]
+    G4S -.->|Guest 코스 저장| AUTH2
+    G4S -.->|알림 권한 확인| C2
+    G4S -.->|무료 2개 초과| SUB
+    AUTH3s -.->|returnTo=G4 · 선택 코스 유지| G4S
+    C2s -.->|returnTo=G4 · 권한 상태 반영| G4S
+    SUB -.->|returnTo=G4 · 프리미엄 활성| G4S
+    G4S --> G4M["코스 저장 + D-7 날씨 모니터링 (F5)"]
+    G4M -.-> G4R["위험 기상 경보 (F6)"]
+
+    I7s3 --> AI_GATE{프리미엄 구독 여부}
+    AI_GATE -->|미구독| SUB["G6 프리미엄 구독 페이월<br/>월간 ₩2,900 / 연간 ₩19,900"]
+    SUB --> SUB1["깊이 분리 모델 안내<br/>(기능 동일 · 무료=기본 · 프리미엄=한도 확대+개인화)"]
+    SUB1 --> SUB2{구독 선택}
+    SUB2 -->|월간| SUB3[월간 결제 완료]
+    SUB2 -->|연간| SUB4[연간 결제 완료]
+    SUB3 -.->|premiumActive 유지| SESSION
+    SUB4 -.->|premiumActive 유지| SESSION
+    SUB3 --> I7s3
+    SUB4 --> I7s3
+
+    AI_GATE -->|구독 중| AI1["G5 국토종주 AI 플래너 (F8 · Premium)"]
+    AI1 --> AI2["출발지 → 목적지 + 여행 일수 입력<br/>(서울→부산, 도쿄→오사카 등 자유 설정)"]
+    AI2 --> AI3["AI 모델 — 구간별·일자별 날씨 분석<br/>(최대 14일 예보)"]
+    AI3 --> AI3s["AI PLAN STATE<br/>(프리미엄 활성 · 알림 권한 · 저장/공유 상태)"]
+    AI3 --> AI4["날짜별 날씨 요약<br/>기온·강수확률·체감온도·바람"]
+    AI3 --> AI5["일자별 코디 추천<br/>기온 레이어링 + 우산 필요 여부"]
+    AI3 --> AI6["전체 짐 체크리스트 자동 생성<br/>방수 장비·옷 조합·보조 배터리 등"]
+    AI3 --> AI7["날씨 악화 구간 경보<br/>일정 조정 또는 대피 숙박지 제안"]
+    AI3 --> AI8["예보 업데이트 시 재분석 알림<br/>(여정 중 기상 변화 즉시 반영)"]
+    AI8 -.->|권한 전 · returnTo=G5| C1
+    C2s -.->|returnTo=G5 · AI 플랜 알림/저장 계속| AI1
+    AI4 & AI5 & AI6 & AI7 & AI8 --> AI9["AI 플랜 저장 · 공유<br/>(SAVED/SHARED 상태)"]
+
+    D -->|하단 MY 탭| M["M1 MY 메인<br/>(하단 탭 · 설정 허브)"]
+    D -->|하단 소셜 탭| S["소셜<br/>(하단 탭 · ON Square)"]
+    M --> M0["PROFILE STATE<br/>Guest/계정 연결 · 플랜 · 최근 선택"]
+    M0 -.->|Guest 계정 필요 액션| AUTH2
+    M0 -->|스타일 태그 설정 · returnTo=M1| C3
+    C3 -.->|returnTo=M1 · styleProfileSaved| M0
+    M -->|프로필 편집| A4m["A4 계정 관리<br/>(연결 계정 · 데이터 · 위험 액션)"]
+    A4m --> A4s["ACCOUNT STATE<br/>연결 계정 · 구독 활성 · 데이터 내보내기 · 위험 액션 확인"]
+    A4s -->|구독 관리 · returnTo=A4| SUB
+    A4s -->|로그아웃/탈퇴 확정| SIGNOUT["SESSION STATE 해제<br/>accountLinked=false · premiumActive=false<br/>계정 기반 저장/케어 데이터 초기화"]
+    SIGNOUT -->|Guest 홈 복귀| D
+    M --> M2[알림 설정]
+    M2 --> M2a["스마트 알림 ON/OFF<br/>(알아서 챙기기 · OFF 시 필수 날씨만 유지)"]
+    M2 --> M2b["적용 중인 알림 요약<br/>(필수 날씨 · 생활 루틴 · 목적지/여행 상태 반영)"]
+    M2 --> M2c["고급 설정<br/>(세부 토글은 접힘 상태 · 완료 시 접기)"]
+    M2 --> M2d["피로도 제어<br/>(하루 최대 3건 · 수면시간 제한)"]
+    M2a & M2c & M2d -.->|스마트 알림/고급 토글 유지| SETTINGS
+    M2 --> M2x["SHORTCUT CONTEXT<br/>(H4/H5/G2 진입 시 우산·비·목적지 알림 맥락 표시)"]
+    M2 --> M2p["알림 권한 상태<br/>(정상/확인 필요)"]
+    M2p -->|권한 관리 · returnTo=M2| C1
+    C2s -.->|returnTo=M2 · 알림 설정 복귀| M2p
+    M2 --> M2g["목적지 알림 조건<br/>(Guest 조회 가능 · 저장/발송은 계정+권한 필요)"]
+    M2g -.->|계정 연결| AUTH2
+    M2g -.->|권한 관리 · returnTo=M2| C1
+    AUTH3s -.->|returnTo=M2 · 알림 설정 복귀| M2g
+    M --> M4["프리미엄 구독 관리"]
+    M4 --> M4a["구독 상태 확인 · 갱신 · 해지"]
+    M4 -->|업그레이드 · returnTo=M1| SUB
+    SUB -.->|returnTo=M1/A4 · premiumActive| M0
+    M2 --> M2e["제보 알림 구독<br/>(저장 장소 · Premium · v2.0)"]
+    M --> M5["커뮤니티 제보 이력<br/>(F6 · v2.1)"]
+    M5 --> M5a["제보 기록 · 확정률 · 지역 랭킹"]
+    M --> Z["M3 전역 설정"]
+    Z --> Zs["GLOBAL STATE<br/>단위 · 테마 · 위치/권한 관리 연결"]
+    Z --> Z1["단위 설정<br/>(섭씨, kg/g, m/km)"]
+    Z -->|returnTo=M3| Z2[위치 관리]
+    Z2 -.->|locationManaged| Zs
+    Z2 -.->|locationManaged 유지| SETTINGS
+    Z --> Z3[테마 설정]
+    Z -->|returnTo=M3| Z4["알림 권한 관리<br/>(시스템 설정 연동)"]
+    Z4 -.->|permissionReady| Zs
+    Z --> R1["R1 정책 허브<br/>(개인정보 · 약관 · 광고 설정)"]
+    R1 --> R1s["POLICY STATE<br/>선택 정책 · 문서 허브 · 설정 재진입"]
+    R1 --> R2["R2 개인정보처리방침<br/>(광고 SDK · 위치정보 · 이용자 권리)"]
+    R2 --> R2s["DOCUMENT STATE<br/>문서 타입 · 섹션 수 · A3 약관 동일 본문"]
+    R1 --> R3["R3 광고 동의 관리<br/>(UMP · 맞춤/비개인화 광고)"]
+    R3 --> R3s["CONSENT STATE<br/>동의 대기 · 맞춤 광고 · 비개인화 · 옵션 확인"]
+    R1 --> R5["R5 이용약관<br/>(서비스 범위 · 회원/게스트 · 면책)"]
+    R1 --> R6["R6 위치기반서비스 이용약관<br/>(현재 위치 · 목적지 · 동의 철회)"]
+    R1 --> R7["R7 오픈소스 라이선스<br/>(SDK · 패키지 라이선스 고지)"]
+    D --> R4["R4 홈 광고 배치<br/>(네이티브 AD 슬롯)"]
+    R4 --> R4s["AD STATE<br/>AD 라벨 · 구분선 · 클릭/노출 상태"]
+
+    %% ── 소셜 탭 · ON Square ──────────────────────────────────────────────────
+    S --> S0{최초 진입?<br/>ON Square Lite · 런칭 동시}
+    S0 -->|최초| S0a["대표 마스코트 자동 부여<br/>원소 컴패니언 6종 미리보기"]
+    S0a --> S0s["ON SQUARE STATE<br/>최초 진입 · 대표 부여 · 선택 컴패니언 미리보기"]
+    S0s --> S1
+    S0 -->|기존| S1["내 ON Square<br/>(오늘 미션 · 대표 마스코트 · 동행 컴패니언)"]
+    S1 --> S1q["오늘의 날씨 미션<br/>체크인 · 제보 · 공감 중 1개 추천"]
+    S1 --> S1m["대표 마스코트 상태 합성<br/>Base Idle + Weather + Event One-shot"]
+    S1q --> S1a["1탭 체크인 → 컴패니언 반응 · XP/포인트 즉시 반영<br/>(폭우 → Rain / 35°C↑ → Solar 등)"]
+    S1 --> S1s["SQUARE STATE<br/>오늘 미션 · 체크인 · 동네 도움 지표 · Note/리액션 진입"]
+    S1a --> S1b["희귀 기상 이벤트 → 레어 배지 드랍"]
+
+    S --> S2["Weather Note 지도<br/>(ON Square 도시 맵 위 실황 핀)"]
+    S1s --> S2
+    S2 --> S2a["핀 작성 — 날씨 + 로컬 메모 입력<br/>(GPS 위치 자동 태그 · 24시간 후 만료)"]
+    S2a -.->|Guest 작성 탭| AUTH2
+    S2a -.->|위치 권한 필요| C1
+    AUTH3s -.->|returnTo=S2 · 작성 준비 완료| S2a
+    C2s -.->|returnTo=S2 · 위치 제보 준비| S2a
+    S2 --> S2b["핀 읽기 → '도움됨' 1탭 반응"]
+    S2 --> S2s["NOTE STATE<br/>읽기 가능 · 작성 계정 필요 · 위치 제보 권한 필요 · 도움 지수"]
+    S2b --> S2c["도움됨 누적 → 지역 도움 지수 상승 · 포인트 피드백"]
+    S2 -.-> S2d["CWR(커뮤니티 날씨 제보)와 연계"]
+
+    S --> S3["날씨 리액션<br/>(익명 연대 · 동일 날씨 유저 대상)"]
+    S1s --> S3
+    S3 --> S3a["현재 날씨 기반 리액션 자동 생성<br/>(폭우 '다들 고생중' / 폭염 '더위 연대' 등)"]
+    S3a --> S3b["1탭 공감 → 익명 집계 + 컴패니언 보상 피드백<br/>'이 도시 N명이 같은 날씨 중'"]
+    S3 --> S3s["REACTION STATE<br/>도시 선택 · 공감 전/완료 · 익명 동행 · 보상 반영"]
+
+    S -.->|출시 후 v1.1| S4["Weather Mail<br/>(날씨 조건 트리거 타임캡슐)"]
+    S4 --> S4a["메일 작성 + 수신 조건 설정<br/>(예: '다음 폭설 날 도착' / '1년 후 오늘')"]
+    S4a --> S4b["날씨 API 트리거 → 조건 충족 시 자동 발송"]
+    S4 --> S4c["받은 Weather Mail 보관함"]
+
+    S -.->|출시 후 v1.1| S5["CP 적립 현황 / 아이템샵"]
+    S5 --> S5a["CP 잔액 · 적립 내역<br/>(날씨 체크인 · Weather Note · 리액션 기여)"]
+    S5 --> S5b["코스메틱 아이템샵<br/>(캐릭터 스킨 · 배지 · 이모트 · Pay-to-Win 없음)"]
+    S5b --> S5c["CP 사용 또는 무료 획득 아이템 선택"]
