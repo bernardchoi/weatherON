@@ -14,8 +14,8 @@ on:
       - "package-lock.json"
 
 jobs:
-  build-debug-apk:
-    name: Build debug APK
+  build-release-apk:
+    name: Build release APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -64,13 +64,13 @@ jobs:
         working-directory: apps/mobile
         run: npx expo prebuild --platform android --clean --non-interactive
 
-      - name: Build APK
+      - name: Build standalone APK
         working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: weatheron-debug-apk
-          path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
+          name: weatheron-standalone-apk
+          path: apps/mobile/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
