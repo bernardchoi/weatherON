@@ -3,6 +3,7 @@ node_modules/
 dist/
 apps/mobile/dist-web/
 apps/mobile/android/
+apps/mobile/.expo/
 .env
 .env.local
 .env.*.local
@@ -15,7 +16,3 @@ docs/architecture/WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json
 
 .DS_Store
 **/.DS_Store
-
-.DS_Store
-**/.DS_Store
-apps/mobile/.expo/
