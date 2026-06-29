@@ -48,8 +48,8 @@ function buildDecisionText(signals: ReturnType<typeof getWeatherSignals>): strin
 
 function buildReasons(weather: WeatherSnapshot, signals: ReturnType<typeof getWeatherSignals>, hasOuter: boolean, hasAccessory: boolean): string[] {
   const reasons: string[] = [];
-  if (signals.isRainy) reasons.push(`강수확률 ${weather.current.rainProbabilityPct}% 기준으로 비 대응 아이템 우선`);
-  if (signals.isWindy) reasons.push(`바람 ${weather.current.windMs.toFixed(1)}m/s라 안정적인 겉옷 추천`);
+  if (signals.isRainy) reasons.push(`오늘 최대 강수확률 ${signals.maxRainProbabilityPct}% 기준으로 비 대응 아이템 우선`);
+  if (signals.isWindy) reasons.push(`오늘 최대 바람 ${signals.maxWindMs.toFixed(1)}m/s라 안정적인 겉옷 추천`);
   if (signals.isHot) reasons.push(`체감 ${weather.current.feelsLikeC}도라 통기성 소재 우선`);
   if (signals.isCold) reasons.push(`체감 ${weather.current.feelsLikeC}도라 보온 아이템 우선`);
   if (signals.tempSwingC >= 8) reasons.push(`일교차 ${signals.tempSwingC}도라 아침 레이어링 필요`);

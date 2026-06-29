@@ -1,7 +1,9 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { brandAssets } from "../assets";
 import { StatusPill } from "./StatusPill";
-import { appColors, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { spacing } from "../theme/tokens";
 
 type AppScreenProps = {
   title: string;
@@ -11,13 +13,19 @@ type AppScreenProps = {
 };
 
 export function AppScreen({ title, subtitle, badge, children }: AppScreenProps) {
+  const theme = useAppTheme();
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+      <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
       <View style={styles.hero}>
         <View style={styles.heroText}>
-          <Text style={styles.logo}>WeatherON</Text>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <Image
+            source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
+            style={styles.wordmark}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+          {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
         </View>
         {badge ? <StatusPill label={badge} tone="gold" /> : null}
       </View>
@@ -27,38 +35,46 @@ export function AppScreen({ title, subtitle, badge, children }: AppScreenProps) 
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   content: {
-    gap: spacing.lg,
-    padding: spacing.lg,
-    paddingBottom: 112,
-    backgroundColor: appColors.navy,
+    gap: spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: spacing.sm,
+    paddingBottom: 110,
+    minHeight: "100%",
+  },
+  atmosphere: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 420,
+    opacity: 0.42,
   },
   hero: {
-    minHeight: 124,
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
     gap: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
   },
   heroText: {
     flex: 1,
   },
-  logo: {
-    color: appColors.gold,
-    fontSize: 15,
-    fontWeight: "900",
-    letterSpacing: 0,
-    marginBottom: spacing.sm,
+  wordmark: {
+    width: 118,
+    height: 24,
+    marginBottom: spacing.xs,
   },
   title: {
-    color: appColors.text,
-    fontSize: 30,
-    lineHeight: 36,
+    fontSize: 23,
+    lineHeight: 28,
     fontWeight: "900",
   },
   subtitle: {
-    color: appColors.muted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: spacing.sm,

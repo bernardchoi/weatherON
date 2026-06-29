@@ -6,7 +6,8 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AgeBand, FitPreference, StyleGender } from "../state/useWeatherOnAppState";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 const genderOptions: { value: StyleGender; label: string }[] = [
   { value: "all", label: "공통" },
@@ -35,19 +36,24 @@ export function StyleProfileScreen({
   onSaveStyleProfile,
   onNavigate,
 }: P0ScreenProps) {
+  const theme = useAppTheme();
+  const topTags = selectedStyles.slice(0, 2);
+
   return (
-    <AppScreen title="스타일 기준" subtitle="성별·연령대·스타일 태그·핏 기준을 Settings State에 저장" badge="O4">
-      <Section title="프로필 상태" caption="C1 추천과 MY 설정에서 같은 기준을 공유">
-        <View style={styles.statusCard}>
-          <View style={styles.copy}>
-            <Text style={styles.title}>{styleProfileSaved ? "스타일 기준 저장됨" : "스타일 기준 선택 중"}</Text>
-            <Text style={styles.body}>{selectedStyles.length}개 태그 · {getFitLabel(fitPreference)} · {ageBand}</Text>
-          </View>
-          <StatusPill label={styleProfileSaved ? "SAVED" : "편집"} tone={styleProfileSaved ? "clear" : "gold"} />
-        </View>
+    <AppScreen title="코디 추천 기준을 골라주세요" subtitle="스타일은 복수 선택 가능 · 성별과 연령대는 추천 보정에만 사용" badge="1 / 3">
+      <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
+        <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
+      </View>
+
+      <Section title="스타일 태그" caption="오늘 입을 옷의 무드를 정함" accent="gold">
+        <OptionGrid>
+          {styleTags.slice(0, 5).map((item) => (
+            <ChoiceButton key={item} label={item} selected={selectedStyles.includes(item)} onPress={() => onToggleStyleTag(item)} />
+          ))}
+        </OptionGrid>
       </Section>
 
-      <Section title="성별 기준" caption="추천 필터 기준이며 가입 정보가 아님">
+      <Section title="코디 및 기준" caption="가입 정보가 아니라 추천 실루엣 기준">
         <OptionGrid>
           {genderOptions.map((item) => (
             <ChoiceButton key={item.value} label={item.label} selected={item.value === styleGender} onPress={() => onSetStyleGender(item.value)} />
@@ -55,18 +61,10 @@ export function StyleProfileScreen({
         </OptionGrid>
       </Section>
 
-      <Section title="연령대" caption="코디 톤과 아이템 우선순위에만 사용">
+      <Section title="추천 연령대" caption="코디 톤과 브랜드 무드 보정용">
         <OptionGrid>
           {ageOptions.map((item) => (
             <ChoiceButton key={item} label={item} selected={item === ageBand} onPress={() => onSetAgeBand(item)} />
-          ))}
-        </OptionGrid>
-      </Section>
-
-      <Section title="스타일 태그" caption="최대 4개까지 선택">
-        <OptionGrid>
-          {styleTags.map((item) => (
-            <ChoiceButton key={item} label={item} selected={selectedStyles.includes(item)} onPress={() => onToggleStyleTag(item)} />
           ))}
         </OptionGrid>
       </Section>
@@ -79,9 +77,30 @@ export function StyleProfileScreen({
         </OptionGrid>
       </Section>
 
-      <Section title="저장" caption="온보딩에서는 O5로, 설정 진입에서는 MY로 복귀 가능">
+      <Section title="스타일" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
+        <View style={[styles.previewCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.previewIllustration}>
+            <View style={[styles.clothTile, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.clothText, { color: theme.clear }]}>상의</Text>
+            </View>
+            <View style={[styles.clothTile, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.clothText, { color: theme.clear }]}>하의</Text>
+            </View>
+          </View>
+          <Text style={[styles.title, { color: theme.text }]}>
+            {topTags.length ? topTags.join(" · ") : "스타일"} 스타일로 추천
+          </Text>
+          <View style={styles.pillRow}>
+            <StatusPill label={getFitLabel(fitPreference)} tone="sky" />
+            <StatusPill label={ageBand} tone="gold" />
+            <StatusPill label={styleProfileSaved ? "준비" : "편집"} tone={styleProfileSaved ? "clear" : "gold"} />
+          </View>
+        </View>
+      </Section>
+
+      <Section title="저장" caption="온보딩에서는 알림 기준으로 이어짐" accent="gold">
         <View style={styles.actions}>
-          <AppButton label="저장하고 알림 기준" onPress={() => onSaveStyleProfile("O5")} />
+          <AppButton label="다음" onPress={() => onSaveStyleProfile("O5")} tone="warning" />
           <AppButton label="MY에 저장" onPress={() => onSaveStyleProfile("M1")} tone="secondary" />
           <AppButton label="코디로" onPress={() => onNavigate("C1")} tone="secondary" />
         </View>
@@ -95,9 +114,18 @@ function OptionGrid({ children }: { children: React.ReactNode }) {
 }
 
 function ChoiceButton({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const theme = useAppTheme();
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={[styles.choice, selected ? styles.choiceSelected : null]}>
-      <Text style={[styles.choiceText, selected ? styles.choiceTextSelected : null]}>{label}</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[
+        styles.choice,
+        { backgroundColor: selected ? theme.gold : theme.cardMuted, borderColor: selected ? theme.gold : theme.border },
+      ]}
+    >
+      <Text style={[styles.choiceText, { color: selected ? theme.onAccent : theme.muted }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -106,30 +134,27 @@ function getFitLabel(value: FitPreference) {
   return fitOptions.find((item) => item.value === value)?.label ?? "스탠다드";
 }
 
+function getGenderLabel(value: StyleGender) {
+  return genderOptions.find((item) => item.value === value)?.label ?? "공통";
+}
+
 const styles = StyleSheet.create({
-  statusCard: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
+  progressTrack: {
+    height: 4,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+  },
+  progressFill: {
+    width: "34%",
+    height: "100%",
   },
   copy: {
     flex: 1,
     gap: 5,
   },
   title: {
-    color: appColors.text,
     fontSize: 15,
     fontWeight: "900",
-  },
-  body: {
-    color: appColors.muted,
-    fontSize: 12,
-    lineHeight: 18,
   },
   optionGrid: {
     flexDirection: "row",
@@ -140,22 +165,42 @@ const styles = StyleSheet.create({
     minHeight: 42,
     justifyContent: "center",
     paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  choiceSelected: {
-    backgroundColor: "rgba(103,232,208,0.16)",
-    borderColor: appColors.clear,
   },
   choiceText: {
-    color: appColors.muted,
     fontSize: 13,
     fontWeight: "900",
   },
-  choiceTextSelected: {
-    color: appColors.clear,
+  previewCard: {
+    minHeight: 168,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  previewIllustration: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  clothTile: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.lg,
+  },
+  clothText: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  pillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.xs,
   },
   actions: {
     gap: spacing.sm,

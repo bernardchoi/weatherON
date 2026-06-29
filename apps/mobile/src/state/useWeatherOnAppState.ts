@@ -6,10 +6,18 @@ import type { AppRouteId, OnboardingRouteId, P0RouteId } from "../navigation/rou
 import { initialDeviceLocationState, requestDeviceWeatherLocation, type DeviceLocationState } from "../providers/deviceLocation";
 import { fixtureWeatherProvider, getFallbackSnapshots } from "../providers/weatherProvider";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
-import { defaultSeoulWeatherLocation, seongsuWeatherLocation, type KmaWeatherLocationPreset, type WeatherLocationPreset } from "../providers/weatherLocations";
+import {
+  createKmaWeatherLocationFromCoordinate,
+  defaultSeoulWeatherLocation,
+  seongsuWeatherLocation,
+  type KmaWeatherLocationPreset,
+  type WeatherLocationPreset,
+} from "../providers/weatherLocations";
 import { runtimePlaceSearchClient } from "../providers/placeSearchClient";
+import { readAppJson, writeAppJson } from "../providers/appStorage";
+import { getRouteLabel } from "../navigation/routeLabels";
 
-export type GateReason = "save-outfit" | "destination-care" | "notification";
+export type GateReason = "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
 export type WeatherLocationMode = "auto" | "manual";
 export type DestinationHubFilter = "all" | "saved" | "care" | "category";
 export type AlertSettingsFocus = "general" | "umbrella" | "rain" | "destination";
@@ -18,15 +26,18 @@ export type PermissionGateReason = "notification" | "destination-care" | "locati
 export type PolicyDocumentType = "privacy" | "terms" | "location" | "open-source";
 export type AdConsentMode = "pending" | "personalized" | "non-personalized";
 export type TemperatureUnit = "celsius" | "fahrenheit";
+export type WeightUnit = "kilogram" | "pound";
+export type DistanceUnit = "meter" | "mile";
 export type ThemeMode = "system" | "light" | "dark";
 export type StyleGender = "all" | "women" | "men";
 export type AgeBand = "10-20" | "20-30" | "30-40" | "40-50" | "50+";
 export type FitPreference = "standard" | "relaxed" | "formal" | "outdoor";
 export type SmartCareScenario = "commute" | "outing" | "travel";
 export type PermissionReturnRouteId = P0RouteId | OnboardingRouteId;
+export type AccountGateReturnRouteId = P0RouteId | "A4";
 
 export type AccountGateState = {
-  returnTo: P0RouteId;
+  returnTo: AccountGateReturnRouteId;
   reason: GateReason;
   pendingAction: AccountPendingAction;
   resumeLabel: string;
@@ -40,7 +51,7 @@ export type AlertSettingsRouteState = {
 };
 
 export type AccountGateResultState = {
-  returnTo: P0RouteId;
+  returnTo: AccountGateReturnRouteId;
   pendingAction: AccountPendingAction;
   message: string;
 };
@@ -86,10 +97,12 @@ const defaultDestinationAlertCondition: DestinationAlertCondition = {
 const rainThresholdSteps = [30, 50, 70];
 const leadTimeSteps = [30, 60, 120];
 const windThresholdSteps = [5, 8, 11];
+const appStateStorageKey = "weatheron.appState.v1";
 const notificationStateStorageKey = "weatheron.notificationState.v1";
 
 export function useWeatherOnAppState() {
-  const [route, setRoute] = useState<AppRouteId>("H1");
+  const [route, setRoute] = useState<AppRouteId>("O2");
+  const [appStateHydrated, setAppStateHydrated] = useState(false);
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
@@ -97,14 +110,15 @@ export function useWeatherOnAppState() {
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
   const [deviceLocationState, setDeviceLocationState] = useState<DeviceLocationState>(initialDeviceLocationState);
   const [deviceWeatherLocation, setDeviceWeatherLocation] = useState<KmaWeatherLocationPreset | null>(null);
+  const [manualWeatherLocation, setManualWeatherLocation] = useState<KmaWeatherLocationPreset>(defaultSeoulWeatherLocation);
   const [savedDestinations, setSavedDestinations] = useState<SavedDestination[]>([]);
   const [recentlyRemovedDestination, setRecentlyRemovedDestination] = useState<SavedDestination | null>(null);
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
   const [previewDestinationAlertCondition, setPreviewDestinationAlertCondition] = useState<DestinationAlertCondition>(defaultDestinationAlertCondition);
-  const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(placeSearchFixtures[0]);
+  const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(placeSearchFixtures[1] ?? placeSearchFixtures[0]);
   const [destinationHubFilter, setDestinationHubFilterState] = useState<DestinationHubFilter>("all");
-  const [placeSearchQuery, setPlaceSearchQuery] = useState("강릉");
-  const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>(placeSearchFixtures.slice(0, 3));
+  const [placeSearchQuery, setPlaceSearchQuery] = useState("잠실종합운동장");
+  const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>(placeSearchFixtures.slice(1, 2));
   const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => loadNotificationState().readNotificationIds);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>(() => loadNotificationState().notificationHistory);
@@ -112,6 +126,8 @@ export function useWeatherOnAppState() {
   const [selectedPolicyDocument, setSelectedPolicyDocument] = useState<PolicyDocumentType>("privacy");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("celsius");
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>("kilogram");
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [reducedTransparency, setReducedTransparency] = useState(false);
   const [styleProfileSaved, setStyleProfileSaved] = useState(false);
@@ -155,6 +171,51 @@ export function useWeatherOnAppState() {
   );
   const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
 
+  useEffect(() => {
+    let active = true;
+    readPersistedAppState()
+      .then((persistedState) => {
+        if (!active || !persistedState) return;
+        setOnboardingCompleted(persistedState.onboardingCompleted);
+        setAccountLinked(persistedState.accountLinked);
+        setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
+        setLocationReady(persistedState.locationReady);
+        setPermissionReady(persistedState.permissionReady);
+        setOutfitSaved(persistedState.outfitSaved);
+        setStyleProfileSaved(persistedState.styleProfileSaved);
+        setStyleGender(persistedState.styleGender);
+        setAgeBand(persistedState.ageBand);
+        setFitPreference(persistedState.fitPreference);
+        setSelectedStyles(persistedState.selectedStyles);
+        setSmartCareScenario(persistedState.smartCareScenario);
+        setWardrobeOwnedItemIds(persistedState.wardrobeOwnedItemIds);
+        setSelectedWardrobeItemId(persistedState.selectedWardrobeItemId);
+        setSavedDestinations(persistedState.savedDestinations);
+        setSelectedDestinationPlace(persistedState.selectedDestinationPlace);
+        setPreviewDestinationCareEnabled(persistedState.previewDestinationCareEnabled);
+        setPreviewDestinationAlertCondition(persistedState.previewDestinationAlertCondition);
+        setWeatherLocationMode(persistedState.weatherLocationMode);
+        setTemperatureUnit(persistedState.temperatureUnit);
+        setWeightUnit(persistedState.weightUnit);
+        setDistanceUnit(persistedState.distanceUnit);
+        setThemeMode(persistedState.themeMode);
+        setReducedTransparency(persistedState.reducedTransparency);
+        setAdConsentMode(persistedState.adConsentMode);
+        setReadNotificationIds(persistedState.readNotificationIds);
+        setNotificationHistory(persistedState.notificationHistory);
+        if (persistedState.locationReady) setDeviceLocationState({ status: "idle", message: "현재 위치 재확인 필요" });
+        setManualWeatherLocation(persistedState.manualWeatherLocation);
+        setRoute(persistedState.onboardingCompleted ? "H1" : "O2");
+      })
+      .finally(() => {
+        if (active) setAppStateHydrated(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const state = useMemo(
     () =>
       buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
@@ -186,7 +247,7 @@ export function useWeatherOnAppState() {
     let active = true;
     setIsWeatherLoading(true);
     const currentLocation =
-      weatherLocationMode === "manual" ? defaultSeoulWeatherLocation : deviceWeatherLocation ?? seongsuWeatherLocation;
+      weatherLocationMode === "manual" ? manualWeatherLocation : deviceWeatherLocation ?? seongsuWeatherLocation;
     const destinationLocation = {
       locationId: selectedDestinationPlace.id,
       locationName: selectedDestinationPlace.name,
@@ -207,11 +268,75 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, savedDestinations, selectedDestinationPlace]);
+  }, [weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinations, selectedDestinationPlace]);
 
   useEffect(() => {
     saveNotificationState({ readNotificationIds, notificationHistory });
   }, [notificationHistory, readNotificationIds]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    savePersistedAppState({
+      onboardingCompleted,
+      accountLinked,
+      termsRequiredAccepted,
+      locationReady,
+      permissionReady,
+      outfitSaved,
+      styleProfileSaved,
+      styleGender,
+      ageBand,
+      fitPreference,
+      selectedStyles,
+      smartCareScenario,
+      wardrobeOwnedItemIds,
+      selectedWardrobeItemId,
+      savedDestinations,
+      selectedDestinationPlace,
+      previewDestinationCareEnabled,
+      previewDestinationAlertCondition,
+      weatherLocationMode,
+      manualWeatherLocation,
+      temperatureUnit,
+      weightUnit,
+      distanceUnit,
+      themeMode,
+      reducedTransparency,
+      adConsentMode,
+      readNotificationIds,
+      notificationHistory,
+    });
+  }, [
+    accountLinked,
+    adConsentMode,
+    ageBand,
+    appStateHydrated,
+    fitPreference,
+    locationReady,
+    notificationHistory,
+    onboardingCompleted,
+    outfitSaved,
+    permissionReady,
+    previewDestinationAlertCondition,
+    previewDestinationCareEnabled,
+    readNotificationIds,
+    reducedTransparency,
+    savedDestinations,
+    selectedDestinationPlace,
+    selectedStyles,
+    selectedWardrobeItemId,
+    smartCareScenario,
+    styleGender,
+    styleProfileSaved,
+    temperatureUnit,
+    weightUnit,
+    distanceUnit,
+    termsRequiredAccepted,
+    themeMode,
+    wardrobeOwnedItemIds,
+    weatherLocationMode,
+    manualWeatherLocation,
+  ]);
 
   const setWeatherMode = useCallback((mode: WeatherProviderMode) => {
     setWeatherProviderMode(mode);
@@ -225,6 +350,14 @@ export function useWeatherOnAppState() {
 
   const setLocationMode = useCallback((mode: WeatherLocationMode) => {
     setWeatherLocationMode(mode);
+    setWeatherProviderMode("ready");
+    setUseDestinationWeather(false);
+    setWeatherRefreshTick((value) => value + 1);
+  }, []);
+
+  const selectWeatherLocation = useCallback((place: PlaceSearchResult) => {
+    setManualWeatherLocation(createKmaWeatherLocationFromCoordinate(place.coordinate, place.name));
+    setWeatherLocationMode("manual");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
     setWeatherRefreshTick((value) => value + 1);
@@ -245,6 +378,22 @@ export function useWeatherOnAppState() {
     if (result.location) setDeviceWeatherLocation(result.location);
     setWeatherRefreshTick((value) => value + 1);
   }, [locationReady]);
+
+  useEffect(() => {
+    if (!appStateHydrated || !locationReady || weatherLocationMode !== "auto" || deviceWeatherLocation) return;
+    let active = true;
+    setDeviceLocationState({ status: "requesting", message: "현재 위치 재확인 중" });
+    requestDeviceWeatherLocation().then((result) => {
+      if (!active) return;
+      setDeviceLocationState(result);
+      if (result.location) setDeviceWeatherLocation(result.location);
+      if (result.status !== "granted") setLocationReady(false);
+      setWeatherRefreshTick((value) => value + 1);
+    });
+    return () => {
+      active = false;
+    };
+  }, [appStateHydrated, deviceWeatherLocation, locationReady, weatherLocationMode]);
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
     setAlertSettingsRouteState(null);
@@ -285,7 +434,7 @@ export function useWeatherOnAppState() {
     setWardrobeOwnedItemIds([]);
     setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
     setAccountGateResult(null);
-    setRoute("M1");
+    setRoute("H1");
   }, []);
 
   const toggleStyleTag = useCallback((tag: string) => {
@@ -400,7 +549,7 @@ export function useWeatherOnAppState() {
         title: notification?.title ?? "알림",
         action: "open",
         route,
-        statusLabel: `${route} 이동`,
+        statusLabel: `${getRouteLabel(route)} 이동`,
       }),
     );
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
@@ -579,12 +728,12 @@ export function useWeatherOnAppState() {
     }
   }, [savedDestinations, selectedDestinationPlace.category, selectedDestinationPlace.id]);
 
-  const requestAccountGate = (reason: GateReason, returnTo: P0RouteId) => {
+  const requestAccountGate = (reason: GateReason, returnTo: AccountGateReturnRouteId) => {
     if (accountLinked && termsRequiredAccepted) {
       if (reason === "save-outfit") setOutfitSaved(true);
       if (reason === "destination-care") {
         if (!permissionReady) {
-          setPermissionGate(createPermissionGateState("destination-care", returnTo, selectedDestinationPlace.name, "destination"));
+          setPermissionGate(createPermissionGateState("destination-care", returnTo === "A4" ? "M1" : returnTo, selectedDestinationPlace.name, "destination"));
           setRoute("O3");
           return;
         }
@@ -609,7 +758,7 @@ export function useWeatherOnAppState() {
     if (gate?.reason === "save-outfit") setOutfitSaved(true);
     if (gate?.reason === "destination-care") {
       if (!permissionReady) {
-        setPermissionGate(createPermissionGateState("destination-care", gate.returnTo, selectedDestinationPlace.name, "destination"));
+        setPermissionGate(createPermissionGateState("destination-care", gate.returnTo === "A4" ? "M1" : gate.returnTo, selectedDestinationPlace.name, "destination"));
         setRoute("O3");
         setGate(null);
         return;
@@ -622,14 +771,16 @@ export function useWeatherOnAppState() {
     setGate(null);
   };
 
-  const completePermissionGate = () => {
+  const completePermissionGate = async () => {
     if (permissionGate?.reason === "location") {
-      setLocationReady(true);
       setWeatherLocationMode("auto");
-      setDeviceLocationState({ status: "granted", message: "위치 권한 허용됨", location: seongsuWeatherLocation });
-      setDeviceWeatherLocation(seongsuWeatherLocation);
       setWeatherProviderMode("ready");
       setUseDestinationWeather(false);
+      setDeviceLocationState({ status: "requesting", message: "현재 위치 확인 중" });
+      const result = await requestDeviceWeatherLocation();
+      setDeviceLocationState(result);
+      setLocationReady(result.status === "granted");
+      if (result.location) setDeviceWeatherLocation(result.location);
       setWeatherRefreshTick((value) => value + 1);
     } else {
       setPermissionReady(true);
@@ -660,6 +811,27 @@ export function useWeatherOnAppState() {
     setGate(null);
   };
 
+  const goBack = useCallback(() => {
+    if (route === "A1" || route === "H1" || route === "O2") return false;
+    if (route === "A2" || route === "A3") {
+      setRoute(gate?.returnTo ?? "H1");
+      setGate(null);
+      return true;
+    }
+    if (route === "O3") {
+      setRoute(permissionGate?.returnTo ?? "H1");
+      setPermissionGate(null);
+      return true;
+    }
+    if (route === "R2") {
+      setRoute("R1");
+      return true;
+    }
+    const backRoute = getBackRoute(route);
+    setRoute(backRoute);
+    return true;
+  }, [gate?.returnTo, permissionGate?.returnTo, route]);
+
   return {
     route,
     state,
@@ -685,6 +857,8 @@ export function useWeatherOnAppState() {
     selectedPolicyDocument,
     adConsentMode,
     temperatureUnit,
+    weightUnit,
+    distanceUnit,
     themeMode,
     reducedTransparency,
     styleProfileSaved,
@@ -707,12 +881,15 @@ export function useWeatherOnAppState() {
     gate,
     permissionGate,
     navigate,
+    goBack,
     openAlertSettings,
     returnFromAlertSettings,
     openPolicyDocument,
     returnFromPolicyDocument,
     setAdConsentMode,
     setTemperatureUnit,
+    setWeightUnit,
+    setDistanceUnit,
     setThemeMode,
     toggleReducedTransparency: () => setReducedTransparency((value) => !value),
     setStyleGender,
@@ -731,6 +908,7 @@ export function useWeatherOnAppState() {
     setWeatherProviderMode: setWeatherMode,
     setWeatherLocationMode: setLocationMode,
     requestCurrentLocation,
+    selectWeatherLocation,
     saveDestination,
     toggleDestinationCare,
     toggleSavedDestinationCare,
@@ -758,6 +936,58 @@ export function useWeatherOnAppState() {
   };
 }
 
+function getBackRoute(route: AppRouteId): AppRouteId {
+  switch (route) {
+    case "O4":
+      return "O2";
+    case "O1":
+      return "A1";
+    case "O5":
+      return "O4";
+    case "O6":
+      return "O5";
+    case "C2":
+    case "C3":
+    case "C4":
+      return "C1";
+    case "H3":
+    case "H4":
+    case "H5":
+    case "H2":
+      return "H1";
+    case "W2":
+    case "W3":
+      return "W1";
+    case "W1":
+      return "H1";
+    case "W4":
+      return "M1";
+    case "P1":
+    case "P3":
+      return "G1";
+    case "G2":
+    case "P2":
+      return "P3";
+    case "M2":
+    case "M3":
+    case "A4":
+    case "R1":
+    case "R3":
+    case "R4":
+      return "M1";
+    case "S0":
+    case "S2":
+    case "S3":
+      return "S1";
+    case "C1":
+    case "G1":
+    case "M1":
+    case "S1":
+    default:
+      return "H1";
+  }
+}
+
 function getDestinationAlertConditionSteps(field: keyof DestinationAlertCondition): number[] {
   if (field === "rainThresholdPct") return rainThresholdSteps;
   if (field === "leadTimeMinutes") return leadTimeSteps;
@@ -781,7 +1011,7 @@ function getNotificationDestinationPlaceId(notificationId: string): string | nul
 
 function createAccountGateState(
   reason: GateReason,
-  returnTo: P0RouteId,
+  returnTo: AccountGateReturnRouteId,
   selectedDestinationName?: string,
   outfitVariant?: string,
 ): AccountGateState {
@@ -795,7 +1025,7 @@ function createAccountGateState(
   };
 }
 
-function createAccountGateResult(reason: GateReason, returnTo: P0RouteId): AccountGateResultState {
+function createAccountGateResult(reason: GateReason, returnTo: AccountGateReturnRouteId): AccountGateResultState {
   return {
     returnTo,
     pendingAction: reason,
@@ -806,6 +1036,8 @@ function createAccountGateResult(reason: GateReason, returnTo: P0RouteId): Accou
 function getAccountResumeLabel(reason: GateReason): string {
   if (reason === "save-outfit") return "코디 저장";
   if (reason === "destination-care") return "목적지 케어 저장";
+  if (reason === "social-note") return "ON Square 체크인";
+  if (reason === "weather-report") return "날씨 제보 저장";
   return "알림 확장";
 }
 
@@ -853,6 +1085,197 @@ function createNotificationHistoryId(notificationId: string, action: Notificatio
 function addNotificationHistoryItem(items: NotificationHistoryItem[], nextItem: NotificationHistoryItem): NotificationHistoryItem[] {
   const withoutDuplicate = items.filter((item) => item.id !== nextItem.id);
   return [nextItem, ...withoutDuplicate].slice(0, 6);
+}
+
+type PersistedAppState = {
+  onboardingCompleted: boolean;
+  accountLinked: boolean;
+  termsRequiredAccepted: boolean;
+  locationReady: boolean;
+  permissionReady: boolean;
+  outfitSaved: boolean;
+  styleProfileSaved: boolean;
+  styleGender: StyleGender;
+  ageBand: AgeBand;
+  fitPreference: FitPreference;
+  selectedStyles: string[];
+  smartCareScenario: SmartCareScenario;
+  wardrobeOwnedItemIds: string[];
+  selectedWardrobeItemId: string;
+  savedDestinations: SavedDestination[];
+  selectedDestinationPlace: PlaceSearchResult;
+  previewDestinationCareEnabled: boolean;
+  previewDestinationAlertCondition: DestinationAlertCondition;
+  weatherLocationMode: WeatherLocationMode;
+  manualWeatherLocation: KmaWeatherLocationPreset;
+  temperatureUnit: TemperatureUnit;
+  weightUnit: WeightUnit;
+  distanceUnit: DistanceUnit;
+  themeMode: ThemeMode;
+  reducedTransparency: boolean;
+  adConsentMode: AdConsentMode;
+  readNotificationIds: string[];
+  notificationHistory: NotificationHistoryItem[];
+};
+
+async function readPersistedAppState(): Promise<PersistedAppState | null> {
+  const value = await readAppJson<unknown>(appStateStorageKey);
+  return value ? normalizePersistedAppState(value) : null;
+}
+
+function savePersistedAppState(state: PersistedAppState) {
+  void writeAppJson(appStateStorageKey, normalizePersistedAppState(state));
+}
+
+function normalizePersistedAppState(value: unknown): PersistedAppState {
+  const record = value && typeof value === "object" ? (value as Partial<PersistedAppState>) : {};
+  const firstFixturePlace = placeSearchFixtures[0];
+  const selectedDestinationPlace = isPlaceSearchResult(record.selectedDestinationPlace) ? record.selectedDestinationPlace : firstFixturePlace;
+  const savedDestinations = Array.isArray(record.savedDestinations)
+    ? record.savedDestinations.filter(isSavedDestination).slice(0, 12)
+    : [];
+  const notificationState = normalizeNotificationState({
+    readNotificationIds: record.readNotificationIds,
+    notificationHistory: record.notificationHistory,
+  });
+
+  return {
+    onboardingCompleted: record.onboardingCompleted === true,
+    accountLinked: record.accountLinked === true,
+    termsRequiredAccepted: record.termsRequiredAccepted === true,
+    locationReady: record.locationReady === true,
+    permissionReady: record.permissionReady === true,
+    outfitSaved: record.outfitSaved === true,
+    styleProfileSaved: record.styleProfileSaved === true,
+    styleGender: isStyleGender(record.styleGender) ? record.styleGender : "all",
+    ageBand: isAgeBand(record.ageBand) ? record.ageBand : "20-30",
+    fitPreference: isFitPreference(record.fitPreference) ? record.fitPreference : "standard",
+    selectedStyles: Array.isArray(record.selectedStyles)
+      ? record.selectedStyles.filter((item): item is string => typeof item === "string").slice(0, 4)
+      : ["미니멀", "캐주얼"],
+    smartCareScenario: isSmartCareScenario(record.smartCareScenario) ? record.smartCareScenario : "outing",
+    wardrobeOwnedItemIds: Array.isArray(record.wardrobeOwnedItemIds)
+      ? record.wardrobeOwnedItemIds.filter((item): item is string => typeof item === "string").slice(0, 60)
+      : [],
+    selectedWardrobeItemId: typeof record.selectedWardrobeItemId === "string" ? record.selectedWardrobeItemId : presetWardrobe[0]?.id ?? "",
+    savedDestinations,
+    selectedDestinationPlace,
+    previewDestinationCareEnabled: record.previewDestinationCareEnabled !== false,
+    previewDestinationAlertCondition: normalizeDestinationAlertCondition(record.previewDestinationAlertCondition),
+    weatherLocationMode: record.weatherLocationMode === "manual" ? "manual" : "auto",
+    manualWeatherLocation: isKmaWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
+    temperatureUnit: record.temperatureUnit === "fahrenheit" ? "fahrenheit" : "celsius",
+    weightUnit: record.weightUnit === "pound" ? "pound" : "kilogram",
+    distanceUnit: record.distanceUnit === "mile" ? "mile" : "meter",
+    themeMode: isThemeMode(record.themeMode) ? record.themeMode : "system",
+    reducedTransparency: record.reducedTransparency === true,
+    adConsentMode: isAdConsentMode(record.adConsentMode) ? record.adConsentMode : "pending",
+    readNotificationIds: notificationState.readNotificationIds,
+    notificationHistory: notificationState.notificationHistory,
+  };
+}
+
+function normalizeDestinationAlertCondition(value: unknown): DestinationAlertCondition {
+  if (!value || typeof value !== "object") return defaultDestinationAlertCondition;
+  const record = value as Partial<DestinationAlertCondition>;
+  return {
+    rainThresholdPct: typeof record.rainThresholdPct === "number" ? record.rainThresholdPct : defaultDestinationAlertCondition.rainThresholdPct,
+    leadTimeMinutes: typeof record.leadTimeMinutes === "number" ? record.leadTimeMinutes : defaultDestinationAlertCondition.leadTimeMinutes,
+    windThresholdMs: typeof record.windThresholdMs === "number" ? record.windThresholdMs : defaultDestinationAlertCondition.windThresholdMs,
+  };
+}
+
+function isSavedDestination(value: unknown): value is SavedDestination {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<SavedDestination>;
+  return (
+    isPlaceSearchResult(record.place) &&
+    typeof record.careEnabled === "boolean" &&
+    isDestinationAlertCondition(record.alertCondition) &&
+    typeof record.savedAtLabel === "string"
+  );
+}
+
+function isPlaceSearchResult(value: unknown): value is PlaceSearchResult {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<PlaceSearchResult>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.name === "string" &&
+    typeof record.address === "string" &&
+    isDestinationCategory(record.category) &&
+    (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
+    isGeoCoordinate(record.coordinate) &&
+    typeof record.timezone === "string" &&
+    (record.provider === "fixture" || record.provider === "kakao" || record.provider === "google")
+  );
+}
+
+function isDestinationAlertCondition(value: unknown): value is DestinationAlertCondition {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<DestinationAlertCondition>;
+  return (
+    typeof record.rainThresholdPct === "number" &&
+    typeof record.leadTimeMinutes === "number" &&
+    typeof record.windThresholdMs === "number"
+  );
+}
+
+function isGeoCoordinate(value: unknown): value is PlaceSearchResult["coordinate"] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<PlaceSearchResult["coordinate"]>;
+  return typeof record.latitude === "number" && typeof record.longitude === "number";
+}
+
+function isKmaWeatherLocationPreset(value: unknown): value is KmaWeatherLocationPreset {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<KmaWeatherLocationPreset>;
+  return (
+    typeof record.locationId === "string" &&
+    typeof record.locationName === "string" &&
+    (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
+    isGeoCoordinate(record.coordinate) &&
+    typeof record.timezone === "string" &&
+    typeof record.grid?.nx === "number" &&
+    typeof record.grid?.ny === "number"
+  );
+}
+
+function isDestinationCategory(value: unknown): value is PlaceSearchResult["category"] {
+  return (
+    value === "work" ||
+    value === "school" ||
+    value === "airport" ||
+    value === "hotel" ||
+    value === "sports" ||
+    value === "mountain" ||
+    value === "beach" ||
+    value === "custom"
+  );
+}
+
+function isStyleGender(value: unknown): value is StyleGender {
+  return value === "all" || value === "women" || value === "men";
+}
+
+function isAgeBand(value: unknown): value is AgeBand {
+  return value === "10-20" || value === "20-30" || value === "30-40" || value === "40-50" || value === "50+";
+}
+
+function isFitPreference(value: unknown): value is FitPreference {
+  return value === "standard" || value === "relaxed" || value === "formal" || value === "outdoor";
+}
+
+function isSmartCareScenario(value: unknown): value is SmartCareScenario {
+  return value === "commute" || value === "outing" || value === "travel";
+}
+
+function isThemeMode(value: unknown): value is ThemeMode {
+  return value === "system" || value === "light" || value === "dark";
+}
+
+function isAdConsentMode(value: unknown): value is AdConsentMode {
+  return value === "pending" || value === "personalized" || value === "non-personalized";
 }
 
 type PersistedNotificationState = {

@@ -1,0 +1,26 @@
+{
+  "easBuildId": "7c857db8-da31-4c95-88d8-0455546c1c4d",
+  "appVersion": "0.1.0 (2)",
+  "device": "Galaxy S23",
+  "androidVersion": "14",
+  "screenSize": "1080x2340",
+  "network": "Wi-Fi / LTE",
+  "installMethod": "APK 링크 직접 설치",
+  "testedAt": "2026-06-28 21:00 KST",
+  "results": {
+    "D1": { "result": "통과", "memo": "APK 설치 확인" },
+    "D2": { "result": "통과", "memo": "온보딩 진입" },
+    "D3": { "result": "통과", "memo": "개발 문구 미노출" },
+    "D4": { "result": "통과", "memo": "홈 표시 정상" },
+    "D4-1": { "result": "통과", "memo": "홈/코디/출발/MY/소셜" },
+    "D4-2": { "result": "통과", "memo": "ON Square 진입" },
+    "D5": { "result": "통과", "memo": "재실행 후 상태 유지" },
+    "D6": { "result": "통과", "memo": "뒤로가기 정상" },
+    "D7": { "result": "통과", "memo": "위치 허용 정상" },
+    "D8": { "result": "통과", "memo": "위치 거부 fallback 정상" },
+    "D9": { "result": "통과", "memo": "목적지 검색 표시" },
+    "D10": { "result": "통과", "memo": "가로 overflow 없음" },
+    "D11": { "result": "통과", "memo": "대비 정상" },
+    "D12": { "result": "통과", "memo": "네트워크 끊김 안내 표시" }
+  }
+}

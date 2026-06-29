@@ -1,0 +1,29 @@
+# Local dependencies and caches
+.git
+.git/
+node_modules/
+.npm-cache/
+.expo/
+apps/*/.expo/
+
+# Local build outputs
+dist/
+apps/mobile/dist/
+apps/mobile/dist-web/
+coverage/
+
+# Design, mockup, and documentation sources not needed for native EAS builds
+docs/
+mockups/
+design-process/
+design-qa-screenshots/
+design-qa.md
+brand/
+
+# Store-only/generated assets are tracked separately and not needed in APK builds
+assets/store/
+
+# OS/editor noise
+.DS_Store
+apps/.DS_Store
+*.log

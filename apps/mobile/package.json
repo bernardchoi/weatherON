@@ -13,12 +13,15 @@
     "eas:init": "npx --yes --cache ../../.npm-cache eas-cli init",
     "build:android:development": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile development",
     "build:android:preview": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview",
-    "build:android:production": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production"
+    "build:android:preview:no-wait": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview --no-wait",
+    "build:android:production": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production",
+    "build:android:production:no-wait": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production --no-wait"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.5",
     "@weatheron/shared": "file:../../packages/shared",
     "expo": "^53.0.0",
+    "expo-file-system": "~18.1.11",
     "expo-location": "~18.1.6",
     "expo-status-bar": "^2.0.0",
     "react": "^19.0.0",

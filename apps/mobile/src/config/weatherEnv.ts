@@ -10,6 +10,7 @@ export type WeatherRuntimeConfig = {
   kmaForecastUrl?: string;
   openMeteoForecastUrl?: string;
   timeoutMs: number;
+  allowLocalProxy: boolean;
 };
 
 export const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
@@ -23,7 +24,18 @@ export function getWeatherRuntimeConfig(): WeatherRuntimeConfig {
     kmaForecastUrl: process.env.EXPO_PUBLIC_KMA_FORECAST_URL,
     openMeteoForecastUrl: process.env.EXPO_PUBLIC_OPEN_METEO_FORECAST_URL,
     timeoutMs: Number(process.env.EXPO_PUBLIC_WEATHER_TIMEOUT_MS) || DEFAULT_WEATHER_TIMEOUT_MS,
+    allowLocalProxy: process.env.EXPO_PUBLIC_WEATHER_ALLOW_LOCAL_PROXY === "1",
   };
+}
+
+export function isLocalWeatherProxyUrl(value?: string): boolean {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "0.0.0.0";
+  } catch {
+    return false;
+  }
 }
 
 function getWeatherClientMode(value?: string): WeatherClientMode {

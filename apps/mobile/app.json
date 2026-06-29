@@ -15,7 +15,10 @@
     "assetBundlePatterns": [
       "../../assets/icon/*",
       "../../assets/outfits/*",
-      "../../assets/onboarding/*"
+      "../../assets/place-categories/*",
+      "../../assets/wordmark/*",
+      "../../assets/onboarding/*",
+      "../../assets/ui-icons/*"
     ],
     "ios": {
       "supportsTablet": false,
@@ -26,7 +29,7 @@
     },
     "android": {
       "package": "com.weatheron.mobile",
-      "versionCode": 1,
+      "versionCode": 5,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"

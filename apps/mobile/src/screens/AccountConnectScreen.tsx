@@ -1,11 +1,8 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { AppButton } from "../components/AppButton";
-import { AppScreen } from "../components/AppScreen";
-import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
+import React, { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AccountConnectScreenProps = {
   gate: AccountGateState | null;
@@ -13,76 +10,339 @@ type AccountConnectScreenProps = {
   onCancel: () => void;
 };
 
-export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
-  const gateLabel = gate?.resumeLabel ?? "코디 저장";
+type ProviderTone = "kakao" | "naver" | "line" | "google" | "apple" | "email";
+
+const primaryProviders: { id: ProviderTone; label: string; caption: string }[] = [
+  { id: "kakao", label: "카카오로 시작하기", caption: "자동 추천" },
+  { id: "naver", label: "네이버로 시작하기", caption: "계정 선택지 보완" },
+];
+
+const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
+  { id: "line", label: "LINE으로 시작하기", caption: "해외 사용자용" },
+  { id: "google", label: "Google로 시작하기", caption: "공용 계정" },
+  { id: "apple", label: "Apple로 시작하기", caption: "이메일 숨기기 지원" },
+  { id: "email", label: "이메일 코드로 계속하기", caption: "비밀번호 없이 인증" },
+];
+
+export function AccountConnectScreen({ onComplete, onCancel }: AccountConnectScreenProps) {
+  const theme = useAppTheme();
+  const [showOtherMethods, setShowOtherMethods] = useState(false);
 
   return (
-    <AppScreen title="계정 연결" subtitle="저장과 동기화가 필요한 순간에만 계정 연결을 요청함" badge="A2">
-      <Section title="추천 로그인 방법" caption="국가 선택 없이 지역과 기기 기준으로 자동 추천">
-        <View style={styles.providerList}>
-          {["Kakao", "Naver", "LINE", "Apple", "Google", "Email"].map((provider) => (
-            <View key={provider} style={styles.providerRow}>
-              <Text style={styles.provider}>{provider}</Text>
-              {provider === "Kakao" ? <StatusPill label="추천" tone="gold" /> : null}
-            </View>
-          ))}
-        </View>
-      </Section>
+    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-      <Section title="복귀 위치" caption={`${gateLabel} 완료 후 ${gate?.returnTo ?? "H1"} 화면으로 돌아감`}>
-        <View style={styles.gateBox}>
-          <Text style={styles.gateTitle}>{gateLabel}</Text>
-          <Text style={styles.gateCopy}>대기 액션 {gateLabel} · 복귀 화면 {gate?.returnTo ?? "H1"}</Text>
-          {gate?.selectedDestinationName ? <Text style={styles.gateCopy}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
-          {gate?.outfitVariant ? <Text style={styles.gateCopy}>코디 variant 유지 · {gate.outfitVariant}</Text> : null}
+        <View style={styles.statusBar}>
+          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
+          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
         </View>
-        <View style={styles.actions}>
-          <AppButton label="계정 연결 완료" onPress={onComplete} />
-          <AppButton label="취소" onPress={onCancel} tone="secondary" />
+
+        <View style={styles.header}>
+          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onCancel} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <ChevronLeft color={theme.muted} />
+          </Pressable>
+          <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
         </View>
-      </Section>
-    </AppScreen>
+
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.heroTitle, { color: theme.text }]}>계정 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
+          <Text style={[styles.heroBody, { color: theme.muted }]}>
+            추천 확인은 계속 가능하고{"\n"}저장·동기화·알림 추가만 계정에 연결돼요
+          </Text>
+        </View>
+
+        <View style={styles.recommendBlock}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>추천 방법</Text>
+          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>자동 추천된 방법을 먼저 보여줘요</Text>
+
+          <View style={styles.intentTabs}>
+            <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.intentText, { color: theme.text }]}>설정 이어보기</Text>
+            </View>
+            <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.intentText, { color: theme.text }]}>알림 저장</Text>
+            </View>
+          </View>
+
+          <View style={styles.providerList}>
+            {primaryProviders.map((provider) => (
+              <ProviderButton key={provider.id} provider={provider} onPress={onComplete} theme={theme} />
+            ))}
+            {showOtherMethods
+              ? extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} onPress={onComplete} theme={theme} />)
+              : null}
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setShowOtherMethods((current) => !current)}
+            style={[styles.otherButton, { borderColor: theme.border, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent" }]}
+          >
+            <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "다른 방법 접기" : "다른 방법 보기"}</Text>
+          </Pressable>
+        </View>
+
+        <Pressable accessibilityRole="button" onPress={onCancel} style={styles.laterButton}>
+          <Text style={[styles.laterText, { color: theme.subtle }]}>나중에 할래요</Text>
+        </Pressable>
+
+        <Text style={[styles.footer, { color: theme.subtle }]}>최초 계정 연결 시 다음 단계에서{"\n"}약관 동의를 진행합니다</Text>
+      </ScrollView>
+    </View>
+  );
+}
+
+function ProviderButton({
+  provider,
+  onPress,
+  theme,
+}: {
+  provider: { id: ProviderTone; label: string; caption: string };
+  onPress: () => void;
+  theme: AppTheme;
+}) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.providerButton, { backgroundColor: theme.cardStrong }]}>
+      <View style={[styles.providerIcon, { backgroundColor: getProviderColor(provider.id) }]}>
+        <Text style={[styles.providerIconText, { color: getProviderTextColor(provider.id) }]}>{getProviderMark(provider.id)}</Text>
+      </View>
+      <View style={styles.providerCopy}>
+        <Text style={[styles.providerLabel, { color: theme.text }]}>{provider.label}</Text>
+        <Text style={[styles.providerCaption, { color: theme.subtle }]}>{provider.caption}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function getProviderColor(providerId: ProviderTone) {
+  if (providerId === "kakao") return "#FEE500";
+  if (providerId === "naver") return "#03C75A";
+  if (providerId === "line") return "#4CC764";
+  if (providerId === "google") return "#F8FBFF";
+  if (providerId === "apple") return "#111827";
+  return "#2A5D8F";
+}
+
+function getProviderTextColor(providerId: ProviderTone) {
+  if (providerId === "apple" || providerId === "email") return "#F8FBFF";
+  return "#10243F";
+}
+
+function getProviderMark(providerId: ProviderTone) {
+  if (providerId === "kakao") return "●";
+  if (providerId === "naver") return "N";
+  if (providerId === "line") return "L";
+  if (providerId === "google") return "G";
+  if (providerId === "apple") return "A";
+  return "@";
+}
+
+function ChevronLeft({ color }: { color: string }) {
+  return (
+    <View style={styles.chevronLeft} accessibilityElementsHidden>
+      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
+      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  providerList: {
-    gap: spacing.sm,
+  shell: {
+    flex: 1,
   },
-  providerRow: {
-    minHeight: 48,
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    gap: spacing.md,
+    minHeight: "100%",
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  atmosphere: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 450,
+    height: 480,
+    opacity: 0.48,
+    borderRadius: 80,
+  },
+  statusBar: {
+    minHeight: 23,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 2,
   },
-  provider: {
-    color: appColors.text,
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  gateBox: {
-    gap: 4,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: "rgba(103,232,208,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(103,232,208,0.26)",
-  },
-  gateTitle: {
-    color: appColors.clear,
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  gateCopy: {
-    color: appColors.muted,
-    fontSize: 12,
+  statusText: {
+    fontSize: 14,
     lineHeight: 18,
+    fontWeight: "900",
+    letterSpacing: 0,
   },
-  actions: {
+  header: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  title: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  heroCard: {
+    minHeight: 156,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    padding: 20,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+  },
+  heroTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    lineHeight: 30,
+    fontWeight: "900",
+  },
+  heroBody: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 19,
+    fontWeight: "700",
+  },
+  recommendBlock: {
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
+  sectionTitle: {
+    marginTop: 4,
+    textAlign: "center",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  sectionCaption: {
+    textAlign: "center",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  intentTabs: {
     flexDirection: "row",
     gap: spacing.sm,
+    marginTop: 2,
+  },
+  intentTab: {
+    flex: 1,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  intentText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  providerList: {
+    gap: spacing.sm,
+  },
+  providerButton: {
+    minHeight: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+  },
+  providerIcon: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  providerIconText: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  providerCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  providerLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  providerCaption: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "700",
+  },
+  otherButton: {
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  otherText: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  laterButton: {
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  laterText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  footer: {
+    marginTop: "auto",
+    textAlign: "center",
+    fontSize: 10,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  chevronLeft: {
+    width: 16,
+    height: 16,
+    justifyContent: "center",
+  },
+  chevronLeftTop: {
+    position: "absolute",
+    left: 4,
+    width: 9,
+    height: 2,
+    borderRadius: 2,
+    transform: [{ rotate: "-45deg" }, { translateY: -3 }],
+  },
+  chevronLeftBottom: {
+    position: "absolute",
+    left: 4,
+    width: 9,
+    height: 2,
+    borderRadius: 2,
+    transform: [{ rotate: "45deg" }, { translateY: 3 }],
   },
 });

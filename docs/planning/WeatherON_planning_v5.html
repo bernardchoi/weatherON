@@ -1329,7 +1329,7 @@
         사용자가 H4 우산 추천 상세를 열람하면 umbrellaSignalReviewed 상태를 남겨 H1에서는 같은 우산 카드를 숨기고, H3 알림 사이드바에는 우산 추천 이력을 남겨 재진입할 수 있게 한다.
         따라서 H1은 "지금 바로 결정해야 하는 액션", H3는 "알림 센터/이력/딥링크 보관함" 역할로 분리한다.
         홈에는 Guest/위치/알림 상태를 한 줄 요약으로 보여주어 현재 사용 가능 범위를 빠르게 인지하게 하고, 알림 설정 전 상태는 O3 권한 단계로 연결한다.
-        하단 탭은 홈 안에서 선택 상태만 바꾸지 않고 코디(C1), 출발(G1), MY 설정 허브(M1), 소셜(S0/S1 ON Square)로 실제 화면 이동을 제공한다.
+        하단 탭은 홈 안에서 선택 상태만 바꾸지 않고 코디(C1), 출발(G1), MY 설정 허브(M1), 소셜(S1 ON Square)로 실제 화면 이동을 제공한다. 최초 소셜 진입 안내는 ON Square 내부 S0 상태로 처리한다.
         목업 프리뷰에서는 로그인·권한·위치·프리미엄 같은 앱 전역 값은 Session State로 유지하고, 스타일 기준·핏·연령대·위치 관리 완료·스마트 알림 세부 토글처럼 설정에 남아야 하는 값은 Settings State로 유지한다.
         outfitVariant·selectedDestination·returnTo·pendingAction처럼 특정 액션에만 필요한 값은 Route State로 전달한다.
         Session/Settings State 키는 전역값을 우선 적용해 오래된 Route State가 로그인·권한·구독·설정 완료 상태를 다시 Guest/권한 전/무료/미설정 상태로 되돌리지 않게 한다.
@@ -3148,6 +3148,13 @@
             <td style="padding:10px 14px; text-align:center;"><span style="background:#DDEEFF; color:var(--sky-light); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">P3~</span></td>
           </tr>
           <tr>
+            <td style="padding:10px 16px; font-weight:600; color:var(--purple);">Mapbox Geocoding/Search(대안)</td>
+            <td style="padding:10px 14px; color:var(--mist);">해외 검색 비용 절감 대안</td>
+            <td style="padding:10px 14px; text-align:center; color:var(--purple); font-weight:700;">월 10만건 수준 확인</td>
+            <td style="padding:10px 14px; text-align:center; color:var(--mist);">$0.75/1,000건 수준</td>
+            <td style="padding:10px 14px; text-align:center;"><span style="background:#F0E8FF; color:var(--purple); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">대안</span></td>
+          </tr>
+          <tr>
             <td style="padding:10px 16px; font-weight:600; color:var(--fresh);">Open-Meteo</td>
             <td style="padding:10px 14px; color:var(--mist);">국내+해외 날씨 전체</td>
             <td style="padding:10px 14px; text-align:center; color:var(--fresh); font-weight:700;">무료 한도 기준</td>
@@ -3168,12 +3175,16 @@
         </div>
         <div>
           <strong style="color:var(--dawn); display:block; margin-bottom:4px;">Phase 3 (MAU ~1만 · 여행 플래너 추가)</strong>
-          <div style="color:var(--mist); line-height:1.7;">Google Maps Geocoding 중심으로 해외 검색 커버 · Places API는 POI 고도화 시 검토<br>→ <strong style="color:var(--dawn);">API 비용 재산정 필요</strong></div>
+          <div style="color:var(--mist); line-height:1.7;">Google Maps Geocoding 중심으로 해외 검색 커버 · Mapbox는 비용 절감 대안으로만 보관<br>→ <strong style="color:var(--dawn);">월 USD 100 초과 시 재검토</strong></div>
         </div>
         <div>
           <strong style="color:var(--warm); display:block; margin-bottom:4px;">Phase 4~ (MAU 3만↑ · T-map 전환)</strong>
           <div style="color:var(--mist); line-height:1.7;">T-map 일 1,000건 초과분 발생 · Google Maps 사용량 증가분 반영<br>→ <strong style="color:var(--warm);">월 ₩5~15만 수준 재검토</strong></div>
         </div>
+      </div>
+      <div style="margin-top:14px; font-size:11.5px; color:var(--mist); line-height:1.7;">
+        기준 문서: <strong style="color:var(--sky);">WeatherON_MAP_PROVIDER_COST_COMPARISON.md</strong> · 국내 Kakao/T-map, 해외 Google을 기본 스택으로 유지. Mapbox는 Google Maps 비용 압박이 실제 발생할 때만 PoC 검토.
+        2026-06-29 이후 기능 출시 비용 판단은 <strong style="color:var(--sky);">WeatherON_기능_출시_로드맵.md</strong>의 MVP 0~1, Beta, v1.0, v1.1+ 기준을 우선한다.
       </div>
     </div>
   </div>
@@ -3381,66 +3392,56 @@
   <!-- 17 · 개발 로드맵 -->
   <div class="section" id="s17">
     <div class="section-label">17 · Roadmap</div>
-    <div class="section-title">개발 로드맵 <span style="font-size:14px; font-weight:400; color:var(--text-sub);">(v5 · ON Square Lite 동시 출시)</span></div>
+    <div class="section-title">개발 로드맵 <span style="font-size:14px; font-weight:400; color:var(--text-sub);">(2026-06-29 · MVP 검증 우선)</span></div>
+    <div class="note" style="margin-bottom:18px;">기획안 피드백 반영 후 현재 기준은 전체 기능 동시 출시가 아니라 출발시간 역산, 목적지 날씨 비교, 비 시작/그침 타임라인과 알림 신뢰성 검증이다. 상세 기준 문서는 <strong>WeatherON_기능_출시_로드맵.md</strong>를 따른다.</div>
     <div class="roadmap">
       <div class="rm-item">
         <div class="rm-dot soon"></div>
-        <div class="rm-quarter">Phase 1 · M1~M3</div>
-        <div class="rm-title">MVP — 날씨 + 우산 + 외출 알림 + 어필리에이트 연결</div>
+        <div class="rm-quarter">MVP 0 · M1~M2</div>
+        <div class="rm-title">핵심 흐름 내부 검증</div>
         <div class="rm-tasks">
-          Open-Meteo 날씨 연동 · 우산 알고리즘 구현 · 기본 코디 룰 5구간 작성 ·
-          외출 알림 스케줄러 (FCM/APNs) · Android/iOS 배포 준비 ·
-          <strong>다국어 i18n 구조 셋업 (한국어 기본·영어·일본어 3개 로케일)</strong> ·
-          <strong>스플래시 → Guest 홈 우선 진입 + 계정 필요 기능에서 지역 맞춤 로그인 호출 (한국: 카카오·네이버 / 일본: LINE / 해외: Google·Apple·이메일 코드)</strong> · 개발자 도메인 확보 + 개인정보처리방침·이용약관·위치기반서비스 약관 작성 + UMP SDK 통합 (AdMob 준비) ·
-          OAuth 2.0 + PKCE · Keychain/Keystore 토큰 저장 · SSL Certificate Pinning ·
-          <strong>쿠팡 파트너스 어필리에이트 즉시 연결 (수익 조기 발생)</strong> ·
-          <strong>소셜 탭 — ON Square Lite 개발·베타</strong> : 대표 마스코트 온보딩 + 2D Living Mascot Rive 리그(Base/Weather/Event) + 원소 6 컴패니언 수집·XP · 날씨 체크인 · Weather Note 작성/읽기 · 기본 날씨 리액션 · 신고/차단 · 스팸 제한 · 도시 단위 위치 비식별화. Weather Mail · CP 경제/아이템샵 · 확장 소셜은 제외
+          O2 온보딩 · H1 홈 · 출발시간 역산 UI · 목적지 날씨 비교 ·
+          비 시작/그침 타임라인 · 코디/우산 보조 카드 · 계정/권한 gate ·
+          로딩/오류/fallback 문구 정리
         </div>
       </div>
       <div class="rm-item">
         <div class="rm-dot soon"></div>
-        <div class="rm-quarter">Phase 2 · M4~M6</div>
-        <div class="rm-title">목적지 날씨 + 출발시간 역산 + 신발 알림</div>
+        <div class="rm-quarter">MVP 1 · M3~M4</div>
+        <div class="rm-title">소수 사용자 검증</div>
         <div class="rm-tasks">
-          <strong>카카오 Directions API 연동 (일 1만건 무료)</strong> · 카카오 Local API 장소 검색 · 목적지 날씨 비교 UI · 소요시간 역산 로직 · <strong>AI 위치 기반 주변 추천 카드 (AI 모델 + 카카오 Local)</strong> ·
-          신발 추천 매트릭스 구축 · 출발 10분 전 신발 알림 ·
-          무신사 파트너스 어필리에이트 추가 · <strong>앱스토어 정식 출시 + ON Square Lite 동시 공개</strong> · app-ads.txt 인증 + AdMob 앱 준비 상태 검토 → 배너·네이티브 광고 게재 시작 · 출시 안정화 후 Weather Mail · CP 아이템샵 순차 개발 · MAU 5,000 목표
+          목적지 저장 · 출발 알림 조건 저장 · 비 시작/그침 알림 조건 저장 ·
+          푸시 알림 수신/열람/딥링크 · 알림 이력 ·
+          10~30명 테스트 사용자 피드백 수집
         </div>
       </div>
       <div class="rm-item">
         <div class="rm-dot"></div>
-        <div class="rm-quarter">Phase 3 · M7~M9</div>
-        <div class="rm-title">스타일 개인화 + 프리미엄 구독 도입 (전환율 목표 2~4%)</div>
+        <div class="rm-quarter">Beta · M5~M6</div>
+        <div class="rm-title">Android 폐쇄 테스트</div>
         <div class="rm-tasks">
-          스타일 태그 온보딩 UI 구축 · 태그별 맞춤 코디 추천 엔진 ·
-          프리미엄 구독 인앱결제 연동 (월간 ₩2,900 / 연간 ₩19,900) ·
-          <strong>알림 고도화</strong> (고급 커스터마이징 + 급변 재알림) ·
-          구글 캘린더 연동 + 코디 캘린더 · 날씨 인사이트 월간 리포트 ·
-          7일 코디 플래닝 · <strong>해외여행 플래너</strong> (다도시 일정·날씨·코디·짐 체크리스트) · Google Maps Geocoding 연동 (해외 장소 검색) ·
-          홈 화면 위젯 커스터마이징 · MAU 1만 목표
+          실기기 안정화 · 푸시 서버 경로 · 오류/fallback UX ·
+          개인정보처리방침/약관 · Play 폐쇄 테스트 · 스토어 스크린샷 ·
+          주요 blocker 해소
         </div>
       </div>
       <div class="rm-item">
         <div class="rm-dot"></div>
-        <div class="rm-quarter">Phase 4 · M10~M12</div>
-        <div class="rm-title">중소 브랜드 제휴 + T-map 전환 검토 + 장소 카테고리 확장 (1단계)</div>
+        <div class="rm-quarter">v1.0 · M7</div>
+        <div class="rm-title">공개 출시 후보</div>
         <div class="rm-tasks">
-          레인부츠·방수화 중소 브랜드 협찬 제안 (락피쉬·HUNTER 등) ·
-          날씨 기반 타겟 광고 슬롯 판매 · 시즌 한정 스폰서십 패키지 ·
-          앱 내 쇼핑 탭 베타 오픈 ·
-          <strong>T-map API 전환 검토</strong> ·
-          <strong>장소 카테고리 1단계: KBO 야구장</strong> — 카테고리 인식 로직 + 경기 취소 확률 + 좌석별 자외선 + 유니폼 레이어링 코디
+          MVP 1 기능 안정화 · 핵심 알림 실패율 모니터링 ·
+          주요 UX 이슈 허용 기준 이내 관리 · 정책/스토어 자산 최종화 ·
+          새 수익화 기능 추가 금지
         </div>
       </div>
       <div class="rm-item">
         <div class="rm-dot"></div>
-        <div class="rm-quarter">Phase 5 · M13~ <span style="font-family:sans-serif; font-size:11px; color:var(--warm); font-weight:400;">(MAU 3만 달성 후 진입)</span></div>
-        <div class="rm-title">대형 패션 플랫폼 제휴 + 커머스 본격화 + T-map 프리미엄 연동</div>
+        <div class="rm-quarter">v1.1+ · M8~ <span style="font-family:sans-serif; font-size:11px; color:var(--warm); font-weight:400;">(MVP 지표 확인 후)</span></div>
+        <div class="rm-title">검증 후 확장</div>
         <div class="rm-tasks">
-          무신사·지그재그 파트너십 협상 (MAU·CTR 실적 데이터 기반) ·
-          앱 내 쇼핑 탭 정식 오픈 (GMV 수수료 수익) ·
-          위치 기반 로컬 브랜드 커머스 · AI 코디 추천 고도화 (Gemini 연동 강화) ·
-          <strong>T-map API 프리미엄 연동</strong> — 실제 주행 데이터 기반 출발시간 예측 품질을 구독 전용 기능으로 포지셔닝
+          코디/신발 고도화 · 도보/해외여행 플래너 · AI 장소 추천 ·
+          ON Square · 광고/구독/CP 경제 · T-map 정밀 소요시간은 MVP 핵심 지표 충족 후 별도 결정
         </div>
       </div>
     </div>

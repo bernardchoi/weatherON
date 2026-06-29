@@ -1,0 +1,15 @@
+{
+  "developerEmail": "dev@weatheron.app",
+  "developerWebsite": "미입력",
+  "privacyPolicyUrl": "https://example.com/weatheron/privacy",
+  "operatorName": "WeatherON",
+  "supportContact": "dev@weatheron.app",
+  "privacyOfficerName": "담당자명",
+  "privacyOfficerTitle": "개인정보 보호책임자",
+  "privacyOfficerContact": "dev@weatheron.app",
+  "privacyPolicyEffectiveDate": "2026-07-01",
+  "logRetentionMonths": "12",
+  "emailAuthService": "이메일 인증 미도입",
+  "targetAge": "만 14세 이상",
+  "playConsoleAccountType": "개인 신규"
+}

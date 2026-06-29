@@ -15,7 +15,8 @@ const parsedExpoConfig = JSON.parse(expoConfig);
 
 assert.equal(parsedExpoConfig.name, "WeatherON");
 assert.equal(parsedExpoConfig.android?.package, "com.weatheron.mobile");
-assert.equal(parsedExpoConfig.android?.versionCode, 1);
+assert.equal(Number.isInteger(parsedExpoConfig.android?.versionCode), true);
+assert.ok(parsedExpoConfig.android.versionCode >= 1);
 assert.ok(parsedExpoConfig.android?.permissions?.includes("ACCESS_FINE_LOCATION"));
 
 console.log("android build readiness check passed");

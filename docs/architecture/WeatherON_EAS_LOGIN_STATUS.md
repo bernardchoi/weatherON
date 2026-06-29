@@ -1,6 +1,6 @@
 # WeatherON EAS Login Status
 
-> 생성일: 2026-06-27
+> 생성일: 2026-06-28
 > 목적: Android preview APK 빌드 전 EAS 인증 상태를 추적한다.
 
 ## 1. 현재 상태
@@ -13,4 +13,4 @@
 
 ## 2. 다음 액션
 
-- `npm run eas:init` 실행
+- 최신 preview APK 실기기 QA와 Play Console 제출 준비 진행

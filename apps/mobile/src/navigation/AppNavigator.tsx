@@ -1,8 +1,9 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useEffect } from "react";
+import { BackHandler, StyleSheet, useColorScheme, View } from "react-native";
 import { BottomNav } from "../components/BottomNav";
 import { isP0Route } from "./routes";
 import { HomeScreen } from "../screens/HomeScreen";
+import { LocationChangeScreen } from "../screens/LocationChangeScreen";
 import { OutfitScreen } from "../screens/OutfitScreen";
 import { OutfitDetailScreen } from "../screens/OutfitDetailScreen";
 import { WardrobeScreen } from "../screens/WardrobeScreen";
@@ -10,6 +11,13 @@ import { WardrobePresetScreen } from "../screens/WardrobePresetScreen";
 import { UmbrellaScreen } from "../screens/UmbrellaScreen";
 import { RainTimelineScreen } from "../screens/RainTimelineScreen";
 import { NotificationCenterScreen } from "../screens/NotificationCenterScreen";
+import { SocialOnboardingScreen, SocialScreen, WeatherNoteScreen, WeatherReactionScreen } from "../screens/SocialScreen";
+import {
+  WeatherReportCompleteScreen,
+  WeatherReportHistoryScreen,
+  WeatherReportHomeScreen,
+  WeatherReportSubmitScreen,
+} from "../screens/WeatherReportScreens";
 import { AlertSettingsScreen } from "../screens/AlertSettingsScreen";
 import { MyScreen } from "../screens/MyScreen";
 import { GlobalSettingsScreen } from "../screens/GlobalSettingsScreen";
@@ -23,6 +31,10 @@ import { DestinationCareScreen } from "../screens/DestinationCareScreen";
 import { DestinationAddScreen } from "../screens/DestinationAddScreen";
 import { DestinationGuideScreen } from "../screens/DestinationGuideScreen";
 import { DestinationHubScreen } from "../screens/DestinationHubScreen";
+import { TripPlannerScreen } from "../screens/TripPlannerScreen";
+import { WalkingTripScreen } from "../screens/WalkingTripScreen";
+import { AiJourneyPlannerScreen } from "../screens/AiJourneyPlannerScreen";
+import { PremiumScreen } from "../screens/PremiumScreen";
 import { AccountConnectScreen } from "../screens/AccountConnectScreen";
 import { TermsConsentScreen } from "../screens/TermsConsentScreen";
 import { PermissionGateScreen } from "../screens/PermissionGateScreen";
@@ -30,11 +42,20 @@ import { OnboardingIntroScreen } from "../screens/OnboardingIntroScreen";
 import { StyleProfileScreen } from "../screens/StyleProfileScreen";
 import { SmartCareOnboardingScreen } from "../screens/SmartCareOnboardingScreen";
 import { OnboardingDestinationScreen } from "../screens/OnboardingDestinationScreen";
+import { AppEntrySplashScreen, OnboardingSplashScreen } from "../screens/SplashScreens";
 import { useWeatherOnAppState } from "../state/useWeatherOnAppState";
-import { appColors } from "../theme/tokens";
+import { AppThemeProvider } from "../theme/AppThemeContext";
+import { appColors, resolveAppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
+  const systemTheme = useColorScheme();
+  const theme = resolveAppTheme(appState.themeMode, systemTheme);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
+    return () => subscription.remove();
+  }, [appState.goBack]);
 
   const screenProps = {
     state: appState.state,
@@ -60,6 +81,8 @@ export function AppNavigator() {
     selectedPolicyDocument: appState.selectedPolicyDocument,
     adConsentMode: appState.adConsentMode,
     temperatureUnit: appState.temperatureUnit,
+    weightUnit: appState.weightUnit,
+    distanceUnit: appState.distanceUnit,
     themeMode: appState.themeMode,
     reducedTransparency: appState.reducedTransparency,
     styleProfileSaved: appState.styleProfileSaved,
@@ -86,6 +109,8 @@ export function AppNavigator() {
     onReturnFromPolicyDocument: appState.returnFromPolicyDocument,
     onSetAdConsentMode: appState.setAdConsentMode,
     onSetTemperatureUnit: appState.setTemperatureUnit,
+    onSetWeightUnit: appState.setWeightUnit,
+    onSetDistanceUnit: appState.setDistanceUnit,
     onSetThemeMode: appState.setThemeMode,
     onToggleReducedTransparency: appState.toggleReducedTransparency,
     onSetStyleGender: appState.setStyleGender,
@@ -104,6 +129,7 @@ export function AppNavigator() {
     onSetWeatherProviderMode: appState.setWeatherProviderMode,
     onSetWeatherLocationMode: appState.setWeatherLocationMode,
     onRequestCurrentLocation: appState.requestCurrentLocation,
+    onSelectWeatherLocation: appState.selectWeatherLocation,
     onSaveDestination: appState.saveDestination,
     onToggleDestinationCare: appState.toggleDestinationCare,
     onToggleSavedDestinationCare: appState.toggleSavedDestinationCare,
@@ -126,8 +152,11 @@ export function AppNavigator() {
   };
 
   return (
-    <View style={styles.root}>
+    <AppThemeProvider theme={theme}>
+      <View style={[styles.root, { backgroundColor: theme.background }]}>
+      {appState.route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {appState.route === "H1" ? <HomeScreen {...screenProps} /> : null}
+      {appState.route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
       {appState.route === "C1" ? <OutfitScreen {...screenProps} /> : null}
       {appState.route === "C2" ? <WardrobeScreen {...screenProps} /> : null}
       {appState.route === "C3" ? <WardrobePresetScreen {...screenProps} /> : null}
@@ -135,8 +164,20 @@ export function AppNavigator() {
       {appState.route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
       {appState.route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
       {appState.route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
+      {appState.route === "W1" ? <WeatherReportHomeScreen {...screenProps} /> : null}
+      {appState.route === "W2" ? <WeatherReportSubmitScreen {...screenProps} /> : null}
+      {appState.route === "W3" ? <WeatherReportCompleteScreen {...screenProps} /> : null}
+      {appState.route === "W4" ? <WeatherReportHistoryScreen {...screenProps} /> : null}
+      {appState.route === "S0" ? <SocialOnboardingScreen {...screenProps} /> : null}
+      {appState.route === "S1" ? <SocialScreen {...screenProps} /> : null}
+      {appState.route === "S2" ? <WeatherNoteScreen {...screenProps} /> : null}
+      {appState.route === "S3" ? <WeatherReactionScreen {...screenProps} /> : null}
       {appState.route === "G1" ? <DestinationListScreen {...screenProps} /> : null}
       {appState.route === "G2" ? <DestinationCareScreen {...screenProps} /> : null}
+      {appState.route === "G3" ? <TripPlannerScreen {...screenProps} /> : null}
+      {appState.route === "G4" ? <WalkingTripScreen {...screenProps} /> : null}
+      {appState.route === "G5" ? <AiJourneyPlannerScreen {...screenProps} /> : null}
+      {appState.route === "G6" ? <PremiumScreen {...screenProps} /> : null}
       {appState.route === "P1" ? <DestinationAddScreen {...screenProps} /> : null}
       {appState.route === "P2" ? <DestinationGuideScreen {...screenProps} /> : null}
       {appState.route === "P3" ? <DestinationHubScreen {...screenProps} /> : null}
@@ -149,6 +190,7 @@ export function AppNavigator() {
       {appState.route === "R3" ? <AdConsentScreen {...screenProps} /> : null}
       {appState.route === "R4" ? <AdPlacementScreen {...screenProps} /> : null}
       {appState.route === "O2" ? <OnboardingIntroScreen {...screenProps} /> : null}
+      {appState.route === "O1" ? <OnboardingSplashScreen {...screenProps} /> : null}
       {appState.route === "O4" ? <StyleProfileScreen {...screenProps} /> : null}
       {appState.route === "O5" ? <SmartCareOnboardingScreen {...screenProps} /> : null}
       {appState.route === "O6" ? <OnboardingDestinationScreen {...screenProps} /> : null}
@@ -167,8 +209,10 @@ export function AppNavigator() {
           onComplete={appState.completePermissionGate}
         />
       ) : null}
-      {isP0Route(appState.route) ? <BottomNav activeRoute={appState.route} onNavigate={appState.navigate} /> : null}
-    </View>
+        {isP0Route(appState.route) && appState.route !== "H3" && appState.route !== "G6" ? <BottomNav activeRoute={appState.route} onNavigate={appState.navigate} /> : null}
+        {appState.route === "A4" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
+      </View>
+    </AppThemeProvider>
   );
 }
 

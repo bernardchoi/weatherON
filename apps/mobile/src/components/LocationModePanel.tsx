@@ -2,7 +2,8 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { DeviceLocationState } from "../providers/deviceLocation";
 import type { WeatherLocationMode } from "../state/useWeatherOnAppState";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 type LocationModePanelProps = {
   mode: WeatherLocationMode;
@@ -18,11 +19,12 @@ const locationOptions: Array<{ mode: WeatherLocationMode; label: string }> = [
 ];
 
 export function LocationModePanel({ mode, deviceLocationState, locationReady, onSetMode, onRequestCurrentLocation }: LocationModePanelProps) {
+  const theme = useAppTheme();
   return (
-    <View style={styles.panel}>
+    <View style={[styles.panel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>위치 기준</Text>
-        <Text style={styles.status}>{getLocationStatusText(mode, deviceLocationState)} · {locationReady ? "READY" : "대기"}</Text>
+        <Text style={[styles.title, { color: theme.text }]}>위치 기준</Text>
+        <Text style={[styles.status, { color: theme.clear }]}>{getLocationStatusText(mode, deviceLocationState, locationReady)}</Text>
       </View>
       <View style={styles.modeRow}>
         {locationOptions.map((item) => {
@@ -36,26 +38,30 @@ export function LocationModePanel({ mode, deviceLocationState, locationReady, on
                 if (item.mode === "auto") onRequestCurrentLocation();
                 else onSetMode(item.mode);
               }}
-              style={[styles.modeButton, active ? styles.modeActive : null]}
+              style={[
+                styles.modeButton,
+                { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                active ? { borderColor: theme.clear, backgroundColor: `${theme.clear}24` } : null,
+              ]}
             >
-              <Text style={[styles.modeText, active ? styles.modeTextActive : null]}>{item.label}</Text>
+              <Text style={[styles.modeText, { color: active ? theme.clear : theme.muted }]}>{item.label}</Text>
             </Pressable>
           );
         })}
       </View>
-      <Text style={styles.locationMessage}>{deviceLocationState.message}</Text>
+      <Text style={[styles.locationMessage, { color: theme.muted }]}>{deviceLocationState.message}</Text>
     </View>
   );
 }
 
-function getLocationStatusText(mode: WeatherLocationMode, state: DeviceLocationState): string {
-  if (mode === "manual") return "수동 위치";
-  if (state.status === "granted") return "권한 위치";
+function getLocationStatusText(mode: WeatherLocationMode, state: DeviceLocationState, locationReady: boolean): string {
+  if (mode === "manual") return "수동 위치 사용 중";
+  if (state.status === "granted" && locationReady) return "현재 위치 사용 중";
   if (state.status === "requesting") return "확인 중";
-  if (state.status === "denied") return "권한 거부";
-  if (state.status === "unavailable") return "서비스 꺼짐";
-  if (state.status === "error") return "대체 위치";
-  return "권한 대기";
+  if (state.status === "denied") return "위치 권한 확인 필요";
+  if (state.status === "unavailable") return "위치 서비스 꺼짐";
+  if (state.status === "error") return "기본 위치 사용 중";
+  return "위치 설정 필요";
 }
 
 const styles = StyleSheet.create({
@@ -64,8 +70,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: appColors.border,
-    backgroundColor: "rgba(255,255,255,0.06)",
   },
   header: {
     flexDirection: "row",
@@ -74,12 +78,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    color: appColors.text,
     fontSize: 15,
     fontWeight: "900",
   },
   status: {
-    color: appColors.clear,
     fontSize: 11,
     fontWeight: "900",
   },
@@ -93,24 +95,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
-  modeActive: {
-    borderColor: appColors.clear,
-    backgroundColor: "rgba(103,232,208,0.14)",
   },
   modeText: {
-    color: appColors.muted,
     fontSize: 13,
     fontWeight: "900",
   },
-  modeTextActive: {
-    color: appColors.clear,
-  },
   locationMessage: {
-    color: appColors.muted,
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 17,

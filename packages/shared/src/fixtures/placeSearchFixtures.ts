@@ -16,7 +16,7 @@ export const placeSearchFixtures: PlaceSearchResult[] = [
   },
   {
     id: "kr-jamsil-baseball-stadium",
-    name: "잠실야구장",
+    name: "잠실종합운동장",
     address: "서울 송파구 올림픽로 25",
     category: "sports",
     countryCode: "KR",

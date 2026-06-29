@@ -112,8 +112,8 @@ function buildSlides21_29(pptx) {
       [
         { text: 'Google Maps Geocoding', options: { ...cellOpt, bold: true, color: COLORS.sky } },
         { text: '해외 장소 검색', options: { ...cellOpt, color: COLORS.textSub } },
-        { text: '재산정 필요', options: { ...cellOpt, align: 'center', color: COLORS.sky, bold: true } },
-        { text: '요금 확인', options: { ...cellOpt, align: 'center', color: COLORS.textSub } },
+        { text: '월 1만건 수준', options: { ...cellOpt, align: 'center', color: COLORS.sky, bold: true } },
+        { text: '$5/1k 기준', options: { ...cellOpt, align: 'center', color: COLORS.textSub } },
         { text: 'P3~', options: { ...cellOpt, align: 'center' } },
       ],
       [
@@ -124,6 +124,13 @@ function buildSlides21_29(pptx) {
         { text: 'P3~', options: { ...cellOpt, align: 'center' } },
       ],
       [
+        { text: 'Mapbox(대안)', options: { ...cellOpt, bold: true, color: COLORS.gold } },
+        { text: '해외 검색 비용절감', options: { ...cellOpt, color: COLORS.textSub } },
+        { text: '월 10만건 수준', options: { ...cellOpt, align: 'center', color: COLORS.gold, bold: true } },
+        { text: '$0.75/1k', options: { ...cellOpt, align: 'center', color: COLORS.textSub } },
+        { text: '대안', options: { ...cellOpt, align: 'center' } },
+      ],
+      [
         { text: 'Open-Meteo', options: { ...cellOpt, bold: true, color: COLORS.teal } },
         { text: '국내+해외 날씨 전체', options: { ...cellOpt, color: COLORS.textSub } },
         { text: '무료 한도 기준', options: { ...cellOpt, align: 'center', color: COLORS.teal, bold: true } },
@@ -132,18 +139,18 @@ function buildSlides21_29(pptx) {
       ],
     ];
     s.addTable(rows, {
-      x: 0.5, y: 1.35, w: 9.0, h: 2.2,
+      x: 0.5, y: 1.25, w: 9.0, h: 2.35,
       colW: [2.0, 2.5, 1.6, 1.6, 1.3],
       border: { type: 'solid', color: COLORS.border, pt: 0.5 },
       autoPage: false,
     });
 
-    s.addText('💡 Phase별 예상 API 비용 (MAU 기준)', { x: 0.7, y: 3.78, w: 8.6, h: 0.28, fontFace: FONT_MONO, fontSize: 11, color: COLORS.sky, charSpacing: 1 });
+    s.addText('💡 출시 단계별 예상 API 비용 (MAU 기준)', { x: 0.7, y: 3.78, w: 8.6, h: 0.28, fontFace: FONT_MONO, fontSize: 11, color: COLORS.sky, charSpacing: 1 });
     s.addShape('roundRect', { x: 0.5, y: 4.08, w: 9.0, h: 1.0, rectRadius: 0.06, fill: { color: COLORS.navy }, line: { type: 'none' } });
     const sims = [
-      { t: 'Phase 1~2 (MAU ~5천)', d: '카카오 무료 범위 내 · Open-Meteo 무료', v: 'API 비용 ₩0', c: COLORS.teal },
-      { t: 'Phase 3 (MAU ~1만)', d: 'Google Maps 사용량 기준 재산정', v: '재확인', c: COLORS.gold },
-      { t: 'Phase 4~ (MAU 3만↑)', d: 'T-map 초과분 + Google Maps 사용량 증가', v: '재검토', c: COLORS.sky },
+      { t: 'MVP 0~1', d: 'Kakao Local · KMA · Open-Meteo 우선', v: '무료 한도 중심', c: COLORS.teal },
+      { t: 'Beta/v1.0', d: '푸시·서버 운영비 실측, Directions 선택 도입', v: '알림 신뢰성 우선', c: COLORS.gold },
+      { t: 'v1.1+', d: 'AI·여행·광고·구독 비용 재산정', v: '지표 충족 후', c: COLORS.sky },
     ];
     sims.forEach((sm, i) => {
       const x = 0.7 + i * 3.0;
@@ -151,6 +158,7 @@ function buildSlides21_29(pptx) {
       s.addText(sm.d, { x, y: 4.42, w: 2.8, h: 0.3, fontFace: FONT_BODY, fontSize: 8.5, color: '9FB3D1', lineSpacingMultiple: 1.2 });
       s.addText(sm.v, { x, y: 4.72, w: 2.8, h: 0.25, fontFace: FONT_MONO, fontSize: 11, bold: true, color: sm.c });
     });
+    s.addText('기준 문서: WeatherON_기능_출시_로드맵.md · WeatherON_MAP_PROVIDER_COST_COMPARISON.md', { x: 0.7, y: 5.08, w: 8.6, h: 0.18, fontFace: FONT_BODY, fontSize: 7.5, color: COLORS.textSub });
 
     addFooter(s, 22);
   }
@@ -256,14 +264,14 @@ function buildSlides21_29(pptx) {
     const s = addBgSlide(pptx, COLORS.navy);
     s.addShape('rect', { x: 0, y: 0, w: SLIDE_W, h: 0.08, fill: { color: COLORS.gold }, line: { type: 'none' } });
     s.addText('17 · ROADMAP', { x: 0.7, y: 0.5, w: 8.6, h: 0.32, fontFace: FONT_MONO, fontSize: 12, color: COLORS.sky, charSpacing: 2 });
-    s.addText('개발 로드맵 — v5 (ON Square Lite 동시 출시)', { x: 0.7, y: 0.82, w: 8.6, h: 0.5, fontFace: FONT_HEAD, fontSize: 24, bold: true, color: COLORS.white });
+    s.addText('개발 로드맵 — MVP 검증 우선', { x: 0.7, y: 0.82, w: 8.6, h: 0.5, fontFace: FONT_HEAD, fontSize: 24, bold: true, color: COLORS.white });
 
     const phases = [
-      { ph: 'Phase 1', m: 'M1~3', t: 'MVP — 핵심 날씨 + ON Square Lite', tasks: '날씨·우산·코디·알림, 인증·정책, 어필리에이트, ON Square Lite(2D Living Mascot Rive·6컴패니언·체크인·Note·리액션), 신고·차단·스팸 제한' },
-      { ph: 'Phase 2', m: 'M4~6', t: '목적지 날씨 + 출발시간역산 + 신발알림', tasks: 'Directions/Local, AI 위치추천, 신발알림, 정식출시+ON Square Lite 동시공개+AdMob, 출시 후 Weather Mail·CP샵 순차 개발, MAU 5천' },
-      { ph: 'Phase 3', m: 'M7~9', t: '스타일 개인화 + 프리미엄 구독(전환율 2~4%)', tasks: '스타일태그 온보딩, 맞춤코디 엔진, 구독(₩2,900/월), 알림고도화, 캘린더연동, 인사이트리포트, 해외여행플래너+Google Maps, 위젯커스터마이징, MAU 1만' },
-      { ph: 'Phase 4', m: 'M10~12', t: '중소브랜드 제휴 + T-map 검토 + 장소카테고리 1단계', tasks: '레인부츠·방수화 협찬(락피쉬·HUNTER등), 타겟광고슬롯, 쇼핑탭 베타, T-map 전환검토, KBO야구장 카테고리(취소확률·자외선·유니폼코디)' },
-      { ph: 'Phase 5', m: 'M13~', t: '대형 플랫폼 제휴 + 커머스 본격화', tasks: '무신사·지그재그 파트너십, 쇼핑탭 정식오픈(GMV수수료), 로컬브랜드 커머스, AI코디 고도화, T-map 프리미엄 연동(구독전용), MAU 3만 이상' },
+      { ph: 'MVP 0', m: 'M1~2', t: '핵심 흐름 내부 검증', tasks: 'O2 온보딩, H1 홈, 출발시간 역산 UI, 목적지 날씨 비교, 강수 타임라인, 코디·우산 보조 카드' },
+      { ph: 'MVP 1', m: 'M3~4', t: '소수 사용자 검증', tasks: '목적지 저장, 출발 알림 조건, 비 시작/그침 알림, 권한·계정 gate, 알림 이력, 10~30명 피드백' },
+      { ph: 'Beta', m: 'M5~6', t: 'Android 폐쇄 테스트', tasks: '실기기 안정화, 푸시 서버 경로, 오류/fallback UX, 개인정보·약관, Play 폐쇄 테스트, 스토어 스크린샷' },
+      { ph: 'v1.0', m: 'M7', t: '공개 출시 후보', tasks: 'MVP 1 기능 안정화, 핵심 알림 실패율 모니터링, 주요 UX blocker 해소, 신규 수익화 기능 추가 금지' },
+      { ph: 'v1.1+', m: 'M8~', t: '검증 후 확장', tasks: '코디·신발 고도화, 도보/여행/AI 추천, ON Square, 광고·구독·CP는 MVP 지표 충족 후 별도 결정' },
     ];
     phases.forEach((p, i) => {
       const y = 1.5 + i * 0.74;

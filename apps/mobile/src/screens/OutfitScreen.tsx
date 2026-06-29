@@ -5,37 +5,56 @@ import { AppScreen } from "../components/AppScreen";
 import { OutfitGrid } from "../components/OutfitGrid";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
-import { WeatherSummary } from "../components/WeatherSummary";
 import type { P0ScreenProps } from "../navigation/types";
-import { appColors, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
+import { getOutfitVariantLabel } from "../utils/outfitLabels";
 
 export function OutfitScreen({
   state,
-  useDestinationWeather,
   outfitSaved,
   styleProfileSaved,
   selectedStyles,
   wardrobeItems,
-  onToggleWeather,
   onNavigate,
 }: P0ScreenProps) {
+  const theme = useAppTheme();
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   return (
-    <AppScreen title="오늘 코디" subtitle="날씨 룰엔진 기준으로 지금 입을 세트를 먼저 제안함" badge={`${state.outfit.matchPct}%`}>
-      <WeatherSummary weather={state.weather} useDestinationWeather={useDestinationWeather} onToggleWeather={onToggleWeather} />
-
-      <Section title={state.outfit.decisionText} caption={`룰 버전 ${state.outfit.ruleVersion}`}>
-        <OutfitGrid outfit={state.outfit} />
-        <View style={styles.pillRow}>
-          <StatusPill label={state.outfit.variant.toUpperCase()} tone="clear" />
-          <StatusPill
-            label={ownedItemCount > 0 ? "내 옷장 반영됨" : "기본 프리셋 기준"}
-            tone={ownedItemCount > 0 ? "clear" : "gold"}
-          />
-          <StatusPill label={outfitSaved ? "저장 완료" : "저장 전"} tone={outfitSaved ? "clear" : "sky"} />
+    <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} badge={`${state.outfit.matchPct}%`}>
+      <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
+        <View style={styles.criteriaHeader}>
+          <View>
+            <Text style={[styles.criteriaLabel, { color: theme.gold }]}>추천 기준</Text>
+            <Text style={[styles.criteriaTitle, { color: theme.text }]}>기본 날씨 기준 추천</Text>
+          </View>
+          <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="warning" />
         </View>
-        {state.outfit.reasons.map((reason) => (
-          <Text key={reason} style={styles.reason}>· {reason}</Text>
+        <View style={styles.criteriaStats}>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>옷장</Text>
+            <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 매칭</Text>
+          </View>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>스타일</Text>
+            <Text style={[styles.criteriaStatValue, { color: theme.gold }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
+          </View>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>저장</Text>
+            <Text style={[styles.criteriaStatValue, { color: outfitSaved ? theme.clear : theme.sky }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
+          </View>
+        </View>
+      </View>
+
+      <Section title="오늘 입을 세트" caption={state.outfit.decisionText} accent="clear">
+        <OutfitGrid outfit={state.outfit} maxItems={4} compact />
+        <View style={styles.pillRow}>
+          <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
+          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="sky" />
+          <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
+        </View>
+        {state.outfit.reasons.slice(0, 1).map((reason) => (
+          <Text key={reason} style={[styles.reason, { color: theme.muted }]}>· {reason}</Text>
         ))}
         <View style={styles.actions}>
           <AppButton label="상세 보기" onPress={() => onNavigate("C4")} />
@@ -43,16 +62,16 @@ export function OutfitScreen({
         </View>
       </Section>
 
-      <Section title="시간대 판단" caption="현재는 fallback 샘플 데이터 기준">
+      <Section title="오늘의 판단" caption="시간대별 착장 기준" accent="gold">
         {state.outfit.timeAdvice.map((item) => (
-          <View key={item.time} style={styles.timelineRow}>
-            <Text style={styles.time}>{item.time}</Text>
-            <Text style={styles.timelineText}>{item.text}</Text>
+          <View key={item.time} style={[styles.timelineRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.time, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+            <Text style={[styles.timelineText, { color: theme.text }]}>{item.text}</Text>
           </View>
         ))}
       </Section>
 
-      <Section title="스타일 기준" caption={styleProfileSaved ? selectedStyles.join(" · ") : "O4에서 추천 기준 저장 필요"}>
+      <Section title="스타일 기준" caption={styleProfileSaved ? selectedStyles.join(" · ") : "추천 기준 저장 필요"} accent="sky">
         <View style={styles.actions}>
           <AppButton label="스타일 기준 수정" onPress={() => onNavigate("O4")} />
           <AppButton label="MY" onPress={() => onNavigate("M1")} tone="secondary" />
@@ -63,20 +82,81 @@ export function OutfitScreen({
   );
 }
 
+function getWeatherLine(feelsLikeC: number, condition: string) {
+  const conditionLabel = condition === "clear" ? "맑음" : condition === "rain" ? "비" : condition === "storm" ? "강한 비" : "날씨";
+  return `${Math.round(feelsLikeC)}도 · ${conditionLabel} · 일교차 기준 추천`;
+}
+
+function formatAdviceTime(value: string) {
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return `${String(parsed.getHours()).padStart(2, "0")}:00`;
+  }
+  const match = value.match(/T(\d{2})/);
+  return match ? `${match[1]}:00` : value;
+}
+
 const styles = StyleSheet.create({
+  criteriaCard: {
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  criteriaHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  criteriaLabel: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  criteriaTitle: {
+    marginTop: 2,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  criteriaStats: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  criteriaStat: {
+    flex: 1,
+    minHeight: 50,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  criteriaStatLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  criteriaStatValue: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
   pillRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
   },
   reason: {
-    color: appColors.muted,
     fontSize: 12,
     lineHeight: 18,
+    fontWeight: "700",
   },
   actions: {
     flexDirection: "row",
     gap: spacing.sm,
+    flexWrap: "wrap",
   },
   timelineRow: {
     flexDirection: "row",
@@ -84,17 +164,14 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.08)",
   },
   time: {
     width: 58,
-    color: appColors.clear,
     fontSize: 13,
     fontWeight: "900",
   },
   timelineText: {
     flex: 1,
-    color: appColors.text,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",

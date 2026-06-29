@@ -1,28 +1,41 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { outfitImageAssets } from "../assets";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 type OutfitGridProps = {
   outfit: OutfitRecommendation;
+  maxItems?: number;
+  compact?: boolean;
 };
 
 const slotLabel: Record<string, string> = {
-  outer: "OUTER",
-  top: "TOP",
-  bottom: "BOTTOM",
-  shoes: "SHOES",
-  accessory: "ACCESSORY",
+  outer: "겉옷",
+  top: "상의",
+  bottom: "하의",
+  shoes: "신발",
+  accessory: "소품",
 };
 
-export function OutfitGrid({ outfit }: OutfitGridProps) {
+export function OutfitGrid({ outfit, maxItems, compact = false }: OutfitGridProps) {
+  const theme = useAppTheme();
+  const entries = Object.entries(outfit.items)
+    .filter(([, item]) => Boolean(item))
+    .slice(0, maxItems);
   return (
     <View style={styles.outfitGrid}>
-      {Object.entries(outfit.items).map(([slot, item]) =>
+      {entries.map(([slot, item]) =>
         item ? (
-          <View key={slot} style={styles.itemCell}>
-            <Text style={styles.itemSlot}>{slotLabel[slot] ?? slot.toUpperCase()}</Text>
-            <Text style={styles.itemName}>{item.name}</Text>
+          <View key={slot} style={[styles.itemCell, compact ? styles.itemCellCompact : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+            <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, { backgroundColor: theme.name === "light" ? "#F8FBFF" : "rgba(248,251,255,0.10)" }]}>
+              {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
+                <Image source={outfitImageAssets[item.imageUrl]} style={[styles.itemImage, compact ? styles.itemImageCompact : null]} resizeMode="contain" />
+              ) : null}
+            </View>
+            <Text style={[styles.itemSlot, { color: theme.clear }]}>{slotLabel[slot] ?? "아이템"}</Text>
+            <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
           </View>
         ) : null,
       )}
@@ -38,20 +51,36 @@ const styles = StyleSheet.create({
   },
   itemCell: {
     minWidth: "47%",
-    minHeight: 68,
-    justifyContent: "center",
-    gap: 4,
-    padding: spacing.md,
+    minHeight: 142,
+    gap: 7,
+    padding: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+  },
+  itemCellCompact: {
+    minHeight: 118,
+  },
+  imageWell: {
+    height: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+  },
+  imageWellCompact: {
+    height: 56,
+  },
+  itemImage: {
+    width: "92%",
+    height: 64,
+  },
+  itemImageCompact: {
+    height: 52,
   },
   itemSlot: {
-    color: appColors.clear,
     fontSize: 10,
     fontWeight: "900",
   },
   itemName: {
-    color: appColors.text,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "800",

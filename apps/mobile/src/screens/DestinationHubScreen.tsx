@@ -1,219 +1,551 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { AppButton } from "../components/AppButton";
-import { AppScreen } from "../components/AppScreen";
-import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
+import React, { useMemo, useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { PlaceSearchResult } from "@weatheron/shared";
+import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
-const filters = [
-  { id: "all", label: "전체" },
-  { id: "saved", label: "저장" },
-  { id: "care", label: "케어 ON" },
-  { id: "category", label: "카테고리" },
-] as const;
+type FilterId = "all" | "sports" | "outdoor" | "season" | "culture";
+
+type DestinationCard = {
+  place: PlaceSearchResult;
+  filter: Exclude<FilterId, "all">;
+  image: number;
+  metric: string;
+  recommendation: string;
+  accent: "clear" | "warm";
+};
+
+const filters: { id: FilterId; label: string; icon: "pin" | "ball" | "mountain" | "snow" | "culture" }[] = [
+  { id: "all", label: "전체", icon: "pin" },
+  { id: "sports", label: "스포츠", icon: "ball" },
+  { id: "outdoor", label: "아웃도어", icon: "mountain" },
+  { id: "season", label: "계절", icon: "snow" },
+  { id: "culture", label: "문화", icon: "culture" },
+];
+
+const destinationCards: DestinationCard[] = [
+  {
+    place: {
+      id: "kr-jamsil-baseball-stadium",
+      name: "잠실종합운동장",
+      address: "서울 송파구 올림픽로 25",
+      category: "sports",
+      countryCode: "KR",
+      coordinate: { latitude: 37.5122, longitude: 127.0719 },
+      timezone: "Asia/Seoul",
+      provider: "fixture",
+    },
+    filter: "sports",
+    image: placeImageAssets.baseball,
+    metric: "경기 취소 확률 12%",
+    recommendation: "쿨링룩 추천",
+    accent: "clear",
+  },
+  {
+    place: {
+      id: "kr-bukhansan-national-park",
+      name: "북한산국립공원",
+      address: "서울 강북구 삼양로173길",
+      category: "mountain",
+      countryCode: "KR",
+      coordinate: { latitude: 37.6584, longitude: 126.977 },
+      timezone: "Asia/Seoul",
+      provider: "fixture",
+    },
+    filter: "outdoor",
+    image: placeImageAssets.mountain,
+    metric: "정상 낙뢰 위험",
+    recommendation: "오전 하산 권장",
+    accent: "warm",
+  },
+  {
+    place: {
+      id: "kr-haeundae-beach",
+      name: "해운대해수욕장",
+      address: "부산 해운대구 우동",
+      category: "beach",
+      countryCode: "KR",
+      coordinate: { latitude: 35.1587, longitude: 129.1604 },
+      timezone: "Asia/Seoul",
+      provider: "fixture",
+    },
+    filter: "season",
+    image: placeImageAssets.beach,
+    metric: "파도 보통",
+    recommendation: "래시가드 추천",
+    accent: "clear",
+  },
+];
 
 export function DestinationHubScreen({
-  state,
-  destinationSaved,
-  savedDestinations,
-  destinationCareEnabled,
   selectedDestinationPlace,
-  destinationHubFilter,
   onNavigate,
-  onRemoveSavedDestination,
   onSelectDestinationPlace,
-  onToggleSavedDestinationCare,
-  onSetDestinationHubFilter,
 }: P0ScreenProps) {
-  const care = state.destinationCare;
-  const destinations = savedDestinations.length
-    ? savedDestinations.map((destination) => ({ ...destination, saved: true }))
-    : [{ place: selectedDestinationPlace, careEnabled: destinationCareEnabled, savedAtLabel: "Guest 미리보기", saved: false }];
-  const filteredDestinations = destinations.filter((destination) =>
-    getFilterMatched(destinationHubFilter, destination.saved, destination.careEnabled, destination.place.category, selectedDestinationPlace.category),
+  const theme = useAppTheme();
+  const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+  const visibleDestinations = useMemo(
+    () => destinationCards.filter((card) => activeFilter === "all" || card.filter === activeFilter),
+    [activeFilter],
   );
 
+  const openDestination = (place: PlaceSearchResult) => {
+    onSelectDestinationPlace(place);
+    onNavigate("P2");
+  };
+
   return (
-    <AppScreen title="목적지 허브" subtitle="필터 리스트와 상세 상태를 한 화면에서 확인하는 P3 구조" badge="P3">
-      <Section title="필터" caption={`선택 필터 ${getFilterLabel(destinationHubFilter)} · 매칭 ${filteredDestinations.length}개`}>
+    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+
+        <View style={styles.statusBar}>
+          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
+          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
+        </View>
+
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.text }]}>목적지</Text>
+          <Text style={[styles.subtitle, { color: theme.subtle }]}>저장한 목적지별 자동 케어와 준비 가이드</Text>
+        </View>
+
         <View style={styles.filterRow}>
           {filters.map((filter) => {
-            const active = destinationHubFilter === filter.id;
+            const active = activeFilter === filter.id;
             return (
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 key={filter.id}
-                onPress={() => onSetDestinationHubFilter(filter.id)}
-                style={[styles.filterButton, active ? styles.filterButtonActive : null]}
+                onPress={() => setActiveFilter(filter.id)}
+                style={[styles.filterButton, { backgroundColor: active ? theme.gold : theme.cardStrong, borderColor: active ? theme.gold : theme.border }]}
               >
-                <Text style={[styles.filterText, active ? styles.filterTextActive : null]}>{filter.label}</Text>
+                <FilterIcon type={filter.icon} color={active ? theme.onAccent : theme.subtle} />
+                <Text style={[styles.filterText, { color: active ? theme.onAccent : theme.text }]}>{filter.label}</Text>
               </Pressable>
             );
           })}
         </View>
-        <View style={styles.filterRow}>
-          <StatusPill label={destinationSaved ? "저장됨" : "Guest"} tone={destinationSaved ? "clear" : "warm"} />
-          <StatusPill label={destinationCareEnabled ? "케어 ON" : "케어 OFF"} tone={destinationCareEnabled ? "clear" : "warm"} />
-          <StatusPill label={selectedDestinationPlace.category.toUpperCase()} tone="sky" />
-          <StatusPill label={selectedDestinationPlace.provider.toUpperCase()} tone="gold" />
-        </View>
-      </Section>
 
-      <Section title="상세 상태" caption={care.nextAlertText}>
-        {filteredDestinations.length ? (
-          <View style={styles.list}>
-            {filteredDestinations.map((destination) => {
-              const active = selectedDestinationPlace.id === destination.place.id;
-              return (
-                <View
-                  key={destination.place.id}
-                  style={[styles.card, active ? styles.cardActive : null]}
-                >
-                  <Pressable accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => onSelectDestinationPlace(destination.place)} style={styles.selectArea}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.copy}>
-                        <Text style={styles.name}>{destination.place.name}</Text>
-                        <Text style={styles.meta}>
-                          {destination.place.address} · {destination.saved ? "저장 목적지" : "Guest 미리보기"}
-                        </Text>
-                      </View>
-                      <StatusPill label={destination.careEnabled ? "케어 ON" : "케어 OFF"} tone={destination.careEnabled ? "clear" : "warm"} />
-                    </View>
-                    {active ? (
-                      <Text style={styles.meta}>
-                        목적지 체감 {care.destinationWeather.current.feelsLikeC}도 · 강수확률 {care.destinationWeather.current.rainProbabilityPct}% · 바람{" "}
-                        {care.destinationWeather.current.windMs.toFixed(1)}m/s
-                      </Text>
-                    ) : null}
-                  </Pressable>
-                  <View style={styles.filterRow}>
-                    <StatusPill label={destination.place.category.toUpperCase()} tone="sky" />
-                    <StatusPill label={destination.place.provider.toUpperCase()} tone="gold" />
-                    <StatusPill label={destination.savedAtLabel} tone="clear" />
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
+          <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
+          <Text style={[styles.stateText, { color: theme.text }]}>카테고리별 날씨 리스크와 코디·신발·준비물을 목적지 카드에서 바로 확인해요</Text>
+        </View>
+
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
+          <View style={styles.stateHeader}>
+            <View style={styles.stateCopy}>
+              <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
+              <Text style={[styles.stateText, { color: theme.text }]}>저장 목적지 기준으로 자동 케어 후보를 보여줌</Text>
+            </View>
+            <View style={[styles.countPill, { backgroundColor: "#10243F" }]}>
+              <Text style={[styles.countText, { color: theme.gold }]}>{visibleDestinations.length}곳</Text>
+            </View>
+            <Pressable accessibilityRole="button" onPress={() => onNavigate("P1")} style={[styles.addPill, { backgroundColor: theme.gold }]}>
+              <Text style={[styles.addPillText, { color: theme.onAccent }]}>추가</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.destinationList}>
+          {visibleDestinations.length ? (
+            visibleDestinations.map((card) => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedDestinationPlace.id === card.place.id }}
+                key={card.place.id}
+                onPress={() => openDestination(card.place)}
+                style={[
+                  styles.destinationCard,
+                  {
+                    backgroundColor: theme.cardStrong,
+                    borderColor: selectedDestinationPlace.id === card.place.id ? theme.clear : "transparent",
+                    borderLeftColor: card.accent === "warm" ? theme.warm : theme.clear,
+                  },
+                ]}
+              >
+                <Image source={card.image} style={styles.destinationImage} resizeMode="cover" />
+                <View style={styles.destinationCopy}>
+                  <View style={styles.destinationTitleRow}>
+                    <CategoryMiniIcon category={card.place.category} color={card.accent === "warm" ? theme.warm : theme.clear} />
+                    <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{card.place.name}</Text>
                   </View>
-                  {destination.saved ? (
-                    <View style={styles.actions}>
-                      <AppButton
-                        label={destination.careEnabled ? "케어 끄기" : "케어 켜기"}
-                        onPress={() => {
-                          onSelectDestinationPlace(destination.place);
-                          onToggleSavedDestinationCare(destination.place.id);
-                        }}
-                        tone="secondary"
-                      />
-                      <AppButton label="삭제" onPress={() => onRemoveSavedDestination(destination.place.id)} tone="warning" />
-                    </View>
-                  ) : null}
+                  <Text style={[styles.destinationMeta, { color: card.accent === "warm" ? theme.warm : theme.clear }]} numberOfLines={1}>
+                    {card.metric} · {card.recommendation}
+                  </Text>
                 </View>
-              );
-            })}
-            <View style={styles.actions}>
-              <AppButton label="상세 케어" onPress={() => onNavigate("G2")} />
-              <AppButton label="준비 가이드" onPress={() => onNavigate("P2")} tone="secondary" />
+                <Chevron color={theme.subtle} />
+              </Pressable>
+            ))
+          ) : (
+            <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+              <Text style={[styles.destinationName, { color: theme.text }]}>매칭 목적지 없음</Text>
+              <Text style={[styles.destinationMeta, { color: theme.subtle }]}>목적지를 추가하거나 전체 필터로 돌아가요</Text>
             </View>
-          </View>
-        ) : (
-          <View style={styles.card}>
-            <Text style={styles.name}>매칭 목적지 없음</Text>
-            <Text style={styles.meta}>저장 필터는 계정 연결 후 저장된 목적지만 표시함</Text>
-            <View style={styles.actions}>
-              <AppButton label="목적지 추가" onPress={() => onNavigate("P1")} />
-              <AppButton label="목록" onPress={() => onNavigate("G1")} tone="secondary" />
-            </View>
-          </View>
-        )}
-      </Section>
-    </AppScreen>
+          )}
+        </View>
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </View>
   );
 }
 
-function getFilterMatched(
-  filter: P0ScreenProps["destinationHubFilter"],
-  saved: boolean,
-  careOn: boolean,
-  category: string,
-  selectedCategory: string,
-): boolean {
-  if (filter === "saved") return saved;
-  if (filter === "care") return careOn;
-  if (filter === "category") return category === selectedCategory;
-  return true;
+function FilterIcon({ type, color }: { type: (typeof filters)[number]["icon"]; color: string }) {
+  if (type === "pin") return <PinIcon color={color} />;
+  if (type === "mountain") return <MountainIcon color={color} />;
+  if (type === "snow") return <SnowIcon color={color} />;
+  if (type === "culture") return <CultureIcon color={color} />;
+  return <BallIcon color={color} />;
 }
 
-function getFilterLabel(filter: P0ScreenProps["destinationHubFilter"]): string {
-  const item = filters.find((candidate) => candidate.id === filter);
-  return item?.label ?? "전체";
+function CategoryMiniIcon({ category, color }: { category: string; color: string }) {
+  if (category === "mountain") return <MountainIcon color={color} />;
+  if (category === "beach") return <WaveIcon color={color} />;
+  return <BallIcon color={color} />;
+}
+
+function PinIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.pinOuter, { borderColor: color }]} />
+      <View style={[styles.pinDot, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function BallIcon({ color }: { color: string }) {
+  return (
+    <View style={[styles.roundIcon, { borderColor: color }]} accessibilityElementsHidden>
+      <View style={[styles.ballLine, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function MountainIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.mountainLeft, { borderBottomColor: color }]} />
+      <View style={[styles.mountainRight, { borderBottomColor: color }]} />
+    </View>
+  );
+}
+
+function SnowIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.snowLineV, { backgroundColor: color }]} />
+      <View style={[styles.snowLineH, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function CultureIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.cultureColumn, { backgroundColor: color }]} />
+      <View style={[styles.cultureColumn, { backgroundColor: color }]} />
+      <View style={[styles.cultureColumn, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function WaveIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.waveOne, { backgroundColor: color }]} />
+      <View style={[styles.waveTwo, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function Chevron({ color }: { color: string }) {
+  return (
+    <View style={styles.chevron} accessibilityElementsHidden>
+      <View style={[styles.chevronTop, { backgroundColor: color }]} />
+      <View style={[styles.chevronBottom, { backgroundColor: color }]} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
+  shell: {
+    flex: 1,
   },
-  filterButton: {
-    minHeight: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+  scroll: {
+    flex: 1,
   },
-  filterButtonActive: {
-    borderColor: appColors.clear,
-    backgroundColor: "rgba(103,232,208,0.14)",
-  },
-  filterText: {
-    color: appColors.muted,
-    fontSize: 12,
-    fontWeight: "900",
-  },
-  filterTextActive: {
-    color: appColors.clear,
-  },
-  card: {
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  selectArea: {
+  content: {
     gap: spacing.md,
+    minHeight: "100%",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 118,
   },
-  cardActive: {
-    borderColor: appColors.clear,
-    backgroundColor: "rgba(103,232,208,0.12)",
+  atmosphere: {
+    position: "absolute",
+    left: -32,
+    right: -32,
+    top: 186,
+    height: 520,
+    opacity: 0.34,
+    borderRadius: 76,
   },
-  cardHeader: {
+  statusBar: {
+    minHeight: 23,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
-  copy: {
-    flex: 1,
+  statusText: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+    letterSpacing: 0,
   },
-  list: {
-    gap: spacing.sm,
+  header: {
+    gap: 8,
+    paddingTop: 16,
   },
-  name: {
-    color: appColors.text,
-    fontSize: 18,
+  title: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  subtitle: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  filterRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginHorizontal: -1,
+  },
+  filterButton: {
+    minHeight: 35,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 7,
+  },
+  filterText: {
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
-  meta: {
-    color: appColors.muted,
-    fontSize: 13,
-    lineHeight: 19,
+  stateCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderLeftWidth: 2,
+    borderWidth: 1,
+    borderRadius: radius.lg,
   },
-  actions: {
+  stateHeader: {
     flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
+  },
+  stateCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  eyebrow: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 1.7,
+  },
+  stateText: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+  countPill: {
+    minHeight: 32,
+    minWidth: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+  },
+  countText: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  addPill: {
+    minHeight: 34,
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    paddingHorizontal: 11,
+  },
+  addPillText: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  destinationList: {
+    gap: spacing.md,
+  },
+  destinationCard: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderLeftWidth: 2,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: 12,
+  },
+  destinationImage: {
+    width: 74,
+    height: 58,
+    borderRadius: radius.sm,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  destinationCopy: {
+    flex: 1,
+    gap: 8,
+  },
+  destinationTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  destinationName: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  destinationMeta: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  emptyCard: {
+    gap: 6,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  iconFrame: {
+    width: 12,
+    height: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pinOuter: {
+    width: 11,
+    height: 11,
+    borderWidth: 1.4,
+    borderRadius: 999,
+  },
+  pinDot: {
+    position: "absolute",
+    width: 3,
+    height: 3,
+    borderRadius: 999,
+  },
+  roundIcon: {
+    width: 12,
+    height: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.4,
+    borderRadius: 999,
+  },
+  ballLine: {
+    width: 1.4,
+    height: 8,
+    borderRadius: 2,
+  },
+  mountainLeft: {
+    position: "absolute",
+    left: 1,
+    bottom: 2,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderBottomWidth: 9,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+  },
+  mountainRight: {
+    position: "absolute",
+    right: 1,
+    bottom: 2,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 7,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+  },
+  snowLineV: {
+    position: "absolute",
+    width: 1.4,
+    height: 13,
+    borderRadius: 2,
+  },
+  snowLineH: {
+    position: "absolute",
+    width: 13,
+    height: 1.4,
+    borderRadius: 2,
+  },
+  cultureColumn: {
+    width: 2,
+    height: 11,
+    borderRadius: 2,
+    marginHorizontal: 1,
+  },
+  waveOne: {
+    position: "absolute",
+    top: 4,
+    width: 12,
+    height: 2,
+    borderRadius: 2,
+  },
+  waveTwo: {
+    position: "absolute",
+    top: 9,
+    width: 12,
+    height: 2,
+    borderRadius: 2,
+  },
+  chevron: {
+    width: 14,
+    height: 18,
+  },
+  chevronTop: {
+    position: "absolute",
+    right: 2,
+    top: 5,
+    width: 8,
+    height: 1.6,
+    borderRadius: 2,
+    transform: [{ rotate: "45deg" }],
+  },
+  chevronBottom: {
+    position: "absolute",
+    right: 2,
+    top: 10,
+    width: 8,
+    height: 1.6,
+    borderRadius: 2,
+    transform: [{ rotate: "-45deg" }],
+  },
+  bottomSpacer: {
+    height: 18,
   },
 });

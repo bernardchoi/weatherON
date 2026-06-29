@@ -5,7 +5,7 @@ const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [path.resolve(workspaceRoot, "packages")];
+config.watchFolders = [path.resolve(workspaceRoot, "packages"), path.resolve(workspaceRoot, "assets")];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),

@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 type AppButtonProps = {
   label: string;
@@ -9,9 +10,17 @@ type AppButtonProps = {
 };
 
 export function AppButton({ label, onPress, tone = "primary" }: AppButtonProps) {
+  const theme = useAppTheme();
+  const backgroundColor = tone === "primary" ? theme.clear : tone === "warning" ? theme.gold : theme.cardMuted;
+  const borderColor = tone === "primary" ? theme.clear : theme.border;
+  const color = tone === "primary" || tone === "warning" ? theme.onAccent : theme.text;
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.button, styles[tone]]}>
-      <Text style={[styles.label, tone === "primary" ? styles.primaryLabel : styles.secondaryLabel]}>{label}</Text>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.button, { backgroundColor, borderColor, opacity: pressed ? 0.86 : 1 }]}
+    >
+      <Text style={[styles.label, { color }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -22,27 +31,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.sm,
-  },
-  primary: {
-    backgroundColor: appColors.clear,
-  },
-  secondary: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: appColors.border,
-  },
-  warning: {
-    backgroundColor: appColors.gold,
   },
   label: {
     fontSize: 14,
     fontWeight: "900",
-  },
-  primaryLabel: {
-    color: appColors.navy,
-  },
-  secondaryLabel: {
-    color: appColors.text,
   },
 });

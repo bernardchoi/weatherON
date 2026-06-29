@@ -141,8 +141,8 @@ export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback")
 }
 
 function getProviderMessage(status: WeatherProviderStatus): string {
-  if (status === "ready") return "날씨 API 정규화 완료";
-  if (status === "stale") return "최근 캐시 기준 추천";
+  if (status === "ready") return "최신 예보 기준으로 추천 준비 완료";
+  if (status === "stale") return "최근 예보 기준 추천";
   if (status === "fallback") return "기본 위치 기준 추천";
   return "날씨 갱신 실패. 최근 기준 추천";
 }

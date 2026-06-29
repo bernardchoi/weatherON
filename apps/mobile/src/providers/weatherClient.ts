@@ -5,6 +5,7 @@ import {
   DEFAULT_OPEN_METEO_FORECAST_URL,
   DEFAULT_WEATHER_TIMEOUT_MS,
   getWeatherRuntimeConfig,
+  isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
 
 export type FetchKmaForecastParams = {
@@ -142,6 +143,9 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
 export function createRuntimeWeatherClient(): WeatherClient {
   const config = getWeatherRuntimeConfig();
   if (config.clientMode === "proxy" && config.weatherApiBaseUrl) {
+    if (isLocalWeatherProxyUrl(config.weatherApiBaseUrl) && !config.allowLocalProxy) {
+      return fixtureWeatherClient;
+    }
     return createProxyWeatherClient({
       weatherApiBaseUrl: config.weatherApiBaseUrl,
       timeoutMs: config.timeoutMs,

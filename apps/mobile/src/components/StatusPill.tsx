@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type StatusPillProps = {
   label: string;
@@ -8,32 +9,42 @@ type StatusPillProps = {
 };
 
 export function StatusPill({ label, tone = "clear" }: StatusPillProps) {
+  const theme = useAppTheme();
+  const color = getToneColor(theme, tone);
   return (
-    <View style={[styles.pill, { borderColor: toneColor[tone] }]}>
-      <Text style={[styles.label, { color: toneColor[tone] }]}>{label}</Text>
+    <View style={[styles.pill, { borderColor: `${color}55`, backgroundColor: theme.cardMuted }]}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
+      <Text style={[styles.label, { color }]}>{label}</Text>
     </View>
   );
 }
 
-const toneColor = {
-  clear: appColors.clear,
-  gold: appColors.gold,
-  sky: appColors.sky,
-  warm: appColors.warm,
-};
+function getToneColor(theme: AppTheme, tone: NonNullable<StatusPillProps["tone"]>) {
+  if (tone === "gold") return theme.gold;
+  if (tone === "sky") return theme.sky;
+  if (tone === "warm") return theme.warm;
+  return theme.clear;
+}
 
 const styles = StyleSheet.create({
   pill: {
-    minHeight: 30,
+    minHeight: 32,
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   label: {
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "900",
   },
 });

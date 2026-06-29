@@ -5,6 +5,9 @@ export type WeatherSignals = {
   minTempC: number;
   maxTempC: number;
   tempSwingC: number;
+  maxRainProbabilityPct: number;
+  maxPrecipitationMm: number;
+  maxWindMs: number;
   isRainy: boolean;
   isHeavyRain: boolean;
   isLongRain: boolean;
@@ -34,6 +37,9 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
     minTempC,
     maxTempC,
     tempSwingC,
+    maxRainProbabilityPct: maxRainProbability,
+    maxPrecipitationMm: maxPrecipitation,
+    maxWindMs: maxWind,
     isRainy,
     isHeavyRain,
     isLongRain: rainyHours.length >= 3,

@@ -1,11 +1,14 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
+import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
 
 const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
@@ -24,6 +27,7 @@ export function WardrobeScreen({
   onSetWardrobeItemOwned,
   accountLinked,
 }: P0ScreenProps) {
+  const theme = useAppTheme();
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
@@ -36,37 +40,46 @@ export function WardrobeScreen({
   });
 
   return (
-    <AppScreen title="옷장" subtitle="프리셋 기반 미리보기와 보유 반영으로 코디 추천이 바뀜" badge="C2">
-      <Section title="필터" caption={`${filteredItems.length}개 항목`}
-      >
-        <Section title="카테고리" caption="preset/category 기반 필터">
-          <FilterRow
-            values={categories}
-            activeValue={categoryFilter}
-            onSelect={(value) => setCategoryFilter(value as WardrobeCategoryFilter)}
-            renderLabel={(value) => (value === "all" ? "전체" : value)}
-          />
-        </Section>
-        <Section title="계절" caption="spring/summer/fall/winter">
+    <AppScreen title="내 옷장" subtitle="보유 옷과 추천 프리셋을 한곳에서 관리" badge="옷장">
+      <View style={styles.topBar}>
+        <FilterRow
+          values={categories}
+          activeValue={categoryFilter}
+          onSelect={(value) => setCategoryFilter(value as WardrobeCategoryFilter)}
+          renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
+        />
+      </View>
+
+      <Section title="옷장" caption={accountLinked ? "저장 상태 계정 연결됨" : "저장 시 계정 연결 필요"} accent="gold">
+        <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.gold }]}>옷장 확인 가능 · 저장 시 계정 연결</Text>
+            <Text style={[styles.itemMeta, { color: theme.muted }]}>추천으로 복귀하거나 프리셋을 내 옷장에 추가 가능</Text>
+          </View>
+          <AppButton label="보기" onPress={() => onNavigate("C3")} tone="secondary" />
+        </View>
+        <View style={styles.heroActions}>
+          <AppButton label="추천으로 복귀" onPress={() => onNavigate("C1")} tone="secondary" />
+          <AppButton label="옷 추가" onPress={() => onNavigate("C3")} tone="warning" />
+        </View>
+      </Section>
+
+      <Section title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
+        <View style={styles.filterStack}>
           <FilterRow
             values={seasons}
             activeValue={seasonFilter}
             onSelect={(value) => setSeasonFilter(value as WardrobeSeasonFilter)}
-            renderLabel={(value) => (value === "all" ? "전체" : value)}
+            renderLabel={(value) => (value === "all" ? "계절 전체" : formatOutfitTags([value]))}
           />
-        </Section>
-        <Section title="목적" caption={selectedStyles.join(" · ")}>
           <FilterRow
             values={purposes}
             activeValue={purposeFilter}
             onSelect={(value) => setPurposeFilter(value as WardrobePurposeFilter)}
-            renderLabel={(value) => (value === "all" ? "전체" : value)}
+            renderLabel={(value) => (value === "all" ? "목적 전체" : getOutfitTagLabel(value))}
           />
-        </Section>
-      </Section>
-
-      <Section title="프리셋 목록" caption={accountLinked ? "계정 연결 시 저장 상태 유지" : "Guest는 현재 기기 기준 미리보기 저장"}>
-        <View style={styles.list}>
+        </View>
+        <View style={styles.grid}>
           {filteredItems.map((item) => (
             <WardrobeItemCard
               key={item.id}
@@ -76,10 +89,14 @@ export function WardrobeScreen({
               badge={item.owned ? "내 옷장" : "프리셋"}
             />
           ))}
+          <Pressable accessibilityRole="button" onPress={() => onNavigate("C3")} style={[styles.addTile, { borderColor: theme.border }]}>
+            <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
+            <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
+          </Pressable>
         </View>
       </Section>
 
-      <Section title="빠른 이동" caption="옷장 반영은 C1/C4 추천에도 반영됨">
+      <Section title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
         <View style={styles.actions}>
           <AppButton label="코디 보기" onPress={() => onNavigate("C1")} />
           <AppButton label="코디 상세" onPress={() => onNavigate("C4")} tone="secondary" />
@@ -100,19 +117,20 @@ function WardrobeItemCard({
   onToggleOwned: () => void;
   badge: string;
 }) {
+  const theme = useAppTheme();
+  const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.itemName}>{item.name}</Text>
+    <View style={[styles.card, { backgroundColor: theme.cardMuted, borderColor: item.owned ? theme.clear : theme.border }]}>
+      <Pressable accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
+        <View style={[styles.imageWell, { backgroundColor: theme.cardStrong }]}>
+          {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
+        </View>
+        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
+        <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
+      </Pressable>
+      <View style={styles.cardFooter}>
         <StatusPill label={badge} tone={item.owned ? "clear" : "sky"} />
-      </View>
-      <Text style={styles.itemMeta}>
-        {item.category} · 시즌 {item.seasons.join(", ")} · 목적 {item.purposes.join(", ")}
-      </Text>
-      <Text style={styles.itemMeta}>태그 {item.weatherTags.join(", ")}</Text>
-      <View style={styles.actions}>
-        <AppButton label="상세" onPress={onOpen} tone="secondary" />
-        <AppButton label={item.owned ? "보유 해제" : "옷장 추가"} onPress={onToggleOwned} />
+        <AppButton label={item.owned ? "해제" : "추가"} onPress={onToggleOwned} tone="secondary" />
       </View>
     </View>
   );
@@ -129,6 +147,7 @@ function FilterRow({
   onSelect: (value: string) => void;
   renderLabel: (value: string) => string;
 }) {
+  const theme = useAppTheme();
   return (
     <View style={styles.filterRow}>
       {values.map((value) => (
@@ -137,9 +156,15 @@ function FilterRow({
           accessibilityRole="button"
           accessibilityState={{ selected: activeValue === value }}
           onPress={() => onSelect(value)}
-          style={[styles.filterButton, activeValue === value ? styles.filterButtonActive : null]}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: activeValue === value ? theme.gold : theme.cardMuted,
+              borderColor: activeValue === value ? theme.gold : theme.border,
+            },
+          ]}
         >
-          <Text style={[styles.filterText, activeValue === value ? styles.filterTextActive : null]}>{renderLabel(value)}</Text>
+          <Text style={[styles.filterText, { color: activeValue === value ? theme.onAccent : theme.muted }]}>{renderLabel(value)}</Text>
         </Pressable>
       ))}
     </View>
@@ -147,36 +172,94 @@ function FilterRow({
 }
 
 const styles = StyleSheet.create({
-  list: {
+  topBar: {
     gap: spacing.sm,
   },
-  card: {
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  cardHeader: {
+  infoCard: {
+    minHeight: 88,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  copy: {
+    flex: 1,
+    gap: 5,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  heroActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  filterStack: {
+    gap: spacing.sm,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  card: {
+    width: "31.5%",
+    minHeight: 142,
+    gap: spacing.xs,
+    padding: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  cardMain: {
+    gap: spacing.xs,
+  },
+  imageWell: {
+    height: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+  },
+  itemImage: {
+    width: "92%",
+    height: "92%",
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
   },
   itemName: {
-    color: appColors.text,
-    fontSize: 16,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
-    flex: 1,
   },
   itemMeta: {
-    color: appColors.muted,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
+  },
+  addTile: {
+    width: "31.5%",
+    minHeight: 142,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+  },
+  addMark: {
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: "700",
   },
   actions: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   filterRow: {
@@ -189,21 +272,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
-  filterButtonActive: {
-    borderColor: appColors.clear,
-    backgroundColor: "rgba(103,232,208,0.14)",
   },
   filterText: {
-    color: appColors.muted,
     fontSize: 12,
     fontWeight: "900",
-  },
-  filterTextActive: {
-    color: appColors.clear,
   },
 });

@@ -1,5 +1,5 @@
 import { searchFixturePlaces, type PlaceSearchResult } from "@weatheron/shared";
-import { DEFAULT_WEATHER_TIMEOUT_MS, getWeatherRuntimeConfig } from "../config/weatherEnv";
+import { DEFAULT_WEATHER_TIMEOUT_MS, getWeatherRuntimeConfig, isLocalWeatherProxyUrl } from "../config/weatherEnv";
 
 export type SearchPlacesParams = {
   query: string;
@@ -38,6 +38,7 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
 export function createRuntimePlaceSearchClient(): PlaceSearchClient {
   const config = getWeatherRuntimeConfig();
   if (config.clientMode === "proxy" && config.weatherApiBaseUrl) {
+    if (isLocalWeatherProxyUrl(config.weatherApiBaseUrl) && !config.allowLocalProxy) return fixturePlaceSearchClient;
     return createProxyPlaceSearchClient({
       apiBaseUrl: config.weatherApiBaseUrl,
       timeoutMs: config.timeoutMs,

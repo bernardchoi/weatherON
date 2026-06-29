@@ -12,12 +12,15 @@ import type {
   PolicyDocumentType,
   AdConsentMode,
   TemperatureUnit,
+  WeightUnit,
+  DistanceUnit,
   ThemeMode,
   StyleGender,
   AgeBand,
   FitPreference,
   SmartCareScenario,
   PermissionReturnRouteId,
+  AccountGateReturnRouteId,
   DestinationHubFilter,
   GateReason,
   NotificationHistoryItem,
@@ -51,6 +54,8 @@ export type P0ScreenProps = {
   selectedPolicyDocument: PolicyDocumentType;
   adConsentMode: AdConsentMode;
   temperatureUnit: TemperatureUnit;
+  weightUnit: WeightUnit;
+  distanceUnit: DistanceUnit;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
   styleProfileSaved: boolean;
@@ -77,6 +82,8 @@ export type P0ScreenProps = {
   onReturnFromPolicyDocument: () => void;
   onSetAdConsentMode: (mode: AdConsentMode) => void;
   onSetTemperatureUnit: (unit: TemperatureUnit) => void;
+  onSetWeightUnit: (unit: WeightUnit) => void;
+  onSetDistanceUnit: (unit: DistanceUnit) => void;
   onSetThemeMode: (mode: ThemeMode) => void;
   onToggleReducedTransparency: () => void;
   onSetStyleGender: (gender: StyleGender) => void;
@@ -95,6 +102,7 @@ export type P0ScreenProps = {
   onSetWeatherProviderMode: (mode: WeatherProviderMode) => void;
   onSetWeatherLocationMode: (mode: WeatherLocationMode) => void;
   onRequestCurrentLocation: () => void;
+  onSelectWeatherLocation: (place: PlaceSearchResult) => void;
   onSaveDestination: (returnTo?: P0RouteId) => void;
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
@@ -111,7 +119,7 @@ export type P0ScreenProps = {
   onEditNotificationCondition: (id: string, route: P0RouteId) => void;
   onOpenNotificationDeepLink: (id: string, route: P0RouteId) => void;
   onRefreshWeather: () => void;
-  onRequireAccount: (reason: GateReason, returnTo: P0RouteId) => void;
+  onRequireAccount: (reason: GateReason, returnTo: AccountGateReturnRouteId) => void;
   onRequestPermissionGate: (reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => void;
   onSignOutAccount: () => void;
 };

@@ -1,36 +1,68 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { onboardingAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
+
+const recommendationLabels = ["회사", "학교", "공항", "숙소"];
 
 export function OnboardingDestinationScreen({ selectedDestinationPlace, savedDestinations, onSaveDestination, onNavigate, onCompleteOnboarding }: P0ScreenProps) {
+  const theme = useAppTheme();
   const saved = savedDestinations.some((item) => item.place.id === selectedDestinationPlace.id);
 
   return (
-    <AppScreen title="목적지 등록" subtitle="선택 설정. 건너뛰어도 Mode A 자동 케어는 계속 작동" badge="O6">
-      <Section title="현재 후보" caption="P1 장소 검색에서 같은 목적지 상태를 공유">
-        <View style={styles.destinationCard}>
-          <View style={styles.copy}>
-            <Text style={styles.title}>{selectedDestinationPlace.name}</Text>
-            <Text style={styles.body}>{selectedDestinationPlace.address} · {selectedDestinationPlace.provider.toUpperCase()}</Text>
-          </View>
-          <StatusPill label={saved ? "저장됨" : "선택"} tone={saved ? "clear" : "gold"} />
+    <AppScreen title="자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요" subtitle="등록하면 날씨·출발·신발 알림을 이동 상황에 맞춰 받아볼 수 있음" badge="3 / 3">
+      <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
+        <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
+      </View>
+
+      <View style={[styles.heroFrame, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Image source={onboardingAssets.destinationCare} style={styles.heroImage} resizeMode="cover" />
+      </View>
+
+      <View style={styles.benefitRow}>
+        <StatusPill label="목적지 날씨 비교" tone="sky" />
+        <StatusPill label="출발 시각" tone="gold" />
+        <StatusPill label="신발·우산 알림" tone="clear" />
+      </View>
+
+      <View style={[styles.searchBox, { backgroundColor: theme.cardMuted }]}>
+        <Text style={[styles.searchText, { color: theme.subtle }]}>회사, 학교, 공항, 숙소 검색</Text>
+      </View>
+
+      <Section title="추천 라벨" caption="자주 쓰는 목적지 유형" accent="sky">
+        <View style={styles.labelRow}>
+          {recommendationLabels.map((item) => (
+            <View key={item} style={[styles.labelChip, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.labelText, { color: theme.text }]}>{item}</Text>
+            </View>
+          ))}
         </View>
       </Section>
 
-      <Section title="목적지 케어" caption="등록 시 G1/G2/P3와 같은 저장 목록으로 연결">
-        <Text style={styles.body}>목적지 날씨 비교, 출발 전 급변 알림, 준비 가이드가 활성화됨</Text>
+      <Section title="현재 후보" caption="장소 검색에서 같은 목적지 상태를 공유" accent="clear">
+        <View style={[styles.destinationCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.text }]}>{selectedDestinationPlace.name}</Text>
+            <Text style={[styles.body, { color: theme.muted }]}>{selectedDestinationPlace.address}</Text>
+          </View>
+          <StatusPill label={saved ? "저장됨" : "선택"} tone={saved ? "clear" : "gold"} />
+        </View>
+        <View style={[styles.noticeBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <Text style={[styles.noticeText, { color: theme.muted }]}>목적지를 선택하면 더 정확하게 시작할 수 있음</Text>
+        </View>
         <View style={styles.actions}>
-          <AppButton label={saved ? "G1에서 보기" : "목적지 등록"} onPress={() => (saved ? onNavigate("G1") : onSaveDestination("G1"))} />
+          <AppButton label={saved ? "목적지 목록 보기" : "목적지 등록하고 시작"} onPress={() => (saved ? onNavigate("G1") : onSaveDestination("G1"))} tone="warning" />
           <AppButton label="장소 검색" onPress={() => onNavigate("P1")} tone="secondary" />
         </View>
       </Section>
 
-      <Section title="건너뛰기" caption="목적지는 MY나 출발 탭에서 나중에 추가 가능">
+      <Section title="나중에 설정" caption="목적지는 MY나 목적지 탭에서 나중에 추가 가능" accent="gold">
         <View style={styles.actions}>
           <AppButton label="홈으로 완료" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
           <AppButton label="목적지 목록" onPress={() => onNavigate("G1")} tone="secondary" />
@@ -41,6 +73,55 @@ export function OnboardingDestinationScreen({ selectedDestinationPlace, savedDes
 }
 
 const styles = StyleSheet.create({
+  progressTrack: {
+    height: 4,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+  },
+  progressFill: {
+    width: "100%",
+    height: "100%",
+  },
+  heroFrame: {
+    height: 150,
+    overflow: "hidden",
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+  benefitRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  searchBox: {
+    minHeight: 48,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+  },
+  searchText: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  labelRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  labelChip: {
+    minHeight: 36,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+  },
+  labelText: {
+    fontSize: 13,
+    fontWeight: "900",
+  },
   destinationCard: {
     minHeight: 82,
     flexDirection: "row",
@@ -49,21 +130,34 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
   },
   copy: {
     flex: 1,
     gap: 5,
   },
   title: {
-    color: appColors.text,
     fontSize: 16,
     fontWeight: "900",
   },
   body: {
-    color: appColors.muted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  noticeBox: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    paddingHorizontal: spacing.md,
+  },
+  noticeText: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800",
   },
   actions: {
     gap: spacing.sm,

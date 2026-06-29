@@ -1,7 +1,7 @@
 # WeatherON Android Preview APK QA 체크리스트
 
 > 목적: `npm run build:android:preview`로 생성한 Android APK를 실제 기기 또는 에뮬레이터에서 검증하는 기준을 유지한다.
-> 기준일: 2026-06-27
+> 기준일: 2026-06-28
 
 ---
 
@@ -11,6 +11,8 @@
 |---|---|
 | 빌드 산출물 | EAS `preview` profile APK |
 | 빌드 명령 | `npm run build:android:preview` |
+| 비대기 빌드 | `npm run build:android:preview:no-wait` |
+| 빌드 상태 확인 | `npm run check:eas-build-status -- <eas-build-id>` |
 | 사전 로컬 게이트 | `npm run check:android-build-ready` |
 | 설치 대상 | Android 실제 기기 우선, 필요 시 에뮬레이터 |
 | 네트워크 | Wi-Fi/LTE 각각 최소 1회 |
@@ -22,14 +24,18 @@
 
 ```bash
 npm run check:android-build-ready
+npm run check:android-product-quality
 npm run check:eas-login-state
 npm run build:android:preview
+npm run check:eas-build-status -- <eas-build-id>
 ```
 
 확인 기준:
 - `check:android-build-ready`가 통과해야 한다.
+- `check:android-product-quality`가 내부 코드/개발 문구 노출을 차단해야 한다.
 - `check:eas-login-state`가 Expo 계정명을 반환해야 한다.
 - `build:android:preview`가 APK 다운로드 링크를 반환해야 한다.
+- `build:android:preview:no-wait`로 시작한 경우 `check:eas-build-status`가 `FINISHED`를 반환해야 APK QA로 넘어간다.
 
 ---
 
@@ -37,12 +43,12 @@ npm run build:android:preview
 
 | 순서 | 항목 | 기대 결과 | 상태 |
 |---|---|---|---|
-| A1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 미검증 |
-| A2 | 첫 실행 | 앱 크래시 없음 | 미검증 |
-| A3 | 앱 아이콘 | WeatherON 아이콘 정상 표시 | 미검증 |
+| A1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 통과 |
+| A2 | 첫 실행 | 앱 크래시 없음 | 통과 |
+| A3 | 앱 아이콘 | WeatherON 아이콘 정상 표시 | 실기기 확인 필요 |
 | A4 | 스플래시 | 배경색/아이콘 깨짐 없음 | 미검증 |
 | A5 | 다크/라이트 모드 | 텍스트 대비와 주요 버튼 정상 | 미검증 |
-| A6 | 앱 재시작 | 이전 저장 상태 유지 | 미검증 |
+| A6 | 앱 재시작 | 온보딩/목적지/옷장/권한 상태 유지 | 재빌드 후 검증 필요 |
 
 ---
 
@@ -66,7 +72,7 @@ npm run build:android:preview
 
 | 항목 | 체크 기준 | 상태 |
 |---|---|---|
-| 위치 권한 허용 | 현재 위치 날씨 갱신 또는 fallback 메시지 표시 | 미검증 |
+| 위치 권한 허용 | 현재 위치 날씨 갱신 또는 fallback 메시지 표시 | 실패: `7c857db8-da31-4c95-88d8-0455546c1c4d`에서 권한 허용 후 현재 위치 날씨 미반영 |
 | 위치 권한 거부 | 앱 사용 가능, 수동 목적지 검색 가능 | 미검증 |
 | 위치 서비스 꺼짐 | fallback 안내 표시, 크래시 없음 | 미검증 |
 | 네트워크 끊김 | 캐시/fallback 상태 표시, 빈 화면 없음 | 미검증 |
@@ -102,15 +108,22 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 
 | 항목 | 값 |
 |---|---|
-| APK 빌드 링크 |  |
-| EAS build id |  |
-| 테스트 기기 |  |
-| Android 버전 |  |
-| 테스트 일시 |  |
-| 네트워크 | Wi-Fi / LTE |
-| 통과 여부 |  |
-| 주요 이슈 |  |
-| 후속 조치 |  |
+| 이전 APK 빌드 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/7c857db8-da31-4c95-88d8-0455546c1c4d |
+| 이전 EAS build id | `7c857db8-da31-4c95-88d8-0455546c1c4d` |
+| QA 대상 APK 빌드 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/819b6cba-7757-48a3-9f8e-92a4efd9c17c |
+| QA 대상 EAS build id | `819b6cba-7757-48a3-9f8e-92a4efd9c17c` |
+| QA 대상 build 상태 | `FINISHED` |
+| APK artifact | https://expo.dev/artifacts/eas/bxWR-_rZCG9X8TmXwj_ni6LS1m_5BR5egVy3X8X-HQE.apk |
+| 보조 web export QA | `WeatherON_ANDROID_WEB_EXPORT_QA.md` |
+| 실기기 QA 세션 | `WeatherON_ANDROID_DEVICE_QA_SESSION.md` |
+| 테스트 기기 | A142 / adb `000841458003652` |
+| Android 버전 | 16 |
+| 테스트 일시 | 2026-06-28 23:20 KST |
+| 네트워크 | Wi-Fi, 오프라인 재검증 미실행 |
+| 통과 여부 | 부분 통과. D1/D2/D4/D4-1/D4-2/D7/D8/D11 통과, D3 실패, D10 주의, D6/D12 미확인 |
+| 주요 이슈 | 소셜 화면 프로토타입 문구 노출, 코디 하단 액션 일부 가림 |
+| 보조 확인 | 실기기 스크린샷 기준 홈/코디/출발/MY/소셜 탭 표시, crash log 없음, 설치 패키지 `versionCode=4` 확인 |
+| 후속 조치 | 소셜 문구/하단 탭 여백/코디 시간 표기 소스 수정 완료. 새 preview APK 빌드 후 D3/D10 재검증, 뒤로가기/검색/오프라인 QA 재실행, 스토어 스크린샷 재캡처 |
 
 ---
 
@@ -120,3 +133,19 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 |---|---|
 | 2026-06-27 | Android preview APK QA 체크리스트 최초 작성 |
 | 2026-06-27 | EAS 로그인 확인 명령을 `check:eas-login-state` 기준으로 변경 |
+| 2026-06-27 | EAS preview APK build id와 실기기 설치/실행 성공 기록 |
+| 2026-06-27 | 실기기 제품 완성도 이슈를 제품 완성도 감사 문서로 분리 |
+| 2026-06-27 | 상태 영속화 추가에 따라 앱 재시작 QA 기준 보강 |
+| 2026-06-27 | EAS no-wait 빌드와 build id 상태 확인 명령 추가 |
+| 2026-06-27 | 제품 보정 build `0afbdf0c-f617-43f5-8dd6-5466f862a40b` 완료 및 QA 대상 APK로 기록 |
+| 2026-06-28 | `7c857db8-da31-4c95-88d8-0455546c1c4d` 실기기 D7 위치 권한 허용 후 현재 위치 날씨 미반영 실패 기록 |
+| 2026-06-28 | 하단 탭 IA 보정 build `deb142d7-a9a8-44e5-85ba-6eb0e5b0dd95` 완료 및 QA 대상 APK로 갱신 |
+| 2026-06-28 | `S1 ON Square` 소셜 탭 분리 build `da28ef88-3adb-4a25-858d-9e2e4ba62245` 완료 및 QA 대상 APK로 갱신 |
+| 2026-06-27 | In-app browser web export QA 결과 문서 연결 |
+| 2026-06-27 | 제품 품질 정적 체크를 APK QA 사전 게이트에 추가 |
+| 2026-06-27 | 내부 문구 추가 정리 후 preview build `3df4fb84-98d5-417d-865e-240e14200520` 시작 |
+| 2026-06-27 | 홈 상태 표시 수정 후 최신 preview build `ffe1ec96-c5a2-44d8-9a7d-b3a3a131d66a` 완료 및 artifact 기록 |
+| 2026-06-27 | `.easignore` 반영 preview build `8a0b9f32-260b-4b64-b335-b4b30113b3a1` 완료 및 artifact 기록 |
+| 2026-06-27 | 실기기 QA 세션 문서 연결 |
+| 2026-06-28 | UI polish preview build `819b6cba-7757-48a3-9f8e-92a4efd9c17c` 실기기 QA 결과로 갱신 |
+| 2026-06-28 | 소셜 문구 제거, 하단 탭 레이아웃 보정, 코디 시간 표기 보정. 다음 APK 재검증 필요 |

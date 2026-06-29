@@ -11,7 +11,7 @@ export type DeviceLocationState = {
 
 export const initialDeviceLocationState: DeviceLocationState = {
   status: "idle",
-  message: "위치 권한 대기",
+  message: "위치 권한 확인 필요",
 };
 
 export async function requestDeviceWeatherLocation(): Promise<DeviceLocationState> {

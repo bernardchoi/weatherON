@@ -1,0 +1,18 @@
+# Local dependencies and caches
+.git
+.git/
+node_modules/
+.expo/
+
+# Local web/export outputs
+dist/
+dist-web/
+web-build/
+
+# Native build intermediates
+android/
+ios/
+
+# OS/editor noise
+.DS_Store
+*.log

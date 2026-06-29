@@ -100,7 +100,7 @@ function killChild(child) {
 async function writeStatusReport(status, detail) {
   const report = `# WeatherON EAS Login Status
 
-> 생성일: 2026-06-27
+> 생성일: 2026-06-28
 > 목적: Android preview APK 빌드 전 EAS 인증 상태를 추적한다.
 
 ## 1. 현재 상태
@@ -113,7 +113,7 @@ async function writeStatusReport(status, detail) {
 
 ## 2. 다음 액션
 
-${status === "logged_in" ? "- \`npm run eas:init\` 실행" : "- \`npm run eas:login\` 실행 후 \`npm run check:eas-login-state\` 재확인"}
+${status === "logged_in" ? "- 최신 preview APK 실기기 QA와 Play Console 제출 준비 진행" : "- \`npm run eas:login\` 실행 후 \`npm run check:eas-login-state\` 재확인"}
 `;
 
   await mkdir(dirname(reportPath), { recursive: true });

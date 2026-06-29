@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-06-29",
+  "sourceBuildId": "419e3d2c-135b-41a1-88f6-3321ad5115f1",
+  "appVersion": "0.1.0 (3)",
+  "requiredCount": 5,
+  "readyCount": 5,
+  "issueCount": 0,
+  "recommended": {
+    "format": "PNG",
+    "orientation": "portrait",
+    "minWidth": 1080,
+    "minHeight": 1920
+  },
+  "contentReview": "assets/store/android-screenshots/content-review.json",
+  "files": [
+    {
+      "filename": "phone-01-home.png",
+      "screen": "H1 홈",
+      "route": "하단 홈",
+      "status": "ready",
+      "width": 1084,
+      "height": 2412,
+      "sha256": "9a10fafe127cc5273318962da0cf17ae5049f07e3b51fa7231f10280b478d46f"
+    },
+    {
+      "filename": "phone-02-destination-search.png",
+      "screen": "P1 목적지 검색",
+      "route": "하단 출발 > 목적지 추가",
+      "status": "ready",
+      "width": 1084,
+      "height": 2412,
+      "sha256": "3509dd7e97dfb68948d5f66e6535dde60ca55de2dd115103a07f4ab95f2f3c92"
+    },
+    {
+      "filename": "phone-03-destination-care.png",
+      "screen": "G2 목적지 케어",
+      "route": "하단 출발 > 목적지 카드",
+      "status": "ready",
+      "width": 1084,
+      "height": 2412,
+      "sha256": "bf0dc0343023f80904c69864deaec7fcb31e1e11ad678a63e21eb0236fb1985f"
+    },
+    {
+      "filename": "phone-04-outfit.png",
+      "screen": "C1 코디 추천",
+      "route": "하단 코디",
+      "status": "ready",
+      "width": 1084,
+      "height": 2412,
+      "sha256": "7028669fb09c451a6bcfdb32bd9158b906c3e9c7c018fd8d7a3b0b3568861414"
+    },
+    {
+      "filename": "phone-05-settings-policy.png",
+      "screen": "M/R 정책 허브",
+      "route": "하단 MY > 설정/정책",
+      "status": "ready",
+      "width": 1084,
+      "height": 2412,
+      "sha256": "0bab0a8340c60cae13263f84aaac63c3b241213f603bde0b55828ce58d220817"
+    }
+  ]
+}

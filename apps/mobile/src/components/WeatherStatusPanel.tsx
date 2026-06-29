@@ -1,7 +1,8 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 type WeatherStatusPanelProps = {
   status: WeatherProviderMode;
@@ -12,84 +13,78 @@ type WeatherStatusPanelProps = {
   onRetry: () => void;
 };
 
-const modeOptions: Array<{ mode: WeatherProviderMode; label: string }> = [
-  { mode: "ready", label: "정상" },
-  { mode: "stale", label: "캐시" },
-  { mode: "fallback", label: "기본" },
-  { mode: "error", label: "오류" },
-];
-
 export function WeatherStatusPanel({ status, message, retryable, loading, onSetMode, onRetry }: WeatherStatusPanelProps) {
+  const theme = useAppTheme();
   const isHealthy = status === "ready" && !loading;
-  const statusLabel = loading ? "LOADING" : status.toUpperCase();
+  const statusLabel = loading ? "갱신 중" : getStatusLabel(status);
   return (
-    <View style={[styles.panel, isHealthy ? styles.readyPanel : styles.warningPanel]}>
+    <View
+      style={[
+        styles.panel,
+        {
+          backgroundColor: isHealthy ? `${theme.clear}1A` : `${theme.gold}24`,
+          borderColor: isHealthy ? `${theme.clear}55` : `${theme.gold}66`,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.copy}>
-          <Text style={styles.title}>{loading ? "날씨 갱신 중" : getTitle(status)}</Text>
-          <Text style={styles.message}>{loading ? "최신 날씨를 불러오는 중" : message}</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{loading ? "날씨 갱신 중" : getTitle(status)}</Text>
+          <Text style={[styles.message, { color: theme.muted }]}>{loading ? "최신 날씨를 불러오는 중" : getMessage(status, message)}</Text>
         </View>
-        <Text style={[styles.status, isHealthy ? styles.readyText : styles.warningText]}>{statusLabel}</Text>
+        <Text style={[styles.status, { color: isHealthy ? theme.clear : theme.gold }]}>{statusLabel}</Text>
       </View>
 
       {!isHealthy ? (
         <View style={styles.ctaRow}>
-          <Pressable accessibilityRole="button" disabled={loading} onPress={onRetry} style={[styles.cta, loading ? styles.disabled : null]}>
-            <Text style={styles.ctaText}>{retryable ? "다시 시도" : "갱신"}</Text>
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading}
+            onPress={onRetry}
+            style={[styles.cta, { backgroundColor: theme.gold }, loading ? styles.disabled : null]}
+          >
+            <Text style={[styles.ctaText, { color: theme.onAccent }]}>{retryable ? "다시 시도" : "갱신"}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             disabled={loading}
             onPress={() => onSetMode("fallback")}
-            style={[styles.secondaryCta, loading ? styles.disabled : null]}
+            style={[styles.secondaryCta, { backgroundColor: theme.cardMuted, borderColor: theme.border }, loading ? styles.disabled : null]}
           >
-            <Text style={styles.secondaryText}>수동 위치 검색</Text>
+            <Text style={[styles.secondaryText, { color: theme.text }]}>수동 위치 검색</Text>
           </Pressable>
         </View>
       ) : null}
-
-      <View style={styles.modeRow}>
-        {modeOptions.map((item) => {
-          const active = item.mode === status;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              disabled={loading}
-              key={item.mode}
-              onPress={() => onSetMode(item.mode)}
-              style={[styles.modeButton, active ? styles.modeActive : null, loading ? styles.disabled : null]}
-            >
-              <Text style={[styles.modeText, active ? styles.modeTextActive : null]}>{item.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
     </View>
   );
 }
 
 function getTitle(status: WeatherProviderMode): string {
-  if (status === "ready") return "날씨 연결 정상";
+  if (status === "ready") return "날씨 연결됨";
   if (status === "stale") return "최근 기준 추천";
   if (status === "fallback") return "기본 위치 기준";
   return "날씨 갱신 실패";
 }
 
+function getMessage(status: WeatherProviderMode, message: string): string {
+  if (status === "ready") return "최신 예보 기준으로 준비 완료";
+  if (status === "stale") return "최근 예보 기준으로 추천 유지";
+  return message;
+}
+
+function getStatusLabel(status: WeatherProviderMode): string {
+  if (status === "ready") return "연결됨";
+  if (status === "stale") return "최근 예보";
+  if (status === "fallback") return "기본 예보";
+  return "확인 필요";
+}
+
 const styles = StyleSheet.create({
   panel: {
-    gap: spacing.md,
-    padding: spacing.lg,
+    gap: spacing.sm,
+    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
-  },
-  readyPanel: {
-    backgroundColor: "rgba(103,232,208,0.10)",
-    borderColor: "rgba(103,232,208,0.28)",
-  },
-  warningPanel: {
-    backgroundColor: "rgba(244,182,63,0.12)",
-    borderColor: "rgba(244,182,63,0.34)",
   },
   header: {
     flexDirection: "row",
@@ -101,12 +96,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: appColors.text,
     fontSize: 16,
     fontWeight: "900",
   },
   message: {
-    color: appColors.muted,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 4,
@@ -114,12 +107,6 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 11,
     fontWeight: "900",
-  },
-  readyText: {
-    color: appColors.clear,
-  },
-  warningText: {
-    color: appColors.gold,
   },
   ctaRow: {
     flexDirection: "row",
@@ -131,10 +118,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-    backgroundColor: appColors.gold,
   },
   ctaText: {
-    color: appColors.navy,
     fontSize: 13,
     fontWeight: "900",
   },
@@ -144,44 +129,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1,
-    borderColor: appColors.border,
   },
   secondaryText: {
-    color: appColors.text,
     fontSize: 13,
     fontWeight: "900",
   },
   disabled: {
     opacity: 0.58,
-  },
-  modeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  modeButton: {
-    minHeight: 32,
-    flex: 1,
-    minWidth: 62,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
-  modeActive: {
-    borderColor: appColors.clear,
-    backgroundColor: "rgba(103,232,208,0.14)",
-  },
-  modeText: {
-    color: appColors.muted,
-    fontSize: 12,
-    fontWeight: "900",
-  },
-  modeTextActive: {
-    color: appColors.clear,
   },
 });

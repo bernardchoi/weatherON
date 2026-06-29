@@ -1,7 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { radius, spacing } from "../theme/tokens";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
@@ -9,21 +11,28 @@ type BottomNavProps = {
 };
 
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
+  const theme = useAppTheme();
+  const activeTabRoute = getActiveTabRoute(activeRoute);
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { backgroundColor: theme.nav, borderTopColor: theme.navBorder }]}>
       <View style={styles.nav}>
         {bottomNavRoutes.map((route) => {
-          const active = route.id === activeRoute;
+          const active = route.id === activeTabRoute;
           return (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               key={route.id}
               onPress={() => onNavigate(route.id)}
-              style={[styles.item, active ? styles.activeItem : null]}
+              style={[
+                styles.item,
+                active
+                  ? { backgroundColor: theme.cardStrong, borderColor: theme.gold }
+                  : { backgroundColor: "transparent", borderColor: "transparent" },
+              ]}
             >
-              <Text style={[styles.code, active ? styles.activeText : null]}>{route.id}</Text>
-              <Text style={[styles.label, active ? styles.activeText : null]}>{route.label}</Text>
+              <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
+              <Text style={[styles.label, { color: active ? theme.gold : theme.subtle }]}>{route.label}</Text>
             </Pressable>
           );
         })}
@@ -32,18 +41,33 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   );
 }
 
+function getActiveTabRoute(route: P0RouteId): P0RouteId {
+  if (route === "C2" || route === "C3" || route === "C4") return "C1";
+  if (route === "H3" || route === "H4" || route === "H5") return "H1";
+  if (route === "G2" || route === "G3" || route === "G4" || route === "G5" || route === "G6" || route === "P1" || route === "P2" || route === "P3") return "G1";
+  if (route === "M2" || route === "M3") return "M1";
+  return route;
+}
+
+function TabIcon({ route, color }: { route: P0RouteId; color: string }) {
+  const source = getTabIconSource(route);
+  return <Image source={source} style={[styles.iconImage, { tintColor: color }]} resizeMode="contain" />;
+}
+
+function getTabIconSource(route: P0RouteId) {
+  if (route === "H1") return uiIconAssets.tabHome;
+  if (route === "C1") return uiIconAssets.tabOutfit;
+  if (route === "G1") return uiIconAssets.tabDepart;
+  if (route === "M1") return uiIconAssets.tabMy;
+  return uiIconAssets.tabSocial;
+}
+
 const styles = StyleSheet.create({
   wrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 16,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    backgroundColor: "rgba(3,8,16,0.94)",
     borderTopWidth: 1,
-    borderTopColor: appColors.border,
   },
   nav: {
     flexDirection: "row",
@@ -54,25 +78,17 @@ const styles = StyleSheet.create({
     minHeight: 54,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.sm,
-  },
-  activeItem: {
-    backgroundColor: appColors.panel,
+    borderRadius: radius.md,
+    gap: 3,
     borderWidth: 1,
-    borderColor: appColors.clear,
-  },
-  code: {
-    color: appColors.subtle,
-    fontSize: 10,
-    fontWeight: "900",
   },
   label: {
-    color: appColors.muted,
     fontSize: 11,
-    fontWeight: "800",
-    marginTop: 2,
+    lineHeight: 13,
+    fontWeight: "900",
   },
-  activeText: {
-    color: appColors.clear,
+  iconImage: {
+    width: 23,
+    height: 23,
   },
 });
