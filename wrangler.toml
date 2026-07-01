@@ -1,0 +1,11 @@
+name = "weatheron-api"
+main = "apps/server/src/worker.mjs"
+compatibility_date = "2026-07-01"
+workers_dev = true
+preview_urls = false
+
+[vars]
+WEATHER_TIMEOUT_MS = "8000"
+WEATHER_CACHE_TTL_MS = "600000"
+PLACE_CACHE_TTL_MS = "1800000"
+ROUTE_CACHE_TTL_MS = "600000"

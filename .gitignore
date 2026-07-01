@@ -4,6 +4,7 @@ dist/
 apps/mobile/dist-web/
 apps/mobile/android/
 apps/mobile/.expo/
+.wrangler/
 .env
 .env.local
 .env.*.local
