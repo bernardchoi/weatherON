@@ -9,7 +9,7 @@ const expoBin = join(rootDir, "node_modules/.bin/expo");
 
 rmSync(mobileDistDir, { recursive: true, force: true });
 
-await run(expoBin, ["export", "--platform", "web", "--output-dir", "dist"], {
+await run(expoBin, ["export", "--platform", "web", "--output-dir", "dist", "--clear"], {
   cwd: mobileDir,
 });
 

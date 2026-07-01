@@ -101,7 +101,7 @@ function localTemplate(file) {
         date: "",
         activeTesters: "0",
         version: "0.1.0 (2)",
-        flow: "홈/코디/출발/MY/소셜",
+        flow: "홈/출발/MY + MY 코디·옷장",
         issueCount: "0",
         status: "미시작",
       })),

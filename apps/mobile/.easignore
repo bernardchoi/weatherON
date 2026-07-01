@@ -10,8 +10,10 @@ dist-web/
 web-build/
 
 # Native build intermediates
-android/
-ios/
+android/.gradle/
+android/build/
+android/**/build/
+ios/build/
 
 # OS/editor noise
 .DS_Store

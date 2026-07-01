@@ -70,7 +70,7 @@ WeatherON Android preview build.
 - 날씨 기반 홈/코디/출발 흐름
 - 목적지 날씨 케어와 Kakao Local 검색
 - MY/정책/권한 설정
-- ON Square 소셜 탭 preview
+- 최초 출시 범위 외 소셜 레이어 미공개
 \`\`\`
 
 ## 5. 확인 명령

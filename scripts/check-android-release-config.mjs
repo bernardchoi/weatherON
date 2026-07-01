@@ -11,6 +11,7 @@ const easIgnorePath = join(rootDir, ".easignore");
 const mobileEasIgnorePath = join(mobileDir, ".easignore");
 const packageJsonPath = join(rootDir, "package.json");
 const mobilePackageJsonPath = join(mobileDir, "package.json");
+const androidAppBuildGradlePath = join(mobileDir, "android/app/build.gradle");
 const releaseDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_출시_준비_프로세스.md");
 const apkQaDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_APK_QA_체크리스트.md");
 const storeListingDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_등록자료.md");
@@ -36,6 +37,7 @@ const releaseEvidenceIndexPath = join(rootDir, "docs/architecture/WeatherON_ANDR
 const releaseConsistencyStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_CONSISTENCY_STATUS.md");
 const readinessReportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_READINESS_REPORT.md");
 const releaseActionBoardPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md");
+const previewPreflightStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_PREVIEW_PREFLIGHT_STATUS.md");
 const storeSubmitBlockersPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_SUBMISSION_BLOCKERS.md");
 const externalActionsPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_EXTERNAL_ACTIONS.md");
 const easLoginStatusPath = join(rootDir, "docs/architecture/WeatherON_EAS_LOGIN_STATUS.md");
@@ -70,6 +72,7 @@ assert.equal(appConfig.scheme, "weatheron");
 assert.match(appConfig.version, /^\d+\.\d+\.\d+$/);
 
 assert.equal(appConfig.android?.package, "com.weatheron.mobile");
+assertDocIncludes(androidAppBuildGradlePath, ["namespace 'com.weatheron.mobile'", "applicationId 'com.weatheron.mobile'", "versionCode 5", 'versionName "0.1.0"']);
 assert.equal(Number.isInteger(appConfig.android?.versionCode), true);
 assert.ok(appConfig.android.versionCode >= 1);
 assert.ok(appConfig.android.permissions.includes("ACCESS_COARSE_LOCATION"));
@@ -86,8 +89,8 @@ assert.equal(easConfig.build?.development?.android?.buildType, "apk");
 assert.equal(easConfig.build?.preview?.distribution, "internal");
 assert.equal(easConfig.build?.preview?.android?.buildType, "apk");
 assert.equal(easConfig.build?.production?.android?.buildType, "app-bundle");
-assertDocIncludes(easIgnorePath, [".git", ".git/", "node_modules/", ".npm-cache/", "dist/", "apps/mobile/dist/", "apps/mobile/dist-web/", "docs/", "mockups/", "brand/", "assets/store/"]);
-assertDocIncludes(mobileEasIgnorePath, [".git", ".git/", "node_modules/", ".expo/", "dist/", "dist-web/", "web-build/", "android/", "ios/"]);
+assertDocIncludes(easIgnorePath, [".git", ".git/", "node_modules/", ".npm-cache/", "dist/", "apps/mobile/dist/", "apps/mobile/dist-web/", "apps/mobile/android/**/build/", "docs/", "mockups/", "brand/", "assets/store/"]);
+assertDocIncludes(mobileEasIgnorePath, [".git", ".git/", "node_modules/", ".expo/", "dist/", "dist-web/", "web-build/", "android/.gradle/", "android/**/build/", "ios/build/"]);
 
 assert.equal(mobilePackageConfig.scripts?.["eas:login"], "npx --yes --cache ../../.npm-cache eas-cli login");
 assert.equal(mobilePackageConfig.scripts?.["eas:whoami"], "npx --yes --cache ../../.npm-cache eas-cli whoami");
@@ -115,6 +118,9 @@ assert.equal(
 assert.equal(packageConfig.scripts?.["check:android-release"], "node scripts/check-android-release-config.mjs");
 assert.equal(packageConfig.scripts?.["check:android-build-ready"], "node scripts/check-android-build-ready.mjs");
 assert.equal(packageConfig.scripts?.["check:android-product-quality"], "node scripts/check-android-product-quality.mjs");
+assert.equal(packageConfig.scripts?.["check:android-preview-preflight"], "node scripts/check-android-preview-preflight.mjs");
+assert.equal(packageConfig.scripts?.["check:android-core-flow"], "node scripts/check-android-core-flow.mjs");
+assert.equal(packageConfig.scripts?.["check:android-small-screen-layout"], "node scripts/check-android-small-screen-layout.mjs");
 assert.equal(packageConfig.scripts?.["check:android-web-export"], "node scripts/check-android-web-export.mjs");
 assert.equal(packageConfig.scripts?.["check:android-web-preview-server"], "node scripts/check-android-web-preview-server.mjs");
 assert.equal(packageConfig.scripts?.["check:android-device-qa-ready"], "node scripts/check-android-device-qa-ready.mjs");
@@ -214,7 +220,8 @@ assertDocIncludes(storeScreenshotPacketPath, [
   "캡처 목록",
   "screenshot 기준 build",
   "capture:android-store-screenshot",
-  "홈/코디/출발/MY/소셜",
+  "홈/출발/MY",
+  "MY > 코디·옷장",
   "ADB 준비 상태",
   "check:android-adb-ready",
   "manifest",
@@ -259,6 +266,7 @@ assertDocIncludes(releaseConsistencyStatusPath, [
   "closed test operation required",
 ]);
 assertDocIncludes(readinessReportPath, ["Android Release Readiness Report", "npm run build:android:preview", "현재 차단"]);
+assertDocIncludes(previewPreflightStatusPath, ["WeatherON Android Preview Preflight Status", "Native applicationId", "npm run check:android-preview-preflight"]);
 assertDocIncludes(releaseActionBoardPath, [
   "WeatherON Android Release Action Board",
   "실기기 QA",
@@ -282,9 +290,9 @@ assertDocIncludes(easLoginStatusPath, ["WeatherON EAS Login Status", "npm run ch
 assertDocIncludes(productionBuildStatusPath, ["WeatherON Android Production Build Status", "Profile", "production", "AAB artifact"]);
 assertDocIncludes(artifactAccessStatusPath, ["WeatherON Android Artifact Access Status", "preview APK", "production AAB", "check:android-artifact-access"]);
 assertDocIncludes(productQualityAuditPath, ["WeatherON Android 제품 완성도 감사", "preview APK", "상태 영속화", "npm run check:android-product-quality", "다음 개선 순서"]);
-assertDocIncludes(webExportQaPath, ["WeatherON Android Web Export QA", "In-app browser", "390x844", "Android 실기기 재QA 필요", "WeatherON_ANDROID_WEB_EXPORT_STATUS.md", "WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md", "npm run export:android-web"]);
+assertDocIncludes(webExportQaPath, ["WeatherON Android Web Export QA", "In-app browser", "390x844", "Android 실기기 재QA 필요", "WeatherON_ANDROID_WEB_EXPORT_STATUS.md", "WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md", "npm run export:android-web", "npm run check:android-core-flow"]);
 assertDocIncludes(webExportStatusPath, ["WeatherON Android Web Export Status", "AppNavigator", "BottomNav", "bottomNavRoutes", "preview-shell", "legacy dist-web", "npm run export:android-web"]);
-assertDocIncludes(webPreviewServerStatusPath, ["WeatherON Android Web Preview Server Status", "8094", "apps/mobile/dist/index.html", "홈/코디/출발/MY/소셜", "check:android-web-preview-server"]);
+assertDocIncludes(webPreviewServerStatusPath, ["WeatherON Android Web Preview Server Status", "8094", "apps/mobile/dist/index.html", "홈/출발/MY", "check:android-web-preview-server"]);
 assertDocIncludes(mapProviderCostComparisonPath, ["WeatherON Map Provider Cost Comparison", "Google Maps Geocoding 우선", "Mapbox", "비용 절감 대안", "Mapbox 키는 대안 PoC가 확정되기 전까지 발급하지 않는다"]);
 assertDocIncludes(deviceQaSessionPath, [
   "WeatherON Android Device QA Session",
@@ -293,7 +301,9 @@ assertDocIncludes(deviceQaSessionPath, [
   "D1",
   "D12",
   "D4-1",
-  "홈/코디/출발/MY/소셜",
+  "홈/출발/MY",
+  "코디·옷장",
+  "check:android-core-flow",
   "apply:android-device-qa-results",
 ]);
 assertDocIncludes(deviceQaPacketPath, ["WeatherON Android Device QA Packet", "APK artifact", "D1", "D12", "sync:android-device-qa-env", "apply:android-device-qa-results"]);

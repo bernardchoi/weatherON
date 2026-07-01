@@ -10,6 +10,10 @@ apps/*/.expo/
 dist/
 apps/mobile/dist/
 apps/mobile/dist-web/
+apps/mobile/web-build/
+apps/mobile/android/.gradle/
+apps/mobile/android/build/
+apps/mobile/android/**/build/
 coverage/
 
 # Design, mockup, and documentation sources not needed for native EAS builds

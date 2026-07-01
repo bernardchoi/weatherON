@@ -54,10 +54,8 @@ if (!existsSync(distDir)) {
   assertIncludesAny("mobile BottomNav", ["BottomNav"]);
   assertIncludesAny("bottomNavRoutes", ["bottomNavRoutes"]);
   assertIncludesAny("bottom nav home label", ['label:"홈"', 'label:"\\ud648"']);
-  assertIncludesAny("bottom nav outfit label", ['label:"코디"', 'label:"\\ucf54\\ub514"']);
   assertIncludesAny("bottom nav departure label", ['label:"출발"', 'label:"\\ucd9c\\ubc1c"']);
   assertIncludesAny("bottom nav MY label", ['label:"MY"']);
-  assertIncludesAny("bottom nav social label", ['label:"소셜"', 'label:"\\uc18c\\uc15c"']);
   assertExcludes("mockup preview shell", ["preview-shell", "mockup screens", "WeatherON · S3", "WeatherON · S2", "목업"]);
 }
 
@@ -143,7 +141,7 @@ function writeReport() {
 | 항목 | 기준 |
 |---|---|
 | 앱 엔트리 | 참조 JS에 \`AppNavigator\`, \`BottomNav\`, \`bottomNavRoutes\` 포함 |
-| 하단 탭 | 참조 JS에 \`홈/코디/출발/MY/소셜\` 라벨 포함 |
+| 하단 탭 | 참조 JS에 \`홈/출발/MY\` 라벨 포함. 최초 출시에서는 코디/소셜 등 확장 레이어 미공개 |
 | 목업 혼입 | 참조 JS에 \`preview-shell\`, \`mockup screens\`, \`목업\` 없음 |
 | 보조 JS | index.html이 참조하지 않으면 실제 렌더에는 영향 없음. 목업 마커가 들어 있을 때만 warning으로 기록 |
 | legacy dist-web | \`apps/mobile/dist-web\`는 이전 산출물이다. 존재하더라도 \`apps/mobile/dist\`를 기준으로 서빙한다 |

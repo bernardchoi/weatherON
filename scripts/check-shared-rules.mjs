@@ -83,10 +83,13 @@ await writeFile(
 await writeFile(
   providerEntry,
   `
-    import { buildDemoState } from "../apps/mobile/src/data/demoState.ts";
-    import { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } from "../apps/mobile/src/providers/weatherClient.ts";
-    import { createWeatherProvider, fixtureWeatherProvider } from "../apps/mobile/src/providers/weatherProvider.ts";
-    import { kmaForecastFixture, openMeteoFixture, searchFixturePlaces } from "../packages/shared/src/index.ts";
+    process.env.EXPO_PUBLIC_WEATHER_CLIENT = "fixture";
+
+    const { buildDemoState } = await import("../apps/mobile/src/data/demoState.ts");
+    const { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
+    const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
+    const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
+    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
     const fakeFetch = async (url) => {
@@ -106,16 +109,19 @@ await writeFile(
       timeoutMs: 1000,
       fetchImpl: fakeFetch,
     });
-    const httpProvider = createWeatherProvider(httpClient);
+    const httpProvider = createWeatherProvider(httpClient, { preferKma: true });
     const gangneungPlace = searchFixturePlaces("강릉")[0];
     const jamsilPlace = searchFixturePlaces("잠실")[0];
-    const toWeatherLocation = (place) => ({
-      locationId: place.id,
-      locationName: place.name,
-      countryCode: place.countryCode,
-      coordinate: place.coordinate,
-      timezone: place.timezone,
-    });
+    const marinaPlace = searchFixturePlaces("Marina")[0];
+    const toWeatherLocation = (place) => place.countryCode === "KR"
+      ? createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id)
+      : {
+          locationId: place.id,
+          locationName: place.name,
+          countryCode: place.countryCode,
+          coordinate: place.coordinate,
+          timezone: place.timezone,
+        };
 
     export const demoResults = {
       current: await buildDemoState(false),
@@ -136,6 +142,9 @@ await writeFile(
       parallelProvider: await httpProvider.getSnapshots("ready", {
         destinationLocation: toWeatherLocation(gangneungPlace),
         destinationLocations: [toWeatherLocation(gangneungPlace), toWeatherLocation(jamsilPlace)],
+      }),
+      openMeteoProvider: await httpProvider.getSnapshots("ready", {
+        destinationLocation: toWeatherLocation(marinaPlace),
       }),
       httpUrls: requestedUrls,
       kmaBaseEarly: getKmaForecastBaseDateTime(new Date("2026-06-26T01:59:00+09:00")),
@@ -205,12 +214,14 @@ assert.equal(results.openmeteo.current.feelsLikeC, 31);
 assert.equal(results.openmeteo.hourly[1].windMs, 4.81);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
-assert.equal(demoResults.current.weather.source, "kma");
+assert.equal(demoResults.current.weather.source, "openmeteo");
 assert.equal(demoResults.destination.weather.source, "openmeteo");
-assert.equal(demoResults.current.weatherProvider.currentSource, "kma");
+assert.equal(demoResults.current.weatherProvider.currentSource, "openmeteo");
 assert.equal(demoResults.current.weatherProvider.destinationSource, "openmeteo");
-assert.equal(demoResults.current.destinationCare.originWeather.source, "kma");
+assert.equal(demoResults.current.destinationCare.originWeather.source, "openmeteo");
 assert.equal(demoResults.current.destinationCare.destinationWeather.source, "openmeteo");
+assert.equal(demoResults.httpProvider.current.source, "kma");
+assert.equal(demoResults.httpProvider.destination.source, "kma");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
@@ -226,7 +237,8 @@ assert.equal(demoResults.openMeteoPayload.current.weather_code, 0);
 assert.equal(demoResults.readyProvider.status, "ready");
 assert.equal(demoResults.readyProvider.current.source, "kma");
 assert.equal(demoResults.httpProvider.status, "ready");
-assert.equal(demoResults.httpProvider.destination.source, "openmeteo");
+assert.equal(demoResults.httpProvider.destination.source, "kma");
+assert.equal(demoResults.openMeteoProvider.destination.source, "openmeteo");
 assert.equal(demoResults.parallelProvider.destinationSnapshots.length, 2);
 assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "kr-gangneung-anmok-beach");
 assert.equal(demoResults.parallelProvider.destinationSnapshots[1].locationId, "kr-jamsil-baseball-stadium");

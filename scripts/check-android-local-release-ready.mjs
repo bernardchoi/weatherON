@@ -22,6 +22,10 @@ await run("npm", ["run", "check:android-web-preview-server"], {
   WEATHERON_WEB_PREVIEW_SERVER_REPORT_ONLY: "1",
   WEATHERON_WEB_PREVIEW_SERVER_OPTIONAL: "1",
 });
+await run("npm", ["run", "check:android-core-flow"], {
+  WEATHERON_CORE_FLOW_REPORT_ONLY: "1",
+  WEATHERON_CORE_FLOW_OPTIONAL: "1",
+});
 await run("npm", ["run", "apply:android-closed-test-inputs"], {
   WEATHERON_CLOSED_TEST_INPUTS_REPORT_ONLY: "1",
 });
@@ -52,6 +56,9 @@ await run("npm", ["run", "report:android-release-evidence-index"]);
 await run("npm", ["run", "check:android-release-consistency"]);
 await run("npm", ["run", "check:android-build-ready"]);
 await run("npm", ["run", "check:android-product-quality"]);
+await run("npm", ["run", "check:android-core-flow"], {
+  WEATHERON_CORE_FLOW_OPTIONAL: "1",
+});
 await run("npm", ["run", "check:android-device-qa-ready"]);
 
 console.log("android local release ready check passed");

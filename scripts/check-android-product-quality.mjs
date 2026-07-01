@@ -7,6 +7,9 @@ const rootDir = process.cwd();
 const requiredFiles = [
   "apps/mobile/src/providers/appStorage.ts",
   "apps/mobile/src/navigation/routeLabels.ts",
+  "scripts/check-android-core-flow.mjs",
+  "scripts/check-android-usable-mvp.mjs",
+  "scripts/check-weather-proxy-cache.mjs",
   "docs/architecture/WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md",
   "docs/architecture/WeatherON_ANDROID_WEB_EXPORT_QA.md",
 ];
@@ -19,16 +22,597 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'useState<AppRouteId>("O2")',
   "readAppJson",
   "writeAppJson",
+  "weatherProviderResultStorageKey",
+  "readPersistedWeatherProviderResult",
+  "savePersistedWeatherProviderResult",
+  "weatherLoadedFromNetworkRef",
+  "최근 저장 예보 기준 추천",
   "setRoute(persistedState.onboardingCompleted ? \"H1\" : \"O2\")",
+  "startAccountGate",
+  'setRoute(accountLinked ? "A3" : "A2")',
+  "setRoute(termsRequiredAccepted ? gate?.returnTo ?? \"H1\" : \"A3\")",
+  'if (permissionGate?.reason === "destination-care")',
+  "saveSelectedDestination(false)",
+  'case "G2":',
+  'return "G1";',
+  'setRoute("M1");',
+  "styleProfileReturnRoute",
+  'if (nextRoute === "O4" && isP0Route(route))',
 ]);
 
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", ["BackHandler", "goBack"]);
-assertSourceIncludes("apps/mobile/src/navigation/routeLabels.ts", ["getRouteLabel", "계정 연결", "권한 설정", "정책 허브"]);
-assertSourceIncludes("apps/mobile/src/navigation/routes.ts", ['label: "출발"', 'label: "소셜"', 'id: "H3"', 'id: "S1"']);
+assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", [
+  'route === "O4" && appState.styleProfileReturnRoute',
+  "activeRoute={appState.styleProfileReturnRoute}",
+]);
+assertSourceIncludes("apps/mobile/src/config/weatherEnv.ts", [
+  '"fixture" | "proxy" | "openmeteo"',
+  'if (!value) return "openmeteo"',
+  'if (value === "openmeteo") return "openmeteo"',
+  'if (value === "fixture") return "fixture"',
+  'return "openmeteo"',
+]);
+assertSourceIncludes("apps/mobile/src/providers/weatherClient.ts", [
+  "createOpenMeteoWeatherClient",
+  "KMA forecast is disabled in Open-Meteo weather mode",
+  'if (config.clientMode === "openmeteo")',
+  "return openMeteoClient",
+]);
+assertSourceIncludes("apps/mobile/src/providers/weatherProvider.ts", [
+  "runtimeWeatherProvider",
+  "normalizeKmaWeather",
+  "fetchWeatherSnapshot",
+  "shouldUseKmaForecast",
+  'getWeatherRuntimeConfig().clientMode === "proxy"',
+  "client.fetchKmaForecast",
+  "client.fetchOpenMeteoForecast",
+  "fetchOpenMeteoSnapshot",
+]);
+assertSourceIncludes("apps/server/src/index.mjs", [
+  "DEFAULT_WEATHER_CACHE_TTL_MS",
+  "forecastCache",
+  "placeSearchCache",
+  "fetchCachedJson",
+  "if (cached) return cached.payload",
+  "getUrlCacheKey(\"kma\", url, [\"serviceKey\"])",
+]);
+assertSourceIncludes("scripts/check-weather-proxy-cache.mjs", [
+  "API rate limit exceeded",
+  "WEATHER_CACHE_TTL_MS: \"1\"",
+  "assert.equal(kmaRequestCount, 2)",
+  "weather proxy cache check passed",
+]);
+assertSourceExcludes("apps/mobile/src/state/useWeatherOnAppState.ts", ["fixtureWeatherProvider"]);
+assertSourceIncludes("apps/mobile/src/navigation/routeLabels.ts", ["getRouteLabel", "계정 연결", "권한 설정", "정책"]);
+assertSourceIncludes("apps/mobile/src/navigation/routes.ts", ['label: "출발"', "isLaunchHiddenRoute", 'id: "H3"', 'id: "S1"']);
+assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\n  "C3",\n  "C4",', '  "O4",\n  "R3",']);
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
-assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
+assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
+assertSourceIncludes("scripts/check-android-core-flow.mjs", [
+  "assertClearOfBottomNav",
+  "bottom nav overlap risk",
+  "checkNotificationPermissionRecovery",
+  "checkPersistedWeatherFallbackFlow",
+  "checkAlertSettingsDestinationEmptyFlow",
+  "checkDestinationAddUiPersistenceFlow",
+  "checkDestinationPersistenceFlow",
+  "destinationAddUi",
+  "alertSettingsNoDestination",
+  "waitForPersistedDestination",
+  "persistedDestination",
+  "푸시 알림 대기",
+  "권한 관리",
+  "weatheron.weatherProviderResult.v1",
+  "forced weather offline",
+  "최근 예보로 유지 중",
+  "목적지를 추가하면 출발 전 강수·바람 기준을 저장",
+  "알림 저장은 계정 연결 후 적용",
+  "목적지 추가",
+  "검색어 지우기",
+  "위치 관리",
+  "동 읍 면 검색",
+  "저장한 위치",
+  "savedDestinations: [destination]",
+  "알림 1/1",
+  "목적지 필요",
+  "장소 선택 필요",
+  "비 알림 설정",
+  "정책 및 법적 고지",
+  "assertNoText",
+]);
+assertSourceIncludes("package.json", [
+  '"check:android-small-screen-layout": "node scripts/check-android-small-screen-layout.mjs"',
+  '"check:android-usable-mvp": "node scripts/check-android-usable-mvp.mjs"',
+]);
+assertSourceIncludes("scripts/check-android-usable-mvp.mjs", [
+  "check:android-core-flow",
+  "check:android-small-screen-layout",
+  "WEATHERON_WEB_PREVIEW_URL",
+  "startStaticServer",
+  "android usable MVP check passed",
+]);
+assertSourceIncludes("scripts/check-android-small-screen-layout.mjs", [
+  "{ name: \"compact\", width: 360, height: 800 }",
+  "{ name: \"large-phone\", width: 430, height: 932 }",
+  "horizontal document overflow",
+  "clipped button text",
+  "small touch target",
+  "duplicate accessible button label",
+  "알림 기준 조정",
+  "notification-sidebar",
+]);
+assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
+  "getDestinationResultBanner",
+  "accountGateResult",
+  "permissionGateResult",
+  "목적지 저장 완료",
+  "recentlyRemovedDestination",
+  "RemovedDestinationBanner",
+  "목적지 삭제됨",
+  "목적지 복구",
+  "방금 복구됨",
+  "getDestinationWarningText",
+  "getDestinationSchedule",
+  "알림 켬",
+  "탭해서 날씨와 출발 준비 보기",
+  "onRestoreRemovedDestination",
+]);
+assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
+  "handleNestedAction",
+  "onRemoveSavedDestination",
+  "목적지 삭제\"",
+  "dashedAdd",
+  "＋ 목적지 추가",
+]);
+assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", ['title: index === 0 ? "회사"']);
+assertSourceIncludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
+  "장소 선택",
+  "자동 케어",
+  "이 기기에 저장",
+  "목적지 저장하고 비교",
+  'onSaveDestination("G2")',
+  "SearchRecoveryButton",
+  "검색어 지우기",
+  "목적지 검색어 지우기",
+  "다시 시도하거나 지우고 새로 입력",
+  "저장하면 출발 탭에서 날씨 비교와 출발 준비를 바로 볼 수 있어요",
+]);
+assertSourceIncludes("apps/mobile/src/screens/OnboardingDestinationScreen.tsx", [
+  "destinationSelectionReady",
+  "canUseSelection",
+  "목적지 선택 필요",
+  "장소 검색 후 선택",
+  "기본 후보는 저장하지 않음",
+  'canUseSelection ? onSaveDestination("G2") : onNavigate("P1")',
+]);
+assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
+  'onRequireAccount("destination-care", "G1")',
+  'onRequireAccount("destination-care", "P1")',
+  "계정 연결하고 저장",
+  "계정 필요",
+  "게스트 미리보기",
+  "약관 동의하고 저장",
+  "약관 동의 필요",
+  ">DESTINATION<",
+  ">DESTINATION CARE<",
+  "letterSpacing: 1.7",
+]);
+assertSourceIncludes("apps/mobile/src/screens/TermsConsentScreen.tsx", [
+  "전체 동의 해제",
+  "`${item.label} ${checked ? \"동의 해제\" : \"동의\"}`",
+  "actionPanel",
+  "동의하고 계속",
+  "필수 동의 필요",
+]);
+assertSourceIncludes("apps/mobile/src/screens/OutfitDetailScreen.tsx", [
+  "needsTerms",
+  "약관 동의 후 저장",
+]);
+assertSourceIncludes("apps/mobile/src/screens/OutfitScreen.tsx", [
+  "ownedRecommendedCount",
+  "wardrobeCaption",
+  "내 옷장",
+  "프리셋 기준 추천",
+]);
+assertSourceIncludes("apps/mobile/src/screens/WardrobeScreen.tsx", [
+  "내 옷장에 추가",
+  "내 옷장에서 해제",
+]);
+assertSourceIncludes("apps/mobile/src/screens/StyleProfileScreen.tsx", [
+  "onboardingCompleted",
+  "저장하고 코디로",
+  "저장하면 코디 추천에 바로 반영",
+  "primaryReturnTo",
+]);
+assertSourceIncludes("apps/mobile/src/screens/PermissionGateScreen.tsx", [
+  "actionPanel",
+  "gateReady",
+  'gateReady ? "허용됨" : "대기"',
+  "primaryLabel",
+  "목적지는 먼저 저장할 수 있어요",
+  "알림은 나중에 켜도 출발 탭에서 비교 가능",
+  "알림 권한은 선택 사항이에요. 목적지는 출발 탭에 먼저 저장돼요",
+  "알림 없이 저장",
+  "저장 후 사용",
+  "목적지 저장",
+  "알림 없이 저장해도 목적지 비교와 출발 시간은 바로 사용할 수 있음",
+]);
+assertSourceExcludes("apps/mobile/src/screens/PermissionGateScreen.tsx", ["거부 상태", "readyCount", "${readyCount}/2"]);
+assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
+  "현재 상태",
+  "StatusOverview",
+  "StatusTile",
+  "needsTerms",
+  "약관 동의 필요",
+  "약관 동의 이어가기",
+  "필수 약관 동의 후 저장·동기화 가능",
+  "표시 설정",
+  "getAlertState",
+  "getLocationState",
+  "getGlobalSettingsSummary",
+  "수동 위치",
+  "알림 나중에 설정",
+  "푸시는 대기 · 앱 안 판단 유지",
+  "savedDestinations",
+  "정책 및 법적 고지",
+  "WeatherON v0.1.0",
+]);
+assertSourceExcludes("apps/mobile/src/screens/MyScreen.tsx", ["개인정보처리방침", "코디·옷장", 'onNavigate("C1")']);
+assertSourceIncludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
+  "표시 설정 요약",
+  "투명 효과",
+  "getWeightUnitLabel",
+  "getDistanceUnitLabel",
+  "accessibilityState={{ selected",
+]);
+assertSourceExcludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
+  "2곳 저장됨",
+  "위치 관리",
+  "알림 권한 관리",
+  "getLocationState",
+  "getNotificationState",
+  "현재 위치 확인 필요 · 목적지",
+  "수동 위치 적용",
+  "알림 나중에 설정",
+]);
+assertSourceIncludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
+  "계정 관리",
+  "accountReady",
+  "needsTerms",
+  "profileTitle",
+  "내 계정",
+  "약관 동의",
+  "필수 약관 동의 이어가기",
+  "약관 동의 완료",
+  "로그아웃 확인",
+  "계정 작업 취소",
+]);
+assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
+  ">마이페이지<",
+  "구독 관리",
+  "데이터 내보내기",
+  "연결 상태",
+  "계정 준비 완료",
+  "게스트 모드",
+  "저장 · 동기화 사용 가능",
+  "savedDestinationCount",
+  "목적지 관리",
+  "알림 설정",
+  'onNavigate("G1")',
+  'onNavigate("M2")',
+  'onNavigate("G6")',
+  "내보낼 데이터",
+]);
+assertSourceIncludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
+  "`${item.title}, ${item.body}`",
+  "개인정보처리방침",
+  "오픈소스 라이선스",
+]);
+assertSourceExcludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
+  "PolicyQuickItem",
+  "quickPanel",
+  "알림 설정",
+  "계정 관리",
+  "위치 설정",
+  'onNavigate("M2")',
+  'onNavigate("A4")',
+  'onNavigate("H2")',
+]);
+assertSourceIncludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
+  "약관 동의 화면의 개인정보 수집·이용 동의 항목과 같은 기준임",
+  "위치 변경, 권한 요청, 목적지 케어 화면과 같은 위치 기준을 사용함",
+  "약관 동의와 동일 기준",
+  "MY에서 위치·알림 설정 확인",
+]);
+assertSourceExcludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
+  "A3 약관",
+  "H2 위치",
+  "O3 권한",
+  "G2 목적지",
+]);
+assertSourceIncludes("apps/mobile/src/screens/WeatherReportScreens.tsx", ["위치 권한 필요 · 권한 설정에서 허용"]);
+assertSourceExcludes("apps/mobile/src/screens/WeatherReportScreens.tsx", ["위치 권한 필요 · O3"]);
+assertSourceIncludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
+  "alertPreferences",
+  "onToggleAlertPreference",
+  "알림 기준 조정",
+  "deliveryReady",
+  "advancedEnabledCount",
+  "getAlertReadinessCopy",
+  "getNotificationPermissionResult",
+  "푸시는 대기 상태이며 홈·출발 판단은 계속 사용할 수 있음",
+  "고급 설정 닫기",
+  "AdvancedToggleRow",
+  "목적지 출발",
+  "목적지를 추가하면 출발 전 강수·바람 기준을 저장",
+  "목적지를 추가하면 출발 알림 조건 저장",
+  "목적지 필요",
+  'onNavigate(destinationReady ? "G1" : "P1")',
+]);
+assertSourceExcludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
+  "목적지·여행",
+  'onNavigate("P3")',
+  "날씨·코디",
+  "여행 D-1",
+  "계정 연결 후 목적지 알림 저장",
+  "알림 저장은 계정 연결 후 적용",
+  "onRequireAccount",
+]);
+assertSourceIncludes("apps/mobile/src/screens/LocationChangeScreen.tsx", [
+  "hasSavedDestinations",
+  "locationSectionTitle",
+  "getLocationCopy",
+  "현재 위치 권한은 나중에 설정 · 수동 위치 사용 가능",
+  "수동 위치 적용 중 · GPS 없이도 홈 날씨 기준 유지",
+  "currentLocationAction",
+  "getDeviceLocationStatusCopy",
+  "activeWeatherPlace",
+  "applySelectedPlace",
+  "onSelectWeatherLocation(activeWeatherPlace)",
+  "권한 거부됨 · 수동 위치로 계속 가능",
+  "LocationRecoveryButton",
+  "showShortQueryHint",
+  "2글자 이상 입력하면 위치 후보를 검색함",
+  "다시 검색",
+  "위치 검색어 지우기",
+  "검색어는 유지됨 · 다시 검색하거나 지워서 새로 시작 가능",
+  "검색 결과",
+  "홈에 적용",
+  "새 위치 저장",
+]);
+assertSourceExcludes("apps/mobile/src/screens/LocationChangeScreen.tsx", [
+  "onSelectDestinationPlace(activeWeatherPlace)",
+  "savedPlaces",
+  'label={accountLinked ? "위치 저장됨" : "게스트로 적용"}',
+  'label={accountLinked ? "계정 연결됨" : "계정 연결"}',
+  "검색어 ${placeSearchQuery",
+]);
+assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
+  "permissionCompleted = result.status === \"granted\"",
+  "createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo)",
+  "setDeviceWeatherLocation(null)",
+  "setWeatherLocationMode(\"manual\")",
+  "defaultAlertPreferences",
+  "normalizeAlertPreferences",
+  "notificationDeliveryStatus",
+  "setNotificationDeliveryStatus",
+  "getLocalNotificationResultLabel",
+  "toggleAlertPreference",
+  "getAlertSettingsFocusFromRoute",
+  'record.provider === "openmeteo"',
+]);
+assertSourceExcludes("apps/mobile/src/providers/deviceLocation.ts", [
+  "seongsuWeatherLocation",
+  "location: seongsuWeatherLocation",
+]);
+assertSourceIncludes("apps/mobile/src/providers/placeSearchClient.ts", [
+  "createOpenMeteoPlaceSearchClient",
+  "DEFAULT_OPEN_METEO_GEOCODING_URL",
+  'provider: "openmeteo"',
+  "normalizeOpenMeteoPlaces",
+  "if (query.length < 2) return []",
+]);
+assertSourceExcludes("apps/mobile/src/providers/placeSearchClient.ts", [
+  "catch {\n        return [];\n      }",
+]);
+assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
+  "createProxyTravelEstimateClient",
+  'new URL("/routes/estimate"',
+  "fallbackTravelEstimateClient",
+  "estimateFallbackRoute",
+  "runtimeTravelEstimateClient",
+]);
+assertSourceIncludes("apps/server/src/index.mjs", [
+  "DEFAULT_KAKAO_LOCAL_KEYWORD_URL",
+  "DEFAULT_KAKAO_DIRECTIONS_URL",
+  'url.pathname === "/routes/estimate"',
+  "searchKakaoPlaces",
+  "estimateKakaoRoute",
+  "estimateFallbackRoute",
+  'Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`',
+]);
+assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
+  "expo-notifications",
+  "checkLocalNotificationPermission",
+  "requestLocalNotificationPermission",
+  "scheduleLocalNotificationTest",
+  "syncLocalWeatherNotifications",
+  "addLocalNotificationResponseListener",
+  "addNotificationResponseReceivedListener",
+  "getLastNotificationResponseAsync",
+  "clearLastNotificationResponseAsync",
+  "subscription.remove()",
+  "setNotificationChannelAsync",
+  "scheduleNotificationAsync",
+  "smartNotificationIdentifierPrefix",
+  "cancelSmartScheduledNotifications",
+  "getAllScheduledNotificationsAsync",
+  "cancelScheduledNotificationAsync",
+  "identifier.startsWith(smartNotificationIdentifierPrefix)",
+  "WeatherON 테스트 알림",
+  "seconds: 5",
+  "weatheron-smart-care",
+  "Platform.OS === \"web\"",
+]);
+assertSourceExcludes("apps/mobile/src/providers/localNotifications.ts", [
+  "cancelAllScheduledNotificationsAsync",
+]);
+assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
+  "AppState.addEventListener",
+  "addLocalNotificationResponseListener",
+  "checkLocalNotificationPermission",
+  "getP0RouteFromNotificationPayload",
+  "if (!appStateHydrated) return",
+  "isLaunchHiddenRoute(route) ? \"H1\" : route",
+  "reconcileNotificationPermission",
+  "sendTestNotification",
+  "scheduleLocalNotificationTest",
+  "openNotificationDeepLink(payload.ruleId ?? \"local-notification\", routeFromPayload)",
+  "result.status === \"unavailable\"",
+  "requestLocalNotificationPermission",
+  "syncLocalWeatherNotifications",
+  "shouldScheduleLocalNotification",
+  "localNotificationSyncKeyRef",
+  "preferences: alertPreferences",
+  "saveSelectedDestination(permissionCompleted)",
+]);
+assertSourceIncludes("apps/mobile/app.json", [
+  "POST_NOTIFICATIONS",
+]);
+assertSourceIncludes("apps/mobile/android/app/src/main/AndroidManifest.xml", [
+  "android.permission.POST_NOTIFICATIONS",
+  "com.google.firebase.provider.FirebaseInitProvider",
+  'tools:node="remove"',
+]);
+assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
+  "buildHomeDecision",
+  "buildDestinationDiff",
+  "buildRainWindow",
+  "WeatherSummary",
+  "WeatherStatusPanel",
+  "destinationReady",
+  "목적지 없음",
+  "목적지 추가 후 계산",
+  "state.weatherProvider.status",
+  "onSetWeatherProviderMode",
+  "onRefreshWeather",
+  "onAddDestination={() => onNavigate(\"P1\")}",
+  "오늘 바로 결정",
+  "나가기 전 먼저 볼 세 가지",
+  'actionLabel="출발"',
+  'actionLabel={destinationReady ? "비교" : "추가"}',
+  'actionLabel="강수"',
+  "unreadNotificationCount",
+  "NotificationBellButton",
+  "NotificationSidebar",
+  "알림 열기",
+  "permissionReady",
+  "onManagePermission",
+  "알림 권한 관리",
+  "푸시 알림 대기",
+  "권한 관리",
+  "importantForAccessibility=\"no-hide-descendants\"",
+  "minWidth: 54",
+  "minHeight: 44",
+]);
+assertSourceIncludes("apps/mobile/src/components/WeatherStatusPanel.tsx", [
+  "기본 예보로 보기",
+  "실시간 다시 시도",
+  "실시간 날씨 다시 시도",
+  "연결 전까지 마지막 예보로 판단 유지",
+  "실시간 연결 전까지 기본 위치 예보로 판단",
+  "날씨 다시 시도",
+]);
+assertSourceIncludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
+  "테스트 알림",
+  "5초 뒤 기기 알림",
+  "latestTestNotification",
+  "최근 테스트",
+  "다시 보내기",
+  "알림 탭 시 이 화면으로 돌아옴",
+  "onSendTestNotification",
+  "notificationDeliveryStatus",
+  "예약 상태",
+  "예약 수",
+  "getNotificationDeliveryCopy",
+  "getTestNotificationBody",
+  "조건 대기",
+  "예약 완료",
+]);
+assertSourceExcludes("apps/mobile/src/screens/HomeScreen.tsx", [
+  'state.weatherProvider.fallbackUsed ? "기본 예보" : "실시간 예보"',
+  "18:00 시작 · 21:00 그침",
+  "출발지보다 흐리고 강수 가능성 있음",
+]);
+assertSourceIncludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
+  "알림 센터",
+  "onClearNotificationHistory",
+  "전체 읽음",
+  "조건 설정",
+  "알림 처리 이력 지우기",
+  "HistoryRow",
+  "accessibilityState={{ disabled: read }}",
+]);
+assertSourceExcludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
+  "buildVisibleNotifications",
+  "최근 {notificationHistory.length > 0 ? notificationHistory.length : 7}일 보관",
+]);
+assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
+  "destinationWeatherById",
+  "buildDestinationWarning",
+  "getRecommendedDepartureTime(care)",
+  "originWeather.current.tempC",
+  "destinationWeather.current.tempC",
+  "destination.alertCondition.rainThresholdPct",
+  "numberOfLines={1}",
+]);
+assertSourceIncludes("apps/mobile/src/data/demoState.ts", [
+  "destinationWeatherById",
+  "destinationSchedule",
+  "travelProvider",
+  "travelStatus",
+  "buildDestinationWeatherById",
+  "destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id)",
+  "destinationWeather,",
+  "relabelWeatherSnapshot(fallbackDestinationWeather, destination.place)",
+]);
+assertSourceExcludes("apps/mobile/src/data/demoState.ts", [
+  "personalizeDestinationWeather",
+  "getDestinationWeatherVariant",
+  "rainDelta",
+  "tempDelta",
+]);
+assertSourceIncludes("apps/mobile/src/screens/DestinationCareScreen.tsx", [
+  "originWeather",
+  "destinationWeather",
+  "도착 희망",
+  "여유 시간",
+  "getTravelEstimateCopy",
+  'onCycleDestinationSchedulePreference("targetArrivalTime")',
+  'onCycleDestinationSchedulePreference("bufferMinutes")',
+  "getConditionLabel",
+  "getRecommendedDepartureTime(care)",
+  "알림 권한 켜고 케어 시작",
+  "알림 조건",
+  "강수 기준",
+  "출발 전",
+  "바람 기준",
+  'onOpenAlertSettings("G2", "destination")',
+  'onCycleDestinationAlertCondition("rainThresholdPct")',
+  'onCycleDestinationAlertCondition("leadTimeMinutes")',
+  'onCycleDestinationAlertCondition("windThresholdMs")',
+  "푸시 알림 대기",
+]);
+assertSourceExcludes("apps/mobile/src/screens/DestinationCareScreen.tsx", [
+  "회사 ·",
+  "서울 삼성동",
+  'value="30%"',
+  'meta="출발지 0%"',
+  'time="07:30"',
+  'time="08:00"',
+]);
 
 const visibleCopyPaths = [
   "apps/mobile/src/screens",
@@ -101,10 +685,10 @@ function assertBottomNavRoutes(relativePath) {
   const match = text.match(/export const bottomNavRoutes:[\s\S]*?\n\];/);
   assert.ok(match, `${relativePath} must define bottomNavRoutes`);
   const bottomNavText = match[0];
-  for (const snippet of ['id: "H1"', 'label: "홈"', 'id: "C1"', 'label: "코디"', 'id: "G1"', 'label: "출발"', 'id: "M1"', 'label: "MY"', 'id: "S1"', 'label: "소셜"']) {
+  for (const snippet of ['id: "H1"', 'label: "홈"', 'id: "G1"', 'label: "출발"', 'id: "M1"', 'label: "MY"']) {
     assert.ok(bottomNavText.includes(snippet), `${relativePath} bottomNavRoutes must include: ${snippet}`);
   }
-  for (const snippet of ['id: "H3"', 'id: "H4"', 'id: "H5"', 'label: "우산"', 'label: "강수"']) {
+  for (const snippet of ['id: "C1"', 'label: "코디"', 'id: "S1"', 'label: "소셜"', 'id: "H3"', 'id: "H4"', 'id: "H5"', 'label: "우산"', 'label: "강수"']) {
     assert.ok(!bottomNavText.includes(snippet), `${relativePath} bottomNavRoutes must not include: ${snippet}`);
   }
 }

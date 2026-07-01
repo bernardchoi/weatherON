@@ -2,15 +2,18 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const rootDir = process.cwd();
+const appConfigPath = join(rootDir, "apps/mobile/app.json");
 const buildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD_STATUS.md");
 const actionBoardPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md");
 const qaSessionPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_SESSION.md");
 const reportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_PACKET.md");
 
+const appConfig = JSON.parse(readFileSync(appConfigPath, "utf8")).expo;
 const buildStatus = readFileSync(buildStatusPath, "utf8");
 const actionBoard = readFileSync(actionBoardPath, "utf8");
 const qaSession = readFileSync(qaSessionPath, "utf8");
 
+const sourceVersion = `${appConfig.version} (${appConfig.android.versionCode})`;
 const buildId = normalizeTableValue(tableValue(buildStatus, "EAS build id"));
 const buildState = normalizeTableValue(tableValue(buildStatus, "Build 상태"));
 const version = normalizeTableValue(tableValue(buildStatus, "Version"));
@@ -20,8 +23,11 @@ const adbState = normalizeTableValue(tableValue(actionBoard, "ADB 연결")) || "
 const installState = normalizeTableValue(tableValue(actionBoard, "APK 설치")) || "미확인";
 const unverifiedCount = normalizeTableValue(tableValue(actionBoard, "실기기 QA 미검증")) || "미확인";
 const screenshotIssues = normalizeTableValue(tableValue(actionBoard, "스토어 스크린샷 issue")) || "미확인";
+const sessionBuildId = normalizeTableValue(tableValue(qaSession, "EAS build id"));
+const sessionMatchesBuild = sessionBuildId === buildId;
+const buildMatchesSource = version === sourceVersion;
 
-const qaRows = extractQaRows(qaSession);
+const qaRows = extractQaRows(qaSession, sessionMatchesBuild);
 
 const report = `# WeatherON Android Device QA Packet
 
@@ -35,6 +41,8 @@ const report = `# WeatherON Android Device QA Packet
 | EAS build id | \`${buildId}\` |
 | Build 상태 | ${buildState} |
 | Version | \`${version}\` |
+| 소스 기준 Version | \`${sourceVersion}\` |
+| QA 대상 일치 | ${buildMatchesSource ? "일치" : "불일치 · 새 preview build 필요"} |
 | Build 링크 | ${buildUrl} |
 | APK artifact | ${artifactUrl} |
 | ADB 연결 | ${adbState} |
@@ -44,6 +52,7 @@ const report = `# WeatherON Android Device QA Packet
 
 ## 2. 실기기 직접 설치
 
+${buildMatchesSource ? "" : "> 주의: 현재 APK는 최신 소스 기준이 아니다. D1~D12 정식 재검증은 새 preview APK 생성 후 진행한다.\n\n"}
 1. Android 기기에서 APK artifact 링크를 연다.
 2. 다운로드 후 설치한다.
 3. Play Protect 또는 알 수 없는 앱 설치 경고가 나오면 WeatherON preview APK인지 확인하고 계속 설치한다.
@@ -61,6 +70,7 @@ npm run install:android-preview-apk
 주의:
 - \`sync:android-device-qa-env\`는 ADB로 확인 가능한 \`device\`, \`androidVersion\`, \`screenSize\` 등 비어 있는 QA 환경값만 채운다.
 - \`network\`, \`installMethod\`, \`testedAt\`은 실기기 확인 후 local JSON에 직접 기록한다.
+- 이전 QA 세션 build id가 최신 build와 다르면 결과는 모두 \`미검증\`으로 되돌린다.
 
 ## 3. 필수 QA 결과 기입표
 
@@ -70,8 +80,10 @@ ${qaRows.join("\n")}
 
 ## 4. 결과 반영 방법
 
-실기기 QA가 끝나면 \`docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json\`에 결과를 채운 뒤 실행한다.
-\`easBuildId\`는 \`${buildId}\`, \`appVersion\`은 \`${version}\`과 일치해야 한다.
+${buildMatchesSource ? "실기기 QA가 끝나면" : "새 preview build 생성 후 실기기 QA가 끝나면"} \`docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json\`에 결과를 채운 뒤 실행한다.
+${buildMatchesSource
+  ? `\`easBuildId\`는 \`${buildId}\`, \`appVersion\`은 \`${version}\`과 일치해야 한다.`
+  : "\`easBuildId\`와 \`appVersion\`은 새 preview build 확인 후 갱신된 `WeatherON_ANDROID_BUILD_STATUS.md` 값과 일치해야 한다."}
 
 \`\`\`bash
 npm run sync:android-device-qa-env
@@ -94,7 +106,7 @@ writeFileSync(reportPath, report, "utf8");
 
 console.log(`android device QA packet generated: ${reportPath}`);
 
-function extractQaRows(markdown) {
+function extractQaRows(markdown, keepResults) {
   const lines = markdown.split("\n");
   const rows = lines.filter((line) => /^\| D\d/.test(line.trim()));
   if (rows.length === 0) {
@@ -105,8 +117,8 @@ function extractQaRows(markdown) {
       .split("|")
       .slice(1, -1)
       .map((cell) => cell.trim());
-    const result = cells[3] && cells[3] !== "미검증" ? cells[3] : "미검증";
-    const memo = cells[4] ?? "";
+    const result = keepResults && cells[3] && cells[3] !== "미검증" ? cells[3] : "미검증";
+    const memo = keepResults ? cells[4] ?? "" : "최신 build에서 재검증 필요";
     return `| ${cells[0]} | ${cells[1]} | ${cells[2]} | ${result} | ${memo} |`;
   });
 }

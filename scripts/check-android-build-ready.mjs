@@ -4,12 +4,14 @@ import { spawn } from "node:child_process";
 const rootDir = process.cwd();
 
 await run("npm", ["run", "check:android-release"]);
+await run("npm", ["run", "check:android-preview-preflight"]);
 await run("npx", ["tsc", "-p", "apps/mobile/tsconfig.json", "--noEmit"]);
 await run("npm", ["run", "check:shared"]);
 await run("npm", ["run", "build:mockups"]);
 
 const expoConfig = await runCapture("npx", ["expo", "config", "--json", "--type", "public"], {
   cwd: `${rootDir}/apps/mobile`,
+  env: { ...process.env, EAS_BUILD_PROFILE: "preview" },
 });
 const parsedExpoConfig = JSON.parse(expoConfig);
 
@@ -25,7 +27,7 @@ function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd ?? rootDir,
-      env: process.env,
+      env: options.env ?? process.env,
       stdio: "inherit",
     });
     child.on("error", reject);
@@ -40,7 +42,7 @@ function runCapture(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd ?? rootDir,
-      env: process.env,
+      env: options.env ?? process.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";

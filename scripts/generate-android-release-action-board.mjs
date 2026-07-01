@@ -5,10 +5,12 @@ import { dirname, join } from "node:path";
 const rootDir = process.cwd();
 const reportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md");
 
+const appConfigPath = join(rootDir, "apps/mobile/app.json");
 const readinessPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_READINESS_REPORT.md");
 const buildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD_STATUS.md");
 const productionBuildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_PRODUCTION_BUILD_STATUS.md");
 const deviceQaPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_SESSION.md");
+const deviceQaPacketPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_PACKET.md");
 const deviceQaApplyStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_APPLY_STATUS.md");
 const screenshotStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_SCREENSHOT_STATUS.md");
 const adbStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_ADB_STATUS.md");
@@ -21,10 +23,13 @@ const closedTestPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_폐쇄
 const closedTestStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_CLOSED_TEST_STATUS.md");
 const closedTestInputsApplyStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_CLOSED_TEST_INPUTS_APPLY_STATUS.md");
 
+const appConfig = JSON.parse(readOptional(appConfigPath) || "{}").expo ?? {};
+const sourceVersion = appConfig.version && appConfig.android?.versionCode ? `${appConfig.version} (${appConfig.android.versionCode})` : "미확인";
 const readiness = readOptional(readinessPath);
 const buildStatus = readOptional(buildStatusPath);
 const productionBuildStatus = readOptional(productionBuildStatusPath);
 const deviceQa = readOptional(deviceQaPath);
+const deviceQaPacket = readOptional(deviceQaPacketPath);
 const deviceQaApplyStatus = readOptional(deviceQaApplyStatusPath);
 const screenshots = readOptional(screenshotStatusPath);
 const adbStatus = readOptional(adbStatusPath);
@@ -39,6 +44,11 @@ const closedTestInputsApplyStatus = readOptional(closedTestInputsApplyStatusPath
 
 const latestBuildId = tableValue(buildStatus, "EAS build id") || tableValue(readiness, "최신 preview build") || tableValue(deviceQa, "EAS build id") || "미확인";
 const latestBuildStatus = tableValue(buildStatus, "Build 상태") || tableValue(readiness, "최신 preview build 상태") || tableValue(deviceQa, "Build 상태") || "미확인";
+const latestBuildVersion = tableValue(buildStatus, "Version") || tableValue(deviceQaPacket, "Version") || "미확인";
+const previewBuildMatchesSource = latestBuildVersion === sourceVersion;
+const latestBuildAttemptResult = tableValue(buildStatus, "결과");
+const latestBuildFailureReason = tableValue(buildStatus, "실패 원인");
+const isQuotaBlocked = latestBuildAttemptResult === "실패" && latestBuildFailureReason.includes("quota");
 const latestProductionBuildId = tableValue(productionBuildStatus, "EAS build id") || tableValue(readiness, "최신 production build") || "미확인";
 const latestProductionBuildStatus = tableValue(productionBuildStatus, "Build 상태") || tableValue(readiness, "최신 production build 상태") || "미확인";
 const staticChecks = tableValue(readiness, "정적 체크 통과") || "미확인";
@@ -63,12 +73,23 @@ const closedTestActiveDays = tableValue(closedTestStatus, "14일 운영 기록")
 const closedTestInputsAppliedStatus = tableValue(closedTestInputsApplyStatus, "적용 여부") || "미확인";
 const closedTestInputsIssueCount = tableValue(closedTestInputsApplyStatus, "issue 수") || "미확인";
 const closedTestOperationRequired = tableValue(closedTestInputsApplyStatus, "폐쇄 테스트 운영 요구") || tableValue(closedTestStatus, "폐쇄 테스트 운영 요구") || "미확인";
-const deviceQaPendingCount = countTableRowsContaining(deviceQa, "미검증");
-const deviceQaBlockingFailure = deviceQa.includes("| D7 |") && deviceQa.includes("| 실패 |") && deviceQa.includes(latestBuildId);
+const deviceQaPendingCount = countQaRowsContaining(deviceQaPacket || deviceQa, "미검증");
+const deviceQaD7Result = qaResultFor(deviceQaPacket || deviceQa, "D7");
+const deviceQaBlockingFailure = deviceQaD7Result === "실패" && (deviceQaPacket || deviceQa).includes(latestBuildId);
 const requiredInputPendingCount = countTableRowsEndingWith(storeInputs, "미정") + countTableRowsContaining(storeInputs, "미확인") + countTableRowsContaining(storeInputs, "미완료");
 const closedTestPendingCount = Number(tableValue(closedTestStatus, "issue 수")) || countClosedTestPending(closedTest);
 
 const topActions = [];
+
+if (!previewBuildMatchesSource) {
+  topActions.push([
+    "최신 MVP preview APK",
+    isQuotaBlocked
+      ? `현재 소스 ${sourceVersion} 기준 새 APK 필요. ${latestBuildFailureReason}`
+      : `현재 소스 ${sourceVersion} 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 \`npm run build:android:preview:no-wait\` 실행`,
+    isQuotaBlocked ? `quota 대기 · 현재 APK ${latestBuildVersion}` : `필요 · 현재 APK ${latestBuildVersion}`,
+  ]);
+}
 
 if (deviceQaBlockingFailure) {
   topActions.push([
@@ -78,10 +99,28 @@ if (deviceQaBlockingFailure) {
   ]);
 }
 
+if (adbReadyStatus !== "가능") {
+  topActions.push([
+    "ADB/실기기 연결",
+    "USB 디버깅 허용 후 `npm run check:android-adb-ready` 재실행",
+    adbReadyStatus === "불가" ? "필요" : adbReadyStatus,
+  ]);
+}
+
+if (previewBuildMatchesSource) {
+  topActions.push([
+    "최신 MVP preview APK",
+    "`npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행",
+    "최신 소스 반영됨",
+  ]);
+}
+
 topActions.push(
   [
     `실기기 QA`,
-    deviceQaBlockingFailure
+    !previewBuildMatchesSource
+      ? "새 preview APK 생성 후 D1~D12 판정"
+      : deviceQaBlockingFailure
       ? "새 preview APK 설치 후 D7 위치 권한 재검증"
       : latestBuildStatus === "FINISHED"
         ? `${latestBuildId} APK 재설치 후 D1~D12 판정`
@@ -105,7 +144,7 @@ topActions.push(
 
 const report = `# WeatherON Android Release Action Board
 
-> 생성일: 2026-06-28
+> 생성일: ${kstDate()}
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
@@ -114,6 +153,9 @@ const report = `# WeatherON Android Release Action Board
 |---|---|
 | 최신 preview build | \`${latestBuildId}\` |
 | build 상태 | ${latestBuildStatus} |
+| preview build version | \`${latestBuildVersion}\` |
+| 소스 기준 version | \`${sourceVersion}\` |
+| preview build 소스 일치 | ${previewBuildMatchesSource ? "일치" : "불일치"} |
 | 최신 production build | \`${latestProductionBuildId}\` |
 | production build 상태 | ${latestProductionBuildStatus} |
 | 정적 체크 통과 | ${staticChecks} |
@@ -212,6 +254,15 @@ function readOptional(path) {
   return readFileSync(path, "utf8");
 }
 
+function kstDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 function tableValue(text, label) {
   if (!text) return "";
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -227,12 +278,32 @@ function countTableRowsContaining(text, token) {
     .length;
 }
 
+function countQaRowsContaining(text, token) {
+  if (!text) return 0;
+  return text
+    .split("\n")
+    .filter((line) => /^\|\s*D[\d-]+\s*\|/.test(line) && line.includes(token))
+    .length;
+}
+
 function countTableRowsEndingWith(text, token) {
   if (!text) return 0;
   return text
     .split("\n")
     .filter((line) => line.startsWith("|") && line.split("|").map((cell) => cell.trim()).includes(token))
     .length;
+}
+
+function qaResultFor(text, id) {
+  if (!text) return "";
+  const row = text
+    .split("\n")
+    .find((line) => line.trim().startsWith(`| ${id} |`));
+  if (!row) return "";
+  return row
+    .split("|")
+    .slice(1, -1)
+    .map((cell) => cell.trim())[3] ?? "";
 }
 
 function countClosedTestPending(text) {

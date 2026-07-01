@@ -95,6 +95,7 @@ const report = `# WeatherON Android Release Evidence Index
 | \`npm run check:android-release\` | Expo/EAS/스토어 문서 기준 검증 | \`WeatherON_ANDROID_RELEASE_READINESS_REPORT.md\` |
 | \`npm run check:android-build-ready\` | Android build readiness 검증 | \`WeatherON_ANDROID_RELEASE_READINESS_REPORT.md\` |
 | \`npm run check:android-product-quality\` | 제품 완성도 정적 검증 | \`WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md\` |
+| \`npm run check:android-core-flow\` | 홈 판단 CTA와 코디·옷장 실제 클릭 흐름 검증 | \`WeatherON_ANDROID_WEB_EXPORT_QA.md\` |
 | \`npm run check:android-web-preview-server\` | 8094 미리보기 서버 산출물 검증 | \`WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md\` |
 | \`npm run check:android-device-qa-ready\` | 실기기 QA 대상 APK/문서 검증 | \`WeatherON_ANDROID_DEVICE_QA_PACKET.md\` |
 | \`npm run check:android-artifact-access\` | APK/AAB URL 접근성 검증 | \`WeatherON_ANDROID_ARTIFACT_ACCESS_STATUS.md\` |
