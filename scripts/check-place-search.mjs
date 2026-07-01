@@ -38,6 +38,39 @@ try {
     const global = await fetchJson(`${baseUrl}/places/search?q=Tokyo%20Station&countryCode=JP`);
     assert.ok(global.length > 0, "global place search should return results");
     assert.equal(global[0].provider, "google");
+
+    const koreanTokyo = await fetchJson(`${baseUrl}/places/search?q=%EB%8F%84%EC%BF%84%EC%97%AD&language=ko`);
+    assert.ok(koreanTokyo.length > 0, "Korean Tokyo query should return results");
+    assert.equal(koreanTokyo[0].countryCode, "JP");
+    assert.equal(koreanTokyo[0].provider, "google");
+
+    const englishTokyo = await fetchJson(`${baseUrl}/places/search?q=%EB%8F%84%EC%BF%84%EC%97%AD&language=en`);
+    assert.ok(englishTokyo.length > 0, "Korean Tokyo query with English device language should return results");
+    assert.equal(englishTokyo[0].countryCode, "JP");
+    assert.equal(englishTokyo[0].provider, "google");
+  }
+
+  const route = await fetchJson(
+    `${baseUrl}/routes/estimate?origin=37.5446,127.0557&destination=37.5122,127.0719&originName=%EC%84%B1%EC%88%98&destinationName=%EC%9E%A0%EC%8B%A4%EC%A2%85%ED%95%A9%EC%9A%B4%EB%8F%99%EC%9E%A5`,
+  );
+  assert.ok(route.travelMinutes > 0, "route estimate should include travel minutes");
+  assert.ok(route.distanceMeters >= 0, "route estimate should include distance");
+  assert.ok(["kakao", "fallback"].includes(route.provider), "route estimate should use kakao or fallback provider");
+
+  const tokyoRoute = await fetchJson(
+    `${baseUrl}/routes/estimate?origin=37.5446,127.0557&destination=35.6812,139.7671&originName=%EC%84%B1%EC%88%98&destinationName=Tokyo&originCountryCode=KR&destinationCountryCode=JP`,
+  );
+  assert.ok(tokyoRoute.travelMinutes > 0, "Tokyo route estimate should include travel minutes");
+  assert.ok(tokyoRoute.distanceMeters >= 0, "Tokyo route estimate should include distance");
+  assert.equal(tokyoRoute.provider, "fallback");
+
+  if (googleKey) {
+    const tokyoLocalRoute = await fetchJson(
+      `${baseUrl}/routes/estimate?origin=35.6812,139.7671&destination=35.6580,139.7016&originName=Tokyo%20Station&destinationName=Shibuya&originCountryCode=JP&destinationCountryCode=JP`,
+    );
+    assert.ok(tokyoLocalRoute.travelMinutes > 0, "Tokyo local route estimate should include travel minutes");
+    assert.ok(tokyoLocalRoute.distanceMeters >= 0, "Tokyo local route estimate should include distance");
+    assert.equal(tokyoLocalRoute.provider, "google");
   }
 
   console.log("place search smoke passed");

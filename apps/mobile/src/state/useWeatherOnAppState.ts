@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
 import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
-import { presetWardrobe, type DestinationAlertCondition, type UserPreferenceProfile, type WardrobeItem } from "@weatheron/shared";
+import { presetWardrobe, type DestinationAlertCondition, type NotificationRuleEvaluation, type UserPreferenceProfile, type WardrobeItem } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
-import type { AppRouteId, OnboardingRouteId, P0RouteId } from "../navigation/routes";
-import { initialDeviceLocationState, requestDeviceWeatherLocation, type DeviceLocationState } from "../providers/deviceLocation";
-import { fixtureWeatherProvider, getFallbackSnapshots } from "../providers/weatherProvider";
-import type { WeatherProviderMode } from "../providers/weatherProvider";
+import { isLaunchHiddenRoute, isP0Route, type AppRouteId, type OnboardingRouteId, type P0RouteId } from "../navigation/routes";
+import {
+  initialDeviceLocationState,
+  requestDeviceWeatherLocation,
+  syncDeviceWeatherLocationPermission,
+  type DeviceLocationState,
+} from "../providers/deviceLocation";
+import { getFallbackSnapshots, runtimeWeatherProvider } from "../providers/weatherProvider";
+import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
 import {
   createKmaWeatherLocationFromCoordinate,
   defaultSeoulWeatherLocation,
@@ -13,13 +19,23 @@ import {
   type KmaWeatherLocationPreset,
   type WeatherLocationPreset,
 } from "../providers/weatherLocations";
-import { runtimePlaceSearchClient } from "../providers/placeSearchClient";
+import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
+import { runtimeTravelEstimateClient, type TravelEstimateResult } from "../providers/travelEstimateClient";
 import { readAppJson, writeAppJson } from "../providers/appStorage";
+import {
+  addLocalNotificationResponseListener,
+  checkLocalNotificationPermission,
+  requestLocalNotificationPermission,
+  scheduleLocalNotificationTest,
+  syncLocalWeatherNotifications,
+  type LocalNotificationSyncResult,
+} from "../providers/localNotifications";
 import { getRouteLabel } from "../navigation/routeLabels";
 
 export type GateReason = "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
 export type WeatherLocationMode = "auto" | "manual";
 export type DestinationHubFilter = "all" | "saved" | "care" | "category";
+export type PlaceSearchStatus = "idle" | "loading" | "ready" | "empty" | "error";
 export type AlertSettingsFocus = "general" | "umbrella" | "rain" | "destination";
 export type AccountPendingAction = GateReason;
 export type PermissionGateReason = "notification" | "destination-care" | "location";
@@ -35,6 +51,17 @@ export type FitPreference = "standard" | "relaxed" | "formal" | "outdoor";
 export type SmartCareScenario = "commute" | "outing" | "travel";
 export type PermissionReturnRouteId = P0RouteId | OnboardingRouteId;
 export type AccountGateReturnRouteId = P0RouteId | "A4";
+export type AlertPreferenceKey = "rainDetail" | "routine" | "bedtime" | "destination" | "quietHours";
+export type AlertPreferences = Record<AlertPreferenceKey, boolean>;
+export type NotificationDeliveryStatus = LocalNotificationSyncResult;
+export type DestinationSchedulePreference = {
+  targetArrivalTime: string;
+  bufferMinutes: number;
+};
+export type DestinationTravelEstimate = TravelEstimateResult & {
+  originPlaceId: string;
+  destinationPlaceId: string;
+};
 
 export type AccountGateState = {
   returnTo: AccountGateReturnRouteId;
@@ -76,6 +103,8 @@ export type SavedDestination = {
   place: PlaceSearchResult;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
+  schedulePreference: DestinationSchedulePreference;
+  travelEstimate: DestinationTravelEstimate;
   savedAtLabel: string;
 };
 
@@ -83,7 +112,7 @@ export type NotificationHistoryItem = {
   id: string;
   notificationId: string;
   title: string;
-  action: "read" | "open";
+  action: "read" | "open" | "sent";
   route?: P0RouteId;
   statusLabel: string;
 };
@@ -93,12 +122,26 @@ const defaultDestinationAlertCondition: DestinationAlertCondition = {
   leadTimeMinutes: 60,
   windThresholdMs: 8,
 };
+const defaultAlertPreferences: AlertPreferences = {
+  rainDetail: true,
+  routine: true,
+  bedtime: true,
+  destination: true,
+  quietHours: true,
+};
+const defaultNotificationDeliveryStatus: NotificationDeliveryStatus = {
+  status: "unavailable",
+  scheduledCount: 0,
+};
 
 const rainThresholdSteps = [30, 50, 70];
 const leadTimeSteps = [30, 60, 120];
 const windThresholdSteps = [5, 8, 11];
+const targetArrivalTimeSteps = ["09:00", "10:20", "13:00", "15:30", "18:00", "20:00"];
+const bufferMinuteSteps = [0, 10, 20, 30];
 const appStateStorageKey = "weatheron.appState.v1";
 const notificationStateStorageKey = "weatheron.notificationState.v1";
+const weatherProviderResultStorageKey = "weatheron.weatherProviderResult.v1";
 
 export function useWeatherOnAppState() {
   const [route, setRoute] = useState<AppRouteId>("O2");
@@ -115,13 +158,23 @@ export function useWeatherOnAppState() {
   const [recentlyRemovedDestination, setRecentlyRemovedDestination] = useState<SavedDestination | null>(null);
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
   const [previewDestinationAlertCondition, setPreviewDestinationAlertCondition] = useState<DestinationAlertCondition>(defaultDestinationAlertCondition);
-  const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(placeSearchFixtures[1] ?? placeSearchFixtures[0]);
+  const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(getDefaultDestinationPlace());
+  const [previewDestinationSchedulePreference, setPreviewDestinationSchedulePreference] = useState<DestinationSchedulePreference>(() =>
+    getDefaultDestinationSchedulePreference(getDefaultDestinationPlace()),
+  );
+  const [previewDestinationTravelEstimate, setPreviewDestinationTravelEstimate] = useState<DestinationTravelEstimate>(() =>
+    createDefaultTravelEstimate(seongsuWeatherLocation, getDefaultDestinationPlace()),
+  );
+  const [destinationSelectionReady, setDestinationSelectionReady] = useState(false);
   const [destinationHubFilter, setDestinationHubFilterState] = useState<DestinationHubFilter>("all");
-  const [placeSearchQuery, setPlaceSearchQuery] = useState("잠실종합운동장");
-  const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>(placeSearchFixtures.slice(1, 2));
+  const [placeSearchQuery, setPlaceSearchQuery] = useState("");
+  const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>([]);
   const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false);
+  const [placeSearchStatus, setPlaceSearchStatus] = useState<PlaceSearchStatus>("idle");
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => loadNotificationState().readNotificationIds);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>(() => loadNotificationState().notificationHistory);
+  const [alertPreferences, setAlertPreferences] = useState<AlertPreferences>(defaultAlertPreferences);
+  const [notificationDeliveryStatus, setNotificationDeliveryStatus] = useState<NotificationDeliveryStatus>(defaultNotificationDeliveryStatus);
   const [alertSettingsRouteState, setAlertSettingsRouteState] = useState<AlertSettingsRouteState | null>(null);
   const [selectedPolicyDocument, setSelectedPolicyDocument] = useState<PolicyDocumentType>("privacy");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
@@ -139,6 +192,7 @@ export function useWeatherOnAppState() {
   const [wardrobeOwnedItemIds, setWardrobeOwnedItemIds] = useState<string[]>([]);
   const [selectedWardrobeItemId, setSelectedWardrobeItemId] = useState<string>(presetWardrobe[0]?.id ?? "");
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [styleProfileReturnRoute, setStyleProfileReturnRoute] = useState<P0RouteId | null>(null);
   const [accountLinked, setAccountLinked] = useState(false);
   const [termsRequiredAccepted, setTermsRequiredAccepted] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
@@ -151,6 +205,11 @@ export function useWeatherOnAppState() {
   const [weatherRefreshTick, setWeatherRefreshTick] = useState(0);
   const [weatherProviderResult, setWeatherProviderResult] = useState(() => getFallbackSnapshots("stale"));
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+  const localNotificationSyncKeyRef = useRef("");
+  const placeSearchRequestSeqRef = useRef(0);
+  const previousRouteRef = useRef<AppRouteId | null>(null);
+  const weatherLoadedFromNetworkRef = useRef(false);
+  const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
   const selectedSavedDestination = useMemo(
     () => savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id),
     [savedDestinations, selectedDestinationPlace.id],
@@ -158,6 +217,8 @@ export function useWeatherOnAppState() {
   const destinationSaved = Boolean(selectedSavedDestination);
   const destinationCareEnabled = selectedSavedDestination?.careEnabled ?? previewDestinationCareEnabled;
   const selectedDestinationAlertCondition = selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition;
+  const selectedDestinationSchedulePreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+  const selectedDestinationTravelEstimate = selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
       gender: styleGender === "men" ? "male" : styleGender === "women" ? "female" : "any",
@@ -170,12 +231,22 @@ export function useWeatherOnAppState() {
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
   const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
+  const reconcileNotificationPermission = useCallback(async () => {
+    const result = await checkLocalNotificationPermission();
+    if (result.status === "unavailable") return;
+    setPermissionReady(result.granted);
+  }, []);
 
   useEffect(() => {
     let active = true;
-    readPersistedAppState()
-      .then((persistedState) => {
-        if (!active || !persistedState) return;
+    Promise.all([readPersistedWeatherProviderResult(), readPersistedAppState()])
+      .then(([persistedWeatherResult, persistedState]) => {
+        if (!active) return;
+        if (persistedWeatherResult) {
+          persistedWeatherProviderResultRef.current = persistedWeatherResult;
+          setWeatherProviderResult(persistedWeatherResult);
+        }
+        if (!persistedState) return;
         setOnboardingCompleted(persistedState.onboardingCompleted);
         setAccountLinked(persistedState.accountLinked);
         setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
@@ -194,6 +265,8 @@ export function useWeatherOnAppState() {
         setSelectedDestinationPlace(persistedState.selectedDestinationPlace);
         setPreviewDestinationCareEnabled(persistedState.previewDestinationCareEnabled);
         setPreviewDestinationAlertCondition(persistedState.previewDestinationAlertCondition);
+        setPreviewDestinationSchedulePreference(persistedState.previewDestinationSchedulePreference);
+        setPreviewDestinationTravelEstimate(persistedState.previewDestinationTravelEstimate);
         setWeatherLocationMode(persistedState.weatherLocationMode);
         setTemperatureUnit(persistedState.temperatureUnit);
         setWeightUnit(persistedState.weightUnit);
@@ -203,6 +276,7 @@ export function useWeatherOnAppState() {
         setAdConsentMode(persistedState.adConsentMode);
         setReadNotificationIds(persistedState.readNotificationIds);
         setNotificationHistory(persistedState.notificationHistory);
+        setAlertPreferences(persistedState.alertPreferences);
         if (persistedState.locationReady) setDeviceLocationState({ status: "idle", message: "현재 위치 재확인 필요" });
         setManualWeatherLocation(persistedState.manualWeatherLocation);
         setRoute(persistedState.onboardingCompleted ? "H1" : "O2");
@@ -217,25 +291,39 @@ export function useWeatherOnAppState() {
   }, []);
 
   const state = useMemo(
-    () =>
-      buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
-        destinationCareEnabled,
+    () => {
+      const hasSavedDestination = savedDestinations.length > 0;
+      return buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
+        hasDestination: hasSavedDestination,
+        destinationCareEnabled: hasSavedDestination ? destinationCareEnabled : false,
         wardrobe,
         preferenceProfile: userPreferenceProfile,
-        destination: {
-          id: selectedDestinationPlace.id,
-          name: selectedDestinationPlace.name,
-          category: selectedDestinationPlace.category,
-          countryCode: selectedDestinationPlace.countryCode,
-        },
+        destination: hasSavedDestination
+          ? {
+              id: selectedDestinationPlace.id,
+              name: selectedDestinationPlace.name,
+              category: selectedDestinationPlace.category,
+              countryCode: selectedDestinationPlace.countryCode,
+            }
+          : undefined,
         destinationAlertCondition: selectedDestinationAlertCondition,
+        destinationSchedule: {
+          targetArrivalTime: selectedDestinationSchedulePreference.targetArrivalTime,
+          bufferMinutes: selectedDestinationSchedulePreference.bufferMinutes,
+          travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
+          travelProvider: selectedDestinationTravelEstimate.provider,
+          travelStatus: selectedDestinationTravelEstimate.status,
+        },
         savedDestinations,
-      }),
+      });
+    },
     [
       destinationCareEnabled,
       savedDestinations,
       selectedDestinationAlertCondition,
       selectedDestinationPlace,
+      selectedDestinationSchedulePreference,
+      selectedDestinationTravelEstimate,
       useDestinationWeather,
       userPreferenceProfile,
       wardrobe,
@@ -244,22 +332,25 @@ export function useWeatherOnAppState() {
   );
 
   useEffect(() => {
+    if (!appStateHydrated) return;
     let active = true;
     setIsWeatherLoading(true);
-    const currentLocation =
-      weatherLocationMode === "manual" ? manualWeatherLocation : deviceWeatherLocation ?? seongsuWeatherLocation;
-    const destinationLocation = {
-      locationId: selectedDestinationPlace.id,
-      locationName: selectedDestinationPlace.name,
-      countryCode: selectedDestinationPlace.countryCode,
-      coordinate: selectedDestinationPlace.coordinate,
-      timezone: selectedDestinationPlace.timezone,
-    };
+    const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
+    const destinationLocation = createWeatherLocationFromPlace(selectedDestinationPlace);
     const savedDestinationLocations = savedDestinations.map((destination) => createWeatherLocationFromPlace(destination.place));
-    fixtureWeatherProvider
+    runtimeWeatherProvider
       .getSnapshots(weatherProviderMode, { currentLocation, destinationLocation, destinationLocations: savedDestinationLocations })
       .then((result) => {
-        if (active) setWeatherProviderResult(result);
+        if (active) {
+          const persistedWeatherResult = persistedWeatherProviderResultRef.current;
+          const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult) ? persistedWeatherResult : result;
+          weatherLoadedFromNetworkRef.current = true;
+          setWeatherProviderResult(nextResult);
+          if (result.status === "ready" && !result.fallbackUsed) {
+            persistedWeatherProviderResultRef.current = normalizePersistedWeatherProviderResult(result);
+            savePersistedWeatherProviderResult(result);
+          }
+        }
       })
       .finally(() => {
         if (active) setIsWeatherLoading(false);
@@ -268,11 +359,85 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinations, selectedDestinationPlace]);
+  }, [appStateHydrated, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinations, selectedDestinationPlace]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    let active = true;
+    const originLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
+    const destinationPlace = selectedDestinationPlace;
+    runtimeTravelEstimateClient
+      .estimateRoute({
+        origin: originLocation.coordinate,
+        destination: destinationPlace.coordinate,
+        originName: originLocation.locationName,
+        destinationName: destinationPlace.name,
+        originCountryCode: "KR",
+        destinationCountryCode: destinationPlace.countryCode,
+      })
+      .then((result) => {
+        if (!active) return;
+        const estimate = createDestinationTravelEstimate(originLocation.locationId, destinationPlace.id, result);
+        setPreviewDestinationTravelEstimate(estimate);
+        setSavedDestinations((current) =>
+          current.map((destination) =>
+            destination.place.id === destinationPlace.id
+              ? { ...destination, travelEstimate: estimate, savedAtLabel: destination.savedAtLabel === "방금 저장" ? "방금 저장" : "업데이트됨" }
+              : destination,
+          ),
+        );
+      })
+      .catch(() => {
+        if (!active) return;
+        const estimate = createDefaultTravelEstimate(originLocation, destinationPlace, "error");
+        setPreviewDestinationTravelEstimate(estimate);
+      });
+    return () => {
+      active = false;
+    };
+  }, [appStateHydrated, weatherLocationMode, manualWeatherLocation, deviceWeatherLocation, selectedDestinationPlace]);
 
   useEffect(() => {
     saveNotificationState({ readNotificationIds, notificationHistory });
   }, [notificationHistory, readNotificationIds]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    void reconcileNotificationPermission();
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") void reconcileNotificationPermission();
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [appStateHydrated, reconcileNotificationPermission]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    let active = true;
+    const notifications = state.notifications.filter((item) => shouldScheduleLocalNotification(item, alertPreferences));
+    const syncKey = JSON.stringify({
+      permissionReady,
+      smartCareEnabled,
+      preferences: alertPreferences,
+      ids: notifications.map((item) => `${item.id}:${item.active}:${item.reason}`),
+    });
+    if (localNotificationSyncKeyRef.current === syncKey) return;
+    localNotificationSyncKeyRef.current = syncKey;
+    void syncLocalWeatherNotifications({
+      enabled: permissionReady && smartCareEnabled,
+      notifications,
+    })
+      .then((result) => {
+        if (active) setNotificationDeliveryStatus(result);
+      })
+      .catch(() => {
+        if (active) setNotificationDeliveryStatus(defaultNotificationDeliveryStatus);
+      });
+    return () => {
+      active = false;
+    };
+  }, [alertPreferences, appStateHydrated, permissionReady, smartCareEnabled, state.notifications]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -295,6 +460,8 @@ export function useWeatherOnAppState() {
       selectedDestinationPlace,
       previewDestinationCareEnabled,
       previewDestinationAlertCondition,
+      previewDestinationSchedulePreference,
+      previewDestinationTravelEstimate,
       weatherLocationMode,
       manualWeatherLocation,
       temperatureUnit,
@@ -305,11 +472,13 @@ export function useWeatherOnAppState() {
       adConsentMode,
       readNotificationIds,
       notificationHistory,
+      alertPreferences,
     });
   }, [
     accountLinked,
     adConsentMode,
     ageBand,
+    alertPreferences,
     appStateHydrated,
     fitPreference,
     locationReady,
@@ -319,6 +488,8 @@ export function useWeatherOnAppState() {
     permissionReady,
     previewDestinationAlertCondition,
     previewDestinationCareEnabled,
+    previewDestinationSchedulePreference,
+    previewDestinationTravelEstimate,
     readNotificationIds,
     reducedTransparency,
     savedDestinations,
@@ -356,7 +527,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const selectWeatherLocation = useCallback((place: PlaceSearchResult) => {
-    setManualWeatherLocation(createKmaWeatherLocationFromCoordinate(place.coordinate, place.name));
+    setManualWeatherLocation(createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id));
     setWeatherLocationMode("manual");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
@@ -375,19 +546,32 @@ export function useWeatherOnAppState() {
     setDeviceLocationState({ status: "requesting", message: "위치 확인 중" });
     const result = await requestDeviceWeatherLocation();
     setDeviceLocationState(result);
-    if (result.location) setDeviceWeatherLocation(result.location);
+    if (result.status === "granted" && result.location) {
+      setLocationReady(true);
+      setDeviceWeatherLocation(result.location);
+    } else {
+      setLocationReady(false);
+      setDeviceWeatherLocation(null);
+      setWeatherLocationMode("manual");
+    }
     setWeatherRefreshTick((value) => value + 1);
   }, [locationReady]);
 
   useEffect(() => {
-    if (!appStateHydrated || !locationReady || weatherLocationMode !== "auto" || deviceWeatherLocation) return;
+    if (!appStateHydrated || weatherLocationMode !== "auto" || deviceWeatherLocation) return;
     let active = true;
-    setDeviceLocationState({ status: "requesting", message: "현재 위치 재확인 중" });
-    requestDeviceWeatherLocation().then((result) => {
+    setDeviceLocationState({ status: "requesting", message: locationReady ? "현재 위치 재확인 중" : "위치 권한 동기화 중" });
+    syncDeviceWeatherLocationPermission().then((result) => {
       if (!active) return;
       setDeviceLocationState(result);
-      if (result.location) setDeviceWeatherLocation(result.location);
-      if (result.status !== "granted") setLocationReady(false);
+      if (result.status === "granted" && result.location) {
+        setLocationReady(true);
+        setDeviceWeatherLocation(result.location);
+      } else {
+        setLocationReady(false);
+        setDeviceWeatherLocation(null);
+        setWeatherLocationMode("manual");
+      }
       setWeatherRefreshTick((value) => value + 1);
     });
     return () => {
@@ -395,10 +579,29 @@ export function useWeatherOnAppState() {
     };
   }, [appStateHydrated, deviceWeatherLocation, locationReady, weatherLocationMode]);
 
+  const resetPlaceSearch = useCallback(() => {
+    placeSearchRequestSeqRef.current += 1;
+    setPlaceSearchQuery("");
+    setPlaceSearchResults([]);
+    setIsPlaceSearchLoading(false);
+    setPlaceSearchStatus("idle");
+  }, []);
+
+  useEffect(() => {
+    const previousRoute = previousRouteRef.current;
+    previousRouteRef.current = route;
+    if (previousRoute && previousRoute !== "P1" && route === "P1") resetPlaceSearch();
+  }, [resetPlaceSearch, route]);
+
   const navigate = useCallback((nextRoute: AppRouteId) => {
     setAlertSettingsRouteState(null);
-    setRoute(nextRoute);
-  }, []);
+    if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
+    setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
+  }, [route]);
+
+  useEffect(() => {
+    if (route !== "O4" && styleProfileReturnRoute) setStyleProfileReturnRoute(null);
+  }, [route, styleProfileReturnRoute]);
 
   const openAlertSettings = useCallback((returnTo: P0RouteId, focus: AlertSettingsFocus = "general") => {
     setAlertSettingsRouteState({ returnTo, focus });
@@ -434,7 +637,7 @@ export function useWeatherOnAppState() {
     setWardrobeOwnedItemIds([]);
     setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
     setAccountGateResult(null);
-    setRoute("H1");
+    setRoute("M1");
   }, []);
 
   const toggleStyleTag = useCallback((tag: string) => {
@@ -516,10 +719,15 @@ export function useWeatherOnAppState() {
     setNotificationHistory([]);
   }, []);
 
+  const toggleAlertPreference = useCallback((key: AlertPreferenceKey) => {
+    setAlertPreferences((current) => ({ ...current, [key]: !current[key] }));
+  }, []);
+
   const editDestinationAlertCondition = useCallback((placeId: string) => {
     const matchedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
     if (matchedDestination) {
       setSelectedDestinationPlace(matchedDestination.place);
+      setDestinationSelectionReady(true);
       setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
       setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
       setDestinationHubFilterState("all");
@@ -533,11 +741,24 @@ export function useWeatherOnAppState() {
   const editNotificationCondition = useCallback((id: string, route: P0RouteId) => {
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
     if (destinationPlaceId) {
-      editDestinationAlertCondition(destinationPlaceId);
+      const matchedDestination = savedDestinations.find((destination) => destination.place.id === destinationPlaceId);
+      if (matchedDestination) {
+        setSelectedDestinationPlace(matchedDestination.place);
+        setDestinationSelectionReady(true);
+        setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
+        setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
+        setDestinationHubFilterState("all");
+        setUseDestinationWeather(false);
+        setWeatherProviderMode("ready");
+        setWeatherRefreshTick((value) => value + 1);
+      }
+      setAlertSettingsRouteState({ returnTo: "G2", focus: "destination" });
+      setRoute("M2");
       return;
     }
-    setRoute(route === "H1" ? "M2" : route);
-  }, [editDestinationAlertCondition]);
+    setAlertSettingsRouteState({ returnTo: route, focus: getAlertSettingsFocusFromRoute(route) });
+    setRoute("M2");
+  }, [savedDestinations]);
 
   const openNotificationDeepLink = useCallback((id: string, route: P0RouteId) => {
     setReadNotificationIds((current) => (current.includes(id) ? current : [...current, id]));
@@ -546,10 +767,10 @@ export function useWeatherOnAppState() {
       addNotificationHistoryItem(current, {
         id: createNotificationHistoryId(id, "open"),
         notificationId: id,
-        title: notification?.title ?? "알림",
+        title: getNotificationHistoryTitle(id, notification?.title),
         action: "open",
         route,
-        statusLabel: `${getRouteLabel(route)} 이동`,
+        statusLabel: getNotificationOpenResultLabel(id, route),
       }),
     );
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
@@ -557,6 +778,7 @@ export function useWeatherOnAppState() {
       const matchedDestination = savedDestinations.find((destination) => destination.place.id === destinationPlaceId);
       if (matchedDestination) {
         setSelectedDestinationPlace(matchedDestination.place);
+        setDestinationSelectionReady(true);
         setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
         setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
         setDestinationHubFilterState("all");
@@ -565,24 +787,83 @@ export function useWeatherOnAppState() {
         setWeatherRefreshTick((value) => value + 1);
       }
     }
+    if (route === "M2") {
+      setAlertSettingsRouteState({ returnTo: "H1", focus: "general" });
+    }
     setRoute(route);
   }, [savedDestinations, state.notifications]);
 
+  const sendTestNotification = useCallback(async () => {
+    if (!permissionReady) {
+      setPermissionGate(createPermissionGateState("notification", "M2", selectedDestinationPlace.name, "general"));
+      setRoute("O3");
+      return;
+    }
+    const result = await scheduleLocalNotificationTest();
+    setNotificationHistory((current) =>
+      addNotificationHistoryItem(current, {
+        id: createNotificationHistoryId("local-test", "sent"),
+        notificationId: "local-test",
+        title: "WeatherON 테스트 알림",
+        action: "sent",
+        route: "M2",
+        statusLabel: getLocalNotificationResultLabel(result),
+      }),
+    );
+  }, [permissionReady, selectedDestinationPlace.name]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    let removeListener: (() => void) | undefined;
+    let active = true;
+    void addLocalNotificationResponseListener((payload) => {
+      if (!active) return;
+      const routeFromPayload = getP0RouteFromNotificationPayload(payload.route);
+      if (!routeFromPayload) return;
+      openNotificationDeepLink(payload.ruleId ?? "local-notification", routeFromPayload);
+    }).then((remove) => {
+      if (active) {
+        removeListener = remove;
+        return;
+      }
+      remove();
+    });
+    return () => {
+      active = false;
+      removeListener?.();
+    };
+  }, [appStateHydrated, openNotificationDeepLink]);
+
   const searchPlaces = useCallback(async (query: string) => {
+    const requestSeq = placeSearchRequestSeqRef.current + 1;
+    placeSearchRequestSeqRef.current = requestSeq;
     setPlaceSearchQuery(query);
-    setIsPlaceSearchLoading(true);
-    try {
-      const results = await runtimePlaceSearchClient.searchPlaces({ query });
-      setPlaceSearchResults(results.length ? results : placeSearchFixtures.slice(0, 3));
-    } catch {
-      setPlaceSearchResults(placeSearchFixtures.slice(0, 3));
-    } finally {
+    if (query.trim().length < 2) {
+      setPlaceSearchResults([]);
       setIsPlaceSearchLoading(false);
+      setPlaceSearchStatus("idle");
+      return;
+    }
+    setIsPlaceSearchLoading(true);
+    setPlaceSearchStatus("loading");
+    try {
+      const results = await runtimePlaceSearchClient.searchPlaces({ query, locale: getDeviceSearchLocale() });
+      if (placeSearchRequestSeqRef.current !== requestSeq) return;
+      setPlaceSearchResults(results);
+      setPlaceSearchStatus(results.length > 0 ? "ready" : "empty");
+    } catch {
+      if (placeSearchRequestSeqRef.current !== requestSeq) return;
+      setPlaceSearchResults([]);
+      setPlaceSearchStatus("error");
+    } finally {
+      if (placeSearchRequestSeqRef.current === requestSeq) setIsPlaceSearchLoading(false);
     }
   }, []);
 
   const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
     setSelectedDestinationPlace(place);
+    setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(place));
+    setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(true);
     setDestinationHubFilterState("all");
     setUseDestinationWeather(false);
@@ -591,11 +872,14 @@ export function useWeatherOnAppState() {
   }, []);
 
   const saveSelectedDestination = useCallback((careEnabled = true) => {
+    setDestinationSelectionReady(true);
     setSavedDestinations((current) => {
       const nextDestination: SavedDestination = {
         place: selectedDestinationPlace,
         careEnabled,
         alertCondition: selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition,
+        schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
+        travelEstimate: selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate,
         savedAtLabel: current.some((destination) => destination.place.id === selectedDestinationPlace.id) ? "업데이트됨" : "방금 저장",
       };
       const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
@@ -603,37 +887,37 @@ export function useWeatherOnAppState() {
         ? current.map((destination) => (destination.place.id === selectedDestinationPlace.id ? nextDestination : destination))
         : [nextDestination, ...current];
     });
-  }, [previewDestinationAlertCondition, selectedDestinationPlace, selectedSavedDestination?.alertCondition]);
+  }, [
+    previewDestinationAlertCondition,
+    previewDestinationSchedulePreference,
+    previewDestinationTravelEstimate,
+    selectedDestinationPlace,
+    selectedSavedDestination?.alertCondition,
+    selectedSavedDestination?.schedulePreference,
+    selectedSavedDestination?.travelEstimate,
+  ]);
+
+  const startAccountGate = useCallback((reason: GateReason, returnTo: AccountGateReturnRouteId, selectedDestinationName?: string) => {
+    setGate(createAccountGateState(reason, returnTo, selectedDestinationName, state.outfit.variant));
+    setRoute(accountLinked ? "A3" : "A2");
+  }, [accountLinked, state.outfit.variant]);
 
   const saveDestination = useCallback((returnTo: P0RouteId = "G1") => {
-    if (accountLinked && termsRequiredAccepted) {
-      if (!permissionReady) {
-        setPermissionGate(createPermissionGateState("destination-care", returnTo, selectedDestinationPlace.name, "destination"));
-        setRoute("O3");
-        return;
-      }
-      saveSelectedDestination(true);
-      setPreviewDestinationCareEnabled(true);
-      setAccountGateResult(createAccountGateResult("destination-care", returnTo));
-      setRoute(returnTo);
-      return;
-    }
-    setGate(createAccountGateState("destination-care", returnTo, selectedDestinationPlace.name));
-    setRoute("A2");
-  }, [accountLinked, permissionReady, saveSelectedDestination, selectedDestinationPlace.name, termsRequiredAccepted]);
+    saveSelectedDestination(true);
+    resetPlaceSearch();
+    setPreviewDestinationCareEnabled(true);
+    setAccountGateResult(createAccountGateResult("destination-care", returnTo));
+    if (route === "O6") setOnboardingCompleted(true);
+    setRoute(returnTo);
+  }, [resetPlaceSearch, route, saveSelectedDestination]);
 
   const toggleDestinationCare = useCallback(() => {
-    if (!accountLinked || !termsRequiredAccepted) {
-      setGate(createAccountGateState("destination-care", "G2", selectedDestinationPlace.name));
-      setRoute("A2");
-      return;
-    }
-    if (!permissionReady) {
+    const nextCareEnabled = !destinationCareEnabled;
+    if (nextCareEnabled && !permissionReady) {
       setPermissionGate(createPermissionGateState("destination-care", "G2", selectedDestinationPlace.name, "destination"));
       setRoute("O3");
       return;
     }
-    const nextCareEnabled = !destinationCareEnabled;
     if (destinationSaved) {
       setSavedDestinations((current) =>
         current.map((destination) =>
@@ -644,16 +928,12 @@ export function useWeatherOnAppState() {
       saveSelectedDestination(nextCareEnabled);
     }
     setPreviewDestinationCareEnabled(nextCareEnabled);
-  }, [accountLinked, destinationCareEnabled, destinationSaved, permissionReady, saveSelectedDestination, selectedDestinationPlace.id, selectedDestinationPlace.name, termsRequiredAccepted]);
+  }, [destinationCareEnabled, destinationSaved, permissionReady, saveSelectedDestination, selectedDestinationPlace.id, selectedDestinationPlace.name]);
 
   const toggleSavedDestinationCare = useCallback((placeId: string) => {
-    if (!accountLinked || !termsRequiredAccepted) {
-      setGate(createAccountGateState("destination-care", "G1"));
-      setRoute("A2");
-      return;
-    }
-    if (!permissionReady) {
-      const matchedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
+    const matchedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
+    const nextCareEnabled = !matchedDestination?.careEnabled;
+    if (nextCareEnabled && !permissionReady) {
       setPermissionGate(createPermissionGateState("destination-care", "G1", matchedDestination?.place.name, "destination"));
       setRoute("O3");
       return;
@@ -663,7 +943,7 @@ export function useWeatherOnAppState() {
         destination.place.id === placeId ? { ...destination, careEnabled: !destination.careEnabled, savedAtLabel: "업데이트됨" } : destination,
       ),
     );
-  }, [accountLinked, permissionReady, savedDestinations, termsRequiredAccepted]);
+  }, [permissionReady, savedDestinations]);
 
   const cycleSelectedDestinationAlertCondition = useCallback((field: keyof DestinationAlertCondition) => {
     const steps = getDestinationAlertConditionSteps(field);
@@ -682,6 +962,30 @@ export function useWeatherOnAppState() {
     }
   }, [destinationSaved, selectedDestinationAlertCondition, selectedDestinationPlace.id]);
 
+  const cycleSelectedDestinationSchedulePreference = useCallback((field: keyof DestinationSchedulePreference) => {
+    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+    const nextPreference =
+      field === "targetArrivalTime"
+        ? {
+            ...currentPreference,
+            targetArrivalTime: cycleValue(targetArrivalTimeSteps, currentPreference.targetArrivalTime),
+          }
+        : {
+            ...currentPreference,
+            bufferMinutes: cycleValue(bufferMinuteSteps, currentPreference.bufferMinutes),
+          };
+    setPreviewDestinationSchedulePreference(nextPreference);
+    if (destinationSaved) {
+      setSavedDestinations((current) =>
+        current.map((destination) =>
+          destination.place.id === selectedDestinationPlace.id
+            ? { ...destination, schedulePreference: nextPreference, savedAtLabel: "업데이트됨" }
+            : destination,
+        ),
+      );
+    }
+  }, [destinationSaved, previewDestinationSchedulePreference, selectedDestinationPlace.id, selectedSavedDestination?.schedulePreference]);
+
   const removeSavedDestination = useCallback((placeId: string) => {
     const removedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
     if (!removedDestination) return;
@@ -689,9 +993,10 @@ export function useWeatherOnAppState() {
     setSavedDestinations(nextDestinations);
     setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제" });
     if (selectedDestinationPlace.id === placeId) {
-      const nextSelectedPlace = nextDestinations[0]?.place ?? removedDestination.place;
+      const nextSelectedPlace = nextDestinations[0]?.place ?? getDefaultDestinationPlace();
       setSelectedDestinationPlace(nextSelectedPlace);
-      setPreviewDestinationCareEnabled(nextDestinations[0]?.careEnabled ?? true);
+      setDestinationSelectionReady(nextDestinations.length > 0);
+      setPreviewDestinationCareEnabled(nextDestinations[0]?.careEnabled ?? false);
       setPreviewDestinationAlertCondition(nextDestinations[0]?.alertCondition ?? defaultDestinationAlertCondition);
       setWeatherProviderMode("ready");
       setWeatherRefreshTick((value) => value + 1);
@@ -708,6 +1013,7 @@ export function useWeatherOnAppState() {
         : [restoredDestination, ...current];
     });
     setSelectedDestinationPlace(restoredDestination.place);
+    setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(restoredDestination.careEnabled);
     setPreviewDestinationAlertCondition(restoredDestination.alertCondition);
     setRecentlyRemovedDestination(null);
@@ -723,6 +1029,7 @@ export function useWeatherOnAppState() {
     );
     if (matchingDestination && matchingDestination.place.id !== selectedDestinationPlace.id) {
       setSelectedDestinationPlace(matchingDestination.place);
+      setDestinationSelectionReady(true);
       setWeatherProviderMode("ready");
       setWeatherRefreshTick((value) => value + 1);
     }
@@ -744,13 +1051,12 @@ export function useWeatherOnAppState() {
       setRoute(returnTo);
       return;
     }
-    setGate(createAccountGateState(reason, returnTo, selectedDestinationPlace.name, state.outfit.variant));
-    setRoute("A2");
+    startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined);
   };
 
   const completeAccountLink = () => {
     setAccountLinked(true);
-    setRoute("A3");
+    setRoute(termsRequiredAccepted ? gate?.returnTo ?? "H1" : "A3");
   };
 
   const completeTerms = () => {
@@ -772,24 +1078,40 @@ export function useWeatherOnAppState() {
   };
 
   const completePermissionGate = async () => {
+    let permissionCompleted = true;
     if (permissionGate?.reason === "location") {
       setWeatherLocationMode("auto");
       setWeatherProviderMode("ready");
       setUseDestinationWeather(false);
       setDeviceLocationState({ status: "requesting", message: "현재 위치 확인 중" });
       const result = await requestDeviceWeatherLocation();
+      permissionCompleted = result.status === "granted";
       setDeviceLocationState(result);
-      setLocationReady(result.status === "granted");
-      if (result.location) setDeviceWeatherLocation(result.location);
+      if (permissionCompleted && result.location) {
+        setLocationReady(true);
+        setDeviceWeatherLocation(result.location);
+      } else {
+        setLocationReady(false);
+        setDeviceWeatherLocation(null);
+        setWeatherLocationMode("manual");
+      }
       setWeatherRefreshTick((value) => value + 1);
     } else {
-      setPermissionReady(true);
+      const result = await requestLocalNotificationPermission();
+      permissionCompleted = result.granted;
+      setPermissionReady(result.granted);
     }
     if (permissionGate?.reason === "destination-care") {
-      saveSelectedDestination(true);
-      setPreviewDestinationCareEnabled(true);
+      saveSelectedDestination(permissionCompleted);
+      setPreviewDestinationCareEnabled(permissionCompleted);
     }
-    if (permissionGate) setPermissionGateResult(createPermissionGateResult(permissionGate.reason, permissionGate.returnTo));
+    if (permissionGate) {
+      setPermissionGateResult(
+        permissionCompleted
+          ? createPermissionGateResult(permissionGate.reason, permissionGate.returnTo)
+          : createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo),
+      );
+    }
     if (permissionGate?.returnTo === "M2") setAlertSettingsRouteState(null);
     setRoute(permissionGate?.returnTo ?? "H1");
     setPermissionGate(null);
@@ -797,10 +1119,17 @@ export function useWeatherOnAppState() {
 
   const skipPermissionGate = () => {
     if (permissionGate) setPermissionGateResult(createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo));
+    if (permissionGate?.reason === "destination-care") {
+      saveSelectedDestination(false);
+      setPreviewDestinationCareEnabled(false);
+    }
     if (permissionGate?.reason === "location") {
       setLocationReady(false);
-      setDeviceLocationState({ status: "denied", message: "위치 권한 나중에 설정", location: seongsuWeatherLocation });
+      setDeviceWeatherLocation(null);
+      setDeviceLocationState({ status: "denied", message: "위치 권한 나중에 설정" });
       setWeatherLocationMode("manual");
+      setWeatherProviderMode("ready");
+      setWeatherRefreshTick((value) => value + 1);
     }
     setRoute(permissionGate?.returnTo ?? "H1");
     setPermissionGate(null);
@@ -827,13 +1156,18 @@ export function useWeatherOnAppState() {
       setRoute("R1");
       return true;
     }
+    if (route === "O4" && styleProfileReturnRoute) {
+      setRoute(styleProfileReturnRoute);
+      return true;
+    }
     const backRoute = getBackRoute(route);
     setRoute(backRoute);
     return true;
-  }, [gate?.returnTo, permissionGate?.returnTo, route]);
+  }, [gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute]);
 
   return {
     route,
+    styleProfileReturnRoute,
     state,
     useDestinationWeather,
     umbrellaReviewed,
@@ -846,13 +1180,19 @@ export function useWeatherOnAppState() {
     recentlyRemovedDestination,
     destinationCareEnabled,
     selectedDestinationAlertCondition,
+    selectedDestinationSchedulePreference,
+    selectedDestinationTravelEstimate,
     selectedDestinationPlace,
+    destinationSelectionReady,
     destinationHubFilter,
     placeSearchQuery,
     placeSearchResults,
     isPlaceSearchLoading,
+    placeSearchStatus,
     readNotificationIds,
     notificationHistory,
+    alertPreferences,
+    notificationDeliveryStatus,
     alertSettingsRouteState,
     selectedPolicyDocument,
     adConsentMode,
@@ -913,6 +1253,7 @@ export function useWeatherOnAppState() {
     toggleDestinationCare,
     toggleSavedDestinationCare,
     cycleSelectedDestinationAlertCondition,
+    cycleSelectedDestinationSchedulePreference,
     removeSavedDestination,
     restoreRemovedDestination,
     setDestinationHubFilter,
@@ -921,9 +1262,11 @@ export function useWeatherOnAppState() {
     markNotificationRead,
     markAllNotificationsRead,
     clearNotificationHistory,
+    toggleAlertPreference,
     editDestinationAlertCondition,
     editNotificationCondition,
     openNotificationDeepLink,
+    sendTestNotification,
     refreshWeather,
     requestAccountGate,
     signOutAccount,
@@ -943,7 +1286,7 @@ function getBackRoute(route: AppRouteId): AppRouteId {
     case "O1":
       return "A1";
     case "O5":
-      return "O4";
+      return "O2";
     case "O6":
       return "O5";
     case "C2":
@@ -967,7 +1310,7 @@ function getBackRoute(route: AppRouteId): AppRouteId {
       return "G1";
     case "G2":
     case "P2":
-      return "P3";
+      return "G1";
     case "M2":
     case "M3":
     case "A4":
@@ -994,7 +1337,52 @@ function getDestinationAlertConditionSteps(field: keyof DestinationAlertConditio
   return windThresholdSteps;
 }
 
+function cycleValue<T>(steps: T[], currentValue: T): T {
+  const currentIndex = steps.indexOf(currentValue);
+  return steps[(currentIndex + 1) % steps.length] ?? steps[0] ?? currentValue;
+}
+
+function getP0RouteFromNotificationPayload(value?: string): P0RouteId | null {
+  if (!value) return null;
+  const route = value as AppRouteId;
+  if (!isP0Route(route)) return null;
+  return isLaunchHiddenRoute(route) ? "H1" : route;
+}
+
+function shouldScheduleLocalNotification(notification: NotificationRuleEvaluation, preferences: AlertPreferences): boolean {
+  if (!notification.active || !notification.requiresPushPermission) return false;
+  if (notification.type === "rain") return preferences.rainDetail;
+  if (notification.type === "destination") return preferences.destination;
+  if (notification.type === "routine") return preferences.routine;
+  return preferences.routine;
+}
+
+function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): string {
+  if (result.status === "scheduled") return `${result.scheduledCount}건 발송 예약`;
+  if (result.status === "permission-required") return "권한 필요";
+  if (result.status === "cancelled") return "알림 예약 해제";
+  return "기기 알림 미지원";
+}
+
+function getNotificationHistoryTitle(notificationId: string, fallbackTitle?: string): string {
+  if (notificationId === "local-test") return "WeatherON 테스트 알림";
+  return fallbackTitle ?? "알림";
+}
+
+function getNotificationOpenResultLabel(notificationId: string, route: P0RouteId): string {
+  if (notificationId === "local-test") return "스마트 알림 설정 이동";
+  return `${getRouteLabel(route)} 이동`;
+}
+
+function getAlertSettingsFocusFromRoute(route: P0RouteId): AlertSettingsFocus {
+  if (route === "H4") return "umbrella";
+  if (route === "H5") return "rain";
+  if (route === "G2" || route === "G1") return "destination";
+  return "general";
+}
+
 function createWeatherLocationFromPlace(place: PlaceSearchResult): WeatherLocationPreset {
+  if (place.countryCode === "KR") return createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id);
   return {
     locationId: place.id,
     locationName: place.name,
@@ -1106,6 +1494,8 @@ type PersistedAppState = {
   selectedDestinationPlace: PlaceSearchResult;
   previewDestinationCareEnabled: boolean;
   previewDestinationAlertCondition: DestinationAlertCondition;
+  previewDestinationSchedulePreference: DestinationSchedulePreference;
+  previewDestinationTravelEstimate: DestinationTravelEstimate;
   weatherLocationMode: WeatherLocationMode;
   manualWeatherLocation: KmaWeatherLocationPreset;
   temperatureUnit: TemperatureUnit;
@@ -1116,6 +1506,7 @@ type PersistedAppState = {
   adConsentMode: AdConsentMode;
   readNotificationIds: string[];
   notificationHistory: NotificationHistoryItem[];
+  alertPreferences: AlertPreferences;
 };
 
 async function readPersistedAppState(): Promise<PersistedAppState | null> {
@@ -1127,13 +1518,107 @@ function savePersistedAppState(state: PersistedAppState) {
   void writeAppJson(appStateStorageKey, normalizePersistedAppState(state));
 }
 
+async function readPersistedWeatherProviderResult(): Promise<WeatherProviderResult | null> {
+  const value = await readAppJson<unknown>(weatherProviderResultStorageKey);
+  return value ? normalizePersistedWeatherProviderResult(value) : null;
+}
+
+function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
+  if (result.status !== "ready" || result.fallbackUsed) return;
+  void writeAppJson(weatherProviderResultStorageKey, result);
+}
+
+function shouldKeepPersistedWeatherResult(result: WeatherProviderResult, persistedResult: WeatherProviderResult | null): persistedResult is WeatherProviderResult {
+  if (!persistedResult) return false;
+  return result.status === "error" || result.status === "fallback" || result.fallbackUsed;
+}
+
+function normalizePersistedWeatherProviderResult(value: unknown): WeatherProviderResult | null {
+  if (!isWeatherProviderResult(value)) return null;
+  return {
+    current: markPersistedWeatherSnapshotStale(value.current),
+    destination: markPersistedWeatherSnapshotStale(value.destination),
+    destinationSnapshots: value.destinationSnapshots.filter(isWeatherSnapshot).map(markPersistedWeatherSnapshotStale),
+    status: "stale",
+    message: "최근 저장 예보 기준 추천",
+    retryable: true,
+    fallbackUsed: value.fallbackUsed === true,
+  };
+}
+
+function isWeatherProviderResult(value: unknown): value is WeatherProviderResult {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<WeatherProviderResult>;
+  return (
+    isWeatherSnapshot(record.current) &&
+    isWeatherSnapshot(record.destination) &&
+    Array.isArray(record.destinationSnapshots) &&
+    (record.status === "ready" || record.status === "stale" || record.status === "fallback" || record.status === "error") &&
+    typeof record.message === "string" &&
+    typeof record.retryable === "boolean" &&
+    typeof record.fallbackUsed === "boolean"
+  );
+}
+
+function markPersistedWeatherSnapshotStale(snapshot: WeatherProviderResult["current"]): WeatherProviderResult["current"] {
+  return {
+    ...snapshot,
+    stale: true,
+    current: { ...snapshot.current },
+    hourly: snapshot.hourly.map((item) => ({ ...item })),
+  };
+}
+
+function isWeatherSnapshot(value: unknown): value is WeatherProviderResult["current"] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<WeatherProviderResult["current"]>;
+  return (
+    typeof record.locationId === "string" &&
+    typeof record.locationName === "string" &&
+    (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
+    typeof record.observedAt === "string" &&
+    isWeatherCurrent(record.current) &&
+    Array.isArray(record.hourly) &&
+    record.hourly.every(isHourlyWeather) &&
+    (record.source === "kma" || record.source === "openmeteo" || record.source === "cache" || record.source === "fallback") &&
+    typeof record.stale === "boolean"
+  );
+}
+
+function isWeatherCurrent(value: unknown): value is WeatherProviderResult["current"]["current"] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<WeatherProviderResult["current"]["current"]>;
+  return (
+    typeof record.tempC === "number" &&
+    typeof record.feelsLikeC === "number" &&
+    (record.condition === "clear" || record.condition === "cloud" || record.condition === "rain" || record.condition === "snow" || record.condition === "storm" || record.condition === "dust") &&
+    typeof record.precipitationMm === "number" &&
+    typeof record.rainProbabilityPct === "number" &&
+    typeof record.windMs === "number" &&
+    typeof record.humidityPct === "number"
+  );
+}
+
+function isHourlyWeather(value: unknown): value is WeatherProviderResult["current"]["hourly"][number] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<WeatherProviderResult["current"]["hourly"][number]>;
+  return (
+    typeof record.time === "string" &&
+    typeof record.tempC === "number" &&
+    typeof record.rainProbabilityPct === "number" &&
+    typeof record.precipitationMm === "number" &&
+    typeof record.windMs === "number" &&
+    typeof record.condition === "string"
+  );
+}
+
 function normalizePersistedAppState(value: unknown): PersistedAppState {
   const record = value && typeof value === "object" ? (value as Partial<PersistedAppState>) : {};
-  const firstFixturePlace = placeSearchFixtures[0];
-  const selectedDestinationPlace = isPlaceSearchResult(record.selectedDestinationPlace) ? record.selectedDestinationPlace : firstFixturePlace;
   const savedDestinations = Array.isArray(record.savedDestinations)
-    ? record.savedDestinations.filter(isSavedDestination).slice(0, 12)
+    ? record.savedDestinations.map(normalizeSavedDestination).filter((item): item is SavedDestination => Boolean(item)).slice(0, 12)
     : [];
+  const defaultSelectedDestinationPlace = savedDestinations[0]?.place ?? getDefaultDestinationPlace();
+  const selectedDestinationPlace = normalizeSelectedDestinationPlace(record.selectedDestinationPlace, savedDestinations, defaultSelectedDestinationPlace);
   const notificationState = normalizeNotificationState({
     readNotificationIds: record.readNotificationIds,
     notificationHistory: record.notificationHistory,
@@ -1162,6 +1647,8 @@ function normalizePersistedAppState(value: unknown): PersistedAppState {
     selectedDestinationPlace,
     previewDestinationCareEnabled: record.previewDestinationCareEnabled !== false,
     previewDestinationAlertCondition: normalizeDestinationAlertCondition(record.previewDestinationAlertCondition),
+    previewDestinationSchedulePreference: normalizeDestinationSchedulePreference(record.previewDestinationSchedulePreference, selectedDestinationPlace),
+    previewDestinationTravelEstimate: normalizeDestinationTravelEstimate(record.previewDestinationTravelEstimate, defaultSeoulWeatherLocation, selectedDestinationPlace),
     weatherLocationMode: record.weatherLocationMode === "manual" ? "manual" : "auto",
     manualWeatherLocation: isKmaWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
     temperatureUnit: record.temperatureUnit === "fahrenheit" ? "fahrenheit" : "celsius",
@@ -1172,6 +1659,89 @@ function normalizePersistedAppState(value: unknown): PersistedAppState {
     adConsentMode: isAdConsentMode(record.adConsentMode) ? record.adConsentMode : "pending",
     readNotificationIds: notificationState.readNotificationIds,
     notificationHistory: notificationState.notificationHistory,
+    alertPreferences: normalizeAlertPreferences(record.alertPreferences),
+  };
+}
+
+function normalizeSelectedDestinationPlace(
+  value: unknown,
+  savedDestinations: SavedDestination[],
+  fallbackPlace: PlaceSearchResult,
+): PlaceSearchResult {
+  if (!isPlaceSearchResult(value)) return fallbackPlace;
+  if (savedDestinations.length === 0) return value;
+  return savedDestinations.find((destination) => destination.place.id === value.id)?.place ?? fallbackPlace;
+}
+
+function getDefaultDestinationPlace(): PlaceSearchResult {
+  return placeSearchFixtures[1] ?? placeSearchFixtures[0];
+}
+
+function getDefaultDestinationSchedulePreference(place: PlaceSearchResult): DestinationSchedulePreference {
+  const normalizedName = place.name.toLowerCase();
+  return {
+    targetArrivalTime:
+      place.category === "beach" || normalizedName.includes("강릉")
+        ? "13:00"
+        : place.category === "sports" || normalizedName.includes("잠실")
+          ? "10:20"
+          : place.countryCode === "JP"
+            ? "15:30"
+            : "10:05",
+    bufferMinutes: 10,
+  };
+}
+
+function getDefaultTravelMinutes(place: PlaceSearchResult): number {
+  const normalizedName = place.name.toLowerCase();
+  if (place.category === "beach" || normalizedName.includes("강릉")) return 180;
+  if (place.category === "sports" || normalizedName.includes("잠실")) return 45;
+  if (place.countryCode === "JP") return 150;
+  return 35;
+}
+
+function createDefaultTravelEstimate(
+  origin: WeatherLocationPreset,
+  place: PlaceSearchResult,
+  status: DestinationTravelEstimate["status"] = "fallback",
+): DestinationTravelEstimate {
+  return {
+    originPlaceId: origin.locationId,
+    destinationPlaceId: place.id,
+    provider: "fallback",
+    status,
+    travelMinutes: getDefaultTravelMinutes(place),
+    distanceMeters: 0,
+    message: status === "error" ? "이동시간 갱신 실패" : "기본 이동시간",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function createDestinationTravelEstimate(originPlaceId: string, destinationPlaceId: string, result: TravelEstimateResult): DestinationTravelEstimate {
+  return {
+    ...result,
+    originPlaceId,
+    destinationPlaceId,
+  };
+}
+
+function getActiveWeatherLocation(
+  mode: WeatherLocationMode,
+  manualLocation: KmaWeatherLocationPreset,
+  deviceLocation: KmaWeatherLocationPreset | null,
+): KmaWeatherLocationPreset {
+  return mode === "manual" ? manualLocation : deviceLocation ?? seongsuWeatherLocation;
+}
+
+function normalizeAlertPreferences(value: unknown): AlertPreferences {
+  if (!value || typeof value !== "object") return defaultAlertPreferences;
+  const record = value as Partial<AlertPreferences>;
+  return {
+    rainDetail: record.rainDetail !== false,
+    routine: record.routine !== false,
+    bedtime: record.bedtime !== false,
+    destination: record.destination !== false,
+    quietHours: record.quietHours !== false,
   };
 }
 
@@ -1185,15 +1755,48 @@ function normalizeDestinationAlertCondition(value: unknown): DestinationAlertCon
   };
 }
 
-function isSavedDestination(value: unknown): value is SavedDestination {
-  if (!value || typeof value !== "object") return false;
+function normalizeSavedDestination(value: unknown): SavedDestination | null {
+  if (!value || typeof value !== "object") return null;
   const record = value as Partial<SavedDestination>;
-  return (
-    isPlaceSearchResult(record.place) &&
-    typeof record.careEnabled === "boolean" &&
-    isDestinationAlertCondition(record.alertCondition) &&
-    typeof record.savedAtLabel === "string"
-  );
+  if (!isPlaceSearchResult(record.place) || typeof record.careEnabled !== "boolean" || !isDestinationAlertCondition(record.alertCondition)) return null;
+  return {
+    place: record.place,
+    careEnabled: record.careEnabled,
+    alertCondition: normalizeDestinationAlertCondition(record.alertCondition),
+    schedulePreference: normalizeDestinationSchedulePreference(record.schedulePreference, record.place),
+    travelEstimate: normalizeDestinationTravelEstimate(record.travelEstimate, defaultSeoulWeatherLocation, record.place),
+    savedAtLabel: typeof record.savedAtLabel === "string" ? record.savedAtLabel : "저장됨",
+  };
+}
+
+function normalizeDestinationSchedulePreference(value: unknown, place: PlaceSearchResult): DestinationSchedulePreference {
+  if (!value || typeof value !== "object") return getDefaultDestinationSchedulePreference(place);
+  const record = value as Partial<DestinationSchedulePreference>;
+  return {
+    targetArrivalTime: typeof record.targetArrivalTime === "string" && /^\d{2}:\d{2}$/.test(record.targetArrivalTime)
+      ? record.targetArrivalTime
+      : getDefaultDestinationSchedulePreference(place).targetArrivalTime,
+    bufferMinutes: typeof record.bufferMinutes === "number" ? record.bufferMinutes : 10,
+  };
+}
+
+function normalizeDestinationTravelEstimate(value: unknown, origin: WeatherLocationPreset, place: PlaceSearchResult): DestinationTravelEstimate {
+  if (!value || typeof value !== "object") return createDefaultTravelEstimate(origin, place);
+  const record = value as Partial<DestinationTravelEstimate>;
+  return {
+    originPlaceId: typeof record.originPlaceId === "string" ? record.originPlaceId : origin.locationId,
+    destinationPlaceId: typeof record.destinationPlaceId === "string" ? record.destinationPlaceId : place.id,
+    provider: record.provider === "kakao" ? "kakao" : "fallback",
+    status: isTravelEstimateStatus(record.status) ? record.status : "fallback",
+    travelMinutes: typeof record.travelMinutes === "number" ? record.travelMinutes : getDefaultTravelMinutes(place),
+    distanceMeters: typeof record.distanceMeters === "number" ? record.distanceMeters : 0,
+    message: typeof record.message === "string" ? record.message : "기본 이동시간",
+    updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString(),
+  };
+}
+
+function isTravelEstimateStatus(value: unknown): value is DestinationTravelEstimate["status"] {
+  return value === "idle" || value === "loading" || value === "ready" || value === "fallback" || value === "error";
 }
 
 function isPlaceSearchResult(value: unknown): value is PlaceSearchResult {
@@ -1207,7 +1810,7 @@ function isPlaceSearchResult(value: unknown): value is PlaceSearchResult {
     (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
     isGeoCoordinate(record.coordinate) &&
     typeof record.timezone === "string" &&
-    (record.provider === "fixture" || record.provider === "kakao" || record.provider === "google")
+    (record.provider === "fixture" || record.provider === "kakao" || record.provider === "google" || record.provider === "openmeteo")
   );
 }
 
@@ -1323,7 +1926,7 @@ function isNotificationHistoryItem(item: unknown): item is NotificationHistoryIt
     typeof record.id === "string" &&
     typeof record.notificationId === "string" &&
     typeof record.title === "string" &&
-    (record.action === "read" || record.action === "open") &&
+    (record.action === "read" || record.action === "open" || record.action === "sent") &&
     typeof record.statusLabel === "string" &&
     (record.route === undefined || typeof record.route === "string")
   );

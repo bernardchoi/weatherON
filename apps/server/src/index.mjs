@@ -7,7 +7,13 @@ const SERVER_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const ROOT_DIR = resolve(SERVER_DIR, "../..");
 const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
 const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
+const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+const DEFAULT_KAKAO_DIRECTIONS_URL = "https://apis-navi.kakaomobility.com/v1/directions";
+const DEFAULT_GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
 const DEFAULT_TIMEOUT_MS = 8000;
+const DEFAULT_WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
+const DEFAULT_PLACE_CACHE_TTL_MS = 30 * 60 * 1000;
+const DEFAULT_ROUTE_CACHE_TTL_MS = 10 * 60 * 1000;
 
 loadEnvFile(join(ROOT_DIR, ".env"));
 loadEnvFile(join(ROOT_DIR, ".env.local"));
@@ -15,8 +21,14 @@ loadEnvFile(join(SERVER_DIR, ".env"));
 loadEnvFile(join(SERVER_DIR, ".env.local"));
 
 const host = process.env.WEATHER_SERVER_HOST ?? "127.0.0.1";
-const port = Number(process.env.WEATHER_SERVER_PORT) || 8091;
+const port = Number(process.env.PORT || process.env.WEATHER_SERVER_PORT) || 8091;
 const timeoutMs = Number(process.env.WEATHER_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
+const weatherCacheTtlMs = Number(process.env.WEATHER_CACHE_TTL_MS) || DEFAULT_WEATHER_CACHE_TTL_MS;
+const placeCacheTtlMs = Number(process.env.PLACE_CACHE_TTL_MS) || DEFAULT_PLACE_CACHE_TTL_MS;
+const routeCacheTtlMs = Number(process.env.ROUTE_CACHE_TTL_MS) || DEFAULT_ROUTE_CACHE_TTL_MS;
+const forecastCache = new Map();
+const placeSearchCache = new Map();
+const routeEstimateCache = new Map();
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? `${host}:${port}`}`);
@@ -52,6 +64,11 @@ const server = createServer(async (request, response) => {
       sendJson(response, 200, payload);
       return;
     }
+    if (url.pathname === "/routes/estimate") {
+      const payload = await estimateRoute(url.searchParams);
+      sendJson(response, 200, payload);
+      return;
+    }
     sendJson(response, 404, { error: "not_found" });
   } catch (error) {
     const message = error instanceof Error ? error.message : "weather_proxy_error";
@@ -78,7 +95,7 @@ async function fetchKmaForecast(params) {
   url.searchParams.set("base_time", params.get("baseTime") ?? params.get("base_time") ?? base.baseTime);
   url.searchParams.set("nx", nx);
   url.searchParams.set("ny", ny);
-  return fetchJson(url);
+  return fetchCachedJson(forecastCache, getUrlCacheKey("kma", url, ["serviceKey"]), weatherCacheTtlMs, () => fetchJson(url));
 }
 
 async function fetchOpenMeteoForecast(params) {
@@ -117,23 +134,28 @@ async function fetchOpenMeteoForecast(params) {
     ].join(","),
   );
   url.searchParams.set("forecast_days", params.get("forecastDays") ?? "1");
-  return fetchJson(url);
+  return fetchCachedJson(forecastCache, getUrlCacheKey("openmeteo", url), weatherCacheTtlMs, () => fetchJson(url));
 }
 
 async function searchPlaces(params) {
   const query = params.get("q") ?? "";
-  const countryCode = normalizeCountryCode(params.get("countryCode")) ?? inferPlaceSearchCountryCode(query);
-  try {
-    if (countryCode === "KR" && process.env.KAKAO_REST_API_KEY) {
-      return await searchKakaoPlaces(query);
+  const searchQuery = getPlaceSearchQueryAlias(query);
+  const countryCode = normalizeCountryCode(params.get("countryCode")) ?? inferPlaceSearchCountryCode(searchQuery);
+  const language = normalizeSearchLanguage(params.get("language") ?? params.get("locale"));
+  if (query.trim().length < 2) return [];
+  return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${query.trim().toLowerCase()}`, placeCacheTtlMs, async () => {
+    try {
+      if (countryCode === "KR" && process.env.KAKAO_REST_API_KEY) {
+        return await searchKakaoPlaces(searchQuery);
+      }
+      if (getGoogleMapsApiKey()) {
+        return await searchGooglePlaces(searchQuery, countryCode, language);
+      }
+    } catch (error) {
+      console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
     }
-    if (getGoogleMapsApiKey()) {
-      return await searchGooglePlaces(query, countryCode);
-    }
-  } catch (error) {
-    console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
-  }
-  return searchFixturePlaces(query);
+    return searchFixturePlaces(searchQuery);
+  });
 }
 
 function normalizeCountryCode(value) {
@@ -152,33 +174,67 @@ function inferPlaceSearchCountryCode(query) {
   return "KR";
 }
 
+function normalizeSearchLanguage(value) {
+  const language = String(value || "ko").split("-")[0].toLowerCase();
+  if (language === "ja") return "ja";
+  if (language === "en") return "en";
+  return "ko";
+}
+
+function getPlaceSearchQueryAlias(query) {
+  const normalized = query.trim().toLowerCase();
+  return placeSearchQueryAliases[normalized] ?? query;
+}
+
+const placeSearchQueryAliases = {
+  "도쿄": "Tokyo",
+  "도쿄역": "Tokyo Station",
+  "시부야": "Shibuya",
+  "신주쿠": "Shinjuku",
+  "오사카": "Osaka",
+  "교토": "Kyoto",
+  "삿포로": "Sapporo",
+  "후쿠오카": "Fukuoka",
+  "싱가포르": "Singapore",
+  "마리나베이": "Marina Bay",
+  "마리나 베이": "Marina Bay",
+  "방콕": "Bangkok",
+  "타이베이": "Taipei",
+  "홍콩": "Hong Kong",
+  "파리": "Paris",
+  "런던": "London",
+  "뉴욕": "New York",
+};
+
 async function searchKakaoPlaces(query) {
-  const url = new URL("https://dapi.kakao.com/v2/local/search/keyword.json");
+  const url = new URL(process.env.KAKAO_LOCAL_KEYWORD_URL ?? DEFAULT_KAKAO_LOCAL_KEYWORD_URL);
   url.searchParams.set("query", query || "강릉 안목해변");
-  url.searchParams.set("size", "5");
+  url.searchParams.set("size", "8");
   const payload = await fetchJson(url, {
     Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
   });
-  return (payload.documents ?? []).map((item) => ({
-    id: `kakao-${item.id}`,
-    name: item.place_name,
-    address: item.road_address_name || item.address_name,
-    category: inferPlaceCategory(`${item.category_name} ${item.place_name}`),
-    countryCode: "KR",
-    coordinate: {
-      latitude: Number(item.y),
-      longitude: Number(item.x),
-    },
-    timezone: "Asia/Seoul",
-    provider: "kakao",
-  }));
+  return (payload.documents ?? [])
+    .map((item) => ({
+      id: `kakao-${item.id}`,
+      name: item.place_name,
+      address: item.road_address_name || item.address_name || "주소 정보 없음",
+      category: inferPlaceCategory(`${item.category_name} ${item.category_group_name} ${item.place_name}`),
+      countryCode: "KR",
+      coordinate: {
+        latitude: Number(item.y),
+        longitude: Number(item.x),
+      },
+      timezone: "Asia/Seoul",
+      provider: "kakao",
+    }))
+    .filter((place) => Number.isFinite(place.coordinate.latitude) && Number.isFinite(place.coordinate.longitude));
 }
 
-async function searchGooglePlaces(query, countryCode) {
+async function searchGooglePlaces(query, countryCode, language = "ko") {
   const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
   url.searchParams.set("address", query || "Tokyo Station");
   url.searchParams.set("key", getGoogleMapsApiKey());
-  url.searchParams.set("language", "ko");
+  url.searchParams.set("language", language);
   if (countryCode === "JP") {
     url.searchParams.set("components", "country:JP");
     url.searchParams.set("region", "jp");
@@ -213,6 +269,157 @@ function getGooglePlaceName(item) {
   return firstNamedComponent?.long_name ?? item.formatted_address?.split(",")[0] ?? "Google Maps result";
 }
 
+async function estimateRoute(params) {
+  const origin = readCoordinate(params, "origin");
+  const destination = readCoordinate(params, "destination");
+  const originName = params.get("originName") ?? "현재 위치";
+  const destinationName = params.get("destinationName") ?? "목적지";
+  const originCountryCode = normalizeCountryCode(params.get("originCountryCode")) ?? "KR";
+  const destinationCountryCode = normalizeCountryCode(params.get("destinationCountryCode")) ?? inferPlaceSearchCountryCode(destinationName);
+  const cacheKey = `route:${originCountryCode}:${destinationCountryCode}:${formatCoordinateKey(origin)}:${formatCoordinateKey(destination)}`;
+
+  return fetchCachedJson(routeEstimateCache, cacheKey, routeCacheTtlMs, async () => {
+    try {
+      if (shouldUseKakaoRoute(originCountryCode, destinationCountryCode) && process.env.KAKAO_REST_API_KEY) {
+        return await estimateKakaoRoute(origin, destination, originName, destinationName);
+      }
+      if (shouldUseGoogleRoute(originCountryCode, destinationCountryCode) && getGoogleMapsApiKey()) {
+        return await estimateGoogleRoute(origin, destination, originCountryCode, destinationCountryCode);
+      }
+    } catch (error) {
+      console.warn(`route provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
+    }
+    return estimateFallbackRoute(origin, destination, destinationCountryCode);
+  });
+}
+
+function shouldUseKakaoRoute(originCountryCode, destinationCountryCode) {
+  return originCountryCode === "KR" && destinationCountryCode === "KR";
+}
+
+function shouldUseGoogleRoute(originCountryCode, destinationCountryCode) {
+  return originCountryCode === destinationCountryCode && destinationCountryCode !== "KR";
+}
+
+async function estimateKakaoRoute(origin, destination, originName, destinationName) {
+  const url = new URL(process.env.KAKAO_DIRECTIONS_URL ?? DEFAULT_KAKAO_DIRECTIONS_URL);
+  url.searchParams.set("origin", formatKakaoRouteCoordinate(origin, originName));
+  url.searchParams.set("destination", formatKakaoRouteCoordinate(destination, destinationName));
+  url.searchParams.set("priority", "TIME");
+  url.searchParams.set("summary", "true");
+  url.searchParams.set("alternatives", "false");
+  const payload = await fetchJson(url, {
+    Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
+    "Content-Type": "application/json",
+  });
+  const summary = payload.routes?.find((route) => route?.result_code === 0)?.summary ?? payload.routes?.[0]?.summary;
+  const durationSeconds = Number(summary?.duration);
+  const distanceMeters = Number(summary?.distance);
+  if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceMeters)) {
+    throw new Error("kakao route response is empty");
+  }
+  return {
+    provider: "kakao",
+    status: "ready",
+    travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
+    distanceMeters: Math.max(0, Math.round(distanceMeters)),
+    message: "Kakao Directions 기준",
+  };
+}
+
+function estimateFallbackRoute(origin, destination, destinationCountryCode = "KR") {
+  const directDistanceMeters = getDistanceMeters(origin, destination);
+  const roadDistanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : 1));
+  const travelMinutes = destinationCountryCode === "KR"
+    ? Math.max(15, Math.ceil((roadDistanceMeters / 1000 / 32) * 60))
+    : getInternationalFallbackTravelMinutes(destinationCountryCode);
+  return {
+    provider: "fallback",
+    status: "fallback",
+    travelMinutes,
+    distanceMeters: roadDistanceMeters,
+    message: destinationCountryCode === "KR" ? "좌표 거리 기반 추정" : "해외 목적지 기본 이동시간",
+  };
+}
+
+function getInternationalFallbackTravelMinutes(countryCode) {
+  if (countryCode === "JP") return 150;
+  return 180;
+}
+
+async function estimateGoogleRoute(origin, destination, originCountryCode, destinationCountryCode) {
+  const url = new URL(process.env.GOOGLE_DISTANCE_MATRIX_URL ?? DEFAULT_GOOGLE_DISTANCE_MATRIX_URL);
+  url.searchParams.set("origins", formatGoogleRouteCoordinate(origin));
+  url.searchParams.set("destinations", formatGoogleRouteCoordinate(destination));
+  url.searchParams.set("mode", "driving");
+  url.searchParams.set("language", getGoogleRouteLanguage(destinationCountryCode));
+  url.searchParams.set("key", getGoogleMapsApiKey());
+  if (destinationCountryCode === "JP") url.searchParams.set("region", "jp");
+  const payload = await fetchJson(url);
+  if (payload.status !== "OK") throw new Error(`google route failed: ${payload.status ?? "unknown_status"}`);
+  const element = payload.rows?.[0]?.elements?.[0];
+  if (!element || element.status !== "OK") {
+    throw new Error(`google route element failed: ${element?.status ?? "empty"}`);
+  }
+  const durationSeconds = Number(element.duration?.value);
+  const distanceMeters = Number(element.distance?.value);
+  if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceMeters)) {
+    throw new Error("google route response is empty");
+  }
+  return {
+    provider: "google",
+    status: "ready",
+    travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
+    distanceMeters: Math.max(0, Math.round(distanceMeters)),
+    message: "Google Distance Matrix 기준",
+  };
+}
+
+function readCoordinate(params, key) {
+  const value = getRequiredParam(params, key);
+  const [latitudeText, longitudeText] = value.split(",");
+  const coordinate = {
+    latitude: Number(latitudeText),
+    longitude: Number(longitudeText),
+  };
+  if (!Number.isFinite(coordinate.latitude) || !Number.isFinite(coordinate.longitude)) {
+    throw new Error(`${key} coordinate is invalid`);
+  }
+  return coordinate;
+}
+
+function formatCoordinateKey(coordinate) {
+  return `${coordinate.latitude.toFixed(5)},${coordinate.longitude.toFixed(5)}`;
+}
+
+function formatKakaoRouteCoordinate(coordinate, name) {
+  return `${coordinate.longitude},${coordinate.latitude},name=${name}`;
+}
+
+function formatGoogleRouteCoordinate(coordinate) {
+  return `${coordinate.latitude},${coordinate.longitude}`;
+}
+
+function getGoogleRouteLanguage(countryCode) {
+  if (countryCode === "JP") return "ja";
+  if (countryCode === "KR") return "ko";
+  return "en";
+}
+
+function getDistanceMeters(origin, destination) {
+  const radiusMeters = 6371000;
+  const fromLat = toRadians(origin.latitude);
+  const toLat = toRadians(destination.latitude);
+  const deltaLat = toRadians(destination.latitude - origin.latitude);
+  const deltaLon = toRadians(destination.longitude - origin.longitude);
+  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLon / 2) ** 2;
+  return radiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toRadians(value) {
+  return (value * Math.PI) / 180;
+}
+
 async function fetchJson(url, headers = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -224,6 +431,27 @@ async function fetchJson(url, headers = {}) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchCachedJson(cache, key, ttlMs, fetcher) {
+  const now = Date.now();
+  const cached = cache.get(key);
+  if (cached && now - cached.cachedAt <= ttlMs) return cached.payload;
+  try {
+    const payload = await fetcher();
+    cache.set(key, { payload, cachedAt: now });
+    return payload;
+  } catch (error) {
+    if (cached) return cached.payload;
+    throw error;
+  }
+}
+
+function getUrlCacheKey(prefix, url, omitParams = []) {
+  const normalized = new URL(url.toString());
+  for (const param of omitParams) normalized.searchParams.delete(param);
+  normalized.searchParams.sort();
+  return `${prefix}:${normalized.pathname}?${normalized.searchParams.toString()}`;
 }
 
 const placeSearchFixtures = [
