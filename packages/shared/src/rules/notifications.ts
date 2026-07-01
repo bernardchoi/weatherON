@@ -155,6 +155,7 @@ function getRuleReason(
     return "현재 조건에서는 대기";
   }
   if (rule.type === "routine") return "오늘 준비 카드 확인 가능";
+  if (rule.type === "rain") return "비 시작 전 미리 알림";
   if (rule.type === "shoes") return shoesTitle;
   if (rule.type === "destination") return getDestinationActiveReason(context.destinationCondition, context.destinationSignals, context.destinationShoesTitle);
   return umbrellaTitle;
@@ -198,7 +199,7 @@ function getDestinationActiveReason(
   if (!signals) return "목적지 날씨 확인 후 대기";
   if (signals.rainExceeded) return `강수 ${Math.round(signals.maxRainProbabilityPct)}% · 출발 ${condition.leadTimeMinutes}분 전 알림`;
   if (signals.windExceeded) return `바람 ${signals.maxWindMs.toFixed(1)}m/s · 출발 ${condition.leadTimeMinutes}분 전 알림`;
-  if (signals.shoesRecommended) return `${shoesTitle ?? "신발 추천 변경"} · 출발 ${condition.leadTimeMinutes}분 전 알림`;
+  if (signals.shoesRecommended) return `목적지 날씨 변화 · 출발 ${condition.leadTimeMinutes}분 전 알림`;
   return `${formatDestinationCondition(condition)} 기준 대기`;
 }
 

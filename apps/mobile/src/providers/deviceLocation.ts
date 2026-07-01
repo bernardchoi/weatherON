@@ -1,5 +1,5 @@
 import * as Location from "expo-location";
-import { createKmaWeatherLocationFromCoordinate, seongsuWeatherLocation, type KmaWeatherLocationPreset } from "./weatherLocations";
+import { createKmaWeatherLocationFromCoordinate, type KmaWeatherLocationPreset } from "./weatherLocations";
 
 export type DeviceLocationStatus = "idle" | "requesting" | "granted" | "denied" | "unavailable" | "error";
 
@@ -15,22 +15,30 @@ export const initialDeviceLocationState: DeviceLocationState = {
 };
 
 export async function requestDeviceWeatherLocation(): Promise<DeviceLocationState> {
+  return resolveDeviceWeatherLocation(true);
+}
+
+export async function syncDeviceWeatherLocationPermission(): Promise<DeviceLocationState> {
+  return resolveDeviceWeatherLocation(false);
+}
+
+async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): Promise<DeviceLocationState> {
   try {
     const servicesEnabled = await Location.hasServicesEnabledAsync();
     if (!servicesEnabled) {
       return {
         status: "unavailable",
         message: "위치 서비스 꺼짐",
-        location: seongsuWeatherLocation,
       };
     }
 
-    const permission = await Location.requestForegroundPermissionsAsync();
+    const permission = shouldRequestPermission
+      ? await Location.requestForegroundPermissionsAsync()
+      : await Location.getForegroundPermissionsAsync();
     if (!permission.granted) {
       return {
         status: "denied",
-        message: "위치 권한 거부됨",
-        location: seongsuWeatherLocation,
+        message: shouldRequestPermission ? "위치 권한 거부됨" : "위치 권한 확인 필요",
       };
     }
 
@@ -49,7 +57,6 @@ export async function requestDeviceWeatherLocation(): Promise<DeviceLocationStat
     return {
       status: "error",
       message: "위치 확인 실패",
-      location: seongsuWeatherLocation,
     };
   }
 }

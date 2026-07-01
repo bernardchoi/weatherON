@@ -40,6 +40,12 @@ export type ProxyWeatherClientOptions = {
   fetchImpl?: typeof fetch;
 };
 
+export type OpenMeteoWeatherClientOptions = {
+  openMeteoForecastUrl?: string;
+  timeoutMs?: number;
+  fetchImpl?: typeof fetch;
+};
+
 export const fixtureWeatherClient: WeatherClient = {
   async fetchKmaForecast() {
     return kmaForecastFixture;
@@ -113,6 +119,21 @@ export function createHttpWeatherClient(options: HttpWeatherClientOptions = {}):
   };
 }
 
+export function createOpenMeteoWeatherClient(options: OpenMeteoWeatherClientOptions = {}): WeatherClient {
+  const httpClient = createHttpWeatherClient({
+    openMeteoForecastUrl: options.openMeteoForecastUrl,
+    timeoutMs: options.timeoutMs,
+    fetchImpl: options.fetchImpl,
+  });
+
+  return {
+    async fetchKmaForecast() {
+      throw new Error("KMA forecast is disabled in Open-Meteo weather mode");
+    },
+    fetchOpenMeteoForecast: httpClient.fetchOpenMeteoForecast,
+  };
+}
+
 export function createProxyWeatherClient(options: ProxyWeatherClientOptions): WeatherClient {
   const timeoutMs = options.timeoutMs ?? DEFAULT_WEATHER_TIMEOUT_MS;
 
@@ -142,9 +163,16 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
 
 export function createRuntimeWeatherClient(): WeatherClient {
   const config = getWeatherRuntimeConfig();
+  const openMeteoClient = createOpenMeteoWeatherClient({
+    openMeteoForecastUrl: config.openMeteoForecastUrl,
+    timeoutMs: config.timeoutMs,
+  });
+  if (config.clientMode === "openmeteo") {
+    return openMeteoClient;
+  }
   if (config.clientMode === "proxy" && config.weatherApiBaseUrl) {
     if (isLocalWeatherProxyUrl(config.weatherApiBaseUrl) && !config.allowLocalProxy) {
-      return fixtureWeatherClient;
+      return openMeteoClient;
     }
     return createProxyWeatherClient({
       weatherApiBaseUrl: config.weatherApiBaseUrl,

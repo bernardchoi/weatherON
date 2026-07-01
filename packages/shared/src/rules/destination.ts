@@ -13,6 +13,9 @@ type DestinationCareInput = {
   alertCondition?: DestinationAlertCondition;
   travelMinutes?: number;
   targetArrivalTime?: string;
+  bufferMinutes?: number;
+  travelProvider?: "kakao" | "google" | "fallback";
+  travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
 };
 
 const defaultDestinationAlertCondition: DestinationAlertCondition = {
@@ -42,7 +45,11 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
     destinationWeather: input.destinationWeather,
     departureAdvice: {
       targetArrivalTime: input.targetArrivalTime,
+      recommendedDepartureTime: getRecommendedDepartureTime(input.targetArrivalTime, input.travelMinutes, input.bufferMinutes),
       travelMinutes: input.travelMinutes,
+      bufferMinutes: input.bufferMinutes,
+      travelProvider: input.travelProvider,
+      travelStatus: input.travelStatus,
     },
     umbrellaAdvice,
     shoesAdvice,
@@ -50,6 +57,21 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
     alertCondition,
     nextAlertText,
   };
+}
+
+function getRecommendedDepartureTime(targetArrivalTime?: string, travelMinutes?: number, bufferMinutes = 10): string | undefined {
+  if (!targetArrivalTime || typeof travelMinutes !== "number") return undefined;
+  return subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+}
+
+function subtractMinutes(time: string, minutes: number): string {
+  const [hourText, minuteText] = time.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return time;
+  const dayMinutes = 24 * 60;
+  const totalMinutes = ((hour * 60 + minute - minutes) % dayMinutes + dayMinutes) % dayMinutes;
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 
 function buildNextAlertText(input: {

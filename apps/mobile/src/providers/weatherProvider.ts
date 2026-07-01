@@ -1,11 +1,11 @@
 import {
-  kmaForecastFixture,
   normalizeKmaWeather,
   normalizeOpenMeteoWeather,
   openMeteoFixture,
   type WeatherSnapshot,
 } from "@weatheron/shared";
-import { runtimeWeatherClient, type WeatherClient } from "./weatherClient";
+import { getWeatherRuntimeConfig } from "../config/weatherEnv";
+import { fixtureWeatherClient, runtimeWeatherClient, type WeatherClient } from "./weatherClient";
 import {
   defaultGangneungWeatherLocation,
   defaultSeoulWeatherLocation,
@@ -39,7 +39,11 @@ export type WeatherProvider = {
   getSnapshots: (mode?: WeatherProviderMode, options?: WeatherProviderOptions) => Promise<WeatherProviderResult>;
 };
 
-export function createWeatherProvider(client: WeatherClient = runtimeWeatherClient): WeatherProvider {
+export type WeatherProviderCreateOptions = {
+  preferKma?: boolean;
+};
+
+export function createWeatherProvider(client: WeatherClient = runtimeWeatherClient, createOptions: WeatherProviderCreateOptions = {}): WeatherProvider {
   let cachedResult: WeatherProviderResult | null = null;
 
   return {
@@ -58,32 +62,10 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         const destinationLocations = fallback
           ? [defaultGangneungWeatherLocation]
           : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
-        const [kmaPayload, ...openMeteoPayloads] = await Promise.all([
-          client.fetchKmaForecast(currentLocation.grid),
-          ...destinationLocations.map((location) =>
-            client.fetchOpenMeteoForecast({
-              latitude: location.coordinate.latitude,
-              longitude: location.coordinate.longitude,
-              timezone: location.timezone,
-            }),
-          ),
+        const [current, ...destinationSnapshots] = await Promise.all([
+          fetchWeatherSnapshot(client, currentLocation, stale, createOptions.preferKma),
+          ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions.preferKma)),
         ]);
-        const current = normalizeKmaWeather(kmaPayload, {
-          locationId: currentLocation.locationId,
-          locationName: currentLocation.locationName,
-          countryCode: currentLocation.countryCode,
-          timezone: currentLocation.timezone,
-          stale,
-        });
-        const destinationSnapshots = openMeteoPayloads.map((payload, index) => {
-          const location = destinationLocations[index] ?? destinationLocation;
-          return normalizeOpenMeteoWeather(payload, {
-            locationId: location.locationId,
-            locationName: location.locationName,
-            countryCode: location.countryCode,
-            stale,
-          });
-        });
         const destination = destinationSnapshots[0] ?? normalizeOpenMeteoWeather(openMeteoFixture, {
           locationId: destinationLocation.locationId,
           locationName: destinationLocation.locationName,
@@ -96,7 +78,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           destination,
           destinationSnapshots,
           status: mode,
-          message: getProviderMessage(mode),
+          message: getProviderMessage(mode, fallback),
           retryable: mode !== "ready",
           fallbackUsed: fallback,
         };
@@ -112,14 +94,14 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
   };
 }
 
-export const fixtureWeatherProvider = createWeatherProvider();
+export const runtimeWeatherProvider = createWeatherProvider();
+export const fixtureWeatherProvider = createWeatherProvider(fixtureWeatherClient, { preferKma: true });
 
 export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback"): WeatherProviderResult {
-  const current = normalizeKmaWeather(kmaForecastFixture, {
-    locationId: "kr-seoul-seongsu",
-    locationName: "서울 성수동",
+  const current = normalizeOpenMeteoWeather(openMeteoFixture, {
+    locationId: defaultSeoulWeatherLocation.locationId,
+    locationName: defaultSeoulWeatherLocation.locationName,
     countryCode: "KR",
-    timezone: "+09:00",
     stale: true,
   });
   const destination = normalizeOpenMeteoWeather(openMeteoFixture, {
@@ -134,17 +116,66 @@ export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback")
     destination,
     destinationSnapshots: [destination],
     status,
-    message: getProviderMessage(status),
+    message: getProviderMessage(status, true),
     retryable: true,
     fallbackUsed: true,
   };
 }
 
-function getProviderMessage(status: WeatherProviderStatus): string {
+async function fetchWeatherSnapshot(
+  client: WeatherClient,
+  location: WeatherLocationPreset | KmaWeatherLocationPreset,
+  stale: boolean,
+  preferKma?: boolean,
+): Promise<WeatherSnapshot> {
+  if (shouldUseKmaForecast(location, preferKma)) {
+    try {
+      const payload = await client.fetchKmaForecast({
+        nx: location.grid.nx,
+        ny: location.grid.ny,
+      });
+      return normalizeKmaWeather(payload, {
+        locationId: location.locationId,
+        locationName: location.locationName,
+        countryCode: location.countryCode,
+        timezone: "+09:00",
+        stale,
+      });
+    } catch {
+      return fetchOpenMeteoSnapshot(client, location, stale);
+    }
+  }
+  return fetchOpenMeteoSnapshot(client, location, stale);
+}
+
+async function fetchOpenMeteoSnapshot(
+  client: WeatherClient,
+  location: WeatherLocationPreset,
+  stale: boolean,
+): Promise<WeatherSnapshot> {
+  const payload = await client.fetchOpenMeteoForecast({
+    latitude: location.coordinate.latitude,
+    longitude: location.coordinate.longitude,
+    timezone: location.timezone,
+  });
+  return normalizeOpenMeteoWeather(payload, {
+    locationId: location.locationId,
+    locationName: location.locationName,
+    countryCode: location.countryCode,
+    stale,
+  });
+}
+
+function shouldUseKmaForecast(location: WeatherLocationPreset | KmaWeatherLocationPreset, preferKma?: boolean): location is KmaWeatherLocationPreset {
+  const enabled = preferKma ?? getWeatherRuntimeConfig().clientMode === "proxy";
+  return enabled && location.countryCode === "KR" && "grid" in location;
+}
+
+function getProviderMessage(status: WeatherProviderStatus, fallbackUsed = false): string {
   if (status === "ready") return "최신 예보 기준으로 추천 준비 완료";
   if (status === "stale") return "최근 예보 기준 추천";
   if (status === "fallback") return "기본 위치 기준 추천";
-  return "날씨 갱신 실패. 최근 기준 추천";
+  return fallbackUsed ? "날씨 갱신 실패. 기본 예보 기준 추천" : "날씨 갱신 실패. 최근 예보 기준 추천";
 }
 
 function markProviderResultStale(result: WeatherProviderResult, status: WeatherProviderStatus, options: WeatherProviderOptions = {}): WeatherProviderResult {
@@ -160,7 +191,7 @@ function markProviderResultStale(result: WeatherProviderResult, status: WeatherP
     destination: destinationSnapshots[0] ?? markSnapshotStale(result.destination, options.destinationLocation),
     destinationSnapshots,
     status,
-    message: getProviderMessage(status),
+    message: getProviderMessage(status, result.fallbackUsed),
     retryable: true,
     fallbackUsed: result.fallbackUsed,
   };

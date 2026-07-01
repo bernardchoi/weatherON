@@ -1,7 +1,7 @@
 import type { GeoCoordinate } from "../weather/kmaGrid";
 import type { DestinationCare } from "./recommendation";
 
-export type PlaceSearchProvider = "fixture" | "kakao" | "google";
+export type PlaceSearchProvider = "fixture" | "kakao" | "google" | "openmeteo";
 
 export type PlaceSearchResult = {
   id: string;

@@ -45,6 +45,9 @@ export type DestinationCare = {
     targetArrivalTime?: string;
     recommendedDepartureTime?: string;
     travelMinutes?: number;
+    bufferMinutes?: number;
+    travelProvider?: "kakao" | "google" | "fallback";
+    travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
   };
   umbrellaAdvice: RecommendationState;
   shoesAdvice: RecommendationState;

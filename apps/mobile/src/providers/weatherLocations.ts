@@ -23,7 +23,7 @@ export const seongsuWeatherLocation: KmaWeatherLocationPreset = withKmaGrid({
     latitude: 37.5446,
     longitude: 127.0559,
   },
-  timezone: "+09:00",
+  timezone: "Asia/Seoul",
 });
 
 export const defaultSeoulWeatherLocation: KmaWeatherLocationPreset = withKmaGrid({
@@ -34,10 +34,10 @@ export const defaultSeoulWeatherLocation: KmaWeatherLocationPreset = withKmaGrid
     latitude: 37.5665,
     longitude: 126.978,
   },
-  timezone: "+09:00",
+  timezone: "Asia/Seoul",
 });
 
-export const gangneungWeatherLocation: WeatherLocationPreset = {
+export const gangneungWeatherLocation: KmaWeatherLocationPreset = withKmaGrid({
   locationId: "kr-gangneung-beach",
   locationName: "강릉 안목해변",
   countryCode: "KR",
@@ -46,7 +46,7 @@ export const gangneungWeatherLocation: WeatherLocationPreset = {
     longitude: 128.9483,
   },
   timezone: "Asia/Seoul",
-};
+});
 
 export const defaultGangneungWeatherLocation: WeatherLocationPreset = {
   ...gangneungWeatherLocation,
@@ -57,13 +57,14 @@ export const defaultGangneungWeatherLocation: WeatherLocationPreset = {
 export function createKmaWeatherLocationFromCoordinate(
   coordinate: GeoCoordinate,
   locationName = "현재 위치",
+  locationId = "kr-device-current",
 ): KmaWeatherLocationPreset {
   return withKmaGrid({
-    locationId: "kr-device-current",
+    locationId,
     locationName,
     countryCode: "KR",
     coordinate,
-    timezone: "+09:00",
+    timezone: "Asia/Seoul",
   });
 }
 
