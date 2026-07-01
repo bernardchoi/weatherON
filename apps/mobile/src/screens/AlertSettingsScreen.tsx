@@ -101,61 +101,46 @@ export function AlertSettingsScreen({
           <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
             <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
           </View>
-          <View style={styles.heroMetrics}>
-            <Metric label={permissionReady ? "권한 정상" : "권한 필요"} value={deliveryReady ? "적용 중" : "대기 중"} theme={theme} />
-            <Metric label="예약 상태" value={deliveryStatus.statusLabel} theme={theme} />
-            <Metric label="예약 수" value={deliveryStatus.countLabel} theme={theme} />
+          <View style={styles.heroStatusRail}>
+            <StatusTag label={permissionReady ? "권한 정상" : "권한 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
+            <StatusTag label={deliveryReady ? deliveryStatus.statusLabel : "푸시 대기"} tone={deliveryReady ? "sky" : "gold"} theme={theme} />
           </View>
         </Pressable>
 
         {permissionGateResult?.returnTo === "M2" ? (
           <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
             <Text style={[styles.resultTitle, { color: theme.text }]}>{permissionGateResult.message}</Text>
-            <Text style={[styles.resultBody, { color: theme.subtle }]}>{alertReadiness.resultBody}</Text>
           </View>
         ) : null}
 
-        <GateCard
-          icon="bell"
-          title={alertReadiness.gateTitle}
-          body={alertReadiness.gateBody}
-          actionLabel={permissionReady ? "권한 정상" : "권한 켜기"}
-          tone={permissionReady ? "clear" : "warm"}
-          onPress={() => onRequestPermissionGate("notification", "M2", "general")}
-          theme={theme}
-        />
+        <View style={styles.quickActions}>
+          <GateCard
+            icon="bell"
+            title={alertReadiness.gateTitle}
+            body={alertReadiness.gateBody}
+            actionLabel={permissionReady ? "정상" : "켜기"}
+            tone={permissionReady ? "clear" : "warm"}
+            onPress={() => onRequestPermissionGate("notification", "M2", "general")}
+            theme={theme}
+          />
+          <GateCard
+            icon="bell"
+            title="테스트 알림"
+            body={testNotificationBody}
+            actionLabel={testNotificationActionLabel}
+            tone={permissionReady ? "sky" : "warm"}
+            onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
+            theme={theme}
+          />
+        </View>
 
-        <GateCard
-          icon="bell"
-          title="테스트 알림"
-          body={testNotificationBody}
-          actionLabel={testNotificationActionLabel}
-          tone={permissionReady ? "sky" : "warm"}
-          onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
-          theme={theme}
-        />
-
-        <GateCard
-          icon="route"
-          title="목적지 알림 조건"
-          body={
-            destinationReady
-              ? `${savedDestinations.length}개 목적지 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%부터 알림`
-              : "목적지를 추가하면 출발 전 강수·바람 기준을 저장"
-          }
-          actionLabel={destinationReady ? "목적지 관리" : "목적지 추가"}
-          tone={destinationReady ? "clear" : "gold"}
-          onPress={() => onNavigate(destinationReady ? "G1" : "P1")}
-          theme={theme}
-        />
-
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>적용 중인 알림</Text>
+        <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림 종류</Text>
 
         <View style={styles.alertList}>
           <AlertRow
             icon="rain"
             title="필수 날씨"
-            body={permissionReady ? "강수 임박 · 폭염/한파/강풍 특보" : "앱 안 판단은 유지, 푸시만 대기"}
+            body={permissionReady ? "강수·기상특보" : "푸시만 대기"}
             status={permissionReady ? "항상" : "권한 필요"}
             tone={permissionReady ? "sky" : "clear"}
             onPress={() => onEditNotificationCondition(state.notifications[0]?.id ?? "rain", state.notifications[0]?.deepLink as P0RouteId)}
@@ -164,7 +149,7 @@ export function AlertSettingsScreen({
           <AlertRow
             icon="sun"
             title="생활 루틴"
-            body={smartCareEnabled ? "출발 준비 + 자기 전 내일 체크" : "스마트 알림을 켜면 자동 적용"}
+            body={smartCareEnabled ? "출발 준비·내일 체크" : "스마트 알림 꺼짐"}
             status={deliveryReady ? "자동" : smartCareEnabled ? "권한 필요" : "중지"}
             tone="gold"
             onPress={() => onEditNotificationCondition(state.notifications[1]?.id ?? "daily", state.notifications[1]?.deepLink as P0RouteId)}
@@ -173,7 +158,7 @@ export function AlertSettingsScreen({
           <AlertRow
             icon="route"
             title="목적지 출발"
-            body={destinationReady ? "저장 목적지 변화 알림 적용" : "목적지를 추가하면 출발 알림 조건 저장"}
+            body={destinationReady ? `${savedDestinations.length}개 목적지` : "목적지 추가 필요"}
             status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
             tone="clear"
             onPress={() => onNavigate(destinationReady ? "G1" : "P1")}
@@ -236,22 +221,17 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <View style={[styles.fatigueCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.fatigueKicker, { color: theme.clear }]}>피로도 제어</Text>
-          <Text style={[styles.fatigueText, { color: theme.text }]}>하루 최대 3건 · 수면 시간대는 긴급 날씨만 허용</Text>
-        </View>
-
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
 }
 
-function Metric({ label, value, theme }: { label: string; value: string; theme: AppTheme }) {
+function StatusTag({ label, tone, theme }: { label: string; tone: AlertTone; theme: AppTheme }) {
+  const color = getToneColor(theme, tone);
   return (
-    <View style={styles.metric}>
-      <Text style={[styles.metricLabel, { color: theme.gold }]} numberOfLines={1}>{label}</Text>
-      <Text style={[styles.metricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+    <View style={[styles.statusTag, { backgroundColor: `${color}22` }]}>
+      <Text style={[styles.statusTagText, { color }]} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
@@ -281,7 +261,7 @@ function GateCard({
       </View>
       <View style={styles.rowCopy}>
         <Text style={[styles.rowTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.rowBody, { color: theme.muted }]} numberOfLines={2}>{body}</Text>
+        <Text style={[styles.rowBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
       </View>
       <View style={[styles.actionPill, { backgroundColor: theme.nav }]}>
         <Text style={[styles.actionPillText, { color: theme.text }]}>{actionLabel}</Text>
@@ -315,7 +295,7 @@ function AlertRow({
       </View>
       <View style={styles.rowCopy}>
         <Text style={[styles.rowTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.rowBody, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
+        <Text style={[styles.rowBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
       </View>
       <View style={[styles.statusPill, { backgroundColor: `${color}22` }]}>
         <Text style={[styles.statusPillText, { color }]}>{status}</Text>
@@ -457,36 +437,36 @@ function getNotificationDeliveryCopy(
 }
 
 function getTestNotificationBody(permissionReady: boolean, statusLabel?: string) {
-  if (!permissionReady) return "권한을 켜면 실제 알림 수신을 확인 가능";
-  if (statusLabel) return `최근 테스트 ${statusLabel} · 알림 탭 시 이 화면으로 돌아옴`;
-  return "5초 뒤 기기 알림을 보내고 탭 이동까지 확인";
+  if (!permissionReady) return "권한 켜고 수신 확인";
+  if (statusLabel) return `최근 ${statusLabel}`;
+  return "5초 뒤 발송";
 }
 
 function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boolean, skippedPermission: boolean) {
   if (!smartCareEnabled) {
     return {
       title: "스마트 알림 일시 중지",
-      body: "긴급 날씨는 앱 안에서 확인하고 푸시는 멈춤",
+      body: "푸시 없이 앱 안 판단만 유지",
       resultBody: "스마트 알림이 꺼져 있어 권한 상태와 무관하게 푸시는 발송되지 않음",
       gateTitle: "스마트 알림 꺼짐",
-      gateBody: "다시 켜면 권한 상태에 맞춰 알림을 적용함",
+      gateBody: "켜면 다시 적용",
     };
   }
   if (permissionReady) {
     return {
       title: "스마트 알림 켜짐",
-      body: "날씨와 출발 조건에 맞춰 필요한 알림만 적용",
+      body: "날씨와 출발 조건만 선별",
       resultBody: "푸시 알림을 받을 수 있고 세부 조건을 바로 조정할 수 있음",
       gateTitle: "알림 권한 정상",
-      gateBody: "기기 권한 정상 · 필수 알림 적용 가능",
+      gateBody: "푸시 수신 가능",
     };
   }
   return {
     title: skippedPermission ? "푸시 알림은 나중에" : "알림 권한 확인 필요",
-    body: skippedPermission ? "목적지와 날씨 판단은 유지하고 푸시만 대기" : "권한을 켜면 준비 알림 자동 적용",
+    body: skippedPermission ? "앱 판단 유지 · 푸시 대기" : "권한 필요",
     resultBody: skippedPermission ? "푸시는 대기 상태이며 홈·출발 판단은 계속 사용할 수 있음" : "권한 확인 후 알림 설정으로 복귀함",
     gateTitle: skippedPermission ? "알림 권한 나중에 설정" : "알림 권한 확인 필요",
-    gateBody: skippedPermission ? "앱 안 판단은 가능 · 푸시 발송만 대기" : "권한이 꺼지면 푸시 알림이 중단됨",
+    gateBody: skippedPermission ? "푸시만 대기" : "권한 켜기 필요",
   };
 }
 
@@ -642,22 +622,20 @@ const styles = StyleSheet.create({
   switchKnobOn: {
     alignSelf: "flex-end",
   },
-  heroMetrics: {
+  heroStatusRail: {
     width: "100%",
     flexDirection: "row",
     gap: spacing.xs,
     paddingTop: 4,
   },
-  metric: {
-    flex: 1,
-    gap: 4,
+  statusTag: {
+    maxWidth: "48%",
+    minHeight: 28,
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
   },
-  metricLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  metricValue: {
+  statusTagText: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
@@ -696,6 +674,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   gateCard: {
+    flex: 1,
     minHeight: 66,
     flexDirection: "row",
     alignItems: "center",
@@ -703,6 +682,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  quickActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
   },
   rowIcon: {
     width: 34,

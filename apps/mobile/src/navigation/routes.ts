@@ -65,7 +65,7 @@ export const p0Routes: P0Route[] = [
   { id: "P3", label: "허브", title: "목적지 허브" },
   { id: "M1", label: "MY", title: "MY" },
   { id: "M2", label: "알림", title: "알림 설정" },
-  { id: "M3", label: "설정", title: "표시 설정" },
+  { id: "M3", label: "설정", title: "앱 설정" },
   { id: "S0", label: "입장", title: "ON Square 입장" },
   { id: "S1", label: "소셜", title: "ON Square" },
   { id: "S2", label: "노트", title: "날씨 노트" },

@@ -38,7 +38,7 @@ export type DestinationHubFilter = "all" | "saved" | "care" | "category";
 export type PlaceSearchStatus = "idle" | "loading" | "ready" | "empty" | "error";
 export type AlertSettingsFocus = "general" | "umbrella" | "rain" | "destination";
 export type AccountPendingAction = GateReason;
-export type PermissionGateReason = "notification" | "destination-care" | "location";
+export type PermissionGateReason = "notification" | "destination-care" | "location" | "account-setup";
 export type PolicyDocumentType = "privacy" | "terms" | "location" | "open-source";
 export type AdConsentMode = "pending" | "personalized" | "non-personalized";
 export type TemperatureUnit = "celsius" | "fahrenheit";
@@ -89,6 +89,7 @@ export type PermissionGateState = {
   resumeLabel: string;
   selectedDestinationName?: string;
   alertFocus?: AlertSettingsFocus;
+  pendingAccountAction?: AccountPendingAction;
 };
 
 export type PermissionGateResultState = {
@@ -1054,56 +1055,100 @@ export function useWeatherOnAppState() {
     startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined);
   };
 
+  const openPostAccountSetupGate = (
+    returnTo: PermissionReturnRouteId,
+    pendingAccountAction?: AccountPendingAction,
+    selectedDestinationName?: string,
+  ) => {
+    if (locationReady && permissionReady) return false;
+    setPermissionGate(
+      createPermissionGateState(
+        "account-setup",
+        returnTo,
+        selectedDestinationName,
+        pendingAccountAction === "destination-care" ? "destination" : "general",
+        pendingAccountAction,
+      ),
+    );
+    setRoute("O3");
+    setGate(null);
+    return true;
+  };
+
+  const completeAccountAction = (pendingGate: AccountGateState | null) => {
+    if (!pendingGate) return;
+    if (pendingGate.reason === "save-outfit") setOutfitSaved(true);
+    if (pendingGate.reason === "destination-care") {
+      saveSelectedDestination(permissionReady);
+      setPreviewDestinationCareEnabled(permissionReady);
+    }
+    setAccountGateResult(createAccountGateResult(pendingGate.reason, pendingGate.returnTo));
+  };
+
   const completeAccountLink = () => {
     setAccountLinked(true);
-    setRoute(termsRequiredAccepted ? gate?.returnTo ?? "H1" : "A3");
+    if (!termsRequiredAccepted) {
+      setRoute("A3");
+      return;
+    }
+    const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
+    if (openPostAccountSetupGate(returnTo, gate?.reason, gate?.reason === "destination-care" ? selectedDestinationPlace.name : undefined)) return;
+    completeAccountAction(gate);
+    setRoute(returnTo);
+    setGate(null);
   };
 
   const completeTerms = () => {
     setTermsRequiredAccepted(true);
-    if (gate?.reason === "save-outfit") setOutfitSaved(true);
-    if (gate?.reason === "destination-care") {
-      if (!permissionReady) {
-        setPermissionGate(createPermissionGateState("destination-care", gate.returnTo === "A4" ? "M1" : gate.returnTo, selectedDestinationPlace.name, "destination"));
-        setRoute("O3");
-        setGate(null);
-        return;
-      }
-      saveSelectedDestination(true);
-      setPreviewDestinationCareEnabled(true);
-    }
-    if (gate) setAccountGateResult(createAccountGateResult(gate.reason, gate.returnTo));
-    setRoute(gate?.returnTo ?? "H1");
+    const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
+    if (openPostAccountSetupGate(returnTo, gate?.reason, gate?.reason === "destination-care" ? selectedDestinationPlace.name : undefined)) return;
+    completeAccountAction(gate);
+    setRoute(returnTo);
     setGate(null);
   };
 
   const completePermissionGate = async () => {
     let permissionCompleted = true;
-    if (permissionGate?.reason === "location") {
+    let notificationCompleted = permissionReady;
+    if (permissionGate?.reason === "location" || permissionGate?.reason === "account-setup") {
       setWeatherLocationMode("auto");
       setWeatherProviderMode("ready");
       setUseDestinationWeather(false);
       setDeviceLocationState({ status: "requesting", message: "현재 위치 확인 중" });
-      const result = await requestDeviceWeatherLocation();
-      permissionCompleted = result.status === "granted";
-      setDeviceLocationState(result);
-      if (permissionCompleted && result.location) {
-        setLocationReady(true);
-        setDeviceWeatherLocation(result.location);
+      if (!locationReady) {
+        const result = await requestDeviceWeatherLocation();
+        permissionCompleted = result.status === "granted";
+        setDeviceLocationState(result);
+        if (permissionCompleted && result.location) {
+          setLocationReady(true);
+          setDeviceWeatherLocation(result.location);
+        } else {
+          setLocationReady(false);
+          setDeviceWeatherLocation(null);
+          setWeatherLocationMode("manual");
+        }
       } else {
-        setLocationReady(false);
-        setDeviceWeatherLocation(null);
-        setWeatherLocationMode("manual");
+        setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation ?? seongsuWeatherLocation });
       }
       setWeatherRefreshTick((value) => value + 1);
-    } else {
+    }
+    if (permissionGate?.reason !== "location") {
       const result = await requestLocalNotificationPermission();
-      permissionCompleted = result.granted;
+      notificationCompleted = result.granted;
+      permissionCompleted = permissionGate?.reason === "account-setup" ? permissionCompleted && notificationCompleted : notificationCompleted;
       setPermissionReady(result.granted);
     }
     if (permissionGate?.reason === "destination-care") {
       saveSelectedDestination(permissionCompleted);
       setPreviewDestinationCareEnabled(permissionCompleted);
+    }
+    if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
+      if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
+      if (permissionGate.pendingAccountAction === "destination-care") {
+        saveSelectedDestination(notificationCompleted);
+        setPreviewDestinationCareEnabled(notificationCompleted);
+      }
+      setAccountGateResult(createAccountGateResult(permissionGate.pendingAccountAction, getAccountResultReturnRoute(permissionGate.returnTo)));
     }
     if (permissionGate) {
       setPermissionGateResult(
@@ -1122,6 +1167,14 @@ export function useWeatherOnAppState() {
     if (permissionGate?.reason === "destination-care") {
       saveSelectedDestination(false);
       setPreviewDestinationCareEnabled(false);
+    }
+    if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
+      if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
+      if (permissionGate.pendingAccountAction === "destination-care") {
+        saveSelectedDestination(false);
+        setPreviewDestinationCareEnabled(false);
+      }
+      setAccountGateResult(createAccountGateResult(permissionGate.pendingAccountAction, getAccountResultReturnRoute(permissionGate.returnTo)));
     }
     if (permissionGate?.reason === "location") {
       setLocationReady(false);
@@ -1331,6 +1384,10 @@ function getBackRoute(route: AppRouteId): AppRouteId {
   }
 }
 
+function getAccountResultReturnRoute(route: PermissionReturnRouteId): AccountGateReturnRouteId {
+  return isP0Route(route) ? route : "H1";
+}
+
 function getDestinationAlertConditionSteps(field: keyof DestinationAlertCondition): number[] {
   if (field === "rainThresholdPct") return rainThresholdSteps;
   if (field === "leadTimeMinutes") return leadTimeSteps;
@@ -1434,13 +1491,15 @@ function createPermissionGateState(
   returnTo: PermissionReturnRouteId,
   selectedDestinationName?: string,
   alertFocus?: AlertSettingsFocus,
+  pendingAccountAction?: AccountPendingAction,
 ): PermissionGateState {
   return {
     reason,
     returnTo,
     resumeLabel: getPermissionResumeLabel(reason),
-    selectedDestinationName: reason === "destination-care" ? selectedDestinationName : undefined,
+    selectedDestinationName: reason === "destination-care" || reason === "account-setup" ? selectedDestinationName : undefined,
     alertFocus,
+    pendingAccountAction,
   };
 }
 
@@ -1461,6 +1520,7 @@ function createPermissionGateSkipResult(reason: PermissionGateReason, returnTo: 
 }
 
 function getPermissionResumeLabel(reason: PermissionGateReason): string {
+  if (reason === "account-setup") return "앱 준비 설정";
   if (reason === "location") return "현재 위치 사용";
   if (reason === "destination-care") return "목적지 케어 알림";
   return "알림 권한";

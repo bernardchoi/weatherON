@@ -213,7 +213,7 @@ async function checkNotificationPermissionRecovery(browser) {
   await waitForApp();
   await clickAriaIncludes(page, "알림 열기");
   await assertText(page, "푸시 알림 대기");
-  await assertText(page, "권한 관리");
+  await assertText(page, "알림 설정으로 이동");
   } finally {
     await context.close();
   }
@@ -299,12 +299,12 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
 
     await clickText(page, "MY");
     await clickText(page, "알림 설정");
-    await assertText(page, "목적지 알림 조건");
-    await assertText(page, "목적지를 추가하면 출발 전 강수·바람 기준을 저장");
+    await assertText(page, "목적지 출발");
+    await assertText(page, "목적지 추가 필요");
     await assertText(page, "목적지 필요");
     await assertNoText(page, "계정 연결 후 목적지 알림 저장");
     await assertNoText(page, "알림 저장은 계정 연결 후 적용");
-    await clickText(page, "목적지 추가");
+    await clickText(page, "목적지 추가 필요");
     await assertText(page, "장소를 검색해 주세요");
     await assertText(page, "장소 선택 필요");
     await fillAriaInput(page, "목적지 검색어", "x");
@@ -442,7 +442,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
 async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
   await assertText(page, "알림 설정");
-  await assertText(page, "위치 관리");
+  await assertText(page, "앱 권한 관리");
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
   await assertText(page, "현재 상태");
@@ -450,7 +450,11 @@ async function checkMySettingsFlow(page) {
   await assertNoText(page, "코디·옷장");
   await assertBottomNav(page);
 
-  await clickText(page, "위치 관리");
+  await clickText(page, "앱 권한 관리");
+  await assertText(page, "앱 설정");
+  await assertText(page, "위치 권한");
+  await assertText(page, "알림 권한");
+  await clickText(page, "위치 권한");
   await assertText(page, "위치 변경");
   await fillAriaInput(page, "동 읍 면 검색", "x");
   await assertText(page, "검색어 지우기");
@@ -459,7 +463,8 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
 
   await clickText(page, "표시 설정");
-  await assertText(page, "단위 설정");
+  await assertText(page, "앱 설정");
+  await assertText(page, "표시 설정");
   await assertText(page, "테마");
   await assertText(page, "투명 효과");
   await assertNoText(page, "알림 권한 관리");

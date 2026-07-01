@@ -122,6 +122,9 @@ try {
     await clickBell(page);
     console.log(`small-screen: ${viewport.name}/notification-sidebar bell`);
     await assertText(page, "알림", viewport, "notification-sidebar");
+    await assertText(page, "주의 필요", viewport, "notification-sidebar");
+    await assertText(page, "오늘 예정", viewport, "notification-sidebar");
+    await assertText(page, "최근 완료", viewport, "notification-sidebar");
     console.log(`small-screen: ${viewport.name}/notification-sidebar text`);
     await checkLayout(page, viewport, "notification-sidebar");
     console.log(`small-screen: ${viewport.name}/notification-sidebar layout`);
@@ -129,9 +132,10 @@ try {
     console.log(`small-screen: ${viewport.name}/notification-sidebar screenshot`);
 
     console.log(`small-screen: ${viewport.name}/alert-settings`);
-    await clickText(page, "조건");
+    await clickText(page, "알림 설정으로 이동");
     await assertText(page, "스마트 알림 설정", viewport, "alert-settings");
-    await assertText(page, "알림 기준 조정", viewport, "alert-settings");
+    await assertText(page, "테스트 알림", viewport, "alert-settings");
+    await assertText(page, "목적지 출발", viewport, "alert-settings");
     await checkLayout(page, viewport, "alert-settings");
     await screenshot(page, viewport, "alert-settings");
 
@@ -142,7 +146,7 @@ try {
     await onboardingPage.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await loadSeededApp(onboardingPage, onboardingState);
     await assertText(onboardingPage, "나가기 전 5초 판단", viewport, "onboarding");
-    await assertText(onboardingPage, "위치 권한으로", viewport, "onboarding");
+    await assertText(onboardingPage, "알림 기준 보기", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");
     await onboardingPage.close();

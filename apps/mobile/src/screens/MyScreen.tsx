@@ -33,11 +33,13 @@ export function MyScreen({
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
   const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, weightUnit, distanceUnit, themeMode);
+  const permissionSummary = `${locationState.summary} · ${alertState.summary}`;
+  const permissionTone: MenuTone = locationState.tone === "warm" || alertState.tone === "warm" ? "warm" : locationState.tone === "gold" || alertState.tone === "gold" ? "gold" : "clear";
   const summaryItems: SummaryItem[] = [
     { label: "계정", value: accountSummary, tone: isAccountReady ? "clear" : needsTerms ? "gold" : "warm" },
-    { label: "위치", value: locationState.summary, tone: locationState.tone },
-    { label: "알림", value: alertState.status, tone: alertState.tone },
+    { label: "권한", value: permissionSummary, tone: permissionTone },
     { label: "목적지", value: savedDestinationLabel, tone: savedDestinationCount > 0 ? "clear" : "gold" },
+    { label: "표시", value: globalSettingsSummary, tone: "sky" },
   ];
 
   const openProfile = () => {
@@ -76,12 +78,12 @@ export function MyScreen({
 
         <View style={styles.menuList}>
           <MenuRow
-            icon="pin"
-            title="위치 관리"
-            meta={locationState.meta}
-            status={locationState.status}
-            tone={locationState.tone}
-            onPress={() => onNavigate("H2")}
+            icon="shield"
+            title="앱 권한 관리"
+            meta={`위치 ${locationState.status} · 알림 ${alertState.status}`}
+            status={permissionTone === "clear" ? "정상" : "확인"}
+            tone={permissionTone}
+            onPress={() => onNavigate("M3")}
             theme={theme}
           />
           <MenuRow

@@ -14,7 +14,7 @@ const featureCards = [
   { icon: uiIconAssets.rain, title: "비 시작·그침", body: "강수 타임라인과 그침 알림을 먼저 확인" },
 ];
 
-export function OnboardingIntroScreen({ onNavigate, onRequestPermissionGate, locationReady }: P0ScreenProps) {
+export function OnboardingIntroScreen({ onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
 
   return (
@@ -33,10 +33,8 @@ export function OnboardingIntroScreen({ onNavigate, onRequestPermissionGate, loc
           <QuickFact label="그침" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
         <View style={styles.primaryActions}>
-          <AppButton label="위치 권한으로" accessibilityLabel="위치 권한 설정으로 이동" onPress={() => onRequestPermissionGate("location", "O5")} />
-          <View style={styles.secondaryActions}>
-            <AppButton label={locationReady ? "알림 기준으로" : "위치 없이 계속"} accessibilityLabel="위치 권한 없이 알림 기준으로 이동" onPress={() => onNavigate("O5")} tone="secondary" />
-          </View>
+          <AppButton label="알림 기준 보기" accessibilityLabel="스마트 알림 기준 단계로 이동" onPress={() => onNavigate("O5")} />
+          <Text style={[styles.helperText, { color: theme.subtle }]}>위치와 알림 권한은 계정 연결 후 한 번에 설정함</Text>
         </View>
       </View>
 
@@ -136,10 +134,11 @@ const styles = StyleSheet.create({
   primaryActions: {
     gap: spacing.xs,
   },
-  secondaryActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
+  helperText: {
+    textAlign: "center",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "800",
   },
   featureGrid: {
     gap: spacing.sm,

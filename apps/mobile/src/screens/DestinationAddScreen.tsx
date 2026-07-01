@@ -26,6 +26,8 @@ export function DestinationAddScreen({
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
+  const searchInsight = getSearchInsight(placeSearchStatus, placeSearchResults, hasQuery, placeSearchQuery);
+  const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
 
   const handlePrimaryAction = () => {
     if (!canUseSelectedDestination) return;
@@ -78,6 +80,11 @@ export function DestinationAddScreen({
           </View>
         </View>
 
+        <View style={[styles.searchInsight, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Text style={[styles.searchInsightTitle, { color: theme.text }]}>{searchInsight.title}</Text>
+          <Text style={[styles.searchInsightBody, { color: theme.subtle }]}>{searchInsight.body}</Text>
+        </View>
+
         <View style={styles.stack}>
           <View style={[styles.stateCard, styles.stateCardSky, { backgroundColor: theme.cardStrong, borderColor: "rgba(140,207,255,0.34)" }]}>
             <View style={styles.stateHeader}>
@@ -111,6 +118,7 @@ export function DestinationAddScreen({
           <View style={styles.results}>
             {placeSearchResults.slice(0, 3).map((place) => {
               const selected = selectedDestinationPlace.id === place.id;
+              const duplicate = (duplicateNameCounts.get(place.name) ?? 0) > 1;
               return (
                 <Pressable
                   accessibilityLabel={`${place.name} 목적지 선택`}
@@ -127,8 +135,18 @@ export function DestinationAddScreen({
                   ]}
                 >
                   <View style={styles.resultHead}>
-                    <Text style={[styles.resultName, { color: theme.text }]}>{place.name} {selected ? "선택됨" : ""}</Text>
-                    <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]}>{getCategoryLabel(place.category)} · {getCategoryDetail(place.category)}</Text>
+                    <View style={styles.resultTitleRow}>
+                      <Text style={[styles.resultName, { color: theme.text }]} numberOfLines={1}>{place.name} {selected ? "선택됨" : ""}</Text>
+                      {duplicate ? (
+                        <View style={[styles.smallPill, { borderColor: theme.border }]}>
+                          <Text style={[styles.smallPillText, { color: theme.gold }]}>동명이름</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
+                      {getCategoryLabel(place.category)} · {getCountryLabel(place.countryCode)} · {getProviderLabel(place.provider)}
+                    </Text>
+                    <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>
                   {selected ? (
                     <Text style={[styles.resultBody, { color: theme.muted }]}>
@@ -206,8 +224,48 @@ function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boo
 function getEmptyBody(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
   if (status === "loading") return "장소 목록을 불러오는 중이에요";
   if (status === "error") return "검색어는 유지됨 · 다시 시도하거나 지우고 새로 입력해 주세요";
-  if (hasQuery) return "다른 장소명이나 지역명을 입력하거나 검색어를 지워 다시 시작해요";
+  if (hasQuery) return "한국어 또는 현지어 장소명을 다시 입력해요. 해외 장소는 Google 결과로 확인함";
   return "목적지를 선택하면 홈 비교와 출발 탭에 바로 반영됨";
+}
+
+function getSearchInsight(status: P0ScreenProps["placeSearchStatus"], results: P0ScreenProps["placeSearchResults"], hasQuery: boolean, query: string) {
+  if (!hasQuery) {
+    return {
+      title: "검색 전",
+      body: "장소명, 역명, 경기장 이름을 입력하면 주소·국가·카테고리를 함께 보여줌",
+    };
+  }
+  if (status === "loading") {
+    return {
+      title: "검색 중",
+      body: `"${query}" 후보를 기기 언어 기준으로 확인 중`,
+    };
+  }
+  if (status === "error") {
+    return {
+      title: "연결 확인 필요",
+      body: "검색어는 유지됨. 다시 시도하거나 지워서 새 검색을 시작할 수 있음",
+    };
+  }
+  if (results.length === 0) {
+    return {
+      title: "결과 없음",
+      body: "한국어/영어/현지어를 바꿔 입력하거나 더 넓은 지역명으로 다시 검색",
+    };
+  }
+  const hasGlobal = results.some((place) => place.countryCode !== "KR" || place.provider === "google");
+  return {
+    title: hasGlobal ? "해외 결과 포함" : "검색 결과",
+    body: hasGlobal ? "해외 장소는 Google 기준으로 국가·주소를 함께 확인하고 선택함" : "같은 이름 장소는 주소까지 보고 선택함",
+  };
+}
+
+function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
+  const counts = new Map<string, number>();
+  for (const place of results) {
+    counts.set(place.name, (counts.get(place.name) ?? 0) + 1);
+  }
+  return counts;
 }
 
 function getCategoryLabel(category: string) {
@@ -226,6 +284,19 @@ function getCategoryDetail(category: string) {
   if (category === "airport") return "이동";
   if (category === "hotel") return "여행";
   return "카테고리";
+}
+
+function getCountryLabel(countryCode: string) {
+  if (countryCode === "KR") return "한국";
+  if (countryCode === "JP") return "일본";
+  return "해외";
+}
+
+function getProviderLabel(provider: string) {
+  if (provider === "kakao") return "Kakao";
+  if (provider === "google") return "Google";
+  if (provider === "openmeteo") return "Open-Meteo";
+  return "기본";
 }
 
 function BackGlyph({ color }: { color: string }) {
@@ -405,6 +476,23 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "900",
   },
+  searchInsight: {
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  searchInsightTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  searchInsightBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
   stack: {
     gap: spacing.sm,
   },
@@ -505,15 +593,40 @@ const styles = StyleSheet.create({
   resultHead: {
     gap: 4,
   },
+  resultTitleRow: {
+    minHeight: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   resultName: {
+    flex: 1,
     fontSize: 15,
     lineHeight: 20,
+    fontWeight: "900",
+  },
+  smallPill: {
+    minHeight: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  smallPillText: {
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
   },
   resultMeta: {
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "800",
+  },
+  resultAddress: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
   },
   resultBody: {
     fontSize: 12,

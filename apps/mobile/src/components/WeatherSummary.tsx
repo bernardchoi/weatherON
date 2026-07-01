@@ -85,11 +85,11 @@ function DestinationEmptyMiniCard({ onPress }: { onPress: () => void }) {
         <Text style={[styles.miniLabel, { color: theme.subtle }]}>목적지</Text>
       </View>
       <Text style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
-        추가 필요
+          추가 필요
       </Text>
-      <Text style={[styles.emptyMiniTitle, { color: theme.gold }]}>장소 선택</Text>
+      <Text style={[styles.emptyMiniTitle, { color: theme.gold }]}>목적지 추가</Text>
       <Text style={[styles.miniMeta, { color: theme.subtle }]} numberOfLines={2}>
-        저장 후 날씨 차이와 출발 시간을 계산
+        목적지 추가하면 출발시간까지 계산
       </Text>
     </Pressable>
   );
@@ -177,7 +177,7 @@ function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnaps
 function getMissingDestinationComparison() {
   return {
     label: "목적지 필요",
-    detail: "목적지를 추가하면 현재 위치와 목적지 예보를 실제 데이터로 비교",
+    detail: "목적지 추가하면 현재 위치와 비교하고 출발시간까지 계산",
     tone: "warm" as const,
   };
 }

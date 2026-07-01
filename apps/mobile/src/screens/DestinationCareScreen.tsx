@@ -70,6 +70,22 @@ export function DestinationCareScreen({
             <DecisionStat icon={uiIconAssets.drop} label="목적지 비" value={`${destinationRain}%`} meta={`출발지 ${originRain}%`} color={theme.sky} theme={theme} />
             <DecisionStat icon={uiIconAssets.clock} label="다음 알림" value={rainAlertTime} meta={destinationCareEnabled ? "알림 가능" : permissionReady ? "꺼짐" : "권한 필요"} color={theme.clear} theme={theme} />
           </View>
+          <View style={styles.arrivalControls}>
+            <ArrivalControl
+              label="도착 희망"
+              value={targetArrivalTime}
+              caption="탭해서 변경"
+              onPress={() => onCycleDestinationSchedulePreference("targetArrivalTime")}
+              theme={theme}
+            />
+            <ArrivalControl
+              label="여유 시간"
+              value={`${bufferMinutes}분`}
+              caption={`출발 ${departureTime}`}
+              onPress={() => onCycleDestinationSchedulePreference("bufferMinutes")}
+              theme={theme}
+            />
+          </View>
         </View>
 
         {!permissionReady ? (
@@ -221,6 +237,30 @@ function DecisionStat({
       <Text style={[styles.decisionStatValue, { color: theme.text }]}>{value}</Text>
       <Text style={[styles.decisionStatMeta, { color: theme.muted }]}>{meta}</Text>
     </View>
+  );
+}
+
+function ArrivalControl({
+  label,
+  value,
+  caption,
+  onPress,
+  theme,
+}: {
+  label: string;
+  value: string;
+  caption: string;
+  onPress: () => void;
+  theme: AppTheme;
+}) {
+  return (
+    <Pressable accessibilityLabel={`${label} ${value} 조정`} accessibilityRole="button" onPress={onPress} style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={styles.arrivalControlCopy}>
+        <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
+        <Text style={[styles.arrivalControlValue, { color: theme.text }]}>{value}</Text>
+      </View>
+      <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
+    </Pressable>
   );
 }
 
@@ -454,6 +494,38 @@ const styles = StyleSheet.create({
   decisionStats: {
     flexDirection: "row",
     gap: spacing.xs,
+  },
+  arrivalControls: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  arrivalControl: {
+    flex: 1,
+    minHeight: 62,
+    justifyContent: "space-between",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 9,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  arrivalControlCopy: {
+    gap: 2,
+  },
+  arrivalControlLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  arrivalControlValue: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  arrivalControlCaption: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
   },
   decisionStat: {
     flex: 1,

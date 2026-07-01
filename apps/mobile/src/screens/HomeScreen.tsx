@@ -13,6 +13,7 @@ import { radius, spacing, type AppTheme } from "../theme/tokens";
 export function HomeScreen({
   state,
   readNotificationIds,
+  notificationHistory,
   smartCareEnabled,
   isWeatherLoading,
   permissionReady,
@@ -20,9 +21,7 @@ export function HomeScreen({
   onSetWeatherProviderMode,
   onRefreshWeather,
   onMarkAllNotificationsRead,
-  onEditNotificationCondition,
   onOpenNotificationDeepLink,
-  onRequestPermissionGate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
@@ -115,21 +114,18 @@ export function HomeScreen({
         visible={notificationSidebarOpen}
         notifications={activeNotifications}
         readNotificationIds={readNotificationIds}
+        notificationHistory={notificationHistory}
         smartCareEnabled={smartCareEnabled}
         permissionReady={permissionReady}
         theme={theme}
         onClose={() => setNotificationSidebarOpen(false)}
         onMarkAllNotificationsRead={onMarkAllNotificationsRead}
-        onManagePermission={() => {
+        onOpenSettings={() => {
           setNotificationSidebarOpen(false);
-          onRequestPermissionGate("notification", "M2", "general");
+          onNavigate("M2");
         }}
         onOpen={(id, route) => {
           onOpenNotificationDeepLink(id, route);
-          setNotificationSidebarOpen(false);
-        }}
-        onEdit={(id, route) => {
-          onEditNotificationCondition(id, route);
           setNotificationSidebarOpen(false);
         }}
       />
@@ -146,7 +142,7 @@ function buildHomeDecision(care: P0ScreenProps["state"]["destinationCare"], dest
     ? buildDestinationDiff(care)
     : {
         title: "목적지 없음",
-        body: "목적지를 추가하면 현재 위치와 날씨 차이를 바로 비교",
+        body: "목적지 추가하면 출발시간까지 계산",
       };
   const rainWindow = destinationReady
     ? buildRainWindow(care)
@@ -157,7 +153,7 @@ function buildHomeDecision(care: P0ScreenProps["state"]["destinationCare"], dest
 
   return {
     departureTime,
-    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 반영` : "현재 위치 예보는 연결됨 · 목적지를 추가하면 출발 시각 계산",
+    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 반영` : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
     destinationTitle: destinationDiff.title,
     destinationBody: destinationReady ? `${care.name} · ${destinationDiff.body}` : destinationDiff.body,
     rainTitle: rainWindow.title,
@@ -327,31 +323,33 @@ function NotificationSidebar({
   visible,
   notifications,
   readNotificationIds,
+  notificationHistory,
   smartCareEnabled,
   permissionReady,
   onClose,
   onMarkAllNotificationsRead,
-  onManagePermission,
+  onOpenSettings,
   onOpen,
-  onEdit,
   theme,
 }: {
   visible: boolean;
   notifications: P0ScreenProps["state"]["notifications"];
   readNotificationIds: string[];
+  notificationHistory: P0ScreenProps["notificationHistory"];
   smartCareEnabled: boolean;
   permissionReady: boolean;
   onClose: () => void;
   onMarkAllNotificationsRead: () => void;
-  onManagePermission: () => void;
+  onOpenSettings: () => void;
   onOpen: (id: string, route: P0RouteId) => void;
-  onEdit: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
 }) {
   if (!visible) return null;
 
   const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length;
   const hasUnread = unreadCount > 0;
+  const groups = buildSidebarGroups(notifications.slice(0, 6), readNotificationIds);
+  const recentHistory = notificationHistory.slice(0, 3);
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -380,20 +378,12 @@ function NotificationSidebar({
           </View>
 
           {!permissionReady ? (
-            <Pressable
-              accessibilityLabel="알림 권한 관리"
-              accessibilityRole="button"
-              onPress={onManagePermission}
-              style={[styles.sidebarPermissionCard, { backgroundColor: theme.card, borderColor: theme.warm }]}
-            >
+            <View style={[styles.sidebarPermissionCard, { backgroundColor: theme.card, borderColor: theme.warm }]}>
               <View style={styles.sidebarPermissionCopy}>
                 <Text style={[styles.sidebarPermissionTitle, { color: theme.warm }]}>푸시 알림 대기</Text>
                 <Text style={[styles.sidebarPermissionBody, { color: theme.muted }]}>홈·출발 판단은 유지됨 · 권한을 켜면 조건 알림 발송</Text>
               </View>
-              <View style={[styles.sidebarPermissionPill, { backgroundColor: `${theme.warm}22` }]}>
-                <Text style={[styles.sidebarPermissionPillText, { color: theme.warm }]}>권한 관리</Text>
-              </View>
-            </Pressable>
+            </View>
           ) : null}
 
           <Pressable
@@ -408,37 +398,25 @@ function NotificationSidebar({
           </Pressable>
 
           <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
-            {notifications.slice(0, 6).map((item, index) => {
-              const route = item.deepLink as P0RouteId;
-              const read = readNotificationIds.includes(item.id);
-              const color = getNotificationTone(theme, index, route);
-              return (
-                <Pressable
-                  key={item.id}
-                  accessibilityLabel={`${item.title} 열기`}
-                  accessibilityRole="button"
-                  onPress={() => onOpen(item.id, route)}
-                  style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
-                >
-                  <View style={styles.sidebarItemMain}>
-                    <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
-                    <View style={styles.sidebarItemCopy}>
-                      <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
-                      <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
-                      <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.sidebarItemFooter}>
-                    <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
-                      {read ? "확인됨" : "눌러서 확인"}
-                    </Text>
-                    <Pressable accessibilityLabel={`${item.title} 조건 설정`} accessibilityRole="button" onPress={() => onEdit(item.id, route)} style={[styles.sidebarConditionButton, { backgroundColor: theme.cardMuted }]}>
-                      <Text style={[styles.sidebarConditionText, { color: theme.subtle }]}>조건</Text>
-                    </Pressable>
-                  </View>
-                </Pressable>
-              );
-            })}
+            {groups.map((group) => (
+              <SidebarNotificationGroup
+                key={group.title}
+                group={group}
+                readNotificationIds={readNotificationIds}
+                smartCareEnabled={smartCareEnabled}
+                onOpen={onOpen}
+                theme={theme}
+              />
+            ))}
+            <View style={[styles.sidebarHistoryBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View>
+                <Text style={[styles.sidebarGroupTitle, { color: theme.text }]}>최근 완료</Text>
+                <Text style={[styles.sidebarGroupMeta, { color: theme.subtle }]}>
+                  {recentHistory.length > 0 ? `${recentHistory.length}건 완료` : "아직 완료된 알림 없음"}
+                </Text>
+              </View>
+              {recentHistory.length > 0 ? recentHistory.map((item) => <SidebarHistoryRow key={item.id} item={item} theme={theme} />) : null}
+            </View>
             {notifications.length === 0 ? (
               <View style={[styles.sidebarEmpty, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <Text style={[styles.sidebarEmptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
@@ -446,9 +424,99 @@ function NotificationSidebar({
               </View>
             ) : null}
           </ScrollView>
+
+          <Pressable
+            accessibilityLabel="알림 설정으로 이동"
+            accessibilityRole="button"
+            onPress={onOpenSettings}
+            style={[styles.sidebarSettingsButton, { backgroundColor: theme.gold, borderColor: theme.gold }]}
+          >
+            <Text style={[styles.sidebarSettingsText, { color: theme.onAccent }]}>알림 설정으로 이동</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
+  );
+}
+
+type SidebarGroup = {
+  title: "주의 필요" | "오늘 예정";
+  meta: string;
+  items: P0ScreenProps["state"]["notifications"];
+};
+
+function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications"], readNotificationIds: string[]): SidebarGroup[] {
+  const warningItems = notifications.filter((item, index) => {
+    const route = item.deepLink as P0RouteId;
+    return !readNotificationIds.includes(item.id) || route === "H5" || index === 0;
+  });
+  const warningIds = new Set(warningItems.map((item) => item.id));
+  const todayItems = notifications.filter((item) => !warningIds.has(item.id));
+  return [
+    { title: "주의 필요", meta: "읽지 않은 강수·출발 알림", items: warningItems },
+    { title: "오늘 예정", meta: "오늘 기준으로 준비할 알림", items: todayItems },
+  ];
+}
+
+function SidebarNotificationGroup({
+  group,
+  readNotificationIds,
+  smartCareEnabled,
+  onOpen,
+  theme,
+}: {
+  group: SidebarGroup;
+  readNotificationIds: string[];
+  smartCareEnabled: boolean;
+  onOpen: (id: string, route: P0RouteId) => void;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={styles.sidebarGroup}>
+      <View>
+        <Text style={[styles.sidebarGroupTitle, { color: theme.text }]}>{group.title}</Text>
+        <Text style={[styles.sidebarGroupMeta, { color: theme.subtle }]}>{group.items.length > 0 ? group.meta : "해당 알림 없음"}</Text>
+      </View>
+      {group.items.map((item, index) => {
+        const route = item.deepLink as P0RouteId;
+        const read = readNotificationIds.includes(item.id);
+        const color = getNotificationTone(theme, index, route);
+        return (
+          <Pressable
+            key={item.id}
+            accessibilityLabel={`${item.title} 열기`}
+            accessibilityRole="button"
+            onPress={() => onOpen(item.id, route)}
+            style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
+          >
+            <View style={styles.sidebarItemMain}>
+              <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
+              <View style={styles.sidebarItemCopy}>
+                <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
+                <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
+                <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
+              </View>
+            </View>
+            <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
+              {read ? "확인됨" : "눌러서 확인"}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function SidebarHistoryRow({ item, theme }: { item: P0ScreenProps["notificationHistory"][number]; theme: AppTheme }) {
+  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : "읽음";
+  return (
+    <View style={styles.sidebarHistoryRow}>
+      <View style={[styles.sidebarItemDot, { backgroundColor: theme.clear }]} />
+      <View style={styles.sidebarItemCopy}>
+        <Text style={[styles.sidebarHistoryTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+        <Text style={[styles.sidebarHistoryMeta, { color: theme.subtle }]}>{label} · {item.statusLabel}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -707,8 +775,22 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingBottom: spacing.md,
   },
+  sidebarGroup: {
+    gap: spacing.xs,
+  },
+  sidebarGroupTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  sidebarGroupMeta: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
   sidebarItem: {
-    minHeight: 104,
+    minHeight: 92,
     gap: spacing.xs,
     padding: spacing.sm,
     borderRadius: radius.md,
@@ -767,6 +849,40 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "800",
+  },
+  sidebarHistoryBox: {
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarHistoryRow: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  sidebarHistoryTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  sidebarHistoryMeta: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "700",
+  },
+  sidebarSettingsButton: {
+    minHeight: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarSettingsText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
   },
   sidebarEmpty: {
     gap: spacing.xs,

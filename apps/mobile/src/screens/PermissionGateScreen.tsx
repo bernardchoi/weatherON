@@ -22,13 +22,22 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
   const gateLabel = gate?.resumeLabel ?? "알림 권한";
   const isLocationGate = gate?.reason === "location";
   const isNotificationGate = gate?.reason === "notification";
+  const isAccountSetupGate = gate?.reason === "account-setup";
   const returnLabel = getRouteLabel(gate?.returnTo);
   const isDestinationCareGate = gate?.reason === "destination-care";
-  const gateReady = isLocationGate ? locationReady : permissionReady;
-  const screenTitle = isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
-  const screenSubtitle = isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "나머지 알림 세부 설정은 다음 단계에서 정리";
+  const gateReady = isAccountSetupGate ? locationReady && permissionReady : isLocationGate ? locationReady : permissionReady;
+  const screenTitle = isAccountSetupGate ? "앱 준비를 마무리해요" : isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
+  const screenSubtitle = isAccountSetupGate ? "계정 연결 후 위치와 알림을 한 번에 설정" : isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "설정 후 원래 화면으로 돌아감";
   const statusLabel = isDestinationCareGate ? (permissionReady ? "알림 켜짐" : "저장 가능") : gateReady ? "허용됨" : "대기";
-  const primaryLabel = isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
+  const primaryLabel = isAccountSetupGate ? "위치·알림 허용" : isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
+  const resultCards = buildResultCards({
+    isAccountSetupGate,
+    isLocationGate,
+    isNotificationGate,
+    isDestinationCareGate,
+    locationReady,
+    permissionReady,
+  });
 
   return (
     <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한">
@@ -37,7 +46,11 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           <View style={styles.copy}>
             <Text style={[styles.actionTitle, { color: theme.text }]}>{gateLabel}</Text>
             <Text style={[styles.meta, { color: theme.muted }]}>
-              {isDestinationCareGate ? "알림 권한은 선택 사항이에요. 목적지는 출발 탭에 먼저 저장돼요" : `${returnLabel} 화면으로 돌아가 설정을 이어가요`}
+              {isAccountSetupGate
+                ? "현재 위치 날씨와 출발 알림에만 사용함"
+                : isDestinationCareGate
+                  ? "알림 권한은 선택 사항이에요. 목적지는 출발 탭에 먼저 저장돼요"
+                  : `${returnLabel} 화면으로 돌아가 설정을 이어가요`}
             </Text>
           </View>
           <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
@@ -45,11 +58,20 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
         {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         <View style={styles.actions}>
           <AppButton label={primaryLabel} onPress={onComplete} />
-          <AppButton label={isDestinationCareGate ? "알림 없이 저장" : "나중에 설정"} accessibilityLabel={isDestinationCareGate ? "알림 권한 없이 목적지 저장" : "권한 나중에 설정"} onPress={onCancel} tone="secondary" />
+          <AppButton
+            label={isDestinationCareGate ? "알림 없이 저장" : "나중에 설정"}
+            accessibilityLabel={isDestinationCareGate ? "알림 권한 없이 목적지 저장" : "권한 나중에 설정"}
+            onPress={onCancel}
+            tone="secondary"
+          />
         </View>
       </View>
 
-      <Section title={isDestinationCareGate ? "저장 후 사용" : "필요 권한"} caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : `${returnLabel} 화면으로 돌아가기 전 확인`} accent="gold">
+      <Section
+        title={isDestinationCareGate ? "저장 후 사용" : isAccountSetupGate ? "준비 항목" : "필요 권한"}
+        caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : isAccountSetupGate ? "둘 다 나중에 바꿀 수 있음" : `${returnLabel} 화면으로 돌아가기 전 확인`}
+        accent="gold"
+      >
         {isDestinationCareGate ? (
           <>
             <PermissionCard
@@ -69,19 +91,19 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           </>
         ) : (
           <>
-            {isLocationGate ? (
+            {isLocationGate || isAccountSetupGate ? (
               <PermissionCard
                 title="위치 권한"
-                body="현재 위치 날씨·출발지 파악에 사용함"
+                body="현재 위치 날씨 기준"
                 mark="위치"
                 active
                 ready={locationReady}
               />
             ) : null}
-            {isNotificationGate || !isLocationGate ? (
+            {isNotificationGate || isAccountSetupGate || !isLocationGate ? (
               <PermissionCard
                 title="알림 권한"
-                body="강수·기상특보·외출 준비·목적지 알림에 사용함"
+                body="강수·출발 알림 수신"
                 mark="알림"
                 active
                 ready={permissionReady}
@@ -95,12 +117,70 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
             <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
           </View>
           <Text style={[styles.stateCopy, { color: theme.muted }]}>
-            {isDestinationCareGate ? "알림 없이 저장해도 목적지 비교와 출발 시간은 바로 사용할 수 있음" : "허용하지 않아도 다음 단계 진행 가능"}
+            {isDestinationCareGate
+              ? "알림 없이 저장해도 목적지 비교와 출발 시간은 바로 사용할 수 있음"
+              : isAccountSetupGate
+                ? "나중에 해도 홈과 목적지 비교는 사용 가능"
+                : "허용하지 않아도 다음 단계 진행 가능"}
           </Text>
           {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         </View>
+        {resultCards.length > 0 ? (
+          <View style={styles.resultGrid}>
+            {resultCards.map((card) => (
+              <ResultCard key={card.title} title={card.title} body={card.body} tone={card.tone} />
+            ))}
+          </View>
+        ) : null}
       </Section>
     </AppScreen>
+  );
+}
+
+function buildResultCards({
+  isAccountSetupGate,
+  isLocationGate,
+  isNotificationGate,
+  isDestinationCareGate,
+  locationReady,
+  permissionReady,
+}: {
+  isAccountSetupGate: boolean;
+  isLocationGate: boolean;
+  isNotificationGate: boolean;
+  isDestinationCareGate: boolean;
+  locationReady: boolean;
+  permissionReady: boolean;
+}) {
+  const cards: { title: string; body: string; tone: "clear" | "sky" }[] = [];
+  if ((isAccountSetupGate || isLocationGate) && locationReady) {
+    cards.push({
+      title: "현재 위치 기준 홈 반영됨",
+      body: "홈 날씨와 출발 판단이 현재 위치 기준으로 갱신됨",
+      tone: "clear",
+    });
+  }
+  if ((isAccountSetupGate || isNotificationGate || isDestinationCareGate) && permissionReady) {
+    cards.push({
+      title: "비 알림 받을 수 있음",
+      body: "강수·출발 알림을 받을 준비가 끝남",
+      tone: "sky",
+    });
+  }
+  return cards;
+}
+
+function ResultCard({ title, body, tone }: { title: string; body: string; tone: "clear" | "sky" }) {
+  const theme = useAppTheme();
+  const color = tone === "clear" ? theme.clear : theme.sky;
+  return (
+    <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: `${color}66` }]}>
+      <View style={[styles.resultDot, { backgroundColor: color }]} />
+      <View style={styles.copy}>
+        <Text style={[styles.resultTitle, { color: theme.text }]}>{title}</Text>
+        <Text style={[styles.resultBody, { color: theme.muted }]}>{body}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -189,6 +269,34 @@ const styles = StyleSheet.create({
   stateCopy: {
     fontSize: 12,
     lineHeight: 18,
+  },
+  resultGrid: {
+    gap: spacing.sm,
+  },
+  resultCard: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  resultDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.pill,
+  },
+  resultTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  resultBody: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
   },
   pillRow: {
     flexDirection: "row",
