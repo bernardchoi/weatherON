@@ -17,6 +17,7 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
   const theme = useAppTheme();
   const isHealthy = status === "ready" && !loading;
   const statusLabel = loading ? "갱신 중" : getStatusLabel(status);
+  const showFallbackAction = !loading && status !== "ready" && status !== "fallback";
   return (
     <View
       style={[
@@ -35,24 +36,28 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
         <Text style={[styles.status, { color: isHealthy ? theme.clear : theme.gold }]}>{statusLabel}</Text>
       </View>
 
-      {!isHealthy ? (
+      {!isHealthy && !loading ? (
         <View style={styles.ctaRow}>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={getRetryAccessibilityLabel(status, retryable)}
             disabled={loading}
             onPress={onRetry}
             style={[styles.cta, { backgroundColor: theme.gold }, loading ? styles.disabled : null]}
           >
-            <Text style={[styles.ctaText, { color: theme.onAccent }]}>{retryable ? "다시 시도" : "갱신"}</Text>
+            <Text style={[styles.ctaText, { color: theme.onAccent }]}>{getRetryLabel(status, retryable)}</Text>
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={loading}
-            onPress={() => onSetMode("fallback")}
-            style={[styles.secondaryCta, { backgroundColor: theme.cardMuted, borderColor: theme.border }, loading ? styles.disabled : null]}
-          >
-            <Text style={[styles.secondaryText, { color: theme.text }]}>수동 위치 검색</Text>
-          </Pressable>
+          {showFallbackAction ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="기본 예보로 보기"
+              disabled={loading}
+              onPress={() => onSetMode("fallback")}
+              style={[styles.secondaryCta, { backgroundColor: theme.cardMuted, borderColor: theme.border }, loading ? styles.disabled : null]}
+            >
+              <Text style={[styles.secondaryText, { color: theme.text }]}>기본 예보로 보기</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -61,14 +66,15 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
 
 function getTitle(status: WeatherProviderMode): string {
   if (status === "ready") return "날씨 연결됨";
-  if (status === "stale") return "최근 기준 추천";
-  if (status === "fallback") return "기본 위치 기준";
+  if (status === "stale") return "최근 예보로 유지 중";
+  if (status === "fallback") return "기본 예보 기준";
   return "날씨 갱신 실패";
 }
 
 function getMessage(status: WeatherProviderMode, message: string): string {
   if (status === "ready") return "최신 예보 기준으로 준비 완료";
-  if (status === "stale") return "최근 예보 기준으로 추천 유지";
+  if (status === "stale") return "연결 전까지 마지막 예보로 판단 유지";
+  if (status === "fallback") return "실시간 연결 전까지 기본 위치 예보로 판단";
   return message;
 }
 
@@ -76,7 +82,17 @@ function getStatusLabel(status: WeatherProviderMode): string {
   if (status === "ready") return "연결됨";
   if (status === "stale") return "최근 예보";
   if (status === "fallback") return "기본 예보";
-  return "확인 필요";
+  return "재시도 필요";
+}
+
+function getRetryLabel(status: WeatherProviderMode, retryable: boolean): string {
+  if (status === "fallback") return "실시간 다시 시도";
+  return retryable ? "다시 시도" : "갱신";
+}
+
+function getRetryAccessibilityLabel(status: WeatherProviderMode, retryable: boolean): string {
+  if (status === "fallback") return "실시간 날씨 다시 시도";
+  return retryable ? "날씨 다시 시도" : "날씨 갱신";
 }
 
 const styles = StyleSheet.create({

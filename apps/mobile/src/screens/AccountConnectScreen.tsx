@@ -24,19 +24,16 @@ const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
   { id: "email", label: "이메일 코드로 계속하기", caption: "비밀번호 없이 인증" },
 ];
 
-export function AccountConnectScreen({ onComplete, onCancel }: AccountConnectScreenProps) {
+export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
   const [showOtherMethods, setShowOtherMethods] = useState(false);
+  const resumeLabel = gate?.resumeLabel ?? "준비 설정";
+  const destinationName = gate?.selectedDestinationName;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
 
         <View style={styles.header}>
           <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onCancel} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
@@ -52,16 +49,24 @@ export function AccountConnectScreen({ onComplete, onCancel }: AccountConnectScr
           </Text>
         </View>
 
+        {destinationName ? (
+          <View style={[styles.contextCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <Text style={[styles.contextKicker, { color: theme.gold }]}>{resumeLabel}</Text>
+            <Text style={[styles.contextTitle, { color: theme.text }]}>{destinationName}</Text>
+            <Text style={[styles.contextBody, { color: theme.muted }]}>계정 연결 후 이 목적지의 날씨 비교와 출발 알림을 이어서 저장해요</Text>
+          </View>
+        ) : null}
+
         <View style={styles.recommendBlock}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>추천 방법</Text>
           <Text style={[styles.sectionCaption, { color: theme.subtle }]}>자동 추천된 방법을 먼저 보여줘요</Text>
 
           <View style={styles.intentTabs}>
             <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.intentText, { color: theme.text }]}>설정 이어보기</Text>
+              <Text style={[styles.intentText, { color: theme.text }]}>{destinationName ? "목적지 유지" : "설정 이어보기"}</Text>
             </View>
             <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.intentText, { color: theme.text }]}>알림 저장</Text>
+              <Text style={[styles.intentText, { color: theme.text }]}>{resumeLabel}</Text>
             </View>
           </View>
 
@@ -170,19 +175,6 @@ const styles = StyleSheet.create({
     opacity: 0.48,
     borderRadius: 80,
   },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 2,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
   header: {
     minHeight: 82,
     flexDirection: "row",
@@ -222,6 +214,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     lineHeight: 19,
+    fontWeight: "700",
+  },
+  contextCard: {
+    gap: 5,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderLeftWidth: 2,
+  },
+  contextKicker: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  contextTitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  contextBody: {
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: "700",
   },
   recommendBlock: {

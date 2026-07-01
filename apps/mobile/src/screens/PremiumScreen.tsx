@@ -28,11 +28,6 @@ export function PremiumScreen({ onNavigate }: P0ScreenProps) {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
-
         <View style={styles.closeRow}>
           <Pressable accessibilityRole="button" accessibilityLabel="닫기" onPress={() => onNavigate("G1")} style={[styles.closeButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <CloseGlyph color={theme.subtle} />
@@ -155,19 +150,6 @@ const styles = StyleSheet.create({
     opacity: 0.82,
     borderTopLeftRadius: 180,
     borderTopRightRadius: 180,
-  },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xs,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   closeRow: {
     minHeight: 42,

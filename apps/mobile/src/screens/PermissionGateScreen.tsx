@@ -21,53 +21,83 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
   const theme = useAppTheme();
   const gateLabel = gate?.resumeLabel ?? "알림 권한";
   const isLocationGate = gate?.reason === "location";
+  const isNotificationGate = gate?.reason === "notification";
   const returnLabel = getRouteLabel(gate?.returnTo);
-  const readyCount = Number(locationReady) + Number(permissionReady);
+  const isDestinationCareGate = gate?.reason === "destination-care";
+  const gateReady = isLocationGate ? locationReady : permissionReady;
+  const screenTitle = isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
+  const screenSubtitle = isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "나머지 알림 세부 설정은 다음 단계에서 정리";
+  const statusLabel = isDestinationCareGate ? (permissionReady ? "알림 켜짐" : "저장 가능") : gateReady ? "허용됨" : "대기";
+  const primaryLabel = isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
 
   return (
-    <AppScreen title="필요한 권한만 먼저 허용해 주세요" subtitle="나머지 알림 세부 설정은 다음 단계에서 정리" badge="권한">
-      <View style={styles.segmentRow}>
-        <View style={[styles.segmentActive, { backgroundColor: theme.gold }]}>
-          <Text style={[styles.segmentText, { color: theme.onAccent }]}>권한 요청</Text>
+    <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한">
+      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={styles.actionHeader}>
+          <View style={styles.copy}>
+            <Text style={[styles.actionTitle, { color: theme.text }]}>{gateLabel}</Text>
+            <Text style={[styles.meta, { color: theme.muted }]}>
+              {isDestinationCareGate ? "알림 권한은 선택 사항이에요. 목적지는 출발 탭에 먼저 저장돼요" : `${returnLabel} 화면으로 돌아가 설정을 이어가요`}
+            </Text>
+          </View>
+          <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
         </View>
-        <View style={[styles.segmentPassive, { borderColor: theme.border }]}>
-          <Text style={[styles.segmentText, { color: theme.muted }]}>거부 상태</Text>
+        {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
+        <View style={styles.actions}>
+          <AppButton label={primaryLabel} onPress={onComplete} />
+          <AppButton label={isDestinationCareGate ? "알림 없이 저장" : "나중에 설정"} accessibilityLabel={isDestinationCareGate ? "알림 권한 없이 목적지 저장" : "권한 나중에 설정"} onPress={onCancel} tone="secondary" />
         </View>
       </View>
 
-      <Section title="필요 권한" caption={`${gateLabel} 설정 후 ${returnLabel} 화면으로 돌아감`} accent="gold">
-        <PermissionCard
-          title="위치 권한"
-          body="현재 위치 날씨·출발지 파악에 사용함"
-          mark="위치"
-          active={isLocationGate}
-          ready={locationReady}
-        />
-        <PermissionCard
-          title="알림 권한"
-          body="강수·기상특보·외출 준비·여행·자기 전 확인 알림에 사용함"
-          mark="알림"
-          active={!isLocationGate}
-          ready={permissionReady}
-        />
+      <Section title={isDestinationCareGate ? "저장 후 사용" : "필요 권한"} caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : `${returnLabel} 화면으로 돌아가기 전 확인`} accent="gold">
+        {isDestinationCareGate ? (
+          <>
+            <PermissionCard
+              title="목적지 저장"
+              body="선택한 목적지를 출발 탭에 추가함"
+              mark="저장"
+              active
+              ready
+            />
+            <PermissionCard
+              title="출발 알림"
+              body="비·출발 시간 알림은 권한 허용 후 켜짐"
+              mark="알림"
+              active
+              ready={permissionReady}
+            />
+          </>
+        ) : (
+          <>
+            {isLocationGate ? (
+              <PermissionCard
+                title="위치 권한"
+                body="현재 위치 날씨·출발지 파악에 사용함"
+                mark="위치"
+                active
+                ready={locationReady}
+              />
+            ) : null}
+            {isNotificationGate || !isLocationGate ? (
+              <PermissionCard
+                title="알림 권한"
+                body="강수·기상특보·외출 준비·목적지 알림에 사용함"
+                mark="알림"
+                active
+                ready={permissionReady}
+              />
+            ) : null}
+          </>
+        )}
         <View style={[styles.stateBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
           <View style={styles.stateHeader}>
-            <Text style={[styles.stateTitle, { color: theme.gold }]}>권한 상태</Text>
-            <StatusPill label={`${readyCount}/2`} tone={readyCount === 2 ? "clear" : "gold"} />
+            <Text style={[styles.stateTitle, { color: theme.gold }]}>{isDestinationCareGate ? "저장 상태" : "권한 상태"}</Text>
+            <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
           </View>
-          <Text style={[styles.stateCopy, { color: theme.muted }]}>허용하지 않아도 다음 단계 진행 가능</Text>
+          <Text style={[styles.stateCopy, { color: theme.muted }]}>
+            {isDestinationCareGate ? "알림 없이 저장해도 목적지 비교와 출발 시간은 바로 사용할 수 있음" : "허용하지 않아도 다음 단계 진행 가능"}
+          </Text>
           {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
-        </View>
-      </Section>
-
-      <Section title="다음 단계" caption={`${returnLabel} 화면에서 ${getPermissionReasonLabel(gate?.reason)} 설정을 이어감`} accent="clear">
-        <View style={styles.pillRow}>
-          <StatusPill label={`위치 ${locationReady ? "허용됨" : isLocationGate ? "확인 중" : "나중에"}`} tone={locationReady ? "clear" : "sky"} />
-          <StatusPill label={`알림 ${permissionReady ? "허용됨" : isLocationGate ? "나중에" : "확인 중"}`} tone={permissionReady ? "clear" : "warm"} />
-        </View>
-        <View style={styles.actions}>
-          <AppButton label="권한 허용 완료" onPress={onComplete} />
-          <AppButton label="나중에 설정" onPress={onCancel} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
@@ -90,34 +120,22 @@ function PermissionCard({ title, body, mark, active, ready }: { title: string; b
   );
 }
 
-function getPermissionReasonLabel(reason: PermissionGateState["reason"] | undefined) {
-  if (reason === "location") return "위치";
-  if (reason === "destination-care") return "목적지 케어";
-  return "알림";
-}
-
 const styles = StyleSheet.create({
-  segmentRow: {
-    flexDirection: "row",
+  actionPanel: {
     gap: spacing.sm,
-  },
-  segmentActive: {
-    flex: 1,
-    minHeight: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-  },
-  segmentPassive: {
-    flex: 1,
-    minHeight: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
+    padding: spacing.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
-  segmentText: {
-    fontSize: 13,
+  actionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  actionTitle: {
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   permissionCard: {

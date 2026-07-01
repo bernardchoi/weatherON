@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { BackHandler, StyleSheet, useColorScheme, View } from "react-native";
 import { BottomNav } from "../components/BottomNav";
-import { isP0Route } from "./routes";
+import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
 import { HomeScreen } from "../screens/HomeScreen";
 import { LocationChangeScreen } from "../screens/LocationChangeScreen";
 import { OutfitScreen } from "../screens/OutfitScreen";
@@ -11,7 +11,6 @@ import { WardrobePresetScreen } from "../screens/WardrobePresetScreen";
 import { UmbrellaScreen } from "../screens/UmbrellaScreen";
 import { RainTimelineScreen } from "../screens/RainTimelineScreen";
 import { NotificationCenterScreen } from "../screens/NotificationCenterScreen";
-import { SocialOnboardingScreen, SocialScreen, WeatherNoteScreen, WeatherReactionScreen } from "../screens/SocialScreen";
 import {
   WeatherReportCompleteScreen,
   WeatherReportHistoryScreen,
@@ -51,6 +50,8 @@ export function AppNavigator() {
   const appState = useWeatherOnAppState();
   const systemTheme = useColorScheme();
   const theme = resolveAppTheme(appState.themeMode, systemTheme);
+  const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
+  const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
@@ -70,13 +71,19 @@ export function AppNavigator() {
     recentlyRemovedDestination: appState.recentlyRemovedDestination,
     destinationCareEnabled: appState.destinationCareEnabled,
     selectedDestinationAlertCondition: appState.selectedDestinationAlertCondition,
+    selectedDestinationSchedulePreference: appState.selectedDestinationSchedulePreference,
+    selectedDestinationTravelEstimate: appState.selectedDestinationTravelEstimate,
     selectedDestinationPlace: appState.selectedDestinationPlace,
+    destinationSelectionReady: appState.destinationSelectionReady,
     destinationHubFilter: appState.destinationHubFilter,
     placeSearchQuery: appState.placeSearchQuery,
     placeSearchResults: appState.placeSearchResults,
     isPlaceSearchLoading: appState.isPlaceSearchLoading,
+    placeSearchStatus: appState.placeSearchStatus,
     readNotificationIds: appState.readNotificationIds,
     notificationHistory: appState.notificationHistory,
+    alertPreferences: appState.alertPreferences,
+    notificationDeliveryStatus: appState.notificationDeliveryStatus,
     alertSettingsRouteState: appState.alertSettingsRouteState,
     selectedPolicyDocument: appState.selectedPolicyDocument,
     adConsentMode: appState.adConsentMode,
@@ -134,6 +141,7 @@ export function AppNavigator() {
     onToggleDestinationCare: appState.toggleDestinationCare,
     onToggleSavedDestinationCare: appState.toggleSavedDestinationCare,
     onCycleDestinationAlertCondition: appState.cycleSelectedDestinationAlertCondition,
+    onCycleDestinationSchedulePreference: appState.cycleSelectedDestinationSchedulePreference,
     onRemoveSavedDestination: appState.removeSavedDestination,
     onRestoreRemovedDestination: appState.restoreRemovedDestination,
     onSetDestinationHubFilter: appState.setDestinationHubFilter,
@@ -142,9 +150,11 @@ export function AppNavigator() {
     onMarkNotificationRead: appState.markNotificationRead,
     onMarkAllNotificationsRead: appState.markAllNotificationsRead,
     onClearNotificationHistory: appState.clearNotificationHistory,
+    onToggleAlertPreference: appState.toggleAlertPreference,
     onEditDestinationAlertCondition: appState.editDestinationAlertCondition,
     onEditNotificationCondition: appState.editNotificationCondition,
     onOpenNotificationDeepLink: appState.openNotificationDeepLink,
+    onSendTestNotification: appState.sendTestNotification,
     onRefreshWeather: appState.refreshWeather,
     onRequireAccount: appState.requestAccountGate,
     onRequestPermissionGate: appState.requestPermissionGate,
@@ -154,53 +164,49 @@ export function AppNavigator() {
   return (
     <AppThemeProvider theme={theme}>
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-      {appState.route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
-      {appState.route === "H1" ? <HomeScreen {...screenProps} /> : null}
-      {appState.route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
-      {appState.route === "C1" ? <OutfitScreen {...screenProps} /> : null}
-      {appState.route === "C2" ? <WardrobeScreen {...screenProps} /> : null}
-      {appState.route === "C3" ? <WardrobePresetScreen {...screenProps} /> : null}
-      {appState.route === "C4" ? <OutfitDetailScreen {...screenProps} /> : null}
-      {appState.route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
-      {appState.route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
-      {appState.route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
-      {appState.route === "W1" ? <WeatherReportHomeScreen {...screenProps} /> : null}
-      {appState.route === "W2" ? <WeatherReportSubmitScreen {...screenProps} /> : null}
-      {appState.route === "W3" ? <WeatherReportCompleteScreen {...screenProps} /> : null}
-      {appState.route === "W4" ? <WeatherReportHistoryScreen {...screenProps} /> : null}
-      {appState.route === "S0" ? <SocialOnboardingScreen {...screenProps} /> : null}
-      {appState.route === "S1" ? <SocialScreen {...screenProps} /> : null}
-      {appState.route === "S2" ? <WeatherNoteScreen {...screenProps} /> : null}
-      {appState.route === "S3" ? <WeatherReactionScreen {...screenProps} /> : null}
-      {appState.route === "G1" ? <DestinationListScreen {...screenProps} /> : null}
-      {appState.route === "G2" ? <DestinationCareScreen {...screenProps} /> : null}
-      {appState.route === "G3" ? <TripPlannerScreen {...screenProps} /> : null}
-      {appState.route === "G4" ? <WalkingTripScreen {...screenProps} /> : null}
-      {appState.route === "G5" ? <AiJourneyPlannerScreen {...screenProps} /> : null}
-      {appState.route === "G6" ? <PremiumScreen {...screenProps} /> : null}
-      {appState.route === "P1" ? <DestinationAddScreen {...screenProps} /> : null}
-      {appState.route === "P2" ? <DestinationGuideScreen {...screenProps} /> : null}
-      {appState.route === "P3" ? <DestinationHubScreen {...screenProps} /> : null}
-      {appState.route === "M1" ? <MyScreen {...screenProps} /> : null}
-      {appState.route === "M2" ? <AlertSettingsScreen {...screenProps} /> : null}
-      {appState.route === "M3" ? <GlobalSettingsScreen {...screenProps} /> : null}
-      {appState.route === "A4" ? <AccountManagementScreen {...screenProps} /> : null}
-      {appState.route === "R1" ? <PolicyHubScreen {...screenProps} /> : null}
-      {appState.route === "R2" ? <PolicyDocumentScreen {...screenProps} /> : null}
-      {appState.route === "R3" ? <AdConsentScreen {...screenProps} /> : null}
-      {appState.route === "R4" ? <AdPlacementScreen {...screenProps} /> : null}
-      {appState.route === "O2" ? <OnboardingIntroScreen {...screenProps} /> : null}
-      {appState.route === "O1" ? <OnboardingSplashScreen {...screenProps} /> : null}
-      {appState.route === "O4" ? <StyleProfileScreen {...screenProps} /> : null}
-      {appState.route === "O5" ? <SmartCareOnboardingScreen {...screenProps} /> : null}
-      {appState.route === "O6" ? <OnboardingDestinationScreen {...screenProps} /> : null}
-      {appState.route === "A2" ? (
+      {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
+      {route === "H1" ? <HomeScreen {...screenProps} /> : null}
+      {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
+      {route === "C1" ? <OutfitScreen {...screenProps} /> : null}
+      {route === "C2" ? <WardrobeScreen {...screenProps} /> : null}
+      {route === "C3" ? <WardrobePresetScreen {...screenProps} /> : null}
+      {route === "C4" ? <OutfitDetailScreen {...screenProps} /> : null}
+      {route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
+      {route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
+      {route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
+      {route === "W1" ? <WeatherReportHomeScreen {...screenProps} /> : null}
+      {route === "W2" ? <WeatherReportSubmitScreen {...screenProps} /> : null}
+      {route === "W3" ? <WeatherReportCompleteScreen {...screenProps} /> : null}
+      {route === "W4" ? <WeatherReportHistoryScreen {...screenProps} /> : null}
+      {route === "G1" ? <DestinationListScreen {...screenProps} /> : null}
+      {route === "G2" ? <DestinationCareScreen {...screenProps} /> : null}
+      {route === "G3" ? <TripPlannerScreen {...screenProps} /> : null}
+      {route === "G4" ? <WalkingTripScreen {...screenProps} /> : null}
+      {route === "G5" ? <AiJourneyPlannerScreen {...screenProps} /> : null}
+      {route === "G6" ? <PremiumScreen {...screenProps} /> : null}
+      {route === "P1" ? <DestinationAddScreen {...screenProps} /> : null}
+      {route === "P2" ? <DestinationGuideScreen {...screenProps} /> : null}
+      {route === "P3" ? <DestinationHubScreen {...screenProps} /> : null}
+      {route === "M1" ? <MyScreen {...screenProps} /> : null}
+      {route === "M2" ? <AlertSettingsScreen {...screenProps} /> : null}
+      {route === "M3" ? <GlobalSettingsScreen {...screenProps} /> : null}
+      {route === "A4" ? <AccountManagementScreen {...screenProps} /> : null}
+      {route === "R1" ? <PolicyHubScreen {...screenProps} /> : null}
+      {route === "R2" ? <PolicyDocumentScreen {...screenProps} /> : null}
+      {route === "R3" ? <AdConsentScreen {...screenProps} /> : null}
+      {route === "R4" ? <AdPlacementScreen {...screenProps} /> : null}
+      {route === "O2" ? <OnboardingIntroScreen {...screenProps} /> : null}
+      {route === "O1" ? <OnboardingSplashScreen {...screenProps} /> : null}
+      {route === "O4" ? <StyleProfileScreen {...screenProps} /> : null}
+      {route === "O5" ? <SmartCareOnboardingScreen {...screenProps} /> : null}
+      {route === "O6" ? <OnboardingDestinationScreen {...screenProps} /> : null}
+      {route === "A2" ? (
         <AccountConnectScreen gate={appState.gate} onCancel={appState.cancelAccountGate} onComplete={appState.completeAccountLink} />
       ) : null}
-      {appState.route === "A3" ? (
+      {route === "A3" ? (
         <TermsConsentScreen gate={appState.gate} onCancel={appState.cancelAccountGate} onComplete={appState.completeTerms} />
       ) : null}
-      {appState.route === "O3" ? (
+      {route === "O3" ? (
         <PermissionGateScreen
           gate={appState.permissionGate}
           locationReady={appState.locationReady}
@@ -209,11 +215,20 @@ export function AppNavigator() {
           onComplete={appState.completePermissionGate}
         />
       ) : null}
-        {isP0Route(appState.route) && appState.route !== "H3" && appState.route !== "G6" ? <BottomNav activeRoute={appState.route} onNavigate={appState.navigate} /> : null}
-        {appState.route === "A4" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
+        {isLaunchVisibleP0Route(route) && route !== "G6" ? <BottomNav activeRoute={bottomNavActiveRoute} onNavigate={appState.navigate} /> : null}
+        {route === "A4" || route === "R1" || route === "R2" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
+        {route === "O4" && appState.styleProfileReturnRoute ? (
+          <BottomNav activeRoute={appState.styleProfileReturnRoute} onNavigate={appState.navigate} />
+        ) : null}
       </View>
     </AppThemeProvider>
   );
+}
+
+function getBottomNavActiveRoute(route: AppRouteId, alertReturnTo?: P0RouteId): P0RouteId {
+  if (route === "M2" && (alertReturnTo === "G1" || alertReturnTo === "G2")) return "G1";
+  if (isLaunchVisibleP0Route(route)) return route;
+  return "H1";
 }
 
 const styles = StyleSheet.create({

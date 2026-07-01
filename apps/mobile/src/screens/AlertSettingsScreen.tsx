@@ -14,20 +14,36 @@ export function AlertSettingsScreen({
   permissionGateResult,
   savedDestinations,
   notificationHistory,
+  alertPreferences,
+  notificationDeliveryStatus,
   alertSettingsRouteState,
   selectedDestinationAlertCondition,
   onToggleSmartCare,
+  onToggleAlertPreference,
   onEditNotificationCondition,
+  onSendTestNotification,
   onRequestPermissionGate,
-  onRequireAccount,
   onReturnFromAlertSettings,
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const activeCount = state.notifications.filter((item) => item.active).length;
   const focusMeta = getAlertFocusMeta(alertSettingsRouteState?.focus ?? "general", alertSettingsRouteState?.returnTo);
   const destinationReady = savedDestinations.length > 0;
+  const deliveryReady = smartCareEnabled && permissionReady;
+  const notificationResult = getNotificationPermissionResult(permissionGateResult);
+  const advancedEnabledCount = [
+    permissionReady && alertPreferences.rainDetail,
+    deliveryReady && alertPreferences.routine,
+    deliveryReady && alertPreferences.bedtime,
+    deliveryReady && destinationReady && alertPreferences.destination,
+    deliveryReady && alertPreferences.quietHours,
+  ].filter(Boolean).length;
+  const alertReadiness = getAlertReadinessCopy(smartCareEnabled, permissionReady, notificationResult === "skipped");
+  const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
+  const latestTestNotification = notificationHistory.find((item) => item.notificationId === "local-test");
+  const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel);
+  const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "다시 보내기" : "보내기") : "권한 켜기";
 
   const goBack = () => {
     if (alertSettingsRouteState) onReturnFromAlertSettings();
@@ -38,11 +54,6 @@ export function AlertSettingsScreen({
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
 
         <View style={styles.header}>
           <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={goBack} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
@@ -61,12 +72,19 @@ export function AlertSettingsScreen({
               <Text style={[styles.contextTitle, { color: theme.text }]}>{focusMeta.title}</Text>
             </View>
             <View style={[styles.statusPill, { backgroundColor: `${getToneColor(theme, focusMeta.tone)}22` }]}>
-              <Text style={[styles.statusPillText, { color: getToneColor(theme, focusMeta.tone) }]}>{focusMeta.returnLabel} 복귀</Text>
+              <Text style={[styles.statusPillText, { color: getToneColor(theme, focusMeta.tone) }]}>{withDirectionParticle(focusMeta.returnLabel)}</Text>
             </View>
+          </View>
+        ) : null}
+        {alertSettingsRouteState ? (
+          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }]}>
+            <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>알림 기준 조정</Text>
+            <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
           </View>
         ) : null}
 
         <Pressable
+          accessibilityLabel={smartCareEnabled ? "스마트 알림 끄기" : "스마트 알림 켜기"}
           accessibilityRole="switch"
           accessibilityState={{ checked: smartCareEnabled }}
           onPress={onToggleSmartCare}
@@ -77,35 +95,43 @@ export function AlertSettingsScreen({
           </View>
           <View style={styles.heroCopy}>
             <Text style={[styles.heroKicker, { color: theme.gold }]}>알아서 챙기기</Text>
-            <Text style={[styles.heroTitle, { color: theme.text }]}>{permissionReady ? "스마트 알림 켜짐" : "알림 권한 확인 필요"}</Text>
-            <Text style={[styles.heroBody, { color: theme.muted }]}>
-              {permissionReady ? "필수 날씨와 생활 루틴 자동 적용" : "권한을 켜면 준비 알림 자동 적용"}
-            </Text>
+            <Text style={[styles.heroTitle, { color: theme.text }]}>{alertReadiness.title}</Text>
+            <Text style={[styles.heroBody, { color: theme.muted }]}>{alertReadiness.body}</Text>
           </View>
           <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
             <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
           </View>
           <View style={styles.heroMetrics}>
-            <Metric label={permissionReady ? "권한 정상" : "권한 필요"} value={permissionReady ? "적용 중" : "대기 중"} theme={theme} />
-            <Metric label="활성 알림" value={`${activeCount}개`} theme={theme} />
-            <Metric label="하루 최대" value="3건" theme={theme} />
+            <Metric label={permissionReady ? "권한 정상" : "권한 필요"} value={deliveryReady ? "적용 중" : "대기 중"} theme={theme} />
+            <Metric label="예약 상태" value={deliveryStatus.statusLabel} theme={theme} />
+            <Metric label="예약 수" value={deliveryStatus.countLabel} theme={theme} />
           </View>
         </Pressable>
 
         {permissionGateResult?.returnTo === "M2" ? (
           <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
             <Text style={[styles.resultTitle, { color: theme.text }]}>{permissionGateResult.message}</Text>
-            <Text style={[styles.resultBody, { color: theme.subtle }]}>권한 확인 후 알림 설정으로 복귀함</Text>
+            <Text style={[styles.resultBody, { color: theme.subtle }]}>{alertReadiness.resultBody}</Text>
           </View>
         ) : null}
 
         <GateCard
           icon="bell"
-          title={permissionReady ? "알림 권한 정상" : "알림 권한 확인 필요"}
-          body={permissionReady ? "기기 권한 정상 · 필수 알림 적용 가능" : "권한이 꺼지면 모든 알림이 중단됨"}
-          actionLabel={permissionReady ? "권한 확인" : "권한 관리"}
+          title={alertReadiness.gateTitle}
+          body={alertReadiness.gateBody}
+          actionLabel={permissionReady ? "권한 정상" : "권한 켜기"}
           tone={permissionReady ? "clear" : "warm"}
           onPress={() => onRequestPermissionGate("notification", "M2", "general")}
+          theme={theme}
+        />
+
+        <GateCard
+          icon="bell"
+          title="테스트 알림"
+          body={testNotificationBody}
+          actionLabel={testNotificationActionLabel}
+          tone={permissionReady ? "sky" : "warm"}
+          onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
           theme={theme}
         />
 
@@ -115,11 +141,11 @@ export function AlertSettingsScreen({
           body={
             destinationReady
               ? `${savedDestinations.length}개 목적지 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%부터 알림`
-              : "목적지 조회 가능 · 알림 저장은 계정 연결 후 적용"
+              : "목적지를 추가하면 출발 전 강수·바람 기준을 저장"
           }
-          actionLabel={destinationReady ? "조건 관리" : "계정 연결"}
+          actionLabel={destinationReady ? "목적지 관리" : "목적지 추가"}
           tone={destinationReady ? "clear" : "gold"}
-          onPress={() => (destinationReady ? onNavigate("P3") : onRequireAccount("destination-care", "M2"))}
+          onPress={() => onNavigate(destinationReady ? "G1" : "P1")}
           theme={theme}
         />
 
@@ -129,7 +155,7 @@ export function AlertSettingsScreen({
           <AlertRow
             icon="rain"
             title="필수 날씨"
-            body={permissionReady ? "강수 임박 · 폭염/한파/강풍 특보" : "권한 확인 전까지 앱 안에서만 확인"}
+            body={permissionReady ? "강수 임박 · 폭염/한파/강풍 특보" : "앱 안 판단은 유지, 푸시만 대기"}
             status={permissionReady ? "항상" : "권한 필요"}
             tone={permissionReady ? "sky" : "clear"}
             onPress={() => onEditNotificationCondition(state.notifications[0]?.id ?? "rain", state.notifications[0]?.deepLink as P0RouteId)}
@@ -138,33 +164,75 @@ export function AlertSettingsScreen({
           <AlertRow
             icon="sun"
             title="생활 루틴"
-            body={smartCareEnabled ? "출근·외출 준비 + 자기 전 내일 체크" : "스마트 알림을 켜면 자동 적용"}
-            status={permissionReady ? "자동" : "권한 필요"}
+            body={smartCareEnabled ? "출발 준비 + 자기 전 내일 체크" : "스마트 알림을 켜면 자동 적용"}
+            status={deliveryReady ? "자동" : smartCareEnabled ? "권한 필요" : "중지"}
             tone="gold"
             onPress={() => onEditNotificationCondition(state.notifications[1]?.id ?? "daily", state.notifications[1]?.deepLink as P0RouteId)}
             theme={theme}
           />
           <AlertRow
             icon="route"
-            title="목적지·여행"
-            body={destinationReady ? "저장 목적지 변화 알림 적용" : "계정 연결 후 목적지 알림 저장"}
-            status={destinationReady ? "준비" : "계정 필요"}
+            title="목적지 출발"
+            body={destinationReady ? "저장 목적지 변화 알림 적용" : "목적지를 추가하면 출발 알림 조건 저장"}
+            status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
             tone="clear"
-            onPress={() => (destinationReady ? onNavigate("P3") : onRequireAccount("destination-care", "M2"))}
+            onPress={() => onNavigate(destinationReady ? "G1" : "P1")}
             theme={theme}
           />
         </View>
 
-        <Pressable accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { backgroundColor: theme.cardStrong }]}>
+        <Pressable accessibilityLabel={advancedOpen ? "고급 설정 닫기" : "고급 설정 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { backgroundColor: theme.cardStrong }]}>
           <Text style={[styles.advancedTitle, { color: theme.text }]}>고급 설정</Text>
+          <Text style={[styles.advancedCount, { color: theme.subtle }]}>{advancedEnabledCount}/5 적용</Text>
           <ChevronDown color={theme.subtle} open={advancedOpen} />
         </Pressable>
 
         {advancedOpen ? (
           <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <AdvancedLine title="강수 알림" body={`강수 ${selectedDestinationAlertCondition.rainThresholdPct}% · ${selectedDestinationAlertCondition.leadTimeMinutes}분 전`} theme={theme} />
-            <AdvancedLine title="목적지 바람" body={`${selectedDestinationAlertCondition.windThresholdMs}m/s 이상일 때 안내`} theme={theme} />
-            <AdvancedLine title="최근 이력" body={notificationHistory[0]?.title ?? "아직 읽은 알림 없음"} theme={theme} />
+            <AdvancedToggleRow
+              title="강수 상세"
+              body={`비 시작 전·그칠 시각 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%`}
+              enabled={alertPreferences.rainDetail}
+              disabled={!permissionReady}
+              onToggle={() => onToggleAlertPreference("rainDetail")}
+              theme={theme}
+            />
+            <AdvancedToggleRow
+              title="출발 준비"
+              body="날씨·우산·신발 확인 알림"
+              enabled={alertPreferences.routine}
+              disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreference("routine")}
+              theme={theme}
+            />
+            <AdvancedToggleRow
+              title="자기 전 체크"
+              body="내일 날씨 미확인 시 1회"
+              enabled={alertPreferences.bedtime}
+              disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreference("bedtime")}
+              theme={theme}
+            />
+            <AdvancedToggleRow
+              title="목적지 출발"
+              body={`출발 ${selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 ${selectedDestinationAlertCondition.windThresholdMs}m/s`}
+              enabled={alertPreferences.destination}
+              disabled={!deliveryReady || !destinationReady}
+              onToggle={() => onToggleAlertPreference("destination")}
+              theme={theme}
+            />
+            <AdvancedToggleRow
+              title="방해 줄이기"
+              body="하루 최대 3건 · 수면 시간대 제한"
+              enabled={alertPreferences.quietHours}
+              disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreference("quietHours")}
+              theme={theme}
+            />
+            <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
+              <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
+              <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{notificationHistory[0]?.title ?? "아직 읽은 알림 없음"}</Text>
+            </View>
           </View>
         ) : null}
 
@@ -207,7 +275,7 @@ function GateCard({
 }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.gateCard, { backgroundColor: theme.card, borderColor: `${color}55` }]}>
+    <Pressable accessibilityLabel={`${title}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.gateCard, { backgroundColor: theme.card, borderColor: `${color}55` }]}>
       <View style={[styles.rowIcon, { backgroundColor: theme.cardStrong, borderColor: `${color}55` }]}>
         <AlertIcon type={icon} color={color} />
       </View>
@@ -241,7 +309,7 @@ function AlertRow({
 }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.alertRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <Pressable accessibilityLabel={`${title}, ${status}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.alertRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${color}44` }]}>
         <AlertIcon type={icon} color={color} />
       </View>
@@ -256,12 +324,39 @@ function AlertRow({
   );
 }
 
-function AdvancedLine({ title, body, theme }: { title: string; body: string; theme: AppTheme }) {
+function AdvancedToggleRow({
+  title,
+  body,
+  enabled,
+  disabled,
+  onToggle,
+  theme,
+}: {
+  title: string;
+  body: string;
+  enabled: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+  theme: AppTheme;
+}) {
+  const checked = enabled && !disabled;
   return (
-    <View style={[styles.advancedLine, { borderBottomColor: theme.border }]}>
-      <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
-      <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{body}</Text>
-    </View>
+    <Pressable
+      accessibilityLabel={`${title}, ${disabled ? "사용 불가" : checked ? "켜짐" : "꺼짐"}`}
+      accessibilityRole="switch"
+      accessibilityState={{ checked, disabled }}
+      disabled={disabled}
+      onPress={onToggle}
+      style={[styles.advancedLine, { borderBottomColor: theme.border, opacity: disabled ? 0.5 : 1 }]}
+    >
+      <View style={styles.advancedCopy}>
+        <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
+        <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{body}</Text>
+      </View>
+      <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
+        <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -338,12 +433,69 @@ function getToneColor(theme: AppTheme, tone: AlertTone) {
   return theme.clear;
 }
 
+function getNotificationPermissionResult(permissionGateResult: P0ScreenProps["permissionGateResult"]) {
+  if (permissionGateResult?.returnTo !== "M2" || permissionGateResult.reason !== "notification") return "none";
+  return permissionGateResult.message.includes("나중에") ? "skipped" : "allowed";
+}
+
+function getNotificationDeliveryCopy(
+  deliveryStatus: P0ScreenProps["notificationDeliveryStatus"],
+  smartCareEnabled: boolean,
+  permissionReady: boolean,
+) {
+  if (!smartCareEnabled || deliveryStatus.status === "cancelled") {
+    return { statusLabel: "중지", countLabel: "예약 0건" };
+  }
+  if (!permissionReady || deliveryStatus.status === "permission-required") {
+    return { statusLabel: "권한 대기", countLabel: "예약 0건" };
+  }
+  if (deliveryStatus.status === "scheduled") {
+    if (deliveryStatus.scheduledCount === 0) return { statusLabel: "조건 대기", countLabel: "예약 0건" };
+    return { statusLabel: "예약 완료", countLabel: `예약 ${deliveryStatus.scheduledCount}건` };
+  }
+  return { statusLabel: "미지원", countLabel: "예약 0건" };
+}
+
+function getTestNotificationBody(permissionReady: boolean, statusLabel?: string) {
+  if (!permissionReady) return "권한을 켜면 실제 알림 수신을 확인 가능";
+  if (statusLabel) return `최근 테스트 ${statusLabel} · 알림 탭 시 이 화면으로 돌아옴`;
+  return "5초 뒤 기기 알림을 보내고 탭 이동까지 확인";
+}
+
+function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boolean, skippedPermission: boolean) {
+  if (!smartCareEnabled) {
+    return {
+      title: "스마트 알림 일시 중지",
+      body: "긴급 날씨는 앱 안에서 확인하고 푸시는 멈춤",
+      resultBody: "스마트 알림이 꺼져 있어 권한 상태와 무관하게 푸시는 발송되지 않음",
+      gateTitle: "스마트 알림 꺼짐",
+      gateBody: "다시 켜면 권한 상태에 맞춰 알림을 적용함",
+    };
+  }
+  if (permissionReady) {
+    return {
+      title: "스마트 알림 켜짐",
+      body: "날씨와 출발 조건에 맞춰 필요한 알림만 적용",
+      resultBody: "푸시 알림을 받을 수 있고 세부 조건을 바로 조정할 수 있음",
+      gateTitle: "알림 권한 정상",
+      gateBody: "기기 권한 정상 · 필수 알림 적용 가능",
+    };
+  }
+  return {
+    title: skippedPermission ? "푸시 알림은 나중에" : "알림 권한 확인 필요",
+    body: skippedPermission ? "목적지와 날씨 판단은 유지하고 푸시만 대기" : "권한을 켜면 준비 알림 자동 적용",
+    resultBody: skippedPermission ? "푸시는 대기 상태이며 홈·출발 판단은 계속 사용할 수 있음" : "권한 확인 후 알림 설정으로 복귀함",
+    gateTitle: skippedPermission ? "알림 권한 나중에 설정" : "알림 권한 확인 필요",
+    gateBody: skippedPermission ? "앱 안 판단은 가능 · 푸시 발송만 대기" : "권한이 꺼지면 푸시 알림이 중단됨",
+  };
+}
+
 function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteState"]>["focus"], returnTo?: P0RouteId) {
   const returnLabel = getRouteLabel(returnTo);
-  if (focus === "umbrella") return { title: "우산 알림 기준 조정", caption: "우산 추천에서 들어옴", returnLabel, tone: "sky" as const };
-  if (focus === "rain") return { title: "강수 알림 기준 조정", caption: "강수 타임라인에서 들어옴", returnLabel, tone: "clear" as const };
-  if (focus === "destination") return { title: "목적지 알림 기준 조정", caption: "목적지 케어에서 들어옴", returnLabel, tone: "gold" as const };
-  return { title: "알림 기준 조정", caption: "일반 설정 진입", returnLabel, tone: "warm" as const };
+  if (focus === "umbrella") return { title: "우산 알림 기준", caption: "우산 추천에서 이동", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 조건과 출발 준비 알림을 조정함" };
+  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·그침 알림 조건을 조정함" };
+  if (focus === "destination") return { title: "목적지 알림 기준", caption: "목적지 케어에서 이동", returnLabel, tone: "gold" as const, editBody: "목적지 출발 알림과 강수 기준을 조정함" };
+  return { title: "알림 기준", caption: "홈 알림에서 이동", returnLabel, tone: "warm" as const, editBody: "홈 알림에서 선택한 조건을 조정함" };
 }
 
 function getRouteLabel(route?: P0RouteId) {
@@ -354,6 +506,12 @@ function getRouteLabel(route?: P0RouteId) {
   if (route === "M1") return "MY";
   if (route === "M3") return "설정";
   return "홈";
+}
+
+function withDirectionParticle(label: string) {
+  const lastChar = label.charCodeAt(label.length - 1);
+  if (lastChar < 0xac00 || lastChar > 0xd7a3) return `${label}로`;
+  return (lastChar - 0xac00) % 28 === 0 ? `${label}로` : `${label}으로`;
 }
 
 const styles = StyleSheet.create({
@@ -379,19 +537,6 @@ const styles = StyleSheet.create({
     opacity: 0.34,
     borderRadius: 78,
   },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xs,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
   header: {
     minHeight: 46,
     flexDirection: "row",
@@ -399,8 +544,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -523,6 +668,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  editNotice: {
+    gap: 4,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderLeftWidth: 3,
+  },
+  editNoticeTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  editNoticeBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
   resultTitle: {
     fontSize: 13,
     lineHeight: 17,
@@ -613,8 +775,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
   },
   advancedTitle: {
+    flex: 1,
     fontSize: 14,
     lineHeight: 18,
+    fontWeight: "900",
+  },
+  advancedCount: {
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   advancedPanel: {
@@ -623,9 +791,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   advancedLine: {
-    gap: 4,
-    paddingVertical: 12,
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: 10,
     borderBottomWidth: 1,
+  },
+  advancedCopy: {
+    flex: 1,
+    gap: 4,
   },
   advancedLineTitle: {
     fontSize: 13,
@@ -636,6 +811,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "700",
+  },
+  smallSwitchTrack: {
+    width: 42,
+    height: 26,
+    justifyContent: "center",
+    padding: 3,
+    borderRadius: radius.pill,
+  },
+  smallSwitchKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: radius.pill,
+  },
+  smallSwitchKnobOn: {
+    alignSelf: "flex-end",
+  },
+  historyLine: {
+    gap: 4,
+    paddingVertical: 12,
+    borderTopWidth: 1,
   },
   fatigueCard: {
     gap: 6,

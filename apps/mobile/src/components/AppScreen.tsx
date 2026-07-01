@@ -9,10 +9,11 @@ type AppScreenProps = {
   title: string;
   subtitle?: string;
   badge?: string;
+  heroAction?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function AppScreen({ title, subtitle, badge, children }: AppScreenProps) {
+export function AppScreen({ title, subtitle, badge, heroAction, children }: AppScreenProps) {
   const theme = useAppTheme();
   return (
     <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
@@ -27,7 +28,12 @@ export function AppScreen({ title, subtitle, badge, children }: AppScreenProps) 
           <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
           {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
         </View>
-        {badge ? <StatusPill label={badge} tone="gold" /> : null}
+        {badge || heroAction ? (
+          <View style={styles.heroMeta}>
+            {badge ? <StatusPill label={badge} tone="gold" /> : null}
+            {heroAction}
+          </View>
+        ) : null}
       </View>
       {children}
     </ScrollView>
@@ -63,6 +69,10 @@ const styles = StyleSheet.create({
   },
   heroText: {
     flex: 1,
+  },
+  heroMeta: {
+    alignItems: "flex-end",
+    gap: spacing.xs,
   },
   wordmark: {
     width: 118,

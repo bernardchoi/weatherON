@@ -13,23 +13,23 @@ const policyDocuments: Record<PolicyDocumentType, { title: string; updated: stri
   privacy: {
     title: "개인정보처리방침",
     updated: "2026.06.20",
-    summary: "개인정보 수집·이용·광고 식별자 고지",
+    summary: "개인정보 수집·이용 고지",
     points: [
-      "수집하는 개인정보 항목: 광고 식별자, 기기정보, 네트워크 기반 위치, 앱 사용 데이터",
-      "제3자 제공: Google AdMob 맞춤 광고 제공 목적",
-      "광고 식별자 안내: 설정에서 맞춤광고 수신을 거부할 수 있음",
+      "수집하는 개인정보 항목: 기기정보, 네트워크 기반 위치, 앱 사용 데이터",
+      "제3자 제공: 법령상 의무 또는 사용자가 동의한 경우에만 제공",
+      "위치 정보 안내: 기기 설정에서 언제든 권한을 변경할 수 있음",
       "보관기간 및 파기: 회원 탈퇴 시 즉시 파기",
       "이용자 권리: 개인정보 열람·정정·삭제 요청 가능",
       "개인정보 보호책임자: privacy@weatheron.kr",
     ],
-    notice: "A3 약관 동의의 개인정보 수집·이용 동의 항목과 동일한 본문임",
+    notice: "약관 동의 화면의 개인정보 수집·이용 동의 항목과 같은 기준임",
   },
   terms: {
     title: "이용약관",
     updated: "2026.06.20",
     summary: "WeatherON 사용, 계정 연결, 저장 기능 기준",
     points: [
-      "게스트는 홈·코디·목적지 미리보기 사용 가능",
+      "게스트는 홈·목적지 미리보기 사용 가능",
       "저장·동기화·목적지 케어는 계정 연결 후 사용",
       "외부 날씨·장소 서비스 장애 시 최근 예보 또는 기본 위치 기준 안내",
       "사용자는 언제든 계정 연결을 해제할 수 있음",
@@ -46,7 +46,7 @@ const policyDocuments: Record<PolicyDocumentType, { title: string; updated: stri
       "목적지 좌표는 목적지 날씨와 출발 전 알림 조건에 사용",
       "위치 권한은 기기 설정에서 언제든 변경 가능",
     ],
-    notice: "H2 위치 변경, O3 권한 요청, G2 목적지 케어와 연결됨",
+    notice: "위치 변경, 권한 요청, 목적지 케어 화면과 같은 위치 기준을 사용함",
   },
   "open-source": {
     title: "오픈소스 라이선스",
@@ -54,11 +54,11 @@ const policyDocuments: Record<PolicyDocumentType, { title: string; updated: stri
     summary: "앱 빌드와 런타임 의존성 고지 기준",
     points: [
       "React Native·Expo·Vite 계열 의존성 고지 필요",
-      "지도·날씨·광고 SDK 라이선스 고지 필요",
-      "배포 전 자동 라이선스 목록 생성 단계 추가",
+      "지도·날씨 SDK 라이선스 고지 필요",
+      "사용 중인 라이브러리의 저작권과 라이선스 조건 고지",
       "라이선스 전문은 릴리즈 문서와 앱 내 정책 화면에서 접근",
     ],
-    notice: "출시 빌드 전 라이선스 전문 자동 생성 필요",
+    notice: "라이선스 전문은 앱 업데이트 시 함께 갱신됨",
   },
 };
 
@@ -89,10 +89,10 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
         <Text style={[styles.body, { color: theme.muted }]}>{document.notice}</Text>
       </View>
 
-      <Section title="문서" caption={`${document.title} · ${document.points.length}개 섹션 · A3 약관 동의와 동일 본문`} accent="gold">
+      <Section title="문서" caption={`${document.title} · ${document.points.length}개 섹션 · 약관 동의와 동일 기준`} accent="gold">
         <View style={styles.actions}>
-          <AppButton label="정책 허브" onPress={onReturnFromPolicyDocument} />
-          <AppButton label="권한·정책 설정" onPress={() => onNavigate("M3")} tone="secondary" />
+          <AppButton label="정책 목록" accessibilityLabel="정책 목록으로 돌아가기" onPress={onReturnFromPolicyDocument} />
+          <AppButton label="MY 설정" accessibilityLabel="MY에서 위치·알림 설정 확인" onPress={() => onNavigate("M1")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>

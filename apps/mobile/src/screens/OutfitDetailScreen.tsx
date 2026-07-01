@@ -15,6 +15,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
   const heroItems = items.filter(([slot]) => slot !== "accessory").slice(0, 4);
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
+  const needsTerms = accountLinked && !termsRequiredAccepted;
 
   return (
     <AppScreen title="코디 상세" subtitle={state.outfit.decisionText} badge={`${state.outfit.matchPct}%`}>
@@ -90,7 +91,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
         </View>
         <View style={styles.actions}>
           <AppButton
-            label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : "계정 연결 후 저장"}
+            label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
             onPress={() => onRequireAccount("save-outfit", "C4")}
             tone={outfitSaved ? "secondary" : "warning"}
           />

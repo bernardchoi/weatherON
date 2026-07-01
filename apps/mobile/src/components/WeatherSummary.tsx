@@ -1,70 +1,132 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
-import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 type WeatherSummaryProps = {
-  weather: WeatherSnapshot;
-  useDestinationWeather: boolean;
-  onToggleWeather: () => void;
+  originWeather: WeatherSnapshot;
+  destinationWeather: WeatherSnapshot;
+  destinationName: string;
+  sourceLabel: string;
+  updatedAtLabel: string;
+  loading: boolean;
+  destinationReady: boolean;
+  onRefresh: () => void;
+  onAddDestination: () => void;
 };
 
-export function WeatherSummary({ weather, useDestinationWeather, onToggleWeather }: WeatherSummaryProps) {
+export function WeatherSummary({
+  originWeather,
+  destinationWeather,
+  destinationName,
+  sourceLabel,
+  updatedAtLabel,
+  loading,
+  destinationReady,
+  onRefresh,
+  onAddDestination,
+}: WeatherSummaryProps) {
   const theme = useAppTheme();
-  const summary = getWeatherSummaryMetrics(weather);
+  const comparison = destinationReady ? getWeatherComparison(originWeather, destinationWeather) : getMissingDestinationComparison();
   return (
     <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
-      <View style={[styles.weatherGlow, { backgroundColor: getConditionAccent(weather.current.condition, theme.gold, theme.sky) }]} />
       <View style={styles.header}>
         <View style={styles.copy}>
-          <Text style={[styles.location, { color: theme.text }]}>{weather.locationName}</Text>
-          <Text style={[styles.source, { color: theme.subtle }]}>{getSourceLabel(weather.source, weather.stale)}</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{destinationReady ? "현재 위치와 목적지" : "현재 위치 예보"}</Text>
+          <Text style={[styles.source, { color: theme.subtle }]}>
+            {destinationReady ? "나가기 전 차이만 먼저 확인" : "목적지를 추가하면 차이를 바로 비교"}
+          </Text>
         </View>
+        <View style={[styles.diffPill, { backgroundColor: comparison.tone === "warm" ? `${theme.warm}20` : `${theme.clear}20` }]}>
+          <Text style={[styles.diffPillText, { color: comparison.tone === "warm" ? theme.warm : theme.clear }]}>{comparison.label}</Text>
+        </View>
+      </View>
+      <View style={styles.sourceRow}>
+        <Text style={[styles.sourceMeta, { color: theme.subtle }]} numberOfLines={1}>
+          {loading ? "예보 갱신 중" : `${sourceLabel} · ${updatedAtLabel}`}
+        </Text>
         <Pressable
+          accessibilityLabel="날씨 새로고침"
           accessibilityRole="button"
-          onPress={onToggleWeather}
-          style={[styles.switchButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+          disabled={loading}
+          onPress={onRefresh}
+          style={[styles.refreshButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }, loading ? styles.disabled : null]}
         >
-          <Text style={[styles.switchText, { color: theme.text }]}>{useDestinationWeather ? "현재 위치" : "목적지"}</Text>
+          <Text style={[styles.refreshText, { color: theme.text }]}>갱신</Text>
         </Pressable>
       </View>
-      <View style={styles.sunWrap}>
-        <WeatherGlyph condition={weather.current.condition} color={getConditionAccent(weather.current.condition, theme.gold, theme.sky)} />
+      <View style={styles.compareGrid}>
+        <WeatherMiniCard label="현재" weather={originWeather} toneColor={theme.gold} themeName={theme.name} />
+        {destinationReady ? (
+          <WeatherMiniCard label="목적지" locationName={destinationName} weather={destinationWeather} toneColor={theme.sky} themeName={theme.name} />
+        ) : (
+          <DestinationEmptyMiniCard onPress={onAddDestination} />
+        )}
       </View>
-      <View style={styles.currentRow}>
-        <Text style={[styles.temp, { color: theme.text }]}>{Math.round(weather.current.feelsLikeC)}도</Text>
-      </View>
-      <Text style={[styles.condition, { color: theme.text }]}>{getConditionLabel(weather.current.condition)}</Text>
-      <Text style={[styles.conditionMeta, { color: theme.muted }]}>
-        체감 {Math.round(weather.current.feelsLikeC)}도 · 최고 {Math.round(summary.maxTempC)}도 · 최저 {Math.round(summary.minTempC)}도
-      </Text>
-      <View style={styles.metricRow}>
-        <Metric icon={uiIconAssets.drop} label="오늘 강수" value={`${summary.maxRainProbabilityPct}%`} color={theme.sky} />
-        <Metric icon={uiIconAssets.wind} label="최대 바람" value={`${summary.maxWindMs.toFixed(1)}m/s`} color={theme.clear} />
-        <Metric icon={uiIconAssets.humidity} label="습도" value={`${weather.current.humidityPct}%`} color={theme.gold} />
+      <View style={[styles.diffBar, { backgroundColor: theme.cardMuted }]}>
+        <Text style={[styles.diffText, { color: theme.text }]}>{comparison.detail}</Text>
       </View>
     </View>
   );
 }
 
-function Metric({ icon, label, value, color }: { icon: number; label: string; value: string; color: string }) {
+function DestinationEmptyMiniCard({ onPress }: { onPress: () => void }) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.metric, { backgroundColor: theme.cardMuted }]}>
-      <Image source={icon} style={[styles.metricIcon, { tintColor: color }]} resizeMode="contain" />
-      <Text style={[styles.metricLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text style={[styles.metricValue, { color: theme.text }]}>{value}</Text>
-    </View>
+    <Pressable
+      accessibilityLabel="목적지 추가하기"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.miniCard, styles.emptyMiniCard, { backgroundColor: theme.cardMuted, borderColor: theme.gold }]}
+    >
+      <View style={styles.miniHeader}>
+        <View style={[styles.dot, { backgroundColor: theme.sky }]} />
+        <Text style={[styles.miniLabel, { color: theme.subtle }]}>목적지</Text>
+      </View>
+      <Text style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
+        추가 필요
+      </Text>
+      <Text style={[styles.emptyMiniTitle, { color: theme.gold }]}>장소 선택</Text>
+      <Text style={[styles.miniMeta, { color: theme.subtle }]} numberOfLines={2}>
+        저장 후 날씨 차이와 출발 시간을 계산
+      </Text>
+    </Pressable>
   );
 }
 
-function WeatherGlyph({ condition, color }: { condition: WeatherSnapshot["current"]["condition"]; color: string }) {
-  const icon = condition === "rain" || condition === "storm" ? uiIconAssets.rain : uiIconAssets.uv;
+function WeatherMiniCard({
+  label,
+  locationName,
+  weather,
+  toneColor,
+  themeName,
+}: {
+  label: string;
+  locationName?: string;
+  weather: WeatherSnapshot;
+  toneColor: string;
+  themeName: "dark" | "light";
+}) {
+  const theme = useAppTheme();
   return (
-    <View style={[styles.weatherIconFrame, { backgroundColor: color }]}>
-      <Image source={icon} style={[styles.weatherIconImage, { tintColor: "#ffffff" }]} resizeMode="contain" />
+    <View style={[styles.miniCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+      <View style={styles.miniHeader}>
+        <View style={[styles.dot, { backgroundColor: toneColor }]} />
+        <Text style={[styles.miniLabel, { color: theme.subtle }]}>{label}</Text>
+      </View>
+      <Text style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
+        {locationName ?? weather.locationName}
+      </Text>
+      <View style={styles.miniMain}>
+        <Text style={[styles.miniTemp, { color: theme.text }]}>{Math.round(weather.current.feelsLikeC)}도</Text>
+        <Text style={[styles.miniCondition, { color: themeName === "light" ? toneColor : theme.muted }]}>
+          {getConditionLabel(weather.current.condition)}
+        </Text>
+      </View>
+      <Text style={[styles.miniMeta, { color: theme.subtle }]} numberOfLines={1}>
+        강수 {weather.current.rainProbabilityPct}% · 바람 {weather.current.windMs.toFixed(1)}
+      </Text>
     </View>
   );
 }
@@ -79,50 +141,57 @@ function getConditionLabel(condition: WeatherSnapshot["current"]["condition"]): 
   return "날씨";
 }
 
-function getConditionAccent(condition: WeatherSnapshot["current"]["condition"], gold: string, sky: string) {
-  if (condition === "rain" || condition === "storm" || condition === "snow") return sky;
-  return gold;
-}
+function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnapshot) {
+  const rainDelta = destination.current.rainProbabilityPct - origin.current.rainProbabilityPct;
+  const tempDelta = Math.round(destination.current.feelsLikeC - origin.current.feelsLikeC);
+  const windDelta = destination.current.windMs - origin.current.windMs;
 
-function getSourceLabel(source: WeatherSnapshot["source"], stale: boolean): string {
-  if (stale) return "최근 예보 기준";
-  if (source === "kma") return "기상청 예보 연결";
-  if (source === "openmeteo") return "해외 예보 연결";
-  if (source === "cache") return "최근 예보 기준";
-  return "기본 예보 기준";
-}
-
-function getWeatherSummaryMetrics(weather: WeatherSnapshot) {
-  const hourly = weather.hourly.length ? weather.hourly : [];
+  if (rainDelta >= 15) {
+    return {
+      label: `강수 +${rainDelta}%`,
+      detail: `목적지가 더 젖을 가능성 높음 · 우산 기준은 목적지로 판단`,
+      tone: "warm" as const,
+    };
+  }
+  if (tempDelta <= -2 || tempDelta >= 2) {
+    return {
+      label: `체감 ${tempDelta > 0 ? "+" : ""}${tempDelta}도`,
+      detail: tempDelta > 0 ? "목적지가 더 더움 · 가벼운 준비 우선" : "목적지가 더 서늘함 · 겉옷 여부 확인",
+      tone: "warm" as const,
+    };
+  }
+  if (windDelta >= 2) {
+    return {
+      label: `바람 +${windDelta.toFixed(1)}`,
+      detail: "목적지 바람이 더 강함 · 우산보다 방수 외투 우선",
+      tone: "warm" as const,
+    };
+  }
   return {
-    maxRainProbabilityPct: Math.max(weather.current.rainProbabilityPct, ...hourly.map((item) => item.rainProbabilityPct)),
-    maxWindMs: Math.max(weather.current.windMs, ...hourly.map((item) => item.windMs)),
-    maxTempC: Math.max(weather.current.tempC, ...hourly.map((item) => item.tempC)),
-    minTempC: Math.min(weather.current.tempC, ...hourly.map((item) => item.tempC)),
+    label: "차이 작음",
+    detail: "현재 위치 기준으로 준비해도 무리 없음",
+    tone: "clear" as const,
+  };
+}
+
+function getMissingDestinationComparison() {
+  return {
+    label: "목적지 필요",
+    detail: "목적지를 추가하면 현재 위치와 목적지 예보를 실제 데이터로 비교",
+    tone: "warm" as const,
   };
 }
 
 const styles = StyleSheet.create({
   weatherCard: {
     gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
+    padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
     overflow: "hidden",
     shadowOpacity: 0.2,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 12 },
-  },
-  weatherGlow: {
-    position: "absolute",
-    right: -52,
-    top: 40,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    opacity: 0.12,
   },
   header: {
     flexDirection: "row",
@@ -133,90 +202,125 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
   },
-  location: {
-    fontSize: 20,
+  title: {
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "900",
   },
   source: {
     fontSize: 12,
-    fontWeight: "900",
-    marginTop: 4,
+    fontWeight: "800",
+    marginTop: 2,
   },
-  currentRow: {
+  sourceRow: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  temp: {
-    fontSize: 68,
-    lineHeight: 70,
-    fontWeight: "900",
-  },
-  condition: {
-    textAlign: "center",
-    fontSize: 17,
-    fontWeight: "900",
-  },
-  conditionMeta: {
-    textAlign: "center",
-    fontSize: 12,
+  sourceMeta: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
-  sunWrap: {
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing.xs,
-  },
-  weatherIconFrame: {
-    width: 50,
-    height: 50,
+  refreshButton: {
+    width: 52,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
+    borderWidth: 1,
   },
-  weatherIconImage: {
-    width: 30,
-    height: 30,
+  refreshText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
   },
-  metricRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
+  disabled: {
+    opacity: 0.58,
+  },
+  diffPill: {
+    minHeight: 30,
     justifyContent: "center",
-  },
-  metric: {
-    minHeight: 32,
-    minWidth: 94,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.pill,
   },
-  metricIcon: {
-    width: 14,
-    height: 14,
-  },
-  metricLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  metricValue: {
+  diffPillText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
-  switchButton: {
-    minHeight: 32,
-    minWidth: 82,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
+  compareGrid: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  miniCard: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 100,
+    gap: 4,
+    padding: spacing.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
-  switchText: {
-    fontSize: 13,
+  miniHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: radius.pill,
+  },
+  miniLabel: {
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
+  },
+  miniLocation: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  miniMain: {
+    gap: 2,
+  },
+  miniTemp: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "900",
+  },
+  miniCondition: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  miniMeta: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  emptyMiniCard: {
+    borderStyle: "dashed",
+  },
+  emptyMiniTitle: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "900",
+  },
+  diffBar: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  diffText: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
   },
 });

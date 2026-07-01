@@ -130,7 +130,12 @@ function WardrobeItemCard({
       </Pressable>
       <View style={styles.cardFooter}>
         <StatusPill label={badge} tone={item.owned ? "clear" : "sky"} />
-        <AppButton label={item.owned ? "해제" : "추가"} onPress={onToggleOwned} tone="secondary" />
+        <AppButton
+          label={item.owned ? "해제" : "추가"}
+          accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+          onPress={onToggleOwned}
+          tone="secondary"
+        />
       </View>
     </View>
   );

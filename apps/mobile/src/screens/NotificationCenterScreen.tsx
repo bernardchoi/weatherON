@@ -13,53 +13,83 @@ export function NotificationCenterScreen({
   smartCareEnabled,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
+  onClearNotificationHistory,
   onEditNotificationCondition,
   onOpenNotificationDeepLink,
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const activeNotifications = state.notifications.filter((item) => item.active).slice(0, 4);
-  const visibleNotifications = buildVisibleNotifications(activeNotifications);
+  const activeNotifications = state.notifications.filter((item) => item.active).slice(0, 6);
   const unreadCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
-  const displayUnreadCount = unreadCount > 0 ? Math.min(2, unreadCount) : 0;
-  const selectedNotification = activeNotifications[1] ?? activeNotifications[0];
+  const hasUnread = unreadCount > 0;
+  const hasHistory = notificationHistory.length > 0;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <View style={[styles.leftRail, { backgroundColor: theme.nav }]}>
-        <Text style={[styles.time, { color: theme.subtle }]}>9:41</Text>
-        <View style={styles.railCenter}>
-          <Text style={[styles.railText, { color: theme.subtle }]}>홈</Text>
-          <Text style={[styles.railSub, { color: theme.subtle }]}>화면</Text>
-        </View>
-        <Pressable accessibilityRole="button" onPress={() => onNavigate("H1")} style={[styles.railHome, { backgroundColor: theme.background }]}>
-          <Text style={[styles.railHomeIcon, { color: theme.gold }]}>⌂</Text>
-          <Text style={[styles.railHomeText, { color: theme.gold }]}>홈</Text>
-        </Pressable>
-      </View>
-
       <ScrollView style={styles.panelScroll} contentContainerStyle={styles.panelContent}>
         <View style={styles.header}>
           <View>
-            <Text style={[styles.title, { color: theme.text }]}>알림</Text>
-            <Text style={[styles.unread, { color: theme.subtle }]}>읽지 않음 {displayUnreadCount}개</Text>
+            <Text style={[styles.title, { color: theme.text }]}>알림 센터</Text>
+            <Text style={[styles.unread, { color: theme.subtle }]}>
+              {activeNotifications.length}개 활성 · 읽지 않음 {unreadCount}개
+            </Text>
           </View>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("H1")} style={[styles.closeButton, { borderColor: theme.border }]}>
+          <Pressable
+            accessibilityLabel="알림 센터 닫기"
+            accessibilityRole="button"
+            onPress={() => onNavigate("H1")}
+            style={[styles.closeButton, { borderColor: theme.border }]}
+          >
             <Text style={[styles.closeText, { color: theme.text }]}>닫기</Text>
           </Pressable>
         </View>
 
+        <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.gold : theme.border }]}>
+          <View style={styles.summaryCopy}>
+            <Text style={[styles.summaryLabel, { color: hasUnread ? theme.gold : theme.clear }]}>
+              {hasUnread ? "확인 필요" : "새 알림 없음"}
+            </Text>
+            <Text style={[styles.summaryTitle, { color: theme.text }]}>
+              {hasUnread ? `${unreadCount}개 알림을 먼저 확인` : "오늘 알림은 모두 읽음"}
+            </Text>
+            <Text style={[styles.summaryBody, { color: theme.muted }]}>
+              알림을 열면 관련 화면으로 이동하고 읽음 상태가 남음
+            </Text>
+          </View>
+          <View style={styles.summaryActions}>
+            <Pressable
+              accessibilityLabel="모든 알림 읽음 처리"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !hasUnread }}
+              disabled={!hasUnread}
+              onPress={onMarkAllNotificationsRead}
+              style={[styles.actionButton, { borderColor: theme.border, opacity: hasUnread ? 1 : 0.48 }]}
+            >
+              <Text style={[styles.actionButtonText, { color: theme.text }]}>전체 읽음</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="알림 조건 설정 열기"
+              accessibilityRole="button"
+              onPress={() => onNavigate("M2")}
+              style={[styles.actionButton, { borderColor: theme.border }]}
+            >
+              <Text style={[styles.actionButtonText, { color: theme.text }]}>조건 설정</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <View style={styles.notificationList}>
-          {visibleNotifications.map(({ item, displayIndex }) => {
+          {activeNotifications.map((item, displayIndex) => {
             const route = item.deepLink as P0RouteId;
             const meta = getNotificationPresentation(displayIndex, route, item.title);
             const read = readNotificationIds.includes(item.id);
             return (
               <NotificationCard
-                key={`${item.id}:${displayIndex}`}
+                key={item.id}
                 meta={meta}
                 read={read}
                 reason={smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}
+                targetLabel={getNotificationTargetLabel(route)}
                 onOpen={() => onOpenNotificationDeepLink(item.id, route)}
                 onRead={() => onMarkNotificationRead(item.id)}
                 onEdit={() => onEditNotificationCondition(item.id, route)}
@@ -67,40 +97,56 @@ export function NotificationCenterScreen({
               />
             );
           })}
+          {activeNotifications.length === 0 ? (
+            <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
+              <Text style={[styles.emptyBody, { color: theme.muted }]}>알림 조건을 켜면 여기에서 바로 열어볼 수 있음</Text>
+            </View>
+          ) : null}
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => selectedNotification && onOpenNotificationDeepLink(selectedNotification.id, selectedNotification.deepLink as P0RouteId)}
-          style={[styles.selectedBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-        >
-          <Text style={[styles.selectedLabel, { color: theme.gold }]}>알림</Text>
-          <Text style={[styles.selectedText, { color: theme.muted }]}>
-            선택 알림 · {selectedNotification ? getNotificationTargetLabel(selectedNotification.deepLink as P0RouteId) : "오늘 준비"}
-          </Text>
-        </Pressable>
+        <View style={[styles.historyBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.historyHeader}>
+            <View>
+              <Text style={[styles.historyTitle, { color: theme.text }]}>최근 처리</Text>
+              <Text style={[styles.historyMeta, { color: theme.subtle }]}>
+                {hasHistory ? `${notificationHistory.length}건 보관` : "아직 처리한 알림 없음"}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityLabel="알림 처리 이력 지우기"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !hasHistory }}
+              disabled={!hasHistory}
+              onPress={onClearNotificationHistory}
+              style={[styles.historyClearButton, { borderColor: theme.border, opacity: hasHistory ? 1 : 0.48 }]}
+            >
+              <Text style={[styles.historyClearText, { color: theme.subtle }]}>이력 지우기</Text>
+            </Pressable>
+          </View>
+          {hasHistory ? (
+            <View style={styles.historyList}>
+              {notificationHistory.slice(0, 4).map((item) => (
+                <HistoryRow key={item.id} item={item} theme={theme} />
+              ))}
+            </View>
+          ) : (
+            <Text style={[styles.historyEmpty, { color: theme.muted }]}>읽음이나 열기 후 이력이 표시됨</Text>
+          )}
+        </View>
 
         <View style={styles.footerActions}>
-          <Pressable accessibilityRole="button" onPress={onMarkAllNotificationsRead}>
-            <Text style={[styles.footerAction, { color: theme.subtle }]}>읽음 처리</Text>
+          <Pressable accessibilityLabel="알림 설정 열기" accessibilityRole="button" onPress={() => onNavigate("M2")}>
+            <Text style={[styles.footerAction, { color: theme.subtle }]}>알림 설정</Text>
           </Pressable>
           <Text style={[styles.footerDot, { color: theme.subtle }]}>·</Text>
-          <Text style={[styles.footerAction, { color: theme.subtle }]}>
-            최근 {notificationHistory.length > 0 ? notificationHistory.length : 7}일 보관
-          </Text>
+          <Pressable accessibilityLabel="홈으로 돌아가기" accessibilityRole="button" onPress={() => onNavigate("H1")}>
+            <Text style={[styles.footerAction, { color: theme.subtle }]}>홈으로</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
   );
-}
-
-function buildVisibleNotifications<T>(items: T[]): { item: T; displayIndex: number }[] {
-  if (items.length === 0) return [];
-  const visible = items.map((item, displayIndex) => ({ item, displayIndex }));
-  while (visible.length < 4) {
-    visible.push({ item: items[items.length - 1], displayIndex: visible.length });
-  }
-  return visible.slice(0, 4);
 }
 
 type NotificationPresentation = {
@@ -116,6 +162,7 @@ function NotificationCard({
   meta,
   read,
   reason,
+  targetLabel,
   onOpen,
   onRead,
   onEdit,
@@ -124,6 +171,7 @@ function NotificationCard({
   meta: NotificationPresentation;
   read: boolean;
   reason: string;
+  targetLabel: string;
   onOpen: () => void;
   onRead: () => void;
   onEdit: () => void;
@@ -131,13 +179,12 @@ function NotificationCard({
 }) {
   const toneColor = getToneColor(theme, meta.tone);
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onOpen}
-      style={({ pressed }) => [
+    <View
+      accessibilityLabel={`${meta.title}, ${read ? "읽음" : "읽지 않음"}, ${targetLabel}로 이동 가능`}
+      style={[
         styles.notificationCard,
         {
-          backgroundColor: pressed ? theme.cardSoft : theme.card,
+          backgroundColor: theme.card,
           borderColor: read ? theme.border : toneColor,
           opacity: read ? 0.72 : 1,
         },
@@ -157,19 +204,51 @@ function NotificationCard({
       </View>
       <View style={styles.cardMeta}>
         <View style={[styles.unreadDot, { backgroundColor: read ? theme.border : toneColor }]} />
-        <Pressable accessibilityRole="button" onPress={onRead} style={styles.miniHit}>
+        <Pressable accessibilityLabel={`${meta.title} 열기`} accessibilityRole="button" onPress={onOpen} style={styles.miniHit}>
+          <Text style={[styles.miniText, { color: theme.text }]}>열기</Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={`${meta.title} 읽음 처리`}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: read }}
+          disabled={read}
+          onPress={onRead}
+          style={[styles.miniHit, { opacity: read ? 0.45 : 1 }]}
+        >
           <Text style={[styles.miniText, { color: theme.subtle }]}>읽음</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" onPress={onEdit} style={styles.miniHit}>
+        <Pressable accessibilityLabel={`${meta.title} 조건 설정`} accessibilityRole="button" onPress={onEdit} style={styles.miniHit}>
           <Text style={[styles.miniText, { color: theme.subtle }]}>조건</Text>
         </Pressable>
       </View>
-    </Pressable>
+    </View>
+  );
+}
+
+function HistoryRow({
+  item,
+  theme,
+}: {
+  item: P0ScreenProps["notificationHistory"][number];
+  theme: AppTheme;
+}) {
+  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : "읽음";
+  const dotColor = item.action === "open" ? theme.gold : item.action === "sent" ? theme.sky : theme.clear;
+  return (
+    <View style={styles.historyRow}>
+      <View style={[styles.historyDot, { backgroundColor: dotColor }]} />
+      <View style={styles.historyCopy}>
+        <Text style={[styles.historyItemTitle, { color: theme.text }]}>{item.title}</Text>
+        <Text style={[styles.historyItemMeta, { color: theme.subtle }]}>
+          {label} · {item.statusLabel}
+        </Text>
+      </View>
+    </View>
   );
 }
 
 function getNotificationTargetLabel(route: P0RouteId): string {
-  if (route === "H4") return "우산 추천";
+  if (route === "H4") return "오늘 준비";
   if (route === "H5") return "강수 타임라인";
   if (route === "G2") return "목적지 케어";
   if (route === "M2") return "알림 설정";
@@ -182,28 +261,28 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
       icon: "☼",
       title: "오늘의 외출 준비",
       time: "07:30",
-      detail: "21° 맑음 · 추천 코디: 반팔 + 얇은 가디건",
-      highlight: "우산 필요없음",
+      detail: "21° 맑음 · 출발 전 날씨 확인",
+      highlight: "준비 상태 정상",
       tone: "gold",
     };
   }
   if (route === "H5" || index === 1) {
     return {
-      icon: "☂",
+      icon: "비",
       title: "비 예보 사전 알림",
       time: "14:00",
       detail: "18시 시작 · 시간당 4mm · 21시 그침",
-      highlight: "변하면 강수 타임라인(H5)",
+      highlight: "강수 타임라인 보기",
       tone: "sky",
     };
   }
   if (route === "H4" || index === 2) {
     return {
-      icon: "▱",
-      title: "신발 추천",
+      icon: "↗",
+      title: "목적지 변화",
       time: "08:20",
-      detail: "출발 10분 전 · 오늘은 방수 신발 권장",
-      highlight: "노면 습도 높음",
+      detail: "출발 10분 전 · 목적지 날씨 다시 확인",
+      highlight: "목적지 기준 확인",
       tone: "clear",
     };
   }
@@ -227,50 +306,6 @@ function getToneColor(theme: AppTheme, tone: NotificationPresentation["tone"]) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    flexDirection: "row",
-  },
-  leftRail: {
-    width: 110,
-    minHeight: "100%",
-    justifyContent: "space-between",
-    paddingTop: 38,
-    paddingBottom: spacing.lg,
-    paddingHorizontal: spacing.md,
-  },
-  time: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  railCenter: {
-    alignItems: "center",
-    gap: 4,
-  },
-  railText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  railSub: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
-  },
-  railHome: {
-    minHeight: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-  },
-  railHomeIcon: {
-    fontSize: 24,
-    lineHeight: 26,
-    fontWeight: "900",
-  },
-  railHomeText: {
-    fontSize: 11,
-    fontWeight: "900",
   },
   panelScroll: {
     flex: 1,
@@ -312,6 +347,49 @@ const styles = StyleSheet.create({
   },
   notificationList: {
     gap: spacing.sm,
+  },
+  summaryBox: {
+    flexDirection: "row",
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  summaryCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 5,
+  },
+  summaryLabel: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  summaryTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  summaryBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  summaryActions: {
+    gap: spacing.xs,
+    justifyContent: "center",
+  },
+  actionButton: {
+    minHeight: 32,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   notificationCard: {
     minHeight: 84,
@@ -390,19 +468,86 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
-  selectedBox: {
-    gap: 6,
+  emptyBox: {
+    gap: spacing.xs,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  emptyBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  historyBox: {
+    gap: spacing.sm,
     marginTop: spacing.xs,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  selectedLabel: {
+  historyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  historyTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  historyMeta: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  historyClearButton: {
+    minHeight: 32,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  historyClearText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  historyList: {
+    gap: spacing.xs,
+  },
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  historyDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  historyCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  historyItemTitle: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
   },
-  selectedText: {
+  historyItemMeta: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  historyEmpty: {
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "700",

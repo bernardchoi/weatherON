@@ -6,6 +6,8 @@ import type {
   DestinationAlertCondition,
   AlertSettingsRouteState,
   AlertSettingsFocus,
+  AlertPreferenceKey,
+  AlertPreferences,
   AccountGateResultState,
   PermissionGateResultState,
   PermissionGateReason,
@@ -22,7 +24,11 @@ import type {
   PermissionReturnRouteId,
   AccountGateReturnRouteId,
   DestinationHubFilter,
+  DestinationSchedulePreference,
+  DestinationTravelEstimate,
+  PlaceSearchStatus,
   GateReason,
+  NotificationDeliveryStatus,
   NotificationHistoryItem,
   SavedDestination,
   WeatherLocationMode,
@@ -43,13 +49,19 @@ export type P0ScreenProps = {
   recentlyRemovedDestination: SavedDestination | null;
   destinationCareEnabled: boolean;
   selectedDestinationAlertCondition: DestinationAlertCondition;
+  selectedDestinationSchedulePreference: DestinationSchedulePreference;
+  selectedDestinationTravelEstimate: DestinationTravelEstimate;
   selectedDestinationPlace: PlaceSearchResult;
+  destinationSelectionReady: boolean;
   destinationHubFilter: DestinationHubFilter;
   placeSearchQuery: string;
   placeSearchResults: PlaceSearchResult[];
   isPlaceSearchLoading: boolean;
+  placeSearchStatus: PlaceSearchStatus;
   readNotificationIds: string[];
   notificationHistory: NotificationHistoryItem[];
+  alertPreferences: AlertPreferences;
+  notificationDeliveryStatus: NotificationDeliveryStatus;
   alertSettingsRouteState: AlertSettingsRouteState | null;
   selectedPolicyDocument: PolicyDocumentType;
   adConsentMode: AdConsentMode;
@@ -107,6 +119,7 @@ export type P0ScreenProps = {
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
   onCycleDestinationAlertCondition: (field: keyof DestinationAlertCondition) => void;
+  onCycleDestinationSchedulePreference: (field: keyof DestinationSchedulePreference) => void;
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
   onSetDestinationHubFilter: (filter: DestinationHubFilter) => void;
@@ -115,9 +128,11 @@ export type P0ScreenProps = {
   onMarkNotificationRead: (id: string) => void;
   onMarkAllNotificationsRead: () => void;
   onClearNotificationHistory: () => void;
+  onToggleAlertPreference: (key: AlertPreferenceKey) => void;
   onEditDestinationAlertCondition: (placeId: string) => void;
   onEditNotificationCondition: (id: string, route: P0RouteId) => void;
   onOpenNotificationDeepLink: (id: string, route: P0RouteId) => void;
+  onSendTestNotification: () => void;
   onRefreshWeather: () => void;
   onRequireAccount: (reason: GateReason, returnTo: AccountGateReturnRouteId) => void;
   onRequestPermissionGate: (reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => void;

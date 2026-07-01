@@ -10,16 +10,26 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 const scenarios: { value: SmartCareScenario; title: string; body: string }[] = [
-  { value: "commute", title: "출근·등교", body: "아침 외출 전 우산·신발·코디 알림" },
+  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간·강수 알림" },
   { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심 자동 케어" },
   { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림과 준비 가이드 확장" },
 ];
 
-export function SmartCareOnboardingScreen({ smartCareEnabled, smartCareScenario, onSetSmartCareScenario, onCompleteSmartCareOnboarding, onNavigate }: P0ScreenProps) {
+export function SmartCareOnboardingScreen({
+  smartCareEnabled,
+  smartCareScenario,
+  onSetSmartCareScenario,
+  onCompleteSmartCareOnboarding,
+  onCompleteOnboarding,
+}: P0ScreenProps) {
   const theme = useAppTheme();
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
   return (
     <AppScreen title="알림이 알아서 챙기게 할까요?" subtitle="기준만 고르면 상황에 맞춰 알림 시간을 조정함" badge="2 / 3">
+      <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
+        <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
+      </View>
+
       <Section title="알아서 챙기기" caption="날씨 변화와 이동 패턴에 맞춰 자동 보정" accent="gold">
         <View style={[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
           <View style={styles.copy}>
@@ -57,40 +67,26 @@ export function SmartCareOnboardingScreen({ smartCareEnabled, smartCareScenario,
             </Pressable>
           ))}
         </View>
-        {scenarios.map((item) => (
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{ checked: item.value === smartCareScenario }}
-            key={item.value}
-            onPress={() => onSetSmartCareScenario(item.value)}
-            style={[
-              styles.scenarioRow,
-              {
-                backgroundColor: item.value === smartCareScenario ? theme.cardStrong : theme.cardMuted,
-                borderColor: item.value === smartCareScenario ? theme.clear : theme.border,
-              },
-            ]}
-          >
-            <View style={styles.copy}>
-              <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-              <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
-            </View>
-            <StatusPill label={item.value === smartCareScenario ? "선택" : "옵션"} tone={item.value === smartCareScenario ? "clear" : "sky"} />
-          </Pressable>
-        ))}
+        <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.text }]}>{selectedScenario.title}</Text>
+            <Text style={[styles.body, { color: theme.muted }]}>{selectedScenario.body}</Text>
+          </View>
+          <StatusPill label="선택" tone="clear" />
+        </View>
       </Section>
 
       <Section title="작동 방식" caption="하루 최대 3건으로 묶고 수면 시간대에는 긴급 날씨만 보냄" accent="sky">
         <View style={[styles.ruleSummary, { backgroundColor: theme.cardStrong }]}>
           <Text style={[styles.ruleText, { color: theme.text }]}>강수·기상특보는 필수 알림</Text>
-          <Text style={[styles.ruleText, { color: theme.text }]}>출근 준비 알림은 첫 이동 전 1회</Text>
+          <Text style={[styles.ruleText, { color: theme.text }]}>출발 준비 알림은 첫 이동 전 1회</Text>
         </View>
       </Section>
 
       <Section title="다음 단계" caption="목적지 등록은 선택이며 나중에 해도 자동 케어 유지" accent="gold">
         <View style={styles.actions}>
-          <AppButton label="목적지 등록으로" onPress={onCompleteSmartCareOnboarding} />
-          <AppButton label="알림 설정 보기" onPress={() => onNavigate("M2")} tone="secondary" />
+          <AppButton label="목적지 선택으로" accessibilityLabel="목적지 선택 단계로 이동" onPress={onCompleteSmartCareOnboarding} />
+          <AppButton label="나중에 할게요" accessibilityLabel="목적지 선택을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
@@ -98,6 +94,15 @@ export function SmartCareOnboardingScreen({ smartCareEnabled, smartCareScenario,
 }
 
 const styles = StyleSheet.create({
+  progressTrack: {
+    height: 4,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+  },
+  progressFill: {
+    width: "66%",
+    height: "100%",
+  },
   statusCard: {
     minHeight: 126,
     flexDirection: "row",

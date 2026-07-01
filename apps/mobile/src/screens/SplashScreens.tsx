@@ -47,10 +47,6 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.skyGlow, { backgroundColor: theme.backgroundAlt }]} />
-      <View style={styles.statusRow}>
-        <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-        <Text style={[styles.statusText, { color: theme.text }]}>●●● 5G</Text>
-      </View>
 
       <View style={styles.center}>
         <View style={[styles.iconHalo, { backgroundColor: theme.cardStrong, shadowColor: theme.shadow }]}>
@@ -99,17 +95,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 260,
     borderTopRightRadius: 260,
     opacity: 0.92,
-  },
-  statusRow: {
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   center: {
     flex: 1,

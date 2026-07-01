@@ -29,6 +29,7 @@ export function StyleProfileScreen({
   ageBand,
   fitPreference,
   selectedStyles,
+  onboardingCompleted,
   onSetStyleGender,
   onSetAgeBand,
   onSetFitPreference,
@@ -38,6 +39,8 @@ export function StyleProfileScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const topTags = selectedStyles.slice(0, 2);
+  const primarySaveLabel = onboardingCompleted ? "저장하고 코디로" : "다음";
+  const primaryReturnTo = onboardingCompleted ? "C1" : "O5";
 
   return (
     <AppScreen title="코디 추천 기준을 골라주세요" subtitle="스타일은 복수 선택 가능 · 성별과 연령대는 추천 보정에만 사용" badge="1 / 3">
@@ -98,9 +101,9 @@ export function StyleProfileScreen({
         </View>
       </Section>
 
-      <Section title="저장" caption="온보딩에서는 알림 기준으로 이어짐" accent="gold">
+      <Section title="저장" caption={onboardingCompleted ? "저장하면 코디 추천에 바로 반영" : "온보딩에서는 알림 기준으로 이어짐"} accent="gold">
         <View style={styles.actions}>
-          <AppButton label="다음" onPress={() => onSaveStyleProfile("O5")} tone="warning" />
+          <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
           <AppButton label="MY에 저장" onPress={() => onSaveStyleProfile("M1")} tone="secondary" />
           <AppButton label="코디로" onPress={() => onNavigate("C1")} tone="secondary" />
         </View>

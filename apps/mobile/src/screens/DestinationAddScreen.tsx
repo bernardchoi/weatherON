@@ -1,45 +1,45 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { AppButton } from "../components/AppButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 export function DestinationAddScreen({
   destinationSaved,
-  accountLinked,
-  termsRequiredAccepted,
   selectedDestinationPlace,
   placeSearchQuery,
   placeSearchResults,
   isPlaceSearchLoading,
+  placeSearchStatus,
   onNavigate,
+  onSaveDestination,
   onSearchPlaces,
   onSelectDestinationPlace,
-  onRequireAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const isAccountReady = accountLinked && termsRequiredAccepted;
   const selectedCategory = getCategoryLabel(selectedDestinationPlace.category);
-  const resultCount = isPlaceSearchLoading ? "검색 중" : `${placeSearchResults.length}건`;
-  const ctaLabel = destinationSaved ? "목적지 목록 보기" : isAccountReady ? "목적지 케어에 추가" : "계정 연결하고 저장";
+  const hasQuery = placeSearchQuery.trim().length >= 2;
+  const selectedFromResults = placeSearchResults.some((place) => place.id === selectedDestinationPlace.id);
+  const canUseSavedDestination = destinationSaved && (!hasQuery || selectedFromResults);
+  const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
+  const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
+  const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
+  const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
 
   const handlePrimaryAction = () => {
-    if (destinationSaved) {
-      onNavigate("G1");
+    if (!canUseSelectedDestination) return;
+    if (canUseSavedDestination) {
+      onNavigate("G2");
       return;
     }
-    onRequireAccount("destination-care", "P1");
+    onSaveDestination("G2");
   };
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
 
         <View style={styles.header}>
           <Pressable
@@ -61,48 +61,51 @@ export function DestinationAddScreen({
           <TextInput
             accessibilityLabel="목적지 검색어"
             onChangeText={onSearchPlaces}
-            placeholder="잠실종합운동장"
+            placeholder="장소명 또는 주소 검색"
             placeholderTextColor={theme.subtle}
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
           />
         </View>
 
-        <View style={styles.segmentRow}>
-          <View style={[styles.segment, !isAccountReady ? { backgroundColor: "#0B1E38" } : { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.segmentText, { color: !isAccountReady ? theme.text : theme.subtle }]}>게스트</Text>
+        <View style={[styles.accountStatus, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={styles.accountCopy}>
+            <Text style={[styles.accountTitle, { color: theme.text }]}>이 기기에 저장</Text>
+            <Text style={[styles.accountBody, { color: theme.subtle }]}>선택한 목적지는 홈 비교와 출발 탭에 바로 반영됨</Text>
           </View>
-          <View style={[styles.segment, isAccountReady ? { backgroundColor: theme.gold } : { backgroundColor: theme.card }]}>
-            <Text style={[styles.segmentText, { color: isAccountReady ? theme.onAccent : theme.subtle }]}>
-              {isAccountReady ? "계정 연결됨" : "계정 연결"}
-            </Text>
+          <View style={[styles.accountPill, { backgroundColor: theme.gold }]}>
+            <Text style={[styles.accountPillText, { color: theme.onAccent }]}>저장 가능</Text>
           </View>
         </View>
 
         <View style={styles.stack}>
           <View style={[styles.stateCard, styles.stateCardSky, { backgroundColor: theme.cardStrong, borderColor: "rgba(140,207,255,0.34)" }]}>
             <View style={styles.stateHeader}>
-              <Text style={[styles.eyebrow, { color: theme.sky }]}>DESTINATION</Text>
+              <Text style={[styles.eyebrow, { color: theme.sky }]}>장소 선택</Text>
               <View style={[styles.countPill, { backgroundColor: "#10243F" }]}>
                 <Text style={[styles.countText, { color: theme.sky }]}>{resultCount}</Text>
               </View>
             </View>
-            <Text style={[styles.stateText, { color: theme.text }]}>{selectedDestinationPlace.name} 자동 케어 후보로 선택</Text>
+            <Text style={[styles.stateText, { color: theme.text }]}>
+              {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
+            </Text>
           </View>
 
           <View style={[styles.stateCard, styles.stateCardGold, { backgroundColor: theme.cardStrong, borderColor: "rgba(244,182,63,0.28)" }]}>
-            <Text style={[styles.eyebrow, { color: theme.gold }]}>DESTINATION CARE</Text>
-            <Text style={[styles.stateText, { color: theme.text }]}>등록한 장소는 출발 탭에 저장되고, 날씨 비교·출발 시각·신발/우산 알림에 자동 반영돼요</Text>
+            <Text style={[styles.eyebrow, { color: theme.gold }]}>자동 케어</Text>
+            <Text style={[styles.stateText, { color: theme.text }]}>등록한 장소는 출발 탭에 저장되고, 날씨 비교·출발 시각·강수 알림에 자동 반영돼요</Text>
           </View>
         </View>
 
-        <View style={[styles.selectedRail, { backgroundColor: "rgba(255,255,255,0.14)" }]}>
-          <Text style={[styles.selectedName, { color: theme.text }]}>{selectedDestinationPlace.name}</Text>
-          <View style={[styles.categoryPill, { borderColor: theme.border }]}>
-            <CategoryIcon color={theme.muted} />
-            <Text style={[styles.categoryText, { color: theme.muted }]}>{selectedCategory}</Text>
+        {canUseSelectedDestination ? (
+          <View style={[styles.selectedRail, { backgroundColor: "rgba(255,255,255,0.14)" }]}>
+            <Text style={[styles.selectedName, { color: theme.text }]}>{selectedDestinationPlace.name}</Text>
+            <View style={[styles.categoryPill, { borderColor: theme.border }]}>
+              <CategoryIcon color={theme.muted} />
+              <Text style={[styles.categoryText, { color: theme.muted }]}>{selectedCategory}</Text>
+            </View>
           </View>
-        </View>
+        ) : null}
 
         {placeSearchResults.length > 0 ? (
           <View style={styles.results}>
@@ -110,6 +113,7 @@ export function DestinationAddScreen({
               const selected = selectedDestinationPlace.id === place.id;
               return (
                 <Pressable
+                  accessibilityLabel={`${place.name} 목적지 선택`}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   key={place.id}
@@ -128,7 +132,7 @@ export function DestinationAddScreen({
                   </View>
                   {selected ? (
                     <Text style={[styles.resultBody, { color: theme.muted }]}>
-                      게스트는 미리보기 가능, 저장과 알림 케어는 계정 연결 후 반영돼요
+                      저장하면 출발 탭에서 날씨 비교와 출발 준비를 바로 볼 수 있어요
                     </Text>
                   ) : null}
                 </Pressable>
@@ -137,8 +141,16 @@ export function DestinationAddScreen({
           </View>
         ) : (
           <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <Text style={[styles.resultName, { color: theme.text }]}>검색 결과 없음</Text>
-            <Text style={[styles.resultBody, { color: theme.muted }]}>전체 보기 또는 다른 장소명으로 다시 검색해요</Text>
+            <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus, hasQuery)}</Text>
+            <Text style={[styles.resultBody, { color: theme.muted }]}>
+              {getEmptyBody(placeSearchStatus, hasQuery)}
+            </Text>
+            {placeSearchStatus === "error" ? (
+              <SearchRecoveryButton label="다시 시도" accessibilityLabel="목적지 검색 다시 시도" onPress={() => onSearchPlaces(placeSearchQuery)} />
+            ) : null}
+            {canClearSearch ? (
+              <SearchRecoveryButton label="검색어 지우기" accessibilityLabel="목적지 검색어 지우기" onPress={() => onSearchPlaces("")} />
+            ) : null}
           </View>
         )}
 
@@ -146,12 +158,56 @@ export function DestinationAddScreen({
       </ScrollView>
 
       <View style={[styles.footer, { backgroundColor: theme.background }]}>
-        <Pressable accessibilityRole="button" onPress={handlePrimaryAction} style={[styles.primaryButton, { backgroundColor: theme.gold }]}>
-          <Text style={[styles.primaryText, { color: theme.onAccent }]}>{ctaLabel}</Text>
-        </Pressable>
+        <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
       </View>
     </View>
   );
+}
+
+function SearchRecoveryButton({ label, accessibilityLabel, onPress }: { label: string; accessibilityLabel: string; onPress: () => void }) {
+  const theme = useAppTheme();
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.retryButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+    >
+      <Text style={[styles.retryButtonText, { color: theme.text }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function getResultCountLabel(status: P0ScreenProps["placeSearchStatus"], count: number, hasQuery: boolean, loading: boolean) {
+  if (loading || status === "loading") return "검색 중";
+  if (status === "error") return "연결 실패";
+  if (hasQuery) return `${count}건`;
+  return "검색 전";
+}
+
+function getPrimaryActionLabel(canUseSavedDestination: boolean, selectedFromResults: boolean, hasQuery: boolean) {
+  if (canUseSavedDestination) return "목적지 비교 보기";
+  if (selectedFromResults) return "목적지 저장하고 비교";
+  return hasQuery ? "검색 결과 선택 필요" : "장소 선택 필요";
+}
+
+function getSelectionCopy(canUseSelectedDestination: boolean, selectedName: string, hasQuery: boolean) {
+  if (canUseSelectedDestination) return `${selectedName} 자동 케어 후보로 선택`;
+  return hasQuery ? "검색 결과에서 목적지를 선택해 주세요" : "장소명 검색 후 결과를 선택해 주세요";
+}
+
+function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
+  if (status === "loading") return "검색 중";
+  if (status === "error") return "검색 연결 실패";
+  if (hasQuery) return "검색 결과 없음";
+  return "장소를 검색해 주세요";
+}
+
+function getEmptyBody(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
+  if (status === "loading") return "장소 목록을 불러오는 중이에요";
+  if (status === "error") return "검색어는 유지됨 · 다시 시도하거나 지우고 새로 입력해 주세요";
+  if (hasQuery) return "다른 장소명이나 지역명을 입력하거나 검색어를 지워 다시 시작해요";
+  return "목적지를 선택하면 홈 비교와 출발 탭에 바로 반영됨";
 }
 
 function getCategoryLabel(category: string) {
@@ -220,19 +276,6 @@ const styles = StyleSheet.create({
     height: 520,
     opacity: 0.34,
     borderRadius: 72,
-  },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xs,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   header: {
     minHeight: 54,
@@ -324,19 +367,41 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "900",
   },
-  segmentRow: {
+  accountStatus: {
+    minHeight: 70,
     flexDirection: "row",
-    gap: spacing.sm,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1,
   },
-  segment: {
+  accountCopy: {
     flex: 1,
-    minHeight: 38,
+    minWidth: 0,
+    gap: 4,
+  },
+  accountTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  accountBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  accountPill: {
+    minHeight: 30,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
   },
-  segmentText: {
-    fontSize: 12,
+  accountPillText: {
+    fontSize: 11,
     lineHeight: 16,
     fontWeight: "900",
   },
@@ -366,7 +431,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
-    letterSpacing: 1.7,
+    letterSpacing: 0,
   },
   countPill: {
     minWidth: 44,
@@ -461,6 +526,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
+  retryButton: {
+    minHeight: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
+    marginTop: spacing.xs,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  retryButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
   footer: {
     position: "absolute",
     left: 0,
@@ -469,17 +549,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
-  },
-  primaryButton: {
-    minHeight: 54,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.lg,
-  },
-  primaryText: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
   },
   bottomSpacer: {
     height: 18,

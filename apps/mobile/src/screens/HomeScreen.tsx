@@ -1,154 +1,64 @@
-import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
-import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
-import { OutfitGrid } from "../components/OutfitGrid";
-import { LocationModePanel } from "../components/LocationModePanel";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
-import { WeatherSummary } from "../components/WeatherSummary";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
+import { WeatherSummary } from "../components/WeatherSummary";
+import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function HomeScreen({
   state,
-  useDestinationWeather,
-  umbrellaReviewed,
+  readNotificationIds,
   smartCareEnabled,
-  weatherLocationMode,
-  deviceLocationState,
-  locationReady,
   isWeatherLoading,
+  permissionReady,
   onNavigate,
-  onToggleWeather,
-  onReviewUmbrella,
   onSetWeatherProviderMode,
-  onSetWeatherLocationMode,
-  onRequestCurrentLocation,
   onRefreshWeather,
+  onMarkAllNotificationsRead,
+  onEditNotificationCondition,
+  onOpenNotificationDeepLink,
+  onRequestPermissionGate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
   const activeNotifications = state.notifications.filter((item) => item.active);
-  const departureTime = state.destinationCare.departureAdvice?.recommendedDepartureTime ?? "08:10";
-  const targetArrivalTime = state.destinationCare.departureAdvice?.targetArrivalTime ?? "09:00";
-  const travelMinutes = state.destinationCare.departureAdvice?.travelMinutes ?? 40;
+  const unreadNotificationCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+  const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
+  const homeDecision = buildHomeDecision(state.destinationCare, destinationReady);
 
   return (
-    <AppScreen
-      title="나가기 전 5초 판단"
-      subtitle="언제 나갈지, 목적지는 다른지, 비는 언제 그치는지 먼저 확인"
-      badge={locationReady ? "현재 위치" : "기본 위치"}
-    >
-      <WeatherSummary weather={state.weather} useDestinationWeather={useDestinationWeather} onToggleWeather={onToggleWeather} />
-      <View style={styles.statusStrip}>
-        <StatusPill label={locationReady ? "위치 정상" : "위치 확인 필요"} tone={locationReady ? "clear" : "warm"} />
-        <StatusPill label={smartCareEnabled ? "알림 설정 전" : "스마트 케어 꺼짐"} tone="sky" />
-        <StatusPill label={state.weatherProvider.fallbackUsed ? "기본 예보" : "실시간 예보"} tone="gold" />
-      </View>
-
-      <Section title="오늘 바로 결정" caption="MVP 0에서 검증할 핵심 흐름" accent="gold">
-        <View style={styles.priorityGrid}>
-          <PriorityCard
-            index="01"
-            label="언제 나가야 함"
-            title={`${departureTime} 출발`}
-            body={`${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 10분 반영`}
-            accent={theme.gold}
-            icon={uiIconAssets.depart}
+    <View style={styles.screenWrap}>
+      <AppScreen
+        title="나가기 전 5초 판단"
+        subtitle="언제 나갈지, 목적지는 다른지, 비는 언제 그치는지 먼저 확인"
+        heroAction={
+          <NotificationBellButton
+            unreadCount={unreadNotificationCount}
+            smartCareEnabled={smartCareEnabled}
             theme={theme}
-            action={<AppButton label="출발 준비 보기" onPress={() => onNavigate("G2")} />}
+            onPress={() => setNotificationSidebarOpen(true)}
           />
-          <PriorityCard
-            index="02"
-            label="목적지는 다른가"
-            title={state.destinationCare.name}
-            body="출발지보다 흐리고 강수 가능성 있음 · 목적지 기준으로 준비"
-            accent={theme.sky}
-            icon={uiIconAssets.pin}
-            theme={theme}
-            action={<AppButton label="목적지 비교" onPress={() => onNavigate("G2")} tone="secondary" />}
-          />
-          <PriorityCard
-            index="03"
-            label="비는 언제 그침"
-            title="18:00 시작 · 21:00 그침"
-            body="강수 타임라인에서 비 그침 알림을 바로 켤 수 있음"
-            accent={theme.clear}
-            icon={uiIconAssets.rain}
-            theme={theme}
-            action={<AppButton label="강수 타임라인" onPress={() => onNavigate("H5")} tone="secondary" />}
-          />
-        </View>
-      </Section>
-      <View style={styles.locationAction}>
-        <AppButton label="위치 변경" onPress={() => onNavigate("H2")} tone="secondary" />
-      </View>
-
-      <Section title="목적지 케어" caption={state.destinationCare.nextAlertText} accent="gold">
-        <View style={styles.destinationRow}>
-          <View style={styles.destinationCopy}>
-            <Text style={[styles.destinationName, { color: theme.text }]}>{state.destinationCare.name}</Text>
-            <Text style={[styles.meta, { color: theme.muted }]}>
-              {state.destinationCare.departureAdvice?.targetArrivalTime} 도착 · 이동{" "}
-              {state.destinationCare.departureAdvice?.travelMinutes}분
-            </Text>
-          </View>
-          <StatusPill label={state.destinationCare.careOn ? "켜짐" : "꺼짐"} tone="clear" />
-        </View>
-        <View style={styles.actions}>
-          <AppButton label="목적지 케어" onPress={() => onNavigate("G2")} />
-          <AppButton label="목적지 목록" onPress={() => onNavigate("G1")} tone="secondary" />
-        </View>
-      </Section>
-
-      <Section title="오늘 날씨엔 이 코디 어때요?" caption="핵심 판단 후 확인하는 보조 추천" accent="clear">
-        <OutfitGrid outfit={state.outfit} maxItems={4} compact />
-        <Text style={[styles.reason, { color: theme.muted }]}>{state.outfit.decisionText} · {state.outfit.reasons.join(" · ")}</Text>
-        <View style={styles.actions}>
-          <AppButton label="코디 보기" onPress={() => onNavigate("C1")} />
-          <AppButton label="상세" onPress={() => onNavigate("C4")} tone="secondary" />
-        </View>
-      </Section>
-
-      {!umbrellaReviewed && state.umbrella.level !== "none" ? (
-        <Section title={state.umbrella.title} caption={state.umbrella.reason} accent="sky">
-          <View style={styles.actionRow}>
-            <StatusPill label={state.umbrella.level === "required" ? "필수" : "추천"} tone="sky" />
-            <AppButton label="우산 상세" onPress={() => onNavigate("H4")} />
-            <AppButton label="확인" onPress={onReviewUmbrella} tone="secondary" />
-          </View>
-        </Section>
-      ) : null}
-
-      <Section
-        title="알림 센터"
-        caption={`${activeNotifications.length}개 자동 케어 활성 · ${smartCareEnabled ? "켜짐" : "꺼짐"} · ${
-          state.weatherProvider.fallbackUsed ? "기본 예보 기준" : "실시간 예보 연결"
-        }`}
-        accent="warm"
+        }
       >
-        {activeNotifications.slice(0, 3).map((item) => (
-          <View key={item.id} style={[styles.notificationRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.notificationTitle, { color: theme.text }]}>{item.title}</Text>
-            <Text style={[styles.notificationReason, { color: theme.muted }]}>{item.reason}</Text>
-          </View>
-        ))}
-        <View style={styles.actions}>
-          <AppButton label="알림 센터" onPress={() => onNavigate("H3")} />
-          <AppButton label="강수 보기" onPress={() => onNavigate("H5")} tone="secondary" />
-        </View>
-      </Section>
-
-      <Section title="날씨 기준 설정" caption="위치와 예보 연결 상태를 확인" accent="sky">
-        <LocationModePanel
-          mode={weatherLocationMode}
-          deviceLocationState={deviceLocationState}
-          locationReady={locationReady}
-          onSetMode={onSetWeatherLocationMode}
-          onRequestCurrentLocation={onRequestCurrentLocation}
+        <WeatherSummary
+          originWeather={state.destinationCare.originWeather}
+          destinationWeather={state.destinationCare.destinationWeather}
+          destinationName={state.destinationCare.name}
+          sourceLabel={buildWeatherSourceLabel(
+            state.weatherProvider.currentSource,
+            state.weatherProvider.destinationSource,
+            state.weatherProvider.fallbackUsed,
+          )}
+          updatedAtLabel={buildWeatherUpdatedAtLabel(state.weatherProvider.currentObservedAt, state.weatherProvider.destinationObservedAt)}
+          loading={isWeatherLoading}
+          destinationReady={destinationReady}
+          onRefresh={onRefreshWeather}
+          onAddDestination={() => onNavigate("P1")}
         />
         <WeatherStatusPanel
           status={state.weatherProvider.status}
@@ -158,9 +68,181 @@ export function HomeScreen({
           onSetMode={onSetWeatherProviderMode}
           onRetry={onRefreshWeather}
         />
-      </Section>
-    </AppScreen>
+
+        <Section title="오늘 바로 결정" caption="나가기 전 먼저 볼 세 가지" accent="gold">
+          <View style={styles.priorityGrid}>
+            <PriorityCard
+              index="01"
+              label="언제 나가야 함"
+              title={`${homeDecision.departureTime} 출발`}
+              body={homeDecision.departureBody}
+              accent={theme.gold}
+              icon={uiIconAssets.depart}
+              theme={theme}
+              actionLabel="출발"
+              accessibilityLabel="출발 탭에서 출발 시간 확인"
+              onPress={() => onNavigate("G1")}
+            />
+            <PriorityCard
+              index="02"
+              label="목적지는 다른가"
+              title={homeDecision.destinationTitle}
+              body={homeDecision.destinationBody}
+              accent={theme.sky}
+              icon={uiIconAssets.pin}
+              theme={theme}
+              actionLabel={destinationReady ? "비교" : "추가"}
+              accessibilityLabel={destinationReady ? "목적지 날씨 비교 보기" : "목적지 추가하기"}
+              onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
+            />
+            <PriorityCard
+              index="03"
+              label="비는 언제 그침"
+              title={homeDecision.rainTitle}
+              body={homeDecision.rainBody}
+              accent={theme.clear}
+              icon={uiIconAssets.rain}
+              theme={theme}
+              actionLabel="강수"
+              accessibilityLabel="강수 타임라인 보기"
+              onPress={() => onNavigate("H5")}
+            />
+          </View>
+        </Section>
+      </AppScreen>
+
+      <NotificationSidebar
+        visible={notificationSidebarOpen}
+        notifications={activeNotifications}
+        readNotificationIds={readNotificationIds}
+        smartCareEnabled={smartCareEnabled}
+        permissionReady={permissionReady}
+        theme={theme}
+        onClose={() => setNotificationSidebarOpen(false)}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        onManagePermission={() => {
+          setNotificationSidebarOpen(false);
+          onRequestPermissionGate("notification", "M2", "general");
+        }}
+        onOpen={(id, route) => {
+          onOpenNotificationDeepLink(id, route);
+          setNotificationSidebarOpen(false);
+        }}
+        onEdit={(id, route) => {
+          onEditNotificationCondition(id, route);
+          setNotificationSidebarOpen(false);
+        }}
+      />
+    </View>
   );
+}
+
+function buildHomeDecision(care: P0ScreenProps["state"]["destinationCare"], destinationReady: boolean) {
+  const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? "13:00";
+  const travelMinutes = care.departureAdvice?.travelMinutes ?? 40;
+  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
+  const departureTime = care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+  const destinationDiff = destinationReady
+    ? buildDestinationDiff(care)
+    : {
+        title: "목적지 없음",
+        body: "목적지를 추가하면 현재 위치와 날씨 차이를 바로 비교",
+      };
+  const rainWindow = destinationReady
+    ? buildRainWindow(care)
+    : {
+        title: "목적지 추가 후 계산",
+        body: "저장한 목적지 기준으로 강수 시작과 완화 시점을 계산",
+      };
+
+  return {
+    departureTime,
+    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 반영` : "현재 위치 예보는 연결됨 · 목적지를 추가하면 출발 시각 계산",
+    destinationTitle: destinationDiff.title,
+    destinationBody: destinationReady ? `${care.name} · ${destinationDiff.body}` : destinationDiff.body,
+    rainTitle: rainWindow.title,
+    rainBody: destinationReady ? rainWindow.body : rainWindow.body,
+  };
+}
+
+function buildDestinationDiff(care: P0ScreenProps["state"]["destinationCare"]) {
+  const origin = care.originWeather.current;
+  const destination = care.destinationWeather.current;
+  const tempDiff = Math.round(destination.tempC - origin.tempC);
+  const rainDiff = Math.round(destination.rainProbabilityPct - origin.rainProbabilityPct);
+  const windDiff = Number((destination.windMs - origin.windMs).toFixed(1));
+  const titleParts = [
+    tempDiff === 0 ? "±0°" : `${tempDiff > 0 ? "+" : ""}${tempDiff}°`,
+    `${destination.rainProbabilityPct}%`,
+  ];
+  const diffParts = [
+    rainDiff === 0 ? "강수 차이 없음" : `강수 ${rainDiff > 0 ? "+" : ""}${rainDiff}%`,
+    windDiff === 0 ? "바람 차이 없음" : `바람 ${windDiff > 0 ? "+" : ""}${windDiff}m/s`,
+  ];
+  return {
+    title: titleParts.join(" · "),
+    body: `${care.originWeather.locationName} 대비 ${diffParts.join(" · ")} · 목적지 기준 준비`,
+  };
+}
+
+function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
+  const threshold = care.alertCondition?.rainThresholdPct ?? 50;
+  const rainyHours = care.destinationWeather.hourly.filter((hour) => hour.rainProbabilityPct >= threshold || hour.precipitationMm > 0);
+  if (rainyHours.length === 0) {
+    const maxRain = Math.max(care.destinationWeather.current.rainProbabilityPct, ...care.destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
+    return {
+      title: `최대 강수 ${Math.round(maxRain)}%`,
+      body: `${care.name} 기준 ${threshold}% 미만 · 강수 알림은 조용히 대기`,
+    };
+  }
+  const firstRain = rainyHours[0];
+  const lastRain = rainyHours[rainyHours.length - 1];
+  return {
+    title: `${formatHour(firstRain.time)} 시작 · ${formatHour(lastRain.time)} 완화`,
+    body: `${care.name} 강수 ${threshold}% 기준 · 타임라인에서 그침 알림 조정 가능`,
+  };
+}
+
+function subtractMinutes(time: string, minutes: number) {
+  const [hourText, minuteText] = time.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return time;
+  const dayMinutes = 24 * 60;
+  const total = ((hour * 60 + minute - minutes) % dayMinutes + dayMinutes) % dayMinutes;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function formatHour(value: string) {
+  const directTime = value.match(/(\d{1,2}):(\d{2})/);
+  if (directTime) return `${directTime[1].padStart(2, "0")}:${directTime[2]}`;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${String(date.getHours()).padStart(2, "0")}:00`;
+}
+
+function buildWeatherSourceLabel(
+  currentSource: P0ScreenProps["state"]["weatherProvider"]["currentSource"],
+  destinationSource: P0ScreenProps["state"]["weatherProvider"]["destinationSource"],
+  fallbackUsed: boolean,
+) {
+  if (fallbackUsed || currentSource === "fallback" || destinationSource === "fallback") return "기본 예보";
+  if (currentSource === "kma" || destinationSource === "kma") return "기상청 예보";
+  if (currentSource === "openmeteo" || destinationSource === "openmeteo") return "실시간 예보";
+  if (currentSource === "cache" || destinationSource === "cache") return "최근 예보";
+  return "예보 연결";
+}
+
+function buildWeatherUpdatedAtLabel(currentObservedAt: string, destinationObservedAt: string) {
+  const currentTime = new Date(currentObservedAt).getTime();
+  const destinationTime = new Date(destinationObservedAt).getTime();
+  const latestTime = Math.max(
+    Number.isFinite(currentTime) ? currentTime : 0,
+    Number.isFinite(destinationTime) ? destinationTime : 0,
+  );
+  if (!latestTime) return "갱신 시각 확인 중";
+  const latest = new Date(latestTime);
+  return `갱신 ${String(latest.getHours()).padStart(2, "0")}:${String(latest.getMinutes()).padStart(2, "0")}`;
 }
 
 function PriorityCard({
@@ -171,7 +253,9 @@ function PriorityCard({
   accent,
   icon,
   theme,
-  action,
+  actionLabel,
+  accessibilityLabel,
+  onPress,
 }: {
   index: string;
   label: string;
@@ -180,66 +264,232 @@ function PriorityCard({
   accent: string;
   icon: number;
   theme: AppTheme;
-  action: React.ReactNode;
+  actionLabel: string;
+  accessibilityLabel: string;
+  onPress: () => void;
 }) {
   return (
-    <View style={[styles.priorityItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.priorityItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+    >
       <View style={[styles.priorityRail, { backgroundColor: accent }]} />
-      <View style={styles.priorityHeader}>
+      <View style={styles.priorityLeading}>
         <View style={[styles.priorityIconBox, { borderColor: `${accent}66`, backgroundColor: theme.cardSoft }]}>
           <Image source={icon} style={[styles.priorityIcon, { tintColor: accent }]} resizeMode="contain" />
         </View>
         <Text style={[styles.priorityIndex, { color: accent }]}>{index}</Text>
-        <Text style={[styles.priorityKicker, { color: accent }]}>{label}</Text>
       </View>
-      <Text style={[styles.priorityTitle, { color: theme.text }]}>{title}</Text>
-      <Text style={[styles.priorityBody, { color: theme.muted }]}>{body}</Text>
-      {action}
+      <View style={styles.priorityCopy}>
+        <Text style={[styles.priorityKicker, { color: accent }]}>{label}</Text>
+        <Text style={[styles.priorityTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.priorityBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
+      </View>
+      <View style={[styles.priorityActionPill, { backgroundColor: theme.cardSoft }]}>
+        <Text style={[styles.priorityActionText, { color: theme.text }]}>{actionLabel}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function NotificationBellButton({
+  unreadCount,
+  smartCareEnabled,
+  onPress,
+  theme,
+}: {
+  unreadCount: number;
+  smartCareEnabled: boolean;
+  onPress: () => void;
+  theme: AppTheme;
+}) {
+  const label = smartCareEnabled ? `알림 열기, 읽지 않음 ${unreadCount}개` : "알림 열기, 스마트 케어 꺼짐";
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.gold : theme.border }]}
+    >
+      <BellGlyph color={theme.text} />
+      {unreadCount > 0 ? (
+        <View style={[styles.bellBadge, { backgroundColor: theme.alert }]}>
+          <Text style={[styles.bellBadgeText, { color: theme.onAccent }]}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function NotificationSidebar({
+  visible,
+  notifications,
+  readNotificationIds,
+  smartCareEnabled,
+  permissionReady,
+  onClose,
+  onMarkAllNotificationsRead,
+  onManagePermission,
+  onOpen,
+  onEdit,
+  theme,
+}: {
+  visible: boolean;
+  notifications: P0ScreenProps["state"]["notifications"];
+  readNotificationIds: string[];
+  smartCareEnabled: boolean;
+  permissionReady: boolean;
+  onClose: () => void;
+  onMarkAllNotificationsRead: () => void;
+  onManagePermission: () => void;
+  onOpen: (id: string, route: P0RouteId) => void;
+  onEdit: (id: string, route: P0RouteId) => void;
+  theme: AppTheme;
+}) {
+  if (!visible) return null;
+
+  const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+  const hasUnread = unreadCount > 0;
+
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+      <View style={styles.sidebarLayer}>
+        <Pressable
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          onPress={onClose}
+          style={styles.sidebarScrim}
+        />
+        <View style={[styles.sidebarPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
+          <View style={styles.sidebarHeader}>
+            <View style={styles.sidebarTitleGroup}>
+              <Text style={[styles.sidebarKicker, { color: hasUnread ? theme.gold : theme.clear }]}>
+                {smartCareEnabled ? "스마트 알림" : "알림 꺼짐"}
+              </Text>
+              <Text style={[styles.sidebarTitle, { color: theme.text }]}>알림</Text>
+              <Text style={[styles.sidebarMeta, { color: theme.subtle }]}>
+                {notifications.length}개 활성 · 읽지 않음 {unreadCount}개
+              </Text>
+            </View>
+            <Pressable accessibilityLabel="알림 사이드바 닫기" accessibilityRole="button" onPress={onClose} style={[styles.closeIconButton, { borderColor: theme.border }]}>
+              <Text style={[styles.closeIconText, { color: theme.text }]}>닫기</Text>
+            </Pressable>
+          </View>
+
+          {!permissionReady ? (
+            <Pressable
+              accessibilityLabel="알림 권한 관리"
+              accessibilityRole="button"
+              onPress={onManagePermission}
+              style={[styles.sidebarPermissionCard, { backgroundColor: theme.card, borderColor: theme.warm }]}
+            >
+              <View style={styles.sidebarPermissionCopy}>
+                <Text style={[styles.sidebarPermissionTitle, { color: theme.warm }]}>푸시 알림 대기</Text>
+                <Text style={[styles.sidebarPermissionBody, { color: theme.muted }]}>홈·출발 판단은 유지됨 · 권한을 켜면 조건 알림 발송</Text>
+              </View>
+              <View style={[styles.sidebarPermissionPill, { backgroundColor: `${theme.warm}22` }]}>
+                <Text style={[styles.sidebarPermissionPillText, { color: theme.warm }]}>권한 관리</Text>
+              </View>
+            </Pressable>
+          ) : null}
+
+          <Pressable
+            accessibilityLabel="모든 알림 읽음 처리"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !hasUnread }}
+            disabled={!hasUnread}
+            onPress={onMarkAllNotificationsRead}
+            style={[styles.markAllButton, { backgroundColor: theme.cardMuted, borderColor: hasUnread ? theme.gold : theme.border, opacity: hasUnread ? 1 : 0.54 }]}
+          >
+            <Text style={[styles.markAllText, { color: hasUnread ? theme.gold : theme.subtle }]}>전체 읽음</Text>
+          </Pressable>
+
+          <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
+            {notifications.slice(0, 6).map((item, index) => {
+              const route = item.deepLink as P0RouteId;
+              const read = readNotificationIds.includes(item.id);
+              const color = getNotificationTone(theme, index, route);
+              return (
+                <Pressable
+                  key={item.id}
+                  accessibilityLabel={`${item.title} 열기`}
+                  accessibilityRole="button"
+                  onPress={() => onOpen(item.id, route)}
+                  style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
+                >
+                  <View style={styles.sidebarItemMain}>
+                    <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
+                    <View style={styles.sidebarItemCopy}>
+                      <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
+                      <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
+                      <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.sidebarItemFooter}>
+                    <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
+                      {read ? "확인됨" : "눌러서 확인"}
+                    </Text>
+                    <Pressable accessibilityLabel={`${item.title} 조건 설정`} accessibilityRole="button" onPress={() => onEdit(item.id, route)} style={[styles.sidebarConditionButton, { backgroundColor: theme.cardMuted }]}>
+                      <Text style={[styles.sidebarConditionText, { color: theme.subtle }]}>조건</Text>
+                    </Pressable>
+                  </View>
+                </Pressable>
+              );
+            })}
+            {notifications.length === 0 ? (
+              <View style={[styles.sidebarEmpty, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.sidebarEmptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
+                <Text style={[styles.sidebarEmptyBody, { color: theme.muted }]}>조건을 켜면 여기에서 바로 확인 가능</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function BellGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.iconFrame} accessibilityElementsHidden>
+      <View style={[styles.bellCup, { borderColor: color }]} />
+      <View style={[styles.bellBase, { backgroundColor: color }]} />
     </View>
   );
 }
 
+function getNotificationTargetLabel(route: P0RouteId): string {
+  if (route === "H4") return "오늘 준비";
+  if (route === "H5") return "강수 타임라인";
+  if (route === "G2") return "목적지 케어";
+  if (route === "M2") return "알림 설정";
+  return "홈";
+}
+
+function getNotificationTone(theme: AppTheme, index: number, route: P0RouteId): string {
+  if (route === "H5" || index === 1) return theme.sky;
+  if (route === "G2" || route === "H4" || index === 2) return theme.clear;
+  if (index === 0) return theme.gold;
+  return theme.warm;
+}
+
 const styles = StyleSheet.create({
-  reason: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  statusStrip: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    justifyContent: "center",
-  },
-  locationAction: {
-    alignItems: "center",
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    flexWrap: "wrap",
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    flexWrap: "wrap",
-  },
-  destinationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-  },
-  destinationCopy: {
+  screenWrap: {
     flex: 1,
   },
   priorityGrid: {
-    gap: spacing.sm,
+    gap: 6,
   },
   priorityItem: {
-    gap: spacing.xs,
-    padding: spacing.md,
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 8,
+    paddingLeft: 10,
     borderWidth: 1,
     borderRadius: radius.md,
     overflow: "hidden",
@@ -251,65 +501,60 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 3,
   },
-  priorityHeader: {
-    flexDirection: "row",
+  priorityLeading: {
+    width: 30,
     alignItems: "center",
-    gap: spacing.xs,
+    gap: 3,
   },
   priorityIndex: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 9,
+    lineHeight: 12,
     fontWeight: "900",
   },
   priorityIconBox: {
-    width: 28,
-    height: 28,
+    width: 22,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
     borderWidth: 1,
   },
   priorityIcon: {
-    width: 18,
-    height: 18,
+    width: 14,
+    height: 14,
   },
   priorityKicker: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
   },
+  priorityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
   priorityTitle: {
-    fontSize: 18,
-    lineHeight: 23,
+    fontSize: 14,
+    lineHeight: 17,
     fontWeight: "900",
   },
   priorityBody: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "700",
   },
-  destinationName: {
-    fontSize: 16,
-    lineHeight: 21,
+  priorityActionPill: {
+    minWidth: 46,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  priorityActionText: {
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
-  },
-  meta: {
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  notificationRow: {
-    gap: 3,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-  },
-  notificationTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  notificationReason: {
-    fontSize: 12,
-    lineHeight: 17,
   },
   reportRow: {
     minHeight: 68,
@@ -317,5 +562,246 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  bellBadge: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    minWidth: 17,
+    height: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderRadius: radius.pill,
+  },
+  bellBadgeText: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+  },
+  sidebarLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 40,
+    elevation: 40,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  sidebarScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(6, 14, 24, 0.48)",
+  },
+  sidebarPanel: {
+    width: "86%",
+    maxWidth: 340,
+    height: "100%",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: 30,
+    paddingBottom: 118,
+    borderLeftWidth: 1,
+    shadowOffset: { width: -10, height: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+  },
+  sidebarHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  sidebarTitleGroup: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sidebarKicker: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  sidebarTitle: {
+    marginTop: 2,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "900",
+  },
+  sidebarMeta: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  closeIconButton: {
+    minWidth: 48,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  closeIconText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  sidebarPermissionCard: {
+    minHeight: 70,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarPermissionCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  sidebarPermissionTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  sidebarPermissionBody: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  sidebarPermissionPill: {
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+  },
+  sidebarPermissionPillText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  markAllButton: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  markAllText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  sidebarScroll: {
+    flex: 1,
+  },
+  sidebarList: {
+    gap: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  sidebarItem: {
+    minHeight: 104,
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarItemMain: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+  },
+  sidebarItemDot: {
+    width: 8,
+    height: 8,
+    marginTop: 5,
+    borderRadius: radius.pill,
+  },
+  sidebarItemCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  sidebarItemTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  sidebarItemBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  sidebarItemTarget: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  sidebarItemFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
+  },
+  sidebarOpenHint: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  sidebarConditionButton: {
+    minWidth: 54,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+  },
+  sidebarConditionText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+  },
+  sidebarEmpty: {
+    gap: spacing.xs,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarEmptyTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  sidebarEmptyBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  iconFrame: {
+    width: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellCup: {
+    width: 14,
+    height: 13,
+    borderWidth: 1.8,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    borderBottomWidth: 0,
+  },
+  bellBase: {
+    width: 13,
+    height: 2,
+    marginTop: 1,
+    borderRadius: 2,
   },
 });

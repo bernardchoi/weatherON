@@ -20,6 +20,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           const active = route.id === activeTabRoute;
           return (
             <Pressable
+              accessibilityLabel={`${route.label} 탭`}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               key={route.id}
@@ -42,7 +43,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
 }
 
 function getActiveTabRoute(route: P0RouteId): P0RouteId {
-  if (route === "C2" || route === "C3" || route === "C4") return "C1";
+  if (route === "C1" || route === "C2" || route === "C3" || route === "C4") return "H1";
   if (route === "H3" || route === "H4" || route === "H5") return "H1";
   if (route === "G2" || route === "G3" || route === "G4" || route === "G5" || route === "G6" || route === "P1" || route === "P2" || route === "P3") return "G1";
   if (route === "M2" || route === "M3") return "M1";

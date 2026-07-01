@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { brandAssets, onboardingAssets, uiIconAssets } from "../assets";
+import { brandAssets, uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -9,23 +9,22 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 const featureCards = [
-  { icon: uiIconAssets.shirt, title: "코디 추천", body: "현재 날씨와 시간대에 맞는 옷차림을 먼저 제안" },
-  { icon: uiIconAssets.umbrella, title: "우산 판단", body: "비 시작 전 챙길지, 비 그친 뒤 나갈지 바로 확인" },
-  { icon: uiIconAssets.shoe, title: "신발 추천", body: "목적지 비와 바람까지 보고 외출 전 선택을 줄임" },
-  { icon: uiIconAssets.depart, title: "출발 알림", body: "도착 시간에서 이동 시간과 여유 시간을 빼서 출발 시간을 보여줌" },
+  { icon: uiIconAssets.depart, title: "출발시간", body: "도착 시간에서 이동 시간과 여유 시간을 빼서 바로 안내" },
+  { icon: uiIconAssets.pin, title: "목적지 날씨", body: "현재 위치와 목적지 차이를 한 화면에서 비교" },
+  { icon: uiIconAssets.rain, title: "비 시작·그침", body: "강수 타임라인과 그침 알림을 먼저 확인" },
 ];
 
 export function OnboardingIntroScreen({ onNavigate, onRequestPermissionGate, locationReady }: P0ScreenProps) {
   const theme = useAppTheme();
 
   return (
-    <AppScreen title="나가기 전 5초 판단" subtitle="출발시간, 목적지 날씨, 비 그침 알림만 먼저 확인" badge="MVP 0">
+    <AppScreen title="나가기 전 5초 판단" subtitle="출발·목적지·비 그침만 먼저 확인" badge="1 / 3">
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <View style={styles.brandTop}>
           <Image source={brandAssets.iconPrimary} style={styles.brandIcon} resizeMode="contain" />
           <View style={styles.brandCopy}>
             <Image source={brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
-            <Text style={[styles.heroCopy, { color: theme.muted }]}>처음 열면 바로 알아야 하는 세 가지</Text>
+            <Text style={[styles.heroCopy, { color: theme.muted }]}>처음 열면 바로 볼 세 가지</Text>
           </View>
         </View>
         <View style={styles.quickStrip}>
@@ -33,13 +32,15 @@ export function OnboardingIntroScreen({ onNavigate, onRequestPermissionGate, loc
           <QuickFact label="목적지" value="비 30%" color={theme.sky} textColor={theme.text} surface={theme.cardMuted} />
           <QuickFact label="그침" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
+        <View style={styles.primaryActions}>
+          <AppButton label="위치 권한으로" accessibilityLabel="위치 권한 설정으로 이동" onPress={() => onRequestPermissionGate("location", "O5")} />
+          <View style={styles.secondaryActions}>
+            <AppButton label={locationReady ? "알림 기준으로" : "위치 없이 계속"} accessibilityLabel="위치 권한 없이 알림 기준으로 이동" onPress={() => onNavigate("O5")} tone="secondary" />
+          </View>
+        </View>
       </View>
 
-      <View style={[styles.previewFrame, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Image source={onboardingAssets.ready} style={styles.previewImage} resizeMode="cover" />
-      </View>
-
-      <Section title="먼저 검증할 기능" caption="예쁜 기능보다 실제로 다시 쓸 이유부터 확인" accent="sky">
+      <Section title="먼저 확인할 정보" caption="나가기 전 필요한 것만 빠르게 정리" accent="sky">
         <View style={styles.featureGrid}>
           {featureCards.map((item) => (
             <View key={item.title} style={[styles.featureTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
@@ -52,14 +53,6 @@ export function OnboardingIntroScreen({ onNavigate, onRequestPermissionGate, loc
               </View>
             </View>
           ))}
-        </View>
-      </Section>
-
-      <Section title="바로 확인하기" caption="목적지와 알림은 나중에 저장해도 됨" accent="gold">
-        <View style={styles.actions}>
-          <AppButton label="위치 기준 설정" onPress={() => onRequestPermissionGate("location", "O4")} tone="warning" />
-          <AppButton label="홈에서 먼저 판단" onPress={() => onNavigate("H1")} />
-          <AppButton label={locationReady ? "스타일은 나중에" : "위치 없이 시작"} onPress={() => onNavigate("O4")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
@@ -89,10 +82,10 @@ function QuickFact({
 
 const styles = StyleSheet.create({
   brandHero: {
-    minHeight: 154,
+    minHeight: 212,
     justifyContent: "center",
     gap: spacing.sm,
-    padding: spacing.lg,
+    padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },
@@ -102,16 +95,16 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   brandIcon: {
-    width: 66,
-    height: 66,
+    width: 58,
+    height: 58,
   },
   brandCopy: {
     flex: 1,
     gap: 4,
   },
   wordmark: {
-    width: 134,
-    height: 30,
+    width: 122,
+    height: 28,
   },
   heroCopy: {
     fontSize: 13,
@@ -124,7 +117,7 @@ const styles = StyleSheet.create({
   },
   quickFact: {
     flex: 1,
-    minHeight: 54,
+    minHeight: 48,
     justifyContent: "center",
     gap: 3,
     paddingHorizontal: spacing.sm,
@@ -140,21 +133,19 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "900",
   },
-  previewFrame: {
-    height: 142,
-    overflow: "hidden",
-    borderRadius: radius.md,
-    borderWidth: 1,
+  primaryActions: {
+    gap: spacing.xs,
   },
-  previewImage: {
-    width: "100%",
-    height: "100%",
+  secondaryActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
   },
   featureGrid: {
     gap: spacing.sm,
   },
   featureTile: {
-    minHeight: 78,
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -185,8 +176,5 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 11,
     lineHeight: 16,
-  },
-  actions: {
-    gap: spacing.sm,
   },
 });

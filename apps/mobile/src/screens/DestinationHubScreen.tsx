@@ -35,12 +35,12 @@ const destinationCards: DestinationCard[] = [
       countryCode: "KR",
       coordinate: { latitude: 37.5122, longitude: 127.0719 },
       timezone: "Asia/Seoul",
-      provider: "fixture",
+      provider: "openmeteo",
     },
     filter: "sports",
     image: placeImageAssets.baseball,
-    metric: "경기 취소 확률 12%",
-    recommendation: "쿨링룩 추천",
+    metric: "서울 동남권 비교",
+    recommendation: "강수 타임라인 확인",
     accent: "clear",
   },
   {
@@ -52,12 +52,12 @@ const destinationCards: DestinationCard[] = [
       countryCode: "KR",
       coordinate: { latitude: 37.6584, longitude: 126.977 },
       timezone: "Asia/Seoul",
-      provider: "fixture",
+      provider: "openmeteo",
     },
     filter: "outdoor",
     image: placeImageAssets.mountain,
-    metric: "정상 낙뢰 위험",
-    recommendation: "오전 하산 권장",
+    metric: "산행 전 바람 확인",
+    recommendation: "출발 알림 설정",
     accent: "warm",
   },
   {
@@ -69,12 +69,12 @@ const destinationCards: DestinationCard[] = [
       countryCode: "KR",
       coordinate: { latitude: 35.1587, longitude: 129.1604 },
       timezone: "Asia/Seoul",
-      provider: "fixture",
+      provider: "openmeteo",
     },
     filter: "season",
     image: placeImageAssets.beach,
-    metric: "파도 보통",
-    recommendation: "래시가드 추천",
+    metric: "부산 해안 날씨 비교",
+    recommendation: "강수·바람 확인",
     accent: "clear",
   },
 ];
@@ -101,11 +101,6 @@ export function DestinationHubScreen({
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
-
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>목적지</Text>
           <Text style={[styles.subtitle, { color: theme.subtle }]}>저장한 목적지별 자동 케어와 준비 가이드</Text>
@@ -131,14 +126,14 @@ export function DestinationHubScreen({
 
         <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
           <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
-          <Text style={[styles.stateText, { color: theme.text }]}>카테고리별 날씨 리스크와 코디·신발·준비물을 목적지 카드에서 바로 확인해요</Text>
+          <Text style={[styles.stateText, { color: theme.text }]}>카테고리별 강수·바람·출발 알림 기준을 목적지 카드에서 바로 확인해요</Text>
         </View>
 
         <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
           <View style={styles.stateHeader}>
             <View style={styles.stateCopy}>
               <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
-              <Text style={[styles.stateText, { color: theme.text }]}>저장 목적지 기준으로 자동 케어 후보를 보여줌</Text>
+              <Text style={[styles.stateText, { color: theme.text }]}>저장 목적지 기준으로 출발 전 알림 후보를 보여줌</Text>
             </View>
             <View style={[styles.countPill, { backgroundColor: "#10243F" }]}>
               <Text style={[styles.countText, { color: theme.gold }]}>{visibleDestinations.length}곳</Text>
@@ -292,19 +287,6 @@ const styles = StyleSheet.create({
     height: 520,
     opacity: 0.34,
     borderRadius: 76,
-  },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xs,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   header: {
     gap: 8,

@@ -11,7 +11,7 @@ const extraRouteLabels: Record<Exclude<AppRouteId, (typeof p0Routes)[number]["id
   O4: "스타일 기준",
   O5: "스마트 케어",
   O6: "목적지 설정",
-  R1: "정책 허브",
+  R1: "정책",
   R2: "정책 문서",
   R3: "광고 동의",
   R4: "광고 배치",

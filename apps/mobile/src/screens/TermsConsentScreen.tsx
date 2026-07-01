@@ -1,9 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
-import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -20,7 +17,7 @@ type ConsentKey = "age" | "terms" | "privacy" | "location" | "marketing";
 const consentItems: { key: ConsentKey; label: string; meta: string; required?: boolean }[] = [
   { key: "age", label: "만 14세 이상입니다", meta: "서비스 이용 가능 연령 확인", required: true },
   { key: "terms", label: "이용약관 동의", meta: "게스트·계정 연결·저장 기능 기준", required: true },
-  { key: "privacy", label: "개인정보 수집·이용 동의", meta: "위치·광고 식별자·앱 사용 데이터", required: true },
+  { key: "privacy", label: "개인정보 수집·이용 동의", meta: "위치·목적지·앱 사용 데이터", required: true },
   { key: "location", label: "위치기반서비스 이용약관", meta: "현재 위치와 목적지 기반 안내", required: true },
   { key: "marketing", label: "마케팅 정보 수신 동의", meta: "선택 항목 · 언제든 철회 가능" },
 ];
@@ -34,7 +31,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
     location: false,
     marketing: false,
   });
-  const gateLabel = gate?.resumeLabel ?? "코디 저장";
+  const gateLabel = gate?.resumeLabel ?? "저장";
   const returnLabel = getRouteLabel(gate?.returnTo);
   const requiredItems = consentItems.filter((item) => item.required);
   const requiredCount = requiredItems.filter((item) => accepted[item.key]).length;
@@ -63,12 +60,12 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
   };
 
   return (
-    <AppScreen title="약관 동의" subtitle="약관 확인 후 바로 이어서 진행해요" badge="4/4">
+    <AppScreen title="약관 동의" subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요" badge="필수">
       <View style={[styles.progressCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.clear }]}>약관 상태</Text>
           <Text style={[styles.headline, { color: theme.text }]}>{statusLabel}</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>동의 후 사용자가 하던 저장·알림 흐름으로 이어짐</Text>
+          <Text style={[styles.body, { color: theme.muted }]}>동의 후 저장·알림 설정으로 돌아가요</Text>
         </View>
         <View style={[styles.countBubble, { backgroundColor: theme.cardMuted }]}>
           <Text style={[styles.countText, { color: theme.clear }]}>{requiredCount}/{requiredItems.length}</Text>
@@ -79,6 +76,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
       </View>
 
       <Pressable
+        accessibilityLabel={allAccepted ? "전체 동의 해제" : "전체 동의"}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: allAccepted }}
         onPress={toggleAll}
@@ -90,6 +88,31 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
           <Text style={[styles.body, { color: theme.muted }]}>필수와 선택 항목을 한 번에 변경</Text>
         </View>
       </Pressable>
+
+      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }]}>
+        <View style={styles.actionCopy}>
+          <Text style={[styles.gateTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
+          <Text style={[styles.body, { color: theme.muted }]}>
+            {gate?.selectedDestinationName ? `${gate.selectedDestinationName} 저장 후 ${returnLabel} 화면으로 돌아가요` : `${returnLabel} 화면으로 돌아가요`}
+          </Text>
+        </View>
+        <Pressable
+          accessibilityLabel={requiredAccepted ? "동의하고 계정 연결 계속" : "필수 동의 필요"}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !requiredAccepted }}
+          onPress={() => {
+            if (requiredAccepted) onComplete();
+          }}
+          style={[styles.primaryButton, { backgroundColor: requiredAccepted ? theme.gold : theme.cardMuted, borderColor: requiredAccepted ? theme.gold : theme.border }]}
+        >
+          <Text style={[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }]}>
+            {requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
+          </Text>
+        </Pressable>
+        <Pressable accessibilityLabel="계정 연결 취소" accessibilityRole="button" onPress={onCancel} style={styles.cancelButton}>
+          <Text style={[styles.cancelText, { color: theme.subtle }]}>취소</Text>
+        </Pressable>
+      </View>
 
       <View style={[styles.listPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         {consentItems.map((item, index) => (
@@ -103,30 +126,6 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
           />
         ))}
       </View>
-
-      <Section title="계정 연결 결과" caption={`${gateLabel} 완료 후 ${returnLabel} 화면으로 복귀`} accent="gold">
-        <View style={styles.pillRow}>
-          <StatusPill label={requiredAccepted ? "필수 완료" : "필수 미완료"} tone={requiredAccepted ? "clear" : "warm"} />
-          <StatusPill label={`복귀 ${returnLabel}`} tone="gold" />
-          <StatusPill label={gateLabel} tone="sky" />
-        </View>
-        <View style={[styles.gateBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-          <Text style={[styles.gateTitle, { color: theme.clear }]}>{gateLabel}</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>필수 약관 완료 후 원래 화면에서 액션 상태를 이어감</Text>
-          {gate?.selectedDestinationName ? <Text style={[styles.body, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
-          {gate?.outfitVariant ? <Text style={[styles.body, { color: theme.muted }]}>코디 유형 유지 · {getOutfitVariantLabel(gate.outfitVariant)}</Text> : null}
-        </View>
-        <View style={styles.actions}>
-          <AppButton
-            label={requiredAccepted ? "동의하고 계정 연결 계속" : "필수 동의 필요"}
-            onPress={() => {
-              if (requiredAccepted) onComplete();
-            }}
-            tone={requiredAccepted ? "warning" : "secondary"}
-          />
-          <AppButton label="취소" onPress={onCancel} tone="secondary" />
-        </View>
-      </Section>
     </AppScreen>
   );
 }
@@ -146,6 +145,7 @@ function ConsentRow({
 }) {
   return (
     <Pressable
+      accessibilityLabel={`${item.label} ${checked ? "동의 해제" : "동의"}`}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       onPress={onPress}
@@ -170,14 +170,6 @@ function CheckBox({ checked, theme }: { checked: boolean; theme: AppTheme }) {
       <Text style={[styles.check, { color: checked ? theme.onAccent : "transparent" }]}>✓</Text>
     </View>
   );
-}
-
-function getOutfitVariantLabel(variant: string) {
-  if (variant === "rain") return "비 대비";
-  if (variant === "cold") return "보온";
-  if (variant === "heat") return "더위 대비";
-  if (variant === "wind") return "바람 대비";
-  return "기본";
 }
 
 const styles = StyleSheet.create({
@@ -244,11 +236,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   consentRow: {
-    minHeight: 64,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   checkbox: {
     width: 30,
@@ -289,6 +282,38 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 20,
+    fontWeight: "800",
+  },
+  actionPanel: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderLeftWidth: 2,
+  },
+  actionCopy: {
+    gap: 4,
+  },
+  primaryButton: {
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  primaryText: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  cancelButton: {
+    minHeight: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelText: {
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "800",
   },
   pillRow: {

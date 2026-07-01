@@ -20,6 +20,12 @@ export function OutfitScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
+  const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
+  const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
+  const wardrobeCaption =
+    ownedItemCount > 0
+      ? `내 옷장 ${ownedItemCount}개 반영 · 추천 세트 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
+      : "프리셋 기준 추천 · 옷장을 추가하면 내 보유 옷을 우선 반영";
   return (
     <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} badge={`${state.outfit.matchPct}%`}>
       <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
@@ -30,6 +36,7 @@ export function OutfitScreen({
           </View>
           <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="warning" />
         </View>
+        <Text style={[styles.criteriaBody, { color: theme.muted }]}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>옷장</Text>
@@ -122,6 +129,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 21,
     fontWeight: "900",
+  },
+  criteriaBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
   },
   criteriaStats: {
     flexDirection: "row",

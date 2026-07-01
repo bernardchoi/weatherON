@@ -66,7 +66,7 @@ export function WeatherReportSubmitScreen({
   const reportLocationReady = locationReady || (permissionGateResult?.returnTo === "W2" && permissionGateResult.reason === "location");
 
   return (
-    <AppScreen title="지금 날씨 어때요?" subtitle={reportLocationReady ? "위치 권한 정상 · 60분 후 자동 만료" : "위치 권한 필요 · O3에서 허용"} badge="제보">
+    <AppScreen title="지금 날씨 어때요?" subtitle={reportLocationReady ? "위치 권한 정상 · 60분 후 자동 만료" : "위치 권한 필요 · 권한 설정에서 허용"} badge="제보">
       <View style={styles.segment}>
         <View style={[styles.segmentItem, { borderColor: theme.border, backgroundColor: reportLocationReady ? theme.cardMuted : theme.cardStrong }]}>
           <Text style={[styles.segmentText, { color: theme.text }]}>{reportLocationReady ? "위치 권한 정상" : "위치 권한 전"}</Text>

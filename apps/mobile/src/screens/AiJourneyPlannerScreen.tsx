@@ -38,11 +38,6 @@ export function AiJourneyPlannerScreen({ permissionReady, permissionGateResult, 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.statusBar}>
-          <Text style={[styles.statusText, { color: theme.text }]}>9:41</Text>
-          <Text style={[styles.statusText, { color: theme.subtle }]}>••• 5G</Text>
-        </View>
-
         <View style={styles.header}>
           <Pressable accessibilityRole="button" onPress={() => onNavigate("G3")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <BackGlyph color={theme.subtle} />
@@ -210,19 +205,6 @@ const styles = StyleSheet.create({
     opacity: 0.78,
     borderTopLeftRadius: 170,
     borderTopRightRadius: 170,
-  },
-  statusBar: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xs,
-  },
-  statusText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   header: {
     minHeight: 44,

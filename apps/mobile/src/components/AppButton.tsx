@@ -7,18 +7,23 @@ type AppButtonProps = {
   label: string;
   onPress: () => void;
   tone?: "primary" | "secondary" | "warning";
+  accessibilityLabel?: string;
+  disabled?: boolean;
 };
 
-export function AppButton({ label, onPress, tone = "primary" }: AppButtonProps) {
+export function AppButton({ label, onPress, tone = "primary", accessibilityLabel, disabled = false }: AppButtonProps) {
   const theme = useAppTheme();
   const backgroundColor = tone === "primary" ? theme.clear : tone === "warning" ? theme.gold : theme.cardMuted;
   const borderColor = tone === "primary" ? theme.clear : theme.border;
   const color = tone === "primary" || tone === "warning" ? theme.onAccent : theme.text;
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, { backgroundColor, borderColor, opacity: pressed ? 0.86 : 1 }]}
+      style={({ pressed }) => [styles.button, { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressed ? 0.86 : 1 }]}
     >
       <Text style={[styles.label, { color }]}>{label}</Text>
     </Pressable>
