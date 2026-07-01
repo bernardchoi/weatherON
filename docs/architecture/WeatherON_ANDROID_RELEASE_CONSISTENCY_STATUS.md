@@ -1,6 +1,6 @@
 # WeatherON Android Release Consistency Status
 
-> 생성일: 2026-06-29
+> 생성일: 2026-06-30
 > 목적: Android 출시 상태 문서 간 build id, build 상태, blocker 수, artifact 접근성 값이 일치하는지 검증한다.
 
 ## 1. 현재 상태
@@ -20,7 +20,7 @@
 | production build status | 통과 | readiness: FINISHED<br>actionBoard: FINISHED<br>evidence: FINISHED<br>productionBuild: FINISHED<br>blockers: FINISHED |
 | store blocker count | 통과 | actionBoard: 17<br>evidence: 17<br>blockers: 17 |
 | artifact access issue count | 통과 | evidence: 0<br>artifactAccess: 0 |
-| device QA pending count | 통과 | actionBoard: 0<br>evidence: 0 |
+| device QA pending count | 통과 | actionBoard: 14<br>evidence: 14 |
 | screenshot issue count | 통과 | actionBoard: 0<br>evidence: 0<br>screenshotStatus: 0 |
 | screenshot ready count | 통과 | actionBoard: 5/5<br>evidence: 5/5<br>screenshotStatus: 5/5 |
 | store input missing count | 통과 | actionBoard: 9<br>evidence: 9 |

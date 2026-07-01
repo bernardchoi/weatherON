@@ -11,13 +11,14 @@
 |---|---|---|
 | Expo/EAS | 로그인 완료 | 필요 시 `npm run check:eas-login-state` 재확인 |
 | EAS project | 연결 완료 | `apps/mobile/app.json`의 project id 유지 |
-| Android preview APK | 생성 및 실기기 설치 성공 | 상세 QA와 스크린샷 캡처 |
-| 제품 보정 preview build | 완료 | 새 APK 실기기 재설치 후 제품 완성도 QA |
-| EAS archive 최적화 | `.easignore` 추가, 최신 APK 업로드 62.6MB 확인 | 최신 APK 실기기 QA |
+| Android preview APK | 최신 문서 기준 `419e3d2c-135b-41a1-88f6-3321ad5115f1` FINISHED | 실기기 연결 후 재설치 QA |
+| 최신 MVP 수정 반영 preview build | quota 대기 | 사용자 승인 후 실행했으나 EAS Free plan Android build quota 소진. 2026-07-01 reset 후 재시도 |
+| ADB/실기기 | 미연결 | USB 디버깅 허용 후 `npm run check:android-adb-ready` 재실행 |
+| EAS archive 최적화 | inspect 기준 75MB 회복 | `android/app/build` 등 native 산출물 제외와 applicationId 보정 후 재측정 완료 |
 | Play Console | 계정/앱 미확정 | 개발자 계정 유형 확인, 앱 대시보드 생성 |
 | 개인정보처리방침 | 공개 URL 미확정 | HTML 초안의 placeholder 제거 후 공개 URL 확보 |
 | 개발자 연락처 | 미확정 | `WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md` 기준으로 이메일, 운영자명, 웹사이트 입력 여부 확정 |
-| 스크린샷 | 미캡처 | preview APK 설치 후 실제 화면 캡처 |
+| 스크린샷 | 기존 5장 파일 존재 | 최신 MVP APK 설치 후 필요 시 재캡처 |
 
 ---
 
@@ -55,8 +56,11 @@ npm run check:eas-build-status -- <eas-build-id>
 - Latest versionCode=2 QA build link: https://expo.dev/accounts/weatheron/projects/weatheron/builds/7c857db8-da31-4c95-88d8-0455546c1c4d
 - Latest versionCode=2 QA artifact: https://expo.dev/artifacts/eas/Xo-hMSzJaJpw--znFpD2N082Pyw1RSF3ynB9Kz1ppCI.apk
 - Archive upload size: `62.6 MB`
-- 실기기 설치/실행: 성공
-- 에뮬레이터 자동 설치: `adb` 미설정으로 실패. Android SDK 환경 이슈로 분리
+- Latest tracked preview build: `419e3d2c-135b-41a1-88f6-3321ad5115f1` (`FINISHED`)
+- Latest tracked preview artifact: https://expo.dev/artifacts/eas/Cq_28HC_Rdep_5qC2b8n_oGL8K6WC-dgZfFPRyO9Qqc.apk
+- 현재 ADB 상태: 기기 미감지
+- 최신 로컬 MVP 수정 반영 build: 사용자 승인 후 `npm run build:android:preview:no-wait` 실행했으나 EAS Free plan Android build quota 소진으로 실패. reset은 2026-07-01 예정
+- 최신 archive inspect: 2026-06-30 `/tmp/weatheron-eas-inspect` 75MB. `android/app/build` 제외 및 native `applicationId 'com.weatheron.mobile'` 보정 완료
 
 ---
 

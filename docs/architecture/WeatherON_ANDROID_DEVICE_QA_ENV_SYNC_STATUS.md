@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Env Sync Status
 
-> 생성일: 2026-06-29
+> 생성일: 2026-06-30
 > 목적: ADB로 확인 가능한 실기기 QA 환경값을 local QA JSON에 자동 반영한다.
 
 ## 1. 현재 상태
@@ -9,9 +9,9 @@
 |---|---|
 | 적용 여부 | 미적용 |
 | report only | 예 |
-| issue 수 | 1 |
+| issue 수 | 0 |
 | update 수 | 0 |
-| 선택 기기 | 없음 |
+| 선택 기기 | 000841458003652 |
 | 입력 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json |
 | adb 경로 | /Users/daehyeonchoi/Library/Android/sdk/platform-tools/adb |
 
@@ -21,7 +21,7 @@
 
 ## 3. Issues
 
-- adb devices failed
+- 없음
 
 ## 4. 실행 명령
 

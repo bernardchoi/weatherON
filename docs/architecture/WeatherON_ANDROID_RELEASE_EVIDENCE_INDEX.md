@@ -1,6 +1,6 @@
 # WeatherON Android Release Evidence Index
 
-> 생성일: 2026-06-29
+> 생성일: 2026-06-30
 > 목적: Android 출시 준비의 빌드, 검증, 문서 증빙 위치를 한 곳에서 추적한다.
 
 ## 1. 현재 증빙 요약
@@ -10,12 +10,12 @@
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
 | Android versionCode | `5` |
-| 정적 체크 통과 | 20/20 |
+| 정적 체크 통과 | 22/23 |
 | preview build | `419e3d2c-135b-41a1-88f6-3321ad5115f1` / FINISHED |
 | production build | `90912651-fc84-47d0-91ce-9be096c2ff05` / FINISHED |
 | artifact 접근 issue | 0 |
 | Play 제출 blocker | 17 |
-| 실기기 QA 미검증 | 0 |
+| 실기기 QA 미검증 | 14 |
 | 스토어 스크린샷 issue | 0 |
 | 스토어 스크린샷 준비 | 5/5 |
 | Play 입력값 누락 | 9 |
@@ -44,6 +44,7 @@
 | `npm run check:android-release` | Expo/EAS/스토어 문서 기준 검증 | `WeatherON_ANDROID_RELEASE_READINESS_REPORT.md` |
 | `npm run check:android-build-ready` | Android build readiness 검증 | `WeatherON_ANDROID_RELEASE_READINESS_REPORT.md` |
 | `npm run check:android-product-quality` | 제품 완성도 정적 검증 | `WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md` |
+| `npm run check:android-core-flow` | 홈 판단 CTA와 코디·옷장 실제 클릭 흐름 검증 | `WeatherON_ANDROID_WEB_EXPORT_QA.md` |
 | `npm run check:android-web-preview-server` | 8094 미리보기 서버 산출물 검증 | `WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md` |
 | `npm run check:android-device-qa-ready` | 실기기 QA 대상 APK/문서 검증 | `WeatherON_ANDROID_DEVICE_QA_PACKET.md` |
 | `npm run check:android-artifact-access` | APK/AAB URL 접근성 검증 | `WeatherON_ANDROID_ARTIFACT_ACCESS_STATUS.md` |

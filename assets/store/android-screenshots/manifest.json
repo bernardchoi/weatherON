@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29",
+  "generatedAt": "2026-06-30",
   "sourceBuildId": "419e3d2c-135b-41a1-88f6-3321ad5115f1",
   "appVersion": "0.1.0 (3)",
   "requiredCount": 5,
@@ -43,7 +43,7 @@
     {
       "filename": "phone-04-outfit.png",
       "screen": "C1 코디 추천",
-      "route": "하단 코디",
+      "route": "MY > 코디·옷장",
       "status": "ready",
       "width": 1084,
       "height": 2412,

@@ -1,6 +1,6 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-06-28
+> 생성일: 2026-06-30
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
@@ -9,14 +9,17 @@
 |---|---|
 | 최신 preview build | `419e3d2c-135b-41a1-88f6-3321ad5115f1` |
 | build 상태 | FINISHED |
+| preview build version | `0.1.0 (3)` |
+| 소스 기준 version | `0.1.0 (5)` |
+| preview build 소스 일치 | 불일치 |
 | 최신 production build | `90912651-fc84-47d0-91ce-9be096c2ff05` |
 | production build 상태 | FINISHED |
-| 정적 체크 통과 | 20/20 |
-| 실기기 QA 미검증 | 0 |
+| 정적 체크 통과 | 22/23 |
+| 실기기 QA 미검증 | 14 |
 | 실기기 QA 결과 적용 | 미적용 |
 | 스토어 스크린샷 issue | 0 |
 | 스토어 스크린샷 준비 | 5/5 |
-| ADB 연결 | 불가 |
+| ADB 연결 | 가능 |
 | APK 설치 | 미실행 |
 | local 입력 파일 issue | 0 |
 | local 스토어 입력 누락 | 9 |
@@ -38,8 +41,8 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 위치 수정 preview APK | `npm run build:android:preview:no-wait` 실행 후 `npm run check:eas-build-status -- <eas-build-id>`로 완료 확인 | 필요 |
-| 2 | 실기기 QA | 새 preview APK 설치 후 D7 위치 권한 재검증 | 완료 |
+| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (5) 기준 새 APK 필요. EAS Free plan Android build quota 소진. 2026-07-01 reset 후 재시도 필요 | quota 대기 · 현재 APK 0.1.0 (3) |
+| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D12 판정 | 14개 미검증 |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |

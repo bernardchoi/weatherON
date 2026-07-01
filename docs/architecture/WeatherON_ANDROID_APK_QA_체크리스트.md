@@ -75,7 +75,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | 위치 권한 허용 | 현재 위치 날씨 갱신 또는 fallback 메시지 표시 | 실패: `7c857db8-da31-4c95-88d8-0455546c1c4d`에서 권한 허용 후 현재 위치 날씨 미반영 |
 | 위치 권한 거부 | 앱 사용 가능, 수동 목적지 검색 가능 | 미검증 |
 | 위치 서비스 꺼짐 | fallback 안내 표시, 크래시 없음 | 미검증 |
-| 네트워크 끊김 | 캐시/fallback 상태 표시, 빈 화면 없음 | 미검증 |
+| 네트워크 끊김 | 최근/기본 예보 상태 표시, 빈 화면 없음, `실시간 예보`로 오인 표시 없음 | 미검증 |
 | 작은 화면 | 360x800급에서 가로 overflow 없음 | 미검증 |
 | 큰 화면 | 430x932급에서 카드 간격/버튼 정상 | 미검증 |
 | 앱 백그라운드/복귀 | 상태 유지, 중복 알림/중복 저장 없음 | 미검증 |
@@ -110,20 +110,20 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 |---|---|
 | 이전 APK 빌드 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/7c857db8-da31-4c95-88d8-0455546c1c4d |
 | 이전 EAS build id | `7c857db8-da31-4c95-88d8-0455546c1c4d` |
-| QA 대상 APK 빌드 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/819b6cba-7757-48a3-9f8e-92a4efd9c17c |
-| QA 대상 EAS build id | `819b6cba-7757-48a3-9f8e-92a4efd9c17c` |
+| QA 대상 APK 빌드 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/802540a2-77a2-40cb-9b3b-15d9b3984ae2 |
+| QA 대상 EAS build id | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
 | QA 대상 build 상태 | `FINISHED` |
-| APK artifact | https://expo.dev/artifacts/eas/bxWR-_rZCG9X8TmXwj_ni6LS1m_5BR5egVy3X8X-HQE.apk |
+| APK artifact | https://expo.dev/artifacts/eas/c5GZmnH_LlJTr8f3ysnwjX1BTjQGcoiUcfL1DEOayd4.apk |
 | 보조 web export QA | `WeatherON_ANDROID_WEB_EXPORT_QA.md` |
 | 실기기 QA 세션 | `WeatherON_ANDROID_DEVICE_QA_SESSION.md` |
 | 테스트 기기 | A142 / adb `000841458003652` |
 | Android 버전 | 16 |
-| 테스트 일시 | 2026-06-28 23:20 KST |
-| 네트워크 | Wi-Fi, 오프라인 재검증 미실행 |
-| 통과 여부 | 부분 통과. D1/D2/D4/D4-1/D4-2/D7/D8/D11 통과, D3 실패, D10 주의, D6/D12 미확인 |
-| 주요 이슈 | 소셜 화면 프로토타입 문구 노출, 코디 하단 액션 일부 가림 |
-| 보조 확인 | 실기기 스크린샷 기준 홈/코디/출발/MY/소셜 탭 표시, crash log 없음, 설치 패키지 `versionCode=4` 확인 |
-| 후속 조치 | 소셜 문구/하단 탭 여백/코디 시간 표기 소스 수정 완료. 새 preview APK 빌드 후 D3/D10 재검증, 뒤로가기/검색/오프라인 QA 재실행, 스토어 스크린샷 재캡처 |
+| 테스트 일시 | 2026-07-01 KST |
+| 네트워크 | Wi-Fi, Cloudflare public proxy |
+| 통과 여부 | 부분 통과. 설치/실행/홈/알림 사이드바/출발/MY/계정 관리/목적지 상세/재실행/crash buffer 통과 |
+| 주요 이슈 | 홈-출발-상세 목적지 날씨 값 불일치, 목적지 상세 첫 진입 하단 영역 걸침, 알림 설정 진입 시 탭 context가 MY로 전환, 장소 검색 자동 입력 미검증 |
+| 보조 확인 | `check:public-weather-proxy`, `check:android-preview-preflight` 통과. 실기기 crash buffer 비어 있음 |
+| 후속 조치 | 날씨 snapshot 통합, 목적지 상세 하단 padding 보정, 출발 context 알림 설정 라우팅 정리, 수동 장소 검색 QA |
 
 ---
 
@@ -140,7 +140,8 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | 2026-06-27 | 제품 보정 build `0afbdf0c-f617-43f5-8dd6-5466f862a40b` 완료 및 QA 대상 APK로 기록 |
 | 2026-06-28 | `7c857db8-da31-4c95-88d8-0455546c1c4d` 실기기 D7 위치 권한 허용 후 현재 위치 날씨 미반영 실패 기록 |
 | 2026-06-28 | 하단 탭 IA 보정 build `deb142d7-a9a8-44e5-85ba-6eb0e5b0dd95` 완료 및 QA 대상 APK로 갱신 |
-| 2026-06-28 | `S1 ON Square` 소셜 탭 분리 build `da28ef88-3adb-4a25-858d-9e2e4ba62245` 완료 및 QA 대상 APK로 갱신 |
+| 2026-06-30 | 소셜 레이어 최초 출시 미공개 기준으로 QA 대상 범위 갱신 |
+| 2026-06-30 | 홈 날씨 상태 문구를 provider 상태 기준으로 분기. 오프라인/실패 시 최근/기본 예보 안내로 표시 |
 | 2026-06-27 | In-app browser web export QA 결과 문서 연결 |
 | 2026-06-27 | 제품 품질 정적 체크를 APK QA 사전 게이트에 추가 |
 | 2026-06-27 | 내부 문구 추가 정리 후 preview build `3df4fb84-98d5-417d-865e-240e14200520` 시작 |
@@ -149,3 +150,4 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | 2026-06-27 | 실기기 QA 세션 문서 연결 |
 | 2026-06-28 | UI polish preview build `819b6cba-7757-48a3-9f8e-92a4efd9c17c` 실기기 QA 결과로 갱신 |
 | 2026-06-28 | 소셜 문구 제거, 하단 탭 레이아웃 보정, 코디 시간 표기 보정. 다음 APK 재검증 필요 |
+| 2026-07-01 | Cloudflare public proxy preview build `802540a2-77a2-40cb-9b3b-15d9b3984ae2` 실기기 QA 결과로 갱신 |

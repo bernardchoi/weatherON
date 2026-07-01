@@ -45,25 +45,29 @@
 | 실기기 밀도 보정 | AppScreen/Section 간격과 패딩 축소로 작은 화면 첫 화면 정보 밀도 개선 |
 | 데이터 일관성 | 홈 날씨 카드와 코디 추천 사유가 시간별 최대 강수/바람 기준을 함께 사용하도록 보정 |
 | QA 컨트롤 제거 | 홈 날씨 상태 패널의 QA용 상태 토글을 사용자용 현재 상태 문구로 대체 |
-| 하단 탭 IA | QA용 `우산/강수` 직접 탭을 제거하고 목업 기준 `홈/코디/출발/MY/소셜`로 고정 |
-| 소셜 탭 구현 | 하단 `소셜`을 알림센터 재사용에서 `S1 ON Square` 로컬 체크인/컴패니언 화면으로 분리 |
-| 반복 방지 | `npm run check:android-product-quality` 정적 체크 추가 |
+| 하단 탭 IA | QA용 `코디/소셜/우산/강수` 직접 탭을 제거하고 MVP 기준 `홈/출발/MY + MY 코디·옷장`로 고정 |
+| 소셜 레이어 | `S1 ON Square`는 최초 출시 미공개 처리, 핵심 MVP 판단 흐름과 분리 |
+| 반복 방지 | `npm run check:android-product-quality` 정적 체크와 `npm run check:android-core-flow` 클릭 흐름 체크 추가 |
+| 하단 탭 가림 회귀 | `npm run check:android-core-flow`에서 목적지/강수/코디 하단 CTA가 하단 탭 위로 노출되는지 확인 |
+| 오프라인 상태 문구 | 홈 날씨 pill이 provider 상태 전체를 보도록 보정해 실패/최근 예보 상태를 `실시간 예보`로 오인하지 않게 함 |
 | EAS 업로드 최적화 | `.easignore` 추가로 docs/mockups/brand/store-only 산출물 제외, archive 업로드 62.5MB 확인 |
 | EAS archive 회귀 | web export/모노레포 산출물 확인 과정 이후 preview build `5e5b8f72`, `d217ac7e`, `d6b3aa4b`가 200MB archive로 업로드됨. APK 기능 검증용으로는 사용 가능하나 용량 최적화 기준에서는 superseded 후보 |
 | EAS ignore 보강 | root `.easignore`에 `.git`, `.git/`, `apps/mobile/dist/`, mobile `.easignore`에 `dist/`, `dist-web/`, `web-build/` 제외 추가 |
 | EAS archive 회복 | `eas build:inspect` 기준 archive stage 64MB, preview build `da28ef88-3adb-4a25-858d-9e2e4ba62245` 완료 및 업로드 `62.6 MB` 확인 |
+| EAS archive 재회복 | 최신 preview build 시도에서 archive `892 MB` 회귀 확인. `android/app/build` 등 native 산출물 제외와 native `applicationId` 보정 후 `eas build:inspect --stage archive` 기준 75MB 확인 |
 
 ## 4. 다음 개선 순서
 
-1. O2 -> H1 -> G2 -> H5 핵심 MVP 흐름 실기기 QA
+1. O2 -> H1 -> G2 -> H5 핵심 MVP 흐름 실기기 QA와 `npm run check:android-core-flow` 반복 확인
 2. 작은 화면 360x800, 큰 화면 430x932 레이아웃 QA
 3. 출발시간 역산, 목적지 날씨 비교, 강수 타임라인의 로딩/오류/fallback 문구 정리
-4. 비 시작/그침 알림 조건 저장과 앱 재시작 후 상태 영속화 QA
-5. 최신 보정본 기준 새 preview APK 필요 여부 판단
-6. 기본 내비게이션 스택 도입 검토
-7. 하단 탭 `홈/코디/출발/MY/소셜` 노출이 MVP 검증을 방해하지 않는지 확인
-8. `소셜`/`ON Square`는 MVP 검증 중 확장 루프로 유도하지 않도록 진입 문구와 노출 수준 재검토
-9. 이미지 자산 최적화와 `.easignore` 효과 재측정
+4. 네트워크 끊김 시 홈 상태 pill이 `최근 예보` 또는 `기본 예보`로 표시되는지 새 APK에서 재검증
+5. 비 시작/그침 알림 조건 저장과 앱 재시작 후 상태 영속화 QA
+6. EAS quota reset 후 최신 보정본 기준 새 preview APK 생성
+7. 기본 내비게이션 스택 도입 검토
+8. 새 preview APK에서 하단 탭 `홈/출발/MY`, `MY -> 코디·옷장`, 하단 CTA 가림 없음 재확인
+9. `소셜`/`ON Square`는 MVP 검증 완료 전까지 사용자 화면 미공개 유지
+10. 이미지 자산 최적화와 `.easignore` 효과 재측정
 10. Beta 전 스토어 스크린샷 캡처와 제출 blocker 17개 해소
 
 ## 5. 검증 기준
@@ -73,6 +77,7 @@
 | TypeScript | `npx tsc -p apps/mobile/tsconfig.json --noEmit` 통과 |
 | Android release config | `npm run check:android-release` 통과 |
 | Product quality | `npm run check:android-product-quality` 통과 |
+| Core flow | `npm run check:android-core-flow` 통과. 홈 CTA, 목적지 비교, 강수 알림, 코디 기준 저장, 옷장 추가, 하단 탭 가림 회귀 포함 |
 | 통합 게이트 | `npm run check:android-local-release-ready` 통과 |
 | 실기기 QA | `WeatherON_ANDROID_APK_QA_체크리스트.md` 기준으로 결과 기록 |
 
@@ -100,8 +105,10 @@
 | 2026-06-27 | 홈 강수 표시와 코디 추천 사유의 강수 기준 통일, QA용 날씨 상태 토글 제거 |
 | 2026-06-27 | preview build `5e5b8f72`, `d217ac7e`, `d6b3aa4b` 생성 중 archive 200MB 회귀 확인 및 mobile `.easignore` 보강 |
 | 2026-06-27 | `.git` ignore 매칭 보정 후 `build:inspect` 64MB, preview build `deb142d7-a9a8-44e5-85ba-6eb0e5b0dd95` 62.5MB 업로드 확인 |
-| 2026-06-28 | 하단 탭을 목업 기준 `홈/코디/출발/MY/소셜`로 고정하고 제품 품질 체크에 반복 방지 조건 추가 |
-| 2026-06-28 | 하단 `소셜` 탭을 `S1 ON Square` 화면으로 분리하고 알림센터 직접 재사용 제거 |
+| 2026-06-30 | 하단 탭을 MVP 기준 `홈/출발/MY`로 고정하고 코디·옷장은 MY 내부 진입으로 정리 |
+| 2026-06-30 | 소셜 레이어 최초 출시 미공개 기준으로 제품 품질 기준 갱신 |
+| 2026-06-30 | 핵심 클릭 흐름에 하단 탭 CTA 가림 회귀검사를 추가하고 product quality 게이트에 고정 |
+| 2026-06-30 | 최신 preview build 시도 중 EAS quota 소진과 archive 892MB 회귀 확인. `.easignore` native build 산출물 제외 및 Android applicationId 보정 후 archive inspect 75MB 확인 |
 | 2026-06-28 | preview build `deb142d7-a9a8-44e5-85ba-6eb0e5b0dd95` 완료 및 최신 실기기 QA 대상으로 갱신 |
 | 2026-06-28 | `S1 ON Square` 반영 preview build `da28ef88-3adb-4a25-858d-9e2e4ba62245` 완료 및 최신 실기기 QA 대상으로 갱신 |
 | 2026-06-28 | `H3/H4/H5` 홈 활성 탭 보정 및 Android `versionCode=2` preview build `7c857db8-da31-4c95-88d8-0455546c1c4d` 완료 |

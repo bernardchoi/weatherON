@@ -7,7 +7,7 @@
 
 | API | 상태 | 사용 위치 | 비고 |
 |---|---|---|---|
-| KMA 단기예보 조회서비스 | 활성 | 서버 weather proxy, live smoke | Decoding 서비스키 사용. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과. 계속 사용하려면 공공데이터포털에서 활용기간 연장신청 필요 |
+| KMA 단기예보 조회서비스 | 활성 | 서버 weather proxy, live smoke | Decoding 서비스키 사용. 서버 프록시는 TTL 캐시와 이전 성공값 fallback 적용. 현재 upstream 429 발생 가능성이 있어 활용기간/쿼터 확인 필요 |
 | Kakao Local API | 활성 | `/places/search?countryCode=KR` | 국내 장소 검색 우선 provider. `WEATHERON_PLACE_SMOKE=1` 통과. REST API 키는 서버 환경변수/Secret Manager에만 보관 |
 | Open-Meteo | 활성 | 글로벌/보조 날씨 | 별도 키 없음. 서버 adapter 경유. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과 |
 
@@ -41,4 +41,5 @@
 - 해외 장소 검색은 Google Maps Geocoding 우선이다. Mapbox는 비용 절감 대안으로만 추적하며 현재 키를 발급하지 않는다.
 - Google Maps와 Mapbox 비용 비교 및 재검토 기준은 `docs/architecture/WeatherON_MAP_PROVIDER_COST_COMPARISON.md`를 따른다.
 - KMA 키는 만료 전 연장신청이 필요하므로 운영 캘린더에 만료 30일 전, 7일 전 알림을 둔다.
+- KMA 호출은 서버 프록시 캐시(`WEATHER_CACHE_TTL_MS`)를 통해 중복 호출을 줄이고, upstream 오류 시 이전 성공값이 있으면 우선 반환한다.
 - Android 출시 준비와 테스트/심사 프로세스는 `docs/architecture/WeatherON_ANDROID_출시_준비_프로세스.md`에서 추적한다.

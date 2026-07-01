@@ -22,7 +22,7 @@
 | phone-01-home.png | H1 홈 | 하단 홈 | 캡처됨 | 1084x2412 |
 | phone-02-destination-search.png | P1 목적지 검색 | 하단 출발 > 목적지 추가 | 캡처됨 | 1084x2412 |
 | phone-03-destination-care.png | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 캡처됨 | 1084x2412 |
-| phone-04-outfit.png | C1 코디 추천 | 하단 코디 | 캡처됨 | 1084x2412 |
+| phone-04-outfit.png | C1 코디 추천 | MY > 코디·옷장 | 캡처됨 | 1084x2412 |
 | phone-05-settings-policy.png | M/R 정책 허브 | 하단 MY > 설정/정책 | 캡처됨 | 1084x2412 |
 
 ## 3. Issues

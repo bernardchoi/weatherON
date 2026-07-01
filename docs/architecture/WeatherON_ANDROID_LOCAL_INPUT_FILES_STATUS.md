@@ -1,6 +1,6 @@
 # WeatherON Android Local Input Files Status
 
-> 생성일: 2026-06-29
+> 생성일: 2026-06-30
 > 목적: 출시 준비에 필요한 로컬 입력 JSON 생성 상태를 추적한다.
 
 ## 1. 현재 상태
