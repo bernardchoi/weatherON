@@ -58,6 +58,7 @@
 | 영역 | 적용 내용 |
 |---|---|
 | 첫 진입 | 초기 route를 `O2` 온보딩으로 변경 |
+| 온보딩 권한 UX | `O2`에서는 권한 선택지를 제거하고, `A2/A3` 계정 연결 직후 `O3`에서 위치·알림 권한을 통합 안내 |
 | 내부 코드 노출 | 하단 탭의 route code, `Guest 홈`, `H5`, `source preset`, `fallback 샘플` 같은 개발 문구 제거 |
 | 홈 첫 인상 | 큰 체감 온도, 상태, 강수/바람/습도 지표 중심으로 홈 날씨 요약 재구성 |
 | 화면 밀도 | AppScreen/Section 간격, 헤더 높이, 패딩 축소 |
@@ -69,6 +70,7 @@
 | 데이터 일관성 | 홈 날씨 카드와 코디 추천 사유가 시간별 최대 강수/바람 기준을 공유하도록 보정 |
 | QA 회귀 방지 | `npm run check:android-product-quality` 정적 체크 추가 |
 | MVP 0 핵심 흐름 | `O2 -> H1 -> G2 -> H5` 상단 정보 구조를 출발시간, 목적지 날씨 차이, 비 시작/그침 알림 중심으로 재배치 |
+| 알림 설정 밀도 | `M2`를 스마트 알림 ON/OFF, 상태 태그, 빠른 액션, 필수 날씨/생활 루틴/목적지 출발 3행으로 축약 |
 
 ---
 
@@ -95,7 +97,7 @@
 | H1/H2/H3/H5/G1/G4/G6/P2/R4/S2 | 작은 helper label 정리 또는 10px 이상으로 상향 |
 | H3/W4/O5/C3/C4 | 메타/상태/상세 텍스트 대비 개선 |
 | H4/H5 | 강수 확률, 축, 범례, 우산 비교 label 가독성 개선 |
-| A2/O2/O3/O4/O6 | 온보딩 helper text, inactive control, permission chip, style preview icon 대비 개선 |
+| A2/O2/O3/O4/O6 | 온보딩 helper text, inactive control, permission chip, style preview icon 대비 개선. 최신 기준은 O2 권한 팝업 제거, A2/A3 후 O3 통합 권한 준비 |
 | Theme tokens | dark mode 기능색을 밝히고 light mode 기능색을 어둡게 조정 |
 
 ---
@@ -107,6 +109,7 @@
 | 제품 성격 | 아직 출시 후보가 아니라 빌드/설치/실행 검증용 APK 성격 |
 | MVP 핵심 이해 | O2 -> H1 -> G2 -> H5 흐름을 다시 검증해야 함 |
 | 알림 신뢰성 | 비 시작/그침 알림 조건 저장, 권한 복구, 푸시/딥링크 검증 필요 |
+| 권한 진입 타이밍 | 온보딩 단독 권한 선택이 아니라 계정 연결 직후 권한 준비로 이동했으므로 최초 계정 연결 QA 필요 |
 | 네이티브 내비게이션 | 수동 route state 구조라 전환 애니메이션/deep link 품질 보강 필요 |
 | API UX | smoke는 통과했지만 화면 안 로딩/오류/fallback 체감 QA 필요 |
 | 접근성 | 자동 대비 후보는 0이지만 실제 기기에서 foreground/background 측정 필요 |
