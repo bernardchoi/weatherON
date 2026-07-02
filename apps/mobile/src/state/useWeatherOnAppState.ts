@@ -42,7 +42,7 @@ import { getRouteLabel } from "../navigation/routeLabels";
 
 export type { DestinationTransportMode };
 
-export type GateReason = "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
+export type GateReason = "account-connect" | "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
 export type WeatherLocationMode = "auto" | "manual";
 export type DestinationHubFilter = "all" | "saved" | "care" | "category";
 export type PlaceSearchStatus = "idle" | "loading" | "ready" | "empty" | "error";
@@ -1519,6 +1519,7 @@ function createAccountGateResult(reason: GateReason, returnTo: AccountGateReturn
 }
 
 function getAccountResumeLabel(reason: GateReason): string {
+  if (reason === "account-connect") return "계정 연결";
   if (reason === "save-outfit") return "코디 저장";
   if (reason === "destination-care") return "목적지 케어 저장";
   if (reason === "social-note") return "ON Square 체크인";

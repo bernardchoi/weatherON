@@ -21,7 +21,7 @@ export function AccountManagementScreen({
   const primaryAccessibilityLabel = accountReady ? "로그아웃 확인" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.warm : needsTerms ? theme.gold : theme.sky;
 
-  const requestConnect = () => onRequireAccount("notification", "A4");
+  const requestConnect = () => onRequireAccount("account-connect", "A4");
   const handlePrimaryAccountAction = () => {
     if (accountReady) {
       setDangerConfirm("signout");

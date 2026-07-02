@@ -30,6 +30,8 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "originCountryCode: originLocation.countryCode",
   "setRoute(persistedState.onboardingCompleted ? \"H1\" : \"O1\")",
   "startAccountGate",
+  "account-connect",
+  'if (reason === "account-connect") return "계정 연결"',
   'setRoute(accountLinked ? "A3" : "A2")',
   'if (permissionGate?.reason === "destination-care")',
   "saveSelectedDestination(false)",
@@ -165,6 +167,8 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "onRestoreRemovedDestination",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
+  'onNavigate("G3")',
+  "여행 플래너 열기",
   "handleNestedAction",
   "onRemoveSavedDestination",
   "목적지 삭제\"",
@@ -360,10 +364,12 @@ assertSourceIncludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   "약관 동의",
   "필수 약관 동의 이어가기",
   "약관 동의 완료",
+  'onRequireAccount("account-connect", "A4")',
   "로그아웃 확인",
   "계정 작업 취소",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
+  'onRequireAccount("notification", "A4")',
   ">마이페이지<",
   "구독 관리",
   "데이터 내보내기",
@@ -581,6 +587,10 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "목적지 비교",
   "강수 타임라인",
   "PERSONAL HOME",
+  "getHomeLocationStatus",
+  'value: "현재 위치"',
+  'value: "수동"',
+  'value: "확인 필요"',
   "unreadNotificationCount",
   "NotificationBellButton",
   "NotificationSidebar",

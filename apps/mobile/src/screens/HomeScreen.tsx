@@ -15,6 +15,8 @@ export function HomeScreen({
   smartCareEnabled,
   isWeatherLoading,
   permissionReady,
+  locationReady,
+  weatherLocationMode,
   temperatureUnit,
   onNavigate,
   onSetWeatherProviderMode,
@@ -30,6 +32,7 @@ export function HomeScreen({
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
   const currentWeather = state.destinationCare.originWeather;
   const current = currentWeather.current;
+  const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const sourceLabel = buildWeatherSourceLabel(
     state.weatherProvider.currentSource,
     state.weatherProvider.destinationSource,
@@ -87,7 +90,7 @@ export function HomeScreen({
 
         <View style={styles.stateRail}>
           <HomeStatePill label={smartCareEnabled ? "계정" : "게스트"} value={smartCareEnabled ? "동기화 ON" : "저장 제한"} tone={smartCareEnabled ? theme.clear : theme.gold} theme={theme} />
-          <HomeStatePill label="위치" value="정상" tone={theme.clear} theme={theme} />
+          <HomeStatePill label="위치" value={locationStatus.value} tone={locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.sky : theme.warm} theme={theme} />
           <HomeStatePill label="알림" value={permissionReady ? "맞춤 케어" : "설정 전"} tone={theme.sky} theme={theme} />
         </View>
 
@@ -169,6 +172,15 @@ export function HomeScreen({
       />
     </View>
   );
+}
+
+function getHomeLocationStatus(
+  locationReady: boolean,
+  weatherLocationMode: P0ScreenProps["weatherLocationMode"],
+): { value: string; tone: "clear" | "sky" | "warm" } {
+  if (locationReady && weatherLocationMode === "auto") return { value: "현재 위치", tone: "clear" };
+  if (weatherLocationMode === "manual") return { value: "수동", tone: "sky" };
+  return { value: "확인 필요", tone: "warm" };
 }
 
 function buildHomeDecision(

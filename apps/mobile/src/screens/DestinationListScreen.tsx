@@ -130,19 +130,6 @@ export function DestinationListScreen({
               <Text style={[styles.addDestinationIcon, { color: theme.gold }]}>+</Text>
               <Text style={[styles.addDestinationText, { color: theme.text }]}>목적지 추가</Text>
             </Pressable>
-            <Pressable
-              accessibilityLabel="여행 플래너 열기"
-              accessibilityRole="button"
-              onPress={() => onNavigate("G3")}
-              style={[styles.tripPlannerRail, { backgroundColor: theme.card, borderColor: theme.border }]}
-            >
-              <Image source={uiIconAssets.depart} style={[styles.tripPlannerIcon, { tintColor: theme.text }]} resizeMode="contain" />
-              <View style={styles.tripPlannerCopy}>
-                <Text style={[styles.tripPlannerTitle, { color: theme.text }]}>여행 플래너</Text>
-                <Text style={[styles.tripPlannerBody, { color: theme.subtle }]}>일정별 날씨와 준비를 이어서 확인</Text>
-              </View>
-              <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
-            </Pressable>
           </View>
         ) : null}
 
@@ -692,34 +679,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
-  },
-  tripPlannerRail: {
-    minHeight: 66,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: 14,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  tripPlannerIcon: {
-    width: 22,
-    height: 22,
-  },
-  tripPlannerCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  tripPlannerTitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  tripPlannerBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
   },
   destinationCard: {
     gap: spacing.xs,
