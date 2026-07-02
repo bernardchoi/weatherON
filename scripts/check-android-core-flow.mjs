@@ -299,7 +299,7 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
 
     await clickText(page, "MY");
     await clickText(page, "스마트 알림 설정");
-    await assertText(page, "5초 뒤 발송 · 예약 목록 검증");
+    await assertText(page, "5초 뒤 테스트 발송");
     await assertText(page, "목적지 출발");
     await assertText(page, "목적지 추가 필요");
     await assertText(page, "목적지 필요");

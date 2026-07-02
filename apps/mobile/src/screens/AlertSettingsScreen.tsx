@@ -51,7 +51,7 @@ export function AlertSettingsScreen({
     testNotificationOpened,
   );
   const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
-  const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 QA 필요") : "푸시 대기";
+  const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 확인 전") : "푸시 대기";
   const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel, testNotificationReceived, testNotificationOpened);
   const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "다시 보내기" : "보내기") : "권한 켜기";
 
@@ -111,10 +111,6 @@ export function AlertSettingsScreen({
           <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
             <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
           </View>
-          <View style={styles.heroStatusRail}>
-            <StatusTag label={permissionReady ? "권한 정상" : "권한 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
-            <StatusTag label={deliveryStatusLabel} tone={testNotificationVerified ? "sky" : "gold"} theme={theme} />
-          </View>
         </Pressable>
 
         {permissionGateResult?.returnTo === "M2" ? (
@@ -123,26 +119,17 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <View style={styles.quickActions}>
-          <GateCard
-            icon="bell"
-            title={alertReadiness.gateTitle}
-            body={alertReadiness.gateBody}
-            actionLabel={permissionReady ? "정상" : "켜기"}
-            tone={permissionReady ? "clear" : "warm"}
-            onPress={() => onRequestPermissionGate("notification", "M2", "general")}
-            theme={theme}
-          />
-          <GateCard
-            icon="bell"
-            title="테스트 알림"
-            body={testNotificationBody}
-            actionLabel={testNotificationActionLabel}
-            tone={permissionReady ? "sky" : "warm"}
-            onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
-            theme={theme}
-          />
-        </View>
+        <DeliveryCheckCard
+          deliveryCountLabel={deliveryStatus.countLabel}
+          deliveryStatusLabel={deliveryStatus.statusLabel}
+          permissionReady={permissionReady}
+          testBody={testNotificationBody}
+          testStatusLabel={deliveryStatusLabel}
+          testVerified={testNotificationVerified}
+          actionLabel={testNotificationActionLabel}
+          onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
+          theme={theme}
+        />
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림 종류</Text>
 
@@ -237,46 +224,58 @@ export function AlertSettingsScreen({
   );
 }
 
-function StatusTag({ label, tone, theme }: { label: string; tone: AlertTone; theme: AppTheme }) {
-  const color = getToneColor(theme, tone);
+function DeliveryCheckCard({
+  deliveryCountLabel,
+  deliveryStatusLabel,
+  permissionReady,
+  testBody,
+  testStatusLabel,
+  testVerified,
+  actionLabel,
+  onPress,
+  theme,
+}: {
+  deliveryCountLabel: string;
+  deliveryStatusLabel: string;
+  permissionReady: boolean;
+  testBody: string;
+  testStatusLabel: string;
+  testVerified: boolean;
+  actionLabel: string;
+  onPress: () => void;
+  theme: AppTheme;
+}) {
   return (
-    <View style={[styles.statusTag, { backgroundColor: `${color}22` }]}>
-      <Text style={[styles.statusTagText, { color }]} numberOfLines={1}>{label}</Text>
+    <View style={[styles.deliveryCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={styles.deliveryHeader}>
+        <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${theme.sky}55` }]}>
+          <AlertIcon type="bell" color={theme.sky} />
+        </View>
+        <View style={styles.deliveryTitleCopy}>
+          <Text style={[styles.deliveryTitle, { color: theme.text }]}>푸시 확인</Text>
+          <Text style={[styles.deliveryBody, { color: theme.subtle }]}>권한, 예약, 실제 수신을 따로 확인함</Text>
+        </View>
+      </View>
+      <View style={styles.deliveryLines}>
+        <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
+        <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
+        <DeliveryLine label="테스트" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
+      </View>
+      <Pressable accessibilityLabel={`테스트 알림 ${actionLabel}`} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
+        <Text style={[styles.deliveryActionText, { color: permissionReady ? theme.sky : theme.warm }]}>{actionLabel}</Text>
+      </Pressable>
     </View>
   );
 }
 
-function GateCard({
-  icon,
-  title,
-  body,
-  actionLabel,
-  tone,
-  onPress,
-  theme,
-}: {
-  icon: "bell" | "route";
-  title: string;
-  body: string;
-  actionLabel: string;
-  tone: AlertTone;
-  onPress: () => void;
-  theme: AppTheme;
-}) {
+function DeliveryLine({ label, value, tone, theme }: { label: string; value: string; tone: AlertTone; theme: AppTheme }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityLabel={`${title}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.gateCard, { backgroundColor: theme.card, borderColor: `${color}55` }]}>
-      <View style={[styles.rowIcon, { backgroundColor: theme.cardStrong, borderColor: `${color}55` }]}>
-        <AlertIcon type={icon} color={color} />
-      </View>
-      <View style={styles.rowCopy}>
-        <Text style={[styles.rowTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.rowBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
-      </View>
-      <View style={[styles.actionPill, { backgroundColor: theme.nav }]}>
-        <Text style={[styles.actionPillText, { color: theme.text }]}>{actionLabel}</Text>
-      </View>
-    </Pressable>
+    <View style={styles.deliveryLine}>
+      <Text style={[styles.deliveryLineLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text style={[styles.deliveryLineValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+      <View style={[styles.deliveryDot, { backgroundColor: color }]} />
+    </View>
   );
 }
 
@@ -446,16 +445,16 @@ function getNotificationDeliveryCopy(
   if (deliveryStatus.status === "verification-failed") {
     return { statusLabel: "확인 실패", countLabel: `예약 확인 ${deliveryStatus.scheduledCount}건` };
   }
-  return { statusLabel: "기기 QA 필요", countLabel: "네이티브 확인 전" };
+  return { statusLabel: "기기 확인 필요", countLabel: "네이티브 확인 전" };
 }
 
 function getTestNotificationBody(permissionReady: boolean, statusLabel?: string, received?: boolean, opened?: boolean) {
   if (!permissionReady) return "권한 켜고 수신 확인";
   if (opened) return "수신·탭 확인됨";
   if (received) return "수신 확인됨";
-  if (statusLabel === "예약 확인 실패") return "예약 목록 확인 실패 · 기기 QA 필요";
+  if (statusLabel === "예약 확인 실패") return "예약 확인 실패 · 기기 확인 필요";
   if (statusLabel) return `최근 ${statusLabel}`;
-  return "5초 뒤 발송 · 예약 목록 검증";
+  return "5초 뒤 테스트 발송";
 }
 
 function getAlertReadinessCopy(
@@ -487,7 +486,7 @@ function getAlertReadinessCopy(
     return {
       title: "스마트 알림 확인 중",
       body: "테스트 알림 수신 확인 전",
-      resultBody: "권한은 켜짐. 테스트 알림과 예약 목록으로 실제 도착을 확인해야 함",
+      resultBody: "권한은 켜짐. 테스트 알림으로 실제 도착을 확인해야 함",
       gateTitle: "알림 권한 정상",
       gateBody: "테스트 발송으로 확인",
     };
@@ -654,24 +653,6 @@ const styles = StyleSheet.create({
   switchKnobOn: {
     alignSelf: "flex-end",
   },
-  heroStatusRail: {
-    width: "100%",
-    flexDirection: "row",
-    gap: spacing.xs,
-    paddingTop: 4,
-  },
-  statusTag: {
-    maxWidth: "48%",
-    minHeight: 28,
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-  },
-  statusTagText: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "900",
-  },
   resultStrip: {
     gap: 4,
     padding: 12,
@@ -705,20 +686,67 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "700",
   },
-  gateCard: {
-    flex: 1,
-    minHeight: 66,
-    flexDirection: "row",
-    alignItems: "center",
+  deliveryCard: {
     gap: spacing.sm,
-    padding: 10,
+    padding: 12,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  quickActions: {
+  deliveryHeader: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     gap: spacing.sm,
+  },
+  deliveryTitleCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  deliveryTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  deliveryBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  deliveryLines: {
+    gap: 7,
+  },
+  deliveryLine: {
+    minHeight: 26,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  deliveryLineLabel: {
+    width: 34,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  deliveryLineValue: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  deliveryDot: {
+    width: 7,
+    height: 7,
+    borderRadius: radius.pill,
+  },
+  deliveryAction: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  deliveryActionText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
   },
   rowIcon: {
     width: 34,
@@ -741,17 +769,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: "700",
-  },
-  actionPill: {
-    minHeight: 32,
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-  },
-  actionPillText: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "900",
   },
   groupLabel: {
     marginBottom: -6,
