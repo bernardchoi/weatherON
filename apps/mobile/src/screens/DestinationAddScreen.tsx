@@ -281,8 +281,7 @@ function getCategoryDetail(category: string) {
 function getCountryLabel(countryCode: string) {
   if (countryCode === "KR") return "한국";
   if (countryCode === "JP") return "일본";
-  if (countryCode === "SG") return "싱가포르";
-  return "국가 확인";
+  return "해외";
 }
 
 function getResultSortLabel(
@@ -301,11 +300,16 @@ function getPlaceDistanceLabel(
 ) {
   if (!origin) {
     const placeCountryCode = place.countryCode || currentCountryCode;
-    if (placeCountryCode !== currentCountryCode) return `해외 · ${getCountryLabel(placeCountryCode)}`;
+    if (placeCountryCode !== currentCountryCode) return getOverseasDistanceLabel(placeCountryCode);
     return getCountryLabel(placeCountryCode);
   }
-  if (place.countryCode !== origin.countryCode) return `해외 · ${getCountryLabel(place.countryCode)}`;
+  if (place.countryCode !== origin.countryCode) return getOverseasDistanceLabel(place.countryCode);
   return formatDistance(getCoordinateDistanceMeters(origin.coordinate, place.coordinate), distanceUnit);
+}
+
+function getOverseasDistanceLabel(countryCode: string) {
+  const countryLabel = getCountryLabel(countryCode);
+  return countryLabel === "해외" ? "해외" : `해외 · ${countryLabel}`;
 }
 
 function getCoordinateDistanceMeters(
