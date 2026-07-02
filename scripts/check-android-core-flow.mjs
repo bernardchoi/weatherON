@@ -455,6 +455,8 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "장소 선택 필요");
     console.log("core-flow: destination add search");
     await fillAriaInput(page, "목적지 검색어", "잠실");
+    await assertText(page, "검색 결과");
+    await assertAnyText(page, ["가까운 순", "한국 기준"]);
     await assertText(page, "잠실야구장");
     console.log("core-flow: destination add select");
     await clickText(page, "잠실야구장");
@@ -475,6 +477,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await clickText(page, "대중교통");
     await assertText(page, "배차/환승 변동 가능");
     await assertText(page, "계산식");
+    await assertText(page, "조건 직접 조정");
     await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "실사용 전 경로 QA 필요"]);
     await assertText(page, "잠실야구장");
     await waitForPersistedDestination(page, "잠실야구장");

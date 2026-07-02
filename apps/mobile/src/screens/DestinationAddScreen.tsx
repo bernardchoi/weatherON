@@ -30,6 +30,7 @@ export function DestinationAddScreen({
   const canUseSavedDestination = destinationSaved && (!hasQuery || selectedFromResults);
   const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
+  const resultSortLabel = getResultSortLabel(deviceLocationState.location, state.weather.countryCode);
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
@@ -113,6 +114,10 @@ export function DestinationAddScreen({
 
         {visibleResults.length > 0 ? (
           <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <View style={[styles.resultPanelHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>검색 결과</Text>
+              <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{resultSortLabel}</Text>
+            </View>
             {visibleResults.slice(0, 5).map((place, index) => {
               const selected = selectedDestinationPlace.id === place.id;
               const duplicate = (duplicateNameCounts.get(place.name) ?? 0) > 1;
@@ -276,7 +281,16 @@ function getCategoryDetail(category: string) {
 function getCountryLabel(countryCode: string) {
   if (countryCode === "KR") return "한국";
   if (countryCode === "JP") return "일본";
+  if (countryCode === "SG") return "싱가포르";
   return "국가 확인";
+}
+
+function getResultSortLabel(
+  origin: P0ScreenProps["deviceLocationState"]["location"],
+  currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
+) {
+  if (origin) return "가까운 순";
+  return `${getCountryLabel(currentCountryCode)} 기준`;
 }
 
 function getPlaceDistanceLabel(
@@ -285,7 +299,11 @@ function getPlaceDistanceLabel(
   currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
   distanceUnit: P0ScreenProps["distanceUnit"],
 ) {
-  if (!origin) return getCountryLabel(place.countryCode || currentCountryCode);
+  if (!origin) {
+    const placeCountryCode = place.countryCode || currentCountryCode;
+    if (placeCountryCode !== currentCountryCode) return `해외 · ${getCountryLabel(placeCountryCode)}`;
+    return getCountryLabel(placeCountryCode);
+  }
   if (place.countryCode !== origin.countryCode) return `해외 · ${getCountryLabel(place.countryCode)}`;
   return formatDistance(getCoordinateDistanceMeters(origin.coordinate, place.coordinate), distanceUnit);
 }
@@ -516,6 +534,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  resultPanelHeader: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+  },
+  resultPanelTitle: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  resultPanelMeta: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
   },
   emptyPanel: {
     gap: spacing.xs,

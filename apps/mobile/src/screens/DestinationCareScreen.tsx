@@ -109,6 +109,7 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
+          <Text style={[styles.transportSectionLabel, { color: theme.muted }]}>이동수단</Text>
           <View style={styles.transportGrid}>
             {transportOptions.map((option) => (
               <TransportOption
@@ -158,9 +159,9 @@ export function DestinationCareScreen({
         <View style={[styles.conditionPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.conditionHeader}>
             <View style={styles.conditionCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.muted }]}>적용 중인 알림 조건</Text>
+              <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 조건</Text>
               <Text style={[styles.conditionSummary, { color: theme.text }]}>
-                강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s
+                강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s 기준
               </Text>
             </View>
             <Pressable
@@ -171,15 +172,6 @@ export function DestinationCareScreen({
             >
               <Text style={[styles.detailButtonText, { color: theme.text }]}>전체 설정</Text>
             </Pressable>
-          </View>
-
-          <View style={styles.conditionSummaryGrid}>
-            <ConditionSummaryPill label="강수 기준" value={`${selectedDestinationAlertCondition.rainThresholdPct}% 이상`} theme={theme} />
-            <ConditionSummaryPill label="출발 알림" value={`${selectedDestinationAlertCondition.leadTimeMinutes}분 전`} theme={theme} />
-            <ConditionSummaryPill label="바람 기준" value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`} theme={theme} />
-            <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
-            <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
-            {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
           </View>
 
           <Pressable
@@ -195,29 +187,36 @@ export function DestinationCareScreen({
           </Pressable>
 
           {conditionControlsOpen ? (
-            <View style={styles.conditionGrid}>
-              <ConditionButton
-                label="강수 기준"
-                value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
-                accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
-                onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
-                theme={theme}
-              />
-              <ConditionButton
-                label="출발 전"
-                value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
-                accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
-                onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
-                theme={theme}
-              />
-              <ConditionButton
-                label="바람 기준"
-                value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
-                accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
-                onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
-                theme={theme}
-              />
-            </View>
+            <>
+              <View style={styles.conditionSummaryGrid}>
+                <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
+                <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
+                {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
+              </View>
+              <View style={styles.conditionGrid}>
+                <ConditionButton
+                  label="강수 기준"
+                  value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
+                  accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
+                  onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
+                  theme={theme}
+                />
+                <ConditionButton
+                  label="출발 전"
+                  value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
+                  accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
+                  onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
+                  theme={theme}
+                />
+                <ConditionButton
+                  label="바람 기준"
+                  value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
+                  accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
+                  onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
+                  theme={theme}
+                />
+              </View>
+            </>
           ) : null}
         </View>
 
@@ -941,6 +940,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
+  },
+  transportSectionLabel: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
   },
   transportOption: {
     width: "48.7%",
