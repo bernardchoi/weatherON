@@ -76,13 +76,23 @@ export function DestinationCareScreen({
         </View>
 
         <View style={[styles.decisionPanel, { backgroundColor: theme.card, borderColor: theme.gold }]}>
-          <View style={styles.decisionCopy}>
-            <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
-            <Text style={[styles.decisionTitle, { color: theme.text }]}>{departureTime} 출발</Text>
-            <Text style={[styles.decisionBody, { color: theme.muted }]}>
-              {targetArrivalTime} 도착 기준 · {getTransportModeLabel(transportMode)} {travelMinutes}분 · 자동 여유 {bufferMinutes}분
-            </Text>
+          <View style={styles.decisionHeader}>
+            <View style={styles.decisionCopy}>
+              <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
+              <Text style={[styles.decisionTitle, { color: theme.text }]}>{departureTime} 출발</Text>
+              <Text style={[styles.decisionBody, { color: theme.muted }]}>
+                {targetArrivalTime} 도착 · {getTransportModeLabel(transportMode)} {travelMinutes}분 · 자동 여유 {bufferMinutes}분
+              </Text>
+            </View>
+            <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? "rgba(47,198,163,0.16)" : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
+              <Text style={[styles.careStateText, { color: destinationCareEnabled ? theme.clear : theme.subtle }]}>
+                {destinationCareEnabled ? "케어 ON" : "케어 OFF"}
+              </Text>
+            </View>
           </View>
+          <Text style={[styles.decisionSummary, { color: theme.text }]}>
+            목적지 날씨와 이동 시간을 기준으로 출발, 신발, 우산 알림을 조정함
+          </Text>
           <View style={styles.arrivalControls}>
             <ArrivalInputControl
               label="도착 희망"
@@ -130,28 +140,12 @@ export function DestinationCareScreen({
           </InfoPanel>
         ) : null}
 
-        <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
           <CompareRow label="기온" from={formatTemperature(originWeather.current.tempC, temperatureUnit)} to={formatTemperature(destinationWeather.current.tempC, temperatureUnit)} accent={theme.text} theme={theme} />
           <CompareRow label="날씨" from={getConditionLabel(originWeather.current.condition)} to={getConditionLabel(destinationWeather.current.condition)} accent={theme.text} theme={theme} />
           <CompareRow label="출발지" from={originWeather.locationName} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
           <CompareRow label="강수" from={`${originRain}%`} to={`${destinationRain}%`} accent={destinationRain > originRain ? theme.warm : theme.clear} theme={theme} />
-        </View>
-
-        <View style={[styles.departurePanel, { backgroundColor: theme.card, borderLeftColor: theme.gold }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>출발시간 역산</Text>
-          <Text style={[styles.departureMeta, { color: theme.text }]}>도착 희망 {targetArrivalTime}</Text>
-          <Text style={[styles.departureMeta, { color: theme.text }]}>이동수단 {getTransportModeLabel(transportMode)} · 소요 {travelMinutes}분 · 자동 여유 {bufferMinutes}분</Text>
-          {transportMode === "transit" ? (
-            <Text style={[styles.departureWarning, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
-          ) : null}
-          <Text style={[styles.departureSource, { color: theme.subtle }]}>
-            {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit)}
-          </Text>
-          <Text style={[styles.departureFormula, { color: theme.muted }]}>
-            {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
-          </Text>
-          <Text style={[styles.departureTime, { color: theme.gold }]}>{departureTime} <Text style={styles.departureSuffix}>출발</Text></Text>
         </View>
 
         <View style={[styles.flowPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -663,6 +657,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderLeftWidth: 2,
   },
+  decisionHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   decisionTop: {
     flexDirection: "row",
     alignItems: "stretch",
@@ -698,6 +698,23 @@ const styles = StyleSheet.create({
   decisionBody: {
     fontSize: 13,
     lineHeight: 19,
+    fontWeight: "800",
+  },
+  careStatePill: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  careStateText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  decisionSummary: {
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: "800",
   },
   decisionStats: {
