@@ -13,9 +13,8 @@ flowchart TD
     AUTH2 --> AUTH2s["계정 연결 상태<br/>(Route State에 호출 액션 유지<br/>검증용 정보는 실제 UI 비노출)"]
     AUTH2 -->|로그인 수단 선택| AUTH3["A3 약관 동의<br/>(필수 3종 + 선택 1종)"]
     AUTH2 -->|나중에| D
-    AUTH3 --> AUTH3s["약관 상태<br/>(필수 완료/대기 · 선택 ON/OFF · 원래 액션 복귀 예정)"]
-    AUTH3 -->|동의하고 계속 · 권한 미완료| C1["O3 앱 준비 권한<br/>(계정 직후 위치+알림 통합 요청)"]
-    AUTH3 -->|동의하고 계속 · 권한 완료| D
+    AUTH3 -->|동의하고 계속| AUTH3s["계정 설정 완료<br/>(필수 약관 완료 · 원래 기능 복귀 예정)"]
+    AUTH3 -->|일반 계정 연결 완료| D
     AUTH3s -.->|accountLinked 유지| SESSION
     AUTH3s -.->|실제 구현 원래 액션 복귀| AUTHGATE
     AUTH3s -.->|pendingAction=프리미엄 진입| SUB
@@ -25,13 +24,12 @@ flowchart TD
     CSTART -->|온보딩 시작| C0["온보딩 소개<br/>(4대 기능 한눈 비교 + 기능별 상세 안내)"]
     CSTART -->|홈으로| D
     C0 -->|알림 기준 보기| C4
-    C1 -->|위치·알림 허용 또는 나중에 설정| C2s["권한 상태<br/>(locationReady · permissionReady · 수동 위치/푸시 대기)"]
     C2["O3 권한 복구<br/>(설정 진입 시 필요한 권한만 재요청)"]
     C2 -->|허용 또는 나중에 설정| C2s
-    C1 -->|위치 거부| C1d["위치 거부 상태<br/>검색 위치·앱 내 안내 유지"]
+    C2 -->|위치 거부| C1d["위치 거부 상태<br/>검색 위치·앱 내 안내 유지"]
     C2 -->|알림 거부| C2d["알림 거부 상태<br/>푸시 제한 · M2/M3에서 재요청"]
     C2s -.->|locationReady · permissionReady 유지| SESSION
-    C2s -.->|계정 직후 권한 준비 완료| AUTH3s
+    C2s -.->|기능별 권한 복구 완료| AUTH3s
     C3["스타일 태그·코디 핏·추천 연령대 선택<br/>(MVP 온보딩 제외 · MY 설정 진입 전용)"]
     C3 --> C3s["추천 기준 상태<br/>(태그 수 · 핏 · 연령대 · READY/WAIT)"]
     C3s -.->|styleProfileSaved · selectedStyles · fit · age| SETTINGS

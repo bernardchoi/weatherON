@@ -8,12 +8,14 @@ export function AppPermissionsScreen({
   locationReady,
   weatherLocationMode,
   permissionReady,
+  permissionGateResult,
   smartCareEnabled,
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode);
   const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled);
+  const resultCopy = getPermissionResultCopy(permissionGateResult);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -29,6 +31,12 @@ export function AppPermissionsScreen({
 
         <View style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
           <Text style={[styles.sectionLabel, { color: theme.muted }]}>권한 상태</Text>
+          {resultCopy ? (
+            <View style={[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>
+              <Text style={[styles.resultTitle, { color: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>{resultCopy.title}</Text>
+              <Text style={[styles.resultBody, { color: theme.subtle }]}>{resultCopy.body}</Text>
+            </View>
+          ) : null}
           <PermissionRow
             label="위치 권한"
             body={locationCopy.body}
@@ -119,6 +127,28 @@ function getNotificationPermissionCopy(
   return { body: "푸시 권한을 켜면 강수·출발 알림 수신", status: "확인", tone: "warm" };
 }
 
+function getPermissionResultCopy(
+  permissionGateResult: P0ScreenProps["permissionGateResult"],
+): { title: string; body: string; tone: "clear" | "warm" } | null {
+  if (!permissionGateResult || permissionGateResult.returnTo !== "M4") return null;
+  const skipped = permissionGateResult.message.includes("나중에");
+  if (permissionGateResult.reason === "location") {
+    return {
+      title: skipped ? "위치 권한 보류" : "위치 권한 확인됨",
+      body: skipped ? "현재 위치 자동화만 대기. 수동 위치와 목적지 검색은 계속 사용할 수 있음" : "홈 날씨가 현재 위치 기준으로 갱신됨",
+      tone: skipped ? "warm" : "clear",
+    };
+  }
+  if (permissionGateResult.reason === "notification") {
+    return {
+      title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",
+      body: skipped ? "푸시 수신만 대기. 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "테스트 알림으로 실제 수신을 한 번 더 확인해야 함",
+      tone: skipped ? "warm" : "clear",
+    };
+  }
+  return null;
+}
+
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -176,6 +206,22 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  resultStrip: {
+    gap: 4,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  resultTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  resultBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
   },
   permissionDot: {
     width: 8,

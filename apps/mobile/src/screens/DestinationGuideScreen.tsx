@@ -4,15 +4,16 @@ import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import { formatTemperature } from "../utils/units";
 
-export function DestinationGuideScreen({ state, selectedDestinationPlace, destinationCareEnabled, onNavigate }: P0ScreenProps) {
+export function DestinationGuideScreen({ state, selectedDestinationPlace, destinationCareEnabled, temperatureUnit, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
   const placeImage = getPlaceImage(selectedDestinationPlace.category);
   const placeName = selectedDestinationPlace.name;
   const categoryLabel = getCategoryLabel(selectedDestinationPlace.category);
   const guide = getGuideCopy(selectedDestinationPlace.category);
-  const weatherDisplay = getWeatherDisplay(selectedDestinationPlace.category, care, placeName);
+  const weatherDisplay = getWeatherDisplay(selectedDestinationPlace.category, care, placeName, temperatureUnit);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -133,7 +134,7 @@ function WeatherTile({
   background,
 }: {
   label: string;
-  temp: number;
+  temp: string;
   meta: string;
   color: string;
   muted: string;
@@ -143,7 +144,7 @@ function WeatherTile({
   return (
     <View style={[styles.weatherTile, { backgroundColor: background }]}>
       <Text style={[styles.weatherName, { color: muted }]}>{label}</Text>
-      <Text style={[styles.weatherTemp, { color }]}>{temp}°</Text>
+      <Text style={[styles.weatherTemp, { color }]}>{temp}</Text>
       <Text style={[styles.weatherMeta, { color: subtle }]}>{meta}</Text>
     </View>
   );
@@ -186,23 +187,28 @@ function getGuideCopy(category: string) {
   };
 }
 
-function getWeatherDisplay(category: string, care: P0ScreenProps["state"]["destinationCare"], placeName: string) {
+function getWeatherDisplay(
+  category: string,
+  care: P0ScreenProps["state"]["destinationCare"],
+  placeName: string,
+  temperatureUnit: P0ScreenProps["temperatureUnit"],
+) {
   if (category === "sports") {
     return {
       originLabel: "서울 삼성동",
-      originTemp: 23,
+      originTemp: formatTemperature(23, temperatureUnit),
       originMeta: "맑음 · 강수 0%",
       destinationLabel: placeName,
-      destinationTemp: 21,
+      destinationTemp: formatTemperature(21, temperatureUnit),
       destinationMeta: "구름조금 · 강수 12%",
     };
   }
   return {
     originLabel: care.originWeather.locationName,
-    originTemp: Math.round(care.originWeather.current.feelsLikeC),
+    originTemp: formatTemperature(care.originWeather.current.feelsLikeC, temperatureUnit),
     originMeta: `맑음 · 강수 ${care.originWeather.current.rainProbabilityPct}%`,
     destinationLabel: placeName,
-    destinationTemp: Math.round(care.destinationWeather.current.feelsLikeC),
+    destinationTemp: formatTemperature(care.destinationWeather.current.feelsLikeC, temperatureUnit),
     destinationMeta: `구름조금 · 강수 ${care.destinationWeather.current.rainProbabilityPct}%`,
   };
 }

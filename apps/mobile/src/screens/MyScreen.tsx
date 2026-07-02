@@ -23,7 +23,6 @@ export function MyScreen({
   const theme = useAppTheme();
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const accountSummary = isAccountReady ? "데모 계정 연결됨" : needsTerms ? "약관 동의 필요" : "계정 연결 필요";
   const profileTitle = isAccountReady ? "데모 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
   const profileBody = isAccountReady ? "저장 상태 데모 연결됨" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
@@ -31,14 +30,13 @@ export function MyScreen({
   const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
-  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
   const permissionSummary = `${locationState.summary} · ${alertState.summary}`;
   const permissionTone: MenuTone = locationState.tone === "warm" || alertState.tone === "warm" ? "warm" : locationState.tone === "gold" || alertState.tone === "gold" ? "gold" : "clear";
+  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
   const summaryItems: SummaryItem[] = [
-    { label: "계정", value: accountSummary, tone: isAccountReady ? "clear" : needsTerms ? "gold" : "warm" },
-    { label: "권한", value: permissionSummary, tone: permissionTone },
     { label: "목적지", value: savedDestinationLabel, tone: savedDestinationCount > 0 ? "clear" : "gold" },
-    { label: "표시", value: globalSettingsSummary, tone: "sky" },
+    { label: "위치", value: locationState.summary, tone: locationState.tone },
+    { label: "알림", value: alertState.summary, tone: alertState.tone },
   ];
 
   const openProfile = () => {
@@ -72,6 +70,8 @@ export function MyScreen({
           </View>
           <Chevron color={theme.subtle} />
         </Pressable>
+
+        <StatusOverview items={summaryItems} theme={theme} />
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>앱 권한</Text>
 
@@ -114,8 +114,6 @@ export function MyScreen({
             theme={theme}
           />
         </View>
-
-        <StatusOverview items={summaryItems} theme={theme} />
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>정보</Text>
 
@@ -245,8 +243,8 @@ function StatusOverview({ items, theme }: { items: SummaryItem[]; theme: AppThem
   return (
     <View style={[styles.statusOverview, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.statusHeader}>
-        <Text style={[styles.statusHeaderTitle, { color: theme.text }]}>현재 상태</Text>
-        <Text style={[styles.statusHeaderMeta, { color: theme.subtle }]}>핵심 설정</Text>
+        <Text style={[styles.statusHeaderTitle, { color: theme.text }]}>오늘 준비</Text>
+        <Text style={[styles.statusHeaderMeta, { color: theme.subtle }]}>사용 전 확인</Text>
       </View>
       <View style={styles.statusGrid}>
         {items.map((item) => (

@@ -25,11 +25,11 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
   const isAccountSetupGate = gate?.reason === "account-setup";
   const returnLabel = getRouteLabel(gate?.returnTo);
   const isDestinationCareGate = gate?.reason === "destination-care";
-  const gateReady = isAccountSetupGate ? locationReady && permissionReady : isLocationGate ? locationReady : permissionReady;
-  const screenTitle = isAccountSetupGate ? "앱 권한을 선택해요" : isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
-  const screenSubtitle = isAccountSetupGate ? "계정과 별도로 위치·알림 권한을 선택" : isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "설정 후 원래 화면으로 돌아감";
+  const gateReady = isLocationGate ? locationReady : permissionReady;
+  const screenTitle = isAccountSetupGate ? "권한은 따로 설정해요" : isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
+  const screenSubtitle = isAccountSetupGate ? "계정 연결과 별도 · 나중에 변경 가능" : isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "설정 후 원래 화면으로 돌아감";
   const statusLabel = isDestinationCareGate ? (permissionReady ? "알림 켜짐" : "저장 가능") : gateReady ? "허용됨" : "대기";
-  const primaryLabel = isAccountSetupGate ? "권한 선택 계속" : isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
+  const primaryLabel = isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
   const resultCards = buildResultCards({
     isAccountSetupGate,
     isLocationGate,
@@ -47,7 +47,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
             <Text style={[styles.actionTitle, { color: theme.text }]}>{gateLabel}</Text>
             <Text style={[styles.meta, { color: theme.muted }]}>
               {isAccountSetupGate
-                ? "현재 위치 날씨와 출발 알림에만 사용함"
+                ? "저장·동기화와 무관한 선택 권한"
                 : isDestinationCareGate
                   ? "알림 권한은 선택 사항이에요. 목적지는 출발 탭에 먼저 저장돼요"
                   : `${returnLabel} 화면으로 돌아가 설정을 이어가요`}
@@ -55,15 +55,6 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           </View>
           <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
         </View>
-        {isAccountSetupGate ? (
-          <View style={[styles.stepRail, { backgroundColor: theme.cardMuted }]}>
-            <Text style={[styles.stepRailText, { color: theme.clear }]}>계정 연결 완료</Text>
-            <Text style={[styles.stepRailDivider, { color: theme.subtle }]}>›</Text>
-            <Text style={[styles.stepRailText, { color: theme.gold }]}>권한 선택</Text>
-            <Text style={[styles.stepRailDivider, { color: theme.subtle }]}>›</Text>
-            <Text style={[styles.stepRailText, { color: theme.subtle }]}>원래 화면 복귀</Text>
-          </View>
-        ) : null}
         {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         <View style={styles.actions}>
           <AppButton label={primaryLabel} onPress={onComplete} />
@@ -78,7 +69,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
 
       <Section
         title={isDestinationCareGate ? "저장 후 사용" : isAccountSetupGate ? "준비 항목" : "필요 권한"}
-        caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : isAccountSetupGate ? "둘 다 나중에 바꿀 수 있음" : `${returnLabel} 화면으로 돌아가기 전 확인`}
+        caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : isAccountSetupGate ? "계정 설정과 분리됨" : `${returnLabel} 화면으로 돌아가기 전 확인`}
         accent="gold"
       >
         {isDestinationCareGate ? (
@@ -100,7 +91,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           </>
         ) : (
           <>
-            {isLocationGate || isAccountSetupGate ? (
+            {isLocationGate ? (
               <PermissionCard
                 title="위치 권한"
                 body="현재 위치 날씨 기준"

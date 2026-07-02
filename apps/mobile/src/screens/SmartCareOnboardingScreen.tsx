@@ -107,7 +107,7 @@ export function SmartCareOnboardingScreen({
 
 function getPermissionFeedback(permissionGateResult: P0ScreenProps["permissionGateResult"]): { title: string; body: string; tone: "clear" | "gold" } | null {
   if (!permissionGateResult || permissionGateResult.returnTo !== "H1") return null;
-  if (permissionGateResult.reason !== "location" && permissionGateResult.reason !== "account-setup") return null;
+  if (permissionGateResult.reason !== "location") return null;
   const skipped = permissionGateResult.message.includes("나중에");
   if (skipped) {
     return {

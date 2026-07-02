@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { onboardingAssets, uiIconAssets } from "../assets";
+import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { formatDistance, formatTemperature } from "../utils/units";
 
 export function DestinationCareScreen({
   permissionReady,
@@ -13,6 +14,8 @@ export function DestinationCareScreen({
   selectedDestinationSchedulePreference,
   selectedDestinationTravelEstimate,
   selectedDestinationPlace,
+  temperatureUnit,
+  distanceUnit,
   onNavigate,
   onOpenAlertSettings,
   onToggleDestinationCare,
@@ -66,22 +69,12 @@ export function DestinationCareScreen({
         </View>
 
         <View style={[styles.decisionPanel, { backgroundColor: theme.card, borderColor: theme.gold }]}>
-          <View style={styles.decisionTop}>
-            <View style={styles.decisionCopy}>
-              <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>목적지에서 바로 판단</Text>
-              <Text style={[styles.decisionTitle, { color: theme.text }]}>{departureTime}에 나가면 {targetArrivalTime} 도착</Text>
-              <Text style={[styles.decisionBody, { color: theme.muted }]}>
-                현재 위치와 목적지 날씨 차이를 보고 출발시간, 강수 변화, 비 그침 알림을 한 번에 맞춤
-              </Text>
-            </View>
-            <View style={[styles.decisionImageFrame, { backgroundColor: theme.cardSoft, borderColor: theme.border }]}>
-              <Image source={onboardingAssets.destinationCare} style={styles.decisionImage} resizeMode="cover" />
-            </View>
-          </View>
-          <View style={styles.decisionStats}>
-            <DecisionStat icon={uiIconAssets.depart} label="출발" value={departureTime} meta={`이동 ${travelMinutes}분`} color={theme.gold} theme={theme} />
-            <DecisionStat icon={uiIconAssets.drop} label="목적지 비" value={`${destinationRain}%`} meta={`출발지 ${originRain}%`} color={theme.sky} theme={theme} />
-            <DecisionStat icon={uiIconAssets.clock} label="다음 알림" value={rainAlertTime} meta={!permissionReady ? "권한 필요" : destinationCareEnabled ? "알림 가능" : "꺼짐"} color={theme.clear} theme={theme} />
+          <View style={styles.decisionCopy}>
+            <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
+            <Text style={[styles.decisionTitle, { color: theme.text }]}>{departureTime} 출발</Text>
+            <Text style={[styles.decisionBody, { color: theme.muted }]}>
+              {targetArrivalTime} 도착 기준 · {getTransportModeLabel(transportMode)} {travelMinutes}분 · 자동 여유 {bufferMinutes}분
+            </Text>
           </View>
           <View style={styles.arrivalControls}>
             <ArrivalInputControl
@@ -101,40 +94,6 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
-        </View>
-
-        {!permissionReady ? (
-          <InfoPanel tone="warm" title="푸시 알림 대기" pill="권한 필요" theme={theme}>
-            <Text style={[styles.panelBody, { color: theme.text }]}>목적지 비교와 출발 시간은 사용 가능함. 알림을 받으려면 아래 버튼으로 권한을 켜야 함</Text>
-          </InfoPanel>
-        ) : null}
-
-        <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
-          <CompareRow label="기온" from={`${Math.round(originWeather.current.tempC)}°`} to={`${Math.round(destinationWeather.current.tempC)}°`} accent={theme.text} theme={theme} />
-          <CompareRow label="날씨" from={getConditionLabel(originWeather.current.condition)} to={getConditionLabel(destinationWeather.current.condition)} accent={theme.text} theme={theme} />
-          <CompareRow label="출발지" from={originWeather.locationName} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
-          <CompareRow label="강수" from={`${originRain}%`} to={`${destinationRain}%`} accent={destinationRain > originRain ? theme.warm : theme.clear} theme={theme} />
-        </View>
-
-        <View style={[styles.departurePanel, { backgroundColor: theme.card, borderLeftColor: theme.gold }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>출발시간 역산</Text>
-          <Text style={[styles.departureMeta, { color: theme.text }]}>도착 희망 {targetArrivalTime}</Text>
-          <Text style={[styles.departureMeta, { color: theme.text }]}>이동수단 {getTransportModeLabel(transportMode)} · 소요 {travelMinutes}분 · 자동 여유 {bufferMinutes}분</Text>
-          {transportMode === "transit" ? (
-            <Text style={[styles.departureWarning, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
-          ) : null}
-          <Text style={[styles.departureSource, { color: theme.subtle }]}>
-            {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters)}
-          </Text>
-          <Text style={[styles.departureFormula, { color: theme.muted }]}>
-            {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
-          </Text>
-          <Text style={[styles.departureTime, { color: theme.gold }]}>{departureTime} <Text style={styles.departureSuffix}>출발</Text></Text>
-        </View>
-
-        <View style={[styles.transportPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>이동수단</Text>
           <View style={styles.transportGrid}>
             {transportOptions.map((option) => (
               <TransportOption
@@ -148,8 +107,46 @@ export function DestinationCareScreen({
             ))}
           </View>
           {transportMode === "transit" ? (
-            <Text style={[styles.transportNotice, { color: theme.warm }]}>배차/환승 변동 가능 · 실시간 교통 연동 전까지 예상값으로 표시</Text>
+            <Text style={[styles.transportNotice, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
           ) : null}
+          <View style={[styles.calculationStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <Text style={[styles.calculationText, { color: theme.text }]}>
+              {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
+            </Text>
+            <Text style={[styles.calculationMeta, { color: theme.subtle }]}>
+              {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit)}
+            </Text>
+          </View>
+        </View>
+
+        {!permissionReady ? (
+          <InfoPanel tone="warm" title="푸시 알림 대기" pill="권한 필요" theme={theme}>
+            <Text style={[styles.panelBody, { color: theme.text }]}>목적지 비교와 출발 시간은 사용 가능함. 알림을 받으려면 아래 버튼으로 권한을 켜야 함</Text>
+          </InfoPanel>
+        ) : null}
+
+        <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
+          <CompareRow label="기온" from={formatTemperature(originWeather.current.tempC, temperatureUnit)} to={formatTemperature(destinationWeather.current.tempC, temperatureUnit)} accent={theme.text} theme={theme} />
+          <CompareRow label="날씨" from={getConditionLabel(originWeather.current.condition)} to={getConditionLabel(destinationWeather.current.condition)} accent={theme.text} theme={theme} />
+          <CompareRow label="출발지" from={originWeather.locationName} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
+          <CompareRow label="강수" from={`${originRain}%`} to={`${destinationRain}%`} accent={destinationRain > originRain ? theme.warm : theme.clear} theme={theme} />
+        </View>
+
+        <View style={[styles.departurePanel, { backgroundColor: theme.card, borderLeftColor: theme.gold }]}>
+          <Text style={[styles.sectionTitle, { color: theme.muted }]}>출발시간 역산</Text>
+          <Text style={[styles.departureMeta, { color: theme.text }]}>도착 희망 {targetArrivalTime}</Text>
+          <Text style={[styles.departureMeta, { color: theme.text }]}>이동수단 {getTransportModeLabel(transportMode)} · 소요 {travelMinutes}분 · 자동 여유 {bufferMinutes}분</Text>
+          {transportMode === "transit" ? (
+            <Text style={[styles.departureWarning, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
+          ) : null}
+          <Text style={[styles.departureSource, { color: theme.subtle }]}>
+            {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit)}
+          </Text>
+          <Text style={[styles.departureFormula, { color: theme.muted }]}>
+            {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
+          </Text>
+          <Text style={[styles.departureTime, { color: theme.gold }]}>{departureTime} <Text style={styles.departureSuffix}>출발</Text></Text>
         </View>
 
         <View style={[styles.flowPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -260,33 +257,6 @@ function ConditionButton({
     <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       {content}
     </Pressable>
-  );
-}
-
-function DecisionStat({
-  icon,
-  label,
-  value,
-  meta,
-  color,
-  theme,
-}: {
-  icon: number;
-  label: string;
-  value: string;
-  meta: string;
-  color: string;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.decisionStat, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-      <View style={styles.decisionStatTop}>
-        <Image source={icon} style={[styles.decisionStatIcon, { tintColor: color }]} resizeMode="contain" />
-        <Text style={[styles.decisionStatLabel, { color }]}>{label}</Text>
-      </View>
-      <Text style={[styles.decisionStatValue, { color: theme.text }]}>{value}</Text>
-      <Text style={[styles.decisionStatMeta, { color: theme.muted }]}>{meta}</Text>
-    </View>
   );
 }
 
@@ -463,7 +433,12 @@ function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCa
   return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
 }
 
-function getTravelEstimateCopy(status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"], provider: P0ScreenProps["selectedDestinationTravelEstimate"]["provider"], distanceMeters: number) {
+function getTravelEstimateCopy(
+  status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"],
+  provider: P0ScreenProps["selectedDestinationTravelEstimate"]["provider"],
+  distanceMeters: number,
+  distanceUnit: P0ScreenProps["distanceUnit"],
+) {
   const source = provider === "kakao" && status === "ready"
     ? "Kakao Directions"
     : provider === "google" && status === "ready"
@@ -471,8 +446,9 @@ function getTravelEstimateCopy(status: P0ScreenProps["selectedDestinationTravelE
       : status === "error"
         ? "갱신 실패"
         : "경로 미검증";
-  if (!distanceMeters) return source;
-  return `${source} · ${(distanceMeters / 1000).toFixed(1)}km`;
+  const distanceText = formatDistance(distanceMeters, distanceUnit);
+  if (!distanceText) return source;
+  return `${source} · ${distanceText}`;
 }
 
 function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
@@ -691,6 +667,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
+  },
+  calculationStrip: {
+    gap: 4,
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  calculationText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  calculationMeta: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
   },
   decisionStat: {
     flex: 1,

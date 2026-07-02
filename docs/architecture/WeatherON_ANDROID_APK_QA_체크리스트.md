@@ -79,7 +79,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | 작은 화면 | 360x800급에서 가로 overflow 없음 | 미검증 |
 | 큰 화면 | 430x932급에서 카드 간격/버튼 정상 | 미검증 |
 | 앱 백그라운드/복귀 | 상태 유지, 중복 알림/중복 저장 없음 | 미검증 |
-| 알림 신뢰성 | 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 미검증 |
+| 알림 신뢰성 | 테스트 알림 예약, 5초 내 시스템 알림 수신, 알림 탭 M2 딥링크, 앱 재실행 후 예약/이력 상태 확인 | 미검증 |
 | Android 뒤로가기 | 주요 화면에서 예상 경로로 이동 | 미검증 |
 | 입력 키보드 | P1 검색 입력 시 버튼/결과 가림 없음 | 미검증 |
 
@@ -90,9 +90,9 @@ npm run check:eas-build-status -- <eas-build-id>
 | 항목 | 기준 | 상태 |
 |---|---|---|
 | KMA proxy | 한국 현재 위치/기본 위치 날씨 정상 | 미검증 |
-| Kakao Local | 국내 장소 검색 결과 provider `kakao` | 미검증 |
+| Kakao Local | `잠실`, `잠실 야구장` 국내 검색 결과 provider `kakao` 또는 fallback, 선택/저장 가능 | 미검증 |
 | Open-Meteo | 목적지/해외 fallback 날씨 정상 | 미검증 |
-| Google Maps | 키 없으면 fixture/fallback 유지 | 미검증 |
+| Google Maps | `Tokyo Station`, `도쿄 역`, `東京駅`, `마리나 베이` 해외/현지어 검색 결과 선택 가능. 키 없으면 fixture/fallback 유지 | 미검증 |
 | API 키 노출 | APK 앱 환경에 provider secret 미포함 | 미검증 |
 
 사전 smoke:

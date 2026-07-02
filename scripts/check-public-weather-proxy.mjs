@@ -10,11 +10,12 @@ try {
     const health = await fetchJson(new URL("/health", normalizeBaseUrl(baseUrl)).toString());
     if (!health.ok) issues.push("/health did not return ok=true");
 
-    const priority1DomesticPlaces = await fetchJson(
-      new URL("/places/search?q=%EC%9E%A0%EC%8B%A4&countryCode=KR", normalizeBaseUrl(baseUrl)).toString(),
-    );
-    if (!Array.isArray(priority1DomesticPlaces) || priority1DomesticPlaces.length === 0) {
-      issues.push("priority 1 KR place search returned no results");
+    for (const testCase of [
+      { label: "priority 1 KR 잠실", path: "/places/search?q=%EC%9E%A0%EC%8B%A4&countryCode=KR", countryCode: "KR" },
+      { label: "priority 1 KR 잠실 야구장", path: "/places/search?q=%EC%9E%A0%EC%8B%A4%20%EC%95%BC%EA%B5%AC%EC%9E%A5&countryCode=KR", countryCode: "KR" },
+    ]) {
+      const places = await fetchJson(new URL(testCase.path, normalizeBaseUrl(baseUrl)).toString());
+      validatePlaceResults(places, testCase);
     }
 
     const priority1DomesticRoute = await fetchJson(
@@ -27,13 +28,13 @@ try {
       issues.push(`priority 1 KR route provider is unexpected: ${priority1DomesticRoute.provider || "unknown"}`);
     }
 
-    const priority2GlobalPlaces = await fetchJson(
-      new URL("/places/search?q=Tokyo%20Station&countryCode=JP", normalizeBaseUrl(baseUrl)).toString(),
-    );
-    if (!Array.isArray(priority2GlobalPlaces) || priority2GlobalPlaces.length === 0) {
-      issues.push("priority 2 JP place search returned no results");
-    } else if (priority2GlobalPlaces[0]?.provider !== "google") {
-      issues.push(`priority 2 JP place search provider is not google: ${priority2GlobalPlaces[0]?.provider || "unknown"}`);
+    for (const testCase of [
+      { label: "priority 2 JP Tokyo Station", path: "/places/search?q=Tokyo%20Station&countryCode=JP", countryCode: "JP", provider: "google" },
+      { label: "priority 2 JP 도쿄 역", path: "/places/search?q=%EB%8F%84%EC%BF%84%20%EC%97%AD&language=ja", countryCode: "JP" },
+      { label: "priority 2 JP 東京駅", path: "/places/search?q=%E6%9D%B1%E4%BA%AC%E9%A7%85&language=ja", countryCode: "JP" },
+    ]) {
+      const places = await fetchJson(new URL(testCase.path, normalizeBaseUrl(baseUrl)).toString());
+      validatePlaceResults(places, testCase);
     }
 
     const priority2GlobalRoute = await fetchJson(
@@ -92,5 +93,25 @@ function maskUrl(value) {
     return `${url.protocol}//${url.host}`;
   } catch {
     return "invalid";
+  }
+}
+
+function validatePlaceResults(places, testCase) {
+  if (!Array.isArray(places) || places.length === 0) {
+    issues.push(`${testCase.label} returned no place results`);
+    return;
+  }
+  const first = places[0];
+  if (first.countryCode !== testCase.countryCode) {
+    issues.push(`${testCase.label} country is unexpected: ${first.countryCode || "unknown"}`);
+  }
+  if (testCase.provider && first.provider !== testCase.provider) {
+    issues.push(`${testCase.label} provider is not ${testCase.provider}: ${first.provider || "unknown"}`);
+  }
+  for (const field of ["id", "name", "address", "category", "timezone", "provider"]) {
+    if (!first[field]) issues.push(`${testCase.label} missing ${field}`);
+  }
+  if (!Number.isFinite(first.coordinate?.latitude) || !Number.isFinite(first.coordinate?.longitude)) {
+    issues.push(`${testCase.label} missing coordinate`);
   }
 }

@@ -81,11 +81,11 @@ export function GlobalSettingsScreen({
           <Text style={[styles.globalMeta, { color: theme.subtle }]}>투명 효과 {reducedTransparency ? "줄임" : "기본"} · 탭해서 전환</Text>
         </Pressable>
 
-        <Pressable accessibilityLabel="버전 정보와 약관 보기" accessibilityRole="button" onPress={() => onNavigate("R1")} style={styles.footerLinks}>
+        <View accessibilityLabel="표시 설정 버전 정보" style={styles.footerLinks}>
           <Text style={[styles.footerText, { color: theme.subtle }]}>
-            버전 정보 · 약관 · 오픈소스 라이선스
+            WeatherON v0.1.0 · 표시 설정
           </Text>
-        </Pressable>
+        </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   segmentRow: {
-    minHeight: 36,
+    minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -209,8 +209,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   segmentControl: {
-    width: 110,
-    minHeight: 36,
+    width: 128,
+    minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
     padding: 4,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   },
   segmentOption: {
     flex: 1,
-    minHeight: 28,
+    minHeight: 40,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   wideSegment: {
-    minHeight: 42,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     padding: 4,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   },
   wideSegmentOption: {
     flex: 1,
-    minHeight: 34,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,

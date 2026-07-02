@@ -461,8 +461,8 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "알림");
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
-  await assertText(page, "현재 상태");
-  await assertText(page, "핵심 설정");
+  await assertText(page, "오늘 준비");
+  await assertText(page, "사용 전 확인");
   await assertNoText(page, "코디·옷장");
   await assertBottomNav(page);
 

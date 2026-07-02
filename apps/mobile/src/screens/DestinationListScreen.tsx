@@ -6,14 +6,16 @@ import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 type DestinationCardModel = {
   id: string;
   title: string;
   area: string;
   icon: "company" | "school" | "place";
-  originTemp: number;
-  destinationTemp: number;
+  originTemp: string;
+  destinationTemp: string;
+  tempDiff: string;
   departureTime: string;
   arrivalTime: string;
   warning: string;
@@ -32,13 +34,14 @@ export function DestinationListScreen({
   accountGateResult,
   permissionGateResult,
   permissionReady,
+  temperatureUnit,
   onNavigate,
   onSelectDestinationPlace,
   onRestoreRemovedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
-  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById);
+  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit);
   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
@@ -173,10 +176,10 @@ function DestinationCard({
 
       <View style={styles.weatherLine}>
         <SunGlyph color={theme.gold} />
-        <Text style={[styles.tempText, { color: theme.text }]}>{item.originTemp}°</Text>
+        <Text style={[styles.tempText, { color: theme.text }]}>{item.originTemp}</Text>
         <Text style={[styles.arrowText, { color: theme.subtle }]}>›</Text>
-        <Text style={[styles.tempText, { color: theme.text }]}>{item.destinationTemp}°</Text>
-        <Text style={[styles.diffText, { color: accent }]}>{formatTempDiff(item.destinationTemp - item.originTemp)}</Text>
+        <Text style={[styles.tempText, { color: theme.text }]}>{item.destinationTemp}</Text>
+        <Text style={[styles.diffText, { color: accent }]}>{item.tempDiff}</Text>
       </View>
 
       <View style={styles.destinationBottom}>
@@ -251,6 +254,7 @@ function buildDestinationCards(
   savedDestinations: P0ScreenProps["savedDestinations"],
   care: P0ScreenProps["state"]["destinationCare"],
   destinationWeatherById: P0ScreenProps["state"]["destinationWeatherById"],
+  temperatureUnit: P0ScreenProps["temperatureUnit"],
 ): DestinationCardModel[] {
   if (!savedDestinations.length) return [];
   const originWeather = care.originWeather;
@@ -268,8 +272,9 @@ function buildDestinationCards(
       title: destination.place.name,
       area: getAreaLabel(destination.place),
       icon: "place",
-      originTemp: Math.round(originWeather.current.tempC),
-      destinationTemp: Math.round(destinationWeather.current.tempC),
+      originTemp: formatTemperature(originWeather.current.tempC, temperatureUnit),
+      destinationTemp: formatTemperature(destinationWeather.current.tempC, temperatureUnit),
+      tempDiff: formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit),
       departureTime: schedule.departureTime,
       arrivalTime: schedule.arrivalTime,
       warning,
@@ -349,12 +354,6 @@ function isAdministrativeNoise(value: string) {
 
 function trimAdministrativeSuffix(value: string) {
   return value.replace(/특별시|광역시|특별자치시|특별자치도|시|군|구$/u, "");
-}
-
-function formatTempDiff(value: number) {
-  if (value > 0) return `+${value}°`;
-  if (value === 0) return "±0°";
-  return `${value}°`;
 }
 
 function getDestinationWarningText(item: DestinationCardModel) {

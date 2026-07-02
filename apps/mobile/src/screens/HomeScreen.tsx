@@ -9,6 +9,7 @@ import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { formatTemperatureDelta } from "../utils/units";
 
 export function HomeScreen({
   state,
@@ -17,6 +18,7 @@ export function HomeScreen({
   smartCareEnabled,
   isWeatherLoading,
   permissionReady,
+  temperatureUnit,
   onNavigate,
   onSetWeatherProviderMode,
   onRefreshWeather,
@@ -28,7 +30,7 @@ export function HomeScreen({
   const activeNotifications = state.notifications.filter((item) => item.active);
   const unreadNotificationCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
   const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
-  const homeDecision = buildHomeDecision(state.destinationCare, destinationReady);
+  const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
 
   return (
     <View style={styles.screenWrap}>
@@ -56,6 +58,7 @@ export function HomeScreen({
           updatedAtLabel={buildWeatherUpdatedAtLabel(state.weatherProvider.currentObservedAt, state.weatherProvider.destinationObservedAt)}
           loading={isWeatherLoading}
           destinationReady={destinationReady}
+          temperatureUnit={temperatureUnit}
           onRefresh={onRefreshWeather}
           onAddDestination={() => onNavigate("P1")}
         />
@@ -133,13 +136,17 @@ export function HomeScreen({
   );
 }
 
-function buildHomeDecision(care: P0ScreenProps["state"]["destinationCare"], destinationReady: boolean) {
+function buildHomeDecision(
+  care: P0ScreenProps["state"]["destinationCare"],
+  destinationReady: boolean,
+  temperatureUnit: P0ScreenProps["temperatureUnit"],
+) {
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? "13:00";
   const travelMinutes = care.departureAdvice?.travelMinutes ?? 40;
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   const departureTime = care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
   const destinationDiff = destinationReady
-    ? buildDestinationDiff(care)
+    ? buildDestinationDiff(care, temperatureUnit)
     : {
         title: "목적지 없음",
         body: "목적지 추가하면 출발시간까지 계산",
@@ -161,14 +168,17 @@ function buildHomeDecision(care: P0ScreenProps["state"]["destinationCare"], dest
   };
 }
 
-function buildDestinationDiff(care: P0ScreenProps["state"]["destinationCare"]) {
+function buildDestinationDiff(
+  care: P0ScreenProps["state"]["destinationCare"],
+  temperatureUnit: P0ScreenProps["temperatureUnit"],
+) {
   const origin = care.originWeather.current;
   const destination = care.destinationWeather.current;
   const tempDiff = Math.round(destination.tempC - origin.tempC);
   const rainDiff = Math.round(destination.rainProbabilityPct - origin.rainProbabilityPct);
   const windDiff = Number((destination.windMs - origin.windMs).toFixed(1));
   const titleParts = [
-    tempDiff === 0 ? "±0°" : `${tempDiff > 0 ? "+" : ""}${tempDiff}°`,
+    formatTemperatureDelta(tempDiff, temperatureUnit),
     `${destination.rainProbabilityPct}%`,
   ];
   const diffParts = [

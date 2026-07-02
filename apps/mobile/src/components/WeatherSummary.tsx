@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import type { TemperatureUnit } from "../state/useWeatherOnAppState";
+import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 type WeatherSummaryProps = {
   originWeather: WeatherSnapshot;
@@ -12,6 +14,7 @@ type WeatherSummaryProps = {
   updatedAtLabel: string;
   loading: boolean;
   destinationReady: boolean;
+  temperatureUnit: TemperatureUnit;
   onRefresh: () => void;
   onAddDestination: () => void;
 };
@@ -24,11 +27,12 @@ export function WeatherSummary({
   updatedAtLabel,
   loading,
   destinationReady,
+  temperatureUnit,
   onRefresh,
   onAddDestination,
 }: WeatherSummaryProps) {
   const theme = useAppTheme();
-  const comparison = destinationReady ? getWeatherComparison(originWeather, destinationWeather) : getMissingDestinationComparison();
+  const comparison = destinationReady ? getWeatherComparison(originWeather, destinationWeather, temperatureUnit) : getMissingDestinationComparison();
   return (
     <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
       <View style={styles.header}>
@@ -57,9 +61,9 @@ export function WeatherSummary({
         </Pressable>
       </View>
       <View style={styles.compareGrid}>
-        <WeatherMiniCard label="현재" weather={originWeather} toneColor={theme.gold} themeName={theme.name} />
+        <WeatherMiniCard label="현재" weather={originWeather} toneColor={theme.gold} themeName={theme.name} temperatureUnit={temperatureUnit} />
         {destinationReady ? (
-          <WeatherMiniCard label="목적지" locationName={destinationName} weather={destinationWeather} toneColor={theme.sky} themeName={theme.name} />
+          <WeatherMiniCard label="목적지" locationName={destinationName} weather={destinationWeather} toneColor={theme.sky} themeName={theme.name} temperatureUnit={temperatureUnit} />
         ) : (
           <DestinationEmptyMiniCard onPress={onAddDestination} />
         )}
@@ -101,12 +105,14 @@ function WeatherMiniCard({
   weather,
   toneColor,
   themeName,
+  temperatureUnit,
 }: {
   label: string;
   locationName?: string;
   weather: WeatherSnapshot;
   toneColor: string;
   themeName: "dark" | "light";
+  temperatureUnit: TemperatureUnit;
 }) {
   const theme = useAppTheme();
   return (
@@ -119,7 +125,7 @@ function WeatherMiniCard({
         {locationName ?? weather.locationName}
       </Text>
       <View style={styles.miniMain}>
-        <Text style={[styles.miniTemp, { color: theme.text }]}>{Math.round(weather.current.feelsLikeC)}도</Text>
+        <Text style={[styles.miniTemp, { color: theme.text }]}>{formatTemperature(weather.current.feelsLikeC, temperatureUnit, { suffix: true })}</Text>
         <Text style={[styles.miniCondition, { color: themeName === "light" ? toneColor : theme.muted }]}>
           {getConditionLabel(weather.current.condition)}
         </Text>
@@ -141,7 +147,7 @@ function getConditionLabel(condition: WeatherSnapshot["current"]["condition"]): 
   return "날씨";
 }
 
-function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnapshot) {
+function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnapshot, temperatureUnit: TemperatureUnit) {
   const rainDelta = destination.current.rainProbabilityPct - origin.current.rainProbabilityPct;
   const tempDelta = Math.round(destination.current.feelsLikeC - origin.current.feelsLikeC);
   const windDelta = destination.current.windMs - origin.current.windMs;
@@ -155,7 +161,7 @@ function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnaps
   }
   if (tempDelta <= -2 || tempDelta >= 2) {
     return {
-      label: `체감 ${tempDelta > 0 ? "+" : ""}${tempDelta}도`,
+      label: `체감 ${formatTemperatureDelta(tempDelta, temperatureUnit)}`,
       detail: tempDelta > 0 ? "목적지가 더 더움 · 가벼운 준비 우선" : "목적지가 더 서늘함 · 겉옷 여부 확인",
       tone: "warm" as const,
     };

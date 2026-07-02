@@ -42,6 +42,8 @@ export function AlertSettingsScreen({
   const alertReadiness = getAlertReadinessCopy(smartCareEnabled, permissionReady, notificationResult === "skipped");
   const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
   const latestTestNotification = notificationHistory.find((item) => item.notificationId === "local-test");
+  const testNotificationVerified = latestTestNotification?.statusLabel === "발송 확인";
+  const deliveryStatusLabel = deliveryReady ? (testNotificationVerified ? deliveryStatus.statusLabel : "수신 QA 필요") : "푸시 대기";
   const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel);
   const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "다시 보내기" : "보내기") : "권한 켜기";
 
@@ -103,7 +105,7 @@ export function AlertSettingsScreen({
           </View>
           <View style={styles.heroStatusRail}>
             <StatusTag label={permissionReady ? "권한 정상" : "권한 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
-            <StatusTag label={deliveryReady ? deliveryStatus.statusLabel : "푸시 대기"} tone={deliveryReady ? "sky" : "gold"} theme={theme} />
+            <StatusTag label={deliveryStatusLabel} tone={testNotificationVerified ? "sky" : "gold"} theme={theme} />
           </View>
         </Pressable>
 
@@ -458,8 +460,8 @@ function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boole
   }
   if (permissionReady) {
     return {
-      title: "스마트 알림 준비됨",
-      body: "테스트 알림으로 실제 도착 확인 필요",
+      title: "스마트 알림 확인 중",
+      body: "테스트 알림 수신 확인 전",
       resultBody: "권한은 켜짐. 테스트 알림과 예약 목록으로 실제 도착을 확인해야 함",
       gateTitle: "알림 권한 정상",
       gateBody: "테스트 발송으로 확인",

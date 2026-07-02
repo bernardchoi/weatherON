@@ -1121,7 +1121,7 @@ export function useWeatherOnAppState() {
   const completePermissionGate = async () => {
     let permissionCompleted = true;
     let notificationCompleted = permissionReady;
-    if (permissionGate?.reason === "location" || permissionGate?.reason === "account-setup") {
+    if (permissionGate?.reason === "location") {
       setWeatherLocationMode("auto");
       setWeatherProviderMode("ready");
       setUseDestinationWeather(false);
@@ -1146,7 +1146,7 @@ export function useWeatherOnAppState() {
     if (permissionGate?.reason !== "location") {
       const result = await requestLocalNotificationPermission();
       notificationCompleted = result.granted;
-      permissionCompleted = permissionGate?.reason === "account-setup" ? permissionCompleted && notificationCompleted : notificationCompleted;
+      permissionCompleted = notificationCompleted;
       setPermissionReady(result.granted);
     }
     if (permissionGate?.reason === "destination-care") {
@@ -1511,7 +1511,7 @@ function createPermissionGateState(
     reason,
     returnTo,
     resumeLabel: getPermissionResumeLabel(reason),
-    selectedDestinationName: reason === "destination-care" || reason === "account-setup" ? selectedDestinationName : undefined,
+    selectedDestinationName: reason === "destination-care" ? selectedDestinationName : undefined,
     alertFocus,
     pendingAccountAction,
   };
@@ -1534,7 +1534,7 @@ function createPermissionGateSkipResult(reason: PermissionGateReason, returnTo: 
 }
 
 function getPermissionResumeLabel(reason: PermissionGateReason): string {
-  if (reason === "account-setup") return "앱 준비 설정";
+  if (reason === "account-setup") return "알림 권한";
   if (reason === "location") return "현재 위치 사용";
   if (reason === "destination-care") return "목적지 케어 알림";
   return "알림 권한";

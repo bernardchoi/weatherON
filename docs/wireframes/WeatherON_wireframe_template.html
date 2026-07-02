@@ -115,7 +115,7 @@
 
 <div class="hero">
   <h1>WeatherON 화면 와이어프레임 <small>Mid-Fi · v2 · 2026.07 · UIUX_플로우차트.mmd 기반</small></h1>
-  <p>기기 언어 자동 적용 → 스플래시 → Guest 홈 우선 진입 → 계정 필요 기능에서 로그인 요청 → 홈 / 코디 / 출발 / MY / 소셜(ON Square) 5탭 전체 플로우. AUTH는 첫 관문이 아니라 저장·동기화·알림 확장·여행 플래너 등 계정 필요 기능의 보조 플로우로 동작한다. 로그인 수단은 한국/일본/일반 해외 3권역 기준으로 자동 추천하되, 현재 여행 위치보다 스토어 국가·SIM 국가·OS 지역·기기 언어 등 계정 환경 신호를 우선한다. 국가 선택을 가입 관문으로 만들지 않는다. 중국권 등 특수 인증·네트워크 환경 국가는 1차 범위에서 제외한다. PLACE·ADMOB은 출발·홈·MY·AUTH·온보딩에 부속되는 상세 확장 화면. 구조·정보 위계는 유지하고, WeatherON CI/BI의 Navy, Sky, Clear, Gold 토큰을 적용한 미드파이 단계. MVP 기능 개발 기준은 docs/planning/WeatherON_MVP_기능_PRD.md, 기술 구현 기준은 docs/architecture/WeatherON_MVP_기술_ADR.md를 따른다.</p>
+  <p>기기 언어 자동 적용 → 스플래시 → Guest 홈 우선 진입 → 계정 필요 기능에서 로그인 요청 → 홈 / 출발 / MY 3탭 MVP 플로우. 코디와 소셜(ON Square)은 확장 레이어로 유지하되 최초 출시 하단 탭에는 노출하지 않는다. AUTH는 첫 관문이 아니라 저장·동기화·알림 확장·여행 플래너 등 계정 필요 기능의 보조 플로우로 동작한다. 로그인 수단은 한국/일본/일반 해외 3권역 기준으로 자동 추천하되, 현재 여행 위치보다 스토어 국가·SIM 국가·OS 지역·기기 언어 등 계정 환경 신호를 우선한다. 국가 선택을 가입 관문으로 만들지 않는다. 중국권 등 특수 인증·네트워크 환경 국가는 1차 범위에서 제외한다. PLACE·ADMOB은 출발·홈·MY·AUTH·온보딩에 부속되는 상세 확장 화면. 구조·정보 위계는 유지하고, WeatherON CI/BI의 Navy, Sky, Clear, Gold 토큰을 적용한 미드파이 단계. MVP 기능 개발 기준은 docs/planning/WeatherON_MVP_기능_PRD.md, 기술 구현 기준은 docs/architecture/WeatherON_MVP_기술_ADR.md를 따른다.</p>
   <p>목업 프리뷰 상태 기준: 로그인·권한·위치·프리미엄처럼 앱 전역에 남아야 하는 값은 Session State(accountLinked/permissionReady/locationReady/premiumActive)로 유지하고, 스타일 기준·핏·연령대·스마트 알림 세부 토글처럼 설정에 남아야 하는 값은 Settings State(styleProfileSaved/selectedStyles/fit/age/smartCareEnabled/alertAdvancedOpen/rainDetail/routineAlert/bedtimeAlert/destinationAlert/quietHours)로 유지한다. 선택 목적지·코디 조합·복귀 액션처럼 특정 흐름에 필요한 값은 Route State로 전달한다. Session/Settings State 키는 전역값을 우선 적용해 오래된 화면 컨텍스트가 로그인·권한·구독·설정 완료 상태를 되돌리지 않게 한다. 따라서 A2/A3, O3, G6, O4, H2, M2를 거친 뒤 사이드바나 하단 탭으로 다른 화면에 이동해도 전역/설정 상태가 끊기지 않아야 한다.</p>
   <div class="legend">
     <span><i class="lg-box"></i> 콘텐츠 블록</span>
@@ -196,7 +196,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">A3</span><span class="nname">약관 동의</span>
-          <ul><li>AGREEMENT STATE 카드에서 필수 완료/대기, 선택 ON/OFF, 원래 액션 복귀 예정 상태 표시</li><li>필수 항목 미동의 시 진행 불가</li><li>뒤로가기 → A2 계정 연결로 복귀</li><li>항목 탭 → 전체 내용 인앱 페이지로 열림 (4종 약관 본문은 WeatherON_약관_정책.md 참고, R2와 동일 문서)</li><li>선택 항목은 가입 후 A4에서 변경 가능</li><li>동의하고 계속하기 → A2가 전달한 returnTo/선택 데이터를 유지하고, 위치/알림 권한이 비어 있으면 O3 앱 준비 화면을 먼저 거친 뒤 원래 기능으로 복귀</li><li>일반 계정 연결 경로에서도 accountLinked를 Session State에 남기고, 권한 준비 완료 또는 나중에 설정 후 H1로 복귀</li></ul>
+          <ul><li>AGREEMENT STATE 카드에서 필수 완료/대기, 선택 ON/OFF, 원래 액션 복귀 예정 상태 표시</li><li>필수 항목 미동의 시 진행 불가</li><li>뒤로가기 → A2 계정 연결로 복귀</li><li>항목 탭 → 전체 내용 인앱 페이지로 열림 (4종 약관 본문은 WeatherON_약관_정책.md 참고, R2와 동일 문서)</li><li>선택 항목은 가입 후 A4에서 변경 가능</li><li>동의하고 계속하기 → A2가 전달한 returnTo/선택 데이터를 유지하고 원래 기능으로 복귀</li><li>위치/알림 권한은 MY 앱 권한 관리 또는 해당 기능 진입 시 단일 권한으로 요청한다</li></ul>
         </div>
       </div>
 
@@ -278,7 +278,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">O2</span><span class="nname">온보딩 소개</span>
-          <ul><li>첫 화면에서 출발시간, 목적지 날씨 차이, 강수 타이밍 판단 가치를 한눈에 비교</li><li>O2 일러스트는 현재 목업용으로 적합하나 최종본에서는 실제 앱 화면과 혼동되지 않도록 더 추상화</li><li>각 카드 탭 시 기능별 상세 화면으로 전환</li><li>O2에서는 OS 위치/알림 권한 팝업을 호출하지 않고 CTA는 O5 알림 기준으로 이동</li><li>위치와 알림 권한은 A2/A3 계정 연결 직후 O3 앱 준비 화면에서 한 번에 정리</li></ul>
+          <ul><li>첫 화면에서 출발시간, 목적지 날씨 차이, 강수 타이밍 판단 가치를 한눈에 비교</li><li>O2 일러스트는 현재 목업용으로 적합하나 최종본에서는 실제 앱 화면과 혼동되지 않도록 더 추상화</li><li>각 카드 탭 시 기능별 상세 화면으로 전환</li><li>O2에서는 OS 위치/알림 권한 팝업을 호출하지 않고 CTA는 O5 알림 기준으로 이동</li><li>위치와 알림 권한은 계정 연결과 분리하고, MY 앱 권한 관리 또는 관련 기능에서 필요한 권한만 요청</li></ul>
         </div>
       </div>
 
@@ -299,7 +299,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">O3</span><span class="nname">앱 준비 권한</span>
-          <ul><li>A2/A3 계정 연결 직후 locationReady 또는 permissionReady가 비어 있으면 위치·알림 권한을 한 화면에서 안내</li><li>위치·알림을 허용하면 원래 계정 필요 액션 또는 H1로 복귀</li><li>나중에 설정을 선택해도 홈 진입은 막지 않고 수동 위치/푸시 대기 상태로 운영</li><li>MY 앱 권한 관리/M2에서 진입한 O3는 필요한 단일 권한만 복구하고 returnTo로 돌아간다</li><li>권한 상태는 locationReady/permissionReady로 Session State에 남긴다</li><li>거부 상태에서도 검색 위치와 앱 내 안내는 유지, 푸시·현재 위치 자동화만 제한</li><li>알림 권한은 강수·기상특보·생활 루틴 알림의 시스템 게이트</li><li>거부 상태는 MY 앱 권한 관리 또는 M2 빠른 액션에서 재요청</li></ul>
+          <ul><li>O3는 계정 직후 통합 권한 화면이 아니라 단일 권한 복구 화면으로 사용</li><li>위치 또는 알림을 허용하면 원래 기능으로 복귀</li><li>나중에 설정을 선택해도 홈 진입은 막지 않고 수동 위치/푸시 대기 상태로 운영</li><li>MY 앱 권한 관리/M2/H2에서 진입한 O3는 필요한 단일 권한만 복구하고 returnTo로 돌아간다</li><li>권한 상태는 locationReady/permissionReady로 Session State에 남긴다</li><li>거부 상태에서도 검색 위치와 앱 내 안내는 유지, 푸시·현재 위치 자동화만 제한</li><li>알림 권한은 강수·기상특보·생활 루틴 알림의 시스템 게이트</li><li>거부 상태는 MY 앱 권한 관리 또는 M2 빠른 액션에서 재요청</li></ul>
         </div>
       </div>
 
@@ -868,7 +868,7 @@
               <div class="seg" style="margin-top:4px;"><div class="on">시스템</div><div>라이트</div><div>다크</div></div>
             </div>
             <div class="dash"><span class="t">DISPLAY STATE</span>온도 · 거리 · 테마 · 투명 효과</div>
-            <div class="dash">버전 정보 · 약관 · 오픈소스 라이선스</div>
+            <div class="dash">WeatherON v0.1.0 · 표시 설정</div>
           </div>
         </div>
         <div class="note"><span class="nid">M3</span><span class="nname">표시 설정</span>
