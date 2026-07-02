@@ -55,6 +55,14 @@ export function DestinationListScreen({
 
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>출발</Text>
+          <Pressable
+            accessibilityLabel="상단 목적지 추가"
+            accessibilityRole="button"
+            onPress={() => onNavigate("P1")}
+            style={[styles.addButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          >
+            <Text style={[styles.addButtonText, { color: theme.text }]}>+</Text>
+          </Pressable>
         </View>
 
         <Pressable accessibilityLabel="목적지 검색 추가" accessibilityRole="button" onPress={() => onNavigate("P1")} style={[styles.searchRail, { backgroundColor: theme.card }]}>
@@ -110,6 +118,33 @@ export function DestinationListScreen({
             <EmptyDestinationState theme={theme} onAdd={() => onNavigate("P1")} />
           )}
         </View>
+
+        {hasDestinations ? (
+          <View style={styles.secondaryActions}>
+            <Pressable
+              accessibilityLabel="목록 하단 목적지 추가"
+              accessibilityRole="button"
+              onPress={() => onNavigate("P1")}
+              style={[styles.addDestinationRail, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+            >
+              <Text style={[styles.addDestinationIcon, { color: theme.gold }]}>+</Text>
+              <Text style={[styles.addDestinationText, { color: theme.text }]}>목적지 추가</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="여행 플래너 열기"
+              accessibilityRole="button"
+              onPress={() => onNavigate("G3")}
+              style={[styles.tripPlannerRail, { backgroundColor: theme.card, borderColor: theme.border }]}
+            >
+              <Image source={uiIconAssets.depart} style={[styles.tripPlannerIcon, { tintColor: theme.text }]} resizeMode="contain" />
+              <View style={styles.tripPlannerCopy}>
+                <Text style={[styles.tripPlannerTitle, { color: theme.text }]}>여행 플래너</Text>
+                <Text style={[styles.tripPlannerBody, { color: theme.subtle }]}>일정별 날씨와 준비를 이어서 확인</Text>
+              </View>
+              <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
       </ScrollView>
     </View>
@@ -188,9 +223,6 @@ function DestinationCard({
         <Text style={[styles.warningText, { color: accent }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
       </View>
 
-      <View style={[styles.cardHintRow, { borderTopColor: theme.border }]}>
-        <Text style={[styles.cardHintText, { color: theme.subtle }]}>탭해서 날씨와 출발 준비 보기</Text>
-      </View>
     </Pressable>
   );
 }
@@ -476,12 +508,28 @@ const styles = StyleSheet.create({
     minHeight: 40,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
   },
   title: {
     fontSize: 20,
     lineHeight: 26,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  addButtonText: {
+    marginTop: -2,
+    fontSize: 22,
+    lineHeight: 24,
+    fontWeight: "800",
   },
   searchRail: {
     minHeight: 46,
@@ -622,9 +670,60 @@ const styles = StyleSheet.create({
   destinationList: {
     gap: spacing.sm,
   },
-  destinationCard: {
+  secondaryActions: {
     gap: spacing.sm,
-    padding: 16,
+  },
+  addDestinationRail: {
+    minHeight: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+  },
+  addDestinationIcon: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  addDestinationText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  tripPlannerRail: {
+    minHeight: 66,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  tripPlannerIcon: {
+    width: 22,
+    height: 22,
+  },
+  tripPlannerCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  tripPlannerTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  tripPlannerBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  destinationCard: {
+    gap: spacing.xs,
+    padding: 15,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
     borderWidth: 1,
@@ -689,8 +788,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   readyPill: {
-    minWidth: 60,
-    minHeight: 44,
+    minWidth: 56,
+    minHeight: 28,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
@@ -729,6 +828,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   destinationBottom: {
+    minHeight: 22,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
@@ -747,17 +847,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "900",
-  },
-  cardHintRow: {
-    minHeight: 34,
-    justifyContent: "flex-end",
-    borderTopWidth: 1,
-    paddingTop: spacing.xs,
-  },
-  cardHintText: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
   },
   sunGlyph: {
     width: 19,
