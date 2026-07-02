@@ -16,8 +16,10 @@ export function GlobalSettingsScreen({
   onToggleReducedTransparency,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const unitSummary = `${temperatureUnit === "celsius" ? "°C" : "°F"} · ${getDistanceUnitLabel(distanceUnit)}`;
-  const stateSummary = `${unitSummary} · 테마 ${getThemeModeLabel(themeMode)}`;
+  const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
+  const distanceLabel = getDistanceUnitLabel(distanceUnit);
+  const themeLabel = getThemeModeLabel(themeMode);
+  const stateSummary = `${temperatureLabel} · ${distanceLabel} · 테마 ${themeLabel}`;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -32,7 +34,10 @@ export function GlobalSettingsScreen({
         </View>
 
         <View style={[styles.unitCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.muted }]}>표시 설정</Text>
+          <View>
+            <Text style={[styles.sectionLabel, { color: theme.muted }]}>단위</Text>
+            <Text style={[styles.sectionCaption, { color: theme.subtle }]}>홈, 출발, 목적지 화면에 바로 반영</Text>
+          </View>
           <SegmentRow
             label="온도"
             options={[
@@ -52,7 +57,10 @@ export function GlobalSettingsScreen({
         </View>
 
         <View style={[styles.themeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.muted }]}>테마</Text>
+          <View>
+            <Text style={[styles.sectionLabel, { color: theme.muted }]}>테마</Text>
+            <Text style={[styles.sectionCaption, { color: theme.subtle }]}>앱 전체 색상 모드</Text>
+          </View>
           <View style={[styles.wideSegment, { backgroundColor: theme.nav }]}>
             {(["system", "light", "dark"] as const).map((mode) => (
               <Pressable
@@ -69,16 +77,30 @@ export function GlobalSettingsScreen({
           </View>
         </View>
 
+        <View accessibilityLabel={`표시 설정 요약, ${stateSummary}`} style={[styles.summaryCard, { backgroundColor: theme.cardStrong, borderColor: theme.gold }]}>
+          <Text style={[styles.summaryLabel, { color: theme.gold }]}>표시 설정 요약</Text>
+          <Text style={[styles.summaryText, { color: theme.text }]}>{stateSummary}</Text>
+          <View style={styles.scopeList}>
+            <ScopeLine label="온도" value="홈 날씨 · 출발 비교 · 목적지 상세" theme={theme} />
+            <ScopeLine label="거리" value="장소 검색 결과 · 이동 거리 안내" theme={theme} />
+            <ScopeLine label="테마" value="앱 전체 배경과 카드 색상" theme={theme} />
+          </View>
+        </View>
+
         <Pressable
-          accessibilityLabel={`표시 설정 요약, ${stateSummary}, 투명 효과 ${reducedTransparency ? "줄임" : "기본"}`}
+          accessibilityLabel={`투명 효과 ${reducedTransparency ? "줄임" : "기본"}`}
           accessibilityRole="switch"
           accessibilityState={{ checked: reducedTransparency }}
           onPress={onToggleReducedTransparency}
-          style={[styles.globalCard, { backgroundColor: theme.cardStrong, borderColor: theme.gold }]}
+          style={[styles.effectCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
         >
-          <Text style={[styles.globalLabel, { color: theme.gold }]}>표시</Text>
-          <Text style={[styles.globalText, { color: theme.text }]}>{stateSummary}</Text>
-          <Text style={[styles.globalMeta, { color: theme.subtle }]}>투명 효과 {reducedTransparency ? "줄임" : "기본"} · 탭해서 전환</Text>
+          <View style={styles.effectCopy}>
+            <Text style={[styles.effectTitle, { color: theme.text }]}>화면 효과</Text>
+            <Text style={[styles.effectBody, { color: theme.subtle }]}>투명 효과 {reducedTransparency ? "줄임" : "기본"}</Text>
+          </View>
+          <View style={[styles.effectSwitchTrack, { backgroundColor: reducedTransparency ? theme.gold : theme.cardMuted }]}>
+            <View style={[styles.effectSwitchKnob, { backgroundColor: reducedTransparency ? theme.onAccent : theme.text }, reducedTransparency ? styles.effectSwitchKnobOn : null]} />
+          </View>
         </Pressable>
 
         <View accessibilityLabel="표시 설정 버전 정보" style={styles.footerLinks}>
@@ -89,6 +111,15 @@ export function GlobalSettingsScreen({
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+    </View>
+  );
+}
+
+function ScopeLine({ label, value, theme }: { label: string; value: string; theme: AppTheme }) {
+  return (
+    <View style={styles.scopeLine}>
+      <Text style={[styles.scopeLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text style={[styles.scopeValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -196,6 +227,12 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: "900",
   },
+  sectionCaption: {
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
   segmentRow: {
     minHeight: 48,
     flexDirection: "row",
@@ -249,26 +286,80 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.sm,
   },
-  globalCard: {
-    gap: 6,
+  summaryCard: {
+    gap: spacing.sm,
     padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  globalLabel: {
+  summaryLabel: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
   },
-  globalText: {
-    fontSize: 12,
+  summaryText: {
+    fontSize: 14,
     lineHeight: 18,
+    fontWeight: "900",
+  },
+  scopeList: {
+    gap: 6,
+  },
+  scopeLine: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  scopeLabel: {
+    width: 34,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  scopeValue: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
   },
-  globalMeta: {
-    fontSize: 11,
-    lineHeight: 15,
+  effectCard: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  effectCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  effectTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  effectBody: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
+  },
+  effectSwitchTrack: {
+    width: 50,
+    height: 30,
+    justifyContent: "center",
+    padding: 3,
+    borderRadius: radius.pill,
+  },
+  effectSwitchKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: radius.pill,
+  },
+  effectSwitchKnobOn: {
+    alignSelf: "flex-end",
   },
   footerLinks: {
     minHeight: 38,
