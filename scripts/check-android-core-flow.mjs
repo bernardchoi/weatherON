@@ -458,12 +458,11 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
   await assertText(page, "스마트 알림 설정");
   await assertText(page, "앱 권한 관리");
-  await assertText(page, "앱 권한");
-  await assertText(page, "알림");
+  await assertText(page, "관리");
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
   await assertText(page, "오늘 준비");
-  await assertText(page, "사용 전 확인");
+  await assertText(page, "사용 준비 완료");
   await assertNoText(page, "코디·옷장");
   await assertBottomNav(page);
 

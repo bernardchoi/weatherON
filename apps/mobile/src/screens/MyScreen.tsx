@@ -30,14 +30,14 @@ export function MyScreen({
   const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
-  const permissionSummary = `${locationState.summary} · ${alertState.summary}`;
   const permissionTone: MenuTone = locationState.tone === "warm" || alertState.tone === "warm" ? "warm" : locationState.tone === "gold" || alertState.tone === "gold" ? "gold" : "clear";
   const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
-  const summaryItems: SummaryItem[] = [
-    { label: "목적지", value: savedDestinationLabel, tone: savedDestinationCount > 0 ? "clear" : "gold" },
-    { label: "위치", value: locationState.summary, tone: locationState.tone },
-    { label: "알림", value: alertState.summary, tone: alertState.tone },
-  ];
+  const readinessTone: MenuTone =
+    savedDestinationCount === 0 || locationState.tone === "warm" || alertState.tone === "warm"
+      ? "warm"
+      : locationState.tone === "gold" || alertState.tone === "gold"
+        ? "gold"
+        : "clear";
 
   const openProfile = () => {
     onNavigate("A4");
@@ -71,9 +71,15 @@ export function MyScreen({
           <Chevron color={theme.subtle} />
         </Pressable>
 
-        <StatusOverview items={summaryItems} theme={theme} />
+        <ReadinessSummary
+          alertSummary={alertState.summary}
+          destinationSummary={savedDestinationLabel}
+          locationSummary={locationState.summary}
+          theme={theme}
+          tone={readinessTone}
+        />
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>앱 권한</Text>
+        <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text>
 
         <View style={styles.menuList}>
           <MenuRow
@@ -85,11 +91,6 @@ export function MyScreen({
             onPress={() => onNavigate("M4")}
             theme={theme}
           />
-        </View>
-
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림</Text>
-
-        <View style={styles.menuList}>
           <MenuRow
             icon="bell"
             title="스마트 알림 설정"
@@ -99,11 +100,6 @@ export function MyScreen({
             onPress={() => onNavigate("M2")}
             theme={theme}
           />
-        </View>
-
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>표시</Text>
-
-        <View style={styles.menuList}>
           <MenuRow
             icon="gear"
             title="표시 설정"
@@ -233,35 +229,34 @@ function MenuRow({
   );
 }
 
-type SummaryItem = {
-  label: string;
-  value: string;
+function ReadinessSummary({
+  alertSummary,
+  destinationSummary,
+  locationSummary,
+  theme,
+  tone,
+}: {
+  alertSummary: string;
+  destinationSummary: string;
+  locationSummary: string;
+  theme: AppTheme;
   tone: MenuTone;
-};
-
-function StatusOverview({ items, theme }: { items: SummaryItem[]; theme: AppTheme }) {
+}) {
+  const color = getToneColor(theme, tone);
+  const status = tone === "clear" ? "정상" : "확인";
   return (
-    <View style={[styles.statusOverview, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <View style={styles.statusHeader}>
-        <Text style={[styles.statusHeaderTitle, { color: theme.text }]}>오늘 준비</Text>
-        <Text style={[styles.statusHeaderMeta, { color: theme.subtle }]}>사용 전 확인</Text>
+    <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={styles.readinessCopy}>
+        <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
+        <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : "확인 필요한 항목 있음"}</Text>
+        <Text style={[styles.readinessMeta, { color: theme.subtle }]} numberOfLines={2}>
+          {destinationSummary} · 위치 {locationSummary} · 알림 {alertSummary}
+        </Text>
       </View>
-      <View style={styles.statusGrid}>
-        {items.map((item) => (
-          <StatusTile key={item.label} item={item} theme={theme} />
-        ))}
+      <View style={[styles.readinessPill, { backgroundColor: `${color}22` }]}>
+        <View style={[styles.readinessDot, { backgroundColor: color }]} />
+        <Text style={[styles.readinessPillText, { color }]}>{status}</Text>
       </View>
-    </View>
-  );
-}
-
-function StatusTile({ item, theme }: { item: SummaryItem; theme: AppTheme }) {
-  const color = getToneColor(theme, item.tone);
-  return (
-    <View style={[styles.statusTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-      <View style={[styles.statusDot, { backgroundColor: color }]} />
-      <Text style={[styles.statusTileLabel, { color: theme.subtle }]}>{item.label}</Text>
-      <Text style={[styles.statusTileValue, { color: theme.text }]} numberOfLines={1}>{item.value}</Text>
     </View>
   );
 }
@@ -484,54 +479,51 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: "900",
   },
-  statusOverview: {
-    gap: spacing.sm,
-    padding: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  statusHeader: {
+  readinessCard: {
+    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  statusHeaderTitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  statusHeaderMeta: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  statusGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  statusTile: {
-    width: "48%",
-    minHeight: 58,
-    gap: 3,
-    padding: spacing.sm,
-    borderRadius: radius.md,
+    gap: spacing.md,
+    padding: 14,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
-  statusDot: {
+  readinessCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  readinessEyebrow: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  readinessTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  readinessMeta: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  readinessPill: {
+    minHeight: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+  },
+  readinessDot: {
     width: 7,
     height: 7,
     borderRadius: radius.pill,
   },
-  statusTileLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  statusTileValue: {
-    fontSize: 12,
-    lineHeight: 16,
+  readinessPillText: {
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   appVersion: {

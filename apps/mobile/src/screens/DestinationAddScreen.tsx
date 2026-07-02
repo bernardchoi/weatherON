@@ -98,7 +98,7 @@ export function DestinationAddScreen({
           ]}
         >
           <View style={styles.stateCopy}>
-            <Text style={[styles.stateLabel, { color: canUseSelectedDestination ? theme.gold : theme.sky }]}>DESTINATION</Text>
+            <Text style={[styles.stateLabel, { color: canUseSelectedDestination ? theme.gold : theme.sky }]}>선택 상태</Text>
             <Text style={[styles.stateTitle, { color: theme.text }]} numberOfLines={1}>
               {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
             </Text>
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
-    letterSpacing: 1,
+    letterSpacing: 0,
   },
   stateTitle: {
     fontSize: 14,
