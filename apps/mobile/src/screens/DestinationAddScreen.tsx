@@ -33,6 +33,10 @@ export function DestinationAddScreen({
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
+  const visibleResults = React.useMemo(
+    () => getVisibleSearchResults(placeSearchResults, deviceLocationState.location),
+    [deviceLocationState.location, placeSearchResults],
+  );
 
   React.useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
@@ -68,7 +72,7 @@ export function DestinationAddScreen({
           </Pressable>
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>목적지 추가</Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 검색하고 결과를 선택</Text>
+            <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 고르면 케어 기준이 맞춰짐</Text>
           </View>
         </View>
 
@@ -77,35 +81,39 @@ export function DestinationAddScreen({
           <TextInput
             accessibilityLabel="목적지 검색어"
             onChangeText={onSearchPlaces}
-            placeholder="목적지 장소명 검색"
+            placeholder="장소명 또는 주소 검색"
             placeholderTextColor={theme.subtle}
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
           />
         </View>
 
-        <View style={[styles.searchStatusRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.searchStatusText, { color: theme.text }]} numberOfLines={1}>
-            {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
-          </Text>
+        <View
+          style={[
+            styles.stateCard,
+            {
+              backgroundColor: theme.cardStrong,
+              borderColor: canUseSelectedDestination ? "rgba(244,182,63,0.44)" : theme.border,
+            },
+          ]}
+        >
+          <View style={styles.stateCopy}>
+            <Text style={[styles.stateLabel, { color: canUseSelectedDestination ? theme.gold : theme.sky }]}>DESTINATION</Text>
+            <Text style={[styles.stateTitle, { color: theme.text }]} numberOfLines={1}>
+              {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
+            </Text>
+            <Text style={[styles.stateBody, { color: theme.subtle }]} numberOfLines={2}>
+              {getSelectionBody(canUseSelectedDestination, selectedCategory, hasQuery)}
+            </Text>
+          </View>
           <View style={[styles.countPill, { backgroundColor: theme.cardMuted }]}>
             <Text style={[styles.countText, { color: theme.sky }]}>{resultCount}</Text>
           </View>
         </View>
 
-        {canUseSelectedDestination ? (
-          <View style={[styles.selectedRail, { backgroundColor: "rgba(255,255,255,0.14)" }]}>
-            <Text style={[styles.selectedName, { color: theme.text }]}>{selectedDestinationPlace.name}</Text>
-            <View style={[styles.categoryPill, { borderColor: theme.border }]}>
-              <CategoryIcon color={theme.muted} />
-              <Text style={[styles.categoryText, { color: theme.muted }]}>{selectedCategory}</Text>
-            </View>
-          </View>
-        ) : null}
-
-        {placeSearchResults.length > 0 ? (
-          <View style={styles.results}>
-            {placeSearchResults.slice(0, 3).map((place) => {
+        {visibleResults.length > 0 ? (
+          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            {visibleResults.slice(0, 5).map((place, index) => {
               const selected = selectedDestinationPlace.id === place.id;
               const duplicate = (duplicateNameCounts.get(place.name) ?? 0) > 1;
               return (
@@ -116,19 +124,27 @@ export function DestinationAddScreen({
                   key={place.id}
                   onPress={() => onSelectDestinationPlace(place)}
                   style={[
-                    styles.resultCard,
+                    styles.resultRow,
                     {
-                      backgroundColor: selected ? theme.cardStrong : "rgba(255,255,255,0.08)",
-                      borderColor: selected ? "rgba(140,207,255,0.56)" : theme.border,
+                      backgroundColor: selected ? "rgba(244,182,63,0.10)" : "transparent",
+                      borderTopColor: index === 0 ? "transparent" : theme.border,
                     },
                   ]}
                 >
+                  <View style={[styles.resultGlyph, { backgroundColor: selected ? theme.gold : theme.cardMuted }]}>
+                    <CategoryIcon color={selected ? theme.onAccent : theme.subtle} />
+                  </View>
                   <View style={styles.resultHead}>
                     <View style={styles.resultTitleRow}>
-                      <Text style={[styles.resultName, { color: theme.text }]} numberOfLines={1}>{place.name} {selected ? "선택됨" : ""}</Text>
+                      <Text style={[styles.resultName, { color: theme.text }]} numberOfLines={1}>{place.name}</Text>
                       {duplicate ? (
                         <View style={[styles.smallPill, { borderColor: theme.border }]}>
                           <Text style={[styles.smallPillText, { color: theme.gold }]}>동명이름</Text>
+                        </View>
+                      ) : null}
+                      {selected ? (
+                        <View style={[styles.selectedPill, { backgroundColor: theme.gold }]}>
+                          <Text style={[styles.selectedPillText, { color: theme.onAccent }]}>선택</Text>
                         </View>
                       ) : null}
                     </View>
@@ -142,17 +158,17 @@ export function DestinationAddScreen({
             })}
           </View>
         ) : (
-          <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus, hasQuery)}</Text>
-            <Text style={[styles.resultBody, { color: theme.muted }]}>
-              {getEmptyBody(placeSearchStatus, hasQuery)}
-            </Text>
-            {placeSearchStatus === "error" ? (
-              <SearchRecoveryButton label="다시 시도" accessibilityLabel="목적지 검색 다시 시도" onPress={() => onSearchPlaces(placeSearchQuery)} />
-            ) : null}
-            {canClearSearch ? (
-              <SearchRecoveryButton label="검색어 지우기" accessibilityLabel="목적지 검색어 지우기" onPress={() => onSearchPlaces("")} />
-            ) : null}
+            <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus, hasQuery)}</Text>
+            <View style={styles.recoveryRow}>
+              {placeSearchStatus === "error" ? (
+                <SearchRecoveryButton label="다시 시도" accessibilityLabel="목적지 검색 다시 시도" onPress={() => onSearchPlaces(placeSearchQuery)} />
+              ) : null}
+              {canClearSearch ? (
+                <SearchRecoveryButton label="검색어 지우기" accessibilityLabel="목적지 검색어 지우기" onPress={() => onSearchPlaces("")} />
+              ) : null}
+            </View>
           </View>
         )}
 
@@ -200,6 +216,11 @@ function getSelectionCopy(canUseSelectedDestination: boolean, selectedName: stri
   return hasQuery ? "검색 결과에서 목적지 선택" : "장소명 2글자 이상 입력";
 }
 
+function getSelectionBody(canUseSelectedDestination: boolean, selectedCategory: string, hasQuery: boolean) {
+  if (canUseSelectedDestination) return `${selectedCategory} · 출발 탭에 저장 가능`;
+  return hasQuery ? "주소와 거리 확인 후 선택" : "검색 결과에서 주소와 국가를 확인 후 선택";
+}
+
 function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
   if (status === "loading") return "검색 중";
   if (status === "error") return "검색 연결 실패";
@@ -220,6 +241,18 @@ function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
     counts.set(place.name, (counts.get(place.name) ?? 0) + 1);
   }
   return counts;
+}
+
+function getVisibleSearchResults(
+  results: P0ScreenProps["placeSearchResults"],
+  origin: P0ScreenProps["deviceLocationState"]["location"],
+) {
+  if (!origin) return results;
+  return [...results].sort(
+    (a, b) =>
+      getCoordinateDistanceMeters(origin.coordinate, a.coordinate) -
+      getCoordinateDistanceMeters(origin.coordinate, b.coordinate),
+  );
 }
 
 function getCategoryLabel(category: string) {
@@ -252,8 +285,8 @@ function getPlaceDistanceLabel(
   currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
   distanceUnit: P0ScreenProps["distanceUnit"],
 ) {
-  if (!origin) return place.countryCode === currentCountryCode ? "거리 확인 불가" : getCountryLabel(place.countryCode);
-  if (place.countryCode !== origin.countryCode) return "해외";
+  if (!origin) return getCountryLabel(place.countryCode || currentCountryCode);
+  if (place.countryCode !== origin.countryCode) return `해외 · ${getCountryLabel(place.countryCode)}`;
   return formatDistance(getCoordinateDistanceMeters(origin.coordinate, place.coordinate), distanceUnit);
 }
 
@@ -420,22 +453,38 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "900",
   },
-  searchStatusRow: {
-    minHeight: 44,
+  stateCard: {
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: 14,
+    gap: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  searchStatusText: {
+  stateCopy: {
     flex: 1,
     minWidth: 0,
-    fontSize: 13,
-    lineHeight: 18,
+  },
+  stateLabel: {
+    marginBottom: 4,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
+    letterSpacing: 1,
+  },
+  stateTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  stateBody: {
+    marginTop: 3,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
   },
   countPill: {
     minWidth: 44,
@@ -448,35 +497,6 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 12,
     lineHeight: 15,
-    fontWeight: "900",
-  },
-  selectedRail: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingHorizontal: 14,
-    borderRadius: radius.md,
-  },
-  selectedName: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-  categoryPill: {
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: 9,
-  },
-  categoryText: {
-    fontSize: 11,
-    lineHeight: 14,
     fontWeight: "900",
   },
   categoryIcon: {
@@ -492,15 +512,34 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 2,
   },
-  results: {
-    gap: spacing.sm,
-  },
-  resultCard: {
-    padding: 14,
+  resultPanel: {
+    overflow: "hidden",
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  emptyPanel: {
+    gap: spacing.xs,
+    padding: 16,
+  },
+  resultRow: {
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  resultGlyph: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
   resultHead: {
+    flex: 1,
+    minWidth: 0,
     gap: 4,
   },
   resultTitleRow: {
@@ -528,6 +567,18 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: "900",
   },
+  selectedPill: {
+    minHeight: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    borderRadius: radius.pill,
+  },
+  selectedPillText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
   resultMeta: {
     fontSize: 12,
     lineHeight: 17,
@@ -543,18 +594,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
   },
-  emptyCard: {
+  recoveryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
   },
   retryButton: {
     minHeight: 38,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "flex-start",
-    marginTop: spacing.xs,
     paddingHorizontal: 14,
     borderRadius: radius.sm,
     borderWidth: 1,
