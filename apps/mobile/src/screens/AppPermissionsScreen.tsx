@@ -5,16 +5,18 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function AppPermissionsScreen({
+  deviceLocationState,
   locationReady,
   weatherLocationMode,
   permissionReady,
   permissionGateResult,
   smartCareEnabled,
   onNavigate,
+  onRequestPermissionGate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode);
-  const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled);
+  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState, permissionGateResult);
+  const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled, permissionGateResult);
   const resultCopy = getPermissionResultCopy(permissionGateResult);
 
   return (
@@ -37,20 +39,28 @@ export function AppPermissionsScreen({
               <Text style={[styles.resultBody, { color: theme.subtle }]}>{resultCopy.body}</Text>
             </View>
           ) : null}
-          <PermissionRow
+          <PermissionCard
             label="위치 권한"
             body={locationCopy.body}
+            helper={locationCopy.helper}
+            primaryLabel={locationCopy.primaryLabel}
+            secondaryLabel="위치 선택"
             status={locationCopy.status}
             tone={locationCopy.tone}
-            onPress={() => onNavigate("H2")}
+            onPrimaryPress={() => (locationCopy.canRequest ? onRequestPermissionGate("location", "M4") : onNavigate("H2"))}
+            onSecondaryPress={() => onNavigate("H2")}
             theme={theme}
           />
-          <PermissionRow
+          <PermissionCard
             label="알림 권한"
             body={notificationCopy.body}
+            helper={notificationCopy.helper}
+            primaryLabel={notificationCopy.primaryLabel}
+            secondaryLabel="알림 설정"
             status={notificationCopy.status}
             tone={notificationCopy.tone}
-            onPress={() => onNavigate("M2")}
+            onPrimaryPress={() => (notificationCopy.canRequest ? onRequestPermissionGate("notification", "M4", "general") : onNavigate("M2"))}
+            onSecondaryPress={() => onNavigate("M2")}
             theme={theme}
           />
         </View>
@@ -61,38 +71,52 @@ export function AppPermissionsScreen({
   );
 }
 
-function PermissionRow({
+function PermissionCard({
   label,
   body,
+  helper,
+  primaryLabel,
+  secondaryLabel,
   status,
   tone,
-  onPress,
+  onPrimaryPress,
+  onSecondaryPress,
   theme,
 }: {
   label: string;
   body: string;
+  helper: string;
+  primaryLabel: string;
+  secondaryLabel: string;
   status: string;
   tone: "clear" | "gold" | "warm";
-  onPress: () => void;
+  onPrimaryPress: () => void;
+  onSecondaryPress: () => void;
   theme: AppTheme;
 }) {
   const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
   return (
-    <Pressable
-      accessibilityLabel={`${label}, ${status}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.permissionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-    >
-      <View style={[styles.permissionDot, { backgroundColor: color }]} />
-      <View style={styles.permissionCopy}>
-        <Text style={[styles.permissionLabel, { color: theme.text }]}>{label}</Text>
-        <Text style={[styles.permissionBody, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
+    <View style={[styles.permissionPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.permissionHeader}>
+        <View style={[styles.permissionDot, { backgroundColor: color }]} />
+        <View style={styles.permissionCopy}>
+          <Text style={[styles.permissionLabel, { color: theme.text }]}>{label}</Text>
+          <Text style={[styles.permissionBody, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
+        </View>
+        <View style={[styles.permissionStatus, { backgroundColor: `${color}22` }]}>
+          <Text style={[styles.permissionStatusText, { color }]}>{status}</Text>
+        </View>
       </View>
-      <View style={[styles.permissionStatus, { backgroundColor: `${color}22` }]}>
-        <Text style={[styles.permissionStatusText, { color }]}>{status}</Text>
+      <Text style={[styles.permissionHelper, { color: theme.muted }]}>{helper}</Text>
+      <View style={styles.permissionActions}>
+        <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22` }]}>
+          <Text style={[styles.primaryActionText, { color }]}>{primaryLabel}</Text>
+        </Pressable>
+        <Pressable accessibilityLabel={`${label} ${secondaryLabel}`} accessibilityRole="button" onPress={onSecondaryPress} style={[styles.secondaryAction, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Text style={[styles.secondaryActionText, { color: theme.text }]}>{secondaryLabel}</Text>
+        </Pressable>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -108,23 +132,96 @@ function ChevronLeft({ color }: { color: string }) {
 function getLocationPermissionCopy(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
-): { body: string; status: string; tone: "clear" | "gold" | "warm" } {
+  deviceLocationState: P0ScreenProps["deviceLocationState"],
+  permissionGateResult: P0ScreenProps["permissionGateResult"],
+): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
+  const returnedFromLocationGate = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "location";
+  const skipped = returnedFromLocationGate && permissionGateResult.message.includes("나중에");
+  if (skipped || deviceLocationState.status === "denied") {
+    return {
+      body: "현재 위치 자동화는 대기 중",
+      helper: "수동 위치와 목적지 검색은 계속 사용할 수 있음",
+      primaryLabel: "위치 권한 복구",
+      status: "보류",
+      tone: "warm",
+      canRequest: true,
+    };
+  }
   if (locationReady && weatherLocationMode === "auto") {
-    return { body: "현재 위치 기준 홈 날씨 반영 중", status: "허용됨", tone: "clear" };
+    return {
+      body: "현재 위치 기준 홈 날씨 반영 중",
+      helper: "지역명 표시와 출발 판단에 현재 위치를 사용함",
+      primaryLabel: "위치 관리",
+      status: "허용됨",
+      tone: "clear",
+      canRequest: false,
+    };
   }
   if (weatherLocationMode === "manual") {
-    return { body: "수동 위치 기준으로 홈 날씨 유지", status: "수동", tone: "gold" };
+    return {
+      body: "수동 위치 기준으로 홈 날씨 유지",
+      helper: "현재 위치 권한 없이도 선택한 지역 날씨는 계속 표시됨",
+      primaryLabel: "위치 권한 복구",
+      status: "수동",
+      tone: "gold",
+      canRequest: true,
+    };
   }
-  return { body: "현재 위치 또는 수동 위치 설정 필요", status: "확인", tone: "warm" };
+  return {
+    body: "현재 위치 또는 수동 위치 설정 필요",
+    helper: "권한을 허용하거나 위치 선택 화면에서 지역을 고를 수 있음",
+    primaryLabel: "위치 권한 복구",
+    status: "확인",
+    tone: "warm",
+    canRequest: true,
+  };
 }
 
 function getNotificationPermissionCopy(
   permissionReady: boolean,
   smartCareEnabled: boolean,
-): { body: string; status: string; tone: "clear" | "gold" | "warm" } {
-  if (!smartCareEnabled) return { body: "스마트 알림 꺼짐 · 앱 안 판단은 유지", status: "중지", tone: "gold" };
-  if (permissionReady) return { body: "비·출발 알림 받을 수 있음", status: "허용됨", tone: "clear" };
-  return { body: "푸시 권한을 켜면 강수·출발 알림 수신", status: "확인", tone: "warm" };
+  permissionGateResult: P0ScreenProps["permissionGateResult"],
+): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
+  const returnedFromNotificationGate = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "notification";
+  const skipped = returnedFromNotificationGate && permissionGateResult.message.includes("나중에");
+  if (skipped) {
+    return {
+      body: "푸시 알림은 대기 중",
+      helper: "홈·출발 판단은 유지되며 실제 푸시만 제한됨",
+      primaryLabel: "알림 권한 복구",
+      status: "보류",
+      tone: "warm",
+      canRequest: true,
+    };
+  }
+  if (!smartCareEnabled) {
+    return {
+      body: "스마트 알림 꺼짐 · 앱 안 판단은 유지",
+      helper: "스마트 알림을 켜면 권한과 테스트 수신을 이어서 확인함",
+      primaryLabel: "알림 설정",
+      status: "중지",
+      tone: "gold",
+      canRequest: false,
+    };
+  }
+  if (permissionReady) {
+    return {
+      body: "비·출발 알림 받을 수 있음",
+      helper: "M2에서 테스트 알림으로 실제 수신까지 확인 가능",
+      primaryLabel: "수신 확인",
+      status: "허용됨",
+      tone: "clear",
+      canRequest: false,
+    };
+  }
+  return {
+    body: "푸시 권한을 켜면 강수·출발 알림 수신",
+    helper: "권한은 계정 연결과 별도이며 나중에 변경 가능",
+    primaryLabel: "알림 권한 복구",
+    status: "확인",
+    tone: "warm",
+    canRequest: true,
+  };
 }
 
 function getPermissionResultCopy(
@@ -198,14 +295,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  permissionRow: {
-    minHeight: 64,
+  permissionPanel: {
+    gap: spacing.sm,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  permissionHeader: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   resultStrip: {
     gap: 4,
@@ -243,6 +343,11 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "700",
   },
+  permissionHelper: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
   permissionStatus: {
     minHeight: 28,
     justifyContent: "center",
@@ -253,6 +358,39 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
+  },
+  permissionActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  primaryAction: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  primaryActionText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  secondaryAction: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  secondaryActionText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    textAlign: "center",
   },
   sectionLabel: {
     fontSize: 11,

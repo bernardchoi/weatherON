@@ -99,6 +99,7 @@ try {
   await runCoreFlowStep("load seeded app", () => loadSeededApp(page));
   await runCoreFlowStep("home decision flow", () => checkHomeDecisionFlow(page));
   await runCoreFlowStep("notification permission recovery", () => checkNotificationPermissionRecovery(browser));
+  await runCoreFlowStep("app permissions recovery", () => checkAppPermissionsRecovery(browser));
   await runCoreFlowStep("persisted weather fallback", () => checkPersistedWeatherFallbackFlow(browser));
   await runCoreFlowStep("alert settings destination empty", () => checkAlertSettingsDestinationEmptyFlow(browser));
   await runCoreFlowStep("destination add persistence", () => checkDestinationAddUiPersistenceFlow(browser));
@@ -214,6 +215,43 @@ async function checkNotificationPermissionRecovery(browser) {
   await clickAriaIncludes(page, "알림 열기");
   await assertText(page, "푸시 알림 대기");
   await assertText(page, "알림 설정으로 이동");
+  } finally {
+    await context.close();
+  }
+}
+
+async function checkAppPermissionsRecovery(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  try {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+    page.on("console", (message) => logs.push(`${message.type()}: ${message.text()}`));
+    page.on("pageerror", (error) => issues.push(`page error: ${error.message}`));
+    await installCoreFlowFetchMock(page);
+
+    await page.evaluateOnNewDocument((state) => {
+      localStorage.setItem(
+        "weatheron.appState.v1",
+        JSON.stringify({
+          ...state,
+          locationReady: false,
+          weatherLocationMode: "manual",
+        }),
+      );
+    }, seedState);
+    await page.goto(withCacheBust(previewUrl, "appPermissionsRecovery"), { waitUntil: "networkidle0", timeout: 25000 });
+    await waitForApp();
+    await clickText(page, "MY");
+    await clickText(page, "앱 권한 관리");
+    await assertText(page, "앱 권한 관리");
+    await assertText(page, "위치 권한 복구");
+    await assertText(page, "수신 확인");
+    await clickText(page, "위치 권한 복구");
+    await assertText(page, "필요한 권한만 먼저 허용해 주세요");
+    await assertText(page, "위치 권한");
+    await clickText(page, "나중에 설정");
+    await assertText(page, "위치 권한 보류");
+    await assertText(page, "현재 위치 자동화만 대기");
   } finally {
     await context.close();
   }
@@ -470,7 +508,13 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "앱 권한 관리");
   await assertText(page, "위치 권한");
   await assertText(page, "알림 권한");
-  await clickText(page, "위치 권한");
+  await assertText(page, "수신 확인");
+  await clickText(page, "수신 확인");
+  await assertText(page, "스마트 알림 설정");
+  await assertText(page, "테스트");
+  await clickText(page, "MY");
+  await clickText(page, "앱 권한 관리");
+  await clickText(page, "위치 선택");
   await assertText(page, "위치 변경");
   await fillAriaInput(page, "동 읍 면 검색", "x");
   await assertText(page, "검색어 지우기");
