@@ -72,9 +72,14 @@ assert.equal(appConfig.scheme, "weatheron");
 assert.match(appConfig.version, /^\d+\.\d+\.\d+$/);
 
 assert.equal(appConfig.android?.package, "com.weatheron.mobile");
-assertDocIncludes(androidAppBuildGradlePath, ["namespace 'com.weatheron.mobile'", "applicationId 'com.weatheron.mobile'", "versionCode 5", 'versionName "0.1.0"']);
 assert.equal(Number.isInteger(appConfig.android?.versionCode), true);
 assert.ok(appConfig.android.versionCode >= 1);
+assertDocIncludes(androidAppBuildGradlePath, [
+  "namespace 'com.weatheron.mobile'",
+  "applicationId 'com.weatheron.mobile'",
+  `versionCode ${appConfig.android.versionCode}`,
+  `versionName "${appConfig.version}"`,
+]);
 assert.ok(appConfig.android.permissions.includes("ACCESS_COARSE_LOCATION"));
 assert.ok(appConfig.android.permissions.includes("ACCESS_FINE_LOCATION"));
 assertAssetExists(appConfig.icon, "expo.icon");

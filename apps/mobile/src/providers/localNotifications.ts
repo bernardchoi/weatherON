@@ -16,9 +16,13 @@ export type LocalNotificationSyncResult = {
 export type LocalNotificationResponsePayload = {
   route?: string;
   ruleId?: string;
+  notificationId?: string;
 };
 
 type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission">;
+type ExpoNotification = Parameters<ExpoNotificationsModule["addNotificationReceivedListener"]>[0] extends (notification: infer Notification) => void
+  ? Notification
+  : never;
 type ExpoNotificationResponse = NonNullable<Awaited<ReturnType<ExpoNotificationsModule["getLastNotificationResponseAsync"]>>>;
 
 const notificationChannelId = "weatheron-smart-care";
@@ -141,14 +145,29 @@ export async function addLocalNotificationResponseListener(
 
   const emitPayload = (response: ExpoNotificationResponse) => {
     listener(getLocalNotificationResponsePayload(response));
+    void dismissRespondedNotification(Notifications, response);
   };
   const subscription = Notifications.addNotificationResponseReceivedListener(emitPayload);
   const lastResponse = await Notifications.getLastNotificationResponseAsync();
   if (lastResponse) {
     emitPayload(lastResponse);
-    await Notifications.clearLastNotificationResponseAsync();
   }
 
+  return () => {
+    subscription.remove();
+  };
+}
+
+export async function addLocalNotificationReceivedListener(
+  listener: (payload: LocalNotificationResponsePayload) => void,
+): Promise<() => void> {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) return () => {};
+  await configureNotifications(Notifications);
+
+  const subscription = Notifications.addNotificationReceivedListener((notification) => {
+    listener(getLocalNotificationPayload(notification));
+  });
   return () => {
     subscription.remove();
   };
@@ -200,10 +219,31 @@ async function countScheduledNotifications(Notifications: ExpoNotificationsModul
   return scheduledNotifications.filter((notification) => notification.identifier.startsWith(identifierPrefix)).length;
 }
 
+async function dismissRespondedNotification(Notifications: ExpoNotificationsModule, response: ExpoNotificationResponse) {
+  const identifier = response.notification.request.identifier;
+  try {
+    if (identifier) await Notifications.dismissNotificationAsync(identifier);
+  } catch {
+    // Notification tray cleanup is best-effort; navigation already used the response payload.
+  }
+  try {
+    await Notifications.clearLastNotificationResponseAsync();
+  } catch {
+    // Last-response cleanup is also best-effort on older native notification modules.
+  }
+}
+
 function getLocalNotificationResponsePayload(response: ExpoNotificationResponse): LocalNotificationResponsePayload {
-  const data = response.notification.request.content.data;
+  return getLocalNotificationPayload(response.notification);
+}
+
+function getLocalNotificationPayload(notification: ExpoNotification): LocalNotificationResponsePayload {
+  const data = notification.request.content.data;
+  const fallbackRuleId = notification.request.identifier.startsWith("weatheron:test:") ? "local-test" : undefined;
+  const fallbackRoute = fallbackRuleId ? "M2" : undefined;
   return {
-    route: typeof data.route === "string" ? data.route : undefined,
-    ruleId: typeof data.ruleId === "string" ? data.ruleId : undefined,
+    route: typeof data.route === "string" ? data.route : fallbackRoute,
+    ruleId: typeof data.ruleId === "string" ? data.ruleId : fallbackRuleId,
+    notificationId: notification.request.identifier,
   };
 }

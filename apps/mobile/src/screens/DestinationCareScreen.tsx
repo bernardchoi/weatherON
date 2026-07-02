@@ -34,6 +34,7 @@ export function DestinationCareScreen({
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
   const [arrivalInput, setArrivalInput] = useState(targetArrivalTime);
+  const [conditionControlsOpen, setConditionControlsOpen] = useState(false);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const originRain = originWeather.current.rainProbabilityPct;
@@ -44,8 +45,14 @@ export function DestinationCareScreen({
     setArrivalInput(targetArrivalTime);
   }, [targetArrivalTime]);
 
-  const handleArrivalInputChange = (value: string) => {
-    const nextValue = normalizeArrivalInput(value);
+  const handleArrivalInputChange = (segment: ArrivalTimeSegment, value: string) => {
+    const nextValue = getNextSegmentedArrivalInput(arrivalInput, segment, value);
+    setArrivalInput(nextValue);
+    if (isValidArrivalTime(nextValue)) onSetDestinationTargetArrivalTime(nextValue);
+  };
+
+  const handleArrivalInputBlur = () => {
+    const nextValue = normalizeSegmentedArrivalInput(arrivalInput, targetArrivalTime);
     setArrivalInput(nextValue);
     if (isValidArrivalTime(nextValue)) onSetDestinationTargetArrivalTime(nextValue);
   };
@@ -80,11 +87,9 @@ export function DestinationCareScreen({
             <ArrivalInputControl
               label="도착 희망"
               value={arrivalInput}
-              caption="직접 입력"
+              caption="숫자만 입력"
               onChangeText={handleArrivalInputChange}
-              onBlur={() => {
-                if (!isValidArrivalTime(arrivalInput)) setArrivalInput(targetArrivalTime);
-              }}
+              onBlur={handleArrivalInputBlur}
               theme={theme}
             />
             <ArrivalControl
@@ -159,57 +164,67 @@ export function DestinationCareScreen({
         <View style={[styles.conditionPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.conditionHeader}>
             <View style={styles.conditionCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 조건</Text>
+              <Text style={[styles.sectionTitle, { color: theme.muted }]}>적용 중인 알림 조건</Text>
               <Text style={[styles.conditionSummary, { color: theme.text }]}>
                 강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s
               </Text>
             </View>
             <Pressable
-              accessibilityLabel="알림 설정 상세로 이동"
+              accessibilityLabel="알림 전체 설정으로 이동"
               accessibilityRole="button"
               onPress={() => onOpenAlertSettings("G2", "destination")}
               style={[styles.detailButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
             >
-              <Text style={[styles.detailButtonText, { color: theme.text }]}>상세</Text>
+              <Text style={[styles.detailButtonText, { color: theme.text }]}>전체 설정</Text>
             </Pressable>
           </View>
-          <View style={styles.conditionGrid}>
-            <ConditionButton
-              label="자동 여유"
-              value={`${bufferMinutes}분`}
-              accessibilityLabel={`현재시각 기준 자동 여유 시간 ${bufferMinutes}분`}
-              theme={theme}
-            />
-            <ConditionButton
-              label="이동수단"
-              value={getTransportModeLabel(transportMode)}
-              accessibilityLabel={`이동수단 ${getTransportModeLabel(transportMode)}`}
-              theme={theme}
-            />
+
+          <View style={styles.conditionSummaryGrid}>
+            <ConditionSummaryPill label="강수 기준" value={`${selectedDestinationAlertCondition.rainThresholdPct}% 이상`} theme={theme} />
+            <ConditionSummaryPill label="출발 알림" value={`${selectedDestinationAlertCondition.leadTimeMinutes}분 전`} theme={theme} />
+            <ConditionSummaryPill label="바람 기준" value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`} theme={theme} />
+            <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
+            <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
+            {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
           </View>
-          <View style={styles.conditionGrid}>
-            <ConditionButton
-              label="강수 기준"
-              value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
-              accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
-              onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
-              theme={theme}
-            />
-            <ConditionButton
-              label="출발 전"
-              value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
-              accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
-              onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
-              theme={theme}
-            />
-            <ConditionButton
-              label="바람 기준"
-              value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
-              accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
-              onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
-              theme={theme}
-            />
-          </View>
+
+          <Pressable
+            accessibilityLabel={conditionControlsOpen ? "알림 조건 직접 조정 닫기" : "알림 조건 직접 조정 열기"}
+            accessibilityRole="button"
+            onPress={() => setConditionControlsOpen((current) => !current)}
+            style={[styles.conditionToggle, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          >
+            <Text style={[styles.conditionToggleText, { color: theme.text }]}>
+              {conditionControlsOpen ? "조건 직접 조정 닫기" : "조건 직접 조정"}
+            </Text>
+            <Text style={[styles.conditionToggleIcon, { color: theme.gold }]}>{conditionControlsOpen ? "접기" : "열기"}</Text>
+          </Pressable>
+
+          {conditionControlsOpen ? (
+            <View style={styles.conditionGrid}>
+              <ConditionButton
+                label="강수 기준"
+                value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
+                accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
+                onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
+                theme={theme}
+              />
+              <ConditionButton
+                label="출발 전"
+                value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
+                accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
+                onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
+                theme={theme}
+              />
+              <ConditionButton
+                label="바람 기준"
+                value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
+                accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
+                onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
+                theme={theme}
+              />
+            </View>
+          ) : null}
         </View>
 
         <Pressable
@@ -260,6 +275,26 @@ function ConditionButton({
   );
 }
 
+function ConditionSummaryPill({
+  label,
+  value,
+  tone = "default",
+  theme,
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "warm";
+  theme: AppTheme;
+}) {
+  const accent = tone === "warm" ? theme.warm : theme.gold;
+  return (
+    <View style={[styles.conditionSummaryPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Text numberOfLines={1} style={[styles.conditionSummaryLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.conditionSummaryValue, { color: accent }]}>{value}</Text>
+    </View>
+  );
+}
+
 function ArrivalInputControl({
   label,
   value,
@@ -271,25 +306,40 @@ function ArrivalInputControl({
   label: string;
   value: string;
   caption: string;
-  onChangeText: (value: string) => void;
+  onChangeText: (segment: ArrivalTimeSegment, value: string) => void;
   onBlur: () => void;
   theme: AppTheme;
 }) {
+  const { hour, minute } = getArrivalInputParts(value);
   return (
     <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
-        <TextInput
-          accessibilityLabel={`${label} 직접 입력`}
-          keyboardType="numbers-and-punctuation"
-          maxLength={5}
-          onBlur={onBlur}
-          onChangeText={onChangeText}
-          placeholder="HH:mm"
-          placeholderTextColor={theme.subtle}
-          style={[styles.arrivalInput, { color: theme.text }]}
-          value={value}
-        />
+        <View style={styles.arrivalTimeRow}>
+          <TextInput
+            accessibilityLabel={`${label} 시 입력`}
+            keyboardType="number-pad"
+            maxLength={2}
+            onBlur={onBlur}
+            onChangeText={(nextValue) => onChangeText("hour", nextValue)}
+            placeholder="시"
+            placeholderTextColor={theme.subtle}
+            style={[styles.arrivalTimeInput, { color: theme.text, borderColor: theme.border }]}
+            value={hour}
+          />
+          <Text style={[styles.arrivalTimeColon, { color: theme.subtle }]}>:</Text>
+          <TextInput
+            accessibilityLabel={`${label} 분 입력`}
+            keyboardType="number-pad"
+            maxLength={2}
+            onBlur={onBlur}
+            onChangeText={(nextValue) => onChangeText("minute", nextValue)}
+            placeholder="분"
+            placeholderTextColor={theme.subtle}
+            style={[styles.arrivalTimeInput, { color: theme.text, borderColor: theme.border }]}
+            value={minute}
+          />
+        </View>
       </View>
       <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
     </View>
@@ -324,6 +374,8 @@ const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedule
   { mode: "drive", label: "자차", caption: "도로 기준" },
   { mode: "transit", label: "대중교통", caption: "배차 변동" },
 ];
+
+type ArrivalTimeSegment = "hour" | "minute";
 
 function TransportOption({
   active,
@@ -470,19 +522,42 @@ function getDepartureFormulaCopy(
   return `데모 계산 ${base} · 실사용 전 경로 QA 필요`;
 }
 
-function normalizeArrivalInput(value: string) {
-  const trimmed = value.replace(/[^\d:]/g, "").slice(0, 5);
-  if (trimmed.includes(":")) return trimmed;
-  if (trimmed.length <= 2) return trimmed;
-  return `${trimmed.slice(0, 2)}:${trimmed.slice(2, 4)}`;
-}
-
 function isValidArrivalTime(value: string) {
   if (!/^\d{2}:\d{2}$/.test(value)) return false;
   const [hourText, minuteText] = value.split(":");
   const hour = Number(hourText);
   const minute = Number(minuteText);
   return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+}
+
+function getNextSegmentedArrivalInput(currentValue: string, segment: ArrivalTimeSegment, nextRawValue: string) {
+  const { hour, minute } = getArrivalInputParts(currentValue);
+  const nextValue = nextRawValue.replace(/\D/g, "").slice(0, 2);
+  return segment === "hour" ? `${nextValue}:${minute}` : `${hour}:${nextValue}`;
+}
+
+function normalizeSegmentedArrivalInput(value: string, fallback: string) {
+  const { hour, minute } = getArrivalInputParts(value);
+  const normalizedHour = normalizeTimePart(hour, 23);
+  const normalizedMinute = normalizeTimePart(minute, 59);
+  if (!normalizedHour || !normalizedMinute) return fallback;
+  return `${normalizedHour}:${normalizedMinute}`;
+}
+
+function normalizeTimePart(value: string, maxValue: number) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return null;
+  const numberValue = Math.min(Number(digits), maxValue);
+  if (!Number.isFinite(numberValue)) return null;
+  return String(numberValue).padStart(2, "0");
+}
+
+function getArrivalInputParts(value: string) {
+  const [rawHour = "", rawMinute = ""] = value.split(":");
+  return {
+    hour: rawHour.replace(/\D/g, "").slice(0, 2),
+    minute: rawMinute.replace(/\D/g, "").slice(0, 2),
+  };
 }
 
 function subtractMinutes(time: string, minutes: number) {
@@ -656,9 +731,26 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "900",
   },
-  arrivalInput: {
-    minHeight: 24,
-    padding: 0,
+  arrivalTimeRow: {
+    minHeight: 26,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  arrivalTimeInput: {
+    width: 32,
+    minHeight: 28,
+    paddingHorizontal: 4,
+    paddingVertical: 0,
+    borderBottomWidth: 1,
+    textAlign: "center",
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  arrivalTimeColon: {
+    width: 7,
+    textAlign: "center",
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "900",
@@ -884,6 +976,30 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "900",
   },
+  conditionSummaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  conditionSummaryPill: {
+    width: "48.7%",
+    minHeight: 58,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  conditionSummaryLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  conditionSummaryValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
   detailButton: {
     minWidth: 54,
     minHeight: 44,
@@ -896,6 +1012,27 @@ const styles = StyleSheet.create({
   detailButtonText: {
     fontSize: 12,
     lineHeight: 16,
+    fontWeight: "900",
+  },
+  conditionToggle: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  conditionToggleText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  conditionToggleIcon: {
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
   conditionGrid: {

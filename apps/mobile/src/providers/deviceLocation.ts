@@ -45,13 +45,15 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
     const position = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     });
+    const coordinate = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+    const locationName = await resolveDeviceLocationName(coordinate);
     return {
       status: "granted",
       message: "현재 위치 반영",
-      location: createKmaWeatherLocationFromCoordinate({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      }),
+      location: createKmaWeatherLocationFromCoordinate(coordinate, locationName),
     };
   } catch {
     return {
@@ -59,4 +61,38 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
       message: "위치 확인 실패",
     };
   }
+}
+
+async function resolveDeviceLocationName(coordinate: { latitude: number; longitude: number }) {
+  try {
+    const [address] = await Location.reverseGeocodeAsync(coordinate);
+    return formatDeviceLocationName(address) ?? "내 위치 주변";
+  } catch {
+    return "내 위치 주변";
+  }
+}
+
+function formatDeviceLocationName(address?: Location.LocationGeocodedAddress) {
+  if (!address) return null;
+  const majorArea = address.city ?? address.region;
+  const middleArea = address.district ?? address.subregion;
+  const localArea = address.name && !isGenericAddressName(address.name) ? address.name : null;
+  const streetArea = address.street && !isGenericAddressName(address.street) ? address.street : null;
+  return compactLocationParts([majorArea, middleArea, localArea, streetArea]).slice(0, 3).join(" ") || null;
+}
+
+function compactLocationParts(parts: Array<string | null>) {
+  const seen = new Set<string>();
+  return parts
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .filter((part) => {
+      if (seen.has(part)) return false;
+      seen.add(part);
+      return true;
+    });
+}
+
+function isGenericAddressName(value: string) {
+  return /^\d+(-\d+)?$/.test(value.trim());
 }

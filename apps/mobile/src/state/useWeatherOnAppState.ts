@@ -30,6 +30,7 @@ import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/pl
 import { runtimeTravelEstimateClient, type TravelEstimateResult } from "../providers/travelEstimateClient";
 import { readAppJson, writeAppJson } from "../providers/appStorage";
 import {
+  addLocalNotificationReceivedListener,
   addLocalNotificationResponseListener,
   checkLocalNotificationPermission,
   requestLocalNotificationPermission,
@@ -123,7 +124,7 @@ export type NotificationHistoryItem = {
   id: string;
   notificationId: string;
   title: string;
-  action: "read" | "open" | "sent";
+  action: "read" | "open" | "sent" | "received";
   route?: P0RouteId;
   statusLabel: string;
 };
@@ -586,7 +587,8 @@ export function useWeatherOnAppState() {
   }, [locationReady]);
 
   useEffect(() => {
-    if (!appStateHydrated || weatherLocationMode !== "auto" || deviceWeatherLocation) return;
+    if (!appStateHydrated || weatherLocationMode !== "auto") return;
+    if (deviceWeatherLocation && deviceWeatherLocation.locationName !== "현재 위치") return;
     let active = true;
     setDeviceLocationState({ status: "requesting", message: locationReady ? "현재 위치 재확인 중" : "위치 권한 동기화 중" });
     syncDeviceWeatherLocationPermission().then((result) => {
@@ -847,8 +849,30 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated) return;
-    let removeListener: (() => void) | undefined;
+    let removeResponseListener: (() => void) | undefined;
+    let removeReceivedListener: (() => void) | undefined;
     let active = true;
+    void addLocalNotificationReceivedListener((payload) => {
+      if (!active) return;
+      const notificationId = payload.ruleId ?? payload.notificationId ?? "local-notification";
+      if (notificationId !== "local-test") return;
+      setNotificationHistory((current) =>
+        addNotificationHistoryItem(current, {
+          id: createNotificationHistoryId("local-test", "received"),
+          notificationId: "local-test",
+          title: "WeatherON 테스트 알림",
+          action: "received",
+          route: "M2",
+          statusLabel: "수신 확인",
+        }),
+      );
+    }).then((remove) => {
+      if (active) {
+        removeReceivedListener = remove;
+        return;
+      }
+      remove();
+    });
     void addLocalNotificationResponseListener((payload) => {
       if (!active) return;
       const routeFromPayload = getP0RouteFromNotificationPayload(payload.route);
@@ -856,14 +880,15 @@ export function useWeatherOnAppState() {
       openNotificationDeepLink(payload.ruleId ?? "local-notification", routeFromPayload);
     }).then((remove) => {
       if (active) {
-        removeListener = remove;
+        removeResponseListener = remove;
         return;
       }
       remove();
     });
     return () => {
       active = false;
-      removeListener?.();
+      removeReceivedListener?.();
+      removeResponseListener?.();
     };
   }, [appStateHydrated, openNotificationDeepLink]);
 
@@ -882,7 +907,8 @@ export function useWeatherOnAppState() {
     try {
       const results = await runtimePlaceSearchClient.searchPlaces({ query, locale: getDeviceSearchLocale() });
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
-      setPlaceSearchResults(results);
+      const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
+      setPlaceSearchResults(sortPlaceSearchResultsByRelevanceAndDistance(results, query, currentLocation));
       setPlaceSearchStatus(results.length > 0 ? "ready" : "empty");
     } catch {
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
@@ -891,7 +917,7 @@ export function useWeatherOnAppState() {
     } finally {
       if (placeSearchRequestSeqRef.current === requestSeq) setIsPlaceSearchLoading(false);
     }
-  }, []);
+  }, [deviceWeatherLocation, manualWeatherLocation, weatherLocationMode]);
 
   const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
     setSelectedDestinationPlace(place);
@@ -1848,6 +1874,67 @@ function getActiveWeatherLocation(
   return mode === "manual" ? manualLocation : deviceLocation ?? seongsuWeatherLocation;
 }
 
+function sortPlaceSearchResultsByRelevanceAndDistance(
+  places: PlaceSearchResult[],
+  query: string,
+  origin: WeatherLocationPreset,
+): PlaceSearchResult[] {
+  return places
+    .map((place, index) => ({
+      place,
+      index,
+      textRank: getPlaceTextMatchRank(place, query),
+      countryRank: getPlaceCountryRank(place, origin),
+      distanceMeters: getCoordinateDistanceMeters(origin.coordinate, place.coordinate),
+    }))
+    .sort((a, b) =>
+      a.textRank - b.textRank ||
+      a.countryRank - b.countryRank ||
+      a.distanceMeters - b.distanceMeters ||
+      a.index - b.index
+    )
+    .map((item) => item.place);
+}
+
+function getPlaceTextMatchRank(place: PlaceSearchResult, query: string) {
+  const normalizedQuery = normalizePlaceSearchText(query);
+  const normalizedName = normalizePlaceSearchText(place.name);
+  const normalizedAddress = normalizePlaceSearchText(place.address);
+  if (!normalizedQuery) return 0;
+  if (normalizedName === normalizedQuery) return 0;
+  if (normalizedName.startsWith(normalizedQuery)) return 1;
+  if (normalizedName.includes(normalizedQuery)) return 2;
+  if (normalizedAddress.includes(normalizedQuery)) return 3;
+  return 4;
+}
+
+function getPlaceCountryRank(place: PlaceSearchResult, origin: WeatherLocationPreset) {
+  if (place.countryCode === origin.countryCode) return 0;
+  if (place.countryCode === "GLOBAL" || origin.countryCode === "GLOBAL") return 1;
+  return 2;
+}
+
+function getCoordinateDistanceMeters(
+  origin: WeatherLocationPreset["coordinate"],
+  destination: PlaceSearchResult["coordinate"],
+) {
+  const earthRadiusMeters = 6371000;
+  const lat1 = toRadians(origin.latitude);
+  const lat2 = toRadians(destination.latitude);
+  const deltaLat = toRadians(destination.latitude - origin.latitude);
+  const deltaLon = toRadians(destination.longitude - origin.longitude);
+  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function normalizePlaceSearchText(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
+
 function normalizeAlertPreferences(value: unknown): AlertPreferences {
   if (!value || typeof value !== "object") return defaultAlertPreferences;
   const record = value as Partial<AlertPreferences>;
@@ -2045,7 +2132,7 @@ function isNotificationHistoryItem(item: unknown): item is NotificationHistoryIt
     typeof record.id === "string" &&
     typeof record.notificationId === "string" &&
     typeof record.title === "string" &&
-    (record.action === "read" || record.action === "open" || record.action === "sent") &&
+    (record.action === "read" || record.action === "open" || record.action === "sent" || record.action === "received") &&
     typeof record.statusLabel === "string" &&
     (record.route === undefined || typeof record.route === "string")
   );

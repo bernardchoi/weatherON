@@ -1,17 +1,21 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import { formatDistance } from "../utils/units";
 
 export function DestinationAddScreen({
+  state,
   destinationSaved,
+  deviceLocationState,
   selectedDestinationPlace,
   placeSearchQuery,
   placeSearchResults,
   isPlaceSearchLoading,
   placeSearchStatus,
+  distanceUnit,
   onNavigate,
   onReturnFromDestinationAdd,
   onSaveDestination,
@@ -19,6 +23,7 @@ export function DestinationAddScreen({
   onSelectDestinationPlace,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const [keyboardVisible, setKeyboardVisible] = React.useState(false);
   const selectedCategory = getCategoryLabel(selectedDestinationPlace.category);
   const hasQuery = placeSearchQuery.trim().length >= 2;
   const selectedFromResults = placeSearchResults.some((place) => place.id === selectedDestinationPlace.id);
@@ -27,8 +32,16 @@ export function DestinationAddScreen({
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
-  const searchInsight = getSearchInsight(placeSearchStatus, placeSearchResults, hasQuery, placeSearchQuery);
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
+
+  React.useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handlePrimaryAction = () => {
     if (!canUseSelectedDestination) return;
@@ -55,7 +68,7 @@ export function DestinationAddScreen({
           </Pressable>
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>목적지 추가</Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]}>현재 위치와 목적지에 맞춰 장소를 확인</Text>
+            <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 검색하고 결과를 선택</Text>
           </View>
         </View>
 
@@ -64,44 +77,19 @@ export function DestinationAddScreen({
           <TextInput
             accessibilityLabel="목적지 검색어"
             onChangeText={onSearchPlaces}
-            placeholder="장소명 또는 주소 검색"
+            placeholder="목적지 장소명 검색"
             placeholderTextColor={theme.subtle}
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
           />
         </View>
 
-        <View style={[styles.accountStatus, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <View style={styles.accountCopy}>
-            <Text style={[styles.accountTitle, { color: theme.text }]}>이 기기에 저장</Text>
-            <Text style={[styles.accountBody, { color: theme.subtle }]}>선택한 목적지는 홈 비교와 출발 탭에 바로 반영됨</Text>
-          </View>
-          <View style={[styles.accountPill, { backgroundColor: theme.gold }]}>
-            <Text style={[styles.accountPillText, { color: theme.onAccent }]}>저장 가능</Text>
-          </View>
-        </View>
-
-        <View style={[styles.searchInsight, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.searchInsightTitle, { color: theme.text }]}>{searchInsight.title}</Text>
-          <Text style={[styles.searchInsightBody, { color: theme.subtle }]}>{searchInsight.body}</Text>
-        </View>
-
-        <View style={styles.stack}>
-          <View style={[styles.stateCard, styles.stateCardSky, { backgroundColor: theme.cardStrong, borderColor: "rgba(140,207,255,0.34)" }]}>
-            <View style={styles.stateHeader}>
-              <Text style={[styles.eyebrow, { color: theme.sky }]}>장소 선택</Text>
-              <View style={[styles.countPill, { backgroundColor: "#10243F" }]}>
-                <Text style={[styles.countText, { color: theme.sky }]}>{resultCount}</Text>
-              </View>
-            </View>
-            <Text style={[styles.stateText, { color: theme.text }]}>
-              {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
-            </Text>
-          </View>
-
-          <View style={[styles.stateCard, styles.stateCardGold, { backgroundColor: theme.cardStrong, borderColor: "rgba(244,182,63,0.28)" }]}>
-            <Text style={[styles.eyebrow, { color: theme.gold }]}>자동 케어</Text>
-            <Text style={[styles.stateText, { color: theme.text }]}>등록한 장소는 출발 탭에 저장되고, 날씨 비교·출발 시각·강수 알림에 자동 반영돼요</Text>
+        <View style={[styles.searchStatusRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Text style={[styles.searchStatusText, { color: theme.text }]} numberOfLines={1}>
+            {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
+          </Text>
+          <View style={[styles.countPill, { backgroundColor: theme.cardMuted }]}>
+            <Text style={[styles.countText, { color: theme.sky }]}>{resultCount}</Text>
           </View>
         </View>
 
@@ -145,15 +133,10 @@ export function DestinationAddScreen({
                       ) : null}
                     </View>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
-                      {getCategoryLabel(place.category)} · {getCountryLabel(place.countryCode)} · {getProviderLabel(place.provider)}
+                      {getCategoryLabel(place.category)} · {getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit)} · {getProviderLabel(place.provider)}
                     </Text>
                     <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>
-                  {selected ? (
-                    <Text style={[styles.resultBody, { color: theme.muted }]}>
-                      저장하면 출발 탭에서 날씨 비교와 출발 준비를 바로 볼 수 있어요
-                    </Text>
-                  ) : null}
                 </Pressable>
               );
             })}
@@ -176,9 +159,11 @@ export function DestinationAddScreen({
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      <View style={[styles.footer, { backgroundColor: theme.background }]}>
-        <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
-      </View>
+      {keyboardVisible ? null : (
+        <View style={[styles.footer, { backgroundColor: theme.background }]}>
+          <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
+        </View>
+      )}
     </View>
   );
 }
@@ -211,8 +196,8 @@ function getPrimaryActionLabel(canUseSavedDestination: boolean, selectedFromResu
 }
 
 function getSelectionCopy(canUseSelectedDestination: boolean, selectedName: string, hasQuery: boolean) {
-  if (canUseSelectedDestination) return `${selectedName} 자동 케어 후보로 선택`;
-  return hasQuery ? "검색 결과에서 목적지를 선택해 주세요" : "장소명 검색 후 결과를 선택해 주세요";
+  if (canUseSelectedDestination) return `${selectedName} 선택됨`;
+  return hasQuery ? "검색 결과에서 목적지 선택" : "장소명 2글자 이상 입력";
 }
 
 function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
@@ -223,41 +208,10 @@ function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boo
 }
 
 function getEmptyBody(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
-  if (status === "loading") return "장소 목록을 불러오는 중이에요";
-  if (status === "error") return "검색어는 유지됨 · 다시 시도하거나 지우고 새로 입력해 주세요";
-  if (hasQuery) return "한국어, 영어, 현지어 장소명이나 더 넓은 지역명으로 다시 검색";
-  return "장소를 선택하면 주소·국가·카테고리를 함께 확인하고 저장";
-}
-
-function getSearchInsight(status: P0ScreenProps["placeSearchStatus"], results: P0ScreenProps["placeSearchResults"], hasQuery: boolean, query: string) {
-  if (!hasQuery) {
-    return {
-      title: "검색 전",
-      body: "장소명, 역명, 경기장 이름을 입력하면 주소·국가·카테고리를 함께 보여줌",
-    };
-  }
-  if (status === "loading") {
-    return {
-      title: "검색 중",
-      body: `"${query}" 후보를 기기 언어 기준으로 확인 중`,
-    };
-  }
-  if (status === "error") {
-    return {
-      title: "연결 확인 필요",
-      body: "검색어는 유지됨. 다시 시도하거나 지워서 새 검색을 시작할 수 있음",
-    };
-  }
-  if (results.length === 0) {
-    return {
-      title: "결과 없음",
-      body: "한국어/영어/현지어를 바꿔 입력하거나 더 넓은 지역명으로 다시 검색",
-    };
-  }
-  return {
-    title: "검색 결과",
-    body: "같은 이름 장소는 주소와 국가까지 보고 선택함",
-  };
+  if (status === "loading") return "장소 목록을 불러오는 중";
+  if (status === "error") return "다시 시도하거나 검색어를 지워 주세요";
+  if (hasQuery) return "다른 이름이나 더 넓은 지역명으로 검색";
+  return "검색 결과에서 주소와 국가를 확인 후 선택";
 }
 
 function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
@@ -292,11 +246,39 @@ function getCountryLabel(countryCode: string) {
   return "국가 확인";
 }
 
+function getPlaceDistanceLabel(
+  place: P0ScreenProps["placeSearchResults"][number],
+  origin: P0ScreenProps["deviceLocationState"]["location"],
+  currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
+  distanceUnit: P0ScreenProps["distanceUnit"],
+) {
+  if (!origin) return place.countryCode === currentCountryCode ? "거리 확인 불가" : getCountryLabel(place.countryCode);
+  if (place.countryCode !== origin.countryCode) return "해외";
+  return formatDistance(getCoordinateDistanceMeters(origin.coordinate, place.coordinate), distanceUnit);
+}
+
+function getCoordinateDistanceMeters(
+  origin: NonNullable<P0ScreenProps["deviceLocationState"]["location"]>["coordinate"],
+  destination: P0ScreenProps["placeSearchResults"][number]["coordinate"],
+) {
+  const earthRadiusMeters = 6371000;
+  const lat1 = toRadians(origin.latitude);
+  const lat2 = toRadians(destination.latitude);
+  const deltaLat = toRadians(destination.latitude - origin.latitude);
+  const deltaLon = toRadians(destination.longitude - origin.longitude);
+  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
 function getProviderLabel(provider: string) {
   if (provider === "kakao") return "Kakao";
   if (provider === "google") return "Google";
-  if (provider === "openmeteo") return "Open-Meteo";
-  return "기본";
+  if (provider === "openmeteo") return "좌표 검색";
+  return "추천";
 }
 
 function BackGlyph({ color }: { color: string }) {
@@ -333,7 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.md,
+    gap: spacing.sm,
     minHeight: "100%",
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -438,92 +420,26 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "900",
   },
-  accountStatus: {
-    minHeight: 70,
+  searchStatusRow: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: radius.lg,
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
-  accountCopy: {
+  searchStatusText: {
     flex: 1,
     minWidth: 0,
-    gap: 4,
-  },
-  accountTitle: {
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "900",
-  },
-  accountBody: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  accountPill: {
-    minHeight: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  accountPillText: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  searchInsight: {
-    gap: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  searchInsightTitle: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
   },
-  searchInsightBody: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  stack: {
-    gap: spacing.sm,
-  },
-  stateCard: {
-    gap: spacing.xs,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  stateCardSky: {
-    borderLeftWidth: 2,
-  },
-  stateCardGold: {
-    borderLeftWidth: 2,
-  },
-  stateHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  eyebrow: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
   countPill: {
     minWidth: 44,
-    minHeight: 31,
+    minHeight: 28,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -534,19 +450,14 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
   },
-  stateText: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "800",
-  },
   selectedRail: {
-    minHeight: 52,
+    minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingHorizontal: 16,
-    borderRadius: radius.lg,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
   },
   selectedName: {
     flex: 1,
@@ -585,9 +496,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   resultCard: {
-    gap: spacing.sm,
-    padding: 16,
-    borderRadius: radius.lg,
+    padding: 14,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
   resultHead: {

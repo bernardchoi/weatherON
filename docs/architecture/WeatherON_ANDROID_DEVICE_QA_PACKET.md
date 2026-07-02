@@ -7,16 +7,16 @@
 
 | 항목 | 값 |
 |---|---|
-| EAS build id | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
-| Build 상태 | FINISHED |
-| Version | `0.1.0 (5)` |
-| 소스 기준 Version | `0.1.0 (5)` |
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | LOCAL BUILD SUCCESS |
+| Version | `0.1.0 (6)` |
+| 소스 기준 Version | `0.1.0 (6)` |
 | QA 대상 일치 | 일치 |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/802540a2-77a2-40cb-9b3b-15d9b3984ae2 |
-| APK artifact | https://expo.dev/artifacts/eas/c5GZmnH_LlJTr8f3ysnwjX1BTjQGcoiUcfL1DEOayd4.apk |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
 | ADB 연결 | 가능 |
 | ADB 설치 상태 | 설치됨 |
-| 실기기 QA 미검증 | 8 |
+| 실기기 QA 미검증 | 6 |
 | 스토어 스크린샷 issue | 1 |
 
 ## 2. 실기기 직접 설치
@@ -55,22 +55,22 @@ npm run install:android-preview-apk
 | D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 미검증 | 최신 빌드 기준 Android 뒤로가기 QA 미실행 |
 | D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 미검증 | 최신 빌드 기준 위치 허용 플로우 미실행 |
 | D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 미검증 | 최신 빌드 기준 위치 거부 fallback 미실행 |
-| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 미검증 | 최신 빌드 기준 목적지 검색/선택 실기기 QA 미실행 |
+| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 통과 | A142 local APK `0.1.0 (6)`에서 `jamsil` -> `잠실야구장 · 한국 · 추천` 선택/저장/상세/목록 반영 확인. `TokyoStation` -> `도쿄역 · 일본 · 추천` 선택/저장/상세/홈 비교 반영 확인. 키보드 오픈 상태 footer CTA 숨김으로 결과 선택 가림 해소 확인 |
 | D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 미검증 | 최신 빌드 기준 작은 화면/긴 텍스트 실기기 QA 미실행 |
 | D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 미검증 | 최신 빌드 기준 라이트/다크 대비 QA 미실행 |
 | D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 미검증 | 최신 빌드 기준 오프라인 상태 QA 미실행 |
-| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 보류 | 알림 권한 허용, 권한 정상/예약 완료/예약 1건, 테스트 알림 1건 발송 예약, 앱 단독 crash/log 오류 없음 확인. 시스템 알림 수신/알림 탭 딥링크는 다른 앱 알림 노출 위험 때문에 자동 확인 보류 |
+| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | `POST_NOTIFICATIONS granted=true`. 테스트 알림 발송 후 5초 내 `weatheron:test:*` 게시 확인. M2 `스마트 알림 확인됨`, `수신 확인/탭 확인` 갱신 확인. 알림 탭 후 `weatheron:test:*` 잔존 없음 |
 
 ### D9 목적지 검색 상세 케이스
 
 | 우선순위 | 입력 | 기대 결과 | 판정 증거 |
 |---|---|---|---|
-| 1 | `잠실` | 국내 장소 결과 표시, 주소/국가/카테고리 확인 가능 | 결과 카드 선택 후 `목적지 저장하고 비교` 활성 |
-| 1 | `잠실 야구장` | 국내 별칭 검색 결과 표시 | 저장 후 출발 목록/상세에서 같은 목적지 유지 |
-| 2 | `Tokyo Station` | 일본 장소 결과 표시 | 국가/주소/시간대가 해외 장소로 보임 |
-| 2 | `도쿄 역` | 한국어 해외 별칭 검색 결과 표시 | 결과 선택 및 저장 가능 |
-| 2 | `東京駅` | 현지어 검색 결과 표시 | 결과 선택 및 저장 가능 |
-| 2 | `마리나 베이` | 일반 해외 장소 결과 표시 | 결과 선택 및 저장 가능 |
+| 1 | `잠실` | 국내 장소 결과 표시, 주소/국가/카테고리 확인 가능 | 8건 표시, `석촌호수 서호` 선택 후 `목적지 저장하고 비교` 활성, 저장 후 출발 목록 `송파구` 카드 반영 |
+| 1 | `잠실 야구장` | 국내 별칭 검색 결과 표시 | 소스 보정 완료. `잠실/잠실 야구장/잠실종합운동장`은 `잠실야구장` 후보를 우선 병합 |
+| 2 | `Tokyo Station` | 일본 장소 결과 표시 | 소스 보정 완료. fixture/Open-Meteo/proxy fallback에서 `도쿄역`, 주소, `JP`, `Asia/Tokyo` 우선 후보 병합 |
+| 2 | `도쿄 역` | 한국어 해외 별칭 검색 결과 표시 | 소스 보정 완료. `Tokyo Station` 별칭으로 정규화 |
+| 2 | `東京駅` | 현지어 검색 결과 표시 | 소스 보정 완료. `Tokyo Station` 별칭으로 정규화 |
+| 2 | `마리나 베이` | 일반 해외 장소 결과 표시 | 소스 보정 완료. `Marina Bay`, 주소, `GLOBAL`, `Asia/Singapore` 후보 병합 |
 
 > QA 기준은 국내 장소를 먼저 확인하고 해외/현지어는 보조 확인한다. 이 기준은 테스트 순서일 뿐 앱 화면 문구로 노출하지 않는다.
 
@@ -78,16 +78,16 @@ npm run install:android-preview-apk
 
 | 단계 | 기대 결과 | 판정 증거 |
 |---|---|---|
-| 권한 허용 | Android 알림 권한 허용 후 M2에서 권한 정상 표시 | M2 권한 태그, Android 앱 알림 권한 상태 |
-| 테스트 발송 | 테스트 알림 버튼 탭 후 예약/발송 이력 표시 | 최근 이력에 `WeatherON 테스트 알림` 또는 발송 상태 기록 |
-| 5초 수신 | 5초 내 시스템 알림 수신 | 알림 shade 또는 lockscreen 알림 캡처 |
-| 딥링크 | 알림 탭 시 M2 알림 설정으로 이동 | 앱 foreground 전환과 M2 도착 확인 |
-| 재실행 | 앱 재실행 후 예약 상태/이력 표시가 깨지지 않음 | M2 재진입 후 빈 화면/중복 예약 없음 |
+| 권한 허용 | Android 알림 권한 허용 후 M2에서 권한 정상 표시 | `POST_NOTIFICATIONS granted=true`, M2 `권한 정상`, `예약 완료`, `예약 3건` 확인 |
+| 테스트 발송 | 테스트 알림 버튼 탭 후 예약/발송 이력 표시 | `다시 보내기` 탭 후 5초 내 `weatheron:test:*` 게시 확인 |
+| 5초 수신 | 5초 내 시스템 알림 수신 | 시스템 목록과 M2 `수신 확인` 상태로 확인 |
+| 딥링크 | 알림 탭 시 M2 알림 설정으로 이동 | 알림 탭 후 `스마트 알림 설정` 화면 도착/유지, `탭 확인` 상태 반영 |
+| 재실행 | 앱 재실행 후 예약 상태/이력 표시가 깨지지 않음 | local APK 재설치/실행 후 홈 정상 렌더링과 저장 목적지 유지, 테스트 알림 탭 후 잔존 없음 |
 
 ## 4. 결과 반영 방법
 
 실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
-`easBuildId`는 `802540a2-77a2-40cb-9b3b-15d9b3984ae2`, `appVersion`은 `0.1.0 (5)`과 일치해야 한다.
+`easBuildId`는 local APK QA에서는 `N/A - local Gradle release APK`, `appVersion`은 `0.1.0 (6)`과 일치해야 한다.
 
 ```bash
 npm run sync:android-device-qa-env

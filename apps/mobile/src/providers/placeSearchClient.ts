@@ -47,7 +47,7 @@ type OpenMeteoGeocodingPlace = {
 
 export const fixturePlaceSearchClient: PlaceSearchClient = {
   async searchPlaces(params) {
-    return searchFixturePlaces(params.query);
+    return filterPlacesByCountryCode(searchFixturePlaces(params.query), params.countryCode);
   },
 };
 
@@ -60,7 +60,8 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
       url.searchParams.set("q", params.query);
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
       url.searchParams.set("language", getSearchLanguage(params.locale));
-      return fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);
+      const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);
+      return mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode), remoteResults);
     },
   };
 }
@@ -80,8 +81,14 @@ export function createOpenMeteoPlaceSearchClient(options: OpenMeteoPlaceSearchCl
       if (params.countryCode && params.countryCode !== "GLOBAL") {
         url.searchParams.set("countryCode", params.countryCode);
       }
-      const payload = await fetchJson<OpenMeteoGeocodingResponse>(url, timeoutMs, options.fetchImpl);
-      return normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode);
+      const curatedResults = getCuratedPlaceMatches(query, params.countryCode);
+      try {
+        const payload = await fetchJson<OpenMeteoGeocodingResponse>(url, timeoutMs, options.fetchImpl);
+        return mergePlaceSearchResults(curatedResults, normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode));
+      } catch (error) {
+        if (curatedResults.length > 0) return curatedResults;
+        throw error;
+      }
     },
   };
 }
@@ -146,8 +153,17 @@ function getSearchQueryAlias(query: string): string {
 }
 
 const placeSearchQueryAliases: Record<string, string> = {
+  "잠실": "잠실야구장",
+  "잠실 야구장": "잠실야구장",
+  "잠실종합운동장": "잠실야구장",
+  "jamsil": "Jamsil Baseball Stadium",
+  "jamsil stadium": "Jamsil Baseball Stadium",
   "도쿄": "Tokyo",
+  "tokyo station": "Tokyo Station",
+  "tokyostation": "Tokyo Station",
   "도쿄역": "Tokyo Station",
+  "도쿄 역": "Tokyo Station",
+  "東京駅": "Tokyo Station",
   "시부야": "Shibuya",
   "신주쿠": "Shinjuku",
   "오사카": "Osaka",
@@ -164,6 +180,38 @@ const placeSearchQueryAliases: Record<string, string> = {
   "런던": "London",
   "뉴욕": "New York",
 };
+
+function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"]): PlaceSearchResult[] {
+  return filterPlacesByCountryCode(searchFixturePlaces(query), countryCode);
+}
+
+function filterPlacesByCountryCode(
+  places: PlaceSearchResult[],
+  countryCode?: SearchPlacesParams["countryCode"],
+): PlaceSearchResult[] {
+  if (!countryCode || countryCode === "GLOBAL") return places;
+  return places.filter((place) => place.countryCode === countryCode);
+}
+
+function mergePlaceSearchResults(...groups: PlaceSearchResult[][]): PlaceSearchResult[] {
+  const seen = new Set<string>();
+  return groups.flat().filter((place) => {
+    const key = getPlaceIdentityKey(place);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getPlaceIdentityKey(place: PlaceSearchResult): string {
+  const lat = place.coordinate.latitude.toFixed(4);
+  const lon = place.coordinate.longitude.toFixed(4);
+  return `${place.countryCode}:${normalizePlaceIdentityText(place.name)}:${lat}:${lon}`;
+}
+
+function normalizePlaceIdentityText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
 
 function normalizeOpenMeteoPlaces(
   places: OpenMeteoGeocodingPlace[],

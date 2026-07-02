@@ -144,17 +144,19 @@ async function searchPlaces(params) {
   const language = normalizeSearchLanguage(params.get("language") ?? params.get("locale"));
   if (query.trim().length < 2) return [];
   return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${query.trim().toLowerCase()}`, placeCacheTtlMs, async () => {
+    const curatedResults = searchFixturePlaces(searchQuery);
     try {
       if (countryCode === "KR" && process.env.KAKAO_REST_API_KEY) {
-        return await searchKakaoPlaces(searchQuery);
+        return mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery));
       }
       if (getGoogleMapsApiKey()) {
-        return await searchGooglePlaces(searchQuery, countryCode, language);
+        const googleResults = await searchGooglePlaces(searchQuery, countryCode, language);
+        return mergePlaceSearchResults(curatedResults, googleResults);
       }
     } catch (error) {
       console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
     }
-    return searchFixturePlaces(searchQuery);
+    return curatedResults;
   });
 }
 
@@ -187,7 +189,12 @@ function getPlaceSearchQueryAlias(query) {
 }
 
 const placeSearchQueryAliases = {
+  "잠실": "잠실야구장",
+  "jamsil": "Jamsil Baseball Stadium",
+  "jamsil baseball stadium": "잠실야구장",
   "도쿄": "Tokyo",
+  "tokyo station": "Tokyo Station",
+  "tokyostation": "Tokyo Station",
   "도쿄 역": "Tokyo Station",
   "도쿄역": "Tokyo Station",
   "東京駅": "Tokyo Station",
@@ -200,8 +207,10 @@ const placeSearchQueryAliases = {
   "싱가포르": "Singapore",
   "마리나베이": "Marina Bay",
   "마리나 베이": "Marina Bay",
-  "잠실 야구장": "잠실종합운동장",
-  "jamsil stadium": "잠실종합운동장",
+  "잠실 야구장": "잠실야구장",
+  "잠실야구장": "Jamsil Baseball Stadium",
+  "잠실종합운동장": "잠실야구장",
+  "jamsil stadium": "Jamsil Baseball Stadium",
   "방콕": "Bangkok",
   "타이베이": "Taipei",
   "홍콩": "Hong Kong",
@@ -500,6 +509,31 @@ const placeSearchFixtures = [
     provider: "fixture",
   },
 ];
+
+function mergePlaceSearchResults(...groups) {
+  const seen = new Set();
+  return groups.flat().filter((place) => {
+    const key = getPlaceIdentityKey(place);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getPlaceIdentityKey(place) {
+  const lat = Number(place.coordinate?.latitude);
+  const lon = Number(place.coordinate?.longitude);
+  return [
+    place.countryCode,
+    normalizePlaceIdentityText(place.name),
+    Number.isFinite(lat) ? lat.toFixed(4) : "",
+    Number.isFinite(lon) ? lon.toFixed(4) : "",
+  ].join(":");
+}
+
+function normalizePlaceIdentityText(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, "");
+}
 
 function searchFixturePlaces(query) {
   const normalizedQuery = getPlaceSearchQueryAlias(query).trim().toLowerCase().replace(/\s+/g, " ");

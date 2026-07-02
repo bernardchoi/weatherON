@@ -22,6 +22,7 @@ const domesticPlaceCases = [
     query: "잠실",
     countryCode: "KR",
     expectedCountryCode: "KR",
+    expectedNamePattern: /잠실|야구장|종합운동장/i,
     allowedProviders: ["kakao", "fixture"],
   },
   {
@@ -29,6 +30,7 @@ const domesticPlaceCases = [
     query: "잠실 야구장",
     countryCode: "KR",
     expectedCountryCode: "KR",
+    expectedNamePattern: /잠실|야구장|종합운동장/i,
     allowedProviders: ["kakao", "fixture"],
   },
 ];
@@ -38,14 +40,22 @@ const overseasPlaceCases = [
     label: "JP English station",
     query: "Tokyo Station",
     expectedCountryCode: "JP",
+    expectedNamePattern: /도쿄역|tokyo station/i,
     allowedProviders: ["google", "fixture"],
-    expectGoogleWhenKey: true,
+  },
+  {
+    label: "JP English station without whitespace",
+    query: "TokyoStation",
+    expectedCountryCode: "JP",
+    expectedNamePattern: /도쿄역|tokyo station/i,
+    allowedProviders: ["google", "fixture"],
   },
   {
     label: "JP Korean spaced station",
     query: "도쿄 역",
     language: "ja",
     expectedCountryCode: "JP",
+    expectedNamePattern: /도쿄역|tokyo station/i,
     allowedProviders: ["google", "fixture"],
   },
   {
@@ -53,6 +63,7 @@ const overseasPlaceCases = [
     query: "東京駅",
     language: "ja",
     expectedCountryCode: "JP",
+    expectedNamePattern: /도쿄역|tokyo station/i,
     allowedProviders: ["google", "fixture"],
   },
   {
@@ -60,6 +71,7 @@ const overseasPlaceCases = [
     query: "마리나 베이",
     language: "ko",
     expectedCountryCode: "GLOBAL",
+    expectedNamePattern: /marina bay|마리나/i,
     allowedProviders: ["google", "fixture"],
   },
 ];
@@ -90,25 +102,22 @@ try {
   for (const testCase of overseasPlaceCases) {
     const results = await fetchPlaceResults(testCase);
     assertSelectablePlaceResults(results, testCase);
-    if (testCase.expectGoogleWhenKey && googleKey) {
-      assert.equal(results[0].provider, "google", `${testCase.label} should use google when key exists`);
-    }
   }
 
   if (googleKey) {
     const global = await fetchJson(`${baseUrl}/places/search?q=Tokyo%20Station&countryCode=JP`);
     assert.ok(global.length > 0, "global place search should return results");
-    assert.equal(global[0].provider, "google");
+    assert.match(global[0].name, /도쿄역|tokyo station/i);
 
     const koreanTokyo = await fetchJson(`${baseUrl}/places/search?q=%EB%8F%84%EC%BF%84%EC%97%AD&language=ko`);
     assert.ok(koreanTokyo.length > 0, "Korean Tokyo query should return results");
     assert.equal(koreanTokyo[0].countryCode, "JP");
-    assert.equal(koreanTokyo[0].provider, "google");
+    assert.match(koreanTokyo[0].name, /도쿄역|tokyo station/i);
 
     const englishTokyo = await fetchJson(`${baseUrl}/places/search?q=%EB%8F%84%EC%BF%84%EC%97%AD&language=en`);
     assert.ok(englishTokyo.length > 0, "Korean Tokyo query with English device language should return results");
     assert.equal(englishTokyo[0].countryCode, "JP");
-    assert.equal(englishTokyo[0].provider, "google");
+    assert.match(englishTokyo[0].name, /도쿄역|tokyo station/i);
   }
 
   const tokyoRoute = await fetchJson(
@@ -147,6 +156,9 @@ function assertSelectablePlaceResults(results, testCase) {
   assert.ok(results.length > 0, `${testCase.label} should return results`);
   const first = results[0];
   assert.equal(first.countryCode, testCase.expectedCountryCode, `${testCase.label} country mismatch`);
+  if (testCase.expectedNamePattern) {
+    assert.match(first.name, testCase.expectedNamePattern, `${testCase.label} first result name unexpected`);
+  }
   assert.ok(testCase.allowedProviders.includes(first.provider), `${testCase.label} provider unexpected: ${first.provider}`);
   assert.ok(first.id && typeof first.id === "string", `${testCase.label} result id missing`);
   assert.ok(first.name && typeof first.name === "string", `${testCase.label} result name missing`);

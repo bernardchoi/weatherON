@@ -39,12 +39,20 @@ export function AlertSettingsScreen({
     deliveryReady && destinationReady && alertPreferences.destination,
     deliveryReady && alertPreferences.quietHours,
   ].filter(Boolean).length;
-  const alertReadiness = getAlertReadinessCopy(smartCareEnabled, permissionReady, notificationResult === "skipped");
-  const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
   const latestTestNotification = notificationHistory.find((item) => item.notificationId === "local-test");
-  const testNotificationVerified = latestTestNotification?.statusLabel === "발송 확인";
-  const deliveryStatusLabel = deliveryReady ? (testNotificationVerified ? deliveryStatus.statusLabel : "수신 QA 필요") : "푸시 대기";
-  const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel);
+  const testNotificationReceived = notificationHistory.some((item) => item.notificationId === "local-test" && item.action === "received");
+  const testNotificationOpened = notificationHistory.some((item) => item.notificationId === "local-test" && item.action === "open");
+  const testNotificationVerified = testNotificationReceived || testNotificationOpened;
+  const alertReadiness = getAlertReadinessCopy(
+    smartCareEnabled,
+    permissionReady,
+    notificationResult === "skipped",
+    testNotificationVerified,
+    testNotificationOpened,
+  );
+  const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
+  const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 QA 필요") : "푸시 대기";
+  const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel, testNotificationReceived, testNotificationOpened);
   const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "다시 보내기" : "보내기") : "권한 켜기";
 
   const goBack = () => {
@@ -441,14 +449,22 @@ function getNotificationDeliveryCopy(
   return { statusLabel: "기기 QA 필요", countLabel: "네이티브 확인 전" };
 }
 
-function getTestNotificationBody(permissionReady: boolean, statusLabel?: string) {
+function getTestNotificationBody(permissionReady: boolean, statusLabel?: string, received?: boolean, opened?: boolean) {
   if (!permissionReady) return "권한 켜고 수신 확인";
+  if (opened) return "수신·탭 확인됨";
+  if (received) return "수신 확인됨";
   if (statusLabel === "예약 확인 실패") return "예약 목록 확인 실패 · 기기 QA 필요";
   if (statusLabel) return `최근 ${statusLabel}`;
   return "5초 뒤 발송 · 예약 목록 검증";
 }
 
-function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boolean, skippedPermission: boolean) {
+function getAlertReadinessCopy(
+  smartCareEnabled: boolean,
+  permissionReady: boolean,
+  skippedPermission: boolean,
+  testNotificationVerified: boolean,
+  testNotificationOpened: boolean,
+) {
   if (!smartCareEnabled) {
     return {
       title: "스마트 알림 일시 중지",
@@ -459,6 +475,15 @@ function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boole
     };
   }
   if (permissionReady) {
+    if (testNotificationVerified) {
+      return {
+        title: "스마트 알림 확인됨",
+        body: testNotificationOpened ? "테스트 알림 수신·탭 확인됨" : "테스트 알림 수신 확인됨",
+        resultBody: testNotificationOpened ? "권한과 실제 수신, 설정 화면 이동까지 확인됨" : "권한과 실제 수신까지 확인됨",
+        gateTitle: "알림 권한 정상",
+        gateBody: "테스트 수신 확인됨",
+      };
+    }
     return {
       title: "스마트 알림 확인 중",
       body: "테스트 알림 수신 확인 전",
