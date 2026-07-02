@@ -26,10 +26,10 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
   const returnLabel = getRouteLabel(gate?.returnTo);
   const isDestinationCareGate = gate?.reason === "destination-care";
   const gateReady = isAccountSetupGate ? locationReady && permissionReady : isLocationGate ? locationReady : permissionReady;
-  const screenTitle = isAccountSetupGate ? "앱 준비를 마무리해요" : isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
-  const screenSubtitle = isAccountSetupGate ? "계정 연결 후 위치와 알림을 한 번에 설정" : isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "설정 후 원래 화면으로 돌아감";
+  const screenTitle = isAccountSetupGate ? "앱 권한을 선택해요" : isDestinationCareGate ? "목적지는 먼저 저장할 수 있어요" : "필요한 권한만 먼저 허용해 주세요";
+  const screenSubtitle = isAccountSetupGate ? "계정과 별도로 위치·알림 권한을 선택" : isDestinationCareGate ? "알림은 나중에 켜도 출발 탭에서 비교 가능" : "설정 후 원래 화면으로 돌아감";
   const statusLabel = isDestinationCareGate ? (permissionReady ? "알림 켜짐" : "저장 가능") : gateReady ? "허용됨" : "대기";
-  const primaryLabel = isAccountSetupGate ? "위치·알림 허용" : isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
+  const primaryLabel = isAccountSetupGate ? "권한 선택 계속" : isLocationGate ? "위치 권한 허용" : permissionReady ? "알림 설정으로 돌아가기" : "알림 권한 허용";
   const resultCards = buildResultCards({
     isAccountSetupGate,
     isLocationGate,
@@ -55,6 +55,15 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           </View>
           <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
         </View>
+        {isAccountSetupGate ? (
+          <View style={[styles.stepRail, { backgroundColor: theme.cardMuted }]}>
+            <Text style={[styles.stepRailText, { color: theme.clear }]}>계정 연결 완료</Text>
+            <Text style={[styles.stepRailDivider, { color: theme.subtle }]}>›</Text>
+            <Text style={[styles.stepRailText, { color: theme.gold }]}>권한 선택</Text>
+            <Text style={[styles.stepRailDivider, { color: theme.subtle }]}>›</Text>
+            <Text style={[styles.stepRailText, { color: theme.subtle }]}>원래 화면 복귀</Text>
+          </View>
+        ) : null}
         {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         <View style={styles.actions}>
           <AppButton label={primaryLabel} onPress={onComplete} />
@@ -216,6 +225,25 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 17,
     lineHeight: 22,
+    fontWeight: "900",
+  },
+  stepRail: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  stepRailText: {
+    flexShrink: 1,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  stepRailDivider: {
+    fontSize: 15,
+    lineHeight: 18,
     fontWeight: "900",
   },
   permissionCard: {

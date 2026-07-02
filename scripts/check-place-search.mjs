@@ -24,15 +24,37 @@ const server = spawn(process.execPath, ["apps/server/src/index.mjs"], {
 
 try {
   await waitForHealth(`${baseUrl}/health`);
+  console.log("place search priority 1: domestic KR destination search and route");
   const domestic = await fetchJson(`${baseUrl}/places/search?q=%EC%9E%A0%EC%8B%A4&countryCode=KR`);
   assert.ok(domestic.length > 0, "domestic place search should return results");
   assert.ok(["kakao", "fixture"].includes(domestic[0].provider));
 
+  const domesticAlias = await fetchJson(`${baseUrl}/places/search?q=%EC%9E%A0%EC%8B%A4%20%EC%95%BC%EA%B5%AC%EC%9E%A5&countryCode=KR`);
+  assert.ok(domesticAlias.length > 0, "domestic alias place search should return results");
+  assert.equal(domesticAlias[0].countryCode, "KR");
+
+  const route = await fetchJson(
+    `${baseUrl}/routes/estimate?origin=37.5446,127.0557&destination=37.5122,127.0719&originName=%EC%84%B1%EC%88%98&destinationName=%EC%9E%A0%EC%8B%A4%EC%A2%85%ED%95%A9%EC%9A%B4%EB%8F%99%EC%9E%A5`,
+  );
+  assert.ok(route.travelMinutes > 0, "route estimate should include travel minutes");
+  assert.ok(route.distanceMeters >= 0, "route estimate should include distance");
+  assert.ok(["kakao", "fallback"].includes(route.provider), "route estimate should use kakao or fallback provider");
+
+  console.log("place search priority 2: overseas destination search and route fallback");
   const googleKey = process.env.GOOGLE_MAPS_API_KEY ?? process.env.GOOGLE_GEOCODING_API_KEY;
   const autoGlobal = await fetchJson(`${baseUrl}/places/search?q=Tokyo%20Station`);
   assert.ok(autoGlobal.length > 0, "auto global place search should return results");
   assert.equal(autoGlobal[0].countryCode, "JP");
   assert.ok(googleKey ? autoGlobal[0].provider === "google" : autoGlobal[0].provider === "fixture");
+
+  const spacedKoreanTokyo = await fetchJson(`${baseUrl}/places/search?q=%EB%8F%84%EC%BF%84%20%EC%97%AD&language=ja`);
+  assert.ok(spacedKoreanTokyo.length > 0, "spaced Korean Tokyo query should return results");
+  assert.equal(spacedKoreanTokyo[0].countryCode, "JP");
+  assert.ok(["google", "fixture"].includes(spacedKoreanTokyo[0].provider));
+
+  const marinaBay = await fetchJson(`${baseUrl}/places/search?q=%EB%A7%88%EB%A6%AC%EB%82%98%20%EB%B2%A0%EC%9D%B4&language=ko`);
+  assert.ok(marinaBay.length > 0, "Korean Marina Bay alias should return results");
+  assert.equal(marinaBay[0].countryCode, "GLOBAL");
 
   if (googleKey) {
     const global = await fetchJson(`${baseUrl}/places/search?q=Tokyo%20Station&countryCode=JP`);
@@ -50,19 +72,14 @@ try {
     assert.equal(englishTokyo[0].provider, "google");
   }
 
-  const route = await fetchJson(
-    `${baseUrl}/routes/estimate?origin=37.5446,127.0557&destination=37.5122,127.0719&originName=%EC%84%B1%EC%88%98&destinationName=%EC%9E%A0%EC%8B%A4%EC%A2%85%ED%95%A9%EC%9A%B4%EB%8F%99%EC%9E%A5`,
-  );
-  assert.ok(route.travelMinutes > 0, "route estimate should include travel minutes");
-  assert.ok(route.distanceMeters >= 0, "route estimate should include distance");
-  assert.ok(["kakao", "fallback"].includes(route.provider), "route estimate should use kakao or fallback provider");
-
   const tokyoRoute = await fetchJson(
     `${baseUrl}/routes/estimate?origin=37.5446,127.0557&destination=35.6812,139.7671&originName=%EC%84%B1%EC%88%98&destinationName=Tokyo&originCountryCode=KR&destinationCountryCode=JP`,
   );
   assert.ok(tokyoRoute.travelMinutes > 0, "Tokyo route estimate should include travel minutes");
   assert.ok(tokyoRoute.distanceMeters >= 0, "Tokyo route estimate should include distance");
   assert.equal(tokyoRoute.provider, "fallback");
+  assert.equal(tokyoRoute.travelMinutes, 150, "cross-country fallback should use international default minutes");
+  assert.match(tokyoRoute.message, /해외 목적지 기본 이동시간/);
 
   if (googleKey) {
     const tokyoLocalRoute = await fetchJson(

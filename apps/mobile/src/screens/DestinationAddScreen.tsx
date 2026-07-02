@@ -13,6 +13,7 @@ export function DestinationAddScreen({
   isPlaceSearchLoading,
   placeSearchStatus,
   onNavigate,
+  onReturnFromDestinationAdd,
   onSaveDestination,
   onSearchPlaces,
   onSelectDestinationPlace,
@@ -47,14 +48,14 @@ export function DestinationAddScreen({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="뒤로"
-            onPress={() => onNavigate("G1")}
+            onPress={onReturnFromDestinationAdd}
             style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
           >
             <BackGlyph color={theme.subtle} />
           </Pressable>
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>목적지 추가</Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 고르면 자동 케어가 확장돼요</Text>
+            <Text style={[styles.subtitle, { color: theme.subtle }]}>현재 위치와 목적지에 맞춰 장소를 확인</Text>
           </View>
         </View>
 
@@ -224,8 +225,8 @@ function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boo
 function getEmptyBody(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
   if (status === "loading") return "장소 목록을 불러오는 중이에요";
   if (status === "error") return "검색어는 유지됨 · 다시 시도하거나 지우고 새로 입력해 주세요";
-  if (hasQuery) return "한국어 또는 현지어 장소명을 다시 입력해요. 해외 장소는 Google 결과로 확인함";
-  return "목적지를 선택하면 홈 비교와 출발 탭에 바로 반영됨";
+  if (hasQuery) return "한국어, 영어, 현지어 장소명이나 더 넓은 지역명으로 다시 검색";
+  return "장소를 선택하면 주소·국가·카테고리를 함께 확인하고 저장";
 }
 
 function getSearchInsight(status: P0ScreenProps["placeSearchStatus"], results: P0ScreenProps["placeSearchResults"], hasQuery: boolean, query: string) {
@@ -253,10 +254,9 @@ function getSearchInsight(status: P0ScreenProps["placeSearchStatus"], results: P
       body: "한국어/영어/현지어를 바꿔 입력하거나 더 넓은 지역명으로 다시 검색",
     };
   }
-  const hasGlobal = results.some((place) => place.countryCode !== "KR" || place.provider === "google");
   return {
-    title: hasGlobal ? "해외 결과 포함" : "검색 결과",
-    body: hasGlobal ? "해외 장소는 Google 기준으로 국가·주소를 함께 확인하고 선택함" : "같은 이름 장소는 주소까지 보고 선택함",
+    title: "검색 결과",
+    body: "같은 이름 장소는 주소와 국가까지 보고 선택함",
   };
 }
 
@@ -289,7 +289,7 @@ function getCategoryDetail(category: string) {
 function getCountryLabel(countryCode: string) {
   if (countryCode === "KR") return "한국";
   if (countryCode === "JP") return "일본";
-  return "해외";
+  return "국가 확인";
 }
 
 function getProviderLabel(provider: string) {

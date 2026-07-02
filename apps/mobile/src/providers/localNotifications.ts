@@ -9,7 +9,7 @@ export type LocalNotificationPermissionResult = {
 };
 
 export type LocalNotificationSyncResult = {
-  status: "scheduled" | "cancelled" | "permission-required" | "unavailable";
+  status: "scheduled" | "cancelled" | "permission-required" | "unavailable" | "verification-failed";
   scheduledCount: number;
 };
 
@@ -94,7 +94,11 @@ export async function syncLocalWeatherNotifications(options: {
     ),
   );
 
-  return { status: "scheduled", scheduledCount: activeNotifications.length };
+  const scheduledCount = await countScheduledNotifications(Notifications, smartNotificationIdentifierPrefix);
+  return {
+    status: scheduledCount >= activeNotifications.length ? "scheduled" : "verification-failed",
+    scheduledCount,
+  };
 }
 
 export async function scheduleLocalNotificationTest(): Promise<LocalNotificationSyncResult> {
@@ -105,8 +109,9 @@ export async function scheduleLocalNotificationTest(): Promise<LocalNotification
   const permission = await Notifications.getPermissionsAsync();
   if (!permission.granted) return { status: "permission-required", scheduledCount: 0 };
 
+  const identifier = `weatheron:test:${Date.now()}`;
   await Notifications.scheduleNotificationAsync({
-    identifier: `weatheron:test:${Date.now()}`,
+    identifier,
     content: {
       title: "WeatherON 테스트 알림",
       body: "알림을 누르면 스마트 알림 설정으로 이동함",
@@ -122,7 +127,9 @@ export async function scheduleLocalNotificationTest(): Promise<LocalNotification
     },
   });
 
-  return { status: "scheduled", scheduledCount: 1 };
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+  const scheduledCount = scheduledNotifications.some((notification) => notification.identifier === identifier) ? 1 : 0;
+  return { status: scheduledCount === 1 ? "scheduled" : "verification-failed", scheduledCount };
 }
 
 export async function addLocalNotificationResponseListener(
@@ -186,6 +193,11 @@ async function cancelSmartScheduledNotifications(Notifications: ExpoNotification
       .filter((notification) => notification.identifier.startsWith(smartNotificationIdentifierPrefix))
       .map((notification) => Notifications.cancelScheduledNotificationAsync(notification.identifier)),
   );
+}
+
+async function countScheduledNotifications(Notifications: ExpoNotificationsModule, identifierPrefix: string) {
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+  return scheduledNotifications.filter((notification) => notification.identifier.startsWith(identifierPrefix)).length;
 }
 
 function getLocalNotificationResponsePayload(response: ExpoNotificationResponse): LocalNotificationResponsePayload {

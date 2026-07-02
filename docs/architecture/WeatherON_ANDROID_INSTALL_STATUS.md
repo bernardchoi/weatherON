@@ -1,6 +1,6 @@
 # WeatherON Android Install Status
 
-> 생성일: 2026-07-01
+> 생성일: 2026-07-02
 > 목적: 최신 Android preview APK 실기기 설치 상태와 설치 명령을 추적한다.
 
 ## 1. 현재 상태
@@ -10,12 +10,12 @@
 | 설치 가능 여부 | 가능 |
 | 설치 상태 | 설치됨 |
 | issue 수 | 0 |
-| EAS build id | `0ec9445b-12ac-41f5-a399-b4b948a575d6` |
+| EAS build id | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
 | Build 상태 | FINISHED |
-| APK artifact | https://expo.dev/artifacts/eas/rhuN-vzjaN2dMv39hZlf5bdKifIUtyxwfEdugJbLqfU.apk |
+| APK artifact | https://expo.dev/artifacts/eas/c5GZmnH_LlJTr8f3ysnwjX1BTjQGcoiUcfL1DEOayd4.apk |
 | 선택 기기 | 000841458003652 |
 | adb 경로 | /Users/daehyeonchoi/Library/Android/sdk/platform-tools/adb |
-| 로컬 APK | /var/folders/_5/fb8khc257cn_060s0g93zsdh0000gn/T/weatheron-0ec9445b-12ac-41f5-a399-b4b948a575d6.apk |
+| 로컬 APK | /var/folders/_5/fb8khc257cn_060s0g93zsdh0000gn/T/weatheron-802540a2-77a2-40cb-9b3b-15d9b3984ae2.apk |
 
 ## 2. Issues
 

@@ -453,8 +453,8 @@ function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications
   const warningIds = new Set(warningItems.map((item) => item.id));
   const todayItems = notifications.filter((item) => !warningIds.has(item.id));
   return [
-    { title: "주의 필요", meta: "읽지 않은 강수·출발 알림", items: warningItems },
     { title: "오늘 예정", meta: "오늘 기준으로 준비할 알림", items: todayItems },
+    { title: "주의 필요", meta: "읽지 않은 강수·출발 알림", items: warningItems },
   ];
 }
 

@@ -14,7 +14,6 @@ import type {
   PolicyDocumentType,
   AdConsentMode,
   TemperatureUnit,
-  WeightUnit,
   DistanceUnit,
   ThemeMode,
   StyleGender,
@@ -25,6 +24,7 @@ import type {
   AccountGateReturnRouteId,
   DestinationHubFilter,
   DestinationSchedulePreference,
+  DestinationTransportMode,
   DestinationTravelEstimate,
   PlaceSearchStatus,
   GateReason,
@@ -66,7 +66,6 @@ export type P0ScreenProps = {
   selectedPolicyDocument: PolicyDocumentType;
   adConsentMode: AdConsentMode;
   temperatureUnit: TemperatureUnit;
-  weightUnit: WeightUnit;
   distanceUnit: DistanceUnit;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
@@ -94,7 +93,6 @@ export type P0ScreenProps = {
   onReturnFromPolicyDocument: () => void;
   onSetAdConsentMode: (mode: AdConsentMode) => void;
   onSetTemperatureUnit: (unit: TemperatureUnit) => void;
-  onSetWeightUnit: (unit: WeightUnit) => void;
   onSetDistanceUnit: (unit: DistanceUnit) => void;
   onSetThemeMode: (mode: ThemeMode) => void;
   onToggleReducedTransparency: () => void;
@@ -116,10 +114,12 @@ export type P0ScreenProps = {
   onRequestCurrentLocation: () => void;
   onSelectWeatherLocation: (place: PlaceSearchResult) => void;
   onSaveDestination: (returnTo?: P0RouteId) => void;
+  onReturnFromDestinationAdd: () => void;
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
   onCycleDestinationAlertCondition: (field: keyof DestinationAlertCondition) => void;
-  onCycleDestinationSchedulePreference: (field: keyof DestinationSchedulePreference) => void;
+  onSetDestinationTargetArrivalTime: (targetArrivalTime: string) => void;
+  onSetDestinationTransportMode: (transportMode: DestinationTransportMode) => void;
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
   onSetDestinationHubFilter: (filter: DestinationHubFilter) => void;

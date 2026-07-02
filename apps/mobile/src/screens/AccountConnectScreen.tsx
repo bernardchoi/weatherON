@@ -13,15 +13,15 @@ type AccountConnectScreenProps = {
 type ProviderTone = "kakao" | "naver" | "line" | "google" | "apple" | "email";
 
 const primaryProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "kakao", label: "카카오로 시작하기", caption: "자동 추천" },
-  { id: "naver", label: "네이버로 시작하기", caption: "계정 선택지 보완" },
+  { id: "kakao", label: "카카오 데모로 계속", caption: "인증 화면 없이 상태만 연결" },
+  { id: "naver", label: "네이버 데모로 계속", caption: "계정 선택지 QA" },
 ];
 
 const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "line", label: "LINE으로 시작하기", caption: "해외 사용자용" },
-  { id: "google", label: "Google로 시작하기", caption: "공용 계정" },
-  { id: "apple", label: "Apple로 시작하기", caption: "이메일 숨기기 지원" },
-  { id: "email", label: "이메일 코드로 계속하기", caption: "비밀번호 없이 인증" },
+  { id: "line", label: "LINE 데모로 계속", caption: "해외 사용자 QA" },
+  { id: "google", label: "Google 데모로 계속", caption: "공용 계정 QA" },
+  { id: "apple", label: "Apple 데모로 계속", caption: "이메일 숨기기 흐름 QA" },
+  { id: "email", label: "이메일 코드 데모", caption: "코드 입력 없이 상태만 연결" },
 ];
 
 export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
@@ -39,14 +39,20 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onCancel} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <ChevronLeft color={theme.muted} />
           </Pressable>
-          <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
+          <Text style={[styles.title, { color: theme.text }]}>계정 연결 데모</Text>
         </View>
 
         <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.heroTitle, { color: theme.text }]}>계정 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
+          <Text style={[styles.heroTitle, { color: theme.text }]}>계정 상태를 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
           <Text style={[styles.heroBody, { color: theme.muted }]}>
-            추천 확인은 계속 가능하고{"\n"}저장·동기화·알림 추가만 계정에 연결돼요
+            현재 빌드는 실제 소셜 인증 전 단계이며{"\n"}저장·동기화 상태만 데모로 확인함
           </Text>
+        </View>
+
+        <View style={[styles.stepNotice, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Text style={[styles.stepKicker, { color: theme.gold }]}>다음 단계</Text>
+          <Text style={[styles.stepTitle, { color: theme.text }]}>약관 확인 후 원래 화면으로 돌아감</Text>
+          <Text style={[styles.stepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도이며 MY에서 따로 켤 수 있음</Text>
         </View>
 
         {destinationName ? (
@@ -58,8 +64,8 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
         ) : null}
 
         <View style={styles.recommendBlock}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>추천 방법</Text>
-          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>자동 추천된 방법을 먼저 보여줘요</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>데모 연결 방법</Text>
+          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>실제 인증 전 QA용 상태 연결</Text>
 
           <View style={styles.intentTabs}>
             <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
@@ -92,7 +98,7 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           <Text style={[styles.laterText, { color: theme.subtle }]}>나중에 할래요</Text>
         </Pressable>
 
-        <Text style={[styles.footer, { color: theme.subtle }]}>최초 계정 연결 시 다음 단계에서{"\n"}약관 동의를 진행합니다</Text>
+        <Text style={[styles.footer, { color: theme.subtle }]}>실제 제공자 인증은 추후 연동 대상임{"\n"}현재는 약관과 저장 상태만 검증</Text>
       </ScrollView>
     </View>
   );
@@ -234,6 +240,27 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   contextBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  stepNotice: {
+    gap: 4,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  stepKicker: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  stepTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  stepBody: {
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "700",

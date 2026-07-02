@@ -56,7 +56,7 @@
 | 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 코디 요약, 우산/알림 진입이 보임 |
 | 2 | `phone-02-destination-search.png` | P1 목적지 검색 | 하단 출발 > 목적지 추가 | Kakao Local 결과 또는 fallback 결과가 보임 |
 | 3 | `phone-03-destination-care.png` | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 목적지 날씨와 케어 ON/OFF 상태가 보임 |
-| 4 | `phone-04-outfit.png` | C1 코디 추천 | MY > 코디·옷장 | 날씨 기반 착장과 추천 사유가 보임 |
+| 4 | `phone-04-outfit.png` | C1 코디 추천 | 하단 홈 > 코디 요약 | 날씨 기반 착장과 추천 사유가 보임 |
 | 5 | `phone-05-settings-policy.png` | M/R 정책 허브 | 하단 MY > 설정/정책 | 개인정보, 알림, 광고 설정 접근이 보임 |
 
 ## 5. Play 제출 입력값 회신표

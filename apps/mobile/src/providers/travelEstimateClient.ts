@@ -43,7 +43,7 @@ export type ProxyTravelEstimateClientOptions = {
 export const fallbackTravelEstimateClient: TravelEstimateClient = {
   async estimateRoute(params) {
     return {
-      ...estimateFallbackRoute(params.origin, params.destination),
+      ...estimateFallbackRoute(params),
       updatedAt: new Date().toISOString(),
     };
   },
@@ -98,16 +98,26 @@ async function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl = globalThis.
   }
 }
 
-function estimateFallbackRoute(origin: TravelEstimateCoordinate, destination: TravelEstimateCoordinate): Omit<TravelEstimateResult, "updatedAt"> {
-  const directDistanceMeters = getDistanceMeters(origin, destination);
-  const distanceMeters = Math.round(directDistanceMeters * 1.35);
+function estimateFallbackRoute(params: TravelEstimateParams): Omit<TravelEstimateResult, "updatedAt"> {
+  const destinationCountryCode = params.destinationCountryCode ?? "KR";
+  const directDistanceMeters = getDistanceMeters(params.origin, params.destination);
+  const distanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : 1));
+  const travelMinutes =
+    destinationCountryCode === "KR"
+      ? Math.max(15, Math.ceil((distanceMeters / 1000 / 32) * 60))
+      : getInternationalFallbackTravelMinutes(destinationCountryCode);
   return {
     provider: "fallback",
     status: "fallback",
-    travelMinutes: Math.max(15, Math.ceil((distanceMeters / 1000 / 32) * 60)),
+    travelMinutes,
     distanceMeters,
-    message: "좌표 거리 기반 추정",
+    message: destinationCountryCode === "KR" ? "좌표 거리 기반 추정" : "해외 목적지 기본 이동시간",
   };
+}
+
+function getInternationalFallbackTravelMinutes(countryCode: TravelEstimateParams["destinationCountryCode"]): number {
+  if (countryCode === "JP") return 150;
+  return 180;
 }
 
 function getDistanceMeters(origin: TravelEstimateCoordinate, destination: TravelEstimateCoordinate): number {

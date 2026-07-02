@@ -16,7 +16,6 @@ export function MyScreen({
   smartCareEnabled,
   savedDestinations,
   temperatureUnit,
-  weightUnit,
   distanceUnit,
   themeMode,
   onNavigate,
@@ -24,15 +23,15 @@ export function MyScreen({
   const theme = useAppTheme();
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const accountSummary = isAccountReady ? "계정 연결됨" : needsTerms ? "약관 동의 필요" : "계정 연결 필요";
-  const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? "프로필 정보 동기화됨" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
+  const accountSummary = isAccountReady ? "데모 계정 연결됨" : needsTerms ? "약관 동의 필요" : "계정 연결 필요";
+  const profileTitle = isAccountReady ? "데모 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
+  const profileBody = isAccountReady ? "저장 상태 데모 연결됨" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
   const savedDestinationCount = savedDestinations.length;
   const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
-  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, weightUnit, distanceUnit, themeMode);
+  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
   const permissionSummary = `${locationState.summary} · ${alertState.summary}`;
   const permissionTone: MenuTone = locationState.tone === "warm" || alertState.tone === "warm" ? "warm" : locationState.tone === "gold" || alertState.tone === "gold" ? "gold" : "clear";
   const summaryItems: SummaryItem[] = [
@@ -74,7 +73,7 @@ export function MyScreen({
           <Chevron color={theme.subtle} />
         </Pressable>
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>설정</Text>
+        <Text style={[styles.groupLabel, { color: theme.subtle }]}>앱 권한</Text>
 
         <View style={styles.menuList}>
           <MenuRow
@@ -83,18 +82,28 @@ export function MyScreen({
             meta={`위치 ${locationState.status} · 알림 ${alertState.status}`}
             status={permissionTone === "clear" ? "정상" : "확인"}
             tone={permissionTone}
-            onPress={() => onNavigate("M3")}
+            onPress={() => onNavigate("M4")}
             theme={theme}
           />
+        </View>
+
+        <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림</Text>
+
+        <View style={styles.menuList}>
           <MenuRow
             icon="bell"
-            title="알림 설정"
+            title="스마트 알림 설정"
             meta={alertState.meta}
             status={alertState.status}
             tone={alertState.tone}
             onPress={() => onNavigate("M2")}
             theme={theme}
           />
+        </View>
+
+        <Text style={[styles.groupLabel, { color: theme.subtle }]}>표시</Text>
+
+        <View style={styles.menuList}>
           <MenuRow
             icon="gear"
             title="표시 설정"
@@ -177,14 +186,12 @@ function getLocationState(
 
 function getGlobalSettingsSummary(
   temperatureUnit: P0ScreenProps["temperatureUnit"],
-  weightUnit: P0ScreenProps["weightUnit"],
   distanceUnit: P0ScreenProps["distanceUnit"],
   themeMode: P0ScreenProps["themeMode"],
 ) {
   const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
-  const weightLabel = weightUnit === "kilogram" ? "kg" : "lb";
   const distanceLabel = distanceUnit === "meter" ? "m" : "mi";
-  return `${temperatureLabel} · ${weightLabel} · ${distanceLabel} · ${getThemeModeLabel(themeMode)}`;
+  return `${temperatureLabel} · ${distanceLabel} · ${getThemeModeLabel(themeMode)}`;
 }
 
 function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {

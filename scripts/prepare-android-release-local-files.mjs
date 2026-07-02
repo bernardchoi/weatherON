@@ -101,7 +101,7 @@ function localTemplate(file) {
         date: "",
         activeTesters: "0",
         version: "0.1.0 (2)",
-        flow: "홈/출발/MY + MY 코디·옷장",
+        flow: "홈/출발/MY + 목적지 알림 설정",
         issueCount: "0",
         status: "미시작",
       })),
@@ -232,6 +232,14 @@ function localReadinessNote(file) {
 }
 
 function normalizeQaLocalInput(local) {
+  const example = JSON.parse(readFileSync(join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.example.json"), "utf8"));
+  const normalizedResults = { ...(local.results || {}) };
+  for (const id of Object.keys(example.results || {})) {
+    if (!normalizedResults[id]) {
+      normalizedResults[id] = { result: "미검증", memo: "" };
+      readiness.qaAutoFilledMetadata += 1;
+    }
+  }
   return {
     easBuildId: local.easBuildId || "",
     appVersion: local.appVersion || "",
@@ -241,7 +249,7 @@ function normalizeQaLocalInput(local) {
     network: local.network || "",
     installMethod: local.installMethod || "",
     testedAt: local.testedAt || "",
-    results: local.results || {},
+    results: normalizedResults,
   };
 }
 

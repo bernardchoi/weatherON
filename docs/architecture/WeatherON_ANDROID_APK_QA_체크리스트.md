@@ -79,6 +79,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | 작은 화면 | 360x800급에서 가로 overflow 없음 | 미검증 |
 | 큰 화면 | 430x932급에서 카드 간격/버튼 정상 | 미검증 |
 | 앱 백그라운드/복귀 | 상태 유지, 중복 알림/중복 저장 없음 | 미검증 |
+| 알림 신뢰성 | 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 미검증 |
 | Android 뒤로가기 | 주요 화면에서 예상 경로로 이동 | 미검증 |
 | 입력 키보드 | P1 검색 입력 시 버튼/결과 가림 없음 | 미검증 |
 
@@ -151,3 +152,4 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | 2026-06-28 | UI polish preview build `819b6cba-7757-48a3-9f8e-92a4efd9c17c` 실기기 QA 결과로 갱신 |
 | 2026-06-28 | 소셜 문구 제거, 하단 탭 레이아웃 보정, 코디 시간 표기 보정. 다음 APK 재검증 필요 |
 | 2026-07-01 | Cloudflare public proxy preview build `802540a2-77a2-40cb-9b3b-15d9b3984ae2` 실기기 QA 결과로 갱신 |
+| 2026-07-02 | D13 알림 신뢰성 실기기 QA 기준 추가 |

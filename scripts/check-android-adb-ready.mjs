@@ -163,7 +163,7 @@ function nextActions() {
   if (issues.length === 0) {
     return [
       "- `npm run install:android-preview-apk`로 최신 preview APK를 설치한다.",
-      "- 설치 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`의 D1~D12 항목을 실기기 기준으로 판정한다.",
+      "- 설치 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`의 D1~D13 항목을 실기기 기준으로 판정한다.",
       "- QA 통과 후 `npm run capture:android-store-screenshot -- <filename>`로 스토어 스크린샷 5장을 캡처한다.",
     ].join("\n");
   }

@@ -24,19 +24,19 @@
     { "testerAlias": "T12", "deviceOs": "Android 14", "invited": "초대", "optIn": "완료", "memo": "" }
   ],
   "operationDays": [
-    { "day": 1, "date": "2026-07-01", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 2, "date": "2026-07-02", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 3, "date": "2026-07-03", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 4, "date": "2026-07-04", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 5, "date": "2026-07-05", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 6, "date": "2026-07-06", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 7, "date": "2026-07-07", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 8, "date": "2026-07-08", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 9, "date": "2026-07-09", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 10, "date": "2026-07-10", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 11, "date": "2026-07-11", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 12, "date": "2026-07-12", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 13, "date": "2026-07-13", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" },
-    { "day": 14, "date": "2026-07-14", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + MY 코디·옷장", "issueCount": "0", "status": "운영" }
+    { "day": 1, "date": "2026-07-01", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 2, "date": "2026-07-02", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 3, "date": "2026-07-03", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 4, "date": "2026-07-04", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 5, "date": "2026-07-05", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 6, "date": "2026-07-06", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 7, "date": "2026-07-07", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 8, "date": "2026-07-08", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 9, "date": "2026-07-09", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 10, "date": "2026-07-10", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 11, "date": "2026-07-11", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 12, "date": "2026-07-12", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 13, "date": "2026-07-13", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" },
+    { "day": 14, "date": "2026-07-14", "activeTesters": "12", "version": "0.1.0 (2)", "flow": "홈/출발/MY + 목적지 알림 설정", "issueCount": "0", "status": "운영" }
   ]
 }

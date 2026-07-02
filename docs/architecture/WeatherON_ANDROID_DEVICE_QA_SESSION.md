@@ -18,9 +18,9 @@
 | App version | `0.1.0 (5)` |
 | Public proxy | `https://weatheron-api.weatheron.workers.dev` |
 | 사전 체크 | `check:public-weather-proxy`, `check:android-preview-preflight` 통과 |
-| 설치 방식 | `adb install -r /tmp/weatheron-preview-802540a2.apk` |
-| 테스트 기기 | A142 / adb `000841458003652` |
-| 테스트 일시 | 2026-07-01 KST |
+| 설치 방식 | 기존 서명 불일치 앱 삭제 후 npm run install:android-preview-apk / ADB install |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-02 12:50 KST |
 
 ### 이전 QA 기준
 
@@ -46,9 +46,9 @@
 | 테스트 기기 | A142 / adb 000841458003652 |
 | Android 버전 | 16 |
 | 화면 크기 | 1084x2412 |
-| 네트워크 | Wi-Fi / 모바일 데이터 / 오프라인 재검증 |
-| 설치 방식 | npm run install:android-preview-apk / ADB install |
-| 테스트 일시 | 2026-06-29 00:41 KST |
+| 네트워크 | Wi-Fi |
+| 설치 방식 | 기존 서명 불일치 앱 삭제 후 npm run install:android-preview-apk / ADB install |
+| 테스트 일시 | 2026-07-02 12:50 KST |
 
 ---
 
@@ -56,20 +56,21 @@
 
 | ID | 항목 | 기대 결과 | 결과 | 메모 |
 |---|---|---|---|---|
-| D1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 통과 | ADB install 완료, 패키지 com.weatheron.mobile 설치 확인 |
-| D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | MainActivity 실행, 앱 프로세스 유지, crash log buffer 비어 있음 |
-| D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 실패 | 소셜 화면에 MVP, Weather Note, Solar/Rain/Mist 문구 노출. 819b APK에는 로컬 수정 미반영 |
-| D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 홈 카드, 워드마크, 코디 이미지, 목적지 CTA, 하단탭 표시 정상 |
-| D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 코디·옷장은 MY 내부 `코디·옷장`에서 진입 |
-| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 통과 | web export 클릭/하단 탭 가림 회귀검사 통과. 실기기 APK에서 재확인 필요 |
-| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 보류 | force-stop 후 홈 상태 유지는 확인. 목적지 저장 상태 재확인은 미실행 |
-| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 홈/출발/MY 주요 경로 복귀, 크래시 없음 |
-| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | 현재 위치 사용 중, 현재 위치 반영, 날씨 연결됨 표시 |
-| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 통과 | 위치 권한 revoke 후 기본 위치 서울 성수동 fallback, 날씨/코디 유지, 크래시 없음. 권한은 QA 후 재허용 |
-| D9 | 목적지 검색 | Kakao Local 결과 또는 fallback 결과 표시 | 보류 | 목적지 목록/미리보기 화면은 정상. 검색 입력 플로우는 이번 자동 QA에서 미실행 |
-| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 실패 | 1084x2412 설치 APK에서는 코디 하단 콘텐츠 일부 가림. 최신 web export는 `npm run check:android-core-flow` 하단 탭 가림 회귀검사 통과. 새 APK 재검증 필요 |
-| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | 시스템 라이트 모드 전환 후 홈 주요 텍스트/카드/버튼 대비 정상, 크래시 없음. QA 후 다크 모드 복구 |
-| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 미검증 | 최신 build에서 재검증 필요 |
+| D1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 통과 | 기존 서명 불일치 앱 삭제 후 ADB install 완료, 패키지 com.weatheron.mobile 설치 확인 |
+| D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | pm clear 후 MainActivity 실행, O1 온보딩 진입, crash log buffer 비어 있음 |
+| D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 보류 | H1/Guest/READY/OUTER 등 내부 route/dev label은 미노출. Android 권한 팝업 앱명 WeatherON Dev 노출은 출시 label 확정 필요 |
+| D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
+| D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
+| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
+| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 미검증 | 최신 빌드 기준 앱 재실행 후 목적지/설정 상태 유지 미실행 |
+| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 미검증 | 최신 빌드 기준 Android 뒤로가기 QA 미실행 |
+| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 미검증 | 최신 빌드 기준 위치 허용 플로우 미실행 |
+| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 미검증 | 최신 빌드 기준 위치 거부 fallback 미실행 |
+| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 미검증 | 최신 빌드 기준 목적지 검색/선택 실기기 QA 미실행 |
+| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 미검증 | 최신 빌드 기준 작은 화면/긴 텍스트 실기기 QA 미실행 |
+| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 미검증 | 최신 빌드 기준 라이트/다크 대비 QA 미실행 |
+| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 미검증 | 최신 빌드 기준 오프라인 상태 QA 미실행 |
+| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 보류 | 알림 권한 허용, 권한 정상/예약 완료/예약 1건, 테스트 알림 1건 발송 예약, 앱 단독 crash/log 오류 없음 확인. 시스템 알림 수신/알림 탭 딥링크는 다른 앱 알림 노출 위험 때문에 자동 확인 보류 |
 
 ---
 
@@ -79,9 +80,11 @@
 2. `npm run install:android-preview-apk`로 최신 APK artifact를 실기기에 재설치한다.
 3. 앱 데이터를 초기화한 뒤 첫 실행 D1~D4-2를 확인한다.
 4. 목적지 1개를 저장하고 앱을 완전 종료/재실행해 D5를 확인한다.
-5. 권한 허용/거부, 네트워크 끊김, Wi-Fi/LTE 전환을 확인한다.
-6. 통과 화면은 스토어 스크린샷 후보로 캡처한다.
-7. 실패가 있으면 아래 실패 기록에 같은 build id로 남긴다.
+5. 목적지 검색·설정은 국내 장소를 1순위로 먼저 완료하고, 해외 장소는 2순위 보조 케이스로 확인한다.
+6. 권한 허용/거부, 네트워크 끊김, Wi-Fi/LTE 전환을 확인한다.
+7. 알림 설정에서 테스트 알림을 보내고 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태를 확인한다.
+8. 통과 화면은 스토어 스크린샷 후보로 캡처한다.
+9. 실패가 있으면 아래 실패 기록에 같은 build id로 남긴다.
 
 스토어 스크린샷 후보 캡처는 화면을 직접 연 뒤 아래 명령으로 저장한다.
 
@@ -93,7 +96,7 @@ QA 결과는 JSON으로 일괄 반영할 수 있다.
 
 | 파일 | 목적 |
 |---|---|
-| `WeatherON_ANDROID_DEVICE_QA_RESULTS.example.json` | D1~D12 결과 입력 샘플 |
+| `WeatherON_ANDROID_DEVICE_QA_RESULTS.example.json` | D1~D13 결과 입력 샘플 |
 | `WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json` | 실제 로컬 QA 결과. `.gitignore` 대상 |
 
 ```bash
@@ -125,7 +128,7 @@ npm run report:android-release-action-board
 ## 6. 완료 기준
 
 - D1~D6은 모두 통과해야 다음 store screenshot 캡처 단계로 이동한다.
-- D7~D12 중 실패가 있으면 `WeatherON_ANDROID_APK_QA_체크리스트.md`와 이 문서에 같은 build id로 기록한다.
+- D7~D13 중 실패가 있으면 `WeatherON_ANDROID_APK_QA_체크리스트.md`와 이 문서에 같은 build id로 기록한다.
 - 치명도 높은 크래시, 빈 화면, 설치 실패가 있으면 새 preview build 전 원인 분석 문서를 추가한다.
 
 ---
@@ -155,3 +158,5 @@ npm run report:android-release-action-board
 | 2026-06-30 | 홈 날씨 상태 문구가 provider status 전체를 보도록 보정. 오프라인/실패 시 `실시간 예보`로 남지 않게 함 |
 | 2026-06-30 | `npm run check:android-core-flow`에 목적지/강수/코디 하단 CTA가 하단 탭에 가리지 않는지 확인하는 회귀검사 추가 |
 | 2026-07-01 | Cloudflare public proxy preview APK `802540a2-77a2-40cb-9b3b-15d9b3984ae2` 실기기 설치 QA. 홈/알림 사이드바/출발/MY/계정 관리/목적지 상세/알림 설정 연결/재실행/crash buffer 확인 |
+| 2026-07-02 | D13 알림 신뢰성 실기기 QA 항목 추가 |
+| 2026-07-02 | 실기기 QA 결과 JSON 반영 |

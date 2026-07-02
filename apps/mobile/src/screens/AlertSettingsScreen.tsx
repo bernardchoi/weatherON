@@ -433,13 +433,17 @@ function getNotificationDeliveryCopy(
     if (deliveryStatus.scheduledCount === 0) return { statusLabel: "조건 대기", countLabel: "예약 0건" };
     return { statusLabel: "예약 완료", countLabel: `예약 ${deliveryStatus.scheduledCount}건` };
   }
-  return { statusLabel: "미지원", countLabel: "예약 0건" };
+  if (deliveryStatus.status === "verification-failed") {
+    return { statusLabel: "확인 실패", countLabel: `예약 확인 ${deliveryStatus.scheduledCount}건` };
+  }
+  return { statusLabel: "기기 QA 필요", countLabel: "네이티브 확인 전" };
 }
 
 function getTestNotificationBody(permissionReady: boolean, statusLabel?: string) {
   if (!permissionReady) return "권한 켜고 수신 확인";
+  if (statusLabel === "예약 확인 실패") return "예약 목록 확인 실패 · 기기 QA 필요";
   if (statusLabel) return `최근 ${statusLabel}`;
-  return "5초 뒤 발송";
+  return "5초 뒤 발송 · 예약 목록 검증";
 }
 
 function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boolean, skippedPermission: boolean) {
@@ -454,11 +458,11 @@ function getAlertReadinessCopy(smartCareEnabled: boolean, permissionReady: boole
   }
   if (permissionReady) {
     return {
-      title: "스마트 알림 켜짐",
-      body: "날씨와 출발 조건만 선별",
-      resultBody: "푸시 알림을 받을 수 있고 세부 조건을 바로 조정할 수 있음",
+      title: "스마트 알림 준비됨",
+      body: "테스트 알림으로 실제 도착 확인 필요",
+      resultBody: "권한은 켜짐. 테스트 알림과 예약 목록으로 실제 도착을 확인해야 함",
       gateTitle: "알림 권한 정상",
-      gateBody: "푸시 수신 가능",
+      gateBody: "테스트 발송으로 확인",
     };
   }
   return {
@@ -484,7 +488,8 @@ function getRouteLabel(route?: P0RouteId) {
   if (route === "G2") return "목적지";
   if (route === "H3") return "알림";
   if (route === "M1") return "MY";
-  if (route === "M3") return "설정";
+  if (route === "M3") return "표시";
+  if (route === "M4") return "권한";
   return "홈";
 }
 

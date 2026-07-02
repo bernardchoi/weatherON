@@ -29,7 +29,7 @@
 | 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 코디 요약, 우산/알림 진입이 보임 |
 | 2 | `phone-02-destination-search.png` | P1 목적지 검색 | 하단 출발 > 목적지 추가 | Kakao Local 결과 또는 fallback 결과가 보임 |
 | 3 | `phone-03-destination-care.png` | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 목적지 날씨와 케어 ON/OFF 상태가 보임 |
-| 4 | `phone-04-outfit.png` | C1 코디 추천 | MY > 코디·옷장 | 날씨 기반 착장과 추천 사유가 보임 |
+| 4 | `phone-04-outfit.png` | C1 코디 추천 | 하단 홈 > 코디 요약 | 날씨 기반 착장과 추천 사유가 보임 |
 | 5 | `phone-05-settings-policy.png` | M/R 정책 허브 | 하단 MY > 설정/정책 | 개인정보, 알림, 광고 설정 접근이 보임 |
 
 ---
@@ -38,7 +38,7 @@
 
 1. `WeatherON_ANDROID_DEVICE_QA_SESSION.md`의 D1~D6 통과
 2. `npm run check:android-adb-ready`로 연결 기기와 화면 크기 확인
-3. 하단 탭 `홈/출발/MY` 확인, 코디 화면은 `MY > 코디·옷장`에서 진입
+3. 하단 탭 `홈/출발/MY` 확인, 코디 캡처는 홈의 코디 요약 카드 기준으로 진행
 4. 내부 코드 `H1`, `Guest`, `READY`, `OUTER` 미노출 확인
 5. 앱 아이콘/스플래시 깨짐 없음 확인
 6. 작은 화면에서 버튼/텍스트 잘림 없음 확인

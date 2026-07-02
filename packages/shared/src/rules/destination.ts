@@ -1,4 +1,4 @@
-import type { DestinationAlertCondition, DestinationCare } from "../types/recommendation";
+import type { DestinationAlertCondition, DestinationCare, DestinationTransportMode } from "../types/recommendation";
 import type { WeatherSnapshot } from "../types/weather";
 import { recommendShoes } from "./shoes";
 import { recommendUmbrella } from "./umbrella";
@@ -14,6 +14,7 @@ type DestinationCareInput = {
   travelMinutes?: number;
   targetArrivalTime?: string;
   bufferMinutes?: number;
+  transportMode?: DestinationTransportMode;
   travelProvider?: "kakao" | "google" | "fallback";
   travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
 };
@@ -48,6 +49,7 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
       recommendedDepartureTime: getRecommendedDepartureTime(input.targetArrivalTime, input.travelMinutes, input.bufferMinutes),
       travelMinutes: input.travelMinutes,
       bufferMinutes: input.bufferMinutes,
+      transportMode: input.transportMode,
       travelProvider: input.travelProvider,
       travelStatus: input.travelStatus,
     },

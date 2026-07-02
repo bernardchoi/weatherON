@@ -12,7 +12,7 @@ const buildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD
 const statusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_DEVICE_QA_APPLY_STATUS.md");
 const reportOnly = process.env.WEATHERON_DEVICE_QA_REPORT_ONLY === "1";
 
-const requiredResultIds = ["D1", "D2", "D3", "D4", "D4-1", "D4-2", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12"];
+const requiredResultIds = ["D1", "D2", "D3", "D4", "D4-1", "D4-2", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13"];
 const allowedResults = new Set(["통과", "실패", "보류", "미검증"]);
 
 const issues = [];
@@ -157,7 +157,7 @@ ${issues.length === 0 ? "- 없음" : issues.map((issue) => `- ${issue}`).join("\
 ## 3. 실행 순서
 
 1. \`npm run prepare:android-release-local-files\` 또는 샘플 복사로 \`WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json\`을 만든다.
-2. 실기기에서 D1~D12를 판정하고 결과를 채운다.
+2. 실기기에서 D1~D13을 판정하고 결과를 채운다.
 3. 아래 명령을 실행한다.
 
 \`\`\`bash

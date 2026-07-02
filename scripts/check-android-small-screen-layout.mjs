@@ -51,12 +51,28 @@ const appState = {
   wardrobeOwnedItemIds: [],
   selectedWardrobeItemId: "",
   savedDestinations: [
-    { place: basePlace, careEnabled: true, alertCondition, savedAtLabel: "업데이트됨" },
-    { place: secondPlace, careEnabled: true, alertCondition: { ...alertCondition, rainThresholdPct: 70 }, savedAtLabel: "방금 저장" },
+    {
+      place: basePlace,
+      careEnabled: true,
+      alertCondition,
+      schedulePreference: { targetArrivalTime: "09:00", transportMode: "auto" },
+      travelEstimate: createTravelEstimate(basePlace, 34),
+      savedAtLabel: "업데이트됨",
+    },
+    {
+      place: secondPlace,
+      careEnabled: true,
+      alertCondition: { ...alertCondition, rainThresholdPct: 70 },
+      schedulePreference: { targetArrivalTime: "08:40", transportMode: "transit" },
+      travelEstimate: createTravelEstimate(secondPlace, 28),
+      savedAtLabel: "방금 저장",
+    },
   ],
   selectedDestinationPlace: basePlace,
   previewDestinationCareEnabled: true,
   previewDestinationAlertCondition: alertCondition,
+  previewDestinationSchedulePreference: { targetArrivalTime: "09:00", transportMode: "auto" },
+  previewDestinationTravelEstimate: createTravelEstimate(basePlace, 34),
   weatherLocationMode: "manual",
   temperatureUnit: "celsius",
   weightUnit: "kilogram",
@@ -84,6 +100,18 @@ const onboardingState = {
 const issues = [];
 const evidence = [];
 let browser;
+
+function createTravelEstimate(destination, durationMinutes) {
+  return {
+    status: "fallback",
+    originPlaceId: "kr-seoul-seongsu",
+    destinationPlaceId: destination.id,
+    durationMinutes,
+    distanceMeters: durationMinutes * 520,
+    provider: "fixture",
+    fetchedAt: "2026-07-02T00:00:00.000Z",
+  };
+}
 
 try {
   const puppeteer = await import("puppeteer");
@@ -116,6 +144,17 @@ try {
     await checkLayout(page, viewport, "destination-list");
     await screenshot(page, viewport, "destination-list");
 
+    console.log(`small-screen: ${viewport.name}/destination-care`);
+    await clickText(page, "잠실종합운동장");
+    await assertText(page, "목적지 기준 알림 미리보기", viewport, "destination-care");
+    await assertText(page, "이동수단", viewport, "destination-care");
+    await assertText(page, "도착 희망", viewport, "destination-care");
+    await assertText(page, "직접 입력", viewport, "destination-care");
+    await assertText(page, "자동 여유", viewport, "destination-care");
+    await assertText(page, "대중교통", viewport, "destination-care");
+    await checkLayout(page, viewport, "destination-care");
+    await screenshot(page, viewport, "destination-care");
+
     console.log(`small-screen: ${viewport.name}/notification-sidebar`);
     await clickText(page, "홈");
     console.log(`small-screen: ${viewport.name}/notification-sidebar home`);
@@ -145,8 +184,9 @@ try {
     const onboardingPage = await browser.newPage();
     await onboardingPage.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await loadSeededApp(onboardingPage, onboardingState);
-    await assertText(onboardingPage, "나가기 전 5초 판단", viewport, "onboarding");
-    await assertText(onboardingPage, "알림 기준 보기", viewport, "onboarding");
+    await assertText(onboardingPage, "오늘의 외출, 미리 준비하세요", viewport, "onboarding");
+    await assertText(onboardingPage, "온보딩 시작", viewport, "onboarding");
+    await assertText(onboardingPage, "홈으로", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");
     await onboardingPage.close();

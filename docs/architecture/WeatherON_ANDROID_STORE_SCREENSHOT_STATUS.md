@@ -7,10 +7,10 @@
 
 | 항목 | 값 |
 |---|---|
-| 제출 가능 여부 | 가능 |
-| issue 수 | 0 |
-| 기준 build id | 419e3d2c-135b-41a1-88f6-3321ad5115f1 |
-| 기준 app version | 0.1.0 (3) |
+| 제출 가능 여부 | 불가 |
+| issue 수 | 1 |
+| 기준 build id | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 |
+| 기준 app version | 0.1.0 (5) |
 | 저장 위치 | `assets/store/android-screenshots/` |
 | manifest | `assets/store/android-screenshots/manifest.json` |
 | 준비 완료 파일 | 5/5 |
@@ -22,12 +22,12 @@
 | phone-01-home.png | H1 홈 | 하단 홈 | 캡처됨 | 1084x2412 |
 | phone-02-destination-search.png | P1 목적지 검색 | 하단 출발 > 목적지 추가 | 캡처됨 | 1084x2412 |
 | phone-03-destination-care.png | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 캡처됨 | 1084x2412 |
-| phone-04-outfit.png | C1 코디 추천 | MY > 코디·옷장 | 캡처됨 | 1084x2412 |
+| phone-04-outfit.png | C1 코디 추천 | 하단 홈 > 코디 요약 | 캡처됨 | 1084x2412 |
 | phone-05-settings-policy.png | M/R 정책 허브 | 하단 MY > 설정/정책 | 캡처됨 | 1084x2412 |
 
 ## 3. Issues
 
-- 없음
+- screenshot plan build id mismatch: expected 802540a2-77a2-40cb-9b3b-15d9b3984ae2
 
 ## 4. 확인 명령
 

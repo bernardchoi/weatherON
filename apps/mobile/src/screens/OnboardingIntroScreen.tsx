@@ -14,7 +14,7 @@ const featureCards = [
   { icon: uiIconAssets.rain, title: "비 시작·그침", body: "강수 타임라인과 그침 알림을 먼저 확인" },
 ];
 
-export function OnboardingIntroScreen({ onNavigate }: P0ScreenProps) {
+export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
 
   return (
@@ -33,8 +33,9 @@ export function OnboardingIntroScreen({ onNavigate }: P0ScreenProps) {
           <QuickFact label="그침" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
         <View style={styles.primaryActions}>
-          <AppButton label="알림 기준 보기" accessibilityLabel="스마트 알림 기준 단계로 이동" onPress={() => onNavigate("O5")} />
-          <Text style={[styles.helperText, { color: theme.subtle }]}>위치와 알림 권한은 계정 연결 후 한 번에 설정함</Text>
+          <AppButton label="계속" accessibilityLabel="스마트 알림 기준 단계로 계속" onPress={() => onNavigate("O5")} />
+          <AppButton label="건너뛰고 홈으로" accessibilityLabel="온보딩을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
+          <Text style={[styles.helperText, { color: theme.subtle }]}>위치·알림 권한은 MY에서 따로 켤 수 있음</Text>
         </View>
       </View>
 

@@ -32,7 +32,7 @@ const qaRows = extractQaRows(qaSession, sessionMatchesBuild);
 const report = `# WeatherON Android Device QA Packet
 
 > 생성일: ${kstDate()}
-> 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D12 QA를 바로 수행할 수 있게 한 장으로 정리한다.
+> 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D13 QA를 바로 수행할 수 있게 한 장으로 정리한다.
 
 ## 1. 설치 대상
 
@@ -52,12 +52,12 @@ const report = `# WeatherON Android Device QA Packet
 
 ## 2. 실기기 직접 설치
 
-${buildMatchesSource ? "" : "> 주의: 현재 APK는 최신 소스 기준이 아니다. D1~D12 정식 재검증은 새 preview APK 생성 후 진행한다.\n\n"}
+${buildMatchesSource ? "" : "> 주의: 현재 APK는 최신 소스 기준이 아니다. D1~D13 정식 재검증은 새 preview APK 생성 후 진행한다.\n\n"}
 1. Android 기기에서 APK artifact 링크를 연다.
 2. 다운로드 후 설치한다.
 3. Play Protect 또는 알 수 없는 앱 설치 경고가 나오면 WeatherON preview APK인지 확인하고 계속 설치한다.
 4. 설치 후 앱을 실행한다.
-5. 아래 D1~D12 결과를 기록한다.
+5. 아래 D1~D13 결과를 기록한다.
 
 ADB가 연결되면 아래 명령으로 설치/상태 확인을 자동화할 수 있다.
 
@@ -96,7 +96,7 @@ npm run report:android-release-action-board
 ## 5. 다음 단계
 
 1. D1~D6 모두 통과 시 스토어 스크린샷 5장 캡처
-2. D7~D12 실패/보류 항목은 같은 build id로 원인 기록
+2. D7~D13 실패/보류 항목은 같은 build id로 원인 기록
 3. 스크린샷 완료 후 \`npm run check:android-store-screenshots-ready\`
 4. Play Console 입력값 확정 후 \`npm run apply:android-store-inputs\`
 `;

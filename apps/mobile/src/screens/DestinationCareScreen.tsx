@@ -1,5 +1,5 @@
-import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -17,7 +17,8 @@ export function DestinationCareScreen({
   onOpenAlertSettings,
   onToggleDestinationCare,
   onCycleDestinationAlertCondition,
-  onCycleDestinationSchedulePreference,
+  onSetDestinationTargetArrivalTime,
+  onSetDestinationTransportMode,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
@@ -27,12 +28,24 @@ export function DestinationCareScreen({
   const departureTime = getRecommendedDepartureTime(care);
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? selectedDestinationSchedulePreference.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes ?? selectedDestinationTravelEstimate.travelMinutes;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? selectedDestinationSchedulePreference.bufferMinutes;
+  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
+  const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
+  const [arrivalInput, setArrivalInput] = useState(targetArrivalTime);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const originRain = originWeather.current.rainProbabilityPct;
   const destinationRain = destinationWeather.current.rainProbabilityPct;
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
+
+  useEffect(() => {
+    setArrivalInput(targetArrivalTime);
+  }, [targetArrivalTime]);
+
+  const handleArrivalInputChange = (value: string) => {
+    const nextValue = normalizeArrivalInput(value);
+    setArrivalInput(nextValue);
+    if (isValidArrivalTime(nextValue)) onSetDestinationTargetArrivalTime(nextValue);
+  };
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -68,21 +81,23 @@ export function DestinationCareScreen({
           <View style={styles.decisionStats}>
             <DecisionStat icon={uiIconAssets.depart} label="출발" value={departureTime} meta={`이동 ${travelMinutes}분`} color={theme.gold} theme={theme} />
             <DecisionStat icon={uiIconAssets.drop} label="목적지 비" value={`${destinationRain}%`} meta={`출발지 ${originRain}%`} color={theme.sky} theme={theme} />
-            <DecisionStat icon={uiIconAssets.clock} label="다음 알림" value={rainAlertTime} meta={destinationCareEnabled ? "알림 가능" : permissionReady ? "꺼짐" : "권한 필요"} color={theme.clear} theme={theme} />
+            <DecisionStat icon={uiIconAssets.clock} label="다음 알림" value={rainAlertTime} meta={!permissionReady ? "권한 필요" : destinationCareEnabled ? "알림 가능" : "꺼짐"} color={theme.clear} theme={theme} />
           </View>
           <View style={styles.arrivalControls}>
-            <ArrivalControl
+            <ArrivalInputControl
               label="도착 희망"
-              value={targetArrivalTime}
-              caption="탭해서 변경"
-              onPress={() => onCycleDestinationSchedulePreference("targetArrivalTime")}
+              value={arrivalInput}
+              caption="직접 입력"
+              onChangeText={handleArrivalInputChange}
+              onBlur={() => {
+                if (!isValidArrivalTime(arrivalInput)) setArrivalInput(targetArrivalTime);
+              }}
               theme={theme}
             />
             <ArrivalControl
-              label="여유 시간"
+              label="자동 여유"
               value={`${bufferMinutes}분`}
-              caption={`출발 ${departureTime}`}
-              onPress={() => onCycleDestinationSchedulePreference("bufferMinutes")}
+              caption="현재시각 기준"
               theme={theme}
             />
           </View>
@@ -105,11 +120,36 @@ export function DestinationCareScreen({
         <View style={[styles.departurePanel, { backgroundColor: theme.card, borderLeftColor: theme.gold }]}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>출발시간 역산</Text>
           <Text style={[styles.departureMeta, { color: theme.text }]}>도착 희망 {targetArrivalTime}</Text>
-          <Text style={[styles.departureMeta, { color: theme.text }]}>− 소요시간 {travelMinutes}분 − 여유 {bufferMinutes}분</Text>
+          <Text style={[styles.departureMeta, { color: theme.text }]}>이동수단 {getTransportModeLabel(transportMode)} · 소요 {travelMinutes}분 · 자동 여유 {bufferMinutes}분</Text>
+          {transportMode === "transit" ? (
+            <Text style={[styles.departureWarning, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
+          ) : null}
           <Text style={[styles.departureSource, { color: theme.subtle }]}>
             {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters)}
           </Text>
+          <Text style={[styles.departureFormula, { color: theme.muted }]}>
+            {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
+          </Text>
           <Text style={[styles.departureTime, { color: theme.gold }]}>{departureTime} <Text style={styles.departureSuffix}>출발</Text></Text>
+        </View>
+
+        <View style={[styles.transportPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.sectionTitle, { color: theme.muted }]}>이동수단</Text>
+          <View style={styles.transportGrid}>
+            {transportOptions.map((option) => (
+              <TransportOption
+                key={option.mode}
+                active={transportMode === option.mode}
+                label={option.label}
+                caption={option.caption}
+                onPress={() => onSetDestinationTransportMode(option.mode)}
+                theme={theme}
+              />
+            ))}
+          </View>
+          {transportMode === "transit" ? (
+            <Text style={[styles.transportNotice, { color: theme.warm }]}>배차/환승 변동 가능 · 실시간 교통 연동 전까지 예상값으로 표시</Text>
+          ) : null}
         </View>
 
         <View style={[styles.flowPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -138,17 +178,15 @@ export function DestinationCareScreen({
           </View>
           <View style={styles.conditionGrid}>
             <ConditionButton
-              label="도착 희망"
-              value={targetArrivalTime}
-              accessibilityLabel={`도착 희망 ${targetArrivalTime}, 조정`}
-              onPress={() => onCycleDestinationSchedulePreference("targetArrivalTime")}
+              label="자동 여유"
+              value={`${bufferMinutes}분`}
+              accessibilityLabel={`현재시각 기준 자동 여유 시간 ${bufferMinutes}분`}
               theme={theme}
             />
             <ConditionButton
-              label="여유 시간"
-              value={`${bufferMinutes}분`}
-              accessibilityLabel={`여유 시간 ${bufferMinutes}분, 조정`}
-              onPress={() => onCycleDestinationSchedulePreference("bufferMinutes")}
+              label="이동수단"
+              value={getTransportModeLabel(transportMode)}
+              accessibilityLabel={`이동수단 ${getTransportModeLabel(transportMode)}`}
               theme={theme}
             />
           </View>
@@ -202,13 +240,25 @@ function ConditionButton({
   label: string;
   value: string;
   accessibilityLabel: string;
-  onPress: () => void;
+  onPress?: () => void;
   theme: AppTheme;
 }) {
-  return (
-    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+  const content = (
+    <>
       <Text style={[styles.conditionLabel, { color: theme.subtle }]}>{label}</Text>
       <Text style={[styles.conditionValue, { color: theme.gold }]}>{value}</Text>
+    </>
+  );
+  if (!onPress) {
+    return (
+      <View accessibilityLabel={accessibilityLabel} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        {content}
+      </View>
+    );
+  }
+  return (
+    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      {content}
     </Pressable>
   );
 }
@@ -240,26 +290,100 @@ function DecisionStat({
   );
 }
 
-function ArrivalControl({
+function ArrivalInputControl({
   label,
   value,
   caption,
-  onPress,
+  onChangeText,
+  onBlur,
   theme,
 }: {
   label: string;
   value: string;
   caption: string;
-  onPress: () => void;
+  onChangeText: (value: string) => void;
+  onBlur: () => void;
   theme: AppTheme;
 }) {
   return (
-    <Pressable accessibilityLabel={`${label} ${value} 조정`} accessibilityRole="button" onPress={onPress} style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={styles.arrivalControlCopy}>
+        <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
+        <TextInput
+          accessibilityLabel={`${label} 직접 입력`}
+          keyboardType="numbers-and-punctuation"
+          maxLength={5}
+          onBlur={onBlur}
+          onChangeText={onChangeText}
+          placeholder="HH:mm"
+          placeholderTextColor={theme.subtle}
+          style={[styles.arrivalInput, { color: theme.text }]}
+          value={value}
+        />
+      </View>
+      <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
+    </View>
+  );
+}
+
+function ArrivalControl({
+  label,
+  value,
+  caption,
+  theme,
+}: {
+  label: string;
+  value: string;
+  caption: string;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
         <Text style={[styles.arrivalControlValue, { color: theme.text }]}>{value}</Text>
       </View>
       <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
+    </View>
+  );
+}
+
+const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]; label: string; caption: string }> = [
+  { mode: "auto", label: "자동", caption: "기본 경로" },
+  { mode: "walk", label: "도보", caption: "걷는 시간" },
+  { mode: "drive", label: "자차", caption: "도로 기준" },
+  { mode: "transit", label: "대중교통", caption: "배차 변동" },
+];
+
+function TransportOption({
+  active,
+  label,
+  caption,
+  onPress,
+  theme,
+}: {
+  active: boolean;
+  label: string;
+  caption: string;
+  onPress: () => void;
+  theme: AppTheme;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={`${label} 이동수단 선택`}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[
+        styles.transportOption,
+        {
+          backgroundColor: active ? theme.cardStrong : theme.cardMuted,
+          borderColor: active ? theme.gold : theme.border,
+        },
+      ]}
+    >
+      <Text style={[styles.transportLabel, { color: active ? theme.gold : theme.text }]}>{label}</Text>
+      <Text style={[styles.transportCaption, { color: theme.subtle }]}>{caption}</Text>
     </Pressable>
   );
 }
@@ -346,9 +470,43 @@ function getTravelEstimateCopy(status: P0ScreenProps["selectedDestinationTravelE
       ? "Google Distance Matrix"
       : status === "error"
         ? "갱신 실패"
-        : "좌표 추정";
+        : "경로 미검증";
   if (!distanceMeters) return source;
   return `${source} · ${(distanceMeters / 1000).toFixed(1)}km`;
+}
+
+function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
+  if (mode === "walk") return "도보";
+  if (mode === "drive") return "자차";
+  if (mode === "transit") return "대중교통";
+  return "자동";
+}
+
+function getDepartureFormulaCopy(
+  targetArrivalTime: string,
+  travelMinutes: number,
+  bufferMinutes: number,
+  status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"],
+) {
+  const base = `${targetArrivalTime} - 이동 ${travelMinutes}분 - 여유 ${bufferMinutes}분`;
+  if (status === "ready") return `계산식 ${base}`;
+  if (status === "error") return `계산식 ${base} · 경로 갱신 실패`;
+  return `데모 계산 ${base} · 실사용 전 경로 QA 필요`;
+}
+
+function normalizeArrivalInput(value: string) {
+  const trimmed = value.replace(/[^\d:]/g, "").slice(0, 5);
+  if (trimmed.includes(":")) return trimmed;
+  if (trimmed.length <= 2) return trimmed;
+  return `${trimmed.slice(0, 2)}:${trimmed.slice(2, 4)}`;
+}
+
+function isValidArrivalTime(value: string) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hourText, minuteText] = value.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
 }
 
 function subtractMinutes(time: string, minutes: number) {
@@ -410,8 +568,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
@@ -518,6 +676,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   arrivalControlValue: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  arrivalInput: {
+    minHeight: 24,
+    padding: 0,
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "900",
@@ -639,10 +804,20 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "800",
   },
+  departureWarning: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
   departureSource: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "800",
+  },
+  departureFormula: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
   },
   departureTime: {
     marginTop: 2,
@@ -653,6 +828,41 @@ const styles = StyleSheet.create({
   departureSuffix: {
     fontSize: 13,
     lineHeight: 18,
+    fontWeight: "900",
+  },
+  transportPanel: {
+    gap: spacing.sm,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  transportGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  transportOption: {
+    width: "48.7%",
+    minHeight: 58,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  transportLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  transportCaption: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  transportNotice: {
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "900",
   },
   flowPanel: {
@@ -683,7 +893,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   detailButton: {
-    minHeight: 36,
+    minWidth: 54,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,

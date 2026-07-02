@@ -221,7 +221,7 @@ assertDocIncludes(storeScreenshotPacketPath, [
   "screenshot 기준 build",
   "capture:android-store-screenshot",
   "홈/출발/MY",
-  "MY > 코디·옷장",
+  "하단 홈 > 코디 요약",
   "ADB 준비 상태",
   "check:android-adb-ready",
   "manifest",
@@ -299,15 +299,16 @@ assertDocIncludes(deviceQaSessionPath, [
   "EAS build id",
   "APK artifact",
   "D1",
-  "D12",
+  "D13",
+  "알림 신뢰성",
   "D4-1",
   "홈/출발/MY",
-  "코디·옷장",
+  "알림 설정",
   "check:android-core-flow",
   "apply:android-device-qa-results",
 ]);
-assertDocIncludes(deviceQaPacketPath, ["WeatherON Android Device QA Packet", "APK artifact", "D1", "D12", "sync:android-device-qa-env", "apply:android-device-qa-results"]);
-assertDocIncludes(deviceQaResultsExamplePath, ["easBuildId", "appVersion", "D1", "D12", "result", "memo"]);
+assertDocIncludes(deviceQaPacketPath, ["WeatherON Android Device QA Packet", "APK artifact", "D1", "D13", "sync:android-device-qa-env", "apply:android-device-qa-results"]);
+assertDocIncludes(deviceQaResultsExamplePath, ["easBuildId", "appVersion", "D1", "D13", "result", "memo"]);
 assertDocIncludes(deviceQaApplyStatusPath, ["WeatherON Android Device QA Apply Status", "기대 build id", "기대 app version", "apply:android-device-qa-results"]);
 assertDocIncludes(deviceQaEnvSyncStatusPath, ["WeatherON Android Device QA Env Sync Status", "sync:android-device-qa-env", "network"]);
 assertDocIncludes(adbStatusPath, ["WeatherON Android ADB Status", "check:android-adb-ready", "ADB devices"]);

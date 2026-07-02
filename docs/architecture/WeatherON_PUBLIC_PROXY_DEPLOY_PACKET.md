@@ -55,10 +55,10 @@ WEATHERON_PUBLIC_PROXY_URL=https://weatheron-api.example.com node scripts/check-
 
 검증 항목:
 - `/health`
-- 국내 장소검색
-- 일본 장소검색
-- 국내 경로
-- 일본 내부 경로
+- 1순위 국내 장소검색
+- 1순위 국내 경로
+- 2순위 해외 장소검색
+- 2순위 해외 내부 경로
 
 ## 5. Mobile public 모드 전환
 

@@ -298,7 +298,8 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
     await waitForApp();
 
     await clickText(page, "MY");
-    await clickText(page, "알림 설정");
+    await clickText(page, "스마트 알림 설정");
+    await assertText(page, "5초 뒤 발송 · 예약 목록 검증");
     await assertText(page, "목적지 출발");
     await assertText(page, "목적지 추가 필요");
     await assertText(page, "목적지 필요");
@@ -423,6 +424,19 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     console.log("core-flow: destination add save");
     await clickText(page, "목적지 저장하고 비교");
     await assertText(page, "목적지 기준 알림 미리보기");
+    await assertText(page, "이동수단");
+    await assertText(page, "자동");
+    await assertText(page, "도보");
+    await assertText(page, "자차");
+    await assertText(page, "대중교통");
+    await assertText(page, "직접 입력");
+    await assertText(page, "자동 여유");
+    await fillAriaInput(page, "도착 희망 직접 입력", "09:30");
+    await assertText(page, "09:30");
+    await clickText(page, "대중교통");
+    await assertText(page, "배차/환승 변동 가능");
+    await assertText(page, "계산식");
+    await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "실사용 전 경로 QA 필요"]);
     await assertText(page, "잠실종합운동장");
     await waitForPersistedDestination(page, "잠실종합운동장");
 
@@ -441,8 +455,10 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
 
 async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
-  await assertText(page, "알림 설정");
+  await assertText(page, "스마트 알림 설정");
   await assertText(page, "앱 권한 관리");
+  await assertText(page, "앱 권한");
+  await assertText(page, "알림");
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
   await assertText(page, "현재 상태");
@@ -451,7 +467,7 @@ async function checkMySettingsFlow(page) {
   await assertBottomNav(page);
 
   await clickText(page, "앱 권한 관리");
-  await assertText(page, "앱 설정");
+  await assertText(page, "앱 권한 관리");
   await assertText(page, "위치 권한");
   await assertText(page, "알림 권한");
   await clickText(page, "위치 권한");
@@ -463,11 +479,15 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
 
   await clickText(page, "표시 설정");
-  await assertText(page, "앱 설정");
   await assertText(page, "표시 설정");
   await assertText(page, "테마");
   await assertText(page, "투명 효과");
+  await assertNoText(page, "위치 권한");
+  await assertNoText(page, "알림 권한");
   await assertNoText(page, "알림 권한 관리");
+  await assertNoText(page, "무게");
+  await assertNoText(page, "킬로그램");
+  await assertNoText(page, "파운드");
   await clickText(page, "MY");
 
   await clickText(page, "정책 및 법적 고지");
@@ -620,6 +640,13 @@ async function assertNoText(page, unexpected) {
   const body = await bodyText(page);
   if (body.includes(unexpected)) {
     throw new Error(`unexpected text: ${unexpected}\n${body.slice(0, 1800)}`);
+  }
+}
+
+async function assertAnyText(page, expectedValues) {
+  const body = await bodyText(page);
+  if (!expectedValues.some((expected) => body.includes(expected))) {
+    throw new Error(`missing any text: ${expectedValues.join(" | ")}\n${body.slice(0, 1800)}`);
   }
 }
 

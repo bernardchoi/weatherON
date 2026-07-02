@@ -181,6 +181,10 @@ type DestinationCare = {
     targetArrivalTime?: string;
     recommendedDepartureTime?: string;
     travelMinutes?: number;
+    bufferMinutes?: number;
+    transportMode?: "auto" | "walk" | "drive" | "transit";
+    travelProvider?: "kakao" | "google" | "fallback";
+    travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
   };
   umbrellaAdvice: RecommendationState;
   shoesAdvice: RecommendationState;
@@ -374,6 +378,10 @@ type AccountConsentState = {
 
 - O6/P1에서 등록한 목적지는 G1 목록과 P3 필터에 동시에 반영한다.
 - G2는 출발지와 목적지 날씨 비교, 출발 시각, 우산/신발 알림 상태를 보여준다.
+- G2 출발시간 역산은 사용자가 `자동/도보/자차/대중교통` 이동수단을 직접 선택할 수 있어야 한다.
+- 도착 희망 시각은 프리셋 순환이 아니라 `HH:mm` 직접 입력으로 받는다.
+- 여유시간은 사용자가 직접 고르지 않고 현재시각, 도착 희망 시각, 이동시간 기준으로 자동 계산한다.
+- 대중교통 선택 시 `배차/환승 변동 가능` 안내를 표시한다.
 - P2는 목적지 카테고리별 준비 가이드를 제공한다.
 - P3는 필터 리스트와 목적지 상세 상태를 모두 가진 목적지 허브로 동작한다.
 - 목적지 알림 ON/OFF는 `DestinationCare.careOn`으로 공유한다.

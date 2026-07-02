@@ -5,27 +5,19 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function GlobalSettingsScreen({
-  locationReady,
-  weatherLocationMode,
-  permissionReady,
-  smartCareEnabled,
   temperatureUnit,
-  weightUnit,
   distanceUnit,
   themeMode,
   reducedTransparency,
   onNavigate,
   onSetTemperatureUnit,
-  onSetWeightUnit,
   onSetDistanceUnit,
   onSetThemeMode,
   onToggleReducedTransparency,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const unitSummary = `${temperatureUnit === "celsius" ? "°C" : "°F"} · ${getWeightUnitLabel(weightUnit)} · ${getDistanceUnitLabel(distanceUnit)}`;
+  const unitSummary = `${temperatureUnit === "celsius" ? "°C" : "°F"} · ${getDistanceUnitLabel(distanceUnit)}`;
   const stateSummary = `${unitSummary} · 테마 ${getThemeModeLabel(themeMode)}`;
-  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode);
-  const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -36,27 +28,7 @@ export function GlobalSettingsScreen({
           <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <ChevronLeft color={theme.muted} />
           </Pressable>
-          <Text style={[styles.title, { color: theme.text }]}>앱 설정</Text>
-        </View>
-
-        <View style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.muted }]}>앱 권한 관리</Text>
-          <PermissionRow
-            label="위치 권한"
-            body={locationCopy.body}
-            status={locationCopy.status}
-            tone={locationCopy.tone}
-            onPress={() => onNavigate("H2")}
-            theme={theme}
-          />
-          <PermissionRow
-            label="알림 권한"
-            body={notificationCopy.body}
-            status={notificationCopy.status}
-            tone={notificationCopy.tone}
-            onPress={() => onNavigate("M2")}
-            theme={theme}
-          />
+          <Text style={[styles.title, { color: theme.text }]}>표시 설정</Text>
         </View>
 
         <View style={[styles.unitCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -66,14 +38,6 @@ export function GlobalSettingsScreen({
             options={[
               { label: "°C", active: temperatureUnit === "celsius", onPress: () => onSetTemperatureUnit("celsius") },
               { label: "°F", active: temperatureUnit === "fahrenheit", onPress: () => onSetTemperatureUnit("fahrenheit") },
-            ]}
-            theme={theme}
-          />
-          <SegmentRow
-            label="무게"
-            options={[
-              { label: "킬로그램", active: weightUnit === "kilogram", onPress: () => onSetWeightUnit("kilogram") },
-              { label: "파운드", active: weightUnit === "pound", onPress: () => onSetWeightUnit("pound") },
             ]}
             theme={theme}
           />
@@ -159,41 +123,6 @@ function SegmentRow({
   );
 }
 
-function PermissionRow({
-  label,
-  body,
-  status,
-  tone,
-  onPress,
-  theme,
-}: {
-  label: string;
-  body: string;
-  status: string;
-  tone: "clear" | "gold" | "warm";
-  onPress: () => void;
-  theme: AppTheme;
-}) {
-  const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
-  return (
-    <Pressable
-      accessibilityLabel={`${label}, ${status}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.permissionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-    >
-      <View style={[styles.permissionDot, { backgroundColor: color }]} />
-      <View style={styles.permissionCopy}>
-        <Text style={[styles.permissionLabel, { color: theme.text }]}>{label}</Text>
-        <Text style={[styles.permissionBody, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
-      </View>
-      <View style={[styles.permissionStatus, { backgroundColor: `${color}22` }]}>
-        <Text style={[styles.permissionStatusText, { color }]}>{status}</Text>
-      </View>
-    </Pressable>
-  );
-}
-
 function ChevronLeft({ color }: { color: string }) {
   return (
     <View style={styles.chevronLeft} accessibilityElementsHidden>
@@ -209,34 +138,8 @@ function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
   return "시스템";
 }
 
-function getWeightUnitLabel(unit: P0ScreenProps["weightUnit"]) {
-  return unit === "pound" ? "파운드" : "킬로그램";
-}
-
 function getDistanceUnitLabel(unit: P0ScreenProps["distanceUnit"]) {
   return unit === "mile" ? "마일" : "미터";
-}
-
-function getLocationPermissionCopy(
-  locationReady: boolean,
-  weatherLocationMode: P0ScreenProps["weatherLocationMode"],
-): { body: string; status: string; tone: "clear" | "gold" | "warm" } {
-  if (locationReady && weatherLocationMode === "auto") {
-    return { body: "현재 위치 기준 홈 날씨 반영 중", status: "허용됨", tone: "clear" };
-  }
-  if (weatherLocationMode === "manual") {
-    return { body: "수동 위치 기준으로 홈 날씨 유지", status: "수동", tone: "gold" };
-  }
-  return { body: "현재 위치 또는 수동 위치 설정 필요", status: "확인", tone: "warm" };
-}
-
-function getNotificationPermissionCopy(
-  permissionReady: boolean,
-  smartCareEnabled: boolean,
-): { body: string; status: string; tone: "clear" | "gold" | "warm" } {
-  if (!smartCareEnabled) return { body: "스마트 알림 꺼짐 · 앱 안 판단은 유지", status: "중지", tone: "gold" };
-  if (permissionReady) return { body: "비·출발 알림 받을 수 있음", status: "허용됨", tone: "clear" };
-  return { body: "푸시 권한을 켜면 강수·출발 알림 수신", status: "확인", tone: "warm" };
 }
 
 const styles = StyleSheet.create({
@@ -287,52 +190,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.xl,
     borderWidth: 1,
-  },
-  permissionCard: {
-    gap: spacing.sm,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  permissionRow: {
-    minHeight: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  permissionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: radius.pill,
-  },
-  permissionCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  permissionLabel: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  permissionBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
-  },
-  permissionStatus: {
-    minHeight: 28,
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  permissionStatusText: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
   },
   sectionLabel: {
     fontSize: 11,

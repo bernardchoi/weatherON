@@ -1,29 +1,29 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-06-30
+> 생성일: 2026-07-02
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
 
 | 항목 | 값 |
 |---|---|
-| 최신 preview build | `419e3d2c-135b-41a1-88f6-3321ad5115f1` |
+| 최신 preview build | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
 | build 상태 | FINISHED |
-| preview build version | `0.1.0 (3)` |
+| preview build version | `0.1.0 (5)` |
 | 소스 기준 version | `0.1.0 (5)` |
-| preview build 소스 일치 | 불일치 |
+| preview build 소스 일치 | 일치 |
 | 최신 production build | `90912651-fc84-47d0-91ce-9be096c2ff05` |
 | production build 상태 | FINISHED |
 | 정적 체크 통과 | 22/23 |
-| 실기기 QA 미검증 | 14 |
-| 실기기 QA 결과 적용 | 미적용 |
-| 스토어 스크린샷 issue | 0 |
+| 실기기 QA 미검증 | 8 |
+| 실기기 QA 결과 적용 | 적용됨 |
+| 스토어 스크린샷 issue | 1 |
 | 스토어 스크린샷 준비 | 5/5 |
 | ADB 연결 | 가능 |
-| APK 설치 | 미실행 |
+| APK 설치 | 설치됨 |
 | local 입력 파일 issue | 0 |
 | local 스토어 입력 누락 | 9 |
-| local QA 환경/결과 누락 | 0/0 |
+| local QA 환경/결과 누락 | 0/8 |
 | 스토어 입력값 적용 | 미적용 |
 | 스토어 입력값 issue | 9 |
 | 스토어 입력값 누락 필드 | 9 |
@@ -41,9 +41,9 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (5) 기준 새 APK 필요. EAS Free plan Android build quota 소진. 2026-07-01 reset 후 재시도 필요 | quota 대기 · 현재 APK 0.1.0 (3) |
-| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D12 판정 | 14개 미검증 |
-| 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
+| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
+| 2 | 실기기 QA | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 APK 재설치 후 D1~D13 판정 | 8개 미검증 |
+| 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 1개 issue |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
 | 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
@@ -72,8 +72,8 @@ npm run check:eas-production-build-status -- <eas-build-id>
 
 | 문서 | 목적 |
 |---|---|
-| `WeatherON_ANDROID_DEVICE_QA_SESSION.md` | 실기기 D1~D12 결과 기록 |
-| `WeatherON_ANDROID_DEVICE_QA_PACKET.md` | 최신 APK 설치 링크와 D1~D12 수동 QA 패킷 |
+| `WeatherON_ANDROID_DEVICE_QA_SESSION.md` | 실기기 D1~D13 결과 기록 |
+| `WeatherON_ANDROID_DEVICE_QA_PACKET.md` | 최신 APK 설치 링크와 D1~D13 수동 QA 패킷 |
 | `WeatherON_ANDROID_DEVICE_QA_APPLY_STATUS.md` | 실기기 QA 결과 JSON 적용 상태 |
 | `WeatherON_ANDROID_STORE_SCREENSHOT_PLAN.md` | 스토어 스크린샷 캡처 목록 |
 | `WeatherON_ANDROID_STORE_SCREENSHOT_PACKET.md` | 스토어 스크린샷 캡처 작업 패킷 |

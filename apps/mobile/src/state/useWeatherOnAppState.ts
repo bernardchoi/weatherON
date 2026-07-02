@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
-import { presetWardrobe, type DestinationAlertCondition, type NotificationRuleEvaluation, type UserPreferenceProfile, type WardrobeItem } from "@weatheron/shared";
+import {
+  presetWardrobe,
+  type DestinationAlertCondition,
+  type DestinationTransportMode,
+  type NotificationRuleEvaluation,
+  type UserPreferenceProfile,
+  type WardrobeItem,
+} from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
 import { isLaunchHiddenRoute, isP0Route, type AppRouteId, type OnboardingRouteId, type P0RouteId } from "../navigation/routes";
 import {
@@ -32,6 +39,8 @@ import {
 } from "../providers/localNotifications";
 import { getRouteLabel } from "../navigation/routeLabels";
 
+export type { DestinationTransportMode };
+
 export type GateReason = "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
 export type WeatherLocationMode = "auto" | "manual";
 export type DestinationHubFilter = "all" | "saved" | "care" | "category";
@@ -51,12 +60,13 @@ export type FitPreference = "standard" | "relaxed" | "formal" | "outdoor";
 export type SmartCareScenario = "commute" | "outing" | "travel";
 export type PermissionReturnRouteId = P0RouteId | OnboardingRouteId;
 export type AccountGateReturnRouteId = P0RouteId | "A4";
+export type DestinationAddReturnRouteId = P0RouteId | "O6";
 export type AlertPreferenceKey = "rainDetail" | "routine" | "bedtime" | "destination" | "quietHours";
 export type AlertPreferences = Record<AlertPreferenceKey, boolean>;
 export type NotificationDeliveryStatus = LocalNotificationSyncResult;
 export type DestinationSchedulePreference = {
   targetArrivalTime: string;
-  bufferMinutes: number;
+  transportMode: DestinationTransportMode;
 };
 export type DestinationTravelEstimate = TravelEstimateResult & {
   originPlaceId: string;
@@ -138,15 +148,14 @@ const defaultNotificationDeliveryStatus: NotificationDeliveryStatus = {
 const rainThresholdSteps = [30, 50, 70];
 const leadTimeSteps = [30, 60, 120];
 const windThresholdSteps = [5, 8, 11];
-const targetArrivalTimeSteps = ["09:00", "10:20", "13:00", "15:30", "18:00", "20:00"];
-const bufferMinuteSteps = [0, 10, 20, 30];
 const appStateStorageKey = "weatheron.appState.v1";
 const notificationStateStorageKey = "weatheron.notificationState.v1";
 const weatherProviderResultStorageKey = "weatheron.weatherProviderResult.v1";
 
 export function useWeatherOnAppState() {
-  const [route, setRoute] = useState<AppRouteId>("O2");
+  const [route, setRoute] = useState<AppRouteId>("O1");
   const [appStateHydrated, setAppStateHydrated] = useState(false);
+  const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
@@ -194,6 +203,7 @@ export function useWeatherOnAppState() {
   const [selectedWardrobeItemId, setSelectedWardrobeItemId] = useState<string>(presetWardrobe[0]?.id ?? "");
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [styleProfileReturnRoute, setStyleProfileReturnRoute] = useState<P0RouteId | null>(null);
+  const [destinationAddReturnRoute, setDestinationAddReturnRoute] = useState<DestinationAddReturnRouteId>("G1");
   const [accountLinked, setAccountLinked] = useState(false);
   const [termsRequiredAccepted, setTermsRequiredAccepted] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
@@ -220,6 +230,15 @@ export function useWeatherOnAppState() {
   const selectedDestinationAlertCondition = selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition;
   const selectedDestinationSchedulePreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
   const selectedDestinationTravelEstimate = selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate;
+  const selectedDestinationTravelMinutes = getTravelMinutesForTransport(
+    selectedDestinationTravelEstimate,
+    selectedDestinationSchedulePreference.transportMode,
+  );
+  const selectedDestinationAutoBufferMinutes = getAutoBufferMinutes(
+    selectedDestinationSchedulePreference.targetArrivalTime,
+    selectedDestinationTravelMinutes,
+    nowMinuteTick,
+  );
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
       gender: styleGender === "men" ? "male" : styleGender === "women" ? "female" : "any",
@@ -280,7 +299,7 @@ export function useWeatherOnAppState() {
         setAlertPreferences(persistedState.alertPreferences);
         if (persistedState.locationReady) setDeviceLocationState({ status: "idle", message: "현재 위치 재확인 필요" });
         setManualWeatherLocation(persistedState.manualWeatherLocation);
-        setRoute(persistedState.onboardingCompleted ? "H1" : "O2");
+        setRoute(persistedState.onboardingCompleted ? "H1" : "O1");
       })
       .finally(() => {
         if (active) setAppStateHydrated(true);
@@ -310,8 +329,9 @@ export function useWeatherOnAppState() {
         destinationAlertCondition: selectedDestinationAlertCondition,
         destinationSchedule: {
           targetArrivalTime: selectedDestinationSchedulePreference.targetArrivalTime,
-          bufferMinutes: selectedDestinationSchedulePreference.bufferMinutes,
-          travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
+          bufferMinutes: selectedDestinationAutoBufferMinutes,
+          travelMinutes: selectedDestinationTravelMinutes,
+          transportMode: selectedDestinationSchedulePreference.transportMode,
           travelProvider: selectedDestinationTravelEstimate.provider,
           travelStatus: selectedDestinationTravelEstimate.status,
         },
@@ -322,15 +342,22 @@ export function useWeatherOnAppState() {
       destinationCareEnabled,
       savedDestinations,
       selectedDestinationAlertCondition,
+      selectedDestinationAutoBufferMinutes,
       selectedDestinationPlace,
       selectedDestinationSchedulePreference,
       selectedDestinationTravelEstimate,
+      selectedDestinationTravelMinutes,
       useDestinationWeather,
       userPreferenceProfile,
       wardrobe,
       weatherProviderResult,
     ],
   );
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setNowMinuteTick(Date.now()), 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -373,7 +400,7 @@ export function useWeatherOnAppState() {
         destination: destinationPlace.coordinate,
         originName: originLocation.locationName,
         destinationName: destinationPlace.name,
-        originCountryCode: "KR",
+        originCountryCode: originLocation.countryCode,
         destinationCountryCode: destinationPlace.countryCode,
       })
       .then((result) => {
@@ -597,8 +624,13 @@ export function useWeatherOnAppState() {
   const navigate = useCallback((nextRoute: AppRouteId) => {
     setAlertSettingsRouteState(null);
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
+    if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
   }, [route]);
+
+  const returnFromDestinationAdd = useCallback(() => {
+    setRoute(destinationAddReturnRoute);
+  }, [destinationAddReturnRoute]);
 
   useEffect(() => {
     if (route !== "O4" && styleProfileReturnRoute) setStyleProfileReturnRoute(null);
@@ -904,13 +936,14 @@ export function useWeatherOnAppState() {
   }, [accountLinked, state.outfit.variant]);
 
   const saveDestination = useCallback((returnTo: P0RouteId = "G1") => {
-    saveSelectedDestination(true);
+    saveSelectedDestination(permissionReady);
     resetPlaceSearch();
-    setPreviewDestinationCareEnabled(true);
+    setPreviewDestinationCareEnabled(permissionReady);
     setAccountGateResult(createAccountGateResult("destination-care", returnTo));
-    if (route === "O6") setOnboardingCompleted(true);
+    if (route === "O6" || destinationAddReturnRoute === "O6") setOnboardingCompleted(true);
+    setDestinationAddReturnRoute("G1");
     setRoute(returnTo);
-  }, [resetPlaceSearch, route, saveSelectedDestination]);
+  }, [destinationAddReturnRoute, permissionReady, resetPlaceSearch, route, saveSelectedDestination]);
 
   const toggleDestinationCare = useCallback(() => {
     const nextCareEnabled = !destinationCareEnabled;
@@ -963,18 +996,7 @@ export function useWeatherOnAppState() {
     }
   }, [destinationSaved, selectedDestinationAlertCondition, selectedDestinationPlace.id]);
 
-  const cycleSelectedDestinationSchedulePreference = useCallback((field: keyof DestinationSchedulePreference) => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    const nextPreference =
-      field === "targetArrivalTime"
-        ? {
-            ...currentPreference,
-            targetArrivalTime: cycleValue(targetArrivalTimeSteps, currentPreference.targetArrivalTime),
-          }
-        : {
-            ...currentPreference,
-            bufferMinutes: cycleValue(bufferMinuteSteps, currentPreference.bufferMinutes),
-          };
+  const setSelectedDestinationSchedulePreference = useCallback((nextPreference: DestinationSchedulePreference) => {
     setPreviewDestinationSchedulePreference(nextPreference);
     if (destinationSaved) {
       setSavedDestinations((current) =>
@@ -985,7 +1007,18 @@ export function useWeatherOnAppState() {
         ),
       );
     }
-  }, [destinationSaved, previewDestinationSchedulePreference, selectedDestinationPlace.id, selectedSavedDestination?.schedulePreference]);
+  }, [destinationSaved, selectedDestinationPlace.id]);
+
+  const setSelectedDestinationTargetArrivalTime = useCallback((targetArrivalTime: string) => {
+    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+    if (!isValidTimeText(targetArrivalTime)) return;
+    setSelectedDestinationSchedulePreference({ ...currentPreference, targetArrivalTime });
+  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+
+  const setSelectedDestinationTransportMode = useCallback((transportMode: DestinationTransportMode) => {
+    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode });
+  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
 
   const removeSavedDestination = useCallback((placeId: string) => {
     const removedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
@@ -1055,26 +1088,6 @@ export function useWeatherOnAppState() {
     startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined);
   };
 
-  const openPostAccountSetupGate = (
-    returnTo: PermissionReturnRouteId,
-    pendingAccountAction?: AccountPendingAction,
-    selectedDestinationName?: string,
-  ) => {
-    if (locationReady && permissionReady) return false;
-    setPermissionGate(
-      createPermissionGateState(
-        "account-setup",
-        returnTo,
-        selectedDestinationName,
-        pendingAccountAction === "destination-care" ? "destination" : "general",
-        pendingAccountAction,
-      ),
-    );
-    setRoute("O3");
-    setGate(null);
-    return true;
-  };
-
   const completeAccountAction = (pendingGate: AccountGateState | null) => {
     if (!pendingGate) return;
     if (pendingGate.reason === "save-outfit") setOutfitSaved(true);
@@ -1092,7 +1105,6 @@ export function useWeatherOnAppState() {
       return;
     }
     const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
-    if (openPostAccountSetupGate(returnTo, gate?.reason, gate?.reason === "destination-care" ? selectedDestinationPlace.name : undefined)) return;
     completeAccountAction(gate);
     setRoute(returnTo);
     setGate(null);
@@ -1101,7 +1113,6 @@ export function useWeatherOnAppState() {
   const completeTerms = () => {
     setTermsRequiredAccepted(true);
     const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
-    if (openPostAccountSetupGate(returnTo, gate?.reason, gate?.reason === "destination-care" ? selectedDestinationPlace.name : undefined)) return;
     completeAccountAction(gate);
     setRoute(returnTo);
     setGate(null);
@@ -1194,7 +1205,7 @@ export function useWeatherOnAppState() {
   };
 
   const goBack = useCallback(() => {
-    if (route === "A1" || route === "H1" || route === "O2") return false;
+    if (route === "A1" || route === "H1" || route === "O1" || route === "O2") return false;
     if (route === "A2" || route === "A3") {
       setRoute(gate?.returnTo ?? "H1");
       setGate(null);
@@ -1213,10 +1224,14 @@ export function useWeatherOnAppState() {
       setRoute(styleProfileReturnRoute);
       return true;
     }
+    if (route === "P1") {
+      setRoute(destinationAddReturnRoute);
+      return true;
+    }
     const backRoute = getBackRoute(route);
     setRoute(backRoute);
     return true;
-  }, [gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute]);
+  }, [destinationAddReturnRoute, gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute]);
 
   return {
     route,
@@ -1303,10 +1318,12 @@ export function useWeatherOnAppState() {
     requestCurrentLocation,
     selectWeatherLocation,
     saveDestination,
+    returnFromDestinationAdd,
     toggleDestinationCare,
     toggleSavedDestinationCare,
     cycleSelectedDestinationAlertCondition,
-    cycleSelectedDestinationSchedulePreference,
+    setSelectedDestinationTargetArrivalTime,
+    setSelectedDestinationTransportMode,
     removeSavedDestination,
     restoreRemovedDestination,
     setDestinationHubFilter,
@@ -1366,6 +1383,7 @@ function getBackRoute(route: AppRouteId): AppRouteId {
       return "G1";
     case "M2":
     case "M3":
+    case "M4":
     case "A4":
     case "R1":
     case "R3":
@@ -1394,11 +1412,6 @@ function getDestinationAlertConditionSteps(field: keyof DestinationAlertConditio
   return windThresholdSteps;
 }
 
-function cycleValue<T>(steps: T[], currentValue: T): T {
-  const currentIndex = steps.indexOf(currentValue);
-  return steps[(currentIndex + 1) % steps.length] ?? steps[0] ?? currentValue;
-}
-
 function getP0RouteFromNotificationPayload(value?: string): P0RouteId | null {
   if (!value) return null;
   const route = value as AppRouteId;
@@ -1416,6 +1429,7 @@ function shouldScheduleLocalNotification(notification: NotificationRuleEvaluatio
 
 function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): string {
   if (result.status === "scheduled") return `${result.scheduledCount}건 발송 예약`;
+  if (result.status === "verification-failed") return "예약 확인 실패";
   if (result.status === "permission-required") return "권한 필요";
   if (result.status === "cancelled") return "알림 예약 해제";
   return "기기 알림 미지원";
@@ -1746,9 +1760,9 @@ function getDefaultDestinationSchedulePreference(place: PlaceSearchResult): Dest
         : place.category === "sports" || normalizedName.includes("잠실")
           ? "10:20"
           : place.countryCode === "JP"
-            ? "15:30"
+          ? "15:30"
             : "10:05",
-    bufferMinutes: 10,
+    transportMode: "auto",
   };
 }
 
@@ -1783,6 +1797,47 @@ function createDestinationTravelEstimate(originPlaceId: string, destinationPlace
     originPlaceId,
     destinationPlaceId,
   };
+}
+
+function getTravelMinutesForTransport(estimate: DestinationTravelEstimate, transportMode: DestinationTransportMode): number {
+  const baseMinutes = estimate.travelMinutes || 35;
+  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
+  if (transportMode === "walk") {
+    if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
+    return Math.max(15, Math.ceil(baseMinutes * 1.8));
+  }
+  if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
+  if (transportMode === "drive") return baseMinutes;
+  return baseMinutes;
+}
+
+function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number): number {
+  const arrivalOffset = getMinutesUntilTime(targetArrivalTime, nowMs);
+  if (arrivalOffset === null) return 10;
+  const freeWindow = arrivalOffset - travelMinutes;
+  if (freeWindow <= 30) return 0;
+  if (freeWindow <= 90) return 5;
+  if (freeWindow <= 180) return 10;
+  if (freeWindow <= 360) return 15;
+  return 20;
+}
+
+function getMinutesUntilTime(time: string, nowMs: number): number | null {
+  if (!isValidTimeText(time)) return null;
+  const [hourText, minuteText] = time.split(":");
+  const targetMinutes = Number(hourText) * 60 + Number(minuteText);
+  const now = new Date(nowMs);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const dayMinutes = 24 * 60;
+  return ((targetMinutes - currentMinutes) % dayMinutes + dayMinutes) % dayMinutes;
+}
+
+function isValidTimeText(value: string): boolean {
+  if (!/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hourText, minuteText] = value.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
 }
 
 function getActiveWeatherLocation(
@@ -1833,11 +1888,15 @@ function normalizeDestinationSchedulePreference(value: unknown, place: PlaceSear
   if (!value || typeof value !== "object") return getDefaultDestinationSchedulePreference(place);
   const record = value as Partial<DestinationSchedulePreference>;
   return {
-    targetArrivalTime: typeof record.targetArrivalTime === "string" && /^\d{2}:\d{2}$/.test(record.targetArrivalTime)
+    targetArrivalTime: typeof record.targetArrivalTime === "string" && isValidTimeText(record.targetArrivalTime)
       ? record.targetArrivalTime
       : getDefaultDestinationSchedulePreference(place).targetArrivalTime,
-    bufferMinutes: typeof record.bufferMinutes === "number" ? record.bufferMinutes : 10,
+    transportMode: isDestinationTransportMode(record.transportMode) ? record.transportMode : "auto",
   };
+}
+
+function isDestinationTransportMode(value: unknown): value is DestinationTransportMode {
+  return value === "auto" || value === "walk" || value === "drive" || value === "transit";
 }
 
 function normalizeDestinationTravelEstimate(value: unknown, origin: WeatherLocationPreset, place: PlaceSearchResult): DestinationTravelEstimate {
@@ -1846,7 +1905,7 @@ function normalizeDestinationTravelEstimate(value: unknown, origin: WeatherLocat
   return {
     originPlaceId: typeof record.originPlaceId === "string" ? record.originPlaceId : origin.locationId,
     destinationPlaceId: typeof record.destinationPlaceId === "string" ? record.destinationPlaceId : place.id,
-    provider: record.provider === "kakao" ? "kakao" : "fallback",
+    provider: record.provider === "kakao" || record.provider === "google" ? record.provider : "fallback",
     status: isTravelEstimateStatus(record.status) ? record.status : "fallback",
     travelMinutes: typeof record.travelMinutes === "number" ? record.travelMinutes : getDefaultTravelMinutes(place),
     distanceMeters: typeof record.distanceMeters === "number" ? record.distanceMeters : 0,

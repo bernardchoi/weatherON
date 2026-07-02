@@ -15,8 +15,8 @@ export function AccountManagementScreen({
   const [dangerConfirm, setDangerConfirm] = useState<"none" | "signout" | "delete">("none");
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const profileTitle = accountReady ? "내 계정" : needsTerms ? "약관 동의" : "계정 연결";
-  const profileMeta = accountReady ? "로그아웃과 계정 작업 관리" : needsTerms ? "필수 약관 확인 후 계속" : "저장·동기화를 시작하려면 연결";
+  const profileTitle = accountReady ? "데모 계정" : needsTerms ? "약관 동의" : "계정 연결";
+  const profileMeta = accountReady ? "실제 제공자 인증 전 저장 상태 데모" : needsTerms ? "필수 약관 확인 후 계속" : "저장·동기화를 시작하려면 연결";
   const primaryLabel = accountReady ? "로그아웃" : needsTerms ? "약관 동의 완료" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "로그아웃 확인" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.warm : needsTerms ? theme.gold : theme.sky;

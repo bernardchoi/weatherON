@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-06-30",
-  "sourceBuildId": "419e3d2c-135b-41a1-88f6-3321ad5115f1",
-  "appVersion": "0.1.0 (3)",
+  "generatedAt": "2026-07-02",
+  "sourceBuildId": "802540a2-77a2-40cb-9b3b-15d9b3984ae2",
+  "appVersion": "0.1.0 (5)",
   "requiredCount": 5,
   "readyCount": 5,
-  "issueCount": 0,
+  "issueCount": 1,
   "recommended": {
     "format": "PNG",
     "orientation": "portrait",
@@ -43,7 +43,7 @@
     {
       "filename": "phone-04-outfit.png",
       "screen": "C1 코디 추천",
-      "route": "MY > 코디·옷장",
+      "route": "하단 홈 > 코디 요약",
       "status": "ready",
       "width": 1084,
       "height": 2412,

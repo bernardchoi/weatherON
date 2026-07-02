@@ -119,11 +119,11 @@ topActions.push(
   [
     `실기기 QA`,
     !previewBuildMatchesSource
-      ? "새 preview APK 생성 후 D1~D12 판정"
+      ? "새 preview APK 생성 후 D1~D13 판정"
       : deviceQaBlockingFailure
       ? "새 preview APK 설치 후 D7 위치 권한 재검증"
       : latestBuildStatus === "FINISHED"
-        ? `${latestBuildId} APK 재설치 후 D1~D12 판정`
+        ? `${latestBuildId} APK 재설치 후 D1~D13 판정`
         : `${latestBuildId} 빌드 완료 후 APK 재설치`,
     latestBuildStatus === "FINISHED" ? (deviceQaPendingCount === 0 ? "완료" : `${deviceQaPendingCount}개 미검증`) : `빌드 ${latestBuildStatus}`,
   ],
@@ -210,8 +210,8 @@ npm run check:eas-production-build-status -- <eas-build-id>
 
 | 문서 | 목적 |
 |---|---|
-| \`WeatherON_ANDROID_DEVICE_QA_SESSION.md\` | 실기기 D1~D12 결과 기록 |
-| \`WeatherON_ANDROID_DEVICE_QA_PACKET.md\` | 최신 APK 설치 링크와 D1~D12 수동 QA 패킷 |
+| \`WeatherON_ANDROID_DEVICE_QA_SESSION.md\` | 실기기 D1~D13 결과 기록 |
+| \`WeatherON_ANDROID_DEVICE_QA_PACKET.md\` | 최신 APK 설치 링크와 D1~D13 수동 QA 패킷 |
 | \`WeatherON_ANDROID_DEVICE_QA_APPLY_STATUS.md\` | 실기기 QA 결과 JSON 적용 상태 |
 | \`WeatherON_ANDROID_STORE_SCREENSHOT_PLAN.md\` | 스토어 스크린샷 캡처 목록 |
 | \`WeatherON_ANDROID_STORE_SCREENSHOT_PACKET.md\` | 스토어 스크린샷 캡처 작업 패킷 |

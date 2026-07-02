@@ -20,6 +20,7 @@ import {
 import { AlertSettingsScreen } from "../screens/AlertSettingsScreen";
 import { MyScreen } from "../screens/MyScreen";
 import { GlobalSettingsScreen } from "../screens/GlobalSettingsScreen";
+import { AppPermissionsScreen } from "../screens/AppPermissionsScreen";
 import { AccountManagementScreen } from "../screens/AccountManagementScreen";
 import { PolicyHubScreen } from "../screens/PolicyHubScreen";
 import { PolicyDocumentScreen } from "../screens/PolicyDocumentScreen";
@@ -88,7 +89,6 @@ export function AppNavigator() {
     selectedPolicyDocument: appState.selectedPolicyDocument,
     adConsentMode: appState.adConsentMode,
     temperatureUnit: appState.temperatureUnit,
-    weightUnit: appState.weightUnit,
     distanceUnit: appState.distanceUnit,
     themeMode: appState.themeMode,
     reducedTransparency: appState.reducedTransparency,
@@ -116,7 +116,6 @@ export function AppNavigator() {
     onReturnFromPolicyDocument: appState.returnFromPolicyDocument,
     onSetAdConsentMode: appState.setAdConsentMode,
     onSetTemperatureUnit: appState.setTemperatureUnit,
-    onSetWeightUnit: appState.setWeightUnit,
     onSetDistanceUnit: appState.setDistanceUnit,
     onSetThemeMode: appState.setThemeMode,
     onToggleReducedTransparency: appState.toggleReducedTransparency,
@@ -138,10 +137,12 @@ export function AppNavigator() {
     onRequestCurrentLocation: appState.requestCurrentLocation,
     onSelectWeatherLocation: appState.selectWeatherLocation,
     onSaveDestination: appState.saveDestination,
+    onReturnFromDestinationAdd: appState.returnFromDestinationAdd,
     onToggleDestinationCare: appState.toggleDestinationCare,
     onToggleSavedDestinationCare: appState.toggleSavedDestinationCare,
     onCycleDestinationAlertCondition: appState.cycleSelectedDestinationAlertCondition,
-    onCycleDestinationSchedulePreference: appState.cycleSelectedDestinationSchedulePreference,
+    onSetDestinationTargetArrivalTime: appState.setSelectedDestinationTargetArrivalTime,
+    onSetDestinationTransportMode: appState.setSelectedDestinationTransportMode,
     onRemoveSavedDestination: appState.removeSavedDestination,
     onRestoreRemovedDestination: appState.restoreRemovedDestination,
     onSetDestinationHubFilter: appState.setDestinationHubFilter,
@@ -190,6 +191,7 @@ export function AppNavigator() {
       {route === "M1" ? <MyScreen {...screenProps} /> : null}
       {route === "M2" ? <AlertSettingsScreen {...screenProps} /> : null}
       {route === "M3" ? <GlobalSettingsScreen {...screenProps} /> : null}
+      {route === "M4" ? <AppPermissionsScreen {...screenProps} /> : null}
       {route === "A4" ? <AccountManagementScreen {...screenProps} /> : null}
       {route === "R1" ? <PolicyHubScreen {...screenProps} /> : null}
       {route === "R2" ? <PolicyDocumentScreen {...screenProps} /> : null}

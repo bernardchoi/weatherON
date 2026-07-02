@@ -15,6 +15,8 @@ export type DestinationAlertCondition = {
   windThresholdMs: number;
 };
 
+export type DestinationTransportMode = "auto" | "walk" | "drive" | "transit";
+
 export type OutfitVariant = "default" | "formal" | "rain" | "cold" | "heat";
 
 export type OutfitRecommendation = {
@@ -46,6 +48,7 @@ export type DestinationCare = {
     recommendedDepartureTime?: string;
     travelMinutes?: number;
     bufferMinutes?: number;
+    transportMode?: DestinationTransportMode;
     travelProvider?: "kakao" | "google" | "fallback";
     travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
   };

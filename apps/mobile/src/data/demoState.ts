@@ -8,7 +8,15 @@ import {
   recommendOutfit,
   recommendUmbrella,
 } from "@weatheron/shared";
-import type { DestinationAlertCondition, DestinationCare, NotificationRuleEvaluation, PlaceSearchResult, WardrobeItem, WeatherSnapshot } from "@weatheron/shared";
+import type {
+  DestinationAlertCondition,
+  DestinationCare,
+  DestinationTransportMode,
+  NotificationRuleEvaluation,
+  PlaceSearchResult,
+  WardrobeItem,
+  WeatherSnapshot,
+} from "@weatheron/shared";
 import { runtimeWeatherProvider } from "../providers/weatherProvider";
 import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
 
@@ -29,6 +37,7 @@ export type DestinationScheduleInput = {
   targetArrivalTime: string;
   travelMinutes: number;
   bufferMinutes: number;
+  transportMode?: DestinationTransportMode;
   travelProvider?: "kakao" | "google" | "fallback";
   travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
 };
@@ -37,7 +46,7 @@ export type DestinationNotificationInput = {
   place: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode">;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
-  schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "bufferMinutes">;
+  schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode">;
   travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "travelProvider" | "travelStatus">;
 };
 
@@ -89,6 +98,7 @@ export function buildDemoStateFromWeatherResult(
     travelMinutes: options.destinationSchedule?.travelMinutes ?? 40,
     targetArrivalTime: options.destinationSchedule?.targetArrivalTime ?? "13:00",
     bufferMinutes: options.destinationSchedule?.bufferMinutes ?? 10,
+    transportMode: options.destinationSchedule?.transportMode ?? "auto",
     travelProvider: options.destinationSchedule?.travelProvider,
     travelStatus: options.destinationSchedule?.travelStatus,
   });

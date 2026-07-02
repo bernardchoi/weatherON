@@ -18,17 +18,29 @@ const scenarios: { value: SmartCareScenario; title: string; body: string }[] = [
 export function SmartCareOnboardingScreen({
   smartCareEnabled,
   smartCareScenario,
+  permissionGateResult,
   onSetSmartCareScenario,
   onCompleteSmartCareOnboarding,
   onCompleteOnboarding,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
+  const permissionFeedback = getPermissionFeedback(permissionGateResult);
   return (
     <AppScreen title="알림이 알아서 챙기게 할까요?" subtitle="기준만 고르면 상황에 맞춰 알림 시간을 조정함" badge="2 / 3">
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
+
+      {permissionFeedback ? (
+        <View style={[styles.feedbackCard, { backgroundColor: theme.cardStrong, borderColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }]}>
+          <View style={[styles.feedbackDot, { backgroundColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }]} />
+          <View style={styles.copy}>
+            <Text style={[styles.feedbackTitle, { color: theme.text }]}>{permissionFeedback.title}</Text>
+            <Text style={[styles.feedbackBody, { color: theme.muted }]}>{permissionFeedback.body}</Text>
+          </View>
+        </View>
+      ) : null}
 
       <Section title="알아서 챙기기" caption="날씨 변화와 이동 패턴에 맞춰 자동 보정" accent="gold">
         <View style={[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
@@ -93,6 +105,24 @@ export function SmartCareOnboardingScreen({
   );
 }
 
+function getPermissionFeedback(permissionGateResult: P0ScreenProps["permissionGateResult"]): { title: string; body: string; tone: "clear" | "gold" } | null {
+  if (!permissionGateResult || permissionGateResult.returnTo !== "H1") return null;
+  if (permissionGateResult.reason !== "location" && permissionGateResult.reason !== "account-setup") return null;
+  const skipped = permissionGateResult.message.includes("나중에");
+  if (skipped) {
+    return {
+      title: "위치 권한은 나중에 설정",
+      body: "기본 위치 기준으로 홈 판단을 먼저 보여줌",
+      tone: "gold",
+    };
+  }
+  return {
+    title: "현재 위치 기준 홈 반영됨",
+    body: "홈 날씨와 출발 판단이 현재 위치 기준으로 갱신됨",
+    tone: "clear",
+  };
+}
+
 const styles = StyleSheet.create({
   progressTrack: {
     height: 4,
@@ -102,6 +132,30 @@ const styles = StyleSheet.create({
   progressFill: {
     width: "66%",
     height: "100%",
+  },
+  feedbackCard: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  feedbackDot: {
+    width: 9,
+    height: 9,
+    borderRadius: radius.pill,
+  },
+  feedbackTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  feedbackBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
   },
   statusCard: {
     minHeight: 126,

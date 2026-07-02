@@ -31,6 +31,7 @@ export function DestinationListScreen({
   selectedDestinationPlace,
   accountGateResult,
   permissionGateResult,
+  permissionReady,
   onNavigate,
   onSelectDestinationPlace,
   onRestoreRemovedDestination,
@@ -38,7 +39,7 @@ export function DestinationListScreen({
   const theme = useAppTheme();
   const care = state.destinationCare;
   const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById);
-  const alertCount = destinationCards.filter((item) => item.careEnabled).length;
+  const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
   const resultBanner = getDestinationResultBanner(accountGateResult, permissionGateResult, hasDestinations);
@@ -94,6 +95,7 @@ export function DestinationListScreen({
                 key={item.id}
                 item={item}
                 theme={theme}
+                permissionReady={permissionReady}
                 selected={selectedDestinationPlace.id === item.place.id}
                 onOpen={() => {
                   onSelectDestinationPlace(item.place);
@@ -131,11 +133,13 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
 function DestinationCard({
   item,
   theme,
+  permissionReady,
   selected,
   onOpen,
 }: {
   item: DestinationCardModel;
   theme: AppTheme;
+  permissionReady: boolean;
   selected: boolean;
   onOpen: () => void;
 }) {
@@ -162,7 +166,7 @@ function DestinationCard({
           <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>— {item.area}</Text>
         </View>
         <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
-          <Text style={[styles.readyText, { color: theme.gold }]}>{item.careEnabled ? "알림 켬" : "알림 꺼짐"}</Text>
+          <Text style={[styles.readyText, { color: theme.gold }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
         </View>
         <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
       </View>
@@ -186,6 +190,11 @@ function DestinationCard({
       </View>
     </Pressable>
   );
+}
+
+function getAlertPillLabel(careEnabled: boolean, permissionReady: boolean) {
+  if (!permissionReady) return "권한 필요";
+  return careEnabled ? "알림 켬" : "알림 꺼짐";
 }
 
 function RemovedDestinationBanner({
@@ -308,14 +317,38 @@ function getDestinationResultBanner(
 }
 
 function getAreaLabel(place: PlaceSearchResult) {
-  if (place.countryCode === "JP") return "일본";
-  if (place.countryCode === "GLOBAL") return "해외";
-  const parts = place.address.split(" ").filter(Boolean);
+  if (place.countryCode === "JP") {
+    const city = getCountryCityLabel(place);
+    return city ? `${city} · 일본` : "일본";
+  }
+  if (place.countryCode === "GLOBAL") return getGlobalAreaLabel(place);
+  const parts = place.address.replace(/,/g, " ").split(" ").filter(Boolean);
   const province = parts[0] ?? "";
   const city = parts[1] ?? "";
-  if (city && !city.endsWith("도") && city !== "County") return city;
-  if (province) return province.replace(/특별시|광역시|특별자치시|특별자치도|시$/u, "");
+  if (city && !isAdministrativeNoise(city)) return trimAdministrativeSuffix(city);
+  if (province && !isAdministrativeNoise(province)) return trimAdministrativeSuffix(province);
+  if (place.category === "sports") return "경기장";
+  if (place.category === "beach") return "해변";
   return "목적지";
+}
+
+function getGlobalAreaLabel(place: PlaceSearchResult) {
+  const parts = place.address.split(",").map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) return parts[parts.length - 1] ?? "해외";
+  return "해외";
+}
+
+function getCountryCityLabel(place: PlaceSearchResult) {
+  const parts = place.address.split(",").map((part) => part.trim()).filter(Boolean);
+  return parts.length >= 2 ? parts[parts.length - 1] : null;
+}
+
+function isAdministrativeNoise(value: string) {
+  return value === "County" || value === "Province" || value === "State" || value === "도";
+}
+
+function trimAdministrativeSuffix(value: string) {
+  return value.replace(/특별시|광역시|특별자치시|특별자치도|시|군|구$/u, "");
 }
 
 function formatTempDiff(value: number) {
@@ -333,8 +366,8 @@ function getDestinationWarningText(item: DestinationCardModel) {
 
 function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][number], care: P0ScreenProps["state"]["destinationCare"]) {
   const targetArrivalTime = destination.schedulePreference.targetArrivalTime;
-  const travelMinutes = destination.travelEstimate.travelMinutes || care.departureAdvice?.travelMinutes || 40;
-  const bufferMinutes = destination.schedulePreference.bufferMinutes;
+  const travelMinutes = getTravelMinutesForTransport(destination.travelEstimate, destination.schedulePreference.transportMode);
+  const bufferMinutes = getAutoBufferMinutes(targetArrivalTime, travelMinutes);
   return {
     arrivalTime: targetArrivalTime,
     departureTime: subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes),
@@ -347,6 +380,35 @@ function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCa
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "08:10";
   return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+}
+
+function getTravelMinutesForTransport(
+  estimate: P0ScreenProps["selectedDestinationTravelEstimate"],
+  transportMode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
+): number {
+  const baseMinutes = estimate.travelMinutes || 35;
+  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
+  if (transportMode === "walk") {
+    if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
+    return Math.max(15, Math.ceil(baseMinutes * 1.8));
+  }
+  if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
+  return baseMinutes;
+}
+
+function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number): number {
+  const [hourText, minuteText] = targetArrivalTime.split(":");
+  const targetMinutes = Number(hourText) * 60 + Number(minuteText);
+  if (!Number.isFinite(targetMinutes)) return 10;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const dayMinutes = 24 * 60;
+  const freeWindow = (((targetMinutes - currentMinutes) % dayMinutes + dayMinutes) % dayMinutes) - travelMinutes;
+  if (freeWindow <= 30) return 0;
+  if (freeWindow <= 90) return 5;
+  if (freeWindow <= 180) return 10;
+  if (freeWindow <= 360) return 15;
+  return 20;
 }
 
 function subtractMinutes(time: string, minutes: number) {

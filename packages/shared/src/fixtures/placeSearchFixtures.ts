@@ -56,14 +56,29 @@ export const placeSearchFixtures: PlaceSearchResult[] = [
 ];
 
 export function searchFixturePlaces(query: string): PlaceSearchResult[] {
-  const normalizedQuery = normalizeSearchText(query);
+  const normalizedQuery = normalizeSearchText(getFixtureSearchAlias(query));
   if (!normalizedQuery) return placeSearchFixtures.slice(0, 3);
   return placeSearchFixtures.filter((place) => {
-    const haystack = normalizeSearchText(`${place.name} ${place.address} ${place.category} ${place.countryCode}`);
-    return haystack.includes(normalizedQuery);
+    const haystack = normalizeSearchText(`${place.name} ${place.address} ${place.category} ${place.countryCode} ${getFixtureSearchAlias(place.name)}`);
+    return haystack.includes(normalizedQuery) || normalizedQuery.split(/\s+/).every((token) => haystack.includes(token));
   });
 }
 
-function normalizeSearchText(value: string): string {
-  return value.trim().toLowerCase();
+function getFixtureSearchAlias(value: string): string {
+  const normalized = normalizeSearchText(value).replace(/\s+/g, " ");
+  return placeSearchAliases[normalized] ?? value;
 }
+
+function normalizeSearchText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+const placeSearchAliases: Record<string, string> = {
+  "도쿄 역": "Tokyo Station",
+  "도쿄역": "Tokyo Station",
+  "東京駅": "Tokyo Station",
+  "잠실 야구장": "잠실종합운동장",
+  "jamsil stadium": "잠실종합운동장",
+  "마리나 베이": "Marina Bay",
+  "마리나베이": "Marina Bay",
+};

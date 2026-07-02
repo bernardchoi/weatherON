@@ -18,9 +18,9 @@
 | Google Maps Geocoding API | 해외 목적지 검색 실제 연동 시 | 해외 장소 검색, 좌표 변환 | 키 없으면 fixture 결과 유지. 현재 place smoke는 fixture fallback 기준 통과 |
 | Google Places API | 해외 POI 검색 품질 고도화 검토 시 | 세밀한 POI 검색, 장소 후보 품질 개선 | Google Maps Geocoding 우선 |
 | Mapbox Geocoding/Search API | Google Maps 비용 절감 PoC 확정 시 | 해외 장소 검색 비용 대안 | 현재 기본 provider 아님. 키 발급 불필요 |
-| Kakao Directions API | MVP 1 출발시간 역산 실측 고도화 시 | 국내 목적지 소요시간 계산 | 고정 소요시간/룰 기반 안내 |
+| Kakao Directions API | MVP 1 출발시간 역산 실측 고도화 시 | 국내 목적지 자차/자동 소요시간 계산 | 사용자 선택 이동수단 + 거리 기반 fallback |
 | Google Routes API | 해외 이동시간 고도화 검토 시 | 해외 도시/공항 이동시간 | 고정값 처리 |
-| T-map API | Phase 4 국내 정밀 소요시간 검토 시 | 국내 주행/대중교통 소요시간 정밀화 | Kakao Directions 또는 고정값 |
+| T-map API | Phase 4 국내 정밀 소요시간 검토 시 | 국내 주행/대중교통 소요시간 정밀화 | Kakao Directions 또는 사용자 선택 이동수단 fallback |
 | Firebase/Cloud Functions/Secret Manager | 계정·동기화·운영 배포 시 | 서버 adapter, Secret 보관, 계정 동기화 | 로컬 상태/로컬 proxy |
 | AdMob | MVP 사용 지표 확인 후 광고 실험 전 | 배너/네이티브 광고 | mock slot |
 | Google Play Console / EAS Submit 권한 | Android 프로덕션 제출 시 | AAB 업로드, 내부/폐쇄 테스트, 프로덕션 배포 | EAS Build 산출물 수동 업로드 |
@@ -37,6 +37,7 @@
 - 새 API가 필요해지는 화면을 구현할 때 이 문서에 API명, 필요 시점, fallback, 키 발급 담당 상태를 먼저 추가한다.
 - 키가 없어도 화면 빌드와 QA가 가능해야 하며, provider-backed smoke는 키 확보 후 별도 실행한다.
 - MVP 0~1에서는 출발시간 역산, 목적지 날씨 비교, 강수 타임라인, 알림 신뢰성에 필요한 API만 우선한다.
+- 현재 G2 출발시간 역산은 `자동/도보/자차/대중교통` 사용자 선택을 지원한다. 실시간 교통 API 전까지는 거리 기반 fallback과 자동 여유시간으로 계산하며, 대중교통에는 `배차/환승 변동 가능` 안내를 유지한다.
 - AI 장소 추천, 광고, 구독, 여행 플래너용 API는 `WeatherON_기능_출시_로드맵.md`의 확장 조건 충족 전까지 실제 키 발급을 보류한다.
 - 해외 장소 검색은 Google Maps Geocoding 우선이다. Mapbox는 비용 절감 대안으로만 추적하며 현재 키를 발급하지 않는다.
 - Google Maps와 Mapbox 비용 비교 및 재검토 기준은 `docs/architecture/WeatherON_MAP_PROVIDER_COST_COMPARISON.md`를 따른다.

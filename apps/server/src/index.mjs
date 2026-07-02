@@ -182,13 +182,15 @@ function normalizeSearchLanguage(value) {
 }
 
 function getPlaceSearchQueryAlias(query) {
-  const normalized = query.trim().toLowerCase();
+  const normalized = query.trim().toLowerCase().replace(/\s+/g, " ");
   return placeSearchQueryAliases[normalized] ?? query;
 }
 
 const placeSearchQueryAliases = {
   "도쿄": "Tokyo",
+  "도쿄 역": "Tokyo Station",
   "도쿄역": "Tokyo Station",
+  "東京駅": "Tokyo Station",
   "시부야": "Shibuya",
   "신주쿠": "Shinjuku",
   "오사카": "Osaka",
@@ -198,6 +200,8 @@ const placeSearchQueryAliases = {
   "싱가포르": "Singapore",
   "마리나베이": "Marina Bay",
   "마리나 베이": "Marina Bay",
+  "잠실 야구장": "잠실종합운동장",
+  "jamsil stadium": "잠실종합운동장",
   "방콕": "Bangkok",
   "타이베이": "Taipei",
   "홍콩": "Hong Kong",
@@ -498,10 +502,16 @@ const placeSearchFixtures = [
 ];
 
 function searchFixturePlaces(query) {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = getPlaceSearchQueryAlias(query).trim().toLowerCase().replace(/\s+/g, " ");
   if (!normalizedQuery) return placeSearchFixtures.slice(0, 3);
   return placeSearchFixtures.filter((place) =>
-    `${place.name} ${place.address} ${place.category} ${place.countryCode}`.toLowerCase().includes(normalizedQuery),
+    `${place.name} ${place.address} ${place.category} ${place.countryCode} ${getPlaceSearchQueryAlias(place.name)}`
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .includes(normalizedQuery) ||
+    normalizedQuery.split(/\s+/).every((token) =>
+      `${place.name} ${place.address} ${place.category} ${place.countryCode}`.toLowerCase().includes(token),
+    ),
   );
 }
 
