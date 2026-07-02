@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
-import { AppScreen } from "../components/AppScreen";
-import { Section } from "../components/Section";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
-import { WeatherSummary } from "../components/WeatherSummary";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
-import { formatTemperatureDelta } from "../utils/units";
+import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 export function HomeScreen({
   state,
@@ -31,87 +28,125 @@ export function HomeScreen({
   const unreadNotificationCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
   const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
+  const currentWeather = state.destinationCare.originWeather;
+  const current = currentWeather.current;
+  const sourceLabel = buildWeatherSourceLabel(
+    state.weatherProvider.currentSource,
+    state.weatherProvider.destinationSource,
+    state.weatherProvider.fallbackUsed,
+  );
+  const updatedAtLabel = buildWeatherUpdatedAtLabel(state.weatherProvider.currentObservedAt, state.weatherProvider.destinationObservedAt);
 
   return (
-    <View style={styles.screenWrap}>
-      <AppScreen
-        title="나가기 전 5초 판단"
-        subtitle="언제 나갈지, 목적지는 다른지, 비는 언제 그치는지 먼저 확인"
-        heroAction={
+    <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.homeScroll} contentContainerStyle={styles.homeContent} showsVerticalScrollIndicator={false}>
+        <View style={[styles.homeAtmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        <View style={[styles.homeGlow, { backgroundColor: `${theme.gold}24` }]} />
+
+        <View style={styles.topBar}>
+          <View style={[styles.modePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
+            <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
+              {smartCareEnabled ? "ON · 개인화" : "게스트 · 저장 제한"}
+            </Text>
+          </View>
+          <Pressable
+            accessibilityLabel="현재 위치 변경"
+            accessibilityRole="button"
+            onPress={() => onNavigate("H2")}
+            style={[styles.locationPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          >
+            <Text style={[styles.locationText, { color: theme.text }]} numberOfLines={1}>{currentWeather.locationName}</Text>
+            <Text style={[styles.locationChevron, { color: theme.subtle }]}>▾</Text>
+          </Pressable>
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
             smartCareEnabled={smartCareEnabled}
             theme={theme}
             onPress={() => setNotificationSidebarOpen(true)}
           />
-        }
-      >
-        <WeatherSummary
-          originWeather={state.destinationCare.originWeather}
-          destinationWeather={state.destinationCare.destinationWeather}
-          destinationName={state.destinationCare.name}
-          sourceLabel={buildWeatherSourceLabel(
-            state.weatherProvider.currentSource,
-            state.weatherProvider.destinationSource,
-            state.weatherProvider.fallbackUsed,
-          )}
-          updatedAtLabel={buildWeatherUpdatedAtLabel(state.weatherProvider.currentObservedAt, state.weatherProvider.destinationObservedAt)}
-          loading={isWeatherLoading}
-          destinationReady={destinationReady}
-          temperatureUnit={temperatureUnit}
-          onRefresh={onRefreshWeather}
-          onAddDestination={() => onNavigate("P1")}
-        />
-        <WeatherStatusPanel
-          status={state.weatherProvider.status}
-          message={state.weatherProvider.message}
-          retryable={state.weatherProvider.retryable}
-          loading={isWeatherLoading}
-          onSetMode={onSetWeatherProviderMode}
-          onRetry={onRefreshWeather}
-        />
+        </View>
 
-        <Section title="오늘 바로 결정" caption="나가기 전 먼저 볼 세 가지" accent="gold">
-          <View style={styles.priorityGrid}>
-            <PriorityCard
-              index="01"
-              label="언제 나가야 함"
-              title={`${homeDecision.departureTime} 출발`}
-              body={homeDecision.departureBody}
-              accent={theme.gold}
-              icon={uiIconAssets.depart}
-              theme={theme}
-              actionLabel="출발"
-              accessibilityLabel="출발 탭에서 출발 시간 확인"
-              onPress={() => onNavigate("G1")}
-            />
-            <PriorityCard
-              index="02"
-              label="목적지는 다른가"
-              title={homeDecision.destinationTitle}
-              body={homeDecision.destinationBody}
-              accent={theme.sky}
-              icon={uiIconAssets.pin}
-              theme={theme}
-              actionLabel={destinationReady ? "비교" : "추가"}
-              accessibilityLabel={destinationReady ? "목적지 날씨 비교 보기" : "목적지 추가하기"}
-              onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
-            />
-            <PriorityCard
-              index="03"
-              label="비는 언제 그침"
-              title={homeDecision.rainTitle}
-              body={homeDecision.rainBody}
-              accent={theme.clear}
-              icon={uiIconAssets.rain}
-              theme={theme}
-              actionLabel="강수"
-              accessibilityLabel="강수 타임라인 보기"
-              onPress={() => onNavigate("H5")}
-            />
+        <View style={styles.weatherHero}>
+          <View style={[styles.sunMark, { backgroundColor: `${theme.gold}24`, borderColor: `${theme.gold}55` }]}>
+            <Text style={[styles.sunText, { color: theme.gold }]}>☀</Text>
           </View>
-        </Section>
-      </AppScreen>
+          <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
+          <Text style={[styles.heroCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+          <Text style={[styles.heroMeta, { color: theme.subtle }]}>
+            체감 {formatTemperature(current.feelsLikeC, temperatureUnit)} · 현재 {formatTemperature(current.tempC, temperatureUnit)}
+          </Text>
+        </View>
+
+        <View style={styles.metricRow}>
+          <MetricPill icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
+          <MetricPill icon={uiIconAssets.wind} label={`${current.windMs.toFixed(1)}m/s`} theme={theme} />
+          <MetricPill icon={uiIconAssets.uv} label={`UV ${current.uvIndex ?? 3}`} theme={theme} />
+          <MetricPill icon={uiIconAssets.drop} label={`${current.precipitationMm}mm`} theme={theme} />
+        </View>
+
+        <View style={styles.stateRail}>
+          <HomeStatePill label={smartCareEnabled ? "계정" : "게스트"} value={smartCareEnabled ? "동기화 ON" : "저장 제한"} tone={smartCareEnabled ? theme.clear : theme.gold} theme={theme} />
+          <HomeStatePill label="위치" value="정상" tone={theme.clear} theme={theme} />
+          <HomeStatePill label="알림" value={permissionReady ? "맞춤 케어" : "설정 전"} tone={theme.sky} theme={theme} />
+        </View>
+
+        <View style={styles.cardStack}>
+          <HomeActionCard
+            label="출발 판단"
+            title={`${homeDecision.departureTime} 출발`}
+            body={homeDecision.departureBody}
+            accent={theme.gold}
+            icon={uiIconAssets.depart}
+            theme={theme}
+            onPress={() => onNavigate("G1")}
+          />
+          <HomeActionCard
+            label="목적지 비교"
+            title={destinationReady ? homeDecision.destinationTitle : "목적지 추가 필요"}
+            body={destinationReady ? `${state.destinationCare.name} · ${homeDecision.destinationBody}` : "목적지를 추가하면 날씨 차이와 출발시간을 같이 계산"}
+            accent={theme.sky}
+            icon={uiIconAssets.pin}
+            theme={theme}
+            onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
+          />
+          <HomeActionCard
+            label="강수 타임라인"
+            title={homeDecision.rainTitle}
+            body={homeDecision.rainBody}
+            accent={theme.clear}
+            icon={uiIconAssets.rain}
+            theme={theme}
+            onPress={() => onNavigate("H5")}
+          />
+          <View style={[styles.syncCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.syncCopy}>
+              <Text style={[styles.syncLabel, { color: theme.clear }]}>PERSONAL HOME</Text>
+              <Text style={[styles.syncTitle, { color: theme.text }]}>저장한 기준으로 오늘 준비 중</Text>
+              <Text style={[styles.syncBody, { color: theme.muted }]}>{sourceLabel} · {updatedAtLabel}</Text>
+            </View>
+            <Pressable
+              accessibilityLabel="날씨 새로고침"
+              accessibilityRole="button"
+              disabled={isWeatherLoading}
+              onPress={onRefreshWeather}
+              style={[styles.refreshPill, { backgroundColor: `${theme.clear}18`, borderColor: `${theme.clear}44`, opacity: isWeatherLoading ? 0.55 : 1 }]}
+            >
+              <Text style={[styles.refreshPillText, { color: theme.clear }]}>{isWeatherLoading ? "갱신 중" : "동기화"}</Text>
+            </Pressable>
+          </View>
+          {state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed ? (
+            <WeatherStatusPanel
+              status={state.weatherProvider.status}
+              message={state.weatherProvider.message}
+              retryable={state.weatherProvider.retryable}
+              loading={isWeatherLoading}
+              onSetMode={onSetWeatherProviderMode}
+              onRetry={onRefreshWeather}
+            />
+          ) : null}
+        </View>
+      </ScrollView>
 
       <NotificationSidebar
         visible={notificationSidebarOpen}
@@ -251,53 +286,83 @@ function buildWeatherUpdatedAtLabel(currentObservedAt: string, destinationObserv
   return `갱신 ${String(latest.getHours()).padStart(2, "0")}:${String(latest.getMinutes()).padStart(2, "0")}`;
 }
 
-function PriorityCard({
-  index,
+function MetricPill({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
+  return (
+    <View style={[styles.metricPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Image source={icon} style={[styles.metricIcon, { tintColor: theme.text }]} resizeMode="contain" />
+      <Text style={[styles.metricText, { color: theme.text }]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
+
+function HomeStatePill({
+  label,
+  value,
+  tone,
+  theme,
+}: {
+  label: string;
+  value: string;
+  tone: string;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.homeStatePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.homeStateDot, { backgroundColor: tone }]} />
+      <Text style={[styles.homeStateLabel, { color: theme.muted }]} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.homeStateValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+    </View>
+  );
+}
+
+function HomeActionCard({
   label,
   title,
   body,
   accent,
   icon,
   theme,
-  actionLabel,
-  accessibilityLabel,
   onPress,
 }: {
-  index: string;
   label: string;
   title: string;
   body: string;
   accent: string;
   icon: number;
   theme: AppTheme;
-  actionLabel: string;
-  accessibilityLabel: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={`${label} ${title}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.priorityItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+      style={[styles.homeActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
     >
-      <View style={[styles.priorityRail, { backgroundColor: accent }]} />
-      <View style={styles.priorityLeading}>
-        <View style={[styles.priorityIconBox, { borderColor: `${accent}66`, backgroundColor: theme.cardSoft }]}>
-          <Image source={icon} style={[styles.priorityIcon, { tintColor: accent }]} resizeMode="contain" />
+      <View style={[styles.homeActionRail, { backgroundColor: accent }]} />
+      <View style={styles.homeActionCopy}>
+        <View style={styles.homeActionLabelRow}>
+          <Image source={icon} style={[styles.homeActionIcon, { tintColor: accent }]} resizeMode="contain" />
+          <Text style={[styles.homeActionLabel, { color: accent }]}>{label}</Text>
         </View>
-        <Text style={[styles.priorityIndex, { color: accent }]}>{index}</Text>
+        <Text style={[styles.homeActionTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.homeActionBody, { color: theme.muted }]} numberOfLines={2}>{body}</Text>
       </View>
-      <View style={styles.priorityCopy}>
-        <Text style={[styles.priorityKicker, { color: accent }]}>{label}</Text>
-        <Text style={[styles.priorityTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        <Text style={[styles.priorityBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
-      </View>
-      <View style={[styles.priorityActionPill, { backgroundColor: theme.cardSoft }]}>
-        <Text style={[styles.priorityActionText, { color: theme.text }]}>{actionLabel}</Text>
+      <View style={[styles.homeActionGlyph, { backgroundColor: `${accent}22`, borderColor: `${accent}55` }]}>
+        <Text style={[styles.homeActionArrow, { color: accent }]}>→</Text>
       </View>
     </Pressable>
   );
+}
+
+function getConditionLabel(condition: string) {
+  if (condition === "clear") return "맑음";
+  if (condition === "cloud") return "흐림";
+  if (condition === "rain") return "비";
+  if (condition === "snow") return "눈";
+  if (condition === "storm") return "강한 비";
+  if (condition === "dust") return "먼지";
+  return "날씨";
 }
 
 function NotificationBellButton({
@@ -558,88 +623,285 @@ const styles = StyleSheet.create({
   screenWrap: {
     flex: 1,
   },
-  priorityGrid: {
-    gap: 6,
+  homeScroll: {
+    flex: 1,
   },
-  priorityItem: {
-    minHeight: 62,
+  homeContent: {
+    minHeight: "100%",
+    gap: spacing.sm,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 130,
+  },
+  homeAtmosphere: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 420,
+    opacity: 0.68,
+  },
+  homeGlow: {
+    position: "absolute",
+    top: 86,
+    left: "50%",
+    width: 220,
+    height: 220,
+    marginLeft: -110,
+    borderRadius: 110,
+    opacity: 0.54,
+  },
+  topBar: {
+    minHeight: 46,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    padding: 8,
-    paddingLeft: 10,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    overflow: "hidden",
+    justifyContent: "space-between",
+    gap: spacing.xs,
   },
-  priorityRail: {
+  modePill: {
+    minHeight: 34,
+    maxWidth: 112,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  modeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+  },
+  modeText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  locationPill: {
+    flex: 1,
+    minHeight: 44,
+    maxWidth: 184,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  locationText: {
+    minWidth: 0,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  locationChevron: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  weatherHero: {
+    minHeight: 238,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 8,
+  },
+  sunMark: {
+    width: 72,
+    height: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  sunText: {
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: "900",
+  },
+  heroTemp: {
+    fontSize: 78,
+    lineHeight: 82,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  heroCondition: {
+    marginTop: 8,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  heroMeta: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+  metricRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  metricPill: {
+    flex: 1,
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  metricIcon: {
+    width: 13,
+    height: 13,
+  },
+  metricText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  stateRail: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  homeStatePill: {
+    flex: 1,
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  homeStateDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+  },
+  homeStateLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  homeStateValue: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  cardStack: {
+    gap: 9,
+    paddingTop: 2,
+  },
+  homeActionCard: {
+    minHeight: 88,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: 14,
+    paddingLeft: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  homeActionRail: {
     position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
     width: 3,
   },
-  priorityLeading: {
-    width: 30,
-    alignItems: "center",
-    gap: 3,
-  },
-  priorityIndex: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-  },
-  priorityIconBox: {
-    width: 22,
-    height: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  priorityIcon: {
-    width: 14,
-    height: 14,
-  },
-  priorityKicker: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  priorityCopy: {
+  homeActionCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 4,
   },
-  priorityTitle: {
-    fontSize: 14,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  priorityBody: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "700",
-  },
-  priorityActionPill: {
-    minWidth: 46,
-    minHeight: 32,
+  homeActionLabelRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
+    gap: 5,
   },
-  priorityActionText: {
+  homeActionIcon: {
+    width: 13,
+    height: 13,
+  },
+  homeActionLabel: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
   },
-  reportRow: {
-    minHeight: 68,
+  homeActionTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  homeActionBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+  homeActionGlyph: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  homeActionArrow: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  syncCard: {
+    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.md,
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  syncCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  syncLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  syncTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  syncBody: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  refreshPill: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  refreshPillText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   bellButton: {
     width: 44,

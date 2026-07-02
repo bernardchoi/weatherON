@@ -127,7 +127,7 @@ try {
     await loadSeededApp(page, appState);
     console.log(`small-screen: ${viewport.name}/home loaded`);
 
-    await assertText(page, "나가기 전 5초 판단", viewport, "home");
+    await assertText(page, "출발 판단", viewport, "home");
     console.log(`small-screen: ${viewport.name}/home text`);
     await checkLayout(page, viewport, "home");
     console.log(`small-screen: ${viewport.name}/home layout`);
@@ -149,7 +149,7 @@ try {
     await assertText(page, "목적지 기준 알림 미리보기", viewport, "destination-care");
     await assertText(page, "이동수단", viewport, "destination-care");
     await assertText(page, "도착 희망", viewport, "destination-care");
-    await assertText(page, "직접 입력", viewport, "destination-care");
+    await assertText(page, "숫자만 입력", viewport, "destination-care");
     await assertText(page, "자동 여유", viewport, "destination-care");
     await assertText(page, "대중교통", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");

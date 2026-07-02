@@ -164,27 +164,27 @@ async function loadSeededApp(page) {
   await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
   await waitForApp();
 
-  await assertText(page, "나가기 전 5초 판단");
+  await assertText(page, "출발 판단");
   await assertBottomNav(page);
 }
 
 async function checkHomeDecisionFlow(page) {
-  await clickText(page, "언제 나가야 함");
+  await clickText(page, "출발 판단");
   await assertText(page, "출발");
   await assertText(page, "목적지 추가");
   await assertBottomNav(page);
   await assertClearOfBottomNav(page, "목적지 추가");
 
   await clickText(page, "홈");
-  await assertText(page, "목적지 필요");
-  await clickText(page, "목적지는 다른가");
+  await assertText(page, "목적지 추가 필요");
+  await clickText(page, "목적지 비교");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
   await assertBottomNav(page);
   await assertClearOfBottomNav(page, "장소 선택 필요");
 
   await clickText(page, "홈");
-  await clickText(page, "비는 언제 그침");
+  await clickText(page, "강수 타임라인");
   await assertText(page, "비 그치면 알려줘");
   await assertText(page, "비 알림 설정");
   await assertBottomNav(page);
@@ -417,9 +417,9 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "장소 선택 필요");
     console.log("core-flow: destination add search");
     await fillAriaInput(page, "목적지 검색어", "잠실");
-    await assertText(page, "잠실종합운동장");
+    await assertText(page, "잠실야구장");
     console.log("core-flow: destination add select");
-    await clickText(page, "잠실종합운동장");
+    await clickText(page, "잠실야구장");
     await assertText(page, "목적지 저장하고 비교");
     console.log("core-flow: destination add save");
     await clickText(page, "목적지 저장하고 비교");
@@ -429,22 +429,23 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "도보");
     await assertText(page, "자차");
     await assertText(page, "대중교통");
-    await assertText(page, "직접 입력");
+    await assertText(page, "숫자만 입력");
     await assertText(page, "자동 여유");
-    await fillAriaInput(page, "도착 희망 직접 입력", "09:30");
+    await fillAriaInput(page, "도착 희망 시 입력", "09");
+    await fillAriaInput(page, "도착 희망 분 입력", "30");
     await assertText(page, "09:30");
     await clickText(page, "대중교통");
     await assertText(page, "배차/환승 변동 가능");
     await assertText(page, "계산식");
     await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "실사용 전 경로 QA 필요"]);
-    await assertText(page, "잠실종합운동장");
-    await waitForPersistedDestination(page, "잠실종합운동장");
+    await assertText(page, "잠실야구장");
+    await waitForPersistedDestination(page, "잠실야구장");
 
     console.log("core-flow: destination add reload");
     await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
     await waitForApp();
-    await assertText(page, "나가기 전 5초 판단");
-    await assertText(page, "잠실종합운동장");
+    await assertText(page, "출발 판단");
+    await assertText(page, "잠실야구장");
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
     await assertNoText(page, "첫 목적지를 추가해 주세요");
