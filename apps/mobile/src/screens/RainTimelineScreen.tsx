@@ -49,7 +49,7 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
           style={[styles.togglePanel, { backgroundColor: theme.card, borderColor: rainEndAlertEnabled ? theme.sky : theme.border }]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleLabel, { color: theme.sky }]}>알림 신뢰성 검증</Text>
+            <Text style={[styles.toggleLabel, { color: theme.sky }]}>알림 설정</Text>
             <Text style={[styles.toggleTitle, { color: theme.text }]}>비 그치면 알려줘</Text>
             <Text style={[styles.toggleMeta, { color: theme.muted }]}>21:00 전후로 그침 알림을 받을지 선택</Text>
           </View>

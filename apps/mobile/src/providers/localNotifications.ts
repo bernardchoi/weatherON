@@ -117,7 +117,7 @@ export async function scheduleLocalNotificationTest(): Promise<LocalNotification
   await Notifications.scheduleNotificationAsync({
     identifier,
     content: {
-      title: "WeatherON 테스트 알림",
+      title: "WeatherON 확인 알림",
       body: "알림을 누르면 스마트 알림 설정으로 이동함",
       data: {
         route: "M2",

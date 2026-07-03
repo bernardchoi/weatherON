@@ -1,9 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
-import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -56,7 +54,7 @@ const policyDocuments: Record<PolicyDocumentType, { title: string; updated: stri
       "React Native·Expo·Vite 계열 의존성 고지 필요",
       "지도·날씨 SDK 라이선스 고지 필요",
       "사용 중인 라이브러리의 저작권과 라이선스 조건 고지",
-      "라이선스 전문은 릴리즈 문서와 앱 내 정책 화면에서 접근",
+      "라이선스 전문은 앱 내 정책 화면에서 접근",
     ],
     notice: "라이선스 전문은 앱 업데이트 시 함께 갱신됨",
   },
@@ -67,71 +65,100 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
   const document = policyDocuments[selectedPolicyDocument];
 
   return (
-    <AppScreen
-      title={document.title}
-      subtitle={`최종 업데이트 ${document.updated}`}
-      badge="문서"
-      heroAction={<DocumentBackButton onPress={onReturnFromPolicyDocument} />}
-    >
-      <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-        <View style={styles.copy}>
-          <Text style={[styles.title, { color: theme.text }]}>{document.title}</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>{document.summary}</Text>
-        </View>
-        <StatusPill label="열람 가능" tone="clear" />
-      </View>
+    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-      <View style={styles.pointList}>
-        {document.points.map((point, index) => (
-          <View key={point} style={[styles.pointRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <Text style={[styles.stepNumber, { color: theme.gold }]}>{index + 1}.</Text>
-            <Text style={[styles.pointText, { color: theme.text }]}>{point}</Text>
+        <View style={styles.header}>
+          <Pressable accessibilityLabel="상단 정책 목록으로 돌아가기" accessibilityRole="button" onPress={onReturnFromPolicyDocument} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <ChevronLeft color={theme.muted} />
+          </Pressable>
+          <Text style={[styles.screenTitle, { color: theme.text }]} numberOfLines={1}>{document.title}</Text>
+        </View>
+
+        <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.text }]}>{document.title}</Text>
+            <Text style={[styles.body, { color: theme.muted }]}>{document.summary}</Text>
           </View>
-        ))}
-      </View>
-
-      <View style={[styles.noticeBox, { backgroundColor: theme.cardMuted }]}>
-        <Text style={[styles.body, { color: theme.muted }]}>{document.notice}</Text>
-      </View>
-
-      <Section title="문서" caption={`${document.title} · ${document.points.length}개 섹션 · 약관 동의와 동일 기준`} accent="gold">
-        <View style={styles.actions}>
-          <AppButton label="정책 목록" accessibilityLabel="정책 목록으로 돌아가기" onPress={onReturnFromPolicyDocument} />
-          <AppButton label="MY 설정" accessibilityLabel="MY에서 위치·알림 설정 확인" onPress={() => onNavigate("M1")} tone="secondary" />
         </View>
-      </Section>
-    </AppScreen>
+
+        <View style={styles.pointList}>
+          {document.points.map((point, index) => (
+            <View key={point} style={[styles.pointRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+              <Text style={[styles.stepNumber, { color: theme.gold }]}>{index + 1}.</Text>
+              <Text style={[styles.pointText, { color: theme.text }]}>{point}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={[styles.noticeBox, { backgroundColor: theme.cardMuted }]}>
+          <Text style={[styles.body, { color: theme.muted }]}>{document.notice}</Text>
+        </View>
+
+        <Section title="문서" caption={`${document.title} · ${document.points.length}개 섹션 · 약관 동의와 동일 기준`} accent="gold">
+          <View style={styles.actions}>
+            <AppButton label="정책 목록" accessibilityLabel="정책 목록으로 돌아가기" onPress={onReturnFromPolicyDocument} />
+            <AppButton label="MY 설정" accessibilityLabel="MY에서 위치·알림 설정 확인" onPress={() => onNavigate("M1")} tone="secondary" />
+          </View>
+        </Section>
+      </ScrollView>
+    </View>
   );
 }
 
-function DocumentBackButton({ onPress }: { onPress: () => void }) {
-  const theme = useAppTheme();
+function ChevronLeft({ color }: { color: string }) {
   return (
-    <Pressable
-      accessibilityLabel="상단 정책 목록으로 돌아가기"
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-    >
-      <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-    </Pressable>
+    <View style={styles.chevronLeft} accessibilityElementsHidden>
+      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
+      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    gap: spacing.sm,
+    minHeight: "100%",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 116,
+  },
+  atmosphere: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 280,
+    height: 500,
+    opacity: 0.34,
+    borderRadius: 78,
+  },
+  header: {
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
   backButton: {
     width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 28,
-    lineHeight: 28,
-    fontWeight: "300",
+  screenTitle: {
+    flex: 1,
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "900",
+    letterSpacing: 0,
   },
   heroDoc: {
     minHeight: 88,
@@ -188,5 +215,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
+  },
+  chevronLeft: {
+    width: 18,
+    height: 18,
+    justifyContent: "center",
+  },
+  chevronLeftTop: {
+    width: 10,
+    height: 2,
+    borderRadius: radius.pill,
+    transform: [{ rotate: "-45deg" }, { translateY: -2 }],
+  },
+  chevronLeftBottom: {
+    width: 10,
+    height: 2,
+    borderRadius: radius.pill,
+    transform: [{ rotate: "45deg" }, { translateY: 2 }],
   },
 });

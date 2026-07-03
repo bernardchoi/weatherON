@@ -399,7 +399,7 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
 
     await clickText(page, "MY");
     await clickText(page, "스마트 알림 설정");
-    await assertText(page, "5초 뒤 테스트 발송");
+    await assertText(page, "5초 뒤 확인 알림 발송");
     await assertText(page, "목적지 출발");
     await assertText(page, "목적지 추가 필요");
     await assertText(page, "목적지 필요");
@@ -540,7 +540,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "배차/환승 변동 가능");
     await assertText(page, "계산식");
     await assertText(page, "조건 직접 조정");
-    await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "실사용 전 경로 QA 필요"]);
+    await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "경로 확인 전"]);
     await assertText(page, "잠실야구장");
     await waitForPersistedDestination(page, "잠실야구장");
 
@@ -579,7 +579,7 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "수신 확인");
   await clickText(page, "수신 확인");
   await assertText(page, "스마트 알림 설정");
-  await assertText(page, "테스트");
+  await assertText(page, "확인");
   await clickText(page, "MY");
   await clickText(page, "앱 권한 관리");
   await clickText(page, "위치 선택");

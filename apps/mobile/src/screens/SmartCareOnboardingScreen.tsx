@@ -50,7 +50,7 @@ export function SmartCareOnboardingScreen({
             <View style={styles.pillRow}>
               <StatusPill label={selectedScenario.title} tone="gold" />
               <StatusPill label="필수 날씨 켬" tone="sky" />
-              <StatusPill label="목적지 확장 예정" tone="clear" />
+              <StatusPill label="목적지 케어" tone="clear" />
             </View>
           </View>
           <View style={[styles.bellMark, { borderColor: theme.gold }]}>

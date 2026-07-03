@@ -24,8 +24,8 @@ export function MyScreen({
   const theme = useAppTheme();
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const profileTitle = isAccountReady ? "데모 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? "저장 상태 데모 연결됨" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
+  const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
+  const profileBody = isAccountReady ? "저장·동기화 사용 가능" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
   const savedDestinationCount = savedDestinations.length;
   const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";

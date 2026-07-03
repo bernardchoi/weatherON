@@ -254,7 +254,7 @@ function getLocationCopy(
   return {
     currentAction: "권한 확인 필요 · 수동 위치도 선택 가능",
     statusTitle: "위치 확인",
-    statusBody: (hasSavedDestinations: boolean, count: number) => (hasSavedDestinations ? `저장 위치 ${count}곳` : "임시 위치 적용 가능"),
+    statusBody: (hasSavedDestinations: boolean, count: number) => (hasSavedDestinations ? `저장 위치 ${count}곳` : "선택 위치 적용 가능"),
   };
 }
 

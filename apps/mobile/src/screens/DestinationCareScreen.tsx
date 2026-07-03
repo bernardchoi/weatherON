@@ -548,7 +548,7 @@ function getTravelEstimateCopy(
       ? "Google Distance Matrix"
       : status === "error"
         ? "갱신 실패"
-        : "경로 미검증";
+        : "경로 확인 전";
   const distanceText = formatDistance(distanceMeters, distanceUnit);
   if (!distanceText) return source;
   return `${source} · ${distanceText}`;
@@ -570,7 +570,7 @@ function getDepartureFormulaCopy(
   const base = `${targetArrivalTime} - 이동 ${travelMinutes}분 - 여유 ${bufferMinutes}분`;
   if (status === "ready") return `계산식 ${base}`;
   if (status === "error") return `계산식 ${base} · 경로 갱신 실패`;
-  return `데모 계산 ${base} · 실사용 전 경로 QA 필요`;
+  return `예상 계산 ${base} · 경로 확인 전`;
 }
 
 function isValidArrivalTime(value: string) {

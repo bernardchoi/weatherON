@@ -862,7 +862,7 @@ export function useWeatherOnAppState() {
       addNotificationHistoryItem(current, {
         id: createNotificationHistoryId("local-test", "sent"),
         notificationId: "local-test",
-        title: "WeatherON 테스트 알림",
+        title: "WeatherON 확인 알림",
         action: "sent",
         route: "M2",
         statusLabel: getLocalNotificationResultLabel(result),
@@ -883,7 +883,7 @@ export function useWeatherOnAppState() {
         addNotificationHistoryItem(current, {
           id: createNotificationHistoryId("local-test", "received"),
           notificationId: "local-test",
-          title: "WeatherON 테스트 알림",
+          title: "WeatherON 확인 알림",
           action: "received",
           route: "M2",
           statusLabel: "수신 확인",
@@ -1497,7 +1497,7 @@ function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): st
 }
 
 function getNotificationHistoryTitle(notificationId: string, fallbackTitle?: string): string {
-  if (notificationId === "local-test") return "WeatherON 테스트 알림";
+  if (notificationId === "local-test") return "WeatherON 확인 알림";
   return fallbackTitle ?? "알림";
 }
 

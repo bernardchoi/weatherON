@@ -1,7 +1,6 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
-import { AppScreen } from "../components/AppScreen";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -17,64 +16,93 @@ const policyRows: { type: PolicyDocumentType; icon: number; title: string; body:
 export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   return (
-    <AppScreen
-      title="정책"
-      subtitle="약관과 데이터 기준을 확인"
-      badge="문서"
-      heroAction={<PolicyBackButton onPress={() => onNavigate("M1")} />}
-    >
-      <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-        {policyRows.map((item, index) => (
-          <Pressable
-            accessibilityLabel={`${item.title}, ${item.body}`}
-            accessibilityRole="button"
-            key={item.type}
-            onPress={() => onOpenPolicyDocument(item.type)}
-            style={[styles.documentRow, index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
-          >
-            <View style={[styles.iconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
-            </View>
-            <View style={styles.copy}>
-              <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-              <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
-            </View>
-            <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+
+        <View style={styles.header}>
+          <Pressable accessibilityLabel="MY로 돌아가기" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <ChevronLeft color={theme.muted} />
           </Pressable>
-        ))}
-      </View>
-    </AppScreen>
+          <Text style={[styles.screenTitle, { color: theme.text }]}>정책</Text>
+        </View>
+
+        <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          {policyRows.map((item, index) => (
+            <Pressable
+              accessibilityLabel={`${item.title}, ${item.body}`}
+              accessibilityRole="button"
+              key={item.type}
+              onPress={() => onOpenPolicyDocument(item.type)}
+              style={[styles.documentRow, index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
+            >
+              <View style={[styles.iconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
+              </View>
+              <View style={styles.copy}>
+                <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
+                <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
+              </View>
+              <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
-function PolicyBackButton({ onPress }: { onPress: () => void }) {
-  const theme = useAppTheme();
+function ChevronLeft({ color }: { color: string }) {
   return (
-    <Pressable
-      accessibilityLabel="MY로 돌아가기"
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-    >
-      <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-    </Pressable>
+    <View style={styles.chevronLeft} accessibilityElementsHidden>
+      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
+      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    gap: spacing.sm,
+    minHeight: "100%",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 116,
+  },
+  atmosphere: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 280,
+    height: 500,
+    opacity: 0.34,
+    borderRadius: 78,
+  },
+  header: {
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
   backButton: {
     width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 28,
-    lineHeight: 28,
-    fontWeight: "300",
+  screenTitle: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "900",
+    letterSpacing: 0,
   },
   documentPanel: {
     borderRadius: radius.lg,
@@ -117,5 +145,22 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
     fontWeight: "800",
+  },
+  chevronLeft: {
+    width: 18,
+    height: 18,
+    justifyContent: "center",
+  },
+  chevronLeftTop: {
+    width: 10,
+    height: 2,
+    borderRadius: radius.pill,
+    transform: [{ rotate: "-45deg" }, { translateY: -2 }],
+  },
+  chevronLeftBottom: {
+    width: 10,
+    height: 2,
+    borderRadius: radius.pill,
+    transform: [{ rotate: "45deg" }, { translateY: 2 }],
   },
 });

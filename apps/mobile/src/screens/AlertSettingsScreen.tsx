@@ -259,9 +259,9 @@ function DeliveryCheckCard({
       <View style={styles.deliveryLines}>
         <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
         <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
-        <DeliveryLine label="테스트" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
+        <DeliveryLine label="확인" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
       </View>
-      <Pressable accessibilityLabel={`테스트 알림 ${actionLabel}`} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
+      <Pressable accessibilityLabel={`확인 알림 ${actionLabel}`} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
         <Text style={[styles.deliveryActionText, { color: permissionReady ? theme.sky : theme.warm }]}>{actionLabel}</Text>
       </Pressable>
     </View>
@@ -445,7 +445,7 @@ function getNotificationDeliveryCopy(
   if (deliveryStatus.status === "verification-failed") {
     return { statusLabel: "확인 실패", countLabel: `예약 확인 ${deliveryStatus.scheduledCount}건` };
   }
-  return { statusLabel: "기기 확인 필요", countLabel: "네이티브 확인 전" };
+  return { statusLabel: "기기 확인 필요", countLabel: "기기 확인 전" };
 }
 
 function getTestNotificationBody(permissionReady: boolean, statusLabel?: string, received?: boolean, opened?: boolean) {
@@ -454,7 +454,7 @@ function getTestNotificationBody(permissionReady: boolean, statusLabel?: string,
   if (received) return "수신 확인됨";
   if (statusLabel === "예약 확인 실패") return "예약 확인 실패 · 기기 확인 필요";
   if (statusLabel) return `최근 ${statusLabel}`;
-  return "5초 뒤 테스트 발송";
+  return "5초 뒤 확인 알림 발송";
 }
 
 function getAlertReadinessCopy(
@@ -477,18 +477,18 @@ function getAlertReadinessCopy(
     if (testNotificationVerified) {
       return {
         title: "스마트 알림 확인됨",
-        body: testNotificationOpened ? "테스트 알림 수신·탭 확인됨" : "테스트 알림 수신 확인됨",
+        body: testNotificationOpened ? "확인 알림 수신·탭 확인됨" : "확인 알림 수신 확인됨",
         resultBody: testNotificationOpened ? "권한과 실제 수신, 설정 화면 이동까지 확인됨" : "권한과 실제 수신까지 확인됨",
         gateTitle: "알림 권한 정상",
-        gateBody: "테스트 수신 확인됨",
+        gateBody: "확인 알림 수신됨",
       };
     }
     return {
       title: "스마트 알림 확인 중",
-      body: "테스트 알림 수신 확인 전",
-      resultBody: "권한은 켜짐. 테스트 알림으로 실제 도착을 확인해야 함",
+      body: "확인 알림 수신 전",
+      resultBody: "권한은 켜짐. 확인 알림으로 실제 도착을 확인해야 함",
       gateTitle: "알림 권한 정상",
-      gateBody: "테스트 발송으로 확인",
+      gateBody: "확인 알림 발송",
     };
   }
   return {

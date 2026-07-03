@@ -17,7 +17,7 @@ const contentCards = [
 export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   return (
-    <AppScreen title="광고 배치 기준" subtitle="콘텐츠와 광고를 명확히 구분하는 승인 전 점검" badge="광고">
+    <AppScreen title="광고 배치 기준" subtitle="콘텐츠와 광고를 명확히 구분" badge="광고">
       <View style={[styles.homePreview, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <Text style={[styles.previewLocation, { color: theme.text }]}>서울 마포구 합정동</Text>
         <Text style={[styles.previewTemp, { color: theme.text }]}>22°</Text>

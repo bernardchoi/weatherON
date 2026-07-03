@@ -221,7 +221,7 @@ function buildHomeDecision(
 function getRouteStatusLabel(status?: NonNullable<P0ScreenProps["state"]["destinationCare"]["departureAdvice"]>["travelStatus"]) {
   if (status === "ready") return "경로 확인";
   if (status === "error") return "경로 갱신 실패";
-  return "경로 미검증";
+  return "경로 확인 전";
 }
 
 function buildDestinationDiff(

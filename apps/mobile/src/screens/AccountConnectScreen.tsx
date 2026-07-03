@@ -13,15 +13,15 @@ type AccountConnectScreenProps = {
 type ProviderTone = "kakao" | "naver" | "line" | "google" | "apple" | "email";
 
 const primaryProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "kakao", label: "카카오 데모로 계속", caption: "인증 화면 없이 상태만 연결" },
-  { id: "naver", label: "네이버 데모로 계속", caption: "계정 선택지 QA" },
+  { id: "kakao", label: "카카오로 계속", caption: "간편하게 연결" },
+  { id: "naver", label: "네이버로 계속", caption: "자주 쓰는 계정으로 연결" },
 ];
 
 const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "line", label: "LINE 데모로 계속", caption: "해외 사용자 QA" },
-  { id: "google", label: "Google 데모로 계속", caption: "공용 계정 QA" },
-  { id: "apple", label: "Apple 데모로 계속", caption: "이메일 숨기기 흐름 QA" },
-  { id: "email", label: "이메일 코드 데모", caption: "코드 입력 없이 상태만 연결" },
+  { id: "line", label: "LINE으로 계속", caption: "해외 계정으로 연결" },
+  { id: "google", label: "Google로 계속", caption: "공용 계정으로 연결" },
+  { id: "apple", label: "Apple로 계속", caption: "이메일 숨기기 지원" },
+  { id: "email", label: "이메일 코드로 계속", caption: "이메일로 계정 연결" },
 ];
 
 export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
@@ -39,13 +39,13 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onCancel} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <ChevronLeft color={theme.muted} />
           </Pressable>
-          <Text style={[styles.title, { color: theme.text }]}>계정 연결 데모</Text>
+          <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
         </View>
 
         <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.heroTitle, { color: theme.text }]}>계정 상태를 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
           <Text style={[styles.heroBody, { color: theme.muted }]}>
-            현재 빌드는 실제 소셜 인증 전 단계이며{"\n"}저장·동기화 상태만 데모로 확인함
+            계정을 연결하면 저장·동기화 상태를{"\n"}이어서 사용할 수 있어요
           </Text>
         </View>
 
@@ -64,8 +64,8 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
         ) : null}
 
         <View style={styles.recommendBlock}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>데모 연결 방법</Text>
-          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>실제 인증 전 QA용 상태 연결</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>연결 방법</Text>
+          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>사용할 계정 방식을 선택</Text>
 
           <View style={styles.intentTabs}>
             <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
@@ -98,7 +98,7 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           <Text style={[styles.laterText, { color: theme.subtle }]}>나중에 할래요</Text>
         </Pressable>
 
-        <Text style={[styles.footer, { color: theme.subtle }]}>실제 제공자 인증은 추후 연동 대상임{"\n"}현재는 약관과 저장 상태만 검증</Text>
+        <Text style={[styles.footer, { color: theme.subtle }]}>약관 확인 후 저장 상태가 연결됨</Text>
       </ScrollView>
     </View>
   );

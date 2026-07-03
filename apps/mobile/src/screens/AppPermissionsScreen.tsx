@@ -197,7 +197,7 @@ function getNotificationPermissionCopy(
   if (!smartCareEnabled) {
     return {
       body: "스마트 알림 꺼짐 · 앱 안 판단은 유지",
-      helper: "스마트 알림을 켜면 권한과 테스트 수신을 이어서 확인함",
+      helper: "스마트 알림을 켜면 권한과 수신 상태를 이어서 확인함",
       primaryLabel: "알림 설정",
       status: "중지",
       tone: "gold",
@@ -207,7 +207,7 @@ function getNotificationPermissionCopy(
   if (permissionReady) {
     return {
       body: "비·출발 알림 받을 수 있음",
-      helper: "M2에서 테스트 알림으로 실제 수신까지 확인 가능",
+      helper: "알림 설정에서 실제 수신까지 확인 가능",
       primaryLabel: "수신 확인",
       status: "허용됨",
       tone: "clear",
@@ -239,7 +239,7 @@ function getPermissionResultCopy(
   if (permissionGateResult.reason === "notification") {
     return {
       title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",
-      body: skipped ? "푸시 수신만 대기. 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "테스트 알림으로 실제 수신을 한 번 더 확인해야 함",
+      body: skipped ? "푸시 수신만 대기. 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "확인 알림으로 실제 수신을 한 번 더 확인해야 함",
       tone: skipped ? "warm" : "clear",
     };
   }

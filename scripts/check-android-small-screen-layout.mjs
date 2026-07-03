@@ -173,7 +173,7 @@ try {
     console.log(`small-screen: ${viewport.name}/alert-settings`);
     await clickText(page, "알림 설정으로 이동");
     await assertText(page, "스마트 알림 설정", viewport, "alert-settings");
-    await assertText(page, "테스트 알림", viewport, "alert-settings");
+    await assertText(page, "확인 알림", viewport, "alert-settings");
     await assertText(page, "목적지 출발", viewport, "alert-settings");
     await checkLayout(page, viewport, "alert-settings");
     await screenshot(page, viewport, "alert-settings");
