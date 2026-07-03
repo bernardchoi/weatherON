@@ -175,7 +175,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "getDestinationSchedule",
   "알림 켬",
   "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요",
+  "onRemoveSavedDestination",
   "onRestoreRemovedDestination",
+  "목적지 삭제",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   'onNavigate("G3")',
@@ -184,8 +186,7 @@ assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "목적지 검색 · 추가",
   "searchRail",
   "handleNestedAction",
-  "onRemoveSavedDestination",
-  "목적지 삭제\"",
+  "상단 목적지 추가",
   "dashedAdd",
   "＋ 목적지 추가",
 ]);
@@ -400,6 +401,7 @@ assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   "내보낼 데이터",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
+  "MY로 돌아가기",
   "`${item.title}, ${item.body}`",
   "개인정보처리방침",
   "오픈소스 라이선스",
@@ -415,6 +417,7 @@ assertSourceExcludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
   'onNavigate("H2")',
 ]);
 assertSourceIncludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
+  "상단 정책 목록으로 돌아가기",
   "약관 동의 화면의 개인정보 수집·이용 동의 항목과 같은 기준임",
   "위치 변경, 권한 요청, 목적지 케어 화면과 같은 위치 기준을 사용함",
   "약관 동의와 동일 기준",

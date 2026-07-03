@@ -1,22 +1,28 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
-const policyRows: { type: PolicyDocumentType; icon: string; title: string; body: string }[] = [
-  { type: "privacy", icon: "방패", title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
-  { type: "terms", icon: "문서", title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
-  { type: "location", icon: "위치", title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
-  { type: "open-source", icon: "OSS", title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
+const policyRows: { type: PolicyDocumentType; icon: number; title: string; body: string }[] = [
+  { type: "privacy", icon: uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
+  { type: "terms", icon: uiIconAssets.policyTerms, title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
+  { type: "location", icon: uiIconAssets.policyLocation, title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
+  { type: "open-source", icon: uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
 ];
 
-export function PolicyHubScreen({ onOpenPolicyDocument }: P0ScreenProps) {
+export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   return (
-    <AppScreen title="정책" subtitle="약관과 데이터 기준을 확인" badge="문서">
+    <AppScreen
+      title="정책"
+      subtitle="약관과 데이터 기준을 확인"
+      badge="문서"
+      heroAction={<PolicyBackButton onPress={() => onNavigate("M1")} />}
+    >
       <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         {policyRows.map((item, index) => (
           <Pressable
@@ -27,7 +33,7 @@ export function PolicyHubScreen({ onOpenPolicyDocument }: P0ScreenProps) {
             style={[styles.documentRow, index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
           >
             <View style={[styles.iconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <Text style={[styles.iconText, { color: theme.sky }]}>{item.icon}</Text>
+              <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
             </View>
             <View style={styles.copy}>
               <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
@@ -41,7 +47,35 @@ export function PolicyHubScreen({ onOpenPolicyDocument }: P0ScreenProps) {
   );
 }
 
+function PolicyBackButton({ onPress }: { onPress: () => void }) {
+  const theme = useAppTheme();
+  return (
+    <Pressable
+      accessibilityLabel="MY로 돌아가기"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
+      <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  backGlyph: {
+    marginTop: -2,
+    fontSize: 28,
+    lineHeight: 28,
+    fontWeight: "300",
+  },
   documentPanel: {
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -62,10 +96,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
   },
-  iconText: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
+  iconImage: {
+    width: 22,
+    height: 22,
   },
   copy: {
     flex: 1,

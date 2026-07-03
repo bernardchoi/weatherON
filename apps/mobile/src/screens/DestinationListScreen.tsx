@@ -37,6 +37,7 @@ export function DestinationListScreen({
   temperatureUnit,
   onNavigate,
   onSelectDestinationPlace,
+  onRemoveSavedDestination,
   onRestoreRemovedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -55,14 +56,6 @@ export function DestinationListScreen({
 
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>출발</Text>
-          <Pressable
-            accessibilityLabel="상단 목적지 추가"
-            accessibilityRole="button"
-            onPress={() => onNavigate("P1")}
-            style={[styles.addButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-          >
-            <Text style={[styles.addButtonText, { color: theme.text }]}>+</Text>
-          </Pressable>
         </View>
 
         {resultBanner ? <ResultBanner title={resultBanner.title} body={resultBanner.body} tone={resultBanner.tone} theme={theme} /> : null}
@@ -107,6 +100,7 @@ export function DestinationListScreen({
                   onSelectDestinationPlace(item.place);
                   onNavigate("G2");
                 }}
+                onRemove={() => onRemoveSavedDestination(item.id)}
               />
             ))
           ) : (
@@ -156,20 +150,18 @@ function DestinationCard({
   permissionReady,
   selected,
   onOpen,
+  onRemove,
 }: {
   item: DestinationCardModel;
   theme: AppTheme;
   permissionReady: boolean;
   selected: boolean;
   onOpen: () => void;
+  onRemove: () => void;
 }) {
   const accent = item.tone === "warm" ? theme.warm : theme.clear;
   return (
-    <Pressable
-      accessibilityLabel={`${item.title} 목적지 상세 보기`}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      onPress={onOpen}
+    <View
       style={[
         styles.destinationCard,
         {
@@ -179,33 +171,52 @@ function DestinationCard({
         },
       ]}
     >
-      <View style={styles.destinationTop}>
-        <View style={styles.destinationTitleRow}>
-          <PlaceGlyph type={item.icon} color={theme.text} />
-          <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
-          <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>— {item.area}</Text>
+      <Pressable
+        accessibilityLabel={`${item.title} 목적지 상세 보기`}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        onPress={onOpen}
+        style={styles.destinationMainButton}
+      >
+        <View style={styles.destinationTop}>
+          <View style={styles.destinationTitleRow}>
+            <PlaceGlyph type={item.icon} color={theme.text} />
+            <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>— {item.area}</Text>
+          </View>
+          <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
+            <Text style={[styles.readyText, { color: theme.gold }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
+          </View>
+          <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
-        <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
-          <Text style={[styles.readyText, { color: theme.gold }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
+
+        <View style={styles.weatherLine}>
+          <SunGlyph color={theme.gold} />
+          <Text style={[styles.tempText, { color: theme.text }]}>{item.originTemp}</Text>
+          <Text style={[styles.arrowText, { color: theme.subtle }]}>›</Text>
+          <Text style={[styles.tempText, { color: theme.text }]}>{item.destinationTemp}</Text>
+          <Text style={[styles.diffText, { color: accent }]}>{item.tempDiff}</Text>
         </View>
-        <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+
+        <View style={styles.destinationBottom}>
+          <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>출발 {item.departureTime}</Text>
+          <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>도착 {item.arrivalTime}</Text>
+          <Text style={[styles.warningText, { color: accent }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
+        </View>
+      </Pressable>
+
+      <View style={styles.destinationActions}>
+        <Pressable
+          accessibilityLabel={`${item.title} 목적지 삭제`}
+          accessibilityRole="button"
+          onPress={onRemove}
+          style={[styles.removeButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+        >
+          <Text style={[styles.removeButtonText, { color: theme.warm }]}>삭제</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.weatherLine}>
-        <SunGlyph color={theme.gold} />
-        <Text style={[styles.tempText, { color: theme.text }]}>{item.originTemp}</Text>
-        <Text style={[styles.arrowText, { color: theme.subtle }]}>›</Text>
-        <Text style={[styles.tempText, { color: theme.text }]}>{item.destinationTemp}</Text>
-        <Text style={[styles.diffText, { color: accent }]}>{item.tempDiff}</Text>
-      </View>
-
-      <View style={styles.destinationBottom}>
-        <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>출발 {item.departureTime}</Text>
-        <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>도착 {item.arrivalTime}</Text>
-        <Text style={[styles.warningText, { color: accent }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
-      </View>
-
-    </Pressable>
+    </View>
   );
 }
 
@@ -490,20 +501,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0,
   },
-  addButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  addButtonText: {
-    marginTop: -2,
-    fontSize: 22,
-    lineHeight: 24,
-    fontWeight: "800",
-  },
   todayCard: {
     gap: spacing.sm,
     padding: 16,
@@ -638,6 +635,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     borderWidth: 1,
   },
+  destinationMainButton: {
+    gap: spacing.xs,
+  },
   emptyCard: {
     gap: spacing.md,
     padding: 16,
@@ -756,6 +756,25 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     fontSize: 11,
     lineHeight: 15,
+    fontWeight: "900",
+  },
+  destinationActions: {
+    minHeight: 34,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  removeButton: {
+    minWidth: 64,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  removeButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   sunGlyph: {

@@ -68,7 +68,7 @@ const persistedWeatherPlace = {
 };
 
 const persistedWeatherResult = {
-  current: buildWeatherSnapshot("saved-current", "저장된 현재 위치", "openmeteo", 22, 20),
+  current: buildWeatherSnapshot("kr-default-seoul", "기본 위치 서울", "openmeteo", 22, 20),
   destination: buildWeatherSnapshot(persistedWeatherPlace.id, persistedWeatherPlace.name, "openmeteo", 24, 65),
   destinationSnapshots: [buildWeatherSnapshot(persistedWeatherPlace.id, persistedWeatherPlace.name, "openmeteo", 24, 65)],
   status: "ready",
@@ -101,6 +101,7 @@ try {
   await runCoreFlowStep("notification permission recovery", () => checkNotificationPermissionRecovery(browser));
   await runCoreFlowStep("app permissions recovery", () => checkAppPermissionsRecovery(browser));
   await runCoreFlowStep("persisted weather fallback", () => checkPersistedWeatherFallbackFlow(browser));
+  await runCoreFlowStep("persisted weather location mismatch fallback", () => checkPersistedWeatherLocationMismatchFlow(browser));
   await runCoreFlowStep("alert settings destination empty", () => checkAlertSettingsDestinationEmptyFlow(browser));
   await runCoreFlowStep("destination add persistence", () => checkDestinationAddUiPersistenceFlow(browser));
   await runCoreFlowStep("destination persistence", () => checkDestinationPersistenceFlow(page));
@@ -302,8 +303,69 @@ async function checkPersistedWeatherFallbackFlow(browser) {
     await assertText(page, "최근 예보로 유지 중");
     await assertText(page, "연결 전까지 마지막 예보로 판단 유지");
     await assertText(page, "기본 예보로 보기");
-    await assertText(page, "저장된 현재 위치");
+    await assertText(page, "기본 위치 서울");
     await assertText(page, "저장된 목적지");
+  } finally {
+    await context.close();
+  }
+}
+
+async function checkPersistedWeatherLocationMismatchFlow(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  try {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+    page.on("console", (message) => logs.push(`${message.type()}: ${message.text()}`));
+    page.on("pageerror", (error) => issues.push(`page error: ${error.message}`));
+    await installCoreFlowFetchMock(page);
+
+    await page.evaluateOnNewDocument((state, weatherResult, weatherPlace) => {
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
+        if (url.includes("api.open-meteo.com") || url.includes("/weather/")) {
+          return Promise.reject(new Error("forced weather offline"));
+        }
+        return originalFetch(input, init);
+      };
+      localStorage.setItem(
+        "weatheron.appState.v1",
+        JSON.stringify({
+          ...state,
+          savedDestinations: [
+            {
+              place: weatherPlace,
+              careEnabled: true,
+              alertCondition: {
+                rainThresholdPct: 50,
+                leadTimeMinutes: 60,
+                windThresholdMs: 8,
+              },
+              savedAtLabel: "저장됨",
+            },
+          ],
+          selectedDestinationPlace: weatherPlace,
+        }),
+      );
+      localStorage.setItem(
+        "weatheron.weatherProviderResult.v1",
+        JSON.stringify({
+          ...weatherResult,
+          current: {
+            ...weatherResult.current,
+            id: "weather-saved-current",
+            locationId: "saved-current",
+            locationName: "저장된 현재 위치",
+          },
+        }),
+      );
+    }, seedState, persistedWeatherResult, persistedWeatherPlace);
+
+    await page.goto(withCacheBust(previewUrl, "persistedWeatherMismatch"), { waitUntil: "networkidle0", timeout: 25000 });
+    await waitForApp();
+    await assertText(page, "기본 위치 서울");
+    await assertText(page, "날씨 갱신 실패");
+    await assertNoText(page, "저장된 현재 위치");
   } finally {
     await context.close();
   }
@@ -490,6 +552,9 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
     await assertNoText(page, "첫 목적지를 추가해 주세요");
+    await clickAriaIncludes(page, "잠실야구장 목적지 삭제");
+    await assertText(page, "목적지 삭제됨");
+    await assertText(page, "복구");
   } finally {
     await context.close();
   }
@@ -544,6 +609,12 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "오픈소스 라이선스");
   await assertNoText(page, "계정 관리");
   await assertNoText(page, "위치 설정");
+  await clickText(page, "개인정보처리방침");
+  await assertText(page, "개인정보 수집·이용 고지");
+  await clickAriaIncludes(page, "상단 정책 목록으로 돌아가기");
+  await assertText(page, "오픈소스 라이선스");
+  await clickAriaIncludes(page, "MY로 돌아가기");
+  await assertText(page, "스마트 알림 설정");
 }
 
 async function assertBottomNav(page) {

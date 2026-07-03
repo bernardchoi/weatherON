@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
@@ -83,7 +84,7 @@ export function MyScreen({
 
         <View style={styles.menuList}>
           <MenuRow
-            icon="shield"
+            icon={uiIconAssets.myPermissions}
             title="앱 권한 관리"
             meta={`위치 ${locationState.status} · 알림 ${alertState.status}`}
             status={permissionTone === "clear" ? "정상" : "확인"}
@@ -92,7 +93,7 @@ export function MyScreen({
             theme={theme}
           />
           <MenuRow
-            icon="bell"
+            icon={uiIconAssets.myAlerts}
             title="스마트 알림 설정"
             meta={alertState.meta}
             status={alertState.status}
@@ -101,7 +102,7 @@ export function MyScreen({
             theme={theme}
           />
           <MenuRow
-            icon="gear"
+            icon={uiIconAssets.myDisplay}
             title="표시 설정"
             meta={globalSettingsSummary}
             status="관리"
@@ -115,7 +116,7 @@ export function MyScreen({
 
         <View style={styles.menuList}>
           <MenuRow
-            icon="shield"
+            icon={uiIconAssets.myPolicy}
             title="정책 및 법적 고지"
             meta="개인정보 · 약관 · 오픈소스"
             status="보기"
@@ -203,7 +204,7 @@ function MenuRow({
   onPress,
   theme,
 }: {
-  icon: "pin" | "bell" | "gear" | "shield";
+  icon: number;
   title: string;
   meta: string;
   status: string;
@@ -215,7 +216,7 @@ function MenuRow({
   return (
     <Pressable accessibilityLabel={title} accessibilityRole="button" onPress={onPress} style={[styles.menuRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={[styles.menuIcon, { borderColor: `${color}66`, backgroundColor: "rgba(255,255,255,0.06)" }]}>
-        <MenuIcon type={icon} color={color} />
+        <Image source={icon} style={[styles.menuIconImage, { tintColor: color }]} resizeMode="contain" />
       </View>
       <View style={styles.menuCopy}>
         <Text style={[styles.menuTitle, { color: theme.text }]}>{title}</Text>
@@ -261,52 +262,11 @@ function ReadinessSummary({
   );
 }
 
-function MenuIcon({ type, color }: { type: "pin" | "bell" | "gear" | "shield"; color: string }) {
-  if (type === "pin") return <PinGlyph color={color} />;
-  if (type === "gear") return <GearGlyph color={color} />;
-  if (type === "shield") return <ShieldGlyph color={color} />;
-  return <BellGlyph color={color} />;
-}
-
 function PersonGlyph({ color }: { color: string }) {
   return (
     <View style={styles.personGlyph} accessibilityElementsHidden>
       <View style={[styles.personHead, { borderColor: color }]} />
       <View style={[styles.personBody, { borderColor: color }]} />
-    </View>
-  );
-}
-
-function BellGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.iconFrame} accessibilityElementsHidden>
-      <View style={[styles.bellCup, { borderColor: color }]} />
-      <View style={[styles.bellBase, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
-function PinGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.iconFrame} accessibilityElementsHidden>
-      <View style={[styles.pinHead, { borderColor: color }]} />
-      <View style={[styles.pinPoint, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
-function GearGlyph({ color }: { color: string }) {
-  return (
-    <View style={[styles.gearOuter, { borderColor: color }]} accessibilityElementsHidden>
-      <View style={[styles.gearInner, { borderColor: color }]} />
-    </View>
-  );
-}
-
-function ShieldGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.iconFrame} accessibilityElementsHidden>
-      <View style={[styles.shieldGlyph, { borderColor: color }]} />
     </View>
   );
 }
@@ -454,6 +414,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
   },
+  menuIconImage: {
+    width: 21,
+    height: 21,
+  },
   menuCopy: {
     flex: 1,
     gap: 3,
@@ -531,59 +495,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "700",
     textAlign: "center",
-  },
-  iconFrame: {
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bellCup: {
-    width: 13,
-    height: 12,
-    borderWidth: 1.6,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    borderBottomWidth: 0,
-  },
-  bellBase: {
-    width: 12,
-    height: 1.8,
-    borderRadius: 2,
-    marginTop: 1,
-  },
-  pinHead: {
-    width: 12,
-    height: 12,
-    borderWidth: 1.6,
-    borderRadius: radius.pill,
-  },
-  pinPoint: {
-    width: 2,
-    height: 6,
-    borderRadius: 2,
-    marginTop: -1,
-  },
-  gearOuter: {
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.8,
-    borderRadius: 999,
-  },
-  gearInner: {
-    width: 7,
-    height: 7,
-    borderWidth: 1.4,
-    borderRadius: 999,
-  },
-  shieldGlyph: {
-    width: 14,
-    height: 16,
-    borderWidth: 1.6,
-    borderRadius: 5,
-    transform: [{ rotate: "45deg" }],
   },
   chevron: {
     width: 14,

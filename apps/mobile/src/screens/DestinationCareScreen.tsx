@@ -4,8 +4,7 @@ import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
-import { getDisplayLocationName } from "../utils/locationDisplay";
-import { formatDistance, formatTemperature } from "../utils/units";
+import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 export function DestinationCareScreen({
   permissionReady,
@@ -23,6 +22,7 @@ export function DestinationCareScreen({
   onCycleDestinationAlertCondition,
   onSetDestinationTargetArrivalTime,
   onSetDestinationTransportMode,
+  onRemoveSavedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
@@ -41,6 +41,10 @@ export function DestinationCareScreen({
   const originRain = originWeather.current.rainProbabilityPct;
   const destinationRain = destinationWeather.current.rainProbabilityPct;
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
+  const transportLabel = getTransportModeLabel(transportMode);
+  const routeMeta = getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit);
+  const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
+  const destinationSaved = Boolean(selectedDestinationPlace);
 
   useEffect(() => {
     setArrivalInput(targetArrivalTime);
@@ -82,7 +86,7 @@ export function DestinationCareScreen({
               <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
               <Text style={[styles.decisionTitle, { color: theme.text }]}>{departureTime} 출발</Text>
               <Text style={[styles.decisionBody, { color: theme.muted }]}>
-                {targetArrivalTime} 도착 · {getTransportModeLabel(transportMode)} {travelMinutes}분 · 자동 여유 {bufferMinutes}분
+                {targetArrivalTime} 도착 기준으로 이동 시간과 날씨를 함께 봄
               </Text>
             </View>
             <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? "rgba(47,198,163,0.16)" : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
@@ -91,9 +95,11 @@ export function DestinationCareScreen({
               </Text>
             </View>
           </View>
-          <Text style={[styles.decisionSummary, { color: theme.text }]}>
-            목적지 날씨와 이동 시간을 기준으로 출발, 신발, 우산 알림을 조정함
-          </Text>
+          <View style={styles.summaryGrid}>
+            <SummaryChip label="도착" value={targetArrivalTime} meta={`${departureTime} 출발`} theme={theme} />
+            <SummaryChip label="이동" value={`${travelMinutes}분`} meta={transportLabel} theme={theme} />
+            <SummaryChip label="여유" value={`${bufferMinutes}분`} meta="자동 보정" theme={theme} />
+          </View>
           <View style={styles.arrivalControls}>
             <ArrivalInputControl
               label="도착 희망"
@@ -131,7 +137,7 @@ export function DestinationCareScreen({
               {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
             </Text>
             <Text style={[styles.calculationMeta, { color: theme.subtle }]}>
-              {getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit)}
+              {routeMeta}
             </Text>
           </View>
         </View>
@@ -142,12 +148,38 @@ export function DestinationCareScreen({
           </InfoPanel>
         ) : null}
 
-          <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
-          <CompareRow label="기온" from={formatTemperature(originWeather.current.tempC, temperatureUnit)} to={formatTemperature(destinationWeather.current.tempC, temperatureUnit)} accent={theme.text} theme={theme} />
-          <CompareRow label="날씨" from={getConditionLabel(originWeather.current.condition)} to={getConditionLabel(destinationWeather.current.condition)} accent={theme.text} theme={theme} />
-          <CompareRow label="출발지" from={getDisplayLocationName(originWeather.locationName)} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
-          <CompareRow label="강수" from={`${originRain}%`} to={`${destinationRain}%`} accent={destinationRain > originRain ? theme.warm : theme.clear} theme={theme} />
+          <View style={styles.compareGrid}>
+            <CompareMetric
+              label="기온"
+              value={`${formatTemperature(originWeather.current.tempC, temperatureUnit)} → ${formatTemperature(destinationWeather.current.tempC, temperatureUnit)}`}
+              meta={formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit)}
+              accent={theme.text}
+              theme={theme}
+            />
+            <CompareMetric
+              label="강수"
+              value={`${originRain}% → ${destinationRain}%`}
+              meta={destinationRain > originRain ? "목적지 높음" : "차이 작음"}
+              accent={destinationRain > originRain ? theme.warm : theme.clear}
+              theme={theme}
+            />
+            <CompareMetric
+              label="날씨"
+              value={`${getConditionLabel(originWeather.current.condition)} → ${getConditionLabel(destinationWeather.current.condition)}`}
+              meta={destinationName}
+              accent={theme.text}
+              theme={theme}
+            />
+            <CompareMetric
+              label="경로"
+              value={transportLabel}
+              meta={routeMeta}
+              accent={theme.gold}
+              theme={theme}
+            />
+          </View>
         </View>
 
         <View style={[styles.flowPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -230,6 +262,22 @@ export function DestinationCareScreen({
           <Text style={[styles.ctaText, { color: theme.onAccent }]}>{ctaLabel}</Text>
         </Pressable>
 
+        {destinationSaved ? (
+          <Pressable
+            accessibilityLabel={`${destinationName} 목적지 삭제`}
+            accessibilityRole="button"
+            onPress={() => {
+              if (!selectedDestinationPlace) return;
+              onRemoveSavedDestination(selectedDestinationPlace.id);
+              onNavigate("G1");
+            }}
+            style={[styles.deleteDestinationButton, { backgroundColor: theme.cardStrong, borderColor: theme.warm }]}
+          >
+            <Text style={[styles.deleteDestinationTitle, { color: theme.warm }]}>목적지 삭제</Text>
+            <Text style={[styles.deleteDestinationBody, { color: theme.muted }]}>삭제 후 출발 목록에서 바로 복구 가능</Text>
+          </Pressable>
+        ) : null}
+
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
@@ -285,6 +333,16 @@ function ConditionSummaryPill({
     <View style={[styles.conditionSummaryPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <Text numberOfLines={1} style={[styles.conditionSummaryLabel, { color: theme.subtle }]}>{label}</Text>
       <Text numberOfLines={1} style={[styles.conditionSummaryValue, { color: accent }]}>{value}</Text>
+    </View>
+  );
+}
+
+function SummaryChip({ label, value, meta, theme }: { label: string; value: string; meta: string; theme: AppTheme }) {
+  return (
+    <View style={[styles.summaryChip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Text numberOfLines={1} style={[styles.summaryLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.summaryValue, { color: theme.text }]}>{value}</Text>
+      <Text numberOfLines={1} style={[styles.summaryMeta, { color: theme.gold }]}>{meta}</Text>
     </View>
   );
 }
@@ -433,13 +491,12 @@ function InfoPanel({
   );
 }
 
-function CompareRow({ label, from, to, accent, theme }: { label: string; from: string; to: string; accent: string; theme: AppTheme }) {
+function CompareMetric({ label, value, meta, accent, theme }: { label: string; value: string; meta: string; accent: string; theme: AppTheme }) {
   return (
-    <View style={styles.compareRow}>
-      <Text style={[styles.compareLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text style={[styles.compareValue, { color: theme.text }]}>{from}</Text>
-      <Text style={[styles.compareArrow, { color: theme.subtle }]}>→</Text>
-      <Text style={[styles.compareValue, { color: accent }]}>{to}</Text>
+    <View style={[styles.compareMetric, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Text numberOfLines={1} style={[styles.compareLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.compareValue, { color: accent }]}>{value}</Text>
+      <Text numberOfLines={1} style={[styles.compareMeta, { color: theme.muted }]}>{meta}</Text>
     </View>
   );
 }
@@ -717,6 +774,34 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "800",
   },
+  summaryGrid: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  summaryChip: {
+    flex: 1,
+    minHeight: 70,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  summaryLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  summaryValue: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  summaryMeta: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
   decisionStats: {
     flexDirection: "row",
     gap: spacing.xs,
@@ -865,6 +950,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
+  compareGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
   sectionTitle: {
     fontSize: 11,
     lineHeight: 15,
@@ -878,7 +968,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   compareLabel: {
-    width: 42,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "800",
@@ -893,6 +982,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
+  },
+  compareMetric: {
+    width: "48.7%",
+    minHeight: 76,
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  compareMeta: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
   },
   departurePanel: {
     gap: spacing.sm,
@@ -1128,5 +1231,23 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  deleteDestinationButton: {
+    minHeight: 62,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  deleteDestinationTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  deleteDestinationBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
   },
 });

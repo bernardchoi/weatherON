@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -67,7 +67,12 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
   const document = policyDocuments[selectedPolicyDocument];
 
   return (
-    <AppScreen title={document.title} subtitle={`최종 업데이트 ${document.updated}`} badge="문서">
+    <AppScreen
+      title={document.title}
+      subtitle={`최종 업데이트 ${document.updated}`}
+      badge="문서"
+      heroAction={<DocumentBackButton onPress={onReturnFromPolicyDocument} />}
+    >
       <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>{document.title}</Text>
@@ -99,7 +104,35 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
   );
 }
 
+function DocumentBackButton({ onPress }: { onPress: () => void }) {
+  const theme = useAppTheme();
+  return (
+    <Pressable
+      accessibilityLabel="상단 정책 목록으로 돌아가기"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
+      <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  backGlyph: {
+    marginTop: -2,
+    fontSize: 28,
+    lineHeight: 28,
+    fontWeight: "300",
+  },
   heroDoc: {
     minHeight: 88,
     flexDirection: "row",

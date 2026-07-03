@@ -55,4 +55,12 @@ export const uiIconAssets = {
   check: require("../../../assets/ui-icons/card-check.png"),
   settings: require("../../../assets/ui-icons/card-settings.png"),
   pin: require("../../../assets/ui-icons/card-pin.png"),
+  myPermissions: require("../../../assets/ui-icons/my-permissions.png"),
+  myAlerts: require("../../../assets/ui-icons/my-alerts.png"),
+  myDisplay: require("../../../assets/ui-icons/my-display.png"),
+  myPolicy: require("../../../assets/ui-icons/my-policy.png"),
+  policyPrivacy: require("../../../assets/ui-icons/policy-privacy.png"),
+  policyTerms: require("../../../assets/ui-icons/policy-terms.png"),
+  policyLocation: require("../../../assets/ui-icons/policy-location.png"),
+  policyOss: require("../../../assets/ui-icons/policy-oss.png"),
 };

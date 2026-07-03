@@ -1666,7 +1666,20 @@ function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
 
 function shouldKeepPersistedWeatherResult(result: WeatherProviderResult, persistedResult: WeatherProviderResult | null): persistedResult is WeatherProviderResult {
   if (!persistedResult) return false;
+  if (!isSameWeatherSnapshotLocation(result.current, persistedResult.current)) return false;
+  if (!isSameWeatherSnapshotLocation(result.destination, persistedResult.destination)) return false;
+  if (!hasSameWeatherSnapshotLocations(result.destinationSnapshots, persistedResult.destinationSnapshots)) return false;
   return result.status === "error" || result.status === "fallback" || result.fallbackUsed;
+}
+
+function isSameWeatherSnapshotLocation(left: WeatherProviderResult["current"], right: WeatherProviderResult["current"]) {
+  return left.locationId === right.locationId && left.locationName === right.locationName;
+}
+
+function hasSameWeatherSnapshotLocations(left: WeatherProviderResult["destinationSnapshots"], right: WeatherProviderResult["destinationSnapshots"]) {
+  if (left.length !== right.length) return false;
+  const rightLocationKeys = new Set(right.map((snapshot) => `${snapshot.locationId}:${snapshot.locationName}`));
+  return left.every((snapshot) => rightLocationKeys.has(`${snapshot.locationId}:${snapshot.locationName}`));
 }
 
 function normalizePersistedWeatherProviderResult(value: unknown): WeatherProviderResult | null {
