@@ -76,21 +76,19 @@ export function HomeScreen({
 
         <View style={styles.decisionStack}>
           <HomeDecisionHero
-            decision={homeDecision}
             current={current}
             currentLocationName={currentLocationName}
-            destinationReady={destinationReady}
+            forecastPreview={forecastPreview}
             locationStatus={locationStatus}
-            permissionReady={permissionReady}
             temperatureUnit={temperatureUnit}
             theme={theme}
-            onPress={() => onNavigate("G1")}
+            onOpenForecast={() => onNavigate("H6")}
           />
           <View style={styles.quickActionGrid}>
             <HomeQuickAction
               label="목적지 비교"
               title={destinationReady ? homeDecision.destinationTitle : "목적지 추가 필요"}
-              body={destinationReady ? state.destinationCare.name : "목적지 추가하면 출발시간 계산"}
+              body={destinationReady ? state.destinationCare.name : "출발지와 날씨 비교"}
               accent={theme.sky}
               icon={uiIconAssets.pin}
               theme={theme}
@@ -106,7 +104,6 @@ export function HomeScreen({
               onPress={() => onNavigate("H5")}
             />
           </View>
-          <ForecastPreviewRow preview={forecastPreview} theme={theme} onOpen={() => onNavigate("H6")} />
         </View>
 
         <View style={styles.cardStack}>
@@ -360,36 +357,28 @@ function formatDateLabel(value: string) {
 }
 
 function HomeDecisionHero({
-  decision,
   current,
   currentLocationName,
-  destinationReady,
+  forecastPreview,
   locationStatus,
-  permissionReady,
   temperatureUnit,
   theme,
-  onPress,
+  onOpenForecast,
 }: {
-  decision: ReturnType<typeof buildHomeDecision>;
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
   currentLocationName: string;
-  destinationReady: boolean;
+  forecastPreview: ReturnType<typeof buildForecastPreview>;
   locationStatus: ReturnType<typeof getHomeLocationStatus>;
-  permissionReady: boolean;
   temperatureUnit: P0ScreenProps["temperatureUnit"];
   theme: AppTheme;
-  onPress: () => void;
+  onOpenForecast: () => void;
 }) {
-  const headline = destinationReady ? `${decision.departureTime} 출발 준비` : "목적지 추가하면 출발시간 계산";
-  const body = destinationReady ? decision.departureBody : "현재 위치 예보 기준. 목적지만 추가하면 출발·강수 판단까지 연결";
   const weatherIcon = current.condition === "rain" || current.condition === "storm" ? uiIconAssets.rain : uiIconAssets.uv;
   const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.sky : theme.warm;
 
   return (
-    <Pressable
-      accessibilityLabel={`출발 판단 ${headline}`}
-      accessibilityRole="button"
-      onPress={onPress}
+    <View
+      accessibilityLabel="현재 날씨 요약"
       style={[styles.decisionHero, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}
     >
       <View style={styles.weatherShowcase}>
@@ -407,25 +396,13 @@ function HomeDecisionHero({
           <Text style={[styles.statusBadgeText, { color: locationTone }]}>{locationStatus.value}</Text>
         </View>
       </View>
-      <View style={styles.decisionCopy}>
-        <Text style={[styles.decisionLabel, { color: theme.gold }]}>오늘 준비</Text>
-        <Text style={[styles.decisionTitle, { color: theme.text }]}>{headline}</Text>
-        <Text style={[styles.decisionBody, { color: theme.muted }]} numberOfLines={2}>{body}</Text>
-      </View>
       <View style={styles.decisionMetricRow}>
         <DecisionMetric icon={uiIconAssets.drop} label={`강수 ${current.rainProbabilityPct}%`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.wind} label={`${current.windMs.toFixed(1)}m/s`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
       </View>
-      <View style={styles.decisionFooter}>
-        <Text style={[styles.decisionFootnote, { color: theme.subtle }]} numberOfLines={1}>
-          알림 {permissionReady ? "맞춤 케어" : "설정 전"}
-        </Text>
-        <View style={[styles.primaryMiniButton, { backgroundColor: theme.gold }]}>
-          <Text style={[styles.primaryMiniButtonText, { color: theme.onAccent }]}>출발 판단</Text>
-        </View>
-      </View>
-    </Pressable>
+      <ForecastPreviewRow preview={forecastPreview} theme={theme} onOpen={onOpenForecast} />
+    </View>
   );
 }
 
@@ -892,8 +869,8 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   decisionHero: {
-    minHeight: 390,
-    gap: spacing.md,
+    minHeight: 344,
+    gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -902,7 +879,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
   },
   weatherShowcase: {
-    minHeight: 190,
+    minHeight: 186,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -974,37 +951,18 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: "900",
   },
-  decisionCopy: {
-    gap: 4,
-  },
-  decisionLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  decisionTitle: {
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  decisionBody: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "800",
-  },
   decisionMetricRow: {
     flexDirection: "row",
     gap: spacing.xs,
   },
   decisionMetric: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 42,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     borderRadius: radius.md,
   },
   decisionMetricIcon: {
@@ -1014,31 +972,6 @@ const styles = StyleSheet.create({
   decisionMetricText: {
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: "900",
-  },
-  decisionFooter: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  decisionFootnote: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  primaryMiniButton: {
-    minHeight: 42,
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-  },
-  primaryMiniButtonText: {
-    fontSize: 13,
-    lineHeight: 17,
     fontWeight: "900",
   },
   quickActionGrid: {
@@ -1086,7 +1019,7 @@ const styles = StyleSheet.create({
   },
   forecastPreviewCard: {
     flex: 1,
-    minHeight: 100,
+    minHeight: 88,
     justifyContent: "center",
     gap: 5,
     padding: spacing.sm,

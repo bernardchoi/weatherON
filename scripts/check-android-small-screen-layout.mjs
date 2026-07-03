@@ -127,7 +127,8 @@ try {
     await loadSeededApp(page, appState);
     console.log(`small-screen: ${viewport.name}/home loaded`);
 
-    await assertText(page, "출발 판단", viewport, "home");
+    await assertText(page, "시간별 예보", viewport, "home");
+    await assertText(page, "주간 예보", viewport, "home");
     console.log(`small-screen: ${viewport.name}/home text`);
     await checkLayout(page, viewport, "home");
     console.log(`small-screen: ${viewport.name}/home layout`);

@@ -166,16 +166,25 @@ async function loadSeededApp(page) {
   await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
   await waitForApp();
 
-  await assertText(page, "출발 판단");
+  await assertText(page, "시간별 예보");
+  await assertText(page, "주간 예보");
   await assertBottomNav(page);
 }
 
 async function checkHomeDecisionFlow(page) {
-  await clickText(page, "출발 판단");
+  await clickText(page, "출발");
   await assertText(page, "출발");
   await assertText(page, "목적지 추가");
   await assertBottomNav(page);
   await assertClearOfBottomNav(page, "목적지 추가");
+
+  await clickText(page, "홈");
+  await clickText(page, "시간별 예보");
+  await assertText(page, "날씨 상세");
+  await assertText(page, "주간 예보");
+  await assertBottomNav(page);
+  await clickAriaIncludes(page, "뒤로");
+  await assertText(page, "시간별 예보");
 
   await clickText(page, "홈");
   await assertText(page, "목적지 추가 필요");
@@ -198,7 +207,7 @@ async function checkHomeDecisionFlow(page) {
   await clickAriaIncludes(page, "뒤로");
   await assertText(page, "강수 타임라인");
   await clickAriaIncludes(page, "뒤로");
-  await assertText(page, "출발 판단");
+  await assertText(page, "시간별 예보");
 }
 
 async function checkNotificationPermissionRecovery(browser) {
@@ -555,7 +564,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     console.log("core-flow: destination add reload");
     await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
     await waitForApp();
-    await assertText(page, "출발 판단");
+    await assertText(page, "시간별 예보");
     await assertText(page, "잠실야구장");
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
