@@ -111,7 +111,18 @@ export function createHttpWeatherClient(options: HttpWeatherClientOptions = {}):
           "uv_index",
         ].join(","),
       );
-      url.searchParams.set("forecast_days", "1");
+      url.searchParams.set(
+        "daily",
+        [
+          "weather_code",
+          "temperature_2m_max",
+          "temperature_2m_min",
+          "precipitation_probability_max",
+          "precipitation_sum",
+          "wind_speed_10m_max",
+        ].join(","),
+      );
+      url.searchParams.set("forecast_days", "7");
       const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl);
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
       return payload;

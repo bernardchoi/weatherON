@@ -8,6 +8,7 @@ export type P0RouteId =
   | "H3"
   | "H4"
   | "H5"
+  | "H6"
   | "W1"
   | "W2"
   | "W3"
@@ -51,6 +52,7 @@ export const p0Routes: P0Route[] = [
   { id: "H3", label: "센터", title: "알림 센터" },
   { id: "H4", label: "우산", title: "우산 추천" },
   { id: "H5", label: "강수", title: "강수 타임라인" },
+  { id: "H6", label: "예보", title: "날씨 상세" },
   { id: "W1", label: "제보 홈", title: "날씨 제보 홈" },
   { id: "W2", label: "제보", title: "날씨 제보" },
   { id: "W3", label: "완료", title: "제보 완료" },

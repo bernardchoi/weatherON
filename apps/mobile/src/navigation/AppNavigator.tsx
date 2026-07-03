@@ -10,6 +10,7 @@ import { WardrobeScreen } from "../screens/WardrobeScreen";
 import { WardrobePresetScreen } from "../screens/WardrobePresetScreen";
 import { UmbrellaScreen } from "../screens/UmbrellaScreen";
 import { RainTimelineScreen } from "../screens/RainTimelineScreen";
+import { WeatherDetailScreen } from "../screens/WeatherDetailScreen";
 import { NotificationCenterScreen } from "../screens/NotificationCenterScreen";
 import {
   WeatherReportCompleteScreen,
@@ -175,6 +176,7 @@ export function AppNavigator() {
       {route === "C4" ? <OutfitDetailScreen {...screenProps} /> : null}
       {route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
       {route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
+      {route === "H6" ? <WeatherDetailScreen {...screenProps} /> : null}
       {route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
       {route === "W1" ? <WeatherReportHomeScreen {...screenProps} /> : null}
       {route === "W2" ? <WeatherReportSubmitScreen {...screenProps} /> : null}

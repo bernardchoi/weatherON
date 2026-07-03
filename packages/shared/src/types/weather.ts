@@ -13,6 +13,16 @@ export type HourlyWeather = {
   condition: WeatherCondition | string;
 };
 
+export type DailyWeather = {
+  date: string;
+  minTempC: number;
+  maxTempC: number;
+  rainProbabilityPct: number;
+  precipitationMm: number;
+  windMs: number;
+  condition: WeatherCondition | string;
+};
+
 export type WeatherSnapshot = {
   id?: string;
   locationId: string;
@@ -30,6 +40,7 @@ export type WeatherSnapshot = {
     uvIndex?: number;
   };
   hourly: HourlyWeather[];
+  daily?: DailyWeather[];
   source: WeatherSource;
   stale: boolean;
 };

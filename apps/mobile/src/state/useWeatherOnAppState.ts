@@ -1721,6 +1721,7 @@ function markPersistedWeatherSnapshotStale(snapshot: WeatherProviderResult["curr
     stale: true,
     current: { ...snapshot.current },
     hourly: snapshot.hourly.map((item) => ({ ...item })),
+    daily: snapshot.daily?.map((item) => ({ ...item })),
   };
 }
 
@@ -1735,6 +1736,7 @@ function isWeatherSnapshot(value: unknown): value is WeatherProviderResult["curr
     isWeatherCurrent(record.current) &&
     Array.isArray(record.hourly) &&
     record.hourly.every(isHourlyWeather) &&
+    (record.daily === undefined || (Array.isArray(record.daily) && record.daily.every(isDailyWeather))) &&
     (record.source === "kma" || record.source === "openmeteo" || record.source === "cache" || record.source === "fallback") &&
     typeof record.stale === "boolean"
   );
@@ -1760,6 +1762,20 @@ function isHourlyWeather(value: unknown): value is WeatherProviderResult["curren
   return (
     typeof record.time === "string" &&
     typeof record.tempC === "number" &&
+    typeof record.rainProbabilityPct === "number" &&
+    typeof record.precipitationMm === "number" &&
+    typeof record.windMs === "number" &&
+    typeof record.condition === "string"
+  );
+}
+
+function isDailyWeather(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<NonNullable<WeatherProviderResult["current"]["daily"]>[number]>;
+  return (
+    typeof record.date === "string" &&
+    typeof record.minTempC === "number" &&
+    typeof record.maxTempC === "number" &&
     typeof record.rainProbabilityPct === "number" &&
     typeof record.precipitationMm === "number" &&
     typeof record.windMs === "number" &&

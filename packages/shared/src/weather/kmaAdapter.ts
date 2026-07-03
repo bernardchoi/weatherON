@@ -1,4 +1,4 @@
-import type { HourlyWeather, WeatherSnapshot } from "../types/weather";
+import type { DailyWeather, HourlyWeather, WeatherSnapshot } from "../types/weather";
 import { conditionFromKma } from "./condition";
 import type { KmaForecastItem, KmaForecastResponse, WeatherNormalizeOptions } from "./types";
 
@@ -34,6 +34,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
       uvIndex: undefined,
     },
     hourly,
+    daily: buildDaily(hourly),
     source: "kma",
     stale: options.stale ?? false,
   };
@@ -57,6 +58,34 @@ function buildHourly(timeKey: string, bucket: KmaBucket): HourlyWeather {
     windMs: toNumber(bucket.WSD, 0),
     condition: conditionFromKma(bucket.PTY, bucket.SKY),
   };
+}
+
+function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
+  const grouped = hourly.reduce<Record<string, HourlyWeather[]>>((acc, item) => {
+    const date = item.time.slice(0, 10);
+    acc[date] = acc[date] ?? [];
+    acc[date].push(item);
+    return acc;
+  }, {});
+  const dates = Object.keys(grouped).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date));
+  if (dates.length === 0) return undefined;
+  return dates.sort().map((date) => {
+    const items = grouped[date];
+    return {
+      date,
+      minTempC: Math.min(...items.map((item) => item.tempC)),
+      maxTempC: Math.max(...items.map((item) => item.tempC)),
+      rainProbabilityPct: Math.max(...items.map((item) => item.rainProbabilityPct)),
+      precipitationMm: Number(items.reduce((sum, item) => sum + item.precipitationMm, 0).toFixed(1)),
+      windMs: Math.max(...items.map((item) => item.windMs)),
+      condition: selectDailyCondition(items),
+    };
+  });
+}
+
+function selectDailyCondition(items: HourlyWeather[]): HourlyWeather["condition"] {
+  const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
+  return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
 }
 
 function formatKmaTime(timeKey: string): string {

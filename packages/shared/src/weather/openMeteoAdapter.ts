@@ -1,4 +1,4 @@
-import type { HourlyWeather, WeatherSnapshot } from "../types/weather";
+import type { DailyWeather, HourlyWeather, WeatherSnapshot } from "../types/weather";
 import { conditionFromOpenMeteo } from "./condition";
 import type { OpenMeteoResponse, WeatherNormalizeOptions } from "./types";
 
@@ -9,6 +9,7 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
   }
 
   const hourly = buildHourly(payload);
+  const daily = buildDaily(payload);
   const precipitationMm = current.precipitation ?? current.rain ?? current.showers ?? current.snowfall ?? 0;
 
   return {
@@ -28,6 +29,7 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
       uvIndex: current.uv_index ?? payload.hourly?.uv_index?.[0],
     },
     hourly,
+    daily,
     source: "openmeteo",
     stale: options.stale ?? false,
   };
@@ -43,6 +45,21 @@ function buildHourly(payload: OpenMeteoResponse): HourlyWeather[] {
     precipitationMm: hourly?.precipitation?.[index] ?? 0,
     windMs: kmhToMs(hourly?.wind_speed_10m?.[index] ?? payload.current?.wind_speed_10m ?? 0),
     condition: conditionFromOpenMeteo(hourly?.weather_code?.[index] ?? payload.current?.weather_code),
+  }));
+}
+
+function buildDaily(payload: OpenMeteoResponse): DailyWeather[] | undefined {
+  const daily = payload.daily;
+  const times = daily?.time ?? [];
+  if (times.length === 0) return undefined;
+  return times.map((date, index) => ({
+    date,
+    minTempC: daily?.temperature_2m_min?.[index] ?? payload.current?.temperature_2m ?? 0,
+    maxTempC: daily?.temperature_2m_max?.[index] ?? payload.current?.temperature_2m ?? 0,
+    rainProbabilityPct: daily?.precipitation_probability_max?.[index] ?? 0,
+    precipitationMm: daily?.precipitation_sum?.[index] ?? 0,
+    windMs: kmhToMs(daily?.wind_speed_10m_max?.[index] ?? payload.current?.wind_speed_10m ?? 0),
+    condition: conditionFromOpenMeteo(daily?.weather_code?.[index] ?? payload.current?.weather_code),
   }));
 }
 

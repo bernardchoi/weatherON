@@ -220,6 +220,7 @@ function relabelWeatherSnapshot(
     countryCode: place.countryCode,
     current: { ...snapshot.current },
     hourly: snapshot.hourly.map((hour) => ({ ...hour })),
+    daily: snapshot.daily?.map((day) => ({ ...day })),
   };
 }
 

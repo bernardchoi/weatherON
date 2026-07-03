@@ -44,4 +44,13 @@ export const openMeteoFixture: OpenMeteoResponse = {
     relative_humidity_2m: [69, 66, 72],
     uv_index: [7, 8, 4],
   },
+  daily: {
+    time: ["2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02"],
+    temperature_2m_max: [31, 29, 28, 30, 27, 28, 30],
+    temperature_2m_min: [24, 23, 22, 23, 22, 21, 23],
+    precipitation_probability_max: [24, 35, 58, 42, 20, 18, 30],
+    precipitation_sum: [0, 0.4, 3.1, 1.2, 0, 0, 0.3],
+    weather_code: [1, 3, 61, 80, 2, 0, 3],
+    wind_speed_10m_max: [18.7, 16.2, 20.4, 14.8, 12.1, 11.7, 15.2],
+  },
 };
