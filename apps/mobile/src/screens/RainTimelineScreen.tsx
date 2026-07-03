@@ -5,13 +5,17 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
-export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P0ScreenProps) {
+export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   const [rainEndAlertEnabled, setRainEndAlertEnabled] = useState(false);
-  const rainBars = useMemo(() => buildRainBars(state.weather.hourly), [state.weather.hourly]);
+  const rainBars = useMemo(() => buildRainBars(state.weather), [state.weather]);
+  const chartColors = getRainChartColors(theme);
+  const toggleColors = getRainToggleColors(theme, rainEndAlertEnabled);
   const peakAmount = getPeakRainAmount(rainBars);
-  const rainStart = "18:00";
-  const rainEnd = "21:00";
+  const rainWindow = getRainWindow(rainBars);
+  const rainStart = rainWindow.start;
+  const rainEnd = rainWindow.end;
+  const umbrella = state.umbrella;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -19,7 +23,7 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("H4")} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onGoBack} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
           </Pressable>
           <Text style={[styles.title, { color: theme.text }]}>강수 타임라인</Text>
@@ -31,8 +35,8 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
               <Image source={uiIconAssets.rain} style={[styles.rainIconImage, { tintColor: theme.sky }]} resizeMode="contain" />
             </View>
             <View style={styles.heroCopy}>
-              <Text style={[styles.heroTitle, { color: theme.text }]}>{rainStart} 시작, {rainEnd} 그침</Text>
-              <Text style={[styles.heroMeta, { color: theme.muted }]}>시간당 최대 {peakAmount}mm · 21시 이후 외출 부담 낮음</Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>{rainWindow.title}</Text>
+              <Text style={[styles.heroMeta, { color: theme.muted }]}>시간당 최대 {peakAmount}mm · {rainWindow.body}</Text>
             </View>
           </View>
           <View style={styles.rainDecisionStrip}>
@@ -46,15 +50,15 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
           accessibilityRole="switch"
           accessibilityState={{ checked: rainEndAlertEnabled }}
           onPress={() => setRainEndAlertEnabled((value) => !value)}
-          style={[styles.togglePanel, { backgroundColor: theme.card, borderColor: rainEndAlertEnabled ? theme.sky : theme.border }]}
+          style={[styles.togglePanel, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleLabel, { color: theme.sky }]}>알림 설정</Text>
+            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>그침 알림</Text>
             <Text style={[styles.toggleTitle, { color: theme.text }]}>비 그치면 알려줘</Text>
-            <Text style={[styles.toggleMeta, { color: theme.muted }]}>21:00 전후로 그침 알림을 받을지 선택</Text>
+            <Text style={[styles.toggleMeta, { color: theme.muted }]}>{rainEnd} 전후로 그침 알림을 받을지 선택</Text>
           </View>
-          <View style={[styles.toggleTrack, { backgroundColor: rainEndAlertEnabled ? theme.sky : theme.cardStrong }]}>
-            <View style={[styles.toggleKnob, { backgroundColor: rainEndAlertEnabled ? theme.text : theme.subtle, marginLeft: rainEndAlertEnabled ? 22 : 3 }]} />
+          <View style={[styles.toggleTrack, { backgroundColor: toggleColors.track, borderColor: toggleColors.trackBorder }]}>
+            <View style={[styles.toggleKnob, { backgroundColor: toggleColors.knob, marginLeft: rainEndAlertEnabled ? 22 : 3 }]} />
           </View>
         </Pressable>
 
@@ -71,7 +75,8 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
                         styles.amountBar,
                         {
                           height: `${height}%`,
-                          backgroundColor: item.amount >= 3 ? theme.sky : item.amount >= 1 ? theme.cardSoft : theme.cardStrong,
+                          backgroundColor: getRainBarColor(item.amount, chartColors),
+                          borderColor: chartColors.barBorder,
                         },
                       ]}
                     />
@@ -80,37 +85,40 @@ export function RainTimelineScreen({ state, onNavigate, onOpenAlertSettings }: P
               })}
             </View>
             <View style={styles.timeAxis}>
-              <Text style={[styles.axisText, { color: theme.subtle }]}>17:00</Text>
-              <Text style={[styles.axisText, { color: theme.subtle }]}>18:00</Text>
-              <Text style={[styles.axisText, { color: theme.subtle }]}>19:00</Text>
-              <Text style={[styles.axisText, { color: theme.subtle }]}>20:00</Text>
-              <Text style={[styles.axisText, { color: theme.subtle }]}>21:00</Text>
+              {getAxisLabels(rainBars).map((label) => (
+                <Text key={label} style={[styles.axisText, { color: theme.subtle }]}>{label}</Text>
+              ))}
             </View>
             <View style={styles.legend}>
-              <LegendSwatch label="약함" color={theme.cardSoft} theme={theme} />
-              <LegendSwatch label="보통" color={theme.cardSoft} theme={theme} />
-              <LegendSwatch label="강함" color={theme.sky} theme={theme} />
+              <LegendSwatch label="약함" color={chartColors.weak} theme={theme} />
+              <LegendSwatch label="보통" color={chartColors.medium} theme={theme} />
+              <LegendSwatch label="강함" color={chartColors.strong} theme={theme} />
             </View>
           </View>
         </Panel>
 
         <Panel title="외출 가이드" theme={theme} accentColor={theme.clear}>
-          <GuideRow icon={uiIconAssets.check} text="지금 나가면 비 전 도착 가능" color={theme.clear} theme={theme} />
-          <GuideRow icon={uiIconAssets.umbrella} text="18시 이후 외출 시 우산 필수" color={theme.sky} theme={theme} />
-          <GuideRow icon={uiIconAssets.clock} text="21시 이후는 비가 그칩니다" color={theme.subtle} theme={theme} />
+          <GuideRow icon={uiIconAssets.check} text={getDepartureGuideText(rainStart, umbrella)} color={theme.clear} theme={theme} />
+          <GuideRow icon={uiIconAssets.umbrella} text={getUmbrellaGuideText(rainStart, umbrella)} color={theme.sky} theme={theme} />
+          <GuideRow icon={uiIconAssets.clock} text={getRainEndGuideText(rainEnd)} color={theme.subtle} theme={theme} />
         </Panel>
 
-        <Pressable accessibilityRole="button" onPress={() => onOpenAlertSettings("H5", "rain")} style={[styles.secondaryCta, { backgroundColor: theme.cardStrong }]}>
-          <Image source={uiIconAssets.settings} style={[styles.secondaryCtaIcon, { tintColor: theme.subtle }]} resizeMode="contain" />
-          <Text style={[styles.secondaryCtaText, { color: theme.text }]}>비 알림 설정</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`우산 추천 보기, ${umbrella.title}`}
+          onPress={() => onNavigate("H4")}
+          style={[styles.umbrellaCard, { backgroundColor: theme.cardStrong, borderColor: getUmbrellaCardColor(umbrella.level, theme) }]}
+        >
+          <View style={[styles.umbrellaIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+            <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaCardColor(umbrella.level, theme) }]} resizeMode="contain" />
+          </View>
+          <View style={styles.umbrellaCopy}>
+            <Text style={[styles.umbrellaLabel, { color: getUmbrellaCardColor(umbrella.level, theme) }]}>우산 추천</Text>
+            <Text style={[styles.umbrellaTitle, { color: theme.text }]}>{umbrella.title}</Text>
+            <Text style={[styles.umbrellaBody, { color: theme.muted }]} numberOfLines={2}>{umbrella.reason}</Text>
+          </View>
+          <Text style={[styles.umbrellaChevron, { color: theme.subtle }]}>›</Text>
         </Pressable>
-
-        <View style={[styles.statePanel, { backgroundColor: theme.card }]}>
-          <Text style={[styles.stateLabel, { color: theme.sky }]}>강수</Text>
-          <Text style={[styles.stateText, { color: theme.text }]}>
-            {rainStart} 시작 · {rainEnd} 종료 · 그침 알림 {rainEndAlertEnabled ? "ON" : "끔"}
-          </Text>
-        </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -167,34 +175,128 @@ function LegendSwatch({ label, color, theme }: { label: string; color: string; t
   );
 }
 
+function getRainChartColors(theme: AppTheme) {
+  if (theme.name === "light") {
+    return {
+      weak: "#B8D6EA",
+      medium: "#4F95C8",
+      strong: "#0F6FA8",
+      barBorder: "rgba(20,32,51,0.12)",
+    };
+  }
+  return {
+    weak: "rgba(74,163,223,0.28)",
+    medium: "#4AA3DF",
+    strong: "#67E8D0",
+    barBorder: "rgba(248,251,255,0.12)",
+  };
+}
+
+function getRainBarColor(amount: number, colors: ReturnType<typeof getRainChartColors>) {
+  if (amount >= 3) return colors.strong;
+  if (amount >= 1) return colors.medium;
+  return colors.weak;
+}
+
+function getRainToggleColors(theme: AppTheme, enabled: boolean) {
+  if (theme.name === "light") {
+    return {
+      panel: enabled ? "#E8F3FB" : "#FFFFFF",
+      border: enabled ? "#237BBD" : "rgba(31,78,121,0.22)",
+      track: enabled ? "#237BBD" : "#D7EAF7",
+      trackBorder: enabled ? "#237BBD" : "rgba(31,78,121,0.24)",
+      knob: enabled ? "#FFFFFF" : "#237BBD",
+      accent: "#237BBD",
+    };
+  }
+  return {
+    panel: enabled ? "rgba(74,163,223,0.18)" : theme.card,
+    border: enabled ? theme.sky : theme.border,
+    track: enabled ? theme.sky : theme.cardMuted,
+    trackBorder: enabled ? theme.sky : theme.border,
+    knob: enabled ? theme.text : theme.muted,
+    accent: theme.sky,
+  };
+}
+
 type RainBar = {
   time: string;
   amount: number;
 };
 
-function buildRainBars(hourly: P0ScreenProps["state"]["weather"]["hourly"]): RainBar[] {
-  if (hourly.length >= 8) {
-    return hourly.slice(0, 8).map((item) => ({ time: item.time, amount: item.precipitationMm }));
+function buildRainBars(weather: P0ScreenProps["state"]["weather"]): RainBar[] {
+  if (weather.hourly.length > 0) {
+    return weather.hourly.slice(0, 8).map((item) => ({ time: item.time, amount: item.precipitationMm }));
   }
-  return [
-    { time: "17:00", amount: 0.2 },
-    { time: "17:30", amount: 0.5 },
-    { time: "18:00", amount: 1.8 },
-    { time: "18:30", amount: 3.5 },
-    { time: "19:00", amount: 4.2 },
-    { time: "19:30", amount: 3.8 },
-    { time: "20:00", amount: 2.5 },
-    { time: "20:30", amount: 1.0 },
-    { time: "21:00", amount: 0.3 },
-  ];
+  return [{ time: weather.observedAt, amount: weather.current.precipitationMm }];
 }
 
 function getPeakRainAmount(items: RainBar[]) {
-  return Math.max(...items.map((item) => item.amount)).toFixed(0);
+  return Math.max(0, ...items.map((item) => item.amount)).toFixed(1).replace(/\.0$/, "");
 }
 
 function trimAmount(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function getRainWindow(items: RainBar[]) {
+  const rainyItems = items.filter((item) => item.amount > 0);
+  if (rainyItems.length === 0) {
+    return {
+      start: "대기",
+      end: "대기",
+      title: "뚜렷한 비 예보 없음",
+      body: "강수 신호 낮음",
+    };
+  }
+  const start = formatTimeLabel(rainyItems[0].time);
+  const end = formatTimeLabel(rainyItems[rainyItems.length - 1].time);
+  return {
+    start,
+    end,
+    title: start === end ? `${start} 전후 비 가능` : `${start} 시작, ${end} 완화`,
+    body: end === "대기" ? "강수 신호 낮음" : `${end} 이후 외출 부담 낮음`,
+  };
+}
+
+function getAxisLabels(items: RainBar[]) {
+  if (items.length <= 1) return [formatTimeLabel(items[0]?.time ?? "")];
+  const middle = items[Math.floor(items.length / 2)]?.time;
+  const labels = [items[0]?.time, middle, items[items.length - 1]?.time]
+    .filter((value): value is string => Boolean(value))
+    .map(formatTimeLabel);
+  return Array.from(new Set(labels));
+}
+
+function formatTimeLabel(value: string) {
+  const match = value.match(/T(\d{2}):(\d{2})/);
+  if (match) return `${match[1]}:${match[2]}`;
+  if (/^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
+  return "현재";
+}
+
+function getUmbrellaCardColor(level: P0ScreenProps["state"]["umbrella"]["level"], theme: AppTheme) {
+  if (level === "required") return theme.warm;
+  if (level === "recommended") return theme.sky;
+  if (level === "notice") return theme.gold;
+  return theme.clear;
+}
+
+function getUmbrellaGuideText(start: string, umbrella: P0ScreenProps["state"]["umbrella"]) {
+  if (umbrella.level === "none") return "우산 없이 이동 가능";
+  if (start === "대기") return umbrella.title;
+  return `${start} 이후 외출 시 ${umbrella.title}`;
+}
+
+function getDepartureGuideText(start: string, umbrella: P0ScreenProps["state"]["umbrella"]) {
+  if (umbrella.level === "none") return "현재 강수 신호 낮음";
+  if (start === "대기") return "외출 전 최신 강수 확인";
+  return `${start} 전 이동 여유 확인`;
+}
+
+function getRainEndGuideText(end: string) {
+  if (end === "대기") return "강수 신호 낮음";
+  return `${end} 이후 강수 완화 예상`;
 }
 
 const styles = StyleSheet.create({
@@ -364,6 +466,7 @@ const styles = StyleSheet.create({
     minHeight: 5,
     borderTopLeftRadius: radius.xs,
     borderTopRightRadius: radius.xs,
+    borderWidth: 1,
   },
   timeAxis: {
     flexDirection: "row",
@@ -412,6 +515,56 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0,
   },
+  umbrellaCard: {
+    minHeight: 86,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingHorizontal: 14,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  umbrellaIconBox: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  umbrellaIcon: {
+    width: 24,
+    height: 24,
+  },
+  umbrellaCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  umbrellaLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  umbrellaTitle: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  umbrellaBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+    letterSpacing: 0,
+  },
+  umbrellaChevron: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "800",
+  },
   togglePanel: {
     minHeight: 76,
     flexDirection: "row",
@@ -450,48 +603,12 @@ const styles = StyleSheet.create({
     height: 28,
     justifyContent: "center",
     borderRadius: radius.pill,
+    borderWidth: 1,
   },
   toggleKnob: {
     width: 22,
     height: 22,
     borderRadius: radius.pill,
-  },
-  statePanel: {
-    gap: 3,
-    minHeight: 58,
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
-  },
-  stateLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  stateText: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  secondaryCta: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    borderRadius: radius.md,
-  },
-  secondaryCtaText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  secondaryCtaIcon: {
-    width: 16,
-    height: 16,
   },
   bottomSpacer: {
     height: 12,

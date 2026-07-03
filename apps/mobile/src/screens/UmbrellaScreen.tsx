@@ -4,13 +4,15 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
-export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onNavigate, onOpenAlertSettings }: P0ScreenProps) {
+export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGoBack, onOpenAlertSettings }: P0ScreenProps) {
   const theme = useAppTheme();
-  const usesMockupRainBars = state.weather.hourly.length < 7;
-  const rainBars = buildRainBars(state.weather.hourly);
-  const peakWindow = usesMockupRainBars ? "18시~21시" : getPeakRainWindow(state.weather.hourly);
-  const peakAmount = usesMockupRainBars ? "4" : getPeakRainAmount(state.weather.hourly);
+  const umbrella = state.umbrella;
+  const rainBars = buildRainBars(state.weather);
+  const peakWindow = getPeakRainWindow(rainBars);
+  const peakAmount = getPeakRainAmount(state.weather);
+  const peakRainProbability = getPeakRainProbability(state.weather);
   const windSpeed = state.weather.current.windMs;
+  const umbrellaOptions = getUmbrellaOptions(umbrella.title, umbrella.level);
 
   useEffect(() => {
     if (!umbrellaReviewed) onReviewUmbrella();
@@ -22,7 +24,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onNa
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("H1")} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onGoBack} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
           </Pressable>
           <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
@@ -30,18 +32,18 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onNa
 
         <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }]}>
           <UmbrellaGlyph color={theme.text} />
-          <Text style={[styles.heroTitle, { color: theme.text }]}>오늘은 3단 우산</Text>
+          <Text style={[styles.heroTitle, { color: theme.text }]}>{umbrella.title}</Text>
           <View style={styles.chipRow}>
+            <InfoChip label={getUmbrellaLevelLabel(umbrella.level)} theme={theme} />
             <InfoChip label={getRainIntensityLabel(peakAmount)} theme={theme} />
             <InfoChip label={getWindLabel(windSpeed)} theme={theme} />
-            <InfoChip label="휴대성 우선" theme={theme} />
           </View>
         </View>
 
         <Panel title="추천 이유" theme={theme}>
-          <ReasonRow icon="◷" text={`${peakWindow} 비 예보`} theme={theme} />
-          <ReasonRow icon="⌁" text={`시간당 ${peakAmount}mm · 보통 강도`} theme={theme} />
-          <ReasonRow icon="≋" text={`풍속 초속 ${windSpeed.toFixed(0)}m - 3단 우산으로 충분`} theme={theme} />
+          <ReasonRow icon="◷" text={`${peakWindow} 강수 가능성 최대 ${peakRainProbability}%`} theme={theme} />
+          <ReasonRow icon="⌁" text={`시간당 최대 ${peakAmount}mm · ${getRainIntensityLabel(peakAmount)}`} theme={theme} />
+          <ReasonRow icon="≋" text={`풍속 초속 ${windSpeed.toFixed(0)}m · ${umbrella.reason}`} theme={theme} />
         </Panel>
 
         <Panel title="시간대별 강수확률" theme={theme}>
@@ -76,11 +78,9 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onNa
 
         <Panel title="우산 종류 비교" theme={theme}>
           <View style={styles.optionGrid}>
-            {getUmbrellaOptions().map((item) => (
-              <Pressable
-                accessibilityRole="button"
+            {umbrellaOptions.map((item) => (
+              <View
                 key={item.title}
-                onPress={() => onNavigate(item.recommended ? "H5" : "M2")}
                 style={[
                   styles.optionCard,
                   {
@@ -99,14 +99,14 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onNa
                   </View>
                   <Text style={[styles.optionMeta, { color: item.recommended ? theme.sky : theme.subtle }]}>{item.meta}</Text>
                 </View>
-              </Pressable>
+              </View>
             ))}
           </View>
         </Panel>
 
         <View style={[styles.statePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
           <Text style={[styles.stateLabel, { color: theme.gold }]}>UMBRELLA</Text>
-          <Text style={[styles.stateText, { color: theme.muted }]}>3단 우산 추천 · {peakWindow} 강수 · 알림 설정 전</Text>
+          <Text style={[styles.stateText, { color: theme.muted }]}>{umbrella.title} · {peakWindow} · {umbrella.reason}</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -184,42 +184,74 @@ function getWindLabel(windSpeed: number) {
   return "바람 약함";
 }
 
-function getUmbrellaOptions() {
+function getUmbrellaLevelLabel(level: P0ScreenProps["state"]["umbrella"]["level"]) {
+  if (level === "required") return "필수";
+  if (level === "recommended") return "추천";
+  if (level === "notice") return "가벼운 대비";
+  return "불필요";
+}
+
+function getUmbrellaOptions(title: string, level: P0ScreenProps["state"]["umbrella"]["level"]) {
+  const recommendedTitle = getRecommendedOptionTitle(title, level);
+  const options = [
+    { title: "우산 없이 이동", meta: "강수 낮음", key: "none" },
+    { title: "소형 우산", meta: "약한 비·휴대성", key: "small" },
+    { title: "3단 우산", meta: "보통 비·일상 외출", key: "compact" },
+    { title: "큰 3단 우산", meta: "긴 비·넓은 커버", key: "large-compact" },
+    { title: "장우산", meta: "강한 비·장시간", key: "long" },
+    { title: "우비/방수 아우터", meta: "바람 강함", key: "rainwear" },
+  ];
+  return options.map((item) => ({
+    title: item.title,
+    meta: item.title === recommendedTitle ? `추천 · ${item.meta}` : item.meta,
+    recommended: item.title === recommendedTitle,
+  }));
+}
+
+function getRecommendedOptionTitle(title: string, level: P0ScreenProps["state"]["umbrella"]["level"]) {
+  if (level === "none") return "우산 없이 이동";
+  if (title.includes("우비") || title.includes("방수")) return "우비/방수 아우터";
+  if (title.includes("장우산")) return "장우산";
+  if (title.includes("큰 3단")) return "큰 3단 우산";
+  if (title.includes("3단")) return "3단 우산";
+  if (title.includes("소형")) return "소형 우산";
+  return level === "required" ? "장우산" : "소형 우산";
+}
+
+function buildRainBars(weather: P0ScreenProps["state"]["weather"]) {
+  if (weather.hourly.length > 0) return weather.hourly.slice(0, 7);
   return [
-    { title: "1단 장우산", meta: "강풍·장시간", recommended: false },
-    { title: "2단 우산", meta: "균형·범용", recommended: false },
-    { title: "3단 우산", meta: "추천 · 휴대성·보통강도", recommended: true },
-    { title: "장우산", meta: "폭우·전신 커버", recommended: false },
+    {
+      time: weather.observedAt,
+      tempC: weather.current.tempC,
+      rainProbabilityPct: weather.current.rainProbabilityPct,
+      precipitationMm: weather.current.precipitationMm,
+      windMs: weather.current.windMs,
+      condition: weather.current.condition,
+    },
   ];
 }
 
-function buildRainBars(hourly: P0ScreenProps["state"]["weather"]["hourly"]) {
-  if (hourly.length >= 7) return hourly.slice(0, 7);
-  const fallback = [
-    { time: "15:00", rainProbabilityPct: 10, precipitationMm: 0.2 },
-    { time: "16:00", rainProbabilityPct: 15, precipitationMm: 0.5 },
-    { time: "17:00", rainProbabilityPct: 40, precipitationMm: 1.8 },
-    { time: "18:00", rainProbabilityPct: 80, precipitationMm: 3.5 },
-    { time: "19:00", rainProbabilityPct: 85, precipitationMm: 4.0 },
-    { time: "20:00", rainProbabilityPct: 60, precipitationMm: 2.5 },
-    { time: "21:00", rainProbabilityPct: 20, precipitationMm: 1.0 },
-  ];
-  return fallback;
-}
-
-function getPeakRainWindow(hourly: P0ScreenProps["state"]["weather"]["hourly"]) {
-  const peakIndex = hourly.reduce((bestIndex, item, index) => (item.rainProbabilityPct > hourly[bestIndex].rainProbabilityPct ? index : bestIndex), 0);
-  const start = hourly[Math.max(0, peakIndex - 1)]?.time ?? hourly[peakIndex]?.time ?? "18:00";
-  const end = hourly[Math.min(hourly.length - 1, peakIndex + 1)]?.time ?? "21:00";
+function getPeakRainWindow(items: P0ScreenProps["state"]["weather"]["hourly"]) {
+  if (items.length === 0) return "현재";
+  const peakIndex = items.reduce((bestIndex, item, index) => (item.rainProbabilityPct > items[bestIndex].rainProbabilityPct ? index : bestIndex), 0);
+  const start = items[Math.max(0, peakIndex - 1)]?.time ?? items[peakIndex]?.time ?? "";
+  const end = items[Math.min(items.length - 1, peakIndex + 1)]?.time ?? start;
+  if (!start || start === end) return formatHour(start);
   return `${formatHour(start)}~${formatHour(end)}`;
 }
 
-function getPeakRainAmount(hourly: P0ScreenProps["state"]["weather"]["hourly"]) {
-  return Math.max(...hourly.map((item) => item.precipitationMm)).toFixed(0);
+function getPeakRainAmount(weather: P0ScreenProps["state"]["weather"]) {
+  return Math.max(weather.current.precipitationMm, ...weather.hourly.map((item) => item.precipitationMm)).toFixed(1).replace(/\.0$/, "");
+}
+
+function getPeakRainProbability(weather: P0ScreenProps["state"]["weather"]) {
+  return Math.round(Math.max(weather.current.rainProbabilityPct, ...weather.hourly.map((item) => item.rainProbabilityPct)));
 }
 
 function formatHour(value: string) {
   const match = value.match(/T(\d{2}):\d{2}/);
+  if (!value) return "현재";
   return match ? `${Number(match[1])}시` : `${Number(value.slice(0, 2))}시`;
 }
 

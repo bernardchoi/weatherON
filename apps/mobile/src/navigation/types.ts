@@ -87,6 +87,7 @@ export type P0ScreenProps = {
   accountGateResult: AccountGateResultState | null;
   permissionGateResult: PermissionGateResultState | null;
   onNavigate: (route: AppRouteId) => void;
+  onGoBack: () => boolean;
   onOpenAlertSettings: (returnTo: P0RouteId, focus?: AlertSettingsFocus) => void;
   onReturnFromAlertSettings: () => void;
   onOpenPolicyDocument: (type: PolicyDocumentType) => void;

@@ -110,6 +110,7 @@ export function AppNavigator() {
     accountGateResult: appState.accountGateResult,
     permissionGateResult: appState.permissionGateResult,
     onNavigate: appState.navigate,
+    onGoBack: appState.goBack,
     onOpenAlertSettings: appState.openAlertSettings,
     onReturnFromAlertSettings: appState.returnFromAlertSettings,
     onOpenPolicyDocument: appState.openPolicyDocument,

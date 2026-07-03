@@ -188,9 +188,17 @@ async function checkHomeDecisionFlow(page) {
   await clickText(page, "홈");
   await clickText(page, "강수 타임라인");
   await assertText(page, "비 그치면 알려줘");
-  await assertText(page, "비 알림 설정");
+  await assertText(page, "30분 단위 강수량");
+  await assertText(page, "외출 가이드");
+  await assertText(page, "우산 추천");
   await assertBottomNav(page);
-  await assertClearOfBottomNav(page, "비 알림 설정");
+  await assertClearOfBottomNav(page, "우산 추천");
+  await clickAriaIncludes(page, "우산 추천 보기");
+  await assertText(page, "우산 종류 비교");
+  await clickAriaIncludes(page, "뒤로");
+  await assertText(page, "강수 타임라인");
+  await clickAriaIncludes(page, "뒤로");
+  await assertText(page, "출발 판단");
 }
 
 async function checkNotificationPermissionRecovery(browser) {

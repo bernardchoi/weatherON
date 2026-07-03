@@ -135,7 +135,8 @@ assertSourceIncludes("scripts/check-android-core-flow.mjs", [
   "장소 선택 필요",
   "계산식",
   "경로 확인 전",
-  "비 알림 설정",
+  "외출 가이드",
+  "우산 추천",
   "정책 및 법적 고지",
   "assertNoText",
 ]);

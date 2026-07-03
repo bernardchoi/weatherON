@@ -159,6 +159,7 @@ export function useWeatherOnAppState() {
   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
+  const [umbrellaReturnRoute, setUmbrellaReturnRoute] = useState<P0RouteId>("H1");
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
   const [weatherProviderMode, setWeatherProviderMode] = useState<WeatherProviderMode>("ready");
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
@@ -649,6 +650,7 @@ export function useWeatherOnAppState() {
     setAlertSettingsRouteState(null);
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
+    if (nextRoute === "H4") setUmbrellaReturnRoute(route === "H5" ? "H5" : "H1");
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
   }, [route]);
 
@@ -1289,10 +1291,14 @@ export function useWeatherOnAppState() {
       setRoute(destinationAddReturnRoute);
       return true;
     }
+    if (route === "H4") {
+      setRoute(umbrellaReturnRoute);
+      return true;
+    }
     const backRoute = getBackRoute(route);
     setRoute(backRoute);
     return true;
-  }, [destinationAddReturnRoute, gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute]);
+  }, [destinationAddReturnRoute, gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute, umbrellaReturnRoute]);
 
   return {
     route,
