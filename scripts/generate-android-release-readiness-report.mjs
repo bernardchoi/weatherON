@@ -26,6 +26,7 @@ const latestPreviewBuildStatus = normalizeTableValue(extractTableValue(buildStat
 const latestPreviewBuildVersion = normalizeTableValue(extractTableValue(buildStatusDoc, "Version")) || "미확인";
 const sourceVersion = `${appConfig.version} (${appConfig.android?.versionCode})`;
 const previewBuildMatchesSource = latestPreviewBuildVersion === sourceVersion;
+const isLocalReleaseBuild = latestPreviewBuildId === "N/A - local Gradle release APK" && latestPreviewBuildStatus === "LOCAL BUILD SUCCESS";
 const latestBuildAttemptResult = normalizeTableValue(extractTableValue(buildStatusDoc, "결과"));
 const latestBuildFailureReason = normalizeTableValue(extractTableValue(buildStatusDoc, "실패 원인"));
 const isQuotaBlocked = latestBuildAttemptResult === "실패" && latestBuildFailureReason.includes("quota");
@@ -43,6 +44,8 @@ const nextSteps = isEasLoggedIn && easProjectId
         ? isQuotaBlocked
           ? `현재 소스 ${sourceVersion} 기준 새 preview APK 필요. ${latestBuildFailureReason}. reset 후 \`npm run build:android:preview:no-wait\` 재실행`
           : `현재 소스 ${sourceVersion} 기준 새 preview APK 필요. 사용자 승인 후 \`npm run build:android:preview:no-wait\` 실행`
+        : isLocalReleaseBuild
+        ? `local release APK \`${sourceVersion}\` 기준 실기기 QA 결과 유지`
         : latestPreviewBuildId && latestPreviewBuildStatus === "FINISHED"
         ? `\`${latestPreviewBuildId}\` APK 실기기 재설치 후 QA`
         : latestPreviewBuildId
@@ -139,8 +142,9 @@ ${checks.map((item) => `| ${item.name} | ${item.passed ? "통과" : "확인 필�
 | \`WEATHERON_PROXY_SMOKE=1 npm run check:weather-proxy\` | 통과 |
 | \`WEATHERON_LIVE_SMOKE=1 npm run check:weather-live\` | 통과 |
 | \`WEATHERON_PLACE_SMOKE=1 npm run check:place-search\` | 통과 |
+| \`npm run build:android:preview\` | 필요 시 사용자 승인 후 실행 |
 | \`npm run check:eas-login-state\` | ${easLoginCommandStatus} |
-| \`npm run check:eas-build-status -- ${latestPreviewBuildId || "<eas-build-id>"}\` | ${latestPreviewBuildStatus === "FINISHED" ? "통과" : "확인 필요"} |
+| \`npm run check:eas-build-status -- ${latestPreviewBuildId || "<eas-build-id>"}\` | ${isLocalReleaseBuild ? "해당 없음" : latestPreviewBuildStatus === "FINISHED" ? "통과" : "확인 필요"} |
 | \`npm run check:eas-production-build-status -- ${latestProductionBuildId || "<eas-build-id>"}\` | ${latestProductionBuildStatus === "FINISHED" ? "통과" : "확인 필요"} |
 
 ## 4. 다음 작업

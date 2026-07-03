@@ -27,8 +27,8 @@ if (!existsSync(inputPath)) {
 } else {
   inputs = readInputs(inputPath);
   validateInputs(inputs);
-  if (issues.length === 0 && !reportOnly) {
-    applyResults(inputs);
+  if (issues.length === 0) {
+    if (!reportOnly) applyResults(inputs);
     applied = true;
   }
 }

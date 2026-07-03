@@ -4,6 +4,7 @@ import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
 
 export function DestinationGuideScreen({ state, selectedDestinationPlace, destinationCareEnabled, temperatureUnit, onNavigate }: P0ScreenProps) {
@@ -204,7 +205,7 @@ function getWeatherDisplay(
     };
   }
   return {
-    originLabel: care.originWeather.locationName,
+    originLabel: getDisplayLocationName(care.originWeather.locationName),
     originTemp: formatTemperature(care.originWeather.current.feelsLikeC, temperatureUnit),
     originMeta: `맑음 · 강수 ${care.originWeather.current.rainProbabilityPct}%`,
     destinationLabel: placeName,

@@ -65,11 +65,6 @@ export function DestinationListScreen({
           </Pressable>
         </View>
 
-        <Pressable accessibilityLabel="목적지 검색 추가" accessibilityRole="button" onPress={() => onNavigate("P1")} style={[styles.searchRail, { backgroundColor: theme.card }]}>
-          <SearchGlyph color={theme.subtle} />
-          <Text style={[styles.searchText, { color: theme.subtle }]}>목적지 검색 · 추가</Text>
-        </Pressable>
-
         {resultBanner ? <ResultBanner title={resultBanner.title} body={resultBanner.body} tone={resultBanner.tone} theme={theme} /> : null}
         {recentlyRemovedDestination ? (
           <RemovedDestinationBanner
@@ -441,15 +436,6 @@ function subtractMinutes(time: string, minutes: number) {
   return `${String(nextHour).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`;
 }
 
-function SearchGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.searchGlyph} accessibilityElementsHidden>
-      <View style={[styles.searchCircle, { borderColor: color }]} />
-      <View style={[styles.searchHandle, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function SunGlyph({ color }: { color: string }) {
   return (
     <View style={styles.sunGlyph} accessibilityElementsHidden>
@@ -516,41 +502,6 @@ const styles = StyleSheet.create({
     marginTop: -2,
     fontSize: 22,
     lineHeight: 24,
-    fontWeight: "800",
-  },
-  searchRail: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: 14,
-    borderRadius: radius.md,
-  },
-  searchGlyph: {
-    width: 18,
-    height: 18,
-  },
-  searchCircle: {
-    position: "absolute",
-    left: 1,
-    top: 1,
-    width: 11,
-    height: 11,
-    borderWidth: 1.4,
-    borderRadius: 7,
-  },
-  searchHandle: {
-    position: "absolute",
-    right: 2,
-    bottom: 2,
-    width: 7,
-    height: 1.5,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }],
-  },
-  searchText: {
-    fontSize: 13,
-    lineHeight: 18,
     fontWeight: "800",
   },
   todayCard: {

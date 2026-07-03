@@ -67,11 +67,11 @@ const overseasPlaceCases = [
     allowedProviders: ["google", "fixture"],
   },
   {
-    label: "GLOBAL Korean Marina Bay alias",
-    query: "마리나 베이",
+    label: "GLOBAL Korean Central Park alias",
+    query: "센트럴 파크",
     language: "ko",
     expectedCountryCode: "GLOBAL",
-    expectedNamePattern: /marina bay|마리나/i,
+    expectedNamePattern: /central park|센트럴/i,
     allowedProviders: ["google", "fixture"],
   },
 ];

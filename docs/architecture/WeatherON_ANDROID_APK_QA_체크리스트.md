@@ -92,7 +92,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | KMA proxy | 한국 현재 위치/기본 위치 날씨 정상 | 미검증 |
 | Kakao Local | `잠실`, `잠실 야구장` 국내 검색 결과 provider `kakao` 또는 fallback, 선택/저장 가능 | 미검증 |
 | Open-Meteo | 목적지/해외 fallback 날씨 정상 | 미검증 |
-| Google Maps | `Tokyo Station`, `도쿄 역`, `東京駅`, `마리나 베이` 해외/현지어 검색 결과 선택 가능. 키 없으면 fixture/fallback 유지 | 미검증 |
+| Google Maps | `Tokyo Station`, `도쿄 역`, `東京駅`, `센트럴 파크` 해외/현지어 검색 결과 선택 가능. 키 없으면 fixture/fallback 유지 | 미검증 |
 | API 키 노출 | APK 앱 환경에 provider secret 미포함 | 미검증 |
 
 사전 smoke:

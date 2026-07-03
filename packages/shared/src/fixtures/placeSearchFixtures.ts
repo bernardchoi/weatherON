@@ -41,16 +41,16 @@ export const placeSearchFixtures: PlaceSearchResult[] = [
     provider: "fixture",
   },
   {
-    id: "global-singapore-marina-bay",
-    name: "Marina Bay",
-    address: "Marina Bay, Singapore",
+    id: "global-new-york-central-park",
+    name: "Central Park",
+    address: "Central Park, New York",
     category: "custom",
     countryCode: "GLOBAL",
     coordinate: {
-      latitude: 1.2834,
-      longitude: 103.8607,
+      latitude: 40.7829,
+      longitude: -73.9654,
     },
-    timezone: "Asia/Singapore",
+    timezone: "America/New_York",
     provider: "fixture",
   },
 ];
@@ -85,6 +85,6 @@ const placeSearchAliases: Record<string, string> = {
   "jamsil": "잠실야구장",
   "jamsil stadium": "잠실야구장",
   "jamsil baseball stadium": "잠실야구장",
-  "마리나 베이": "Marina Bay",
-  "마리나베이": "Marina Bay",
+  "센트럴파크": "Central Park",
+  "센트럴 파크": "Central Park",
 };

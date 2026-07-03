@@ -9,8 +9,8 @@
 |---|---|
 | 제출 가능 여부 | 불가 |
 | issue 수 | 1 |
-| 기준 build id | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 |
-| 기준 app version | 0.1.0 (5) |
+| 기준 build id | N/A - local Gradle release APK |
+| 기준 app version | 0.1.0 (6) |
 | 저장 위치 | `assets/store/android-screenshots/` |
 | manifest | `assets/store/android-screenshots/manifest.json` |
 | 준비 완료 파일 | 5/5 |
@@ -27,7 +27,7 @@
 
 ## 3. Issues
 
-- screenshot plan build id mismatch: expected 802540a2-77a2-40cb-9b3b-15d9b3984ae2
+- screenshot plan build id mismatch: expected N/A - local Gradle release APK
 
 ## 4. 확인 명령
 

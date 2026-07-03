@@ -161,8 +161,13 @@ function value(text, label) {
 
 function splitBuild(raw) {
   const normalized = normalize(raw);
-  const [id = "", status = ""] = normalized.split("/").map((part) => part.trim());
-  return { id, status };
+  const separator = " / ";
+  const separatorIndex = normalized.lastIndexOf(separator);
+  if (separatorIndex === -1) return { id: normalized, status: "" };
+  return {
+    id: normalized.slice(0, separatorIndex).trim(),
+    status: normalized.slice(separatorIndex + separator.length).trim(),
+  };
 }
 
 function normalize(raw) {

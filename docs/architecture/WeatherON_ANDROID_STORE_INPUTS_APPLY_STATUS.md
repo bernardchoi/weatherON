@@ -1,6 +1,6 @@
 # WeatherON Android Store Inputs Apply Status
 
-> 생성일: 2026-06-30
+> 생성일: 2026-07-03
 > 목적: Google Play 제출 입력값 적용 상태와 실행 방법을 추적한다.
 
 ## 1. 현재 상태

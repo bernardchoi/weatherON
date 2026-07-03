@@ -17,21 +17,34 @@ const apkQa = readFileSync(apkQaPath, "utf8");
 const session = readFileSync(sessionPath, "utf8");
 const buildStatusDoc = readFileSync(buildStatusPath, "utf8");
 const packet = readFileSync(packetPath, "utf8");
+const appConfig = JSON.parse(readFileSync(join(rootDir, "apps/mobile/app.json"), "utf8")).expo;
+const sourceVersion = `${appConfig.version} (${appConfig.android.versionCode})`;
 
 const buildId = tableValue(buildStatusDoc, "EAS build id").replaceAll("`", "");
 const buildStatus = tableValue(buildStatusDoc, "Build 상태").replaceAll("`", "");
 const artifact = tableValue(buildStatusDoc, "APK artifact");
 const packetBuildId = tableValue(packet, "EAS build id").replaceAll("`", "");
+const packetBuildStatus = tableValue(packet, "Build 상태").replaceAll("`", "");
+const packetVersion = tableValue(packet, "Version").replaceAll("`", "");
+const packetSourceVersion = tableValue(packet, "소스 기준 Version").replaceAll("`", "");
+const packetArtifact = tableValue(packet, "APK artifact").replaceAll("`", "");
 
-assert.match(buildId, /^[0-9a-f-]{36}$/);
-assert.equal(buildStatus, "FINISHED");
-assert.match(artifact, /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.apk$/);
-assert.equal(packetBuildId, buildId, "device QA packet must target latest build status id");
-assert.ok(packet.includes(artifact), "device QA packet must include latest APK artifact URL");
+if (packetBuildId === "N/A - local Gradle release APK") {
+  assert.equal(packetBuildStatus, "LOCAL BUILD SUCCESS");
+  assert.equal(packetVersion, sourceVersion);
+  assert.equal(packetSourceVersion, sourceVersion);
+  assert.equal(packetArtifact, "apps/mobile/android/app/build/outputs/apk/release/app-release.apk");
+} else {
+  assert.match(buildId, /^[0-9a-f-]{36}$/);
+  assert.equal(buildStatus, "FINISHED");
+  assert.match(artifact, /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.apk$/);
+  assert.equal(packetBuildId, buildId, "device QA packet must target latest build status id");
+  assert.ok(packet.includes(artifact), "device QA packet must include latest APK artifact URL");
+}
 
 for (const snippet of [
-  buildId,
-  artifact,
+  packetBuildId === "N/A - local Gradle release APK" ? sourceVersion : buildId,
+  packetBuildId === "N/A - local Gradle release APK" ? packetArtifact : artifact,
   "EAS archive 업로드",
   "62.6 MB",
   "D1",
@@ -40,7 +53,7 @@ for (const snippet of [
   "Tokyo Station",
   "도쿄 역",
   "東京駅",
-  "마리나 베이",
+  "센트럴 파크",
   "앱 화면 문구로 노출하지 않는다",
   "D13 알림 신뢰성 상세 케이스",
   "테스트 알림",

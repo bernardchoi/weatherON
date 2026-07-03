@@ -1,19 +1,19 @@
 # WeatherON Android Manual Action Packet
 
-> 생성일: 2026-07-02
+> 생성일: 2026-07-03
 > 목적: 자동 빌드/검증 이후 사람이 직접 처리해야 하는 Android 출시 액션을 한 장으로 유지한다.
 
 ## 1. 현재 출시 상태
 
 | 항목 | 값 |
 |---|---|
-| preview APK build | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
-| APK artifact | https://expo.dev/artifacts/eas/c5GZmnH_LlJTr8f3ysnwjX1BTjQGcoiUcfL1DEOayd4.apk |
+| preview APK build | `N/A - local Gradle release APK` |
+| APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | production AAB build | `90912651-fc84-47d0-91ce-9be096c2ff05` |
 | production AAB 상태 | FINISHED |
 | AAB artifact | https://expo.dev/artifacts/eas/qCf2bVWNWVs_bgzWZlbMvlacPn0Y3OyxPo0rUvSQHa4.aab |
 | Play 제출 blocker | 17 |
-| 실기기 QA 미검증 | 8 |
+| 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 1 |
 | Play 입력값 누락 | 9 |
 | 폐쇄 테스트 대기 항목 | 13 |
@@ -23,7 +23,7 @@
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
 | 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 APK 재설치 후 D1~D13 판정 | 8개 미검증 |
+| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 1개 issue |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
@@ -40,22 +40,22 @@
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
 | D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
 | D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
-| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 미검증 | 최신 빌드 기준 앱 재실행 후 목적지/설정 상태 유지 미실행 |
-| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 미검증 | 최신 빌드 기준 Android 뒤로가기 QA 미실행 |
-| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 미검증 | 최신 빌드 기준 위치 허용 플로우 미실행 |
-| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 미검증 | 최신 빌드 기준 위치 거부 fallback 미실행 |
-| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 미검증 | 최신 빌드 기준 목적지 검색/선택 실기기 QA 미실행 |
-| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 미검증 | 최신 빌드 기준 작은 화면/긴 텍스트 실기기 QA 미실행 |
-| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 미검증 | 최신 빌드 기준 라이트/다크 대비 QA 미실행 |
-| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 미검증 | 최신 빌드 기준 오프라인 상태 QA 미실행 |
-| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 보류 | 알림 권한 허용, 권한 정상/예약 완료/예약 1건, 테스트 알림 1건 발송 예약, 앱 단독 crash/log 오류 없음 확인. 시스템 알림 수신/알림 탭 딥링크는 다른 앱 알림 노출 위험 때문에 자동 확인 보류 |
+| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
+| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
+| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | local release APK 0.1.0 (6)에서 위치 권한 허용 후 홈 상단 실제 지역명 `고양시 덕양구 지축동`, 위치 상태 `현재 위치`, 날씨 카드 표시 확인. crash buffer 비어 있음 |
+| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 통과 | ACCESS_FINE_LOCATION/COARSE_LOCATION revoke 후 홈이 `기본 위치 서울`, 위치 상태 `수동`으로 전환되고 목적지 비교/출발 판단 흐름 유지. crash buffer 비어 있음 |
+| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 통과 | local release APK 0.1.0 (6)에서 잠실/Tokyo Station 검색·선택·저장 확인. 해외 보조 fixture는 중화권 제외 기준에 맞춰 센트럴 파크로 소스 갱신 |
+| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 통과 | 실기기 wm size 720x1600 override에서 홈 주요 카드, 하단 탭, 스크롤 접근성 확인. 가로 overflow/CTA 가림 없음. 이후 1084x2412로 원복 |
+| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 다크/라이트 각각 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. screenshot /tmp/weatheron-d11-dark.png, /tmp/weatheron-d11-light.png 확인. crash buffer 비어 있음 |
+| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
+| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
 | 우선순위 | 입력 | 기대 결과 | 판정 증거 |
 | 1 | `잠실` | 국내 장소 결과 표시, 주소/국가/카테고리 확인 가능 | 결과 카드 선택 후 `목적지 저장하고 비교` 활성 |
 | 1 | `잠실 야구장` | 국내 별칭 검색 결과 표시 | 저장 후 출발 목록/상세에서 같은 목적지 유지 |
 | 2 | `Tokyo Station` | 일본 장소 결과 표시 | 국가/주소/시간대가 해외 장소로 보임 |
 | 2 | `도쿄 역` | 한국어 해외 별칭 검색 결과 표시 | 결과 선택 및 저장 가능 |
 | 2 | `東京駅` | 현지어 검색 결과 표시 | 결과 선택 및 저장 가능 |
-| 2 | `마리나 베이` | 일반 해외 장소 결과 표시 | 결과 선택 및 저장 가능 |
+| 2 | `센트럴 파크` | 일반 해외 장소 결과 표시 | 결과 선택 및 저장 가능 |
 | 단계 | 기대 결과 | 판정 증거 |
 | 권한 허용 | Android 알림 권한 허용 후 M2에서 권한 정상 표시 | M2 권한 태그, Android 앱 알림 권한 상태 |
 | 테스트 발송 | 테스트 알림 버튼 탭 후 예약/발송 이력 표시 | 최근 이력에 `WeatherON 테스트 알림` 또는 발송 상태 기록 |

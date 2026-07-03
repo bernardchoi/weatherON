@@ -6,6 +6,7 @@ import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 export function HomeScreen({
@@ -31,6 +32,7 @@ export function HomeScreen({
   const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
   const currentWeather = state.destinationCare.originWeather;
+  const currentLocationName = getDisplayLocationName(currentWeather.locationName);
   const current = currentWeather.current;
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const sourceLabel = buildWeatherSourceLabel(
@@ -59,7 +61,7 @@ export function HomeScreen({
             onPress={() => onNavigate("H2")}
             style={[styles.locationPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
           >
-            <Text style={[styles.locationText, { color: theme.text }]} numberOfLines={1}>{currentWeather.locationName}</Text>
+            <Text style={[styles.locationText, { color: theme.text }]} numberOfLines={1}>{currentLocationName}</Text>
             <Text style={[styles.locationChevron, { color: theme.subtle }]}>▾</Text>
           </Pressable>
           <NotificationBellButton
@@ -192,6 +194,7 @@ function buildHomeDecision(
   const travelMinutes = care.departureAdvice?.travelMinutes ?? 40;
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   const departureTime = care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+  const routeStatusLabel = getRouteStatusLabel(care.departureAdvice?.travelStatus);
   const destinationDiff = destinationReady
     ? buildDestinationDiff(care, temperatureUnit)
     : {
@@ -207,12 +210,18 @@ function buildHomeDecision(
 
   return {
     departureTime,
-    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 반영` : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
+    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 · ${routeStatusLabel}` : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
     destinationTitle: destinationDiff.title,
-    destinationBody: destinationReady ? `${care.name} · ${destinationDiff.body}` : destinationDiff.body,
+    destinationBody: destinationDiff.body,
     rainTitle: rainWindow.title,
     rainBody: destinationReady ? rainWindow.body : rainWindow.body,
   };
+}
+
+function getRouteStatusLabel(status?: NonNullable<P0ScreenProps["state"]["destinationCare"]["departureAdvice"]>["travelStatus"]) {
+  if (status === "ready") return "경로 확인";
+  if (status === "error") return "경로 갱신 실패";
+  return "경로 미검증";
 }
 
 function buildDestinationDiff(
@@ -234,7 +243,7 @@ function buildDestinationDiff(
   ];
   return {
     title: titleParts.join(" · "),
-    body: `${care.originWeather.locationName} 대비 ${diffParts.join(" · ")} · 목적지 기준 준비`,
+    body: `${getDisplayLocationName(care.originWeather.locationName)} 대비 ${diffParts.join(" · ")} · 목적지 기준 준비`,
   };
 }
 

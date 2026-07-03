@@ -1,6 +1,6 @@
 # WeatherON Android Release Evidence Index
 
-> 생성일: 2026-07-02
+> 생성일: 2026-07-03
 > 목적: Android 출시 준비의 빌드, 검증, 문서 증빙 위치를 한 곳에서 추적한다.
 
 ## 1. 현재 증빙 요약
@@ -9,14 +9,14 @@
 |---|---|
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
-| Android versionCode | `5` |
-| 정적 체크 통과 | 22/23 |
-| preview build | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` / FINISHED |
+| Android versionCode | `6` |
+| 정적 체크 통과 | 23/23 |
+| preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
 | production build | `90912651-fc84-47d0-91ce-9be096c2ff05` / FINISHED |
 | artifact 접근 issue | 0 |
 | Play 제출 blocker | 17 |
-| 실기기 QA 미검증 | 2 |
-| 스토어 스크린샷 issue | 0 |
+| 실기기 QA 미검증 | 0 |
+| 스토어 스크린샷 issue | 1 |
 | 스토어 스크린샷 준비 | 5/5 |
 | Play 입력값 누락 | 9 |
 | 스토어 입력값 적용 | 미적용 |
@@ -33,7 +33,7 @@
 
 | 대상 | Build ID | 상태 | Artifact |
 |---|---|---|---|
-| Preview APK | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` | FINISHED | https://expo.dev/artifacts/eas/c5GZmnH_LlJTr8f3ysnwjX1BTjQGcoiUcfL1DEOayd4.apk |
+| Preview APK | `N/A - local Gradle release APK` | LOCAL BUILD SUCCESS | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | Production AAB | `90912651-fc84-47d0-91ce-9be096c2ff05` | FINISHED | https://expo.dev/artifacts/eas/qCf2bVWNWVs_bgzWZlbMvlacPn0Y3OyxPo0rUvSQHa4.aab |
 
 ## 3. 검증 명령 증빙

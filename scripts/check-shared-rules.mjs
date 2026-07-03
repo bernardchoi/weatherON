@@ -112,7 +112,7 @@ await writeFile(
     const httpProvider = createWeatherProvider(httpClient, { preferKma: true });
     const gangneungPlace = searchFixturePlaces("강릉")[0];
     const jamsilPlace = searchFixturePlaces("잠실")[0];
-    const marinaPlace = searchFixturePlaces("Marina")[0];
+    const globalPlace = searchFixturePlaces("Central Park")[0];
     const toWeatherLocation = (place) => place.countryCode === "KR"
       ? createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id)
       : {
@@ -144,7 +144,7 @@ await writeFile(
         destinationLocations: [toWeatherLocation(gangneungPlace), toWeatherLocation(jamsilPlace)],
       }),
       openMeteoProvider: await httpProvider.getSnapshots("ready", {
-        destinationLocation: toWeatherLocation(marinaPlace),
+        destinationLocation: toWeatherLocation(globalPlace),
       }),
       httpUrls: requestedUrls,
       kmaBaseEarly: getKmaForecastBaseDateTime(new Date("2026-06-26T01:59:00+09:00")),

@@ -170,15 +170,12 @@ const placeSearchQueryAliases: Record<string, string> = {
   "교토": "Kyoto",
   "삿포로": "Sapporo",
   "후쿠오카": "Fukuoka",
-  "싱가포르": "Singapore",
-  "마리나베이": "Marina Bay",
-  "마리나 베이": "Marina Bay",
   "방콕": "Bangkok",
-  "타이베이": "Taipei",
-  "홍콩": "Hong Kong",
   "파리": "Paris",
   "런던": "London",
   "뉴욕": "New York",
+  "센트럴파크": "Central Park",
+  "센트럴 파크": "Central Park",
 };
 
 function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"]): PlaceSearchResult[] {

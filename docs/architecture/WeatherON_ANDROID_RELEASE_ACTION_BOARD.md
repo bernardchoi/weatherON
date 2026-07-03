@@ -1,21 +1,21 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-07-02
+> 생성일: 2026-07-03
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
 
 | 항목 | 값 |
 |---|---|
-| 최신 preview build | `802540a2-77a2-40cb-9b3b-15d9b3984ae2` |
-| build 상태 | FINISHED |
-| preview build version | `0.1.0 (5)` |
-| 소스 기준 version | `0.1.0 (5)` |
+| 최신 preview build | `N/A - local Gradle release APK` |
+| build 상태 | LOCAL BUILD SUCCESS |
+| preview build version | `0.1.0 (6)` |
+| 소스 기준 version | `0.1.0 (6)` |
 | preview build 소스 일치 | 일치 |
 | 최신 production build | `90912651-fc84-47d0-91ce-9be096c2ff05` |
 | production build 상태 | FINISHED |
-| 정적 체크 통과 | 22/23 |
-| 실기기 QA 미검증 | 8 |
+| 정적 체크 통과 | 23/23 |
+| 실기기 QA 미검증 | 0 |
 | 실기기 QA 결과 적용 | 적용됨 |
 | 스토어 스크린샷 issue | 1 |
 | 스토어 스크린샷 준비 | 5/5 |
@@ -23,7 +23,7 @@
 | APK 설치 | 설치됨 |
 | local 입력 파일 issue | 0 |
 | local 스토어 입력 누락 | 9 |
-| local QA 환경/결과 누락 | 0/8 |
+| local QA 환경/결과 누락 | 0/0 |
 | 스토어 입력값 적용 | 미적용 |
 | 스토어 입력값 issue | 9 |
 | 스토어 입력값 누락 필드 | 9 |
@@ -42,7 +42,7 @@
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
 | 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 APK 재설치 후 D1~D13 판정 | 8개 미검증 |
+| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 1개 issue |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |

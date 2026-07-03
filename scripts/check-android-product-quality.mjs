@@ -30,6 +30,7 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "originCountryCode: originLocation.countryCode",
   "setRoute(persistedState.onboardingCompleted ? \"H1\" : \"O1\")",
   "startAccountGate",
+  "const result = await requestDeviceWeatherLocation()",
   "account-connect",
   'if (reason === "account-connect") return "계정 연결"',
   'setRoute(accountLinked ? "A3" : "A2")',
@@ -40,6 +41,16 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'setRoute("M1");',
   "styleProfileReturnRoute",
   'if (nextRoute === "O4" && isP0Route(route))',
+]);
+
+assertSourceIncludes("apps/mobile/src/utils/locationDisplay.ts", [
+  "getDisplayLocationName",
+  "isGenericCurrentLocationName",
+  'normalized === "현재 위치"',
+  '"내 위치 주변"',
+]);
+assertSourceIncludes("apps/mobile/src/providers/weatherLocations.ts", [
+  'locationName = "내 위치 주변"',
 ]);
 
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", ["BackHandler", "goBack"]);
@@ -169,6 +180,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   'onNavigate("G3")',
   "여행 플래너 열기",
+  "목적지 검색 추가",
+  "목적지 검색 · 추가",
+  "searchRail",
   "handleNestedAction",
   "onRemoveSavedDestination",
   "목적지 삭제\"",
@@ -281,7 +295,7 @@ assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
 assertSourceIncludes("packages/shared/src/fixtures/placeSearchFixtures.ts", [
   "도쿄 역",
   "東京駅",
-  "마리나 베이",
+  "센트럴 파크",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
   "오늘 준비",

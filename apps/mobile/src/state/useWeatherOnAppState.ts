@@ -258,6 +258,24 @@ export function useWeatherOnAppState() {
     setPermissionReady(result.granted);
   }, []);
 
+  const reconcileDeviceLocationPermission = useCallback(async () => {
+    if (!locationReady && weatherLocationMode !== "auto") return;
+    const result = await syncDeviceWeatherLocationPermission();
+    setDeviceLocationState(result);
+    if (result.status === "granted" && result.location) {
+      setLocationReady(true);
+      setDeviceWeatherLocation(result.location);
+      return;
+    }
+    setLocationReady(false);
+    setDeviceWeatherLocation(null);
+    if (weatherLocationMode === "auto") {
+      setWeatherLocationMode("manual");
+      setUseDestinationWeather(false);
+      setWeatherRefreshTick((value) => value + 1);
+    }
+  }, [locationReady, weatherLocationMode]);
+
   useEffect(() => {
     let active = true;
     Promise.all([readPersistedWeatherProviderResult(), readPersistedAppState()])
@@ -433,13 +451,17 @@ export function useWeatherOnAppState() {
   useEffect(() => {
     if (!appStateHydrated) return;
     void reconcileNotificationPermission();
+    void reconcileDeviceLocationPermission();
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") void reconcileNotificationPermission();
+      if (nextState === "active") {
+        void reconcileNotificationPermission();
+        void reconcileDeviceLocationPermission();
+      }
     });
     return () => {
       subscription.remove();
     };
-  }, [appStateHydrated, reconcileNotificationPermission]);
+  }, [appStateHydrated, reconcileDeviceLocationPermission, reconcileNotificationPermission]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -835,6 +857,7 @@ export function useWeatherOnAppState() {
       return;
     }
     const result = await scheduleLocalNotificationTest();
+    setNotificationDeliveryStatus(result);
     setNotificationHistory((current) =>
       addNotificationHistoryItem(current, {
         id: createNotificationHistoryId("local-test", "sent"),
@@ -1164,8 +1187,20 @@ export function useWeatherOnAppState() {
           setDeviceWeatherLocation(null);
           setWeatherLocationMode("manual");
         }
-      } else {
+      } else if (deviceWeatherLocation) {
         setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation ?? seongsuWeatherLocation });
+      } else {
+        const result = await requestDeviceWeatherLocation();
+        permissionCompleted = result.status === "granted";
+        setDeviceLocationState(result);
+        if (permissionCompleted && result.location) {
+          setLocationReady(true);
+          setDeviceWeatherLocation(result.location);
+        } else {
+          setLocationReady(false);
+          setDeviceWeatherLocation(null);
+          setWeatherLocationMode("manual");
+        }
       }
       setWeatherRefreshTick((value) => value + 1);
     }

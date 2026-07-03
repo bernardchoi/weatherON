@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { get as httpsGet } from "node:https";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 
 const rootDir = process.cwd();
 const buildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD_STATUS.md");
@@ -13,7 +13,11 @@ const adbCommand = resolveAdbCommand();
 const buildStatus = existsSync(buildStatusPath) ? readFileSync(buildStatusPath, "utf8") : "";
 const buildId = normalizeTableValue(tableValue(buildStatus, "EAS build id"));
 const buildState = normalizeTableValue(tableValue(buildStatus, "Build 상태"));
+const buildVersion = normalizeTableValue(tableValue(buildStatus, "Version"));
 const artifactUrl = normalizeTableValue(tableValue(buildStatus, "APK artifact"));
+const isLocalReleaseBuild = buildId === "N/A - local Gradle release APK" && buildState === "LOCAL BUILD SUCCESS";
+const isRemoteArtifact = artifactUrl.startsWith("https://");
+const localArtifactPath = isRemoteArtifact ? "" : resolveLocalArtifactPath(artifactUrl);
 
 const issues = [];
 let selectedDevice = "";
@@ -21,8 +25,12 @@ let installStatus = "미실행";
 let apkPath = "";
 
 if (!buildId) issues.push("build id missing in WeatherON_ANDROID_BUILD_STATUS.md");
-if (buildState !== "FINISHED") issues.push(`build is not FINISHED: ${buildState || "unknown"}`);
-if (!artifactUrl || artifactUrl === "미생성" || !artifactUrl.startsWith("https://")) issues.push("APK artifact URL is missing");
+if (buildState !== "FINISHED" && !isLocalReleaseBuild) issues.push(`build is not FINISHED: ${buildState || "unknown"}`);
+if (!artifactUrl || artifactUrl === "미생성") {
+  issues.push("APK artifact is missing");
+} else if (!isRemoteArtifact && !existsSync(localArtifactPath)) {
+  issues.push(`local APK artifact missing: ${localArtifactPath}`);
+}
 
 const devices = listAdbDevices();
 const readyDevices = devices.filter((device) => device.state === "device");
@@ -30,9 +38,14 @@ if (readyDevices.length === 0) issues.push("no Android device detected by adb");
 if (readyDevices.length > 1 && !process.env.ANDROID_SERIAL) issues.push("multiple Android devices connected. Set ANDROID_SERIAL.");
 selectedDevice = process.env.ANDROID_SERIAL || readyDevices[0]?.id || "";
 
+if (issues.length === 0 && reportOnly) {
+  apkPath = localArtifactPath || "";
+  installStatus = isExpectedPackageInstalled(selectedDevice, buildVersion) ? "설치됨" : "설치 가능";
+}
+
 if (issues.length === 0 && !reportOnly) {
-  apkPath = join(tmpdir(), `weatheron-${buildId}.apk`);
-  await downloadFile(artifactUrl, apkPath);
+  apkPath = isRemoteArtifact ? join(tmpdir(), `weatheron-${buildId}.apk`) : localArtifactPath;
+  if (isRemoteArtifact) await downloadFile(artifactUrl, apkPath);
   const installResult = spawnSync(adbCommand, ["-s", selectedDevice, "install", "-r", apkPath], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
@@ -115,6 +128,24 @@ function normalizeTableValue(value) {
   return value.replace(/^`|`$/g, "").trim();
 }
 
+function resolveLocalArtifactPath(value) {
+  if (!value) return "";
+  return isAbsolute(value) ? value : join(rootDir, value);
+}
+
+function isExpectedPackageInstalled(deviceId, expectedVersion) {
+  if (!deviceId || !expectedVersion) return false;
+  const expected = expectedVersion.match(/^(.+?)\s*\((\d+)\)$/);
+  if (!expected) return false;
+  const [, versionName, versionCode] = expected;
+  const result = spawnSync(adbCommand, ["-s", deviceId, "shell", "dumpsys", "package", "com.weatheron.mobile"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.status !== 0) return false;
+  return result.stdout.includes(`versionName=${versionName}`) && result.stdout.includes(`versionCode=${versionCode}`);
+}
+
 function kstDate() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
@@ -139,6 +170,7 @@ function writeReport() {
 | issue 수 | ${issues.length} |
 | EAS build id | \`${buildId || "미확인"}\` |
 | Build 상태 | ${buildState || "미확인"} |
+| Version | ${buildVersion || "미확인"} |
 | APK artifact | ${artifactUrl || "미확인"} |
 | 선택 기기 | ${selectedDevice || "없음"} |
 | adb 경로 | ${adbCommand} |
@@ -167,6 +199,7 @@ WEATHERON_INSTALL_REPORT_ONLY=1 npm run install:android-preview-apk
 
 function nextActions() {
   if (issues.length === 0) {
+    if (reportOnly && installStatus === "설치됨") return "- 대상 기기에 기대 버전 설치가 확인됐다.";
     if (reportOnly) return "- 설치 가능 상태다. 실제 설치는 `npm run install:android-preview-apk`로 실행한다.";
     return "- 설치 완료 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`에 실기기 QA 결과를 기록한다.";
   }

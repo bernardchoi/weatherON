@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Apply Status
 
-> 생성일: 2026-07-02
+> 생성일: 2026-07-03
 > 목적: 실기기 QA 결과 JSON 적용 상태와 실행 방법을 추적한다.
 
 ## 1. 현재 상태
@@ -10,13 +10,13 @@
 | 적용 여부 | 적용됨 |
 | 입력 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json |
 | 샘플 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.example.json |
-| 기대 build id | 802540a2-77a2-40cb-9b3b-15d9b3984ae2 |
-| 기대 app version | 0.1.0 (5) |
+| 기대 build id | N/A - local Gradle release APK |
+| 기대 app version | 0.1.0 (6) |
 | issue 수 | 0 |
-| 통과 | 4 |
+| 통과 | 13 |
 | 실패 | 0 |
-| 보류 | 3 |
-| 미검증 | 8 |
+| 보류 | 2 |
+| 미검증 | 0 |
 
 ## 2. Issues
 

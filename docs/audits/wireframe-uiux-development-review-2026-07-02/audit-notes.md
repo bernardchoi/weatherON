@@ -75,4 +75,4 @@
 - Fresh mobile screenshots for onboarding, MY, M4 app permissions, M3 display settings, destination detail.
 - TalkBack/focus order check for MY menu rows and settings segments.
 - Native D13 notification receive/deep-link check.
-- Real-device destination search QA: `잠실`, `잠실 야구장`, `Tokyo Station`, `도쿄 역`, `東京駅`, `마리나 베이`.
+- Real-device destination search QA: `잠실`, `잠실 야구장`, `Tokyo Station`, `도쿄 역`, `東京駅`, `센트럴 파크`.

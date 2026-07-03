@@ -146,7 +146,7 @@ function inferPlaceSearchCountryCode(query) {
   if (!text) return "KR";
   const jpKeywords = ["tokyo", "osaka", "kyoto", "sapporo", "fukuoka", "japan", "도쿄", "오사카", "교토", "삿포로", "후쿠오카", "일본", "東京", "大阪", "京都"];
   if (jpKeywords.some((keyword) => text.includes(keyword.toLowerCase()))) return "JP";
-  const globalKeywords = ["singapore", "marina bay", "bangkok", "taipei", "hong kong", "paris", "london", "new york", "싱가포르", "방콕", "타이베이", "홍콩", "파리", "런던", "뉴욕"];
+  const globalKeywords = ["bangkok", "paris", "london", "new york", "central park", "방콕", "파리", "런던", "뉴욕", "센트럴파크", "센트럴 파크"];
   if (globalKeywords.some((keyword) => text.includes(keyword.toLowerCase()))) return "GLOBAL";
   if (/[a-z]/.test(text) && !/[가-힣]/.test(text)) return "GLOBAL";
   return "KR";
@@ -180,19 +180,16 @@ const placeSearchQueryAliases = {
   "교토": "Kyoto",
   "삿포로": "Sapporo",
   "후쿠오카": "Fukuoka",
-  "싱가포르": "Singapore",
-  "마리나베이": "Marina Bay",
-  "마리나 베이": "Marina Bay",
   "잠실 야구장": "잠실야구장",
   "잠실야구장": "Jamsil Baseball Stadium",
   "잠실종합운동장": "잠실야구장",
   "jamsil stadium": "Jamsil Baseball Stadium",
   "방콕": "Bangkok",
-  "타이베이": "Taipei",
-  "홍콩": "Hong Kong",
   "파리": "Paris",
   "런던": "London",
   "뉴욕": "New York",
+  "센트럴파크": "Central Park",
+  "센트럴 파크": "Central Park",
 };
 
 async function searchKakaoPlaces(query, env) {
@@ -407,13 +404,13 @@ const placeSearchFixtures = [
     provider: "fixture",
   },
   {
-    id: "global-singapore-marina-bay",
-    name: "Marina Bay",
-    address: "Marina Bay, Singapore",
+    id: "global-new-york-central-park",
+    name: "Central Park",
+    address: "Central Park, New York",
     category: "custom",
     countryCode: "GLOBAL",
-    coordinate: { latitude: 1.2834, longitude: 103.8607 },
-    timezone: "Asia/Singapore",
+    coordinate: { latitude: 40.7829, longitude: -73.9654 },
+    timezone: "America/New_York",
     provider: "fixture",
   },
 ];

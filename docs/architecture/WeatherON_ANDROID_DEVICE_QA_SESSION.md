@@ -18,9 +18,9 @@
 | App version | `0.1.0 (6)` |
 | Public proxy | `https://weatheron-api.weatheron.workers.dev` |
 | 사전 체크 | `npx tsc -p apps/mobile/tsconfig.json --noEmit`, `WEATHERON_PLACE_SMOKE=1 npm run check:place-search`, `./gradlew :app:assembleRelease --console=plain` 통과 |
-| 설치 방식 | EAS 업로드 승인은 보류. local release APK를 ADB install -r로 설치 |
+| 설치 방식 | ADB install release APK |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-02 16:50 KST |
+| 테스트 일시 | 2026-07-03 12:48 KST |
 
 ### 이전 QA 기준
 
@@ -47,8 +47,8 @@
 | Android 버전 | 16 |
 | 화면 크기 | 1084x2412 |
 | 네트워크 | Wi-Fi |
-| 설치 방식 | 기존 서명 불일치 앱 삭제 후 npm run install:android-preview-apk / ADB install |
-| 테스트 일시 | 2026-07-02 12:50 KST |
+| 설치 방식 | ADB install release APK |
+| 테스트 일시 | 2026-07-03 12:48 KST |
 
 ---
 
@@ -62,15 +62,15 @@
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
 | D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
 | D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
-| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 미검증 | 최신 빌드 기준 앱 재실행 후 목적지/설정 상태 유지 미실행 |
-| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 미검증 | 최신 빌드 기준 Android 뒤로가기 QA 미실행 |
-| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 미검증 | 최신 빌드 기준 위치 허용 플로우 미실행 |
-| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 미검증 | 최신 빌드 기준 위치 거부 fallback 미실행 |
-| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 통과 | A142 local APK `0.1.0 (6)`에서 `jamsil` 검색 시 `잠실야구장 · 한국 · 추천` 선택/저장/상세/출발 목록 반영 확인. `TokyoStation` 검색 시 `도쿄역 · 일본 · 추천` 선택/저장/상세/홈 비교 반영 확인. 키보드 오픈 상태에서 footer CTA 숨김으로 결과 선택 가림 해소 확인. 한글 직접 입력은 ADB IME 한계로 소스 스모크(`잠실`)로 보조 검증 |
-| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 미검증 | 최신 빌드 기준 작은 화면/긴 텍스트 실기기 QA 미실행 |
-| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 미검증 | 최신 빌드 기준 라이트/다크 대비 QA 미실행 |
-| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 미검증 | 최신 빌드 기준 오프라인 상태 QA 미실행 |
-| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | `POST_NOTIFICATIONS granted=true`. 테스트 알림 발송 후 5초 내 `weatheron:test:*` 게시 확인, M2가 `스마트 알림 확인됨`, `수신 확인/탭 확인` 상태로 갱신됨. 알림 탭 후 WeatherON foreground 및 `스마트 알림 설정` 도착 확인, `weatheron:test:*` 잔존 없음 확인 |
+| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
+| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
+| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | local release APK 0.1.0 (6)에서 위치 권한 허용 후 홈 상단 실제 지역명 `고양시 덕양구 지축동`, 위치 상태 `현재 위치`, 날씨 카드 표시 확인. crash buffer 비어 있음 |
+| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 통과 | ACCESS_FINE_LOCATION/COARSE_LOCATION revoke 후 홈이 `기본 위치 서울`, 위치 상태 `수동`으로 전환되고 목적지 비교/출발 판단 흐름 유지. crash buffer 비어 있음 |
+| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 통과 | local release APK 0.1.0 (6)에서 잠실/Tokyo Station 검색·선택·저장 확인. 해외 보조 fixture는 중화권 제외 기준에 맞춰 센트럴 파크로 소스 갱신 |
+| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 통과 | 실기기 wm size 720x1600 override에서 홈 주요 카드, 하단 탭, 스크롤 접근성 확인. 가로 overflow/CTA 가림 없음. 이후 1084x2412로 원복 |
+| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 다크/라이트 각각 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. screenshot /tmp/weatheron-d11-dark.png, /tmp/weatheron-d11-light.png 확인. crash buffer 비어 있음 |
+| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
+| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
 
 ---
 
@@ -85,7 +85,7 @@
 | 2 | `Tokyo Station` | 일본 장소 결과 표시 | 소스 보정 완료. fixture/Open-Meteo/proxy fallback에서 `도쿄역`, 주소, `JP`, `Asia/Tokyo` 우선 후보 병합 |
 | 2 | `도쿄 역` | 한국어 해외 별칭 검색 결과 표시 | 소스 보정 완료. `Tokyo Station` 별칭으로 정규화 |
 | 2 | `東京駅` | 현지어 검색 결과 표시 | 소스 보정 완료. `Tokyo Station` 별칭으로 정규화 |
-| 2 | `마리나 베이` | 일반 해외 장소 결과 표시 | 소스 보정 완료. `Marina Bay`, 주소, `GLOBAL`, `Asia/Singapore` 후보 병합 |
+| 2 | `센트럴 파크` | 일반 해외 장소 결과 표시 | 소스 보정 완료. `Central Park`, 주소, `GLOBAL`, `America/New_York` 후보 병합 |
 
 > QA 기준은 국내 장소를 먼저 확인하고 해외/현지어는 보조 확인한다. 이 기준은 테스트 순서일 뿐 앱 화면 문구로 노출하지 않는다.
 
@@ -190,3 +190,4 @@ npm run report:android-release-action-board
 | 2026-07-02 | D9 목적지 검색과 D13 알림 신뢰성 상세 판정 기준 추가 |
 | 2026-07-02 | D9 검색 보정 및 D13 테스트 알림 dismiss 소스 보강 |
 | 2026-07-02 | local release APK `0.1.0 (6)` 기준 D9/D13 재검증 통과. D9 키보드 footer 가림, D13 수신/탭 상태 표시와 테스트 알림 잔존 문제 수정 |
+| 2026-07-03 | local release APK `0.1.0 (6)` 재빌드/재설치 후 D7/D8/D10/D11/D12/D13 최신 설치본 기준 재판정 통과. 위치/알림 권한, 네트워크, 화면 크기, 라이트 모드 원복 확인 || 2026-07-03 | 실기기 QA 결과 JSON 반영 |

@@ -4,6 +4,7 @@ import type { WeatherSnapshot } from "@weatheron/shared";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 import type { TemperatureUnit } from "../state/useWeatherOnAppState";
+import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 type WeatherSummaryProps = {
@@ -122,7 +123,7 @@ function WeatherMiniCard({
         <Text style={[styles.miniLabel, { color: theme.subtle }]}>{label}</Text>
       </View>
       <Text style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
-        {locationName ?? weather.locationName}
+        {locationName ?? getDisplayLocationName(weather.locationName)}
       </Text>
       <View style={styles.miniMain}>
         <Text style={[styles.miniTemp, { color: theme.text }]}>{formatTemperature(weather.current.feelsLikeC, temperatureUnit, { suffix: true })}</Text>

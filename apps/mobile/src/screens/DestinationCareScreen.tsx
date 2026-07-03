@@ -4,6 +4,7 @@ import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatDistance, formatTemperature } from "../utils/units";
 
 export function DestinationCareScreen({
@@ -145,7 +146,7 @@ export function DestinationCareScreen({
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
           <CompareRow label="기온" from={formatTemperature(originWeather.current.tempC, temperatureUnit)} to={formatTemperature(destinationWeather.current.tempC, temperatureUnit)} accent={theme.text} theme={theme} />
           <CompareRow label="날씨" from={getConditionLabel(originWeather.current.condition)} to={getConditionLabel(destinationWeather.current.condition)} accent={theme.text} theme={theme} />
-          <CompareRow label="출발지" from={originWeather.locationName} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
+          <CompareRow label="출발지" from={getDisplayLocationName(originWeather.locationName)} to={selectedDestinationPlace?.name ?? destinationWeather.locationName} accent={theme.text} theme={theme} />
           <CompareRow label="강수" from={`${originRain}%`} to={`${destinationRain}%`} accent={destinationRain > originRain ? theme.warm : theme.clear} theme={theme} />
         </View>
 
