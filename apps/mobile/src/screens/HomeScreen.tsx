@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
-import { uiIconAssets } from "../assets";
+import { outfitImageAssets, uiIconAssets } from "../assets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
@@ -9,6 +9,10 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
+
+// 코디 홈 카드는 출시 직전 이 플래그만 켜서 노출한다.
+const HOME_OUTFIT_CARD_VISIBLE = false;
+const HOME_OUTFIT_FALLBACK_IMAGE = "assets/outfits/weatheron-outfit-light-rain-jacket-v1.png";
 
 export function HomeScreen({
   state,
@@ -37,12 +41,6 @@ export function HomeScreen({
   const currentLocationName = getDisplayLocationName(currentWeather.locationName);
   const current = currentWeather.current;
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
-  const sourceLabel = buildWeatherSourceLabel(
-    state.weatherProvider.currentSource,
-    state.weatherProvider.destinationSource,
-    state.weatherProvider.fallbackUsed,
-  );
-  const updatedAtLabel = buildWeatherUpdatedAtLabel(state.weatherProvider.currentObservedAt, state.weatherProvider.destinationObservedAt);
 
   return (
     <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
@@ -84,48 +82,48 @@ export function HomeScreen({
             theme={theme}
             onOpenForecast={() => onNavigate("H6")}
           />
-          <View style={styles.quickActionGrid}>
-            <HomeQuickAction
-              label="목적지 비교"
-              title={destinationReady ? homeDecision.destinationTitle : "목적지 추가 필요"}
-              body={destinationReady ? state.destinationCare.name : "출발지와 날씨 비교"}
-              accent={theme.sky}
-              icon={uiIconAssets.pin}
+          <View style={styles.visualDecisionGrid}>
+            <VisualDecisionCard
+              label="나갈 시간"
+              value={homeDecision.departureTime}
+              helper={destinationReady ? "도착 역산" : "목적지 추가"}
+              accent={theme.gold}
+              icon={uiIconAssets.depart}
               theme={theme}
               onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
             />
-            <HomeQuickAction
-              label="강수 타임라인"
-              title={homeDecision.rainTitle}
-              body={homeDecision.rainBody}
-              accent={theme.clear}
+            <VisualDecisionCard
+              label="비 그침"
+              value={homeDecision.rainCompactTitle}
+              helper={homeDecision.rainCompactBody}
+              accent={theme.sky}
               icon={uiIconAssets.rain}
               theme={theme}
               onPress={() => onNavigate("H5")}
             />
+            <VisualDecisionCard
+              label="챙길 것"
+              value={homeDecision.packTitle}
+              helper={homeDecision.packBody}
+              accent={theme.clear}
+              icon={homeDecision.packIcon}
+              theme={theme}
+              onPress={() => onNavigate("H4")}
+            />
           </View>
+          {HOME_OUTFIT_CARD_VISIBLE ? (
+            <HomeOutfitPreviewCard
+              outfit={state.outfit}
+              packTitle={homeDecision.packTitle}
+              packBody={homeDecision.packBody}
+              theme={theme}
+              onPress={() => onNavigate("C1")}
+            />
+          ) : null}
         </View>
 
         <View style={styles.cardStack}>
-          <View style={[styles.syncCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.syncCopy}>
-              <Text style={[styles.syncLabel, { color: theme.clear }]}>준비 기준</Text>
-              <Text style={[styles.syncTitle, { color: theme.text }]}>{smartCareEnabled ? "개인화 기준 적용 중" : "게스트 기준 적용 중"}</Text>
-              <Text style={[styles.syncBody, { color: theme.muted }]}>
-                위치 {locationStatus.value} · 알림 {permissionReady ? "맞춤 케어" : "설정 전"} · {sourceLabel} · {updatedAtLabel}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityLabel="날씨 새로고침"
-              accessibilityRole="button"
-              disabled={isWeatherLoading}
-              onPress={onRefreshWeather}
-              style={[styles.refreshPill, { backgroundColor: `${theme.clear}18`, borderColor: `${theme.clear}44`, opacity: isWeatherLoading ? 0.55 : 1 }]}
-            >
-              <Text style={[styles.refreshPillText, { color: theme.clear }]}>{isWeatherLoading ? "갱신 중" : "갱신"}</Text>
-            </Pressable>
-          </View>
-          {state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed ? (
+          {!isWeatherLoading && (state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed) ? (
             <WeatherStatusPanel
               status={state.weatherProvider.status}
               message={state.weatherProvider.message}
@@ -191,6 +189,8 @@ function buildHomeDecision(
     : {
         title: "목적지 추가 후 계산",
         body: "저장한 목적지 기준으로 강수 시작과 완화 시점을 계산",
+        compactTitle: "대기",
+        compactBody: "목적지 추가",
       };
 
   return {
@@ -200,6 +200,9 @@ function buildHomeDecision(
     destinationBody: destinationDiff.body,
     rainTitle: rainWindow.title,
     rainBody: destinationReady ? rainWindow.body : rainWindow.body,
+    rainCompactTitle: rainWindow.compactTitle,
+    rainCompactBody: rainWindow.compactBody,
+    ...buildPackDecision(destinationReady ? care.destinationWeather.current : care.originWeather.current),
   };
 }
 
@@ -240,6 +243,8 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
     return {
       title: `최대 강수 ${Math.round(maxRain)}%`,
       body: `${care.name} 기준 ${threshold}% 미만 · 강수 알림은 조용히 대기`,
+      compactTitle: "대기",
+      compactBody: `최대 ${Math.round(maxRain)}%`,
     };
   }
   const firstRain = rainyHours[0];
@@ -247,7 +252,22 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
   return {
     title: `${formatHour(firstRain.time)} 시작 · ${formatHour(lastRain.time)} 완화`,
     body: `${care.name} 강수 ${threshold}% 기준 · 타임라인에서 그침 알림 조정 가능`,
+    compactTitle: formatHour(lastRain.time),
+    compactBody: `${formatHour(firstRain.time)} 시작`,
   };
+}
+
+function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]) {
+  if (weather.rainProbabilityPct >= 50 || weather.precipitationMm > 0) {
+    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella };
+  }
+  if (weather.windMs >= 7) {
+    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt };
+  }
+  if (weather.feelsLikeC <= 5) {
+    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt };
+  }
+  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check };
 }
 
 function subtractMinutes(time: string, minutes: number) {
@@ -268,30 +288,6 @@ function formatHour(value: string) {
   return `${String(date.getHours()).padStart(2, "0")}:00`;
 }
 
-function buildWeatherSourceLabel(
-  currentSource: P0ScreenProps["state"]["weatherProvider"]["currentSource"],
-  destinationSource: P0ScreenProps["state"]["weatherProvider"]["destinationSource"],
-  fallbackUsed: boolean,
-) {
-  if (fallbackUsed || currentSource === "fallback" || destinationSource === "fallback") return "기본 예보";
-  if (currentSource === "kma" || destinationSource === "kma") return "기상청 예보";
-  if (currentSource === "openmeteo" || destinationSource === "openmeteo") return "실시간 예보";
-  if (currentSource === "cache" || destinationSource === "cache") return "최근 예보";
-  return "예보 연결";
-}
-
-function buildWeatherUpdatedAtLabel(currentObservedAt: string, destinationObservedAt: string) {
-  const currentTime = new Date(currentObservedAt).getTime();
-  const destinationTime = new Date(destinationObservedAt).getTime();
-  const latestTime = Math.max(
-    Number.isFinite(currentTime) ? currentTime : 0,
-    Number.isFinite(destinationTime) ? destinationTime : 0,
-  );
-  if (!latestTime) return "갱신 시각 확인 중";
-  const latest = new Date(latestTime);
-  return `갱신 ${String(latest.getHours()).padStart(2, "0")}:${String(latest.getMinutes()).padStart(2, "0")}`;
-}
-
 function buildForecastPreview(
   weather: P0ScreenProps["state"]["destinationCare"]["originWeather"],
   temperatureUnit: P0ScreenProps["temperatureUnit"],
@@ -306,10 +302,12 @@ function buildForecastPreview(
   }, null);
 
   return {
-    hourlyTitle: nextHour ? `${formatHour(nextHour.time)} · ${formatTemperature(nextHour.tempC, temperatureUnit)}` : "시간별 확인",
-    hourlyBody: rainyHour ? `${formatHour(rainyHour.time)} 강수 ${rainyHour.rainProbabilityPct}%` : "강수 신호 낮음",
-    weeklyTitle: weeklyPeak ? `${formatDateLabel(weeklyPeak.date)} 강수 ${weeklyPeak.rainProbabilityPct}%` : "주간 확인",
-    weeklyBody: daily.length > 1 ? `${daily.length}일 예보 · 최고 ${formatTemperature(Math.max(...daily.map((item) => item.maxTempC)), temperatureUnit)}` : "일별 예보 확인",
+    hourlyLabel: rainyHour ? "다음 비" : "다음 시간",
+    hourlyTitle: rainyHour ? formatHour(rainyHour.time) : nextHour ? formatHour(nextHour.time) : "확인",
+    hourlyBody: rainyHour ? `${rainyHour.rainProbabilityPct}%` : nextHour ? formatTemperature(nextHour.tempC, temperatureUnit) : "대기",
+    weeklyLabel: "주간 강수",
+    weeklyTitle: weeklyPeak ? formatDateLabel(weeklyPeak.date) : "주간",
+    weeklyBody: weeklyPeak ? `${weeklyPeak.rainProbabilityPct}%` : "대기",
   };
 }
 
@@ -383,14 +381,18 @@ function HomeDecisionHero({
     >
       <View style={styles.weatherShowcase}>
         <View style={[styles.weatherHalo, { backgroundColor: theme.cardMuted }]} />
-        <View style={[styles.weatherOrb, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}42` }]}>
-          <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: current.condition === "rain" || current.condition === "storm" ? theme.sky : theme.gold }]} resizeMode="contain" />
+        <View style={styles.weatherPrimaryRow}>
+          <View style={[styles.weatherOrb, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}42` }]}>
+            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: current.condition === "rain" || current.condition === "storm" ? theme.sky : theme.gold }]} resizeMode="contain" />
+          </View>
+          <View style={styles.weatherPrimaryCopy}>
+            <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
+            <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+              {currentLocationName} · 현재 {formatTemperature(current.tempC, temperatureUnit)}
+            </Text>
+          </View>
         </View>
-        <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
-        <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-        <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-          {currentLocationName} · 현재 {formatTemperature(current.tempC, temperatureUnit)}
-        </Text>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
           <Text style={[styles.statusBadgeText, { color: locationTone }]}>{locationStatus.value}</Text>
@@ -418,7 +420,7 @@ function ForecastPreviewRow({
   return (
     <View style={styles.forecastPreviewRow}>
       <ForecastPreviewCard
-        label="시간별 예보"
+        label={preview.hourlyLabel}
         title={preview.hourlyTitle}
         body={preview.hourlyBody}
         icon={uiIconAssets.clock}
@@ -427,7 +429,7 @@ function ForecastPreviewRow({
         onPress={onOpen}
       />
       <ForecastPreviewCard
-        label="주간 예보"
+        label={preview.weeklyLabel}
         title={preview.weeklyTitle}
         body={preview.weeklyBody}
         icon={uiIconAssets.uv}
@@ -463,12 +465,14 @@ function ForecastPreviewCard({
       onPress={onPress}
       style={[styles.forecastPreviewCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
-      <View style={styles.forecastPreviewHeader}>
+      <View style={[styles.forecastPreviewIconFrame, { backgroundColor: `${accent}16` }]}>
         <Image source={icon} style={[styles.forecastPreviewIcon, { tintColor: accent }]} resizeMode="contain" />
-        <Text style={[styles.forecastPreviewLabel, { color: accent }]}>{label}</Text>
       </View>
-      <Text style={[styles.forecastPreviewTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-      <Text style={[styles.forecastPreviewBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
+      <View style={styles.forecastPreviewCopy}>
+        <Text style={[styles.forecastPreviewLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
+        <Text style={[styles.forecastPreviewTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.forecastPreviewBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -482,18 +486,18 @@ function DecisionMetric({ icon, label, theme }: { icon: number; label: string; t
   );
 }
 
-function HomeQuickAction({
+function VisualDecisionCard({
   label,
-  title,
-  body,
+  value,
+  helper,
   accent,
   icon,
   theme,
   onPress,
 }: {
   label: string;
-  title: string;
-  body: string;
+  value: string;
+  helper: string;
   accent: string;
   icon: number;
   theme: AppTheme;
@@ -501,19 +505,66 @@ function HomeQuickAction({
 }) {
   return (
     <Pressable
-      accessibilityLabel={`${label} ${title}`}
+      accessibilityLabel={`${label} ${value}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.quickActionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[styles.visualDecisionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
-      <View style={styles.quickActionHeader}>
-        <Image source={icon} style={[styles.quickActionIcon, { tintColor: accent }]} resizeMode="contain" />
-        <Text style={[styles.quickActionLabel, { color: accent }]}>{label}</Text>
+      <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
+        <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
       </View>
-      <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={2}>{title}</Text>
-      <Text style={[styles.quickActionBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
+      <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.visualDecisionValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+      <Text style={[styles.visualDecisionHelper, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>
     </Pressable>
   );
+}
+
+function HomeOutfitPreviewCard({
+  outfit,
+  packTitle,
+  packBody,
+  theme,
+  onPress,
+}: {
+  outfit: P0ScreenProps["state"]["outfit"];
+  packTitle: string;
+  packBody: string;
+  theme: AppTheme;
+  onPress: () => void;
+}) {
+  const imageSource = getHomeOutfitPreviewImage(outfit);
+  return (
+    <Pressable
+      accessibilityLabel={`오늘 코디 ${outfit.decisionText}`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.homeOutfitCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
+      <View style={styles.homeOutfitCopy}>
+        <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 코디</Text>
+        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={1}>
+          {outfit.decisionText || packTitle}
+        </Text>
+        <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
+          {packBody} · 대표 착장 준비
+        </Text>
+      </View>
+      <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.name === "light" ? "#F8FBFF" : "rgba(248,251,255,0.10)" }]}>
+        {imageSource ? (
+          <Image source={imageSource} style={styles.homeOutfitImage} resizeMode="contain" />
+        ) : (
+          <Image source={uiIconAssets.shirt} style={[styles.homeOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+function getHomeOutfitPreviewImage(outfit: P0ScreenProps["state"]["outfit"]) {
+  const previewItem = Object.values(outfit.items).find((item) => item?.imageUrl && outfitImageAssets[item.imageUrl]);
+  if (previewItem?.imageUrl && outfitImageAssets[previewItem.imageUrl]) return outfitImageAssets[previewItem.imageUrl];
+  return outfitImageAssets[HOME_OUTFIT_FALLBACK_IMAGE];
 }
 
 function getConditionLabel(condition: string) {
@@ -543,7 +594,7 @@ function NotificationBellButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.gold : theme.border }]}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.alert : theme.border }]}
     >
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
@@ -789,7 +840,7 @@ const styles = StyleSheet.create({
   },
   homeContent: {
     minHeight: "100%",
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 130,
@@ -865,12 +916,12 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   decisionStack: {
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingTop: 2,
   },
   decisionHero: {
-    minHeight: 344,
-    gap: spacing.sm,
+    minHeight: 322,
+    gap: spacing.md,
     padding: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -879,55 +930,68 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
   },
   weatherShowcase: {
-    minHeight: 186,
+    minHeight: 150,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    paddingTop: 4,
+    paddingTop: 8,
   },
   weatherHalo: {
     position: "absolute",
-    top: 8,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    opacity: 0.56,
+    top: 2,
+    left: 18,
+    width: 154,
+    height: 154,
+    borderRadius: 77,
+    opacity: 0.5,
+  },
+  weatherPrimaryRow: {
+    width: "100%",
+    minHeight: 128,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    zIndex: 1,
   },
   weatherOrb: {
-    width: 62,
-    height: 62,
+    width: 92,
+    height: 92,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
-    marginBottom: 4,
-    zIndex: 1,
   },
   weatherOrbIcon: {
-    width: 34,
-    height: 34,
+    width: 56,
+    height: 56,
+  },
+  weatherPrimaryCopy: {
+    minWidth: 0,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    flex: 1,
+    maxWidth: 180,
   },
   showcaseTemp: {
-    fontSize: 74,
-    lineHeight: 80,
+    fontSize: 58,
+    lineHeight: 62,
     fontWeight: "900",
     letterSpacing: 0,
-    zIndex: 1,
   },
   showcaseCondition: {
-    marginTop: -2,
-    fontSize: 17,
-    lineHeight: 22,
+    marginTop: -1,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
-    zIndex: 1,
   },
   showcaseMeta: {
-    marginTop: 3,
-    maxWidth: "84%",
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-    zIndex: 1,
+    marginTop: 5,
+    maxWidth: "100%",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
   },
   showcaseStatus: {
     position: "absolute",
@@ -974,44 +1038,89 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
   },
-  quickActionGrid: {
+  visualDecisionGrid: {
     flexDirection: "row",
     gap: spacing.sm,
   },
-  quickActionCard: {
+  visualDecisionCard: {
     flex: 1,
-    minHeight: 108,
-    gap: spacing.xs,
+    minHeight: 118,
+    alignItems: "center",
+    gap: 6,
     justifyContent: "center",
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
-  quickActionHeader: {
+  visualIconFrame: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  visualDecisionIcon: {
+    width: 22,
+    height: 22,
+  },
+  visualDecisionLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  visualDecisionValue: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900",
+  },
+  visualDecisionHelper: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+  },
+  homeOutfitCard: {
+    minHeight: 132,
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
   },
-  quickActionIcon: {
-    width: 16,
-    height: 16,
-  },
-  quickActionLabel: {
+  homeOutfitCopy: {
     flex: 1,
     minWidth: 0,
+    gap: 4,
+  },
+  homeOutfitLabel: {
     fontSize: 11,
-    lineHeight: 15,
+    lineHeight: 14,
     fontWeight: "900",
   },
-  quickActionTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+  homeOutfitTitle: {
+    fontSize: 24,
+    lineHeight: 30,
     fontWeight: "900",
   },
-  quickActionBody: {
-    fontSize: 11,
-    lineHeight: 15,
+  homeOutfitBody: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
+  },
+  homeOutfitImageFrame: {
+    width: 104,
+    height: 104,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.lg,
+  },
+  homeOutfitImage: {
+    width: 96,
+    height: 96,
+  },
+  homeOutfitIcon: {
+    width: 34,
+    height: 34,
   },
   forecastPreviewRow: {
     flexDirection: "row",
@@ -1019,83 +1128,48 @@ const styles = StyleSheet.create({
   },
   forecastPreviewCard: {
     flex: 1,
-    minHeight: 88,
-    justifyContent: "center",
-    gap: 5,
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  forecastPreviewHeader: {
-    flexDirection: "row",
+  forecastPreviewIconFrame: {
+    width: 42,
+    height: 42,
     alignItems: "center",
-    gap: 5,
+    justifyContent: "center",
+    borderRadius: radius.pill,
   },
   forecastPreviewIcon: {
-    width: 16,
-    height: 16,
+    width: 24,
+    height: 24,
+  },
+  forecastPreviewCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
   forecastPreviewLabel: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  forecastPreviewTitle: {
-    fontSize: 15,
-    lineHeight: 19,
-    fontWeight: "900",
-  },
-  forecastPreviewBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  cardStack: {
-    gap: 9,
-    paddingTop: 2,
-  },
-  syncCard: {
-    minHeight: 82,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  syncCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  syncLabel: {
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
   },
-  syncTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+  forecastPreviewTitle: {
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: "900",
   },
-  syncBody: {
+  forecastPreviewBody: {
     fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "800",
-  },
-  refreshPill: {
-    minHeight: 44,
-    justifyContent: "center",
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  refreshPillText: {
-    fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 14,
     fontWeight: "900",
+  },
+  cardStack: {
+    gap: spacing.md,
+    paddingTop: 4,
   },
   bellButton: {
     width: 44,

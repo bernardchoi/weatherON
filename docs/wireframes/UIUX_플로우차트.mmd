@@ -1,4 +1,6 @@
 flowchart TD
+    %% Visual source of truth: docs/design/WeatherON_UI_Design_Spec.md
+    %% If this flowchart conflicts with mockups or the integrated design spec, follow the mockup/spec.
     A([앱 실행]) --> LANG["기기 언어 자동 적용<br/>ko/ja/en 지원 · 미지원 시 en"]
     LANG --> B{최초 실행 여부}
     B -->|최초 실행| SPLASH["A1 스플래시<br/>브랜드 1회 노출"]
@@ -8,6 +10,7 @@ flowchart TD
     TOKEN -.->|계정·권한·구독 복원| SESSION["SESSION STATE<br/>accountLinked · permissionReady · locationReady · premiumActive"]
     TOKEN -.->|설정 복원| SETTINGS["SETTINGS STATE<br/>styleProfileSaved · selectedStyles · fit · age · locationManaged<br/>smartCareEnabled · alert toggles"]
     SPLASH -->|프리뷰 홈 이동| D
+    D --> NAV3["현재 런치 표면<br/>하단 탭 H1 홈 · G1 출발 · M1 MY<br/>확장 라우트는 구현 보존 · 런치 숨김"]
     D --> AUTHGATE{계정 필요 기능 탭?}
     AUTHGATE -->|계정 연결·코디 저장·옷장 저장·장소 저장·알림 추가·여행 저장·프리미엄·Weather Note 작성·날씨 제보 저장| AUTH2["A2 계정 연결<br/>계정 환경 기반 자동추천<br/>국가 선택 미노출 · 다른 방법 보기"]
     AUTH2 --> AUTH2s["계정 연결 상태<br/>(Route State에 호출 액션 유지<br/>검증용 정보는 실제 UI 비노출)"]
@@ -51,7 +54,8 @@ flowchart TD
     D --> D0s["홈 상태 요약<br/>(Guest 열람 · 위치 정상 · 알림 설정 전)"]
     D0s -->|알림 설정 전 탭| C2
     D -->|홈 코디 추천 카드 탭| E1
-    D -->|홈 AI 장소 추천 카드 탭| P3
+    D -->|홈 목적지 quick-action<br/>목적지 있음 G2 · 없음 P1| P1
+    D -.->|목적지 허브 확장 · 런치 숨김| P3
     D -.->|벨 아이콘| K["알림 사이드바<br/>(우측 슬라이드)"]
     K --> Ks["NOTIFICATION STATE<br/>선택 알림 · 읽음/미읽음 · 딥링크 대상"]
     K -->|우산 추천 알림 탭| F
@@ -107,7 +111,7 @@ flowchart TD
     CWR3 -->|반경 500m · 3건 이상 + 기상청 정합| CWR5["확정 제보 → 홈 화면 오버레이 표시"]
     CWR2 --> CWR6["기여 배지 업데이트<br/>(새싹 → 관측자 → 리포터 → 동네 관측왕 → 날씨 도우미)"]
 
-    D -->|하단 코디 탭| E["코디<br/>(하단 탭)"]
+    D -.->|코디 보조 흐름 · 런치 숨김| E["코디<br/>(확장 화면)"]
     E -->|내 옷장 관리 탭| E0[내 옷장 관리]
     E0 --> E0s["옷장 상태<br/>(아이템 수 · 필터 · Guest/계정 저장 상태 · 옷 추가)"]
     E0s -->|추천으로 복귀| E1
@@ -144,6 +148,7 @@ flowchart TD
 
     D -->|하단 출발 탭| I["출발<br/>(하단 탭)"]
     I --> I0["오늘 알아서 챙기는 중<br/>(저장 목적지 요약 + 출발/신발/우산)"]
+    I --> I0e["목적지 없음 empty state<br/>목적지 추가 CTA + 출발 시간 · 비 그침 이점 카드<br/>장식은 낮은 대비로 보조"]
     I0 --> I0s["출발 상태<br/>(목적지 수 · 케어 ON 수 · 케어 적용 범위 · G2/P1 연결)"]
     I -->|목적지 카드 탭| G2["G2 목적지 알림 상세<br/>(날씨 비교 + 출발시간 역산)"]
     G2 -->|뒤로| I
@@ -174,7 +179,7 @@ flowchart TD
     P2 --> P2s["준비 가이드 상태<br/>(등록 목적지 기준 · G2/P3 연결)"]
     P2s -->|목적지 알림 보기 · selectedDestination 유지| G2
     P2s -->|다른 목적지 보기 · 필터 목록 복귀| P3
-    I --> P3["목적지 필터<br/>(카테고리별 목적지 알림/준비 가이드)"]
+    I -.->|런치 숨김 · 확장 허브| P3["목적지 필터<br/>(카테고리별 목적지 알림/준비 가이드)"]
     P3 -->|필터 결과 없음| P3e["빈 카테고리 상태<br/>(목적지 추가 · 전체 보기)"]
     P3e -->|목적지 추가| P1
     P3e -->|전체 보기| P3
@@ -189,7 +194,7 @@ flowchart TD
     P3a -->|ON 저장| I4
     P3a -.->|공유 케어 상태 반영| I0
 
-    I --> I7["G3 여행 일정<br/>(출발 탭 내 · 여행 플래너)"]
+    I -.->|런치 숨김 · 확장| I7["G3 여행 일정<br/>(출발 탭 내 · 여행 플래너)"]
     I7 --> I7s["여행 플래너 상태<br/>(프리미엄 활성 · 공유 준비 · 미구독 시 G6)"]
     I7s -.->|미구독 CTA · returnTo=G3| SUB
     SUB -.->|returnTo=G3 · 공유/일정 액션 계속| I7s
@@ -236,8 +241,9 @@ flowchart TD
     AI4 & AI5 & AI6 & AI7 & AI8 --> AI9["AI 플랜 저장 · 공유<br/>(SAVED/SHARED 상태)"]
 
     D -->|하단 MY 탭| M["M1 MY 메인<br/>(하단 탭 · 설정 허브)"]
-    D -->|하단 소셜 탭| S["소셜<br/>(하단 탭 · ON Square)"]
+    D -.->|소셜 확장 · 런치 숨김| S["소셜<br/>(ON Square)"]
     M --> M0["PROFILE STATE<br/>Guest/계정 연결 · 플랜 · 최근 선택"]
+    M --> MTONE["MY 상태 톤<br/>blocking=확인 · non-blocking=설정/정보<br/>Gold는 ON/활성/CTA 중심"]
     M0 -.->|Guest 계정 필요 액션| AUTH2
     M0 -->|스타일 태그 설정 · returnTo=M1| C3
     C3 -.->|returnTo=M1 · styleProfileSaved| M0
@@ -283,7 +289,7 @@ flowchart TD
     D --> R4["R4 홈 광고 배치<br/>(네이티브 AD 슬롯)"]
     R4 --> R4s["AD STATE<br/>AD 라벨 · 구분선 · 클릭/노출 상태"]
 
-    %% ── 소셜 탭 · ON Square ──────────────────────────────────────────────────
+    %% ── 소셜 확장 · ON Square (런치 숨김) ─────────────────────────────────────
     S --> S0{최초 진입?<br/>ON Square Lite · 런칭 동시}
     S0 -->|최초| S0a["대표 마스코트 자동 부여<br/>원소 컴패니언 6종 미리보기"]
     S0a --> S0s["ON SQUARE STATE<br/>최초 진입 · 대표 부여 · 선택 컴패니언 미리보기"]

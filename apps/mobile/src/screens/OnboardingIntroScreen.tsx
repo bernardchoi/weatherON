@@ -18,7 +18,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
   const theme = useAppTheme();
 
   return (
-    <AppScreen title="나가기 전 5초 판단" subtitle="출발·목적지·비 그침만 먼저 확인" badge="1 / 3">
+    <AppScreen title="나가기 전 5초 판단" subtitle="언제 나가고, 비는 언제 그치고, 뭘 챙길지만 먼저 확인" badge="1 / 3">
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <View style={styles.brandTop}>
           <Image source={brandAssets.iconPrimary} style={styles.brandIcon} resizeMode="contain" />

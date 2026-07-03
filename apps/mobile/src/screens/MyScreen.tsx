@@ -31,13 +31,14 @@ export function MyScreen({
   const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
-  const permissionTone: MenuTone = locationState.tone === "warm" || alertState.tone === "warm" ? "warm" : locationState.tone === "gold" || alertState.tone === "gold" ? "gold" : "clear";
+  const permissionTone: MenuTone =
+    locationState.tone === "warm" ? "warm" : locationState.tone === "clear" && alertState.tone === "clear" ? "clear" : "sky";
   const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
   const readinessTone: MenuTone =
-    savedDestinationCount === 0 || locationState.tone === "warm" || alertState.tone === "warm"
+    locationState.tone === "warm"
       ? "warm"
-      : locationState.tone === "gold" || alertState.tone === "gold"
-        ? "gold"
+      : savedDestinationCount === 0 || locationState.tone !== "clear" || alertState.tone !== "clear"
+        ? "sky"
         : "clear";
 
   const openProfile = () => {
@@ -57,10 +58,10 @@ export function MyScreen({
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
-          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? "rgba(103,232,208,0.36)" : theme.gold }]}
+          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? "rgba(103,232,208,0.36)" : theme.border }]}
         >
-          <View style={[styles.avatar, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.gold }]}>
-            <PersonGlyph color={isAccountReady ? theme.clear : theme.gold} />
+          <View style={[styles.avatar, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky }]}>
+            <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />
           </View>
           <View style={styles.profileCopy}>
             <Text style={[styles.profileName, { color: theme.text }]}>{profileTitle}</Text>
@@ -87,7 +88,7 @@ export function MyScreen({
             icon={uiIconAssets.myPermissions}
             title="앱 권한 관리"
             meta={`위치 ${locationState.status} · 알림 ${alertState.status}`}
-            status={permissionTone === "clear" ? "정상" : "확인"}
+            status={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
             tone={permissionTone}
             onPress={() => onNavigate("M4")}
             theme={theme}
@@ -147,7 +148,7 @@ function getAlertState(
       summary: "알림 일시 중지",
       meta: "스마트 알림 꺼짐 · 앱 안 판단 유지",
       status: "중지",
-      tone: "gold",
+      tone: "sky",
     };
   }
   if (permissionReady) {
@@ -161,8 +162,8 @@ function getAlertState(
   return {
     summary: skippedPermission ? "알림 나중에 설정" : "알림 권한 필요",
     meta: skippedPermission ? "푸시는 대기 · 앱 안 판단 유지" : "권한 확인 필요 · 스마트 알림 관리",
-    status: skippedPermission ? "대기" : "확인",
-    tone: skippedPermission ? "sky" : "warm",
+    status: skippedPermission ? "대기" : "설정",
+    tone: "sky",
   };
 }
 
@@ -244,12 +245,12 @@ function ReadinessSummary({
   tone: MenuTone;
 }) {
   const color = getToneColor(theme, tone);
-  const status = tone === "clear" ? "정상" : "확인";
+  const status = tone === "clear" ? "정상" : tone === "warm" ? "확인" : "설정";
   return (
     <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.readinessCopy}>
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
-        <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : "확인 필요한 항목 있음"}</Text>
+        <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : tone === "warm" ? "확인 필요한 항목 있음" : "설정하면 더 정확해짐"}</Text>
         <Text style={[styles.readinessMeta, { color: theme.subtle }]} numberOfLines={2}>
           {destinationSummary} · 위치 {locationSummary} · 알림 {alertSummary}
         </Text>

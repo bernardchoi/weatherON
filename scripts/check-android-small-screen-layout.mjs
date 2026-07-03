@@ -127,8 +127,8 @@ try {
     await loadSeededApp(page, appState);
     console.log(`small-screen: ${viewport.name}/home loaded`);
 
-    await assertText(page, "시간별 예보", viewport, "home");
-    await assertText(page, "주간 예보", viewport, "home");
+    await assertAnyText(page, ["다음 비", "다음 시간"], viewport, "home");
+    await assertText(page, "주간 강수", viewport, "home");
     console.log(`small-screen: ${viewport.name}/home text`);
     await checkLayout(page, viewport, "home");
     console.log(`small-screen: ${viewport.name}/home layout`);
@@ -300,6 +300,11 @@ async function checkLayout(page, viewport, screen) {
 async function assertText(page, text, viewport, screen) {
   const found = await page.evaluate((target) => document.body.innerText.includes(target), text);
   if (!found) issues.push(`${viewport.name}/${screen}: missing text "${text}"`);
+}
+
+async function assertAnyText(page, texts, viewport, screen) {
+  const found = await page.evaluate((targets) => targets.some((target) => document.body.innerText.includes(target)), texts);
+  if (!found) issues.push(`${viewport.name}/${screen}: missing any text "${texts.join("\" or \"")}"`);
 }
 
 async function assertNoText(page, text, viewport, screen) {

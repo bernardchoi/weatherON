@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   iconImage: {
-    width: 23,
-    height: 23,
+    width: 21,
+    height: 21,
   },
 });

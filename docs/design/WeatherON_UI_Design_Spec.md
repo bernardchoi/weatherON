@@ -1,0 +1,347 @@
+# WeatherON UI 통합 디자인 스펙
+
+Version 1.0 · 2026-07-03 · Source of Truth
+
+---
+
+## 1. 목적
+
+이 문서는 WeatherON의 앱 UI를 구현할 때 따르는 단일 디자인 스펙이다.
+브랜드 문서, 목업, 와이어프레임, 구현 토큰이 서로 다를 때의 우선순위를 고정한다.
+
+핵심 원칙은 두 가지다.
+
+- 목업과 와이어프레임의 구성, 아이콘, 컴포넌트 형태가 다르면 목업 기준을 따른다.
+- MVP 범위에서도 이 통합 디자인 스펙을 따른다. 기능 범위 축소가 시각 완성도 축소를 의미하지 않는다.
+
+---
+
+## 2. 기준 우선순위
+
+| 우선 | 기준 | 역할 |
+|---:|---|---|
+| 1 | `mockups/WeatherON_design_system.jsx` | 컴포넌트 형태, 탭바, 아이콘 path, radius, 상태 레이어의 최상위 기준 |
+| 2 | `mockups/WeatherON_theme_tokens.js` | 라이트/다크 토큰, 배경, 패널, 기능색 기준 |
+| 3 | 개별 화면 목업 `mockups/WeatherON_*_mockup.jsx` | 화면 구성, 밀도, CTA 위치, 카드 위계 기준 |
+| 4 | `brand/WeatherON_디자인_정체성_가이드.md` | 변하지 않는 브랜드 축, 색 의미, 타이포, OS 트렌드 수용 원칙 |
+| 5 | `brand/WeatherON_아이콘_시스템.md` | 인앱 아이콘 그리드, 크기, stroke, 컬러 운용 |
+| 6 | `docs/wireframes/UIUX_플로우차트.mmd`, `WeatherON_wireframe_template.html` | 화면 흐름, 상태, 라우트, 정보 구조 참고 |
+| 7 | `apps/mobile/src/theme/tokens.ts`, 구현 코드 | 실제 구현값. 위 기준과 다르면 수정 대상 |
+
+와이어프레임은 플로우와 상태 정의용이다.
+시각 구성, 탭 개수, 아이콘 모양, 컴포넌트 반경, CTA 위계는 목업이 우선한다.
+
+---
+
+## 3. MVP 적용 규칙
+
+MVP는 기능 출시 범위를 줄일 수 있지만 디자인 스펙은 줄이지 않는다.
+
+- MVP에서도 WeatherON 고유의 `Clear Navy + Warm Sun`, 기능색, 아이콘 스케일, 탭바 스타일을 유지한다.
+- 기능이 준비되지 않은 화면은 삭제 대신 목업 기준의 empty, gate, disabled, preview 상태로 처리한다.
+- 기능 미구현을 이유로 아이콘을 텍스트, 이모지, 임시 기호로 대체하지 않는다.
+- 구현 편의를 이유로 목업의 5탭 구조를 임의의 다른 구조로 바꾸지 않는다. 탭 노출을 줄여야 할 때는 별도 제품 예외로 기록한다.
+- MVP 문서, 로드맵, 와이어프레임이 이 문서와 충돌하면 이 문서가 우선한다.
+
+---
+
+## 4. 제품 디자인 축
+
+### 컨셉
+
+WeatherON은 날씨 데이터를 많이 보여주는 앱이 아니라 오늘 준비 결정을 빠르게 돕는 앱이다.
+모든 화면은 `5초 안에 오늘 준비 끝`을 기준으로 정보량을 조절한다.
+
+### 브랜드 톤
+
+- Quiet Horizon
+- Clear Navy + Warm Sun
+- Sky / Clear / Rain / Mist 기능색
+- 토글 + 태양노브 공유 글리프
+- OS 트렌드는 그대로 복제하지 않고 WeatherON 토큰으로 리틴트한다.
+
+### 정보 위계
+
+1. 지금 결정해야 하는 것
+2. 사용자가 바로 누를 수 있는 행동
+3. 판단 근거
+4. 세부 설정과 설명
+
+---
+
+## 5. 컬러 토큰
+
+### 다크 모드
+
+| 토큰 | 값 | 용도 |
+|---|---|---|
+| `NAVY` | `#10243F` | 앱 배경, 브랜드 필드 |
+| `NAVY_DARK` | `#17365D` | 탭바, 강한 surface |
+| `PANEL` | `#214A78` | 기본 카드 |
+| `PANEL_L1` | `#2A5D8F` | 시트, 상위 surface |
+| `PANEL_L2` | `#3470A6` | 시트 내부 중첩 요소 |
+| `GOLD` | `#F4B63F` | ON, 활성, 1차 CTA |
+| `SKY` | `#4AA3DF` | 비, 흐림, 정보, 알림 |
+| `SKY_LITE` | `#A6CEF2` | 작은 라벨 대비 보강 |
+| `CLEAR` | `#2FC6A3` | 정상, 안전, 완료 |
+| `WARM` | `#E8854A` | 약한 주의, 따뜻한 정보 |
+| `RAIN_RED` | `#E97F77` | blocking 경고, 위험 |
+| `MIST` | `#B9CBE0` | 보조 텍스트, 중성 아이콘 |
+| `TEXT` | `#F8FBFF` | 본문 텍스트 |
+
+### 라이트 모드
+
+| 토큰 | 값 | 용도 |
+|---|---|---|
+| `LIGHT_BG` | `#F5F9FC` | 앱 배경 |
+| `LIGHT_SURFACE` | `#FFFFFF` | 기본 카드 |
+| `LIGHT_ELEVATED` | `#EAF3FA` | 보조 surface |
+| `LIGHT_GOLD` | `#C2410C` | 라이트 CTA, 활성 |
+| `LIGHT_SKY` | `#237BBD` | 정보, 비/흐림 |
+| `LIGHT_CLEAR` | `#007F73` | 정상, 완료 |
+| `LIGHT_WARM` | `#C84A2F` | 약한 주의 |
+| `LIGHT_TEXT` | `#142033` | 본문 텍스트 |
+| `LIGHT_MIST` | `#40536A` | 보조 텍스트 |
+
+### 컬러 사용 규칙
+
+- Gold는 ON, 활성 탭, 1차 CTA에만 우선 사용한다.
+- 알림 미읽음, 권한 권장, 정보성 테두리에 Gold를 쓰지 않는다.
+- Blocking 오류는 Rain Red, 비차단 권장은 Sky, 정상/완료는 Clear로 나눈다.
+- 소형 보조 텍스트는 다크에서 opacity 0.80 이상, 라이트에서 opacity 0.60 이상을 기본값으로 둔다.
+
+---
+
+## 6. 타이포그래피
+
+| 용도 | 폰트 |
+|---|---|
+| 영문 UI / 숫자 / 라벨 | Plus Jakarta Sans |
+| 한글 UI | Noto Sans KR |
+| 수치, 시간, 상태 코드 | DM Mono |
+| 워드마크 | Manrope 전용 |
+
+규칙:
+
+- OS 기본 폰트로 전체 UI를 대체하지 않는다.
+- UI 텍스트 letter spacing은 0을 기본값으로 둔다.
+- 워드마크와 로고 락업은 별도 브랜드 규칙을 따른다.
+- 작은 라벨은 굵기보다 대비와 간격으로 위계를 만든다.
+
+---
+
+## 7. 레이아웃 기준
+
+| 항목 | 기준 |
+|---|---|
+| 모바일 기준 프레임 | 393 × 852 |
+| 내부 스크롤 | 화면에 스크롤바 노출 금지 |
+| 하단 고정 CTA | 탭바와 겹치지 않게 bottom safe area 확보 |
+| 카드 이미지 | `object-fit: contain` 또는 고정 비율 슬롯 |
+| 정보 밀도 | 첫 viewport에서 핵심 판단 2~3개까지만 우선 |
+
+고정 CTA와 탭바가 있는 화면은 마지막 콘텐츠가 가려지지 않도록 충분한 하단 padding을 둔다.
+
+---
+
+## 8. Radius, Spacing, Elevation
+
+목업 기준 radius를 따른다.
+
+| 토큰 | 값 | 용도 |
+|---|---:|---|
+| `RADIUS.card` | 20 | 기본 카드 |
+| `RADIUS.cardSm` | 16 | 작은 카드, 칩 그룹 |
+| `RADIUS.sheet` | 28 | 바텀시트, 모달 |
+| `RADIUS.pill` | 16 또는 999 | pill, 상태 칩 |
+| `RADIUS.tab` | 24 | floating tab bar |
+
+구현 토큰이 8px 위주로 줄어든 경우 목업 대비 조정 대상이다.
+운영형 리스트나 초밀도 보조 영역만 8px 이하를 예외로 둘 수 있다.
+
+Spacing은 구현 토큰 `xs 6`, `sm 10`, `md 14`, `lg 18`, `xl 24`를 기본으로 사용하되, 화면 단위 구성과 CTA 위치는 목업을 우선한다.
+
+---
+
+## 9. 아이콘 시스템
+
+### 기본 규칙
+
+| 용도 | 크기 |
+|---|---:|
+| 탭바 아이콘 | 21px |
+| 리스트 행 보조 아이콘 | 18px |
+| 헤더/원형 버튼 내부 아이콘 | 16px |
+| 쉐브런/보조 인디케이터 | 14px |
+
+아이콘은 24×24 viewBox, strokeWidth 1.8, round cap, round join, fill none을 기본으로 한다.
+
+### 금지
+
+- 이모지를 생산 UI 아이콘으로 사용하지 않는다.
+- `비`, `OSS`, `문서` 같은 텍스트를 아이콘 박스 안에 넣어 아이콘처럼 쓰지 않는다.
+- 탭바 아이콘 path를 화면별로 다르게 그리지 않는다.
+- Gold를 장식 아이콘에 분산하지 않는다.
+
+### 장소/목적지 아이콘
+
+O6/P1/P2/P3의 회사, 학교, 공항, 숙소, 야구장, 등산, 해변, 계절, 문화 아이콘은 `mockups/WeatherON_destination_icons.jsx` 기준을 따른다.
+
+---
+
+## 10. 하단 탭바
+
+목업 기준 탭바는 5개다.
+
+| 순서 | 탭 | 라우트 | 아이콘 기준 |
+|---:|---|---|---|
+| 1 | 홈 | H1 | home line icon |
+| 2 | 코디 | C1 | outfit line icon |
+| 3 | 출발 | G1 | depart/navigation line icon |
+| 4 | MY | M1 | user line icon |
+| 5 | 소셜 | S1 | chat/community line icon |
+
+### 스타일
+
+| 항목 | 값 |
+|---|---|
+| 위치 | bottom 18, left/right 16 |
+| 높이 | 64 |
+| radius | 24 |
+| 배경 | 다크 `NAVY_DARK`, 라이트 `LIGHT_SURFACE` |
+| active 표시 | 5px dot + Gold icon/text |
+| inactive | Mist 계열 |
+| 아이콘 | 21px, stroke 1.8 |
+| 프레스 | tint overlay opacity 0.12, 120ms |
+
+MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른다.
+3탭 운영이 필요한 경우는 제품 범위 예외로 별도 기록하고, 아이콘/크기/active 표현은 이 스펙을 유지한다.
+
+---
+
+## 11. 공통 컴포넌트
+
+### BrandCard
+
+- 기본 배경은 `PANEL`.
+- radius는 20.
+- padding은 14×16 기준.
+- 좌측 accent bar는 3px.
+- 탭 가능한 카드는 state layer press tint를 적용한다.
+- 카드 안에 카드 중첩을 만들지 않는다.
+
+### CTA
+
+- 1차 CTA는 Gold 계열.
+- 텍스트는 Navy/onAccent.
+- 비차단 설정은 Sky/Clear 계열 보조 버튼으로 둔다.
+- CTA와 탭바는 서로 붙지 않게 한다.
+
+### Status Pill
+
+| 상태 | 색 |
+|---|---|
+| ON / 활성 | Gold |
+| 정상 / 완료 | Clear |
+| 정보 / 설정 권장 | Sky |
+| 약한 주의 | Warm |
+| 차단 / 오류 | Rain Red |
+| 중성 / 보류 | Mist |
+
+### Sheet / Modal
+
+- radius 28.
+- 블러와 투명도는 구조적 chrome으로만 사용한다.
+- 시스템 기본 흰색/회색 틴트가 아니라 WeatherON Navy/Sky 토큰으로 리틴트한다.
+
+---
+
+## 12. 화면별 기준
+
+### H1 홈
+
+- 목적: 현재 날씨, 목적지 차이, 비 시작/그침, 오늘 준비를 5초 안에 판단하게 한다.
+- 첫 viewport는 핵심 판단 2~3개만 강하게 보여준다.
+- quick-action은 문구가 잘리지 않게 2줄 안에서 정리한다.
+- 알림 미읽음 테두리에 Gold를 쓰지 않는다.
+- 대표 코디가 보일 때는 C1/C4의 outfitVariant와 같은 결과를 쓴다.
+
+### G1 출발
+
+- 목적: 목적지 날씨 비교와 출발 시간 판단.
+- 목적지가 없을 때도 placeholder처럼 비워 두지 않는다.
+- empty state에는 첫 목적지 추가 CTA, 출발 시간, 비 그침 이점 카드를 함께 둔다.
+- 저장 목적지 카드는 G2/P3의 Destination Care State와 동기화한다.
+
+### M1 MY
+
+- 목적: 계정, 권한, 알림, 표시, 정책의 설정 허브.
+- 같은 강도의 `확인` 배지를 반복하지 않는다.
+- blocking 상태만 강한 확인 톤을 사용한다.
+- 비차단 설정 권장은 `설정`/Sky 톤으로 처리한다.
+- Guest 프로필 안내는 Gold 강조가 아니라 Sky/Clear 정보 톤을 기본으로 한다.
+
+### C1/C4 코디
+
+- Outfit Spec 기법을 따른다.
+- 옷 색상은 브랜드/기능색과 분리된 실제 패션 색상 팔레트를 쓴다.
+- Gold/Sky/Clear는 주석, 리더라인, 상태 readout에만 쓴다.
+
+### S1 소셜
+
+- ON Square는 확장 기능이어도 아이콘과 탭 구성은 목업 기준을 보존한다.
+- MVP에서 기능이 제한되면 preview/gate 상태를 사용한다.
+
+---
+
+## 13. 구현 정합 체크리스트
+
+구현 전후로 아래를 확인한다.
+
+- 목업과 와이어프레임이 다르면 목업을 따랐는가.
+- MVP 범위라는 이유로 탭바, 아이콘, radius, CTA 위계가 축소되지 않았는가.
+- 탭바 아이콘은 21px/stroke 1.8인가.
+- Gold는 ON/활성/CTA에만 쓰였는가.
+- Rain Red는 blocking에만 쓰였는가.
+- G1 empty state가 기능 이점과 CTA를 함께 보여주는가.
+- M1 경고/정보 톤이 분리됐는가.
+- 텍스트 아이콘, 이모지 아이콘, 임시 기호가 남아 있지 않은가.
+- fixed CTA와 탭바가 겹치지 않는가.
+- 라이트/다크 모두 보조 텍스트 대비가 충분한가.
+
+---
+
+## 14. 현재 구현과의 주요 갭
+
+| 영역 | 스펙 | 현재 구현/문서에서 확인된 차이 |
+|---|---|---|
+| 탭 구성 | 목업 기준 5탭 | 현재 모바일 구현은 3탭 중심 |
+| 탭 스타일 | floating tab bar, radius 24, active dot | 현재 구현은 segment button 성격이 강함 |
+| 카드 radius | card 20 / cardSm 16 | 구현 토큰은 8px 중심 |
+| 텍스트 아이콘 | 금지 | 일부 알림/정책/제보 화면에 텍스트·기호 아이콘 잔존 |
+| 상태 톤 | blocking/info/active 분리 | 후속 개선 중이나 전체 화면 재점검 필요 |
+
+이 표는 구현 작업의 우선순위 목록이다.
+스펙 자체를 낮추는 근거로 쓰지 않는다.
+
+---
+
+## 15. 관련 문서
+
+- `mockups/WeatherON_design_system.jsx`
+- `mockups/WeatherON_theme_tokens.js`
+- `brand/WeatherON_디자인_정체성_가이드.md`
+- `brand/WeatherON_아이콘_시스템.md`
+- `brand/WeatherON_로고_디자인철학.md`
+- `brand/WeatherON_BI_CI_로고_워드마크_리뷰.md`
+- `docs/wireframes/UIUX_플로우차트.mmd`
+- `docs/wireframes/WeatherON_wireframe_template.html`
+- `apps/mobile/src/theme/tokens.ts`
+
+---
+
+## 16. 변경 이력
+
+| 날짜 | 내용 |
+|---|---|
+| 2026-07-03 | v1.0 작성. 목업 우선순위, MVP 적용 규칙, 색/타입/아이콘/탭바/컴포넌트 통합 기준 정의 |

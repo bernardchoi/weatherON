@@ -101,7 +101,7 @@
   /* 하단 탭바 */
   .tabbar{display:flex;border-top:1px solid var(--line);margin:auto -12px 0;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);}
   .tabbar div{flex:1;text-align:center;font-size:10px;color:var(--muted);padding:9px 0 11px;}
-  .tabbar div b{display:block;width:18px;height:18px;border:1.5px solid rgba(31,78,121,.28);border-radius:6px;margin:0 auto 3px;background:#fff;}
+  .tabbar div b{display:block;width:21px;height:21px;border:1.5px solid rgba(31,78,121,.28);border-radius:6px;margin:0 auto 3px;background:#fff;}
   .tabbar div.on{color:var(--navy);font-weight:800;}
   .tabbar div.on b{border-color:var(--gold);background:linear-gradient(135deg,var(--gold),#ffe29a);}
 
@@ -115,7 +115,7 @@
 
 <div class="hero">
   <h1>WeatherON 화면 와이어프레임 <small>Mid-Fi · v2 · 2026.07 · UIUX_플로우차트.mmd 기반</small></h1>
-  <p>기기 언어 자동 적용 → 스플래시 → Guest 홈 우선 진입 → 계정 필요 기능에서 로그인 요청 → 홈 / 출발 / MY 3탭 MVP 플로우. 코디와 소셜(ON Square)은 확장 레이어로 유지하되 최초 출시 하단 탭에는 노출하지 않는다. AUTH는 첫 관문이 아니라 저장·동기화·알림 확장·여행 플래너 등 계정 필요 기능의 보조 플로우로 동작한다. 로그인 수단은 한국/일본/일반 해외 3권역 기준으로 자동 추천하되, 현재 여행 위치보다 스토어 국가·SIM 국가·OS 지역·기기 언어 등 계정 환경 신호를 우선한다. 국가 선택을 가입 관문으로 만들지 않는다. 중국권 등 특수 인증·네트워크 환경 국가는 1차 범위에서 제외한다. PLACE·ADMOB은 출발·홈·MY·AUTH·온보딩에 부속되는 상세 확장 화면. 구조·정보 위계는 유지하고, WeatherON CI/BI의 Navy, Sky, Clear, Gold 토큰을 적용한 미드파이 단계. MVP 기능 개발 기준은 docs/planning/WeatherON_MVP_기능_PRD.md, 기술 구현 기준은 docs/architecture/WeatherON_MVP_기술_ADR.md를 따른다.</p>
+  <p>기기 언어 자동 적용 → 스플래시 → Guest 홈 우선 진입 → 계정 필요 기능에서 로그인 요청 → 홈 / 출발 / MY MVP 기능 검증 플로우. 코디와 소셜(ON Square)은 확장 레이어로 유지한다. AUTH는 첫 관문이 아니라 저장·동기화·알림 확장·여행 플래너 등 계정 필요 기능의 보조 플로우로 동작한다. 로그인 수단은 한국/일본/일반 해외 3권역 기준으로 자동 추천하되, 현재 여행 위치보다 스토어 국가·SIM 국가·OS 지역·기기 언어 등 계정 환경 신호를 우선한다. 국가 선택을 가입 관문으로 만들지 않는다. 중국권 등 특수 인증·네트워크 환경 국가는 1차 범위에서 제외한다. PLACE·ADMOB은 출발·홈·MY·AUTH·온보딩에 부속되는 상세 확장 화면. 구조·정보 위계는 유지하고, WeatherON CI/BI의 Navy, Sky, Clear, Gold 토큰을 적용한 미드파이 단계. 시각 기준은 docs/design/WeatherON_UI_Design_Spec.md를 따르며, 목업과 와이어프레임이 다르면 목업 기준을 우선한다. MVP 기능 개발 기준은 docs/planning/WeatherON_MVP_기능_PRD.md, 기술 구현 기준은 docs/architecture/WeatherON_MVP_기술_ADR.md를 따른다.</p>
   <p>목업 프리뷰 상태 기준: 로그인·권한·위치·프리미엄처럼 앱 전역에 남아야 하는 값은 Session State(accountLinked/permissionReady/locationReady/premiumActive)로 유지하고, 스타일 기준·핏·연령대·스마트 알림 세부 토글처럼 설정에 남아야 하는 값은 Settings State(styleProfileSaved/selectedStyles/fit/age/smartCareEnabled/alertAdvancedOpen/rainDetail/routineAlert/bedtimeAlert/destinationAlert/quietHours)로 유지한다. 선택 목적지·코디 조합·복귀 액션처럼 특정 흐름에 필요한 값은 Route State로 전달한다. Session/Settings State 키는 전역값을 우선 적용해 오래된 화면 컨텍스트가 로그인·권한·구독·설정 완료 상태를 되돌리지 않게 한다. 따라서 A2/A3, O3, G6, O4, H2, M2를 거친 뒤 사이드바나 하단 탭으로 다른 화면에 이동해도 전역/설정 상태가 끊기지 않아야 한다.</p>
   <div class="legend">
     <span><i class="lg-box"></i> 콘텐츠 블록</span>
@@ -406,11 +406,11 @@
             <div class="dash"><span class="t">상태 요약</span>게스트 열람 · 위치 정상 · 알림 설정 전<br><span class="small">알림 설정 전 탭 시 O3 권한 단계로 연결</span></div>
             <div class="box"><span class="t">오늘 입을 세트</span>가디건·티셔츠·슬랙스·스니커즈 실루엣<br><span class="small">탭 시 C1 옷장 아이템 카드 · 게스트 열람 가능</span></div>
             <div class="dash"><span class="t">계정 연결 트리거</span>코디 저장 · 알림 추가 · 여행 저장<br><span class="small">탭 시 A2 계정 연결, 추천 기능은 게스트로 계속 이용</span></div>
-            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+            <div class="tabbar"><div class="on"><b></b>홈</div><div><b></b>출발</div><div><b></b>MY</div></div>
           </div>
         </div>
         <div class="note"><span class="nid">H1</span><span class="nname">홈 메인</span>
-          <ul><li>현재 날씨 + 시간별/주간 예보 (D1·D2)</li><li>Guest/위치/알림 상태 요약을 홈에서 짧게 표시하고 알림 설정 전 상태는 O3 권한 단계로 연결</li><li>우산 추천 카드는 현재 위치/목적지 비 신호가 있고 사용자가 아직 확인하지 않은 경우에만 노출한다</li><li>우산 카드 탭 시 H4로 이동하며 umbrellaSignalReviewed 상태를 남기고, 홈 복귀 후에는 같은 카드를 반복 노출하지 않는다</li><li>대표코디 썸네일은 C1/C4의 outfitVariant와 동일 추천 조합을 사용하고, 탭 시 해당 상태를 유지한 채 C1 코디 메인으로 이동</li><li>C1 셔플 또는 C4 재추천 후 홈으로 복귀하면 H1 대표 코디도 같은 의류 컷과 카피로 갱신</li><li>AI 장소 추천 카드는 P3 목적지 필터/상세 허브로 직접 연결</li><li>하단 탭: 코디 → C1, 출발 → G1, MY → M1 설정 허브, 소셜 → S1 ON Square</li><li>Guest는 추천·ON Square 읽기/탐색 가능, 코디/옷장/장소 저장·알림 추가·여행 저장·Weather Note 작성 탭 시 A2 호출</li><li>상단 위치명 탭 → H2 · 벨 → H3 사이드바</li></ul>
+          <ul><li>현재 날씨 + 시간별/주간 예보 (D1·D2)</li><li>Guest/위치/알림 상태 요약을 홈에서 짧게 표시하고 알림 설정 전 상태는 O3 권한 단계로 연결</li><li>우산 추천 카드는 현재 위치/목적지 비 신호가 있고 사용자가 아직 확인하지 않은 경우에만 노출한다</li><li>우산 카드 탭 시 H4로 이동하며 umbrellaSignalReviewed 상태를 남기고, 홈 복귀 후에는 같은 카드를 반복 노출하지 않는다</li><li>홈 quick-action은 목적지 있음 G2, 목적지 없음 P1, 강수 타임라인 H5로 진입한다</li><li>대표 코디/옷장/ON Square는 구현 보존 확장 화면이며 런치 하단 탭에는 노출하지 않는다</li><li>하단 탭: 홈 → H1, 출발 → G1, MY → M1</li><li>Guest는 추천 확인 가능, 저장·알림 확장 탭 시 A2 호출</li><li>상단 위치명 탭 → H2 · 벨 → H3 사이드바</li></ul>
         </div>
       </div>
 
@@ -618,8 +618,8 @@
   <!-- ════════ 4. 출발 ════════ -->
   <div class="sec">
     <span class="sec-tag">04 · GO — Go ON</span>
-    <h2>출발 탭 — 목적지 비교 · 출발시간 · 여행 일정 (도보 특화)</h2>
-    <p class="sec-desc">목적지 등록 → 날씨 비교 → 출발시간 역산 → Mode B 알림 체인. 여행 일정은 도보 특화 — 당일 코스 날씨(G4 무료), 국토종주 AI 플래너(G5 Premium), 구독 페이월(G6) 포함.</p>
+    <h2>출발 탭 — 목적지 비교 · 출발시간</h2>
+    <p class="sec-desc">현재 런치 표면은 G1 목적지 목록과 G2 목적지 케어 중심. 목적지 등록 → 날씨 비교 → 출발시간 역산 → Mode B 알림 체인을 검증한다. 여행 일정, 도보 특화, AI 플래너, 구독 페이월은 구현 보존 확장 화면이며 런치에서는 숨김 처리한다.</p>
     <div class="row">
 
       <!-- G1 출발 메인 -->
@@ -633,12 +633,13 @@
             <div class="box"><span class="t">[회사 아이콘] 회사 — 판교 · READY/ON</span>출발지 21°☀ → 목적지 19°☁<br><span class="small">출발 추천 08:30 · 도착 09:00</span></div>
             <div class="box"><span class="t">[학교 아이콘] 학교 — 신촌 · READY/ON</span>출발지 21°☀ → 목적지 21°☀<br><span class="small">날씨 차이 없음</span></div>
             <div class="listitem" style="color:#999;">＋ 목적지 추가</div>
-            <div class="dash"><span class="t" style="font-weight:700;">✈ 여행 플래너 (프리미엄)</span>여행지 일정별 날씨 + 짐 추천 → G3</div>
-            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div class="on"><b></b>출발</div><div><b></b>MY</div><div><b></b>소셜</div></div>
+            <div class="dash"><span class="t">목적지 없음 상태</span>첫 목적지 추가 CTA + 출발 시간 · 비 그침 이점 카드</div>
+            <div class="dash"><span class="t" style="font-weight:700;">여행 플래너</span>G3~G6 확장 화면 · 런치 숨김</div>
+            <div class="tabbar"><div><b></b>홈</div><div class="on"><b></b>출발</div><div><b></b>MY</div></div>
           </div>
         </div>
         <div class="note"><span class="nid">G1</span><span class="nname">출발 메인 (목적지 목록)</span>
-          <ul><li>I·I1 — 목적지 카드 + 검색·추가 + 오늘 알아서 챙기기 요약</li><li>DEPART STATE에서 저장 목적지 수, 알림 ON 수, 날씨 비교, 출발·신발·우산 알림 적용 범위 표시</li><li>목적지별 READY/ON 배지는 G2/P3 상세의 Destination Care State와 동일 데이터로 동기화</li><li>검색창·상단 ＋·하단 목적지 추가 → P1 목적지 추가</li><li>P1에서 저장 완료한 목적지는 Saved Destination List에 추가되어 G1 목록과 P3 필터 목록에 동시에 반영</li><li>목적지 카드 탭 → G2 비교 상세</li><li>여행 플래너 배너는 프리미엄/계정 필요 기능으로 A2 또는 구독 흐름 호출</li><li>O6/P1에서 등록한 목적지가 이 목록에 추가</li></ul>
+          <ul><li>I·I1 — 목적지 카드 + 검색·추가 + 오늘 알아서 챙기기 요약</li><li>DEPART STATE에서 저장 목적지 수, 알림 ON 수, 날씨 비교, 출발·신발·우산 알림 적용 범위 표시</li><li>목적지별 READY/ON 배지는 G2/P3 상세의 Destination Care State와 동일 데이터로 동기화</li><li>검색창·상단 ＋·하단 목적지 추가 → P1 목적지 추가</li><li>목적지가 없으면 첫 목적지 추가 CTA와 출발 시간·비 그침 이점 카드를 함께 표시해 placeholder 느낌을 줄인다</li><li>P1에서 저장 완료한 목적지는 Saved Destination List에 추가되어 G1 목록과 P3 필터 목록에 동시에 반영</li><li>목적지 카드 탭 → G2 비교 상세</li><li>여행 플래너 배너/G3~G6는 확장 화면으로 보존하되 런치 표면에는 노출하지 않는다</li><li>O6/P1에서 등록한 목적지가 이 목록에 추가</li></ul>
         </div>
       </div>
 
@@ -690,7 +691,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">G3</span><span class="nname">여행 플래너 (프리미엄)</span>
-          <ul><li>I7·G1~G4 — 일정별 날씨 + 짐 추천 + 공유</li><li>TRIP STATE에서 무료 상태/프리미엄 활성/공유 준비/구독 유도 상태 표시</li><li>무료 상태에서 일정 추가·여정 공유 탭 → G6 페이월</li><li>G6 완료 후 returnTo=G3로 돌아와 일정 추가는 G4로 계속 진행하고, 여정 공유는 공유 준비 완료 상태로 복귀</li><li>뒤로가기 → G1, 프리미엄 활성 상태의 일정 추가 → G4, 구독 후 AI 종주 → G5</li><li>하단 탭은 H1/C1/G1/M1/S1로 실제 이동</li></ul>
+          <ul><li>I7·G1~G4 — 일정별 날씨 + 짐 추천 + 공유</li><li>TRIP STATE에서 무료 상태/프리미엄 활성/공유 준비/구독 유도 상태 표시</li><li>무료 상태에서 일정 추가·여정 공유 탭 → G6 페이월</li><li>G6 완료 후 returnTo=G3로 돌아와 일정 추가는 G4로 계속 진행하고, 여정 공유는 공유 준비 완료 상태로 복귀</li><li>뒤로가기 → G1, 프리미엄 활성 상태의 일정 추가 → G4, 구독 후 AI 종주 → G5</li><li>런치 하단 탭은 H1/G1/M1만 노출하고, C1/S1은 확장 화면으로 보존</li></ul>
         </div>
       </div>
 
@@ -756,7 +757,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">G5</span><span class="nname">국토종주 AI 플래너 (F8 · Premium)</span>
-          <ul><li>AI 모델 기반 최대 14일 구간 날씨 종합 분석</li><li>여정 점검 상태에서 프리미엄 활성, 알림 권한, 저장/공유 상태를 표시</li><li>재분석 알림과 AI 플랜 저장은 알림 권한이 필요하며 권한 전 상태에서 O3 권한 단계로 연결</li><li>O3 완료 후 returnTo=G5로 여정 입력값과 저장 의도를 유지한 채 복귀</li><li>AI 플랜 저장 후 저장됨, 여정 공유 후 공유 준비 상태로 전환</li><li>일자별 코디·짐 체크리스트 자동 생성, 악화 구간 경보, 재분석 알림</li><li>뒤로가기 → G3, 하단 탭은 H1/C1/G1/M1/S1로 이동</li></ul>
+          <ul><li>AI 모델 기반 최대 14일 구간 날씨 종합 분석</li><li>여정 점검 상태에서 프리미엄 활성, 알림 권한, 저장/공유 상태를 표시</li><li>재분석 알림과 AI 플랜 저장은 알림 권한이 필요하며 권한 전 상태에서 O3 권한 단계로 연결</li><li>O3 완료 후 returnTo=G5로 여정 입력값과 저장 의도를 유지한 채 복귀</li><li>AI 플랜 저장 후 저장됨, 여정 공유 후 공유 준비 상태로 전환</li><li>일자별 코디·짐 체크리스트 자동 생성, 악화 구간 경보, 재분석 알림</li><li>뒤로가기 → G3, 런치 하단 탭은 H1/G1/M1만 노출</li></ul>
         </div>
       </div>
 
@@ -822,15 +823,17 @@
               <span class="arr small">›</span>
             </div>
             <div class="listitem">🔔 알림 설정<span class="arr">›</span></div>
+            <div class="listitem">📍 앱 권한 관리<span class="small">설정</span><span class="arr">›</span></div>
             <div class="listitem">👕 스타일 태그 변경<span class="small">캐주얼 · 포멀</span><span class="arr">›</span></div>
             <div class="listitem">⚙ 표시 설정<span class="arr">›</span></div>
             <div class="listitem">⭐ 프리미엄 구독<span class="small">여행 플래너</span><span class="arr">›</span></div>
             <div class="dash"><span class="t">PROFILE STATE</span>계정 연결 · 플랜 · 최근 선택 메뉴</div>
-            <div class="tabbar"><div><b></b>홈</div><div><b></b>코디</div><div><b></b>출발</div><div class="on"><b></b>MY</div><div><b></b>소셜</div></div>
+            <div class="dash"><span class="t">TONE STATE</span>확인=blocking · 설정=권장/정보 · Gold=ON/활성/CTA</div>
+            <div class="tabbar"><div><b></b>홈</div><div><b></b>출발</div><div class="on"><b></b>MY</div></div>
           </div>
         </div>
         <div class="note"><span class="nid">M1</span><span class="nname">MY 메인</span>
-          <ul><li>M0 — 프로필 · 설정 허브</li><li>PROFILE STATE에서 계정 연결/Guest, 플랜, 최근 선택 메뉴 표시</li><li>Guest 상태의 MY는 저장·동기화·구독 기능을 바로 실행하지 않고 A2 계정 연결 gate로 보낸다</li><li>프리미엄 업그레이드 → 계정 연결 상태면 G6, Guest면 A2/A3 후 G6로 이어지고 returnTo=M1로 복귀</li><li>구독 완료 후 returnTo=M1로 돌아와 Premium 플랜 상태 표시</li><li>스타일 태그 → O4 설정 모드, 저장 후 returnTo=M1로 돌아와 최근 선택 메뉴에 저장 완료 표시</li><li>프로필 편집 → Guest면 A2 계정 연결, 로그인 상태면 A4 계정 관리. 앱 권한 관리 → M4, 알림 설정 → M2, 표시 설정 → M3, 스타일 태그 → O4, 프리미엄 → G6/A2</li><li>로그아웃/회원 탈퇴는 M1 하단 CTA로 노출하지 않고 A4 계정 관리의 위험 액션 영역에서만 처리한다</li></ul>
+          <ul><li>M0 — 프로필 · 설정 허브</li><li>PROFILE STATE에서 계정 연결/Guest, 플랜, 최근 선택 메뉴 표시</li><li>Guest 상태의 MY는 저장·동기화·구독 기능을 바로 실행하지 않고 A2 계정 연결 gate로 보낸다</li><li>권한/알림/준비 상태는 같은 강도의 경고 배지를 반복하지 않는다</li><li>`확인`은 blocking 상태, `설정`은 비차단 권장/정보 상태에 사용한다</li><li>Gold는 ON/활성/CTA 중심으로 유지하고, Guest/권한 안내는 Sky/Clear 톤을 기본으로 한다</li><li>프리미엄 업그레이드 → 계정 연결 상태면 G6, Guest면 A2/A3 후 G6로 이어지고 returnTo=M1로 복귀</li><li>프로필 편집 → Guest면 A2 계정 연결, 로그인 상태면 A4 계정 관리. 앱 권한 관리 → M4, 알림 설정 → M2, 표시 설정 → M3, 스타일 태그 → O4, 프리미엄 → G6/A2</li><li>로그아웃/회원 탈퇴는 M1 하단 CTA로 노출하지 않고 A4 계정 관리의 위험 액션 영역에서만 처리한다</li></ul>
         </div>
       </div>
 
@@ -1050,7 +1053,7 @@
           </div>
         </div>
         <div class="note"><span class="nid">R4</span><span class="nname">홈 화면 광고 배치</span>
-          <ul><li>네이티브 광고는 AI 추천 카드 아래 1개, "AD" 라벨로 콘텐츠와 명확히 구분</li><li>버튼·인터랙티브 요소 인접 배치 금지</li><li>H1 홈 메인 레이아웃에 AD 슬롯 추가 반영</li><li>AI 장소 추천 → P3, 하단 탭 → H1/C1/G1/M1/S1로 연결</li></ul>
+          <ul><li>네이티브 광고는 AI 추천 카드 아래 1개, "AD" 라벨로 콘텐츠와 명확히 구분</li><li>버튼·인터랙티브 요소 인접 배치 금지</li><li>H1 홈 메인 레이아웃에 AD 슬롯 추가 반영</li><li>AI 장소 추천/P3/R4는 확장 화면으로 보존하고 런치 하단 탭은 H1/G1/M1만 노출</li></ul>
         </div>
       </div>
 
@@ -1209,7 +1212,7 @@
             <li>"✅ 내 제보가 맞았어요" 피드백으로 기여 보람 강화</li>
             <li>v2.1 출시 예정 — v2.0은 배지·간단 이력까지만 제공</li>
             <li>F5 Premium: 저장 장소 제보 알림은 MY→알림설정에서 관리</li>
-            <li>뒤로가기 → M1, 하단 탭 → H1/C1/G1/M1/S1</li>
+            <li>뒤로가기 → M1, 런치 하단 탭 → H1/G1/M1</li>
           </ul>
         </div>
       </div>
@@ -1251,7 +1254,7 @@
             <li>Solar · Rain · Storm · Wind · Frost · Mist 6종은 수집 대상</li>
             <li>날씨 체크인 시 해당 원소 컴패니언 해금·XP 적립</li>
             <li>기존 유저는 내 ON Square(S1)로 바로 이동</li>
-            <li>CTA 탭 시 S1, 하단 소셜 탭도 ON Square 흐름으로 연결</li>
+            <li>CTA 탭 시 S1로 연결. 하단 소셜 탭은 확장 화면 기준이며 런치에서는 숨김</li>
           </ul>
         </div>
       </div>
@@ -1395,7 +1398,7 @@
   <div class="sec" style="margin-top:64px;border-top:1px solid #ddd;padding-top:20px;">
     <p style="font-size:11px;color:#999;">
       WeatherON 화면 와이어프레임 · Mid-Fi v2 · 2026.07 — 총 45개 화면 (AUTH 4 · 온보딩 6 · 홈 5 · 코디 4 · 출발 6 · MY 3 · PLACE 3 · ADMOB 4 · CWR 4 · 소셜 6)<br>
-      괄호 ID(D1, E1, I2…)는 UIUX_플로우차트.mmd 노드 참조 · 신규 섹션(AUTH/PLACE/ADMOB)은 WeatherON_planning_v5.html 16-1·10-1·14-1 내용을 미드파이로 변환 · AUTH는 한국/일본/일반 해외 3권역 로그인 전략을 자동 추천 방식으로 반영, 중국권 등 특수 환경 국가는 별도 검토 · 다음 단계: 실제 앱 스크린과 목업 간 간격 축소
+      현재 런치 하단 탭은 H1 홈 · G1 출발 · M1 MY 3개만 노출 · C/W/S/G3~G6/P2/P3/R3/R4는 구현 보존 확장 화면 · 괄호 ID(D1, E1, I2…)는 UIUX_플로우차트.mmd 노드 참조 · 신규 섹션(AUTH/PLACE/ADMOB)은 WeatherON_planning_v5.html 16-1·10-1·14-1 내용을 미드파이로 변환 · AUTH는 한국/일본/일반 해외 3권역 로그인 전략을 자동 추천 방식으로 반영, 중국권 등 특수 환경 국가는 별도 검토 · 다음 단계: 실제 앱 스크린과 목업 간 간격 축소
     </p>
   </div>
 

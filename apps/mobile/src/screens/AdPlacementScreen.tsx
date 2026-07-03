@@ -9,9 +9,10 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 const contentCards = [
-  { label: "AI 장소 추천", title: "오늘 이 날씨엔 합정동 카페 어때요?", body: "맑음 · 기온 22도 · 탭해서 더보기" },
-  { label: "코디·우산·신발", title: "트렌치코트 + 슬랙스", body: "우산 불필요 · 로우컷 스니커즈" },
-  { label: "출발 시각", title: "목적지 등록 시 10:50 출발 안내", body: "스마트 케어 알림과 연동" },
+  { label: "출발 판단", title: "10:50 출발", body: "목적지 13:00 도착 · 여유 10분" },
+  { label: "비 그침", title: "21:00 완화", body: "강수 타임라인에서 알림 조정" },
+  { label: "챙길 것", title: "우산 · 방수 신발", body: "비 신호 기준 준비" },
+  { label: "확장 예정", title: "여행·AI·소셜", body: "MVP 검증 이후 노출 확대" },
 ];
 
 export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
@@ -23,9 +24,9 @@ export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
         <Text style={[styles.previewTemp, { color: theme.text }]}>22°</Text>
         <Text style={[styles.previewCondition, { color: theme.muted }]}>맑음</Text>
         <View style={[styles.recommendCard, { backgroundColor: theme.cardSoft, borderColor: theme.sky }]}>
-          <Text style={[styles.smallLabel, { color: theme.sky }]}>AI 장소 추천</Text>
-          <Text style={[styles.cardTitle, { color: theme.text }]}>오늘 이 날씨엔 합정동 카페 어때요?</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>맑음 · 기온 22도 · 탭해서 더보기</Text>
+          <Text style={[styles.smallLabel, { color: theme.sky }]}>출발 판단</Text>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>10:50 출발 · 21:00 비 완화</Text>
+          <Text style={[styles.body, { color: theme.muted }]}>목적지 도착 시간과 강수 타임라인 기준</Text>
         </View>
         <View style={[styles.adSlot, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
           <Text style={[styles.slotText, { color: theme.subtle }]}>광고 · 네이티브 광고</Text>
@@ -36,7 +37,7 @@ export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
         {contentCards.slice(1).map((item) => (
           <View key={item.label} style={[styles.contentCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <View style={styles.copy}>
-              <Text style={[styles.smallLabel, { color: theme.gold }]}>{item.label}</Text>
+              <Text style={[styles.smallLabel, { color: item.label === "확장 예정" ? theme.subtle : theme.gold }]}>{item.label}</Text>
               <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>
               <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
             </View>

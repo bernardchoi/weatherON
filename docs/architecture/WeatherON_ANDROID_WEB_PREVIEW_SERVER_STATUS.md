@@ -1,23 +1,23 @@
 # WeatherON Android Web Preview Server Status
 
-> 생성일: 2026-07-03
+> 생성일: 2026-07-04
 > 목적: 8094 미리보기가 최신 `apps/mobile/dist` 산출물을 그대로 서빙하는지 확인한다.
 
 ## 1. 현재 상태
 
 | 항목 | 값 |
 |---|---|
-| 상태 | 미확인 |
+| 상태 | 정상 |
 | issue 수 | 0 |
-| warning 수 | 1 |
+| warning 수 | 0 |
 | preview URL | `http://127.0.0.1:8094/` |
 | 응답 URL | `http://127.0.0.1:8094/` |
-| 응답 상태 | 응답 없음 |
+| 응답 상태 | 200 OK |
 | dist index | 있음 |
-| index.html 일치 | 미확인 |
-| dist script | `/_expo/static/js/web/index-42f7f9d6962525a223e6aeb4726ad05d.js` |
-| served script | 없음 |
-| 하단 메뉴 증빙 | 미확인 |
+| index.html 일치 | 일치 |
+| dist script | `/_expo/static/js/web/index-040337672d08f603135c9b7b832ee73d.js` |
+| served script | `/_expo/static/js/web/index-040337672d08f603135c9b7b832ee73d.js` |
+| 하단 메뉴 증빙 | 홈/출발/MY 확인 |
 
 ## 2. 판정 기준
 
@@ -33,7 +33,7 @@
 
 ## 4. Warnings
 
-- preview server unreachable: fetch failed
+- 없음
 
 ## 5. 확인 명령
 

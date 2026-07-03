@@ -52,7 +52,7 @@ export function DestinationListScreen({
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        <View style={[styles.atmosphere, !hasDestinations ? styles.atmosphereEmpty : null, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>출발</Text>
@@ -139,7 +139,35 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
           <Text style={[styles.emptyBody, { color: theme.subtle }]}>자주 가는 장소를 저장하면 목적지 날씨와 출발 준비를 바로 비교해요</Text>
         </View>
       </View>
+      <View style={styles.emptyBenefitGrid}>
+        <EmptyBenefit icon={uiIconAssets.clock} title="출발 시간" body="도착 시간 기준 계산" color={theme.sky} theme={theme} />
+        <EmptyBenefit icon={uiIconAssets.rain} title="비 그침" body="강수 변화 먼저 확인" color={theme.clear} theme={theme} />
+      </View>
       <AppButton label="목적지 추가" accessibilityLabel="첫 목적지 추가하기" onPress={onAdd} tone="warning" />
+    </View>
+  );
+}
+
+function EmptyBenefit({
+  icon,
+  title,
+  body,
+  color,
+  theme,
+}: {
+  icon: number;
+  title: string;
+  body: string;
+  color: string;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.emptyBenefit, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Image source={icon} style={[styles.emptyBenefitIcon, { tintColor: color }]} resizeMode="contain" />
+      <View style={styles.emptyBenefitCopy}>
+        <Text style={[styles.emptyBenefitTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.emptyBenefitBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+      </View>
     </View>
   );
 }
@@ -472,7 +500,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 112,
@@ -487,6 +515,10 @@ const styles = StyleSheet.create({
     opacity: 0.72,
     borderTopLeftRadius: 160,
     borderTopRightRadius: 160,
+  },
+  atmosphereEmpty: {
+    bottom: -190,
+    opacity: 0.26,
   },
   header: {
     minHeight: 40,
@@ -671,6 +703,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "700",
+  },
+  emptyBenefitGrid: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  emptyBenefit: {
+    flex: 1,
+    minHeight: 72,
+    gap: 6,
+    justifyContent: "center",
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  emptyBenefitIcon: {
+    width: 18,
+    height: 18,
+  },
+  emptyBenefitCopy: {
+    gap: 2,
+  },
+  emptyBenefitTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  emptyBenefitBody: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
   },
   destinationTop: {
     flexDirection: "row",
