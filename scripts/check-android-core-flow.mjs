@@ -686,6 +686,20 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "수신 확인");
   await assertText(page, "스마트 알림 설정");
   await assertText(page, "확인");
+  await clickAriaIncludes(page, "고급 설정 열기");
+  await assertText(page, "강수 상세");
+  await assertText(page, "비 시작 전·그칠 시각");
+  await clickAriaIncludes(page, "강수 상세, 켜짐");
+  await waitForAlertPreference(page, "rainDetail", false);
+  await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
+  await waitForApp();
+  await clickText(page, "MY");
+  await clickText(page, "앱 권한 관리");
+  await clickText(page, "수신 확인");
+  await clickAriaIncludes(page, "고급 설정 열기");
+  await assertAriaIncludes(page, "강수 상세, 꺼짐");
+  await clickAriaIncludes(page, "강수 상세, 꺼짐");
+  await waitForAlertPreference(page, "rainDetail", true);
   await clickText(page, "MY");
   await clickText(page, "앱 권한 관리");
   await clickText(page, "위치 선택");
@@ -957,6 +971,24 @@ async function waitForNotificationHistoryOpen(page, route, titlePart) {
   );
 }
 
+async function waitForAlertPreference(page, key, expectedValue) {
+  await page.waitForFunction(
+    (key, expectedValue) => {
+      const rawValue = localStorage.getItem("weatheron.appState.v1");
+      if (!rawValue) return false;
+      try {
+        const state = JSON.parse(rawValue);
+        return state.alertPreferences?.[key] === expectedValue;
+      } catch {
+        return false;
+      }
+    },
+    { timeout: 5000 },
+    key,
+    expectedValue,
+  );
+}
+
 async function clickText(page, label, index = 0) {
   const clicked = await page.evaluate(
     ({ label, index }) => {
@@ -989,7 +1021,7 @@ async function clickText(page, label, index = 0) {
 
 async function clickAriaIncludes(page, labelPart) {
   const clicked = await page.evaluate((labelPart) => {
-    const target = [...document.querySelectorAll("[role=button],[role=checkbox],button")].find((element) =>
+    const target = [...document.querySelectorAll("[role=button],[role=checkbox],[role=switch],button")].find((element) =>
       (element.getAttribute("aria-label") || "").includes(labelPart),
     );
     if (!target) return false;
@@ -1016,6 +1048,15 @@ async function clickAriaIncludes(page, labelPart) {
 
   if (!clicked) throw new Error(`missing aria clickable: ${labelPart}`);
   await waitForApp();
+}
+
+async function assertAriaIncludes(page, labelPart) {
+  const found = await page.evaluate((labelPart) => {
+    return [...document.querySelectorAll("[aria-label]")].some((element) =>
+      (element.getAttribute("aria-label") || "").includes(labelPart),
+    );
+  }, labelPart);
+  if (!found) throw new Error(`missing aria label: ${labelPart}`);
 }
 
 async function fillAriaInput(page, label, value) {
