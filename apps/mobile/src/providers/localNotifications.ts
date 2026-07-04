@@ -105,7 +105,12 @@ export async function syncLocalWeatherNotifications(options: {
   };
 }
 
-export async function scheduleLocalNotificationTest(): Promise<LocalNotificationSyncResult> {
+export async function scheduleLocalNotificationTest(options: {
+  route?: string;
+  title?: string;
+  body?: string;
+  seconds?: number;
+} = {}): Promise<LocalNotificationSyncResult> {
   const Notifications = await loadNotificationsModule();
   if (!Notifications) return { status: "unavailable", scheduledCount: 0 };
   await configureNotifications(Notifications);
@@ -113,22 +118,26 @@ export async function scheduleLocalNotificationTest(): Promise<LocalNotification
   const permission = await Notifications.getPermissionsAsync();
   if (!permission.granted) return { status: "permission-required", scheduledCount: 0 };
 
-  const identifier = `weatheron:test:${Date.now()}`;
+  const route = options.route ?? "M2";
+  const identifier = `weatheron:test:${route}:${Date.now()}`;
+  const trigger = {
+    type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+    seconds: 5,
+    channelId: notificationChannelId,
+  };
+  if (options.seconds) trigger.seconds = options.seconds;
+
   await Notifications.scheduleNotificationAsync({
     identifier,
     content: {
-      title: "WeatherON 확인 알림",
-      body: "알림을 누르면 스마트 알림 설정으로 이동함",
+      title: options.title ?? "WeatherON 확인 알림",
+      body: options.body ?? "알림을 누르면 스마트 알림 설정으로 이동함",
       data: {
-        route: "M2",
+        route,
         ruleId: "local-test",
       },
     },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 5,
-      channelId: notificationChannelId,
-    },
+    trigger,
   });
 
   const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
@@ -240,10 +249,15 @@ function getLocalNotificationResponsePayload(response: ExpoNotificationResponse)
 function getLocalNotificationPayload(notification: ExpoNotification): LocalNotificationResponsePayload {
   const data = notification.request.content.data;
   const fallbackRuleId = notification.request.identifier.startsWith("weatheron:test:") ? "local-test" : undefined;
-  const fallbackRoute = fallbackRuleId ? "M2" : undefined;
+  const fallbackRoute = fallbackRuleId ? getTestNotificationRouteFromIdentifier(notification.request.identifier) : undefined;
   return {
     route: typeof data.route === "string" ? data.route : fallbackRoute,
     ruleId: typeof data.ruleId === "string" ? data.ruleId : fallbackRuleId,
     notificationId: notification.request.identifier,
   };
+}
+
+function getTestNotificationRouteFromIdentifier(identifier: string): string | undefined {
+  const [, , route] = identifier.split(":");
+  return route || "M2";
 }

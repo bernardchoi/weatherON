@@ -6,6 +6,11 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
+const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
+  { route: "H3", label: "H3 알림함", tone: "sky" },
+  { route: "H5", label: "H5 강수", tone: "clear" },
+  { route: "G2", label: "G2 목적지", tone: "gold" },
+];
 
 export function AlertSettingsScreen({
   state,
@@ -127,7 +132,14 @@ export function AlertSettingsScreen({
           testStatusLabel={deliveryStatusLabel}
           testVerified={testNotificationVerified}
           actionLabel={testNotificationActionLabel}
-          onPress={permissionReady ? onSendTestNotification : () => onRequestPermissionGate("notification", "M2", "general")}
+          onPress={permissionReady ? () => onSendTestNotification("M2") : () => onRequestPermissionGate("notification", "M2", "general")}
+          theme={theme}
+        />
+
+        <DeliveryRouteTestPanel
+          enabled={permissionReady}
+          onSend={onSendTestNotification}
+          onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
           theme={theme}
         />
 
@@ -264,6 +276,43 @@ function DeliveryCheckCard({
       <Pressable accessibilityLabel={`확인 알림 ${actionLabel}`} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
         <Text style={[styles.deliveryActionText, { color: permissionReady ? theme.sky : theme.warm }]}>{actionLabel}</Text>
       </Pressable>
+    </View>
+  );
+}
+
+function DeliveryRouteTestPanel({
+  enabled,
+  onSend,
+  onRequestPermission,
+  theme,
+}: {
+  enabled: boolean;
+  onSend: (route: P0RouteId) => void;
+  onRequestPermission: () => void;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={styles.routeTestHeader}>
+        <Text style={[styles.routeTestTitle, { color: theme.text }]}>딥링크 확인</Text>
+        <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>
+      </View>
+      <View style={styles.routeTestGrid}>
+        {testRouteTargets.map((item) => {
+          const color = getToneColor(theme, item.tone);
+          return (
+            <Pressable
+              accessibilityLabel={`${item.label} 확인 알림 보내기`}
+              accessibilityRole="button"
+              key={item.route}
+              onPress={enabled ? () => onSend(item.route) : onRequestPermission}
+              style={[styles.routeTestButton, { backgroundColor: `${color}1f`, borderColor: `${color}55` }]}
+            >
+              <Text style={[styles.routeTestButtonText, { color }]}>{item.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -747,6 +796,48 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "900",
+  },
+  routeTestPanel: {
+    gap: spacing.sm,
+    padding: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  routeTestHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  routeTestTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  routeTestMeta: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  routeTestGrid: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  routeTestButton: {
+    minHeight: 42,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  routeTestButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    textAlign: "center",
   },
   rowIcon: {
     width: 34,

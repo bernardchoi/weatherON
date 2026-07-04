@@ -855,21 +855,25 @@ export function useWeatherOnAppState() {
     setRoute(route);
   }, [savedDestinations, state.notifications]);
 
-  const sendTestNotification = useCallback(async () => {
+  const sendTestNotification = useCallback(async (route: P0RouteId = "M2") => {
     if (!permissionReady) {
       setPermissionGate(createPermissionGateState("notification", "M2", selectedDestinationPlace.name, "general"));
       setRoute("O3");
       return;
     }
-    const result = await scheduleLocalNotificationTest();
+    const result = await scheduleLocalNotificationTest({
+      route,
+      title: getTestNotificationTitle(route),
+      body: getTestNotificationBody(route),
+    });
     setNotificationDeliveryStatus(result);
     setNotificationHistory((current) =>
       addNotificationHistoryItem(current, {
         id: createNotificationHistoryId("local-test", "sent"),
         notificationId: "local-test",
-        title: "WeatherON 확인 알림",
+        title: getTestNotificationTitle(route),
         action: "sent",
-        route: "M2",
+        route,
         statusLabel: getLocalNotificationResultLabel(result),
       }),
     );
@@ -884,13 +888,14 @@ export function useWeatherOnAppState() {
       if (!active) return;
       const notificationId = payload.ruleId ?? payload.notificationId ?? "local-notification";
       if (notificationId !== "local-test") return;
+      const routeFromPayload = getP0RouteFromNotificationPayload(payload.route) ?? "M2";
       setNotificationHistory((current) =>
         addNotificationHistoryItem(current, {
           id: createNotificationHistoryId("local-test", "received"),
           notificationId: "local-test",
-          title: "WeatherON 확인 알림",
+          title: getTestNotificationTitle(routeFromPayload),
           action: "received",
-          route: "M2",
+          route: routeFromPayload,
           statusLabel: "수신 확인",
         }),
       );
@@ -1536,8 +1541,22 @@ function getNotificationHistoryTitle(notificationId: string, fallbackTitle?: str
 }
 
 function getNotificationOpenResultLabel(notificationId: string, route: P0RouteId): string {
-  if (notificationId === "local-test") return "스마트 알림 설정 이동";
+  if (notificationId === "local-test" && route === "M2") return "스마트 알림 설정 이동";
   return `${getRouteLabel(route)} 이동`;
+}
+
+function getTestNotificationTitle(route: P0RouteId): string {
+  if (route === "H3") return "WeatherON 알림함 확인";
+  if (route === "H5") return "강수 알림";
+  if (route === "G2") return "목적지 알림";
+  return "WeatherON 확인 알림";
+}
+
+function getTestNotificationBody(route: P0RouteId): string {
+  if (route === "H3") return "알림을 누르면 알림함으로 이동함";
+  if (route === "H5") return "알림을 누르면 강수 타임라인으로 이동함";
+  if (route === "G2") return "알림을 누르면 목적지 케어로 이동함";
+  return "알림을 누르면 스마트 알림 설정으로 이동함";
 }
 
 function getAlertSettingsFocusFromRoute(route: P0RouteId): AlertSettingsFocus {
