@@ -27,7 +27,7 @@ export function Section({ title, caption, accent, children }: SectionProps) {
 
 function getAccentColor(theme: ReturnType<typeof useAppTheme>, accent: NonNullable<SectionProps["accent"]>) {
   if (accent === "gold") return theme.gold;
-  if (accent === "sky") return theme.sky;
+  if (accent === "sky") return theme.skyLite;
   if (accent === "warm") return theme.warm;
   return theme.clear;
 }

@@ -77,8 +77,8 @@ export function GlobalSettingsScreen({
           </View>
         </View>
 
-        <View accessibilityLabel={`표시 설정 요약, ${stateSummary}`} style={[styles.summaryCard, { backgroundColor: theme.cardStrong, borderColor: theme.gold }]}>
-          <Text style={[styles.summaryLabel, { color: theme.gold }]}>표시 설정 요약</Text>
+        <View accessibilityLabel={`표시 설정 요약, ${stateSummary}`} style={[styles.summaryCard, { backgroundColor: theme.cardStrong, borderColor: theme.skyLite }]}>
+          <Text style={[styles.summaryLabel, { color: theme.skyLite }]}>표시 설정 요약</Text>
           <Text style={[styles.summaryText, { color: theme.text }]}>{stateSummary}</Text>
           <View style={styles.scopeList}>
             <ScopeLine label="온도" value="홈 날씨 · 출발 비교 · 목적지 상세" theme={theme} />

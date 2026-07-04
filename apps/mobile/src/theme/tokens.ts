@@ -13,6 +13,7 @@ export type AppTheme = {
   clear: string;
   gold: string;
   sky: string;
+  skyLite: string;
   warm: string;
   alert: string;
   text: string;
@@ -37,11 +38,12 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     clear: "#2FC6A3",
     gold: "#F4B63F",
     sky: "#4AA3DF",
+    skyLite: "#A6CEF2",
     warm: "#E8854A",
     alert: "#E97F77",
     text: "#F8FBFF",
     muted: "rgba(215,230,245,0.82)",
-    subtle: "rgba(215,230,245,0.64)",
+    subtle: "rgba(215,230,245,0.80)",
     border: "rgba(255,255,255,0.12)",
     shadow: "rgba(0,0,0,0.34)",
     onAccent: "#10243F",
@@ -59,6 +61,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     clear: "#007F73",
     gold: "#C2410C",
     sky: "#237BBD",
+    skyLite: "#237BBD",
     warm: "#C84A2F",
     alert: "#B42318",
     text: "#142033",
@@ -78,6 +81,7 @@ export const appColors = {
   clear: appThemes.dark.clear,
   gold: appThemes.dark.gold,
   sky: appThemes.dark.sky,
+  skyLite: appThemes.dark.skyLite,
   warm: appThemes.dark.warm,
   text: appThemes.dark.text,
   muted: appThemes.dark.muted,

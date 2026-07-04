@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type WeatherStatusPanelProps = {
   status: WeatherProviderMode;
@@ -18,13 +18,14 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
   const isHealthy = status === "ready" && !loading;
   const statusLabel = loading ? "갱신 중" : getStatusLabel(status);
   const showFallbackAction = !loading && status !== "ready" && status !== "fallback";
+  const panelTone = getPanelTone(theme, status, loading);
   return (
     <View
       style={[
         styles.panel,
         {
-          backgroundColor: isHealthy ? `${theme.clear}1A` : `${theme.gold}24`,
-          borderColor: isHealthy ? `${theme.clear}55` : `${theme.gold}66`,
+          backgroundColor: `${panelTone}1A`,
+          borderColor: `${panelTone}55`,
         },
       ]}
     >
@@ -33,7 +34,7 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
           <Text style={[styles.title, { color: theme.text }]}>{loading ? "날씨 갱신 중" : getTitle(status)}</Text>
           <Text style={[styles.message, { color: theme.muted }]}>{loading ? "최신 날씨를 불러오는 중" : getMessage(status, message)}</Text>
         </View>
-        <Text style={[styles.status, { color: isHealthy ? theme.clear : theme.gold }]}>{statusLabel}</Text>
+        <Text style={[styles.status, { color: panelTone }]}>{statusLabel}</Text>
       </View>
 
       {!isHealthy && !loading ? (
@@ -62,6 +63,13 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
       ) : null}
     </View>
   );
+}
+
+function getPanelTone(theme: AppTheme, status: WeatherProviderMode, loading: boolean): string {
+  if (loading) return theme.skyLite;
+  if (status === "ready") return theme.clear;
+  if (status === "error") return theme.alert;
+  return theme.skyLite;
 }
 
 function getTitle(status: WeatherProviderMode): string {

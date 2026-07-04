@@ -21,7 +21,7 @@ export function StatusPill({ label, tone = "clear" }: StatusPillProps) {
 
 function getToneColor(theme: AppTheme, tone: NonNullable<StatusPillProps["tone"]>) {
   if (tone === "gold") return theme.gold;
-  if (tone === "sky") return theme.sky;
+  if (tone === "sky") return theme.skyLite;
   if (tone === "warm") return theme.warm;
   return theme.clear;
 }

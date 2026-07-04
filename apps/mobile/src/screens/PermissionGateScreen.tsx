@@ -53,7 +53,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
                   : `${returnLabel} 화면으로 돌아가 설정을 이어가요`}
             </Text>
           </View>
-          <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
+          <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "sky"} />
         </View>
         {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         <View style={styles.actions}>
@@ -70,7 +70,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
       <Section
         title={isDestinationCareGate ? "저장 후 사용" : isAccountSetupGate ? "준비 항목" : "필요 권한"}
         caption={isDestinationCareGate ? "출발 탭으로 돌아가기 전 확인" : isAccountSetupGate ? "계정 설정과 분리됨" : `${returnLabel} 화면으로 돌아가기 전 확인`}
-        accent="gold"
+        accent="sky"
       >
         {isDestinationCareGate ? (
           <>
@@ -113,8 +113,8 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
         )}
         <View style={[styles.stateBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
           <View style={styles.stateHeader}>
-            <Text style={[styles.stateTitle, { color: theme.gold }]}>{isDestinationCareGate ? "저장 상태" : "권한 상태"}</Text>
-            <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "gold"} />
+            <Text style={[styles.stateTitle, { color: theme.skyLite }]}>{isDestinationCareGate ? "저장 상태" : "권한 상태"}</Text>
+            <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "sky"} />
           </View>
           <Text style={[styles.stateCopy, { color: theme.muted }]}>
             {isDestinationCareGate
@@ -172,7 +172,7 @@ function buildResultCards({
 
 function ResultCard({ title, body, tone }: { title: string; body: string; tone: "clear" | "sky" }) {
   const theme = useAppTheme();
-  const color = tone === "clear" ? theme.clear : theme.sky;
+  const color = tone === "clear" ? theme.clear : theme.skyLite;
   return (
     <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: `${color}66` }]}>
       <View style={[styles.resultDot, { backgroundColor: color }]} />
@@ -187,15 +187,15 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
 function PermissionCard({ title, body, mark, active, ready }: { title: string; body: string; mark: string; active: boolean; ready: boolean }) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.permissionCard, { backgroundColor: theme.card, borderColor: active ? theme.sky : theme.gold }]}>
+    <View style={[styles.permissionCard, { backgroundColor: theme.card, borderColor: theme.skyLite }]}>
       <View style={[styles.iconBox, { backgroundColor: active ? theme.sky : theme.cardMuted }]}>
-        <Text style={[styles.iconText, { color: active ? theme.onAccent : theme.gold }]}>{mark}</Text>
+        <Text style={[styles.iconText, { color: active ? theme.onAccent : theme.skyLite }]}>{mark}</Text>
       </View>
       <View style={styles.copy}>
         <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
         <Text style={[styles.meta, { color: theme.muted }]}>{body}</Text>
       </View>
-      <StatusPill label={ready ? "허용됨" : active ? "허용" : "대기"} tone={ready ? "clear" : active ? "gold" : "sky"} />
+      <StatusPill label={ready ? "허용됨" : active ? "허용" : "대기"} tone={ready ? "clear" : "sky"} />
     </View>
   );
 }

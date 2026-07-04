@@ -113,7 +113,7 @@ export function HomeScreen({
               label="비 그침"
               value={homeDecision.rainCompactTitle}
               helper={homeDecision.rainCompactBody}
-              accent={theme.gold}
+              accent={getInfoAccent(theme)}
               icon={uiIconAssets.rain}
               theme={theme}
               onPress={() => onNavigate(destinationReady ? "H5" : "P1")}
@@ -122,7 +122,7 @@ export function HomeScreen({
               label="챙길 것"
               value={homeDecision.packTitle}
               helper={homeDecision.packBody}
-              accent={theme.gold}
+              accent={getPackAccent(homeDecision.packTone, theme)}
               icon={homeDecision.packIcon}
               theme={theme}
               onPress={() => onNavigate(destinationReady ? "H4" : "P1")}
@@ -374,15 +374,25 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
 
 function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]) {
   if (weather.rainProbabilityPct >= 50 || weather.precipitationMm > 0) {
-    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella };
+    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella, packTone: "sky" as const };
   }
   if (weather.windMs >= 7) {
-    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt };
+    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt, packTone: "warm" as const };
   }
   if (weather.feelsLikeC <= 5) {
-    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt };
+    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt, packTone: "warm" as const };
   }
-  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check };
+  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check, packTone: "clear" as const };
+}
+
+function getInfoAccent(theme: AppTheme): string {
+  return theme.skyLite;
+}
+
+function getPackAccent(tone: ReturnType<typeof buildPackDecision>["packTone"], theme: AppTheme): string {
+  if (tone === "sky") return getInfoAccent(theme);
+  if (tone === "warm") return theme.warm;
+  return theme.clear;
 }
 
 function subtractMinutes(time: string, minutes: number) {
@@ -487,7 +497,7 @@ function HomeDecisionHero({
   onOpenForecast: () => void;
 }) {
   const weatherIcon = current.condition === "rain" || current.condition === "storm" ? uiIconAssets.rain : uiIconAssets.uv;
-  const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.sky : theme.warm;
+  const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.skyLite : theme.warm;
 
   return (
     <View
@@ -581,7 +591,7 @@ function ForecastPreviewRow({
         title={preview.hourlyTitle}
         body={preview.hourlyBody}
         icon={uiIconAssets.clock}
-        accent={theme.sky}
+        accent={getInfoAccent(theme)}
         theme={theme}
         onPress={onOpen}
       />
@@ -590,7 +600,7 @@ function ForecastPreviewRow({
         title={preview.weeklyTitle}
         body={preview.weeklyBody}
         icon={uiIconAssets.uv}
-        accent={theme.gold}
+        accent={getInfoAccent(theme)}
         theme={theme}
         onPress={onOpen}
       />
@@ -808,7 +818,7 @@ function NotificationSidebar({
         <View style={[styles.sidebarPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
           <View style={styles.sidebarHeader}>
             <View style={styles.sidebarTitleGroup}>
-              <Text style={[styles.sidebarKicker, { color: hasUnread ? theme.gold : theme.clear }]}>
+              <Text style={[styles.sidebarKicker, { color: hasUnread ? getInfoAccent(theme) : theme.clear }]}>
                 {smartCareEnabled ? "스마트 알림" : "알림 꺼짐"}
               </Text>
               <Text style={[styles.sidebarTitle, { color: theme.text }]}>알림</Text>
@@ -836,9 +846,9 @@ function NotificationSidebar({
             accessibilityState={{ disabled: !hasUnread }}
             disabled={!hasUnread}
             onPress={onMarkAllNotificationsRead}
-            style={[styles.markAllButton, { backgroundColor: theme.cardMuted, borderColor: hasUnread ? theme.gold : theme.border, opacity: hasUnread ? 1 : 0.54 }]}
+            style={[styles.markAllButton, { backgroundColor: theme.cardMuted, borderColor: hasUnread ? getInfoAccent(theme) : theme.border, opacity: hasUnread ? 1 : 0.54 }]}
           >
-            <Text style={[styles.markAllText, { color: hasUnread ? theme.gold : theme.subtle }]}>전체 읽음</Text>
+            <Text style={[styles.markAllText, { color: hasUnread ? getInfoAccent(theme) : theme.subtle }]}>전체 읽음</Text>
           </Pressable>
 
           <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
@@ -982,9 +992,9 @@ function getNotificationTargetLabel(route: P0RouteId): string {
 }
 
 function getNotificationTone(theme: AppTheme, index: number, route: P0RouteId): string {
-  if (route === "H5" || index === 1) return theme.sky;
+  if (route === "H5" || index === 1) return getInfoAccent(theme);
   if (route === "G2" || route === "H4" || index === 2) return theme.clear;
-  if (index === 0) return theme.gold;
+  if (index === 0) return getInfoAccent(theme);
   return theme.warm;
 }
 
