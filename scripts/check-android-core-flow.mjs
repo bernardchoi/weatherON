@@ -104,6 +104,7 @@ try {
   await runCoreFlowStep("persisted weather location mismatch fallback", () => checkPersistedWeatherLocationMismatchFlow(browser));
   await runCoreFlowStep("alert settings destination empty", () => checkAlertSettingsDestinationEmptyFlow(browser));
   await runCoreFlowStep("destination add persistence", () => checkDestinationAddUiPersistenceFlow(browser));
+  await runCoreFlowStep("notification center deep link", () => checkNotificationCenterDeepLinkFlow(browser));
   await runCoreFlowStep("destination persistence", () => checkDestinationPersistenceFlow(page));
   await runCoreFlowStep("my settings flow", () => checkMySettingsFlow(page));
 } catch (error) {
@@ -214,20 +215,28 @@ async function checkNotificationPermissionRecovery(browser) {
     page.on("pageerror", (error) => issues.push(`page error: ${error.message}`));
     await installCoreFlowFetchMock(page);
 
-  await page.evaluateOnNewDocument((state) => {
-    localStorage.setItem(
-      "weatheron.appState.v1",
-      JSON.stringify({
-        ...state,
-        permissionReady: false,
-      }),
-    );
-  }, seedState);
-  await page.goto(withCacheBust(previewUrl, "permissionRecovery"), { waitUntil: "networkidle0", timeout: 25000 });
-  await waitForApp();
-  await clickAriaIncludes(page, "알림 열기");
-  await assertText(page, "푸시 알림 대기");
-  await assertText(page, "알림 설정으로 이동");
+    await page.evaluateOnNewDocument((state) => {
+      localStorage.setItem(
+        "weatheron.appState.v1",
+        JSON.stringify({
+          ...state,
+          permissionReady: false,
+        }),
+      );
+    }, seedState);
+    await page.goto(withCacheBust(previewUrl, "permissionRecovery"), { waitUntil: "networkidle0", timeout: 25000 });
+    await waitForApp();
+    await clickAriaIncludes(page, "알림 열기");
+    await assertText(page, "푸시 알림 대기");
+    await assertText(page, "알림 설정으로 이동");
+    await clickText(page, "알림 설정으로 이동");
+    await assertText(page, "스마트 알림 설정");
+    await assertText(page, "권한 켜기");
+    await clickAriaIncludes(page, "확인 알림 권한 켜기");
+    await assertText(page, "필요한 권한만 먼저 허용해 주세요");
+    await clickAriaIncludes(page, "권한 나중에 설정");
+    await assertText(page, "스마트 알림 설정");
+    await assertText(page, "푸시 알림은 나중에");
   } finally {
     await context.close();
   }
@@ -554,12 +563,40 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "경로 확인 전"]);
     await assertText(page, "잠실야구장");
     await waitForPersistedDestination(page, "잠실야구장");
+    await waitForPersistedDestinationSchedule(page, "잠실야구장", {
+      targetArrivalTime: "09:30",
+      transportMode: "transit",
+    });
+    await clickAriaIncludes(page, "날씨 비교와 알림 상세 열기");
+    await clickAriaIncludes(page, "알림 조건 직접 조정 열기");
+    await clickAriaIncludes(page, "강수 기준 50%, 조정");
+    await clickAriaIncludes(page, "출발 전 60분, 조정");
+    await clickAriaIncludes(page, "바람 기준 8미터 매초, 조정");
+    await assertText(page, "강수 70%");
+    await assertText(page, "출발 120분 전");
+    await assertText(page, "바람 11m/s 기준");
+    await waitForPersistedDestinationAlertCondition(page, "잠실야구장", {
+      rainThresholdPct: 70,
+      leadTimeMinutes: 120,
+      windThresholdMs: 11,
+    });
 
     console.log("core-flow: destination add reload");
     await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
     await waitForApp();
     await assertText(page, "다음 비");
     await assertText(page, "잠실야구장");
+    await clickText(page, "출발");
+    await assertText(page, "도착 09:30");
+    await clickAriaIncludes(page, "잠실야구장 목적지 상세 보기");
+    await assertText(page, "09:30 도착");
+    await assertText(page, "대중교통");
+    await clickAriaIncludes(page, "날씨 비교와 알림 상세 열기");
+    await assertText(page, "강수 70%");
+    await assertText(page, "출발 120분 전");
+    await assertText(page, "바람 11m/s 기준");
+    await clickText(page, "출발");
+    await clickText(page, "홈");
     await clickText(page, "비 그침");
     await assertText(page, "외출 가이드");
     await assertText(page, "우산 추천");
@@ -572,6 +609,58 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await clickAriaIncludes(page, "잠실야구장 목적지 삭제");
     await assertText(page, "목적지 삭제됨");
     await assertText(page, "복구");
+  } finally {
+    await context.close();
+  }
+}
+
+async function checkNotificationCenterDeepLinkFlow(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  try {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+    page.on("console", (message) => logs.push(`${message.type()}: ${message.text()}`));
+    page.on("pageerror", (error) => issues.push(`page error: ${error.message}`));
+    await installCoreFlowFetchMock(page);
+
+    const destinationWeatherResult = {
+      ...persistedWeatherResult,
+      destination: buildWeatherSnapshot(persistedDestination.place.id, persistedDestination.place.name, "openmeteo", 24, 65),
+      destinationSnapshots: [
+        buildWeatherSnapshot(persistedDestination.place.id, persistedDestination.place.name, "openmeteo", 24, 65),
+      ],
+    };
+    await page.evaluateOnNewDocument((state, destination, weatherResult) => {
+      localStorage.setItem(
+        "weatheron.appState.v1",
+        JSON.stringify({
+          ...state,
+          savedDestinations: [destination],
+          selectedDestinationPlace: destination.place,
+          destinationSelectionReady: true,
+          previewDestinationCareEnabled: true,
+          permissionReady: true,
+        }),
+      );
+      localStorage.setItem("weatheron.weatherProviderResult.v1", JSON.stringify(weatherResult));
+      localStorage.setItem(
+        "weatheron.notificationState.v1",
+        JSON.stringify({ readNotificationIds: [], notificationHistory: [] }),
+      );
+    }, seedState, persistedDestination, destinationWeatherResult);
+
+    await page.goto(withCacheBust(previewUrl, "notificationCenter"), { waitUntil: "networkidle0", timeout: 25000 });
+    await waitForApp();
+    await clickAriaIncludes(page, "알림 열기");
+    await assertText(page, "알림 센터");
+    await assertText(page, "이력·딥링크 확인");
+    await clickAriaIncludes(page, "알림 센터 열기");
+    await assertText(page, "최근 처리");
+    await assertText(page, "잠실종합운동장 알림");
+    await clickAriaIncludes(page, "잠실종합운동장 알림 열기");
+    await assertText(page, "목적지 기준 알림 미리보기");
+    await assertText(page, "잠실종합운동장");
+    await waitForNotificationHistoryOpen(page, "G2", "잠실종합운동장");
   } finally {
     await context.close();
   }
@@ -799,6 +888,72 @@ async function waitForPersistedDestination(page, destinationName) {
     },
     { timeout: 5000 },
     destinationName,
+  );
+}
+
+async function waitForPersistedDestinationSchedule(page, destinationName, expected) {
+  await page.waitForFunction(
+    (destinationName, expected) => {
+      const rawValue = localStorage.getItem("weatheron.appState.v1");
+      if (!rawValue) return false;
+      let destination = null;
+      try {
+        const state = JSON.parse(rawValue);
+        destination = Array.isArray(state.savedDestinations)
+          ? state.savedDestinations.find((item) => item?.place?.name === destinationName)
+          : null;
+      } catch {
+        return false;
+      }
+      if (!destination?.schedulePreference) return false;
+      return Object.entries(expected).every(([key, value]) => destination.schedulePreference[key] === value);
+    },
+    { timeout: 5000 },
+    destinationName,
+    expected,
+  );
+}
+
+async function waitForPersistedDestinationAlertCondition(page, destinationName, expected) {
+  await page.waitForFunction(
+    (destinationName, expected) => {
+      const rawValue = localStorage.getItem("weatheron.appState.v1");
+      if (!rawValue) return false;
+      let destination = null;
+      try {
+        const state = JSON.parse(rawValue);
+        destination = Array.isArray(state.savedDestinations)
+          ? state.savedDestinations.find((item) => item?.place?.name === destinationName)
+          : null;
+      } catch {
+        return false;
+      }
+      if (!destination?.alertCondition) return false;
+      return Object.entries(expected).every(([key, value]) => destination.alertCondition[key] === value);
+    },
+    { timeout: 5000 },
+    destinationName,
+    expected,
+  );
+}
+
+async function waitForNotificationHistoryOpen(page, route, titlePart) {
+  await page.waitForFunction(
+    (route, titlePart) => {
+      const rawValue = localStorage.getItem("weatheron.notificationState.v1");
+      if (!rawValue) return false;
+      try {
+        const state = JSON.parse(rawValue);
+        return Array.isArray(state.notificationHistory) && state.notificationHistory.some((item) =>
+          item?.action === "open" && item?.route === route && String(item?.title ?? "").includes(titlePart),
+        );
+      } catch {
+        return false;
+      }
+    },
+    { timeout: 5000 },
+    route,
+    titlePart,
   );
 }
 

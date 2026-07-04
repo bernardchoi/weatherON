@@ -158,6 +158,10 @@ export function HomeScreen({
           setNotificationSidebarOpen(false);
           onNavigate("M2");
         }}
+        onOpenCenter={() => {
+          setNotificationSidebarOpen(false);
+          onNavigate("H3");
+        }}
         onOpen={(id, route) => {
           onOpenNotificationDeepLink(id, route);
           setNotificationSidebarOpen(false);
@@ -783,6 +787,7 @@ function NotificationSidebar({
   onClose,
   onMarkAllNotificationsRead,
   onOpenSettings,
+  onOpenCenter,
   onOpen,
   theme,
 }: {
@@ -795,6 +800,7 @@ function NotificationSidebar({
   onClose: () => void;
   onMarkAllNotificationsRead: () => void;
   onOpenSettings: () => void;
+  onOpenCenter: () => void;
   onOpen: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
 }) {
@@ -849,6 +855,16 @@ function NotificationSidebar({
             style={[styles.markAllButton, { backgroundColor: theme.cardMuted, borderColor: hasUnread ? getInfoAccent(theme) : theme.border, opacity: hasUnread ? 1 : 0.54 }]}
           >
             <Text style={[styles.markAllText, { color: hasUnread ? getInfoAccent(theme) : theme.subtle }]}>전체 읽음</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityLabel="알림 센터 열기"
+            accessibilityRole="button"
+            onPress={onOpenCenter}
+            style={[styles.sidebarCenterButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+          >
+            <Text style={[styles.sidebarCenterText, { color: theme.text }]}>알림 센터</Text>
+            <Text style={[styles.sidebarCenterMeta, { color: theme.subtle }]}>이력·딥링크 확인</Text>
           </Pressable>
 
           <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
@@ -1596,6 +1612,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "900",
+  },
+  sidebarCenterButton: {
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  sidebarCenterText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  sidebarCenterMeta: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
   },
   sidebarScroll: {
     flex: 1,

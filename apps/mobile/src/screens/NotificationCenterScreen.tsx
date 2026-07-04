@@ -256,6 +256,36 @@ function getNotificationTargetLabel(route: P0RouteId): string {
 }
 
 function getNotificationPresentation(index: number, route: P0RouteId, fallbackTitle: string): NotificationPresentation {
+  if (route === "G2") {
+    return {
+      icon: "↗",
+      title: fallbackTitle || "목적지 알림",
+      time: "08:20",
+      detail: "출발 전 목적지 날씨 다시 확인",
+      highlight: "목적지 케어 열기",
+      tone: "clear",
+    };
+  }
+  if (route === "H5") {
+    return {
+      icon: "비",
+      title: fallbackTitle || "비 예보 사전 알림",
+      time: "14:00",
+      detail: "18시 시작 · 시간당 4mm · 21시 그침",
+      highlight: "강수 타임라인 보기",
+      tone: "sky",
+    };
+  }
+  if (route === "H4") {
+    return {
+      icon: "☼",
+      title: fallbackTitle || "오늘 준비 알림",
+      time: "07:30",
+      detail: "오늘 외출 전 준비 상태 확인",
+      highlight: "오늘 준비 열기",
+      tone: "gold",
+    };
+  }
   if (index === 0) {
     return {
       icon: "☼",
@@ -266,7 +296,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
       tone: "gold",
     };
   }
-  if (route === "H5" || index === 1) {
+  if (index === 1) {
     return {
       icon: "비",
       title: "비 예보 사전 알림",
@@ -276,7 +306,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
       tone: "sky",
     };
   }
-  if (route === "H4" || index === 2) {
+  if (index === 2) {
     return {
       icon: "↗",
       title: "목적지 변화",
