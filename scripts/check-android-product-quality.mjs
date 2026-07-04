@@ -316,6 +316,11 @@ assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
 assertSourceIncludes("packages/shared/src/fixtures/placeSearchFixtures.ts", [
   "도쿄 역",
   "東京駅",
+  "신사이바시역",
+  "Shinsaibashi Station",
+  "난바역",
+  "Namba Station",
+  "localizePlaceSearchResults",
   "센트럴 파크",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [

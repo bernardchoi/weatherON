@@ -120,13 +120,13 @@ async function searchPlaces(params, env) {
   if (query.trim().length < 2) return [];
 
   return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${query.trim().toLowerCase()}`, readTtl(env, "PLACE_CACHE_TTL_MS", DEFAULT_PLACE_CACHE_TTL_MS), async () => {
-    const curatedResults = searchFixturePlaces(searchQuery);
+    const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
     try {
       if (countryCode === "KR" && readEnv(env, "KAKAO_REST_API_KEY")) {
         return mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, env));
       }
       if (getGoogleMapsApiKey(env)) {
-        const googleResults = await searchGooglePlaces(searchQuery, countryCode, language, env);
+        const googleResults = localizePlaceSearchResults(await searchGooglePlaces(searchQuery, countryCode, language, env), language);
         return mergePlaceSearchResults(curatedResults, googleResults);
       }
     } catch (error) {
@@ -144,7 +144,7 @@ function normalizeCountryCode(value) {
 function inferPlaceSearchCountryCode(query) {
   const text = query.trim().toLowerCase();
   if (!text) return "KR";
-  const jpKeywords = ["tokyo", "osaka", "kyoto", "sapporo", "fukuoka", "japan", "도쿄", "오사카", "교토", "삿포로", "후쿠오카", "일본", "東京", "大阪", "京都"];
+  const jpKeywords = ["tokyo", "osaka", "kyoto", "sapporo", "fukuoka", "japan", "shinsaibashi", "namba", "nankai namba", "도쿄", "오사카", "교토", "삿포로", "후쿠오카", "일본", "신사이바시", "난바", "난카이난바", "東京", "大阪", "京都", "心斎橋", "難波", "なんば"];
   if (jpKeywords.some((keyword) => text.includes(keyword.toLowerCase()))) return "JP";
   const globalKeywords = ["bangkok", "paris", "london", "new york", "central park", "방콕", "파리", "런던", "뉴욕", "센트럴파크", "센트럴 파크"];
   if (globalKeywords.some((keyword) => text.includes(keyword.toLowerCase()))) return "GLOBAL";
@@ -177,6 +177,24 @@ const placeSearchQueryAliases = {
   "시부야": "Shibuya",
   "신주쿠": "Shinjuku",
   "오사카": "Osaka",
+  "신사이바시": "Shinsaibashi Station",
+  "신사이바시역": "Shinsaibashi Station",
+  "shinsaibashi": "Shinsaibashi Station",
+  "shinsaibashi station": "Shinsaibashi Station",
+  "心斎橋": "Shinsaibashi Station",
+  "心斎橋駅": "Shinsaibashi Station",
+  "난바": "Namba Station",
+  "난바역": "Namba Station",
+  "난카이난바": "Namba Station",
+  "난카이난바역": "Namba Station",
+  "namba": "Namba Station",
+  "namba station": "Namba Station",
+  "nankai namba": "Namba Station",
+  "nankai namba station": "Namba Station",
+  "難波": "Namba Station",
+  "難波駅": "Namba Station",
+  "なんば": "Namba Station",
+  "なんば駅": "Namba Station",
   "교토": "Kyoto",
   "삿포로": "Sapporo",
   "후쿠오카": "Fukuoka",
@@ -396,10 +414,30 @@ const placeSearchFixtures = [
   {
     id: "jp-tokyo-station",
     name: "도쿄역",
-    address: "Tokyo Station, Marunouchi, Tokyo",
+    address: "일본 도쿄도 지요다구 마루노우치",
     category: "custom",
     countryCode: "JP",
     coordinate: { latitude: 35.6812, longitude: 139.7671 },
+    timezone: "Asia/Tokyo",
+    provider: "fixture",
+  },
+  {
+    id: "jp-shinsaibashi-station",
+    name: "신사이바시역",
+    address: "일본 오사카부 오사카시 주오구 신사이바시스지",
+    category: "custom",
+    countryCode: "JP",
+    coordinate: { latitude: 34.675, longitude: 135.5006 },
+    timezone: "Asia/Tokyo",
+    provider: "fixture",
+  },
+  {
+    id: "jp-namba-station",
+    name: "난바역",
+    address: "일본 오사카부 오사카시 주오구 난바",
+    category: "custom",
+    countryCode: "JP",
+    coordinate: { latitude: 34.6663, longitude: 135.5001 },
     timezone: "Asia/Tokyo",
     provider: "fixture",
   },
@@ -450,6 +488,52 @@ function searchFixturePlaces(query) {
     return haystack.includes(normalizedQuery) || normalizedQuery.split(/\s+/).every((token) => haystack.includes(token));
   });
 }
+
+function localizePlaceSearchResults(places, language) {
+  return places.map((place) => localizePlaceSearchResult(place, language));
+}
+
+function localizePlaceSearchResult(place, language = "ko") {
+  const key = getKnownStationKey(place);
+  if (!key) return place;
+  const label = localizedStationLabels[key][language] ?? localizedStationLabels[key].ko;
+  return {
+    ...place,
+    name: label.name,
+    address: label.address,
+    countryCode: "JP",
+    timezone: "Asia/Tokyo",
+  };
+}
+
+function getKnownStationKey(place) {
+  if (Object.prototype.hasOwnProperty.call(localizedStationLabels, place.id)) return place.id;
+  const text = String(`${place.name ?? ""} ${place.address ?? ""} ${place.id ?? ""}`).trim().toLowerCase().replace(/\s+/g, " ");
+  const compact = text.replace(/\s+/g, "");
+  const stationLike = /station|stn|역|駅|nankai/.test(text);
+  if ((compact.includes("tokyostation") || compact.includes("도쿄역") || compact.includes("東京駅")) && stationLike) return "jp-tokyo-station";
+  if ((compact.includes("shinsaibashi") || compact.includes("신사이바시") || compact.includes("心斎橋")) && stationLike) return "jp-shinsaibashi-station";
+  if ((compact.includes("nambastation") || compact.includes("nankainamba") || compact.includes("난바역") || compact.includes("난카이난바") || compact.includes("難波駅") || compact.includes("なんば駅")) && stationLike) return "jp-namba-station";
+  return null;
+}
+
+const localizedStationLabels = {
+  "jp-tokyo-station": {
+    ko: { name: "도쿄역", address: "일본 도쿄도 지요다구 마루노우치" },
+    en: { name: "Tokyo Station", address: "Tokyo Station, Marunouchi, Tokyo" },
+    ja: { name: "東京駅", address: "東京都千代田区丸の内" },
+  },
+  "jp-shinsaibashi-station": {
+    ko: { name: "신사이바시역", address: "일본 오사카부 오사카시 주오구 신사이바시스지" },
+    en: { name: "Shinsaibashi Station", address: "Shinsaibashi Station, Chuo Ward, Osaka" },
+    ja: { name: "心斎橋駅", address: "大阪府大阪市中央区心斎橋筋" },
+  },
+  "jp-namba-station": {
+    ko: { name: "난바역", address: "일본 오사카부 오사카시 주오구 난바" },
+    en: { name: "Namba Station", address: "Namba Station, Chuo Ward, Osaka" },
+    ja: { name: "なんば駅", address: "大阪府大阪市中央区難波" },
+  },
+};
 
 function inferPlaceCategory(value) {
   const text = value.toLowerCase();

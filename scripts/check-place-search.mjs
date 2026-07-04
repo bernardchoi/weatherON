@@ -55,7 +55,7 @@ const overseasPlaceCases = [
     query: "도쿄 역",
     language: "ja",
     expectedCountryCode: "JP",
-    expectedNamePattern: /도쿄역|tokyo station/i,
+    expectedNamePattern: /東京駅|도쿄역|tokyo station/i,
     allowedProviders: ["google", "fixture"],
   },
   {
@@ -63,7 +63,43 @@ const overseasPlaceCases = [
     query: "東京駅",
     language: "ja",
     expectedCountryCode: "JP",
-    expectedNamePattern: /도쿄역|tokyo station/i,
+    expectedNamePattern: /東京駅|도쿄역|tokyo station/i,
+    allowedProviders: ["google", "fixture"],
+  },
+  {
+    label: "JP Osaka Shinsaibashi English station Korean device language",
+    query: "Shinsaibashi station",
+    language: "ko",
+    expectedCountryCode: "JP",
+    expectedNamePattern: /신사이바시역/i,
+    disallowedNamePattern: /心斎橋/,
+    allowedProviders: ["google", "fixture"],
+  },
+  {
+    label: "JP Osaka Shinsaibashi English station English device language",
+    query: "Shinsaibashi station",
+    language: "en",
+    expectedCountryCode: "JP",
+    expectedNamePattern: /shinsaibashi station/i,
+    disallowedNamePattern: /心斎橋/,
+    allowedProviders: ["google", "fixture"],
+  },
+  {
+    label: "JP Osaka Namba English station Korean device language",
+    query: "Namba station",
+    language: "ko",
+    expectedCountryCode: "JP",
+    expectedNamePattern: /난바역/i,
+    disallowedNamePattern: /難波|なんば|namba station/i,
+    allowedProviders: ["google", "fixture"],
+  },
+  {
+    label: "JP Osaka Namba English station English device language",
+    query: "Namba station",
+    language: "en",
+    expectedCountryCode: "JP",
+    expectedNamePattern: /namba station/i,
+    disallowedNamePattern: /難波|なんば|난바역/,
     allowedProviders: ["google", "fixture"],
   },
   {
@@ -158,6 +194,9 @@ function assertSelectablePlaceResults(results, testCase) {
   assert.equal(first.countryCode, testCase.expectedCountryCode, `${testCase.label} country mismatch`);
   if (testCase.expectedNamePattern) {
     assert.match(first.name, testCase.expectedNamePattern, `${testCase.label} first result name unexpected`);
+  }
+  if (testCase.disallowedNamePattern) {
+    assert.doesNotMatch(first.name, testCase.disallowedNamePattern, `${testCase.label} first result name language mismatch`);
   }
   assert.ok(testCase.allowedProviders.includes(first.provider), `${testCase.label} provider unexpected: ${first.provider}`);
   assert.ok(first.id && typeof first.id === "string", `${testCase.label} result id missing`);

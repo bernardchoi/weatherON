@@ -1,4 +1,4 @@
-import { searchFixturePlaces, type PlaceSearchResult } from "@weatheron/shared";
+import { localizePlaceSearchResults, searchFixturePlaces, type PlaceSearchResult } from "@weatheron/shared";
 import {
   DEFAULT_OPEN_METEO_GEOCODING_URL,
   DEFAULT_WEATHER_TIMEOUT_MS,
@@ -47,7 +47,7 @@ type OpenMeteoGeocodingPlace = {
 
 export const fixturePlaceSearchClient: PlaceSearchClient = {
   async searchPlaces(params) {
-    return filterPlacesByCountryCode(searchFixturePlaces(params.query), params.countryCode);
+    return localizePlaceSearchResults(filterPlacesByCountryCode(searchFixturePlaces(params.query), params.countryCode), params.locale);
   },
 };
 
@@ -59,9 +59,13 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
       const url = new URL("/places/search", normalizeBaseUrl(options.apiBaseUrl));
       url.searchParams.set("q", params.query);
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
-      url.searchParams.set("language", getSearchLanguage(params.locale));
+      const language = getSearchLanguage(params.locale);
+      url.searchParams.set("language", language);
       const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);
-      return mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode), remoteResults);
+      return localizePlaceSearchResults(
+        mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode, language), remoteResults),
+        language,
+      );
     },
   };
 }
@@ -73,18 +77,22 @@ export function createOpenMeteoPlaceSearchClient(options: OpenMeteoPlaceSearchCl
     async searchPlaces(params) {
       const query = params.query.trim();
       if (query.length < 2) return [];
+      const language = getSearchLanguage(params.locale);
       const url = new URL(options.geocodingUrl ?? DEFAULT_OPEN_METEO_GEOCODING_URL);
       url.searchParams.set("name", getSearchQueryAlias(query));
       url.searchParams.set("count", "8");
-      url.searchParams.set("language", getSearchLanguage(params.locale));
+      url.searchParams.set("language", language);
       url.searchParams.set("format", "json");
       if (params.countryCode && params.countryCode !== "GLOBAL") {
         url.searchParams.set("countryCode", params.countryCode);
       }
-      const curatedResults = getCuratedPlaceMatches(query, params.countryCode);
+      const curatedResults = getCuratedPlaceMatches(query, params.countryCode, language);
       try {
         const payload = await fetchJson<OpenMeteoGeocodingResponse>(url, timeoutMs, options.fetchImpl);
-        return mergePlaceSearchResults(curatedResults, normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode));
+        return localizePlaceSearchResults(
+          mergePlaceSearchResults(curatedResults, normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode)),
+          language,
+        );
       } catch (error) {
         if (curatedResults.length > 0) return curatedResults;
         throw error;
@@ -167,6 +175,24 @@ const placeSearchQueryAliases: Record<string, string> = {
   "시부야": "Shibuya",
   "신주쿠": "Shinjuku",
   "오사카": "Osaka",
+  "신사이바시": "Shinsaibashi Station",
+  "신사이바시역": "Shinsaibashi Station",
+  "shinsaibashi": "Shinsaibashi Station",
+  "shinsaibashi station": "Shinsaibashi Station",
+  "心斎橋": "Shinsaibashi Station",
+  "心斎橋駅": "Shinsaibashi Station",
+  "난바": "Namba Station",
+  "난바역": "Namba Station",
+  "난카이난바": "Namba Station",
+  "난카이난바역": "Namba Station",
+  "namba": "Namba Station",
+  "namba station": "Namba Station",
+  "nankai namba": "Namba Station",
+  "nankai namba station": "Namba Station",
+  "難波": "Namba Station",
+  "難波駅": "Namba Station",
+  "なんば": "Namba Station",
+  "なんば駅": "Namba Station",
   "교토": "Kyoto",
   "삿포로": "Sapporo",
   "후쿠오카": "Fukuoka",
@@ -178,8 +204,8 @@ const placeSearchQueryAliases: Record<string, string> = {
   "센트럴 파크": "Central Park",
 };
 
-function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"]): PlaceSearchResult[] {
-  return filterPlacesByCountryCode(searchFixturePlaces(query), countryCode);
+function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"], localeOrLanguage?: string): PlaceSearchResult[] {
+  return localizePlaceSearchResults(filterPlacesByCountryCode(searchFixturePlaces(query), countryCode), localeOrLanguage);
 }
 
 function filterPlacesByCountryCode(
