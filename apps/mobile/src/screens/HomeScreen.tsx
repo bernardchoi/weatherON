@@ -518,9 +518,51 @@ function HomeDecisionHero({
         <DecisionMetric icon={uiIconAssets.wind} label={`${current.windMs.toFixed(1)}m/s`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
       </View>
+      <FeelsLikeCard current={current} temperatureUnit={temperatureUnit} theme={theme} onPress={onOpenForecast} />
       <ForecastPreviewRow preview={forecastPreview} theme={theme} onOpen={onOpenForecast} />
     </View>
   );
+}
+
+function FeelsLikeCard({
+  current,
+  temperatureUnit,
+  theme,
+  onPress,
+}: {
+  current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
+  temperatureUnit: P0ScreenProps["temperatureUnit"];
+  theme: AppTheme;
+  onPress: () => void;
+}) {
+  const delta = current.feelsLikeC - current.tempC;
+  return (
+    <Pressable
+      accessibilityLabel={`현재 위치 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
+      <View style={[styles.feelsLikeIconFrame, { backgroundColor: `${theme.clear}16` }]}>
+        <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+      </View>
+      <View style={styles.feelsLikeCopy}>
+        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>현재 위치 체감온도</Text>
+        <Text style={[styles.feelsLikeBody, { color: theme.muted }]} numberOfLines={1}>
+          실제 {formatTemperature(current.tempC, temperatureUnit)} · {getFeelsLikeDeltaLabel(delta, temperatureUnit)}
+        </Text>
+      </View>
+      <Text style={[styles.feelsLikeValue, { color: theme.text }]} numberOfLines={1}>
+        {formatTemperature(current.feelsLikeC, temperatureUnit)}
+      </Text>
+    </Pressable>
+  );
+}
+
+function getFeelsLikeDeltaLabel(deltaC: number, temperatureUnit: P0ScreenProps["temperatureUnit"]) {
+  const roundedDelta = Math.round(deltaC);
+  if (roundedDelta === 0) return "실제 기온과 같음";
+  return `체감 ${formatTemperatureDelta(deltaC, temperatureUnit)}`;
 }
 
 function ForecastPreviewRow({
@@ -1012,7 +1054,7 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   decisionHero: {
-    minHeight: 322,
+    minHeight: 402,
     gap: spacing.md,
     padding: spacing.md,
     borderRadius: radius.xl,
@@ -1130,6 +1172,49 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
   },
+  feelsLikeCard: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  feelsLikeIconFrame: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  feelsLikeIcon: {
+    width: 24,
+    height: 24,
+  },
+  feelsLikeCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  feelsLikeLabel: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  feelsLikeBody: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  feelsLikeValue: {
+    minWidth: 64,
+    textAlign: "right",
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "900",
+  },
   destinationSection: {
     gap: spacing.sm,
   },
@@ -1179,7 +1264,7 @@ const styles = StyleSheet.create({
   },
   destinationSelectorAddButton: {
     minWidth: 48,
-    minHeight: 34,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
