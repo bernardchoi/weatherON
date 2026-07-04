@@ -101,7 +101,7 @@ export function HomeScreen({
           />
           <View style={styles.visualDecisionGrid}>
             <VisualDecisionCard
-              label="출발"
+              label="나갈 시간"
               value={homeDecision.departureTime}
               helper={destinationReady ? "도착 역산" : "목적지 추가"}
               accent={theme.gold}
@@ -110,7 +110,7 @@ export function HomeScreen({
               onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
             />
             <VisualDecisionCard
-              label="강수"
+              label="비 그침"
               value={homeDecision.rainCompactTitle}
               helper={homeDecision.rainCompactBody}
               accent={theme.gold}
@@ -119,7 +119,7 @@ export function HomeScreen({
               onPress={() => onNavigate(destinationReady ? "H5" : "P1")}
             />
             <VisualDecisionCard
-              label="준비"
+              label="챙길 것"
               value={homeDecision.packTitle}
               helper={homeDecision.packBody}
               accent={theme.gold}

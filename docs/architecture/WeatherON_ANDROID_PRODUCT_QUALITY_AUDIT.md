@@ -50,7 +50,7 @@
 | 반복 방지 | `npm run check:android-product-quality` 정적 체크와 `npm run check:android-core-flow` 클릭 흐름 체크 추가 |
 | 하단 탭 가림 회귀 | `npm run check:android-core-flow`에서 목적지/강수/코디 하단 CTA가 하단 탭 위로 노출되는지 확인 |
 | 오프라인 상태 문구 | 홈 날씨 pill이 provider 상태 전체를 보도록 보정해 실패/최근 예보 상태를 `실시간 예보`로 오인하지 않게 함 |
-| 출발시간 역산 UX | G2 목적지 케어에 `자동/도보/자차/대중교통` 선택, 도착 희망 `HH:mm` 직접 입력, 현재시각 기준 자동 여유시간, 대중교통 변동 안내 추가 |
+| 출발시간 역산 UX | G2 목적지 케어에 `자동/도보/자차/대중교통` 드롭다운 선택, 선택 즉시 리스트 닫힘, 도착 희망 `HH:mm` 직접 입력, 현재시각 기준 자동 여유시간, 대중교통 변동 안내 추가 |
 | EAS 업로드 최적화 | `.easignore` 추가로 docs/mockups/brand/store-only 산출물 제외, archive 업로드 62.5MB 확인 |
 | EAS archive 회귀 | web export/모노레포 산출물 확인 과정 이후 preview build `5e5b8f72`, `d217ac7e`, `d6b3aa4b`가 200MB archive로 업로드됨. APK 기능 검증용으로는 사용 가능하나 용량 최적화 기준에서는 superseded 후보 |
 | EAS ignore 보강 | root `.easignore`에 `.git`, `.git/`, `apps/mobile/dist/`, mobile `.easignore`에 `dist/`, `dist-web/`, `web-build/` 제외 추가 |
@@ -61,7 +61,7 @@
 
 1. O2 -> H1 -> G2 -> H5 핵심 MVP 흐름 실기기 QA와 `npm run check:android-core-flow` 반복 확인
 2. 작은 화면 360x800, 큰 화면 430x932 레이아웃 QA
-3. 출발시간 역산의 이동수단 선택, 도착 희망 직접 입력, 자동 여유시간, 대중교통 변동 안내를 실기기에서 QA
+3. 출발시간 역산의 이동수단 드롭다운 선택, 선택 후 자동 닫힘, 도착 희망 직접 입력, 자동 여유시간, 대중교통 변동 안내를 실기기에서 QA
 4. 목적지 날씨 비교, 강수 타임라인의 로딩/오류/fallback 문구 정리
 5. 네트워크 끊김 시 홈 상태 pill이 `최근 예보` 또는 `기본 예보`로 표시되는지 새 APK에서 재검증
 6. 비 시작/그침 알림 조건 저장과 앱 재시작 후 상태 영속화 QA

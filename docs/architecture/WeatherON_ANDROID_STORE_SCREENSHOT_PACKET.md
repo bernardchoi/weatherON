@@ -1,6 +1,6 @@
 # WeatherON Android Store Screenshot Packet
 
-> 생성일: 2026-07-03
+> 생성일: 2026-07-04
 > 목적: Google Play 휴대전화 스크린샷 5장을 같은 기준 APK와 파일명으로 캡처하기 위한 작업 패킷이다.
 
 ## 1. 캡처 기준

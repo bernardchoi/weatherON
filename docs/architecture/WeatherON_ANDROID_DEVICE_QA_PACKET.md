@@ -1,7 +1,7 @@
 # WeatherON Android Device QA Packet
 
-> 생성일: 2026-07-03
-> 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D13 QA를 바로 수행할 수 있게 한 장으로 정리한다.
+> 생성일: 2026-07-04
+> 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D14 QA를 바로 수행할 수 있게 한 장으로 정리한다.
 
 ## 1. 설치 대상
 
@@ -26,7 +26,7 @@
 2. 다운로드 후 설치한다.
 3. Play Protect 또는 알 수 없는 앱 설치 경고가 나오면 WeatherON preview APK인지 확인하고 계속 설치한다.
 4. 설치 후 앱을 실행한다.
-5. 아래 D1~D13 결과를 기록한다.
+5. 아래 D1~D14 결과를 기록한다.
 
 ADB가 연결되면 아래 명령으로 설치/상태 확인을 자동화할 수 있다.
 
@@ -51,6 +51,7 @@ npm run install:android-preview-apk
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
 | D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
 | D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
+| D4-3 | 홈 목적지 카드 | 상단 현재 위치 날씨, 하단 목적지 선택 카드, 목적지 기준 `나갈 시간/비 그침/챙길 것` 카드 표시 | 통과 | local release APK 재빌드/재설치 후 실기기 홈에서 현재 위치 날씨, 목적지 선택 카드, 목적지 정보 3개 카드 확인. 저장 목적지 1개라 목적지 전환은 조건 부족 |
 | D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
 | D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
 | D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | local release APK 0.1.0 (6)에서 위치 권한 허용 후 홈 상단 실제 지역명 `고양시 덕양구 지축동`, 위치 상태 `현재 위치`, 날씨 카드 표시 확인. crash buffer 비어 있음 |
@@ -60,6 +61,7 @@ npm run install:android-preview-apk
 | D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 다크/라이트 각각 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. screenshot /tmp/weatheron-d11-dark.png, /tmp/weatheron-d11-light.png 확인. crash buffer 비어 있음 |
 | D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
 | D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
+| D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | 실기기에서 `자동/도보/자차/대중교통` 옵션과 `대중교통은 배차/환승 변동 가능` 문구 확인. `도보` 선택 후 버튼이 `이동수단 도보, 선택 목록 열기`로 돌아오고 옵션 노드 잔존 없음 |
 
 ### D9 목적지 검색 상세 케이스
 
@@ -100,6 +102,6 @@ npm run report:android-release-action-board
 ## 5. 다음 단계
 
 1. D1~D6 모두 통과 시 스토어 스크린샷 5장 캡처
-2. D7~D13 실패/보류 항목은 같은 build id로 원인 기록
+2. D7~D14 실패/보류 항목은 같은 build id로 원인 기록
 3. 스크린샷 완료 후 `npm run check:android-store-screenshots-ready`
 4. Play Console 입력값 확정 후 `npm run apply:android-store-inputs`

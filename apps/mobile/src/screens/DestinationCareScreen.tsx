@@ -122,7 +122,7 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
-          <DepartureSettingsPanel
+          <RepeatSchedulePanel
             transportMode={transportMode}
             transportLabel={transportLabel}
             transportSelectorOpen={transportSelectorOpen}
@@ -131,8 +131,8 @@ export function DestinationCareScreen({
             repeatSummary={repeatSummary}
             onToggleTransportSelector={() => setTransportSelectorOpen((current) => !current)}
             onSetTransportMode={(mode) => {
-              onSetDestinationTransportMode(mode);
               setTransportSelectorOpen(false);
+              onSetDestinationTransportMode(mode);
             }}
             onToggleRepeat={onToggleDestinationRepeat}
             onToggleRepeatDay={onToggleDestinationRepeatDay}
@@ -458,12 +458,12 @@ const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedule
   { mode: "auto", label: "자동", caption: "기본 경로" },
   { mode: "walk", label: "도보", caption: "걷는 시간" },
   { mode: "drive", label: "자차", caption: "도로 기준" },
-  { mode: "transit", label: "대중교통", caption: "배차 변동" },
+  { mode: "transit", label: "대중교통", caption: "대중교통은 배차/환승 변동 가능" },
 ];
 
 type ArrivalTimeSegment = "hour" | "minute";
 
-function DepartureSettingsPanel({
+function RepeatSchedulePanel({
   transportMode,
   transportLabel,
   transportSelectorOpen,

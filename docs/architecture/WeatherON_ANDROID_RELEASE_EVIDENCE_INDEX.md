@@ -1,6 +1,6 @@
 # WeatherON Android Release Evidence Index
 
-> 생성일: 2026-07-03
+> 생성일: 2026-07-04
 > 목적: Android 출시 준비의 빌드, 검증, 문서 증빙 위치를 한 곳에서 추적한다.
 
 ## 1. 현재 증빙 요약

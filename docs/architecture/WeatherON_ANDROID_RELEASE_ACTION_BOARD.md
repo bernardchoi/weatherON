@@ -1,6 +1,6 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-07-03
+> 생성일: 2026-07-04
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
