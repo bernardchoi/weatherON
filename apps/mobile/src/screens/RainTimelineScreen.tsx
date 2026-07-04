@@ -178,16 +178,16 @@ function LegendSwatch({ label, color, theme }: { label: string; color: string; t
 function getRainChartColors(theme: AppTheme) {
   if (theme.name === "light") {
     return {
-      weak: "#B8D6EA",
-      medium: "#4F95C8",
-      strong: "#0F6FA8",
+      weak: theme.cardSoft,
+      medium: theme.sky,
+      strong: theme.clear,
       barBorder: "rgba(20,32,51,0.12)",
     };
   }
   return {
-    weak: "rgba(74,163,223,0.28)",
-    medium: "#4AA3DF",
-    strong: "#67E8D0",
+    weak: `${theme.sky}28`,
+    medium: theme.sky,
+    strong: theme.clear,
     barBorder: "rgba(248,251,255,0.12)",
   };
 }
@@ -201,12 +201,12 @@ function getRainBarColor(amount: number, colors: ReturnType<typeof getRainChartC
 function getRainToggleColors(theme: AppTheme, enabled: boolean) {
   if (theme.name === "light") {
     return {
-      panel: enabled ? "#E8F3FB" : "#FFFFFF",
-      border: enabled ? "#237BBD" : "rgba(31,78,121,0.22)",
-      track: enabled ? "#237BBD" : "#D7EAF7",
-      trackBorder: enabled ? "#237BBD" : "rgba(31,78,121,0.24)",
-      knob: enabled ? "#FFFFFF" : "#237BBD",
-      accent: "#237BBD",
+      panel: enabled ? theme.cardSoft : theme.card,
+      border: enabled ? theme.sky : "rgba(31,78,121,0.22)",
+      track: enabled ? theme.sky : theme.backgroundAlt,
+      trackBorder: enabled ? theme.sky : "rgba(31,78,121,0.24)",
+      knob: enabled ? theme.card : theme.sky,
+      accent: theme.sky,
     };
   }
   return {

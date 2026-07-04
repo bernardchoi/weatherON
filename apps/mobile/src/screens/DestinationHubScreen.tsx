@@ -124,18 +124,18 @@ export function DestinationHubScreen({
           })}
         </View>
 
-        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
           <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
           <Text style={[styles.stateText, { color: theme.text }]}>카테고리별 강수·바람·출발 알림 기준을 목적지 카드에서 바로 확인해요</Text>
         </View>
 
-        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
           <View style={styles.stateHeader}>
             <View style={styles.stateCopy}>
               <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
               <Text style={[styles.stateText, { color: theme.text }]}>저장 목적지 기준으로 출발 전 알림 후보를 보여줌</Text>
             </View>
-            <View style={[styles.countPill, { backgroundColor: "#10243F" }]}>
+            <View style={[styles.countPill, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.countText, { color: theme.gold }]}>{visibleDestinations.length}곳</Text>
             </View>
             <Pressable accessibilityRole="button" onPress={() => onNavigate("P1")} style={[styles.addPill, { backgroundColor: theme.gold }]}>

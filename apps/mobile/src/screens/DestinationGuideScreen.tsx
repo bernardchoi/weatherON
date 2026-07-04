@@ -43,10 +43,10 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           <Image source={placeImage} style={styles.heroImage} resizeMode="cover" />
         </View>
 
-        <View style={[styles.guideState, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.42)" }]}>
+        <View style={[styles.guideState, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
           <View style={styles.guideStateTop}>
             <Text style={[styles.eyebrow, { color: theme.clear }]}>GUIDE</Text>
-            <View style={[styles.readyPill, { backgroundColor: "#122948" }]}>
+            <View style={[styles.readyPill, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.readyText, { color: theme.gold }]}>{destinationCareEnabled ? "준비됨" : "게스트"}</Text>
             </View>
           </View>
@@ -76,19 +76,19 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           />
         </View>
 
-        <View style={[styles.guideCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(103,232,208,0.34)" }]}>
+        <View style={[styles.guideCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
           <View style={styles.guideHead}>
             <View style={styles.guideHeadCopy}>
               <Text style={[styles.sectionLabel, { color: theme.muted }]}>{categoryLabel} 준비 가이드</Text>
               <Text style={[styles.guideTitle, { color: theme.text }]}>{guide.title}</Text>
             </View>
-            <View style={[styles.autoPill, { backgroundColor: "rgba(103,232,208,0.12)" }]}>
+            <View style={[styles.autoPill, { backgroundColor: `${theme.clear}18` }]}>
               <Text style={[styles.autoText, { color: theme.clear }]}>자동 케어 확장</Text>
             </View>
           </View>
 
           <View style={styles.metricRow}>
-            <View style={[styles.metricPill, { backgroundColor: "rgba(103,232,208,0.16)" }]}>
+            <View style={[styles.metricPill, { backgroundColor: `${theme.clear}18` }]}>
               <Text style={[styles.metricText, { color: theme.clear }]}>{guide.risk}</Text>
             </View>
             <Text style={[styles.metricSide, { color: theme.subtle }]}>{guide.mode}</Text>
@@ -99,12 +99,12 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
             <Text style={[styles.sunText, { color: theme.text }]}>{guide.condition}</Text>
           </View>
 
-          <View style={[styles.recommendBox, { backgroundColor: "#10243F" }]}>
+          <View style={[styles.recommendBox, { backgroundColor: theme.card }]}>
             <Text style={[styles.recommendText, { color: theme.text }]}>추천&nbsp; {guide.recommendation}</Text>
           </View>
         </View>
 
-        <View style={[styles.adCard, { backgroundColor: "#10243F", borderColor: theme.border }]}>
+        <View style={[styles.adCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.adLabel, { color: theme.subtle }]}>AD</Text>
           <Text style={[styles.adText, { color: theme.muted }]}>스포츠 브랜드 협찬 카드</Text>
         </View>

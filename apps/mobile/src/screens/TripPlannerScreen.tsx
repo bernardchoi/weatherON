@@ -23,12 +23,12 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
             <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
           </Pressable>
           <Text style={[styles.title, { color: theme.text }]}>여행 플래너</Text>
-          <View style={[styles.premiumTag, { backgroundColor: "rgba(167,139,250,0.22)", borderColor: "rgba(196,181,253,0.36)" }]}>
-            <Text style={[styles.premiumText, { color: "#C4B5FD" }]}>프리미엄</Text>
+          <View style={[styles.premiumTag, { backgroundColor: `${theme.sky}18`, borderColor: theme.sky }]}>
+            <Text style={[styles.premiumText, { color: theme.sky }]}>프리미엄</Text>
           </View>
         </View>
 
-        <View style={[styles.tripBand, { backgroundColor: theme.card }]}>
+        <View style={[styles.tripBand, { backgroundColor: theme.card, borderLeftColor: theme.sky }]}>
           <Text style={[styles.tripTitle, { color: theme.text }]}>제주 2박 3일</Text>
           <Text style={[styles.tripDate, { color: theme.subtle }]}>6/20  -  6/22</Text>
         </View>
@@ -92,7 +92,7 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
         </View>
 
         <View style={[styles.lockBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.lockText, { color: "#C4B5FD" }]}>무료 사용자는 여기서 구독 안내가 노출돼요</Text>
+          <Text style={[styles.lockText, { color: theme.sky }]}>무료 사용자는 여기서 구독 안내가 노출돼요</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -184,7 +184,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: radius.md,
     borderLeftWidth: 2,
-    borderLeftColor: "#C4B5FD",
   },
   tripTitle: {
     fontSize: 15,

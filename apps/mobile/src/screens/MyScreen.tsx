@@ -58,7 +58,7 @@ export function MyScreen({
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
-          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? "rgba(103,232,208,0.36)" : theme.border }]}
+          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.border }]}
         >
           <View style={[styles.avatar, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky }]}>
             <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />

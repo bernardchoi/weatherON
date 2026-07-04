@@ -29,7 +29,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false }: OutfitGridProp
       {entries.map(([slot, item]) =>
         item ? (
           <View key={slot} style={[styles.itemCell, compact ? styles.itemCellCompact : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, { backgroundColor: theme.name === "light" ? "#F8FBFF" : "rgba(248,251,255,0.10)" }]}>
+            <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, { backgroundColor: theme.cardMuted }]}>
               {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
                 <Image source={outfitImageAssets[item.imageUrl]} style={[styles.itemImage, compact ? styles.itemImageCompact : null]} resizeMode="contain" />
               ) : null}

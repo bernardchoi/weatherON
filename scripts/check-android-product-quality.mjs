@@ -18,6 +18,25 @@ for (const relativePath of requiredFiles) {
   assert.ok(existsSync(join(rootDir, relativePath)), `required quality artifact is missing: ${relativePath}`);
 }
 
+assertSourceIncludes("apps/mobile/src/theme/tokens.ts", [
+  'warm: "#E8854A"',
+  'alert: "#E97F77"',
+  'warm: "#C84A2F"',
+  'alert: "#B42318"',
+]);
+const forbiddenNonTokenColorSnippets = [
+  "#C4B5FD",
+  "#B894FF",
+  "rgba(167,139,250",
+  "rgba(196,181,253",
+  "#51ACE6",
+  "#F2A92E",
+  "#ff8a42",
+];
+for (const relativePath of listFiles(["apps/mobile/src"])) {
+  assertSourceExcludes(relativePath, forbiddenNonTokenColorSnippets);
+}
+
 assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'useState<AppRouteId>("O1")',
   "readAppJson",

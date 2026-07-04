@@ -35,7 +35,7 @@ export function PremiumScreen({ onNavigate }: P0ScreenProps) {
         </View>
 
         <View style={styles.hero}>
-          <StarMark color="#B894FF" />
+          <StarMark color={theme.gold} />
           <Text style={[styles.heroTitle, { color: theme.text }]}>WeatherON 프리미엄</Text>
           <Text style={[styles.heroCopy, { color: theme.subtle }]}>기능 분리가 아닌 깊이 분리{"\n"}같은 기능을 더 깊게, 더 자유롭게</Text>
         </View>
@@ -52,8 +52,8 @@ export function PremiumScreen({ onNavigate }: P0ScreenProps) {
           ))}
         </View>
 
-        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: "rgba(196,181,253,0.36)" }]}>
-          <Text style={[styles.stateLabel, { color: "#C4B5FD" }]}>프리미엄</Text>
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.gold }]}>
+          <Text style={[styles.stateLabel, { color: theme.gold }]}>프리미엄</Text>
           <Text style={[styles.stateText, { color: theme.text }]}>미구독 · 플랜 선택 후 프리미엄 기능 활성</Text>
         </View>
 
@@ -70,7 +70,7 @@ export function PremiumScreen({ onNavigate }: P0ScreenProps) {
                   styles.priceCard,
                   {
                     backgroundColor: selected ? theme.gold : theme.cardStrong,
-                    borderColor: selected ? "rgba(244,182,63,0.78)" : theme.border,
+                    borderColor: selected ? theme.gold : theme.border,
                   },
                 ]}
               >

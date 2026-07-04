@@ -59,7 +59,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                           styles.barFill,
                           {
                             height: `${probability}%`,
-                            backgroundColor: hour.rainProbabilityPct >= 70 ? "#51ACE6" : theme.cardSoft,
+                            backgroundColor: hour.rainProbabilityPct >= 70 ? theme.sky : theme.cardSoft,
                           },
                         ]}
                       />
@@ -116,7 +116,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         <Pressable
           accessibilityRole="button"
           onPress={() => onOpenAlertSettings("H4", "umbrella")}
-          style={({ pressed }) => [styles.cta, { backgroundColor: pressed ? "#F2A92E" : theme.gold }]}
+          style={({ pressed }) => [styles.cta, { backgroundColor: theme.gold, opacity: pressed ? 0.86 : 1 }]}
         >
           <Text style={[styles.ctaText, { color: theme.onAccent }]}>우산 알림 시간 설정</Text>
         </Pressable>

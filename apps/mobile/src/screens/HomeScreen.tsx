@@ -665,7 +665,7 @@ function HomeOutfitPreviewCard({
           {packBody} · 대표 착장 준비
         </Text>
       </View>
-      <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.name === "light" ? "#F8FBFF" : "rgba(248,251,255,0.10)" }]}>
+      <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.cardMuted }]}>
         {imageSource ? (
           <Image source={imageSource} style={styles.homeOutfitImage} resizeMode="contain" />
         ) : (

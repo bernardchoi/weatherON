@@ -43,8 +43,8 @@ export function AiJourneyPlannerScreen({ permissionReady, permissionGateResult, 
             <BackGlyph color={theme.subtle} />
           </Pressable>
           <Text style={[styles.title, { color: theme.text }]}>AI 종주 플래너</Text>
-          <View style={[styles.premiumTag, { backgroundColor: "rgba(167,139,250,0.20)", borderColor: "rgba(196,181,253,0.42)" }]}>
-            <Text style={[styles.premiumText, { color: "#C4B5FD" }]}>프리미엄</Text>
+          <View style={[styles.premiumTag, { backgroundColor: `${theme.sky}18`, borderColor: theme.sky }]}>
+            <Text style={[styles.premiumText, { color: theme.sky }]}>프리미엄</Text>
           </View>
         </View>
 
@@ -67,25 +67,25 @@ export function AiJourneyPlannerScreen({ permissionReady, permissionGateResult, 
             <Text style={[styles.conditionText, { color: theme.text }]}>프리미엄 활성 · {permissionReady ? "알림 권한 허용" : "알림 권한 필요"} · {planStatus}</Text>
           </View>
           <View style={[styles.statePill, { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.statePillText, { color: permissionReady ? theme.clear : "#C4B5FD" }]}>{permissionReady ? "권한 허용" : "권한 필요"}</Text>
+            <Text style={[styles.statePillText, { color: permissionReady ? theme.clear : theme.sky }]}>{permissionReady ? "권한 허용" : "권한 필요"}</Text>
           </View>
         </View>
 
         <Pressable
           accessibilityRole="button"
           onPress={() => (permissionReady ? setSaved((current) => current) : onRequestPermissionGate("destination-care", "G5", "destination"))}
-          style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? "rgba(103,232,208,0.36)" : "rgba(255,179,124,0.44)" }]}
+          style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? theme.clear : theme.warm }]}
         >
           <View style={styles.conditionCopy}>
             <Text style={[styles.permissionLabel, { color: permissionReady ? theme.clear : theme.warm }]}>{permissionReady ? "재분석 알림 ON" : "알림 권한 필요"}</Text>
             <Text style={[styles.permissionText, { color: theme.subtle }]}>{permissionReady ? "예보 변동 시 AI 플랜을 자동 재점검" : "저장·재분석 알림 전 권한 확인 필요"}</Text>
           </View>
-          <View style={[styles.permissionButton, { backgroundColor: permissionReady ? "rgba(103,232,208,0.18)" : theme.gold }]}>
+          <View style={[styles.permissionButton, { backgroundColor: permissionReady ? `${theme.clear}18` : theme.gold }]}>
             <Text style={[styles.permissionButtonText, { color: permissionReady ? theme.clear : theme.onAccent }]}>{permissionReady ? "완료" : "권한 확인"}</Text>
           </View>
         </Pressable>
 
-        <View style={[styles.resultCard, { backgroundColor: theme.card, borderLeftColor: "#C4B5FD" }]}>
+        <View style={[styles.resultCard, { backgroundColor: theme.card, borderLeftColor: theme.sky }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>날씨 기반 일정 점검</Text>
           <View style={styles.resultRows}>
             {weatherChecks.map((item) => (
@@ -128,7 +128,7 @@ export function AiJourneyPlannerScreen({ permissionReady, permissionGateResult, 
             onPress={() => setShared(true)}
             onPressIn={() => setShared(true)}
             {...({ onClick: () => setShared(true) } as object)}
-            style={[styles.secondaryAction, { backgroundColor: shared ? "rgba(103,232,208,0.18)" : theme.cardStrong }]}
+            style={[styles.secondaryAction, { backgroundColor: shared ? `${theme.clear}18` : theme.cardStrong }]}
           >
             <Text onPress={() => setShared(true)} style={[styles.secondaryActionText, { color: shared ? theme.clear : theme.text }]}>{shared ? "공유 준비됨" : "여정 공유"}</Text>
           </Pressable>

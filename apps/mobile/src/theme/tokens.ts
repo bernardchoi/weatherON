@@ -37,7 +37,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     clear: "#2FC6A3",
     gold: "#F4B63F",
     sky: "#4AA3DF",
-    warm: "#E97F77",
+    warm: "#E8854A",
     alert: "#E97F77",
     text: "#F8FBFF",
     muted: "rgba(215,230,245,0.82)",

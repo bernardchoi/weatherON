@@ -145,12 +145,12 @@ export function WalkingTripScreen({ accountLinked, permissionReady, onNavigate, 
             ))}
           </View>
 
-          <View style={[styles.scorePill, { backgroundColor: "rgba(103,232,208,0.18)", borderColor: "rgba(103,232,208,0.42)" }]}>
+          <View style={[styles.scorePill, { backgroundColor: `${theme.clear}18`, borderColor: theme.clear }]}>
             <View style={[styles.scoreDot, { backgroundColor: theme.clear }]} />
             <Text style={[styles.scoreText, { color: theme.clear }]}>{selectedCourse.score}</Text>
           </View>
 
-          <View style={[styles.departureBox, { backgroundColor: "rgba(103,232,208,0.08)", borderColor: "rgba(103,232,208,0.30)" }]}>
+          <View style={[styles.departureBox, { backgroundColor: `${theme.clear}12`, borderColor: theme.clear }]}>
             <Text style={[styles.departureText, { color: theme.text }]}>{selectedCourse.departure} 출발 추천</Text>
             <Text style={[styles.departureSub, { color: theme.clear }]}>{selectedCourse.summary}</Text>
           </View>

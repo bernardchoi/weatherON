@@ -6,7 +6,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { appColors, radius, spacing } from "../theme/tokens";
 
 const weatherOptions = [
   { id: "clear", label: "맑음", icon: "☼" },
@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: "rgba(255,128,72,0.10)",
+    backgroundColor: `${appColors.warm}18`,
     borderLeftWidth: 3,
-    borderLeftColor: "#ff8a42",
+    borderLeftColor: appColors.warm,
   },
   simpleCard: {
     gap: spacing.sm,
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.08)",
   },
   kicker: {
-    color: "#ff8a42",
+    color: appColors.warm,
     fontSize: 12,
     fontWeight: "900",
   },
   title: {
-    color: "#F8FBFF",
+    color: appColors.text,
     fontSize: 16,
     fontWeight: "900",
   },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: "#67E8D0",
+    borderColor: appColors.clear,
     textAlign: "center",
     lineHeight: 40,
     fontSize: 28,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.08)",
   },
   metricValue: {
-    color: "#F8FBFF",
+    color: appColors.text,
     fontSize: 18,
     fontWeight: "900",
   },
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   historyWeather: {
     width: 34,
-    color: "#F8FBFF",
+    color: appColors.text,
     fontSize: 13,
     fontWeight: "900",
   },
@@ -358,6 +358,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   historyGood: {
-    color: "#67E8D0",
+    color: appColors.clear,
   },
 });
