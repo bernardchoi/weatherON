@@ -25,6 +25,7 @@ import type {
   DestinationHubFilter,
   DestinationSchedulePreference,
   DestinationTransportMode,
+  DestinationRepeatDay,
   DestinationTravelEstimate,
   PlaceSearchStatus,
   GateReason,
@@ -121,6 +122,8 @@ export type P0ScreenProps = {
   onCycleDestinationAlertCondition: (field: keyof DestinationAlertCondition) => void;
   onSetDestinationTargetArrivalTime: (targetArrivalTime: string) => void;
   onSetDestinationTransportMode: (transportMode: DestinationTransportMode) => void;
+  onToggleDestinationRepeat: () => void;
+  onToggleDestinationRepeatDay: (day: DestinationRepeatDay) => void;
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
   onSetDestinationHubFilter: (filter: DestinationHubFilter) => void;

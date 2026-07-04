@@ -38,6 +38,8 @@ export type DestinationScheduleInput = {
   travelMinutes: number;
   bufferMinutes: number;
   transportMode?: DestinationTransportMode;
+  repeatEnabled?: boolean;
+  repeatDays?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
   travelProvider?: "kakao" | "google" | "fallback";
   travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
 };
@@ -46,7 +48,7 @@ export type DestinationNotificationInput = {
   place: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode">;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
-  schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode">;
+  schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
   travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "travelProvider" | "travelStatus">;
 };
 

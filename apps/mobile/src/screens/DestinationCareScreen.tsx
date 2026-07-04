@@ -22,6 +22,8 @@ export function DestinationCareScreen({
   onCycleDestinationAlertCondition,
   onSetDestinationTargetArrivalTime,
   onSetDestinationTransportMode,
+  onToggleDestinationRepeat,
+  onToggleDestinationRepeatDay,
   onRemoveSavedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -42,6 +44,9 @@ export function DestinationCareScreen({
   const destinationRain = destinationWeather.current.rainProbabilityPct;
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
   const transportLabel = getTransportModeLabel(transportMode);
+  const repeatEnabled = selectedDestinationSchedulePreference.repeatEnabled;
+  const repeatDays = selectedDestinationSchedulePreference.repeatDays;
+  const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
   const routeMeta = getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit);
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const destinationSaved = Boolean(selectedDestinationPlace);
@@ -96,9 +101,9 @@ export function DestinationCareScreen({
             </View>
           </View>
           <View style={styles.summaryGrid}>
-            <SummaryChip label="도착" value={targetArrivalTime} meta={`${departureTime} 출발`} theme={theme} />
-            <SummaryChip label="이동" value={`${travelMinutes}분`} meta={transportLabel} theme={theme} />
-            <SummaryChip label="여유" value={`${bufferMinutes}분`} meta="자동 보정" theme={theme} />
+            <SummaryChip icon={uiIconAssets.clock} label="도착" value={targetArrivalTime} meta={`${departureTime} 출발`} color={theme.sky} theme={theme} />
+            <SummaryChip icon={uiIconAssets.depart} label="이동" value={`${travelMinutes}분`} meta={transportLabel} color={theme.gold} theme={theme} />
+            <SummaryChip icon={uiIconAssets.check} label="여유" value={`${bufferMinutes}분`} meta="자동 보정" color={theme.clear} theme={theme} />
           </View>
           <View style={styles.arrivalControls}>
             <ArrivalInputControl
@@ -132,6 +137,14 @@ export function DestinationCareScreen({
           {transportMode === "transit" ? (
             <Text style={[styles.transportNotice, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
           ) : null}
+          <RepeatSchedulePanel
+            enabled={repeatEnabled}
+            selectedDays={repeatDays}
+            summary={repeatSummary}
+            onToggle={onToggleDestinationRepeat}
+            onToggleDay={onToggleDestinationRepeatDay}
+            theme={theme}
+          />
           <View style={[styles.calculationStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <Text style={[styles.calculationText, { color: theme.text }]}>
               {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
@@ -224,6 +237,7 @@ export function DestinationCareScreen({
               <View style={styles.conditionSummaryGrid}>
                 <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
                 <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
+                <ConditionSummaryPill label="반복" value={repeatSummary} tone={repeatEnabled ? "clear" : "default"} theme={theme} />
                 {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
               </View>
               <View style={styles.conditionGrid}>
@@ -325,10 +339,10 @@ function ConditionSummaryPill({
 }: {
   label: string;
   value: string;
-  tone?: "default" | "warm";
+  tone?: "default" | "warm" | "clear";
   theme: AppTheme;
 }) {
-  const accent = tone === "warm" ? theme.warm : theme.gold;
+  const accent = tone === "warm" ? theme.warm : tone === "clear" ? theme.clear : theme.gold;
   return (
     <View style={[styles.conditionSummaryPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <Text numberOfLines={1} style={[styles.conditionSummaryLabel, { color: theme.subtle }]}>{label}</Text>
@@ -337,12 +351,95 @@ function ConditionSummaryPill({
   );
 }
 
-function SummaryChip({ label, value, meta, theme }: { label: string; value: string; meta: string; theme: AppTheme }) {
+const repeatDayOptions: Array<{ day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]; label: string; shortLabel: string }> = [
+  { day: "mon", label: "월요일", shortLabel: "월" },
+  { day: "tue", label: "화요일", shortLabel: "화" },
+  { day: "wed", label: "수요일", shortLabel: "수" },
+  { day: "thu", label: "목요일", shortLabel: "목" },
+  { day: "fri", label: "금요일", shortLabel: "금" },
+  { day: "sat", label: "토요일", shortLabel: "토" },
+  { day: "sun", label: "일요일", shortLabel: "일" },
+];
+
+function RepeatSchedulePanel({
+  enabled,
+  selectedDays,
+  summary,
+  onToggle,
+  onToggleDay,
+  theme,
+}: {
+  enabled: boolean;
+  selectedDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
+  summary: string;
+  onToggle: () => void;
+  onToggleDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.repeatPanel, { backgroundColor: theme.cardStrong, borderColor: enabled ? theme.clear : theme.border }]}>
+      <View style={styles.repeatHeader}>
+        <View style={[styles.repeatIconFrame, { backgroundColor: enabled ? `${theme.clear}22` : theme.cardMuted }]}>
+          <Image source={uiIconAssets.clock} style={[styles.repeatIcon, { tintColor: enabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
+        </View>
+        <View style={styles.repeatCopy}>
+          <Text style={[styles.repeatLabel, { color: enabled ? theme.clear : theme.subtle }]}>반복 알림</Text>
+          <Text style={[styles.repeatTitle, { color: theme.text }]} numberOfLines={1}>{summary}</Text>
+        </View>
+        <Pressable
+          accessibilityLabel={enabled ? "반복 알림 끄기" : "반복 알림 켜기"}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: enabled }}
+          onPress={onToggle}
+          style={[styles.repeatSwitch, { backgroundColor: enabled ? theme.clear : theme.cardMuted, borderColor: enabled ? theme.clear : theme.border }]}
+        >
+          <Text style={[styles.repeatSwitchText, { color: enabled ? theme.background : theme.subtle }]}>{enabled ? "ON" : "OFF"}</Text>
+        </Pressable>
+      </View>
+      <View style={styles.repeatDayRow}>
+        {repeatDayOptions.map((option) => {
+          const selected = selectedDays.includes(option.day);
+          return (
+            <Pressable
+              key={option.day}
+              accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => onToggleDay(option.day)}
+              style={[styles.repeatDayChip, { backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
+            >
+              <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+function SummaryChip({
+  icon,
+  label,
+  value,
+  meta,
+  color,
+  theme,
+}: {
+  icon: number;
+  label: string;
+  value: string;
+  meta: string;
+  color: string;
+  theme: AppTheme;
+}) {
   return (
     <View style={[styles.summaryChip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
+        <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
+      </View>
       <Text numberOfLines={1} style={[styles.summaryLabel, { color: theme.subtle }]}>{label}</Text>
       <Text numberOfLines={1} style={[styles.summaryValue, { color: theme.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.summaryMeta, { color: theme.gold }]}>{meta}</Text>
+      <Text numberOfLines={1} style={[styles.summaryMeta, { color }]}>{meta}</Text>
     </View>
   );
 }
@@ -559,6 +656,11 @@ function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationScheduleP
   if (mode === "drive") return "자차";
   if (mode === "transit") return "대중교통";
   return "자동";
+}
+
+function getRepeatSummary(enabled: boolean, days: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"]) {
+  if (!enabled || days.length === 0) return "반복 없음";
+  return days.map((day) => repeatDayOptions.find((option) => option.day === day)?.shortLabel ?? "").filter(Boolean).join(" · ");
 }
 
 function getDepartureFormulaCopy(
@@ -780,12 +882,24 @@ const styles = StyleSheet.create({
   },
   summaryChip: {
     flex: 1,
-    minHeight: 70,
+    minHeight: 94,
     justifyContent: "center",
     gap: 3,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  summaryIconFrame: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    marginBottom: 2,
+  },
+  summaryIcon: {
+    width: 17,
+    height: 17,
   },
   summaryLabel: {
     fontSize: 10,
@@ -1073,6 +1187,76 @@ const styles = StyleSheet.create({
   transportNotice: {
     fontSize: 12,
     lineHeight: 17,
+    fontWeight: "900",
+  },
+  repeatPanel: {
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  repeatHeader: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  repeatIconFrame: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  repeatIcon: {
+    width: 20,
+    height: 20,
+  },
+  repeatCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  repeatLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  repeatTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  repeatSwitch: {
+    minWidth: 58,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  repeatSwitchText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  repeatDayRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 5,
+  },
+  repeatDayChip: {
+    width: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  repeatDayText: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   flowPanel: {

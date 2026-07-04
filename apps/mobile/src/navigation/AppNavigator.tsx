@@ -145,6 +145,8 @@ export function AppNavigator() {
     onCycleDestinationAlertCondition: appState.cycleSelectedDestinationAlertCondition,
     onSetDestinationTargetArrivalTime: appState.setSelectedDestinationTargetArrivalTime,
     onSetDestinationTransportMode: appState.setSelectedDestinationTransportMode,
+    onToggleDestinationRepeat: appState.toggleSelectedDestinationRepeat,
+    onToggleDestinationRepeatDay: appState.toggleSelectedDestinationRepeatDay,
     onRemoveSavedDestination: appState.removeSavedDestination,
     onRestoreRemovedDestination: appState.restoreRemovedDestination,
     onSetDestinationHubFilter: appState.setDestinationHubFilter,

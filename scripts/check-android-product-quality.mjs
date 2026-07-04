@@ -579,6 +579,15 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "preferences: alertPreferences",
   "saveSelectedDestination(permissionCompleted)",
 ]);
+assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
+  "DestinationRepeatDay",
+  "repeatEnabled",
+  "repeatDays",
+  "toggleSelectedDestinationRepeat",
+  "toggleSelectedDestinationRepeatDay",
+  "normalizeDestinationSchedulePreference",
+  "isDestinationRepeatDay",
+]);
 assertSourceIncludes("apps/mobile/app.json", [
   "POST_NOTIFICATIONS",
 ]);
@@ -688,6 +697,15 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "destinationWeather.current.tempC",
   "destination.alertCondition.rainThresholdPct",
   "numberOfLines={1}",
+  "MetricTile",
+  "destinationVisualGrid",
+  "departureBlock",
+  "repeatLabel",
+  "getRepeatLabel",
+  "반복",
+  "도착",
+  "강수",
+  "기온차",
 ]);
 assertSourceIncludes("apps/mobile/src/data/demoState.ts", [
   "destinationWeatherById",
@@ -732,6 +750,16 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationCareScreen.tsx", [
   'onCycleDestinationAlertCondition("leadTimeMinutes")',
   'onCycleDestinationAlertCondition("windThresholdMs")',
   "푸시 알림 대기",
+  "RepeatSchedulePanel",
+  "repeatDayOptions",
+  "반복 알림",
+  "반복 없음",
+  "onToggleDestinationRepeat",
+  "onToggleDestinationRepeatDay",
+  "getRepeatSummary",
+  "repeatEnabled",
+  "repeatDays",
+  "SummaryChip icon",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationCareScreen.tsx", [
   "회사 ·",

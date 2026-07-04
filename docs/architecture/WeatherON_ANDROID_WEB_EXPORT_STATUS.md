@@ -11,7 +11,7 @@
 | issue 수 | 0 |
 | warning 수 | 1 |
 | index.html | apps/mobile/dist/index.html |
-| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-9054739d30da8882ef5cd5000d08cc4a.js |
+| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-bb258f80fe033d42d4577ff757e34fbf.js |
 | 보조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-775a7832fdd126cfcf36133d173006d3.js<br>apps/mobile/dist/_expo/static/js/web/index-e0041658aa941db16e618842e8cc98ce.js |
 | 전체 JS 번들 | 3 |
 | legacy dist-web stale marker | apps/mobile/dist-web/_expo/static/js/web/index-e66bb30f16a8f0efa5d87aff1bfa73e0.js |

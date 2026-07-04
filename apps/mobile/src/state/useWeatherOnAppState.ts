@@ -41,6 +41,7 @@ import {
 import { getRouteLabel } from "../navigation/routeLabels";
 
 export type { DestinationTransportMode };
+export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export type GateReason = "account-connect" | "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
 export type WeatherLocationMode = "auto" | "manual";
@@ -68,6 +69,8 @@ export type NotificationDeliveryStatus = LocalNotificationSyncResult;
 export type DestinationSchedulePreference = {
   targetArrivalTime: string;
   transportMode: DestinationTransportMode;
+  repeatEnabled: boolean;
+  repeatDays: DestinationRepeatDay[];
 };
 export type DestinationTravelEstimate = TravelEstimateResult & {
   originPlaceId: string;
@@ -1071,6 +1074,29 @@ export function useWeatherOnAppState() {
     setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode });
   }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
 
+  const toggleSelectedDestinationRepeat = useCallback(() => {
+    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+    const repeatEnabled = !currentPreference.repeatEnabled;
+    setSelectedDestinationSchedulePreference({
+      ...currentPreference,
+      repeatEnabled,
+      repeatDays: repeatEnabled && currentPreference.repeatDays.length === 0 ? [getTodayRepeatDay()] : currentPreference.repeatDays,
+    });
+  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+
+  const toggleSelectedDestinationRepeatDay = useCallback((day: DestinationRepeatDay) => {
+    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
+    const hasDay = currentPreference.repeatDays.includes(day);
+    const repeatDays = hasDay
+      ? currentPreference.repeatDays.filter((item) => item !== day)
+      : [...currentPreference.repeatDays, day].sort(compareRepeatDays);
+    setSelectedDestinationSchedulePreference({
+      ...currentPreference,
+      repeatEnabled: repeatDays.length > 0,
+      repeatDays,
+    });
+  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+
   const removeSavedDestination = useCallback((placeId: string) => {
     const removedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
     if (!removedDestination) return;
@@ -1391,6 +1417,8 @@ export function useWeatherOnAppState() {
     cycleSelectedDestinationAlertCondition,
     setSelectedDestinationTargetArrivalTime,
     setSelectedDestinationTransportMode,
+    toggleSelectedDestinationRepeat,
+    toggleSelectedDestinationRepeatDay,
     removeSavedDestination,
     restoreRemovedDestination,
     setDestinationHubFilter,
@@ -1860,6 +1888,8 @@ function getDefaultDestinationSchedulePreference(place: PlaceSearchResult): Dest
           ? "15:30"
             : "10:05",
     transportMode: "auto",
+    repeatEnabled: false,
+    repeatDays: [],
   };
 }
 
@@ -2045,12 +2075,33 @@ function normalizeSavedDestination(value: unknown): SavedDestination | null {
 function normalizeDestinationSchedulePreference(value: unknown, place: PlaceSearchResult): DestinationSchedulePreference {
   if (!value || typeof value !== "object") return getDefaultDestinationSchedulePreference(place);
   const record = value as Partial<DestinationSchedulePreference>;
+  const repeatDays = Array.isArray(record.repeatDays)
+    ? record.repeatDays.filter(isDestinationRepeatDay).sort(compareRepeatDays)
+    : [];
   return {
     targetArrivalTime: typeof record.targetArrivalTime === "string" && isValidTimeText(record.targetArrivalTime)
       ? record.targetArrivalTime
       : getDefaultDestinationSchedulePreference(place).targetArrivalTime,
     transportMode: isDestinationTransportMode(record.transportMode) ? record.transportMode : "auto",
+    repeatEnabled: record.repeatEnabled === true && repeatDays.length > 0,
+    repeatDays,
   };
+}
+
+const repeatDayOrder: DestinationRepeatDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+function compareRepeatDays(a: DestinationRepeatDay, b: DestinationRepeatDay) {
+  return repeatDayOrder.indexOf(a) - repeatDayOrder.indexOf(b);
+}
+
+function getTodayRepeatDay(): DestinationRepeatDay {
+  const day = new Date().getDay();
+  if (day === 0) return "sun";
+  return repeatDayOrder[day - 1] ?? "mon";
+}
+
+function isDestinationRepeatDay(value: unknown): value is DestinationRepeatDay {
+  return value === "mon" || value === "tue" || value === "wed" || value === "thu" || value === "fri" || value === "sat" || value === "sun";
 }
 
 function isDestinationTransportMode(value: unknown): value is DestinationTransportMode {

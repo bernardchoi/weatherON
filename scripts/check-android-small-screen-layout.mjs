@@ -55,7 +55,7 @@ const appState = {
       place: basePlace,
       careEnabled: true,
       alertCondition,
-      schedulePreference: { targetArrivalTime: "09:00", transportMode: "auto" },
+      schedulePreference: { targetArrivalTime: "09:00", transportMode: "auto", repeatEnabled: true, repeatDays: ["sun"] },
       travelEstimate: createTravelEstimate(basePlace, 34),
       savedAtLabel: "업데이트됨",
     },
@@ -63,7 +63,7 @@ const appState = {
       place: secondPlace,
       careEnabled: true,
       alertCondition: { ...alertCondition, rainThresholdPct: 70 },
-      schedulePreference: { targetArrivalTime: "08:40", transportMode: "transit" },
+      schedulePreference: { targetArrivalTime: "08:40", transportMode: "transit", repeatEnabled: true, repeatDays: ["mon", "wed", "fri"] },
       travelEstimate: createTravelEstimate(secondPlace, 28),
       savedAtLabel: "방금 저장",
     },
@@ -71,7 +71,7 @@ const appState = {
   selectedDestinationPlace: basePlace,
   previewDestinationCareEnabled: true,
   previewDestinationAlertCondition: alertCondition,
-  previewDestinationSchedulePreference: { targetArrivalTime: "09:00", transportMode: "auto" },
+  previewDestinationSchedulePreference: { targetArrivalTime: "09:00", transportMode: "auto", repeatEnabled: true, repeatDays: ["sun"] },
   previewDestinationTravelEstimate: createTravelEstimate(basePlace, 34),
   weatherLocationMode: "manual",
   temperatureUnit: "celsius",
@@ -153,6 +153,8 @@ try {
     await assertText(page, "숫자만 입력", viewport, "destination-care");
     await assertText(page, "자동 여유", viewport, "destination-care");
     await assertText(page, "대중교통", viewport, "destination-care");
+    await assertText(page, "반복 알림", viewport, "destination-care");
+    await assertText(page, "ON", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
     await screenshot(page, viewport, "destination-care");
 

@@ -16,8 +16,10 @@ type DestinationCardModel = {
   originTemp: string;
   destinationTemp: string;
   tempDiff: string;
+  rainPct: string;
   departureTime: string;
   arrivalTime: string;
+  repeatLabel: string;
   warning: string;
   tone: "warm" | "clear";
   place: PlaceSearchResult;
@@ -207,10 +209,12 @@ function DestinationCard({
         style={styles.destinationMainButton}
       >
         <View style={styles.destinationTop}>
-          <View style={styles.destinationTitleRow}>
-            <PlaceGlyph type={item.icon} color={theme.text} />
+          <View style={[styles.destinationIconFrame, { backgroundColor: `${accent}18` }]}>
+            <PlaceGlyph type={item.icon} color={accent} />
+          </View>
+          <View style={styles.destinationTitleColumn}>
             <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
-            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>— {item.area}</Text>
+            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: theme.gold }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -218,17 +222,25 @@ function DestinationCard({
           <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
 
-        <View style={styles.weatherLine}>
-          <SunGlyph color={theme.gold} />
-          <Text style={[styles.tempText, { color: theme.text }]}>{item.originTemp}</Text>
-          <Text style={[styles.arrowText, { color: theme.subtle }]}>›</Text>
-          <Text style={[styles.tempText, { color: theme.text }]}>{item.destinationTemp}</Text>
-          <Text style={[styles.diffText, { color: accent }]}>{item.tempDiff}</Text>
+        <View style={styles.destinationVisualGrid}>
+          <View style={[styles.departureBlock, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}44` }]}>
+            <Image source={uiIconAssets.depart} style={[styles.visualBlockIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+            <Text style={[styles.visualBlockLabel, { color: theme.gold }]}>출발</Text>
+            <Text style={[styles.departureBlockValue, { color: theme.text }]}>{item.departureTime}</Text>
+          </View>
+          <View style={styles.destinationMiniGrid}>
+            <MetricTile icon={uiIconAssets.clock} label="도착" value={item.arrivalTime} color={theme.sky} theme={theme} />
+            <MetricTile icon={uiIconAssets.rain} label="강수" value={item.rainPct} color={accent} theme={theme} />
+            <MetricTile icon={uiIconAssets.drop} label="기온차" value={item.tempDiff} color={accent} theme={theme} />
+            <MetricTile icon={uiIconAssets.settings} label="반복" value={item.repeatLabel} color={theme.clear} theme={theme} />
+          </View>
         </View>
 
-        <View style={styles.destinationBottom}>
-          <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>출발 {item.departureTime}</Text>
-          <Text style={[styles.timeText, { color: theme.subtle }]} numberOfLines={1}>도착 {item.arrivalTime}</Text>
+        <View style={[styles.destinationSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <SunGlyph color={theme.gold} />
+          <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
+            {item.originTemp} → {item.destinationTemp}
+          </Text>
           <Text style={[styles.warningText, { color: accent }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
         </View>
       </Pressable>
@@ -251,6 +263,30 @@ function DestinationCard({
 function getAlertPillLabel(careEnabled: boolean, permissionReady: boolean) {
   if (!permissionReady) return "권한 필요";
   return careEnabled ? "알림 켬" : "알림 꺼짐";
+}
+
+function MetricTile({
+  icon,
+  label,
+  value,
+  color,
+  theme,
+}: {
+  icon: number;
+  label: string;
+  value: string;
+  color: string;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.metricTile, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Image source={icon} style={[styles.metricTileIcon, { tintColor: color }]} resizeMode="contain" />
+      <View style={styles.metricTileCopy}>
+        <Text style={[styles.metricTileLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
+        <Text style={[styles.metricTileValue, { color }]} numberOfLines={1}>{value}</Text>
+      </View>
+    </View>
+  );
 }
 
 function RemovedDestinationBanner({
@@ -328,8 +364,10 @@ function buildDestinationCards(
       originTemp: formatTemperature(originWeather.current.tempC, temperatureUnit),
       destinationTemp: formatTemperature(destinationWeather.current.tempC, temperatureUnit),
       tempDiff: formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit),
+      rainPct: `${Math.round(destinationRain)}%`,
       departureTime: schedule.departureTime,
       arrivalTime: schedule.arrivalTime,
+      repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
       tone,
       place: destination.place,
@@ -424,6 +462,22 @@ function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][
     arrivalTime: targetArrivalTime,
     departureTime: subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes),
   };
+}
+
+const repeatDayLabels: Record<P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number], string> = {
+  mon: "월",
+  tue: "화",
+  wed: "수",
+  thu: "목",
+  fri: "금",
+  sat: "토",
+  sun: "일",
+};
+
+function getRepeatLabel(schedulePreference: P0ScreenProps["selectedDestinationSchedulePreference"]) {
+  if (!schedulePreference.repeatEnabled || schedulePreference.repeatDays.length === 0) return "없음";
+  if (schedulePreference.repeatDays.length >= 5) return "주중";
+  return schedulePreference.repeatDays.map((day) => repeatDayLabels[day]).join("");
 }
 
 function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCare"]) {
@@ -668,7 +722,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   destinationMainButton: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   emptyCard: {
     gap: spacing.md,
@@ -737,7 +791,14 @@ const styles = StyleSheet.create({
   destinationTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
+  },
+  destinationIconFrame: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
   },
   destinationTitleRow: {
     flex: 1,
@@ -745,6 +806,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+  },
+  destinationTitleColumn: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
   destinationName: {
     flexShrink: 1,
@@ -776,6 +842,83 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 22,
     fontWeight: "700",
+  },
+  destinationVisualGrid: {
+    minHeight: 138,
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  departureBlock: {
+    width: 116,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  visualBlockIcon: {
+    width: 24,
+    height: 24,
+  },
+  visualBlockLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  departureBlockValue: {
+    fontSize: 27,
+    lineHeight: 32,
+    fontWeight: "900",
+  },
+  destinationMiniGrid: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  metricTile: {
+    width: "48%",
+    minHeight: 66,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  metricTileIcon: {
+    width: 17,
+    height: 17,
+  },
+  metricTileCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  metricTileLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  metricTileValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  destinationSignal: {
+    minHeight: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  signalText: {
+    flexShrink: 0,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   weatherLine: {
     minHeight: 28,
