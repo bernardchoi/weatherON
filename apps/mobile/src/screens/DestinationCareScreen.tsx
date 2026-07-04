@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -36,9 +36,10 @@ export function DestinationCareScreen({
   const travelMinutes = care.departureAdvice?.travelMinutes ?? selectedDestinationTravelEstimate.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
-  const [arrivalInput, setArrivalInput] = useState(targetArrivalTime);
   const [conditionControlsOpen, setConditionControlsOpen] = useState(false);
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
+  const [repeatDaysOpen, setRepeatDaysOpen] = useState(false);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const originRain = originWeather.current.rainProbabilityPct;
@@ -51,22 +52,6 @@ export function DestinationCareScreen({
   const routeMeta = getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit);
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const destinationSaved = Boolean(selectedDestinationPlace);
-
-  useEffect(() => {
-    setArrivalInput(targetArrivalTime);
-  }, [targetArrivalTime]);
-
-  const handleArrivalInputChange = (segment: ArrivalTimeSegment, value: string) => {
-    const nextValue = getNextSegmentedArrivalInput(arrivalInput, segment, value);
-    setArrivalInput(nextValue);
-    if (isValidArrivalTime(nextValue)) onSetDestinationTargetArrivalTime(nextValue);
-  };
-
-  const handleArrivalInputBlur = () => {
-    const nextValue = normalizeSegmentedArrivalInput(arrivalInput, targetArrivalTime);
-    setArrivalInput(nextValue);
-    if (isValidArrivalTime(nextValue)) onSetDestinationTargetArrivalTime(nextValue);
-  };
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -101,20 +86,9 @@ export function DestinationCareScreen({
               </Text>
             </View>
           </View>
-          <View style={styles.summaryGrid}>
+          <View style={[styles.routeSummaryStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <SummaryChip icon={uiIconAssets.clock} label="도착" value={targetArrivalTime} meta={`${departureTime} 출발`} color={theme.sky} theme={theme} />
             <SummaryChip icon={uiIconAssets.depart} label="이동" value={`${travelMinutes}분`} meta={transportLabel} color={theme.gold} theme={theme} />
-            <SummaryChip icon={uiIconAssets.check} label="여유" value={`${bufferMinutes}분`} meta="자동 보정" color={theme.clear} theme={theme} />
-          </View>
-          <View style={styles.arrivalControls}>
-            <ArrivalInputControl
-              label="도착 희망"
-              value={arrivalInput}
-              caption="숫자만 입력"
-              onChangeText={handleArrivalInputChange}
-              onBlur={handleArrivalInputBlur}
-              theme={theme}
-            />
             <ArrivalControl
               label="자동 여유"
               value={`${bufferMinutes}분`}
@@ -122,12 +96,20 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
+          <ArrivalInputControl
+            label="도착 희망"
+            value={targetArrivalTime}
+            caption="5분 단위 스크롤 선택"
+            onSelectTime={onSetDestinationTargetArrivalTime}
+            theme={theme}
+          />
           <RepeatSchedulePanel
             transportMode={transportMode}
             transportLabel={transportLabel}
             transportSelectorOpen={transportSelectorOpen}
             repeatEnabled={repeatEnabled}
             repeatDays={repeatDays}
+            repeatDaysOpen={repeatDaysOpen}
             repeatSummary={repeatSummary}
             onToggleTransportSelector={() => setTransportSelectorOpen((current) => !current)}
             onSetTransportMode={(mode) => {
@@ -135,6 +117,7 @@ export function DestinationCareScreen({
               onSetDestinationTransportMode(mode);
             }}
             onToggleRepeat={onToggleDestinationRepeat}
+            onToggleRepeatDays={() => setRepeatDaysOpen((current) => !current)}
             onToggleRepeatDay={onToggleDestinationRepeatDay}
             theme={theme}
           />
@@ -154,108 +137,124 @@ export function DestinationCareScreen({
           </InfoPanel>
         ) : null}
 
-        <View style={[styles.comparePanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>현재 위치 · 목적지 날씨 비교</Text>
-          <View style={styles.compareGrid}>
-            <CompareMetric
-              label="기온"
-              value={`${formatTemperature(originWeather.current.tempC, temperatureUnit)} → ${formatTemperature(destinationWeather.current.tempC, temperatureUnit)}`}
-              meta={formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit)}
-              accent={theme.text}
-              theme={theme}
-            />
-            <CompareMetric
-              label="강수"
-              value={`${originRain}% → ${destinationRain}%`}
-              meta={destinationRain > originRain ? "목적지 높음" : "차이 작음"}
-              accent={destinationRain > originRain ? theme.warm : theme.clear}
-              theme={theme}
-            />
-            <CompareMetric
-              label="날씨"
-              value={`${getConditionLabel(originWeather.current.condition)} → ${getConditionLabel(destinationWeather.current.condition)}`}
-              meta={destinationName}
-              accent={theme.text}
-              theme={theme}
-            />
-            <CompareMetric
-              label="경로"
-              value={transportLabel}
-              meta={routeMeta}
-              accent={theme.gold}
-              theme={theme}
-            />
-          </View>
-        </View>
-
-        <View style={[styles.flowPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>출발 전 알림 흐름</Text>
-          <TimelineItem time={prepAlertTime} label="출발 준비 확인" icon={uiIconAssets.clock} color={theme.sky} active={false} theme={theme} />
-          <TimelineItem time={rainAlertTime} label="목적지 강수 확인" icon={uiIconAssets.rain} color={theme.clear} active={false} theme={theme} />
-          <TimelineItem time={departureTime} label="출발 시각 알림" icon={uiIconAssets.depart} color={theme.gold} active theme={theme} />
-        </View>
-
-        <View style={[styles.conditionPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.conditionHeader}>
+        <View style={[styles.detailPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Pressable
+            accessibilityLabel={detailPanelOpen ? "날씨 비교와 알림 상세 닫기" : "날씨 비교와 알림 상세 열기"}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: detailPanelOpen }}
+            onPress={() => setDetailPanelOpen((current) => !current)}
+            style={styles.detailPanelHeader}
+          >
             <View style={styles.conditionCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 조건</Text>
+              <Text style={[styles.sectionTitle, { color: theme.muted }]}>날씨 비교 · 알림</Text>
               <Text style={[styles.conditionSummary, { color: theme.text }]}>
-                강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s 기준
+                강수 {originRain}% → {destinationRain}% · {prepAlertTime}/{rainAlertTime}/{departureTime}
               </Text>
             </View>
-            <Pressable
-              accessibilityLabel="알림 전체 설정으로 이동"
-              accessibilityRole="button"
-              onPress={() => onOpenAlertSettings("G2", "destination")}
-              style={[styles.detailButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-            >
-              <Text style={[styles.detailButtonText, { color: theme.text }]}>전체 설정</Text>
-            </Pressable>
-          </View>
-
-          <Pressable
-            accessibilityLabel={conditionControlsOpen ? "알림 조건 직접 조정 닫기" : "알림 조건 직접 조정 열기"}
-            accessibilityRole="button"
-            onPress={() => setConditionControlsOpen((current) => !current)}
-            style={[styles.conditionToggle, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-          >
-            <Text style={[styles.conditionToggleText, { color: theme.text }]}>
-              {conditionControlsOpen ? "조건 직접 조정 닫기" : "조건 직접 조정"}
-            </Text>
-            <Text style={[styles.conditionToggleIcon, { color: theme.gold }]}>{conditionControlsOpen ? "접기" : "열기"}</Text>
+            <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "상세"}</Text>
           </Pressable>
 
-          {conditionControlsOpen ? (
+          {detailPanelOpen ? (
             <>
-              <View style={styles.conditionSummaryGrid}>
-                <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
-                <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
-                <ConditionSummaryPill label="반복" value={repeatSummary} tone={repeatEnabled ? "clear" : "default"} theme={theme} />
-                {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
+              <View style={styles.compareGrid}>
+                <CompareMetric
+                  label="기온"
+                  value={`${formatTemperature(originWeather.current.tempC, temperatureUnit)} → ${formatTemperature(destinationWeather.current.tempC, temperatureUnit)}`}
+                  meta={formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit)}
+                  accent={theme.text}
+                  theme={theme}
+                />
+                <CompareMetric
+                  label="강수"
+                  value={`${originRain}% → ${destinationRain}%`}
+                  meta={destinationRain > originRain ? "목적지 높음" : "차이 작음"}
+                  accent={destinationRain > originRain ? theme.warm : theme.clear}
+                  theme={theme}
+                />
+                <CompareMetric
+                  label="날씨"
+                  value={`${getConditionLabel(originWeather.current.condition)} → ${getConditionLabel(destinationWeather.current.condition)}`}
+                  meta={destinationName}
+                  accent={theme.text}
+                  theme={theme}
+                />
+                <CompareMetric
+                  label="경로"
+                  value={transportLabel}
+                  meta={routeMeta}
+                  accent={theme.gold}
+                  theme={theme}
+                />
               </View>
-              <View style={styles.conditionGrid}>
-                <ConditionButton
-                  label="강수 기준"
-                  value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
-                  accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
-                  onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
-                  theme={theme}
-                />
-                <ConditionButton
-                  label="출발 전"
-                  value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
-                  accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
-                  onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
-                  theme={theme}
-                />
-                <ConditionButton
-                  label="바람 기준"
-                  value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
-                  accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
-                  onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
-                  theme={theme}
-                />
+
+              <View style={styles.timelineCompact}>
+                <TimelineItem time={prepAlertTime} label="출발 준비 확인" icon={uiIconAssets.clock} color={theme.sky} active={false} theme={theme} />
+                <TimelineItem time={rainAlertTime} label="목적지 강수 확인" icon={uiIconAssets.rain} color={theme.clear} active={false} theme={theme} />
+                <TimelineItem time={departureTime} label="출발 시각 알림" icon={uiIconAssets.depart} color={theme.gold} active theme={theme} />
               </View>
+
+              <View style={styles.conditionHeader}>
+                <View style={styles.conditionCopy}>
+                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 조건</Text>
+                  <Text style={[styles.conditionSummary, { color: theme.text }]}>
+                    강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s 기준
+                  </Text>
+                </View>
+                <Pressable
+                  accessibilityLabel="알림 전체 설정으로 이동"
+                  accessibilityRole="button"
+                  onPress={() => onOpenAlertSettings("G2", "destination")}
+                  style={[styles.detailButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+                >
+                  <Text style={[styles.detailButtonText, { color: theme.text }]}>전체 설정</Text>
+                </Pressable>
+              </View>
+
+              <Pressable
+                accessibilityLabel={conditionControlsOpen ? "알림 조건 직접 조정 닫기" : "알림 조건 직접 조정 열기"}
+                accessibilityRole="button"
+                onPress={() => setConditionControlsOpen((current) => !current)}
+                style={[styles.conditionToggle, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+              >
+                <Text style={[styles.conditionToggleText, { color: theme.text }]}>
+                  {conditionControlsOpen ? "조건 직접 조정 닫기" : "조건 직접 조정"}
+                </Text>
+                <Text style={[styles.conditionToggleIcon, { color: theme.gold }]}>{conditionControlsOpen ? "접기" : "열기"}</Text>
+              </Pressable>
+
+              {conditionControlsOpen ? (
+                <>
+                  <View style={styles.conditionSummaryGrid}>
+                    <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
+                    <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
+                    <ConditionSummaryPill label="반복" value={repeatSummary} tone={repeatEnabled ? "clear" : "default"} theme={theme} />
+                    {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
+                  </View>
+                  <View style={styles.conditionGrid}>
+                    <ConditionButton
+                      label="강수 기준"
+                      value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
+                      accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
+                      onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
+                      theme={theme}
+                    />
+                    <ConditionButton
+                      label="출발 전"
+                      value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
+                      accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
+                      onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
+                      theme={theme}
+                    />
+                    <ConditionButton
+                      label="바람 기준"
+                      value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
+                      accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
+                      onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
+                      theme={theme}
+                    />
+                  </View>
+                </>
+              ) : null}
             </>
           ) : null}
         </View>
@@ -385,50 +384,88 @@ function ArrivalInputControl({
   label,
   value,
   caption,
-  onChangeText,
-  onBlur,
+  onSelectTime,
   theme,
 }: {
   label: string;
   value: string;
   caption: string;
-  onChangeText: (segment: ArrivalTimeSegment, value: string) => void;
-  onBlur: () => void;
+  onSelectTime: (value: string) => void;
   theme: AppTheme;
 }) {
-  const { hour, minute } = getArrivalInputParts(value);
+  const { hour, minute } = getTimeParts(value);
+  const setHour = (nextHour: string) => onSelectTime(`${nextHour}:${minute}`);
+  const setMinute = (nextMinute: string) => onSelectTime(`${hour}:${nextMinute}`);
   return (
     <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
-        <View style={styles.arrivalTimeRow}>
-          <TextInput
+        <View style={styles.arrivalWheelRow}>
+          <TimeWheel
             accessibilityLabel={`${label} 시 입력`}
-            keyboardType="number-pad"
-            maxLength={2}
-            onBlur={onBlur}
-            onChangeText={(nextValue) => onChangeText("hour", nextValue)}
-            placeholder="시"
-            placeholderTextColor={theme.subtle}
-            style={[styles.arrivalTimeInput, { color: theme.text, borderColor: theme.border }]}
-            value={hour}
+            options={hourOptions}
+            selectedValue={hour}
+            suffix="시"
+            theme={theme}
+            onSelect={setHour}
           />
           <Text style={[styles.arrivalTimeColon, { color: theme.subtle }]}>:</Text>
-          <TextInput
+          <TimeWheel
             accessibilityLabel={`${label} 분 입력`}
-            keyboardType="number-pad"
-            maxLength={2}
-            onBlur={onBlur}
-            onChangeText={(nextValue) => onChangeText("minute", nextValue)}
-            placeholder="분"
-            placeholderTextColor={theme.subtle}
-            style={[styles.arrivalTimeInput, { color: theme.text, borderColor: theme.border }]}
-            value={minute}
+            options={minuteOptions}
+            selectedValue={minute}
+            suffix="분"
+            theme={theme}
+            onSelect={setMinute}
           />
         </View>
       </View>
       <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
     </View>
+  );
+}
+
+function TimeWheel({
+  accessibilityLabel,
+  options,
+  selectedValue,
+  suffix,
+  theme,
+  onSelect,
+}: {
+  accessibilityLabel: string;
+  options: string[];
+  selectedValue: string;
+  suffix: string;
+  theme: AppTheme;
+  onSelect: (value: string) => void;
+}) {
+  const selectedIndex = Math.max(0, options.indexOf(selectedValue));
+  return (
+    <ScrollView
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.timeWheel, { borderColor: theme.border }]}
+      contentContainerStyle={styles.timeWheelContent}
+      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 34 - 34) }}
+      showsVerticalScrollIndicator={false}
+      nestedScrollEnabled
+    >
+      {options.map((option) => {
+        const selected = selectedValue === option;
+        return (
+          <Pressable
+            key={`${suffix}-${option}`}
+            accessibilityLabel={`${option}${suffix} 선택`}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onSelect(option)}
+            style={[styles.timeWheelOption, { backgroundColor: selected ? `${theme.gold}18` : "transparent" }]}
+          >
+            <Text style={[styles.timeWheelOptionText, { color: selected ? theme.gold : theme.subtle }]}>{option}</Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
   );
 }
 
@@ -461,7 +498,8 @@ const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedule
   { mode: "transit", label: "대중교통", caption: "대중교통은 배차/환승 변동 가능" },
 ];
 
-type ArrivalTimeSegment = "hour" | "minute";
+const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
 
 function RepeatSchedulePanel({
   transportMode,
@@ -469,10 +507,12 @@ function RepeatSchedulePanel({
   transportSelectorOpen,
   repeatEnabled,
   repeatDays,
+  repeatDaysOpen,
   repeatSummary,
   onToggleTransportSelector,
   onSetTransportMode,
   onToggleRepeat,
+  onToggleRepeatDays,
   onToggleRepeatDay,
   theme,
 }: {
@@ -481,10 +521,12 @@ function RepeatSchedulePanel({
   transportSelectorOpen: boolean;
   repeatEnabled: boolean;
   repeatDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
+  repeatDaysOpen: boolean;
   repeatSummary: string;
   onToggleTransportSelector: () => void;
   onSetTransportMode: (mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) => void;
   onToggleRepeat: () => void;
+  onToggleRepeatDays: () => void;
   onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
@@ -561,6 +603,19 @@ function RepeatSchedulePanel({
       </View>
 
       {repeatEnabled ? (
+        <Pressable
+          accessibilityLabel={repeatDaysOpen ? "반복 요일 선택 닫기" : "반복 요일 선택 열기"}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: repeatDaysOpen }}
+          onPress={onToggleRepeatDays}
+          style={[styles.repeatDayToggle, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+        >
+          <Text style={[styles.repeatDayToggleText, { color: theme.text }]}>요일 선택</Text>
+          <Text style={[styles.repeatDayToggleMeta, { color: theme.clear }]}>{repeatDaysOpen ? "닫기" : repeatSummary}</Text>
+        </Pressable>
+      ) : null}
+
+      {repeatEnabled && repeatDaysOpen ? (
         <View style={styles.repeatDayRow}>
           {repeatDayOptions.map((option) => {
             const selected = repeatDays.includes(option.day);
@@ -703,41 +758,13 @@ function getDepartureFormulaCopy(
   return `예상 계산 ${base} · 경로 확인 전`;
 }
 
-function isValidArrivalTime(value: string) {
-  if (!/^\d{2}:\d{2}$/.test(value)) return false;
-  const [hourText, minuteText] = value.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
-}
-
-function getNextSegmentedArrivalInput(currentValue: string, segment: ArrivalTimeSegment, nextRawValue: string) {
-  const { hour, minute } = getArrivalInputParts(currentValue);
-  const nextValue = nextRawValue.replace(/\D/g, "").slice(0, 2);
-  return segment === "hour" ? `${nextValue}:${minute}` : `${hour}:${nextValue}`;
-}
-
-function normalizeSegmentedArrivalInput(value: string, fallback: string) {
-  const { hour, minute } = getArrivalInputParts(value);
-  const normalizedHour = normalizeTimePart(hour, 23);
-  const normalizedMinute = normalizeTimePart(minute, 59);
-  if (!normalizedHour || !normalizedMinute) return fallback;
-  return `${normalizedHour}:${normalizedMinute}`;
-}
-
-function normalizeTimePart(value: string, maxValue: number) {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return null;
-  const numberValue = Math.min(Number(digits), maxValue);
-  if (!Number.isFinite(numberValue)) return null;
-  return String(numberValue).padStart(2, "0");
-}
-
-function getArrivalInputParts(value: string) {
-  const [rawHour = "", rawMinute = ""] = value.split(":");
+function getTimeParts(value: string) {
+  const [rawHour = "10", rawMinute = "00"] = value.split(":");
+  const hour = Number(rawHour);
+  const minute = Math.round(Number(rawMinute) / 5) * 5;
   return {
-    hour: rawHour.replace(/\D/g, "").slice(0, 2),
-    minute: rawMinute.replace(/\D/g, "").slice(0, 2),
+    hour: Number.isFinite(hour) ? String(Math.max(0, Math.min(23, hour))).padStart(2, "0") : "10",
+    minute: Number.isFinite(minute) ? String(Math.max(0, Math.min(55, minute))).padStart(2, "0") : "00",
   };
 }
 
@@ -908,26 +935,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.xs,
   },
-  summaryChip: {
-    flex: 1,
-    minHeight: 94,
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
+  routeSummaryStrip: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.xs,
+    padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  summaryChip: {
+    flex: 1,
+    minHeight: 66,
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
   summaryIconFrame: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
-    marginBottom: 2,
   },
   summaryIcon: {
-    width: 17,
-    height: 17,
+    width: 13,
+    height: 13,
   },
   summaryLabel: {
     fontSize: 10,
@@ -954,7 +988,7 @@ const styles = StyleSheet.create({
   },
   arrivalControl: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 72,
     justifyContent: "space-between",
     gap: 4,
     paddingHorizontal: spacing.sm,
@@ -996,6 +1030,33 @@ const styles = StyleSheet.create({
     width: 7,
     textAlign: "center",
     fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  arrivalWheelRow: {
+    minHeight: 110,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  timeWheel: {
+    width: 76,
+    maxHeight: 108,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  timeWheelContent: {
+    paddingVertical: 4,
+  },
+  timeWheelOption: {
+    minHeight: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.xs,
+    marginHorizontal: 4,
+  },
+  timeWheelOptionText: {
+    fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
   },
@@ -1289,6 +1350,28 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
   },
+  repeatDayToggle: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  repeatDayToggleText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  repeatDayToggleMeta: {
+    flexShrink: 1,
+    textAlign: "right",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
   repeatDayRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1318,6 +1401,23 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  detailPanel: {
+    gap: spacing.sm,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  detailPanelHeader: {
+    minHeight: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  timelineCompact: {
+    gap: spacing.xs,
+    paddingTop: 2,
   },
   conditionHeader: {
     flexDirection: "row",

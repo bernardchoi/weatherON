@@ -224,27 +224,30 @@ function DestinationCard({
           <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
 
-        <View style={styles.destinationVisualGrid}>
-          <View style={[styles.departureBlock, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}44` }]}>
-            <Image source={uiIconAssets.depart} style={[styles.visualBlockIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-            <Text style={[styles.visualBlockLabel, { color: theme.gold }]}>출발</Text>
-            <Text style={[styles.departureBlockValue, { color: theme.text }]}>{item.departureTime}</Text>
+        <View style={styles.destinationSummaryRow}>
+          <View style={styles.destinationWeatherLine}>
+            <SunGlyph color={theme.gold} />
+            <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
+              {item.originTemp} → {item.destinationTemp}
+            </Text>
+            <Text style={[styles.diffText, { color: warningColor }]} numberOfLines={1}>{item.tempDiff}</Text>
           </View>
-          <View style={styles.destinationMiniGrid}>
-            <MetricTile icon={uiIconAssets.clock} label="도착" value={item.arrivalTime} theme={theme} />
-            <MetricTile icon={uiIconAssets.rain} label="강수" value={item.rainPct} theme={theme} />
-            <MetricTile icon={uiIconAssets.drop} label="기온차" value={item.tempDiff} theme={theme} />
-            <MetricTile icon={uiIconAssets.settings} label="반복" value={item.repeatLabel} theme={theme} />
+          <View style={[styles.rainPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <Image source={uiIconAssets.rain} style={[styles.rainPillIcon, { tintColor: warningColor }]} resizeMode="contain" />
+            <Text style={[styles.rainPillText, { color: warningColor }]} numberOfLines={1}>{item.rainPct}</Text>
           </View>
         </View>
 
-        <View style={[styles.destinationSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <SunGlyph color={theme.gold} />
-          <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
-            {item.originTemp} → {item.destinationTemp}
+        <View style={styles.destinationBottom}>
+          <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
+            출발 {item.departureTime} · 도착 {item.arrivalTime}
           </Text>
-          <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
+          <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>
+            반복 {item.repeatLabel}
+          </Text>
         </View>
+
+        <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
       </Pressable>
 
       <View style={styles.destinationActions}>
@@ -271,28 +274,6 @@ function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: A
   if (!permissionReady) return theme.warm;
   if (careEnabled) return theme.clear;
   return theme.subtle;
-}
-
-function MetricTile({
-  icon,
-  label,
-  value,
-  theme,
-}: {
-  icon: number;
-  label: string;
-  value: string;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.metricTile, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <Image source={icon} style={[styles.metricTileIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-      <View style={styles.metricTileCopy}>
-        <Text style={[styles.metricTileLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
-        <Text style={[styles.metricTileValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
-      </View>
-    </View>
-  );
 }
 
 function RemovedDestinationBanner({
@@ -721,14 +702,15 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   destinationCard: {
-    gap: spacing.xs,
-    padding: 15,
-    borderRadius: radius.lg,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: radius.md,
     borderLeftWidth: 2,
     borderWidth: 1,
   },
   destinationMainButton: {
-    gap: spacing.sm,
+    gap: 7,
   },
   emptyCard: {
     gap: spacing.md,
@@ -797,11 +779,11 @@ const styles = StyleSheet.create({
   destinationTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   destinationIconFrame: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -821,22 +803,22 @@ const styles = StyleSheet.create({
   destinationName: {
     flexShrink: 1,
     minWidth: 0,
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   destinationArea: {
     flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
   readyPill: {
-    minWidth: 56,
-    minHeight: 28,
+    minWidth: 50,
+    minHeight: 24,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs,
     borderRadius: radius.pill,
   },
   readyText: {
@@ -845,83 +827,47 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   chevron: {
-    fontSize: 19,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 20,
     fontWeight: "700",
   },
-  destinationVisualGrid: {
-    minHeight: 138,
+  destinationSummaryRow: {
+    minHeight: 28,
     flexDirection: "row",
-    gap: spacing.sm,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
   },
-  departureBlock: {
-    width: 116,
+  destinationWeatherLine: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  rainPill: {
+    minWidth: 56,
+    minHeight: 26,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
-  visualBlockIcon: {
-    width: 24,
-    height: 24,
+  rainPillIcon: {
+    width: 13,
+    height: 13,
   },
-  visualBlockLabel: {
+  rainPillText: {
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
-  },
-  departureBlockValue: {
-    fontSize: 27,
-    lineHeight: 32,
-    fontWeight: "900",
-  },
-  destinationMiniGrid: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  metricTile: {
-    width: "48%",
-    minHeight: 66,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  metricTileIcon: {
-    width: 17,
-    height: 17,
-  },
-  metricTileCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  metricTileLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  metricTileValue: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  destinationSignal: {
-    minHeight: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   signalText: {
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 0,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
@@ -943,25 +889,31 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   diffText: {
-    marginLeft: spacing.xs,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
   destinationBottom: {
-    minHeight: 22,
+    minHeight: 18,
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    gap: spacing.sm,
+    justifyContent: "space-between",
+    gap: spacing.xs,
   },
   timeText: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 11,
     lineHeight: 15,
+    fontWeight: "900",
+  },
+  repeatText: {
+    flexShrink: 0,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "800",
   },
   warningText: {
-    marginLeft: "auto",
     flexShrink: 1,
     minWidth: 0,
     maxWidth: "100%",
@@ -970,22 +922,22 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   destinationActions: {
-    minHeight: 34,
+    minHeight: 28,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   removeButton: {
-    minWidth: 64,
-    minHeight: 44,
+    minWidth: 52,
+    minHeight: 30,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
   },
   removeButtonText: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
   sunGlyph: {
@@ -1014,8 +966,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   placeGlyph: {
-    width: 20,
-    height: 20,
+    width: 17,
+    height: 17,
     flexShrink: 0,
   },
 });
