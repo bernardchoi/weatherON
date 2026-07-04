@@ -189,7 +189,9 @@ function DestinationCard({
   onOpen: () => void;
   onRemove: () => void;
 }) {
-  const accent = item.tone === "warm" ? theme.warm : theme.clear;
+  const accent = theme.gold;
+  const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
+  const warningColor = item.tone === "warm" ? theme.warm : theme.subtle;
   return (
     <View
       style={[
@@ -217,7 +219,7 @@ function DestinationCard({
             <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.readyText, { color: theme.gold }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
+            <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
           </View>
           <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
@@ -229,10 +231,10 @@ function DestinationCard({
             <Text style={[styles.departureBlockValue, { color: theme.text }]}>{item.departureTime}</Text>
           </View>
           <View style={styles.destinationMiniGrid}>
-            <MetricTile icon={uiIconAssets.clock} label="도착" value={item.arrivalTime} color={theme.sky} theme={theme} />
-            <MetricTile icon={uiIconAssets.rain} label="강수" value={item.rainPct} color={accent} theme={theme} />
-            <MetricTile icon={uiIconAssets.drop} label="기온차" value={item.tempDiff} color={accent} theme={theme} />
-            <MetricTile icon={uiIconAssets.settings} label="반복" value={item.repeatLabel} color={theme.clear} theme={theme} />
+            <MetricTile icon={uiIconAssets.clock} label="도착" value={item.arrivalTime} theme={theme} />
+            <MetricTile icon={uiIconAssets.rain} label="강수" value={item.rainPct} theme={theme} />
+            <MetricTile icon={uiIconAssets.drop} label="기온차" value={item.tempDiff} theme={theme} />
+            <MetricTile icon={uiIconAssets.settings} label="반복" value={item.repeatLabel} theme={theme} />
           </View>
         </View>
 
@@ -241,7 +243,7 @@ function DestinationCard({
           <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
             {item.originTemp} → {item.destinationTemp}
           </Text>
-          <Text style={[styles.warningText, { color: accent }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
+          <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
         </View>
       </Pressable>
 
@@ -252,7 +254,7 @@ function DestinationCard({
           onPress={onRemove}
           style={[styles.removeButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
         >
-          <Text style={[styles.removeButtonText, { color: theme.warm }]}>삭제</Text>
+          <Text style={[styles.removeButtonText, { color: theme.muted }]}>삭제</Text>
         </Pressable>
       </View>
 
@@ -265,25 +267,29 @@ function getAlertPillLabel(careEnabled: boolean, permissionReady: boolean) {
   return careEnabled ? "알림 켬" : "알림 꺼짐";
 }
 
+function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: AppTheme) {
+  if (!permissionReady) return theme.warm;
+  if (careEnabled) return theme.clear;
+  return theme.subtle;
+}
+
 function MetricTile({
   icon,
   label,
   value,
-  color,
   theme,
 }: {
   icon: number;
   label: string;
   value: string;
-  color: string;
   theme: AppTheme;
 }) {
   return (
     <View style={[styles.metricTile, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <Image source={icon} style={[styles.metricTileIcon, { tintColor: color }]} resizeMode="contain" />
+      <Image source={icon} style={[styles.metricTileIcon, { tintColor: theme.gold }]} resizeMode="contain" />
       <View style={styles.metricTileCopy}>
         <Text style={[styles.metricTileLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
-        <Text style={[styles.metricTileValue, { color }]} numberOfLines={1}>{value}</Text>
+        <Text style={[styles.metricTileValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
       </View>
     </View>
   );

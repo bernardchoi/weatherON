@@ -38,6 +38,7 @@ export function DestinationCareScreen({
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
   const [arrivalInput, setArrivalInput] = useState(targetArrivalTime);
   const [conditionControlsOpen, setConditionControlsOpen] = useState(false);
+  const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const originRain = originWeather.current.rainProbabilityPct;
@@ -121,31 +122,23 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
-          <Text style={[styles.transportSectionLabel, { color: theme.muted }]}>이동수단</Text>
-          <View style={styles.transportGrid}>
-            {transportOptions.map((option) => (
-              <TransportOption
-                key={option.mode}
-                active={transportMode === option.mode}
-                label={option.label}
-                caption={option.caption}
-                onPress={() => onSetDestinationTransportMode(option.mode)}
-                theme={theme}
-              />
-            ))}
-          </View>
-          {transportMode === "transit" ? (
-            <Text style={[styles.transportNotice, { color: theme.warm }]}>대중교통은 배차/환승 변동 가능</Text>
-          ) : null}
-          <RepeatSchedulePanel
-            enabled={repeatEnabled}
-            selectedDays={repeatDays}
-            summary={repeatSummary}
-            onToggle={onToggleDestinationRepeat}
-            onToggleDay={onToggleDestinationRepeatDay}
+          <DepartureSettingsPanel
+            transportMode={transportMode}
+            transportLabel={transportLabel}
+            transportSelectorOpen={transportSelectorOpen}
+            repeatEnabled={repeatEnabled}
+            repeatDays={repeatDays}
+            repeatSummary={repeatSummary}
+            onToggleTransportSelector={() => setTransportSelectorOpen((current) => !current)}
+            onSetTransportMode={(mode) => {
+              onSetDestinationTransportMode(mode);
+              setTransportSelectorOpen(false);
+            }}
+            onToggleRepeat={onToggleDestinationRepeat}
+            onToggleRepeatDay={onToggleDestinationRepeatDay}
             theme={theme}
           />
-          <View style={[styles.calculationStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={styles.calculationStrip}>
             <Text style={[styles.calculationText, { color: theme.text }]}>
               {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
             </Text>
@@ -361,62 +354,6 @@ const repeatDayOptions: Array<{ day: P0ScreenProps["selectedDestinationScheduleP
   { day: "sun", label: "일요일", shortLabel: "일" },
 ];
 
-function RepeatSchedulePanel({
-  enabled,
-  selectedDays,
-  summary,
-  onToggle,
-  onToggleDay,
-  theme,
-}: {
-  enabled: boolean;
-  selectedDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
-  summary: string;
-  onToggle: () => void;
-  onToggleDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.repeatPanel, { backgroundColor: theme.cardStrong, borderColor: enabled ? theme.clear : theme.border }]}>
-      <View style={styles.repeatHeader}>
-        <View style={[styles.repeatIconFrame, { backgroundColor: enabled ? `${theme.clear}22` : theme.cardMuted }]}>
-          <Image source={uiIconAssets.clock} style={[styles.repeatIcon, { tintColor: enabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
-        </View>
-        <View style={styles.repeatCopy}>
-          <Text style={[styles.repeatLabel, { color: enabled ? theme.clear : theme.subtle }]}>반복 알림</Text>
-          <Text style={[styles.repeatTitle, { color: theme.text }]} numberOfLines={1}>{summary}</Text>
-        </View>
-        <Pressable
-          accessibilityLabel={enabled ? "반복 알림 끄기" : "반복 알림 켜기"}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: enabled }}
-          onPress={onToggle}
-          style={[styles.repeatSwitch, { backgroundColor: enabled ? theme.clear : theme.cardMuted, borderColor: enabled ? theme.clear : theme.border }]}
-        >
-          <Text style={[styles.repeatSwitchText, { color: enabled ? theme.background : theme.subtle }]}>{enabled ? "ON" : "OFF"}</Text>
-        </Pressable>
-      </View>
-      <View style={styles.repeatDayRow}>
-        {repeatDayOptions.map((option) => {
-          const selected = selectedDays.includes(option.day);
-          return (
-            <Pressable
-              key={option.day}
-              accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => onToggleDay(option.day)}
-              style={[styles.repeatDayChip, { backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
-            >
-              <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
 function SummaryChip({
   icon,
   label,
@@ -526,36 +463,123 @@ const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedule
 
 type ArrivalTimeSegment = "hour" | "minute";
 
-function TransportOption({
-  active,
-  label,
-  caption,
-  onPress,
+function DepartureSettingsPanel({
+  transportMode,
+  transportLabel,
+  transportSelectorOpen,
+  repeatEnabled,
+  repeatDays,
+  repeatSummary,
+  onToggleTransportSelector,
+  onSetTransportMode,
+  onToggleRepeat,
+  onToggleRepeatDay,
   theme,
 }: {
-  active: boolean;
-  label: string;
-  caption: string;
-  onPress: () => void;
+  transportMode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"];
+  transportLabel: string;
+  transportSelectorOpen: boolean;
+  repeatEnabled: boolean;
+  repeatDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
+  repeatSummary: string;
+  onToggleTransportSelector: () => void;
+  onSetTransportMode: (mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) => void;
+  onToggleRepeat: () => void;
+  onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
+  const transportCaption = getTransportOptionCaption(transportMode);
   return (
-    <Pressable
-      accessibilityLabel={`${label} 이동수단 선택`}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      style={[
-        styles.transportOption,
-        {
-          backgroundColor: active ? theme.cardStrong : theme.cardMuted,
-          borderColor: active ? theme.gold : theme.border,
-        },
-      ]}
-    >
-      <Text style={[styles.transportLabel, { color: active ? theme.gold : theme.text }]}>{label}</Text>
-      <Text style={[styles.transportCaption, { color: theme.subtle }]}>{caption}</Text>
-    </Pressable>
+    <View style={[styles.settingsPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Pressable
+        accessibilityLabel={`이동수단 ${transportLabel}, 선택 목록 ${transportSelectorOpen ? "닫기" : "열기"}`}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: transportSelectorOpen }}
+        onPress={onToggleTransportSelector}
+        style={styles.settingsRow}
+      >
+        <View style={styles.settingsRowMain}>
+          <View style={[styles.settingsIconFrame, { backgroundColor: `${theme.gold}18` }]}>
+            <Image source={uiIconAssets.depart} style={[styles.settingsIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+          </View>
+          <View style={styles.settingsCopy}>
+            <Text style={[styles.settingsLabel, { color: theme.subtle }]}>이동수단</Text>
+            <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{transportLabel}</Text>
+          </View>
+        </View>
+        <View style={styles.settingsTrailing}>
+          <Text style={[styles.settingsMeta, { color: transportMode === "transit" ? theme.warm : theme.gold }]} numberOfLines={1}>{transportCaption}</Text>
+          <Text style={[styles.settingsChevron, { color: theme.subtle }]}>{transportSelectorOpen ? "닫기" : "변경"}</Text>
+        </View>
+      </Pressable>
+
+      {transportSelectorOpen ? (
+        <View style={[styles.transportDropdown, { borderTopColor: theme.border }]}>
+          {transportOptions.map((option) => {
+            const selected = transportMode === option.mode;
+            return (
+              <Pressable
+                key={option.mode}
+                accessibilityLabel={`${option.label} 이동수단 선택${selected ? ", 현재 선택됨" : ""}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onSetTransportMode(option.mode)}
+                style={[styles.transportDropdownRow, { backgroundColor: selected ? `${theme.gold}14` : "transparent", borderColor: selected ? theme.gold : theme.border }]}
+              >
+                <View style={styles.transportDropdownCopy}>
+                  <Text style={[styles.transportDropdownLabel, { color: selected ? theme.gold : theme.text }]}>{option.label}</Text>
+                  <Text style={[styles.transportDropdownCaption, { color: theme.subtle }]}>{option.caption}</Text>
+                </View>
+                {selected ? <Text style={[styles.transportSelectedText, { color: theme.gold }]}>선택됨</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+
+      <View style={[styles.settingsDivider, { backgroundColor: theme.border }]} />
+
+      <View style={styles.settingsRow}>
+        <View style={styles.settingsRowMain}>
+          <View style={[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }]}>
+            <Image source={uiIconAssets.clock} style={[styles.settingsIcon, { tintColor: repeatEnabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
+          </View>
+          <View style={styles.settingsCopy}>
+            <Text style={[styles.settingsLabel, { color: repeatEnabled ? theme.clear : theme.subtle }]}>반복 알림</Text>
+            <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{repeatSummary}</Text>
+          </View>
+        </View>
+        <Pressable
+          accessibilityLabel={repeatEnabled ? "반복 알림 끄기" : "반복 알림 켜기"}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: repeatEnabled }}
+          onPress={onToggleRepeat}
+          style={[styles.repeatSwitch, { backgroundColor: repeatEnabled ? theme.clear : theme.cardMuted, borderColor: repeatEnabled ? theme.clear : theme.border }]}
+        >
+          <Text style={[styles.repeatSwitchText, { color: repeatEnabled ? theme.background : theme.subtle }]}>{repeatEnabled ? "ON" : "OFF"}</Text>
+        </Pressable>
+      </View>
+
+      {repeatEnabled ? (
+        <View style={styles.repeatDayRow}>
+          {repeatDayOptions.map((option) => {
+            const selected = repeatDays.includes(option.day);
+            return (
+              <Pressable
+                key={option.day}
+                accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onToggleRepeatDay(option.day)}
+                style={[styles.repeatDayChip, { backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
+              >
+                <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -656,6 +680,10 @@ function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationScheduleP
   if (mode === "drive") return "자차";
   if (mode === "transit") return "대중교통";
   return "자동";
+}
+
+function getTransportOptionCaption(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
+  return transportOptions.find((option) => option.mode === mode)?.caption ?? "기본 경로";
 }
 
 function getRepeatSummary(enabled: boolean, days: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"]) {
@@ -978,9 +1006,8 @@ const styles = StyleSheet.create({
   },
   calculationStrip: {
     gap: 4,
-    padding: spacing.sm,
-    borderRadius: radius.sm,
-    borderWidth: 1,
+    paddingHorizontal: 2,
+    paddingTop: 2,
   },
   calculationText: {
     fontSize: 12,
@@ -1148,83 +1175,104 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "900",
   },
-  transportPanel: {
-    gap: spacing.sm,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  transportGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  transportSectionLabel: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "900",
-  },
-  transportOption: {
-    width: "48.7%",
-    minHeight: 58,
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  transportLabel: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  transportCaption: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  transportNotice: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  repeatPanel: {
+  settingsPanel: {
     gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  repeatHeader: {
-    minHeight: 48,
+  settingsRow: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  settingsRowMain: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
-  repeatIconFrame: {
+  settingsIconFrame: {
     width: 38,
     height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
-  repeatIcon: {
+  settingsIcon: {
     width: 20,
     height: 20,
   },
-  repeatCopy: {
+  settingsCopy: {
     flex: 1,
     minWidth: 0,
     gap: 2,
   },
-  repeatLabel: {
+  settingsLabel: {
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
   },
-  repeatTitle: {
+  settingsValue: {
     fontSize: 15,
     lineHeight: 20,
+    fontWeight: "900",
+  },
+  settingsTrailing: {
+    maxWidth: 106,
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  settingsMeta: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  settingsChevron: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  settingsDivider: {
+    height: 1,
+    opacity: 0.72,
+  },
+  transportDropdown: {
+    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+  },
+  transportDropdownRow: {
+    minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  transportDropdownCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  transportDropdownLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  transportDropdownCaption: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  transportSelectedText: {
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
   },
   repeatSwitch: {
