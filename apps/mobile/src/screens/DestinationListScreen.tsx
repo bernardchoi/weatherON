@@ -39,7 +39,6 @@ export function DestinationListScreen({
   temperatureUnit,
   onNavigate,
   onSelectDestinationPlace,
-  onRemoveSavedDestination,
   onRestoreRemovedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -79,10 +78,10 @@ export function DestinationListScreen({
               <Text style={[styles.alertPillText, { color: theme.gold }]}>{alertLabel}</Text>
             </View>
           </View>
-          <View style={styles.segmentRow}>
-            <Segment label="날씨 비교" active={false} theme={theme} />
-            <Segment label={hasDestinations ? `출발 ${recommendedDepartureTime}` : "목적지 필요"} active theme={theme} />
-            <Segment label={hasDestinations ? "비 그침" : "알림 대기"} active={false} theme={theme} />
+          <View style={[styles.prepMetricStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <PrepMetric label="날씨 비교" value={hasDestinations ? `${destinationCards.length}곳` : "대기"} tone="clear" theme={theme} />
+            <PrepMetric label="출발" value={hasDestinations ? recommendedDepartureTime : "필요"} tone="gold" theme={theme} />
+            <PrepMetric label="비 그침" value={hasDestinations ? "확인" : "대기"} tone="sky" theme={theme} />
           </View>
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
             {hasDestinations ? "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요" : "자주 가는 곳을 추가하면 출발 시간과 비 그침 알림을 계산해요"}
@@ -102,7 +101,6 @@ export function DestinationListScreen({
                   onSelectDestinationPlace(item.place);
                   onNavigate("G2");
                 }}
-                onRemove={() => onRemoveSavedDestination(item.id)}
               />
             ))
           ) : (
@@ -180,14 +178,12 @@ function DestinationCard({
   permissionReady,
   selected,
   onOpen,
-  onRemove,
 }: {
   item: DestinationCardModel;
   theme: AppTheme;
   permissionReady: boolean;
   selected: boolean;
   onOpen: () => void;
-  onRemove: () => void;
 }) {
   const accent = theme.gold;
   const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
@@ -250,17 +246,6 @@ function DestinationCard({
         <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
       </Pressable>
 
-      <View style={styles.destinationActions}>
-        <Pressable
-          accessibilityLabel={`${item.title} 목적지 삭제`}
-          accessibilityRole="button"
-          onPress={onRemove}
-          style={[styles.removeButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-        >
-          <Text style={[styles.removeButtonText, { color: theme.muted }]}>삭제</Text>
-        </Pressable>
-      </View>
-
     </View>
   );
 }
@@ -318,10 +303,12 @@ function ResultBanner({
   );
 }
 
-function Segment({ label, active, theme }: { label: string; active: boolean; theme: AppTheme }) {
+function PrepMetric({ label, value, tone, theme }: { label: string; value: string; tone: "clear" | "gold" | "sky"; theme: AppTheme }) {
+  const color = tone === "clear" ? theme.clear : tone === "sky" ? theme.sky : theme.gold;
   return (
-    <View style={[styles.segment, { backgroundColor: active ? theme.cardStrong : "rgba(16,36,63,0.42)" }]}>
-      <Text style={[styles.segmentText, { color: active ? theme.gold : theme.subtle }]}>{label}</Text>
+    <View style={styles.prepMetric}>
+      <Text style={[styles.prepMetricLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.prepMetricValue, { color }]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -653,20 +640,29 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: "900",
   },
-  segmentRow: {
+  prepMetricStrip: {
     flexDirection: "row",
     gap: spacing.xs,
-  },
-  segment: {
-    flex: 1,
-    minHeight: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 6,
     borderRadius: radius.md,
+    borderWidth: 1,
   },
-  segmentText: {
+  prepMetric: {
+    flex: 1,
+    minHeight: 42,
+    justifyContent: "center",
+    gap: 2,
+    paddingHorizontal: spacing.xs,
+  },
+  prepMetricLabel: {
     fontSize: 10,
     lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: 0,
+  },
+  prepMetricValue: {
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
     letterSpacing: 0,
   },
@@ -917,25 +913,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minWidth: 0,
     maxWidth: "100%",
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  destinationActions: {
-    minHeight: 28,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  removeButton: {
-    minWidth: 52,
-    minHeight: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  removeButtonText: {
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "900",

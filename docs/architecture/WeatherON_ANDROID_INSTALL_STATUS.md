@@ -24,7 +24,7 @@
 
 ## 3. 다음 조치
 
-- 대상 기기에 기대 버전 설치가 확인됐다.
+- 설치 완료 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`에 실기기 QA 결과를 기록한다.
 
 ## 4. 실행 명령
 

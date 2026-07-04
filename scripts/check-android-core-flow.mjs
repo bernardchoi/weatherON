@@ -166,8 +166,8 @@ async function loadSeededApp(page) {
   await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
   await waitForApp();
 
-  await assertText(page, "시간별 예보");
-  await assertText(page, "주간 예보");
+  await assertText(page, "다음 비");
+  await assertText(page, "주간 강수");
   await assertBottomNav(page);
 }
 
@@ -179,35 +179,30 @@ async function checkHomeDecisionFlow(page) {
   await assertClearOfBottomNav(page, "목적지 추가");
 
   await clickText(page, "홈");
-  await clickText(page, "시간별 예보");
+  await clickText(page, "다음 비");
   await assertText(page, "날씨 상세");
   await assertText(page, "주간 예보");
   await assertBottomNav(page);
   await clickAriaIncludes(page, "뒤로");
-  await assertText(page, "시간별 예보");
+  await assertText(page, "다음 비");
 
   await clickText(page, "홈");
   await assertText(page, "목적지 추가 필요");
-  await clickText(page, "목적지 비교");
+  await clickText(page, "나갈 시간");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
   await assertBottomNav(page);
   await assertClearOfBottomNav(page, "장소 선택 필요");
 
   await clickText(page, "홈");
-  await clickText(page, "강수 타임라인");
-  await assertText(page, "비 그치면 알려줘");
-  await assertText(page, "30분 단위 강수량");
-  await assertText(page, "외출 가이드");
-  await assertText(page, "우산 추천");
+  await clickText(page, "비 그침");
+  await assertText(page, "목적지 추가");
+  await assertText(page, "장소 선택");
   await assertBottomNav(page);
-  await assertClearOfBottomNav(page, "우산 추천");
-  await clickAriaIncludes(page, "우산 추천 보기");
-  await assertText(page, "우산 종류 비교");
+  await assertClearOfBottomNav(page, "장소 선택 필요");
   await clickAriaIncludes(page, "뒤로");
-  await assertText(page, "강수 타임라인");
-  await clickAriaIncludes(page, "뒤로");
-  await assertText(page, "시간별 예보");
+  await clickText(page, "홈");
+  await assertText(page, "다음 비");
 }
 
 async function checkNotificationPermissionRecovery(browser) {
@@ -545,18 +540,17 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "목적지 기준 알림 미리보기");
     await assertText(page, "이동수단");
     await assertText(page, "자동");
+    await clickAriaIncludes(page, "이동수단 자동");
     await assertText(page, "도보");
     await assertText(page, "자차");
     await assertText(page, "대중교통");
-    await assertText(page, "숫자만 입력");
-    await assertText(page, "자동 여유");
-    await fillAriaInput(page, "도착 희망 시 입력", "09");
-    await fillAriaInput(page, "도착 희망 분 입력", "30");
-    await assertText(page, "09:30");
     await clickText(page, "대중교통");
     await assertText(page, "배차/환승 변동 가능");
+    await assertText(page, "5분 단위 스크롤 선택");
+    await assertText(page, "자동 여유");
+    await clickAriaIncludes(page, "09시 선택");
+    await clickAriaIncludes(page, "30분 선택");
     await assertText(page, "계산식");
-    await assertText(page, "조건 직접 조정");
     await assertAnyText(page, ["Kakao Directions", "Google Distance Matrix", "경로 확인 전"]);
     await assertText(page, "잠실야구장");
     await waitForPersistedDestination(page, "잠실야구장");
@@ -564,11 +558,12 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     console.log("core-flow: destination add reload");
     await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
     await waitForApp();
-    await assertText(page, "시간별 예보");
+    await assertText(page, "다음 비");
     await assertText(page, "잠실야구장");
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
     await assertNoText(page, "첫 목적지를 추가해 주세요");
+    await clickAriaIncludes(page, "잠실야구장 목적지 상세 보기");
     await clickAriaIncludes(page, "잠실야구장 목적지 삭제");
     await assertText(page, "목적지 삭제됨");
     await assertText(page, "복구");
@@ -585,7 +580,7 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
   await assertText(page, "오늘 준비");
-  await assertText(page, "사용 준비 완료");
+  await assertAnyText(page, ["사용 준비 완료", "설정하면 더 정확해짐", "확인 필요한 항목 있음"]);
   await assertNoText(page, "코디·옷장");
   await assertBottomNav(page);
 

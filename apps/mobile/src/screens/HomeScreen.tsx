@@ -195,13 +195,13 @@ function DestinationSelectorCard({
 }) {
   const hasDestinations = savedDestinations.length > 0;
   return (
-    <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
+    <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={styles.destinationSelectorHeader}>
-        <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}18` }]}>
+        <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}14` }]}>
           <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
         <View style={styles.destinationSelectorCopy}>
-          <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>목적지 선택</Text>
+          <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>목적지</Text>
           <Text style={[styles.destinationSelectorTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestinationName}</Text>
           <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{selectedDestinationMeta}</Text>
         </View>
@@ -209,7 +209,7 @@ function DestinationSelectorCard({
           accessibilityLabel="목적지 추가"
           accessibilityRole="button"
           onPress={onAdd}
-          style={[styles.destinationSelectorAddButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          style={[styles.destinationSelectorAddButton, { backgroundColor: "transparent", borderColor: theme.border }]}
         >
           <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
         </Pressable>
@@ -709,11 +709,11 @@ function NotificationBellButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.alert : theme.border }]}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.sky : theme.border }]}
     >
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
-        <View style={[styles.bellBadge, { backgroundColor: theme.alert }]}>
+        <View style={[styles.bellBadge, { backgroundColor: theme.sky }]}>
           <Text style={[styles.bellBadgeText, { color: theme.onAccent }]}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
         </View>
       ) : null}
@@ -1134,30 +1134,28 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   destinationSelectorCard: {
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.xl,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
   },
   destinationSelectorHeader: {
-    minHeight: 48,
+    minHeight: 42,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   destinationSelectorIconFrame: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   destinationSelectorIcon: {
-    width: 21,
-    height: 21,
+    width: 18,
+    height: 18,
   },
   destinationSelectorCopy: {
     flex: 1,
@@ -1170,8 +1168,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   destinationSelectorTitle: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   destinationSelectorMeta: {
@@ -1180,8 +1178,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   destinationSelectorAddButton: {
-    minWidth: 54,
-    minHeight: 42,
+    minWidth: 48,
+    minHeight: 34,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
@@ -1199,7 +1197,7 @@ const styles = StyleSheet.create({
   },
   destinationChip: {
     width: 104,
-    minHeight: 58,
+    minHeight: 48,
     justifyContent: "center",
     gap: 2,
     paddingHorizontal: spacing.sm,
@@ -1240,7 +1238,7 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 118,
+    minHeight: 108,
     alignItems: "center",
     gap: 6,
     justifyContent: "center",

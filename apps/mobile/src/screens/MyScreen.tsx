@@ -67,7 +67,7 @@ export function MyScreen({
             <Text style={[styles.profileName, { color: theme.text }]}>{profileTitle}</Text>
             <Text style={[styles.profileEmail, { color: theme.subtle }]}>{profileBody}</Text>
           </View>
-          <View style={[styles.profilePill, { backgroundColor: theme.cardStrong }]}>
+          <View style={[styles.profilePill, { backgroundColor: "transparent", borderColor: theme.border }]}>
             <Text style={[styles.profilePillText, { color: theme.text }]}>{profileAction}</Text>
           </View>
           <Chevron color={theme.subtle} />
@@ -223,8 +223,15 @@ function MenuRow({
         <Text style={[styles.menuTitle, { color: theme.text }]}>{title}</Text>
         <Text style={[styles.menuMeta, { color: theme.subtle }]} numberOfLines={1}>{meta}</Text>
       </View>
-      <View style={[styles.statusPill, { backgroundColor: `${color}22` }]}>
-        <Text style={[styles.statusTextSmall, { color }]}>{status}</Text>
+      <View
+        style={[
+          styles.statusPill,
+          isActionLabel(status)
+            ? { backgroundColor: "transparent", borderColor: theme.border }
+            : { backgroundColor: `${color}22`, borderColor: "transparent" },
+        ]}
+      >
+        <Text style={[styles.statusTextSmall, { color: isActionLabel(status) ? theme.muted : color }]}>{status}</Text>
       </View>
       <Chevron color={theme.subtle} />
     </Pressable>
@@ -252,7 +259,7 @@ function ReadinessSummary({
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
         <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : tone === "warm" ? "확인 필요한 항목 있음" : "설정하면 더 정확해짐"}</Text>
         <Text style={[styles.readinessMeta, { color: theme.subtle }]} numberOfLines={2}>
-          {destinationSummary} · 위치 {locationSummary} · 알림 {alertSummary}
+          {destinationSummary} · {locationSummary} · {alertSummary}
         </Text>
       </View>
       <View style={[styles.readinessPill, { backgroundColor: `${color}22` }]}>
@@ -286,6 +293,10 @@ function getToneColor(theme: AppTheme, tone: MenuTone) {
   if (tone === "sky") return theme.sky;
   if (tone === "warm") return theme.warm;
   return theme.clear;
+}
+
+function isActionLabel(status: string) {
+  return status === "관리" || status === "보기";
 }
 
 const styles = StyleSheet.create({
@@ -339,6 +350,7 @@ const styles = StyleSheet.create({
     minHeight: 28,
     justifyContent: "center",
     borderRadius: radius.pill,
+    borderWidth: 1,
     paddingHorizontal: 10,
   },
   profilePillText: {
@@ -437,6 +449,7 @@ const styles = StyleSheet.create({
     minHeight: 26,
     justifyContent: "center",
     borderRadius: radius.pill,
+    borderWidth: 1,
     paddingHorizontal: 8,
   },
   statusTextSmall: {

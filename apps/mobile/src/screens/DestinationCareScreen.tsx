@@ -52,6 +52,7 @@ export function DestinationCareScreen({
   const routeMeta = getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit);
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const destinationSaved = Boolean(selectedDestinationPlace);
+  const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -86,7 +87,7 @@ export function DestinationCareScreen({
               </Text>
             </View>
           </View>
-          <View style={[styles.routeSummaryStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.routeSummaryStrip, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
             <SummaryChip icon={uiIconAssets.clock} label="도착" value={targetArrivalTime} meta={`${departureTime} 출발`} color={theme.sky} theme={theme} />
             <SummaryChip icon={uiIconAssets.depart} label="이동" value={`${travelMinutes}분`} meta={transportLabel} color={theme.gold} theme={theme} />
             <ArrivalControl
@@ -263,9 +264,16 @@ export function DestinationCareScreen({
           accessibilityLabel={ctaLabel}
           accessibilityRole="button"
           onPress={onToggleDestinationCare}
-          style={({ pressed }) => [styles.cta, { backgroundColor: theme.gold, opacity: pressed ? 0.86 : 1 }]}
+          style={({ pressed }) => [
+            styles.cta,
+            {
+              backgroundColor: destinationCareEnabled ? "transparent" : theme.gold,
+              borderColor: ctaAccent,
+              opacity: pressed ? 0.86 : 1,
+            },
+          ]}
         >
-          <Text style={[styles.ctaText, { color: theme.onAccent }]}>{ctaLabel}</Text>
+          <Text style={[styles.ctaText, { color: destinationCareEnabled ? ctaAccent : theme.onAccent }]}>{ctaLabel}</Text>
         </Pressable>
 
         {destinationSaved ? (
@@ -369,7 +377,7 @@ function SummaryChip({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.summaryChip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.summaryChip, { backgroundColor: "transparent", borderColor: "transparent" }]}>
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
@@ -397,7 +405,7 @@ function ArrivalInputControl({
   const setHour = (nextHour: string) => onSelectTime(`${nextHour}:${minute}`);
   const setMinute = (nextMinute: string) => onSelectTime(`${hour}:${nextMinute}`);
   return (
-    <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.arrivalControl, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
         <View style={styles.arrivalWheelRow}>
@@ -481,7 +489,7 @@ function ArrivalControl({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.arrivalControl, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.arrivalControl, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
         <Text style={[styles.arrivalControlValue, { color: theme.text }]}>{value}</Text>
@@ -532,7 +540,7 @@ function RepeatSchedulePanel({
 }) {
   const transportCaption = getTransportOptionCaption(transportMode);
   return (
-    <View style={[styles.settingsPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <Pressable
         accessibilityLabel={`이동수단 ${transportLabel}, 선택 목록 ${transportSelectorOpen ? "닫기" : "열기"}`}
         accessibilityRole="button"
@@ -941,7 +949,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.xs,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   summaryChip: {
     flex: 1,
@@ -950,7 +958,7 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: spacing.xs,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   summaryIconFrame: {
     width: 24,
@@ -994,7 +1002,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 9,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   arrivalControlCopy: {
     gap: 2,
@@ -1240,7 +1248,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   settingsRow: {
     minHeight: 54,
@@ -1557,6 +1565,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
+    borderWidth: 1,
   },
   ctaText: {
     fontSize: 14,
