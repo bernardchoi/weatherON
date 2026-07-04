@@ -195,9 +195,7 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "getDestinationSchedule",
   "알림 켬",
   "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요",
-  "onRemoveSavedDestination",
   "onRestoreRemovedDestination",
-  "목적지 삭제",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   'onNavigate("G3")',
@@ -773,6 +771,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationCareScreen.tsx", [
   'onCycleDestinationAlertCondition("rainThresholdPct")',
   'onCycleDestinationAlertCondition("leadTimeMinutes")',
   'onCycleDestinationAlertCondition("windThresholdMs")',
+  "onRemoveSavedDestination",
+  "목적지 삭제",
+  "삭제 후 출발 목록에서 바로 복구 가능",
   "푸시 알림 대기",
   "RepeatSchedulePanel",
   "repeatDayOptions",

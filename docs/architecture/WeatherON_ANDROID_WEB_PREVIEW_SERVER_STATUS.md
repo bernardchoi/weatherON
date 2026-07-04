@@ -15,8 +15,8 @@
 | 응답 상태 | 200 OK |
 | dist index | 있음 |
 | index.html 일치 | 일치 |
-| dist script | `/_expo/static/js/web/index-378f54e0f5602c18d1108f9ebeb02c73.js` |
-| served script | `/_expo/static/js/web/index-378f54e0f5602c18d1108f9ebeb02c73.js` |
+| dist script | `/_expo/static/js/web/index-8a9d08c8cf1af7d90fb44717a8e42e2e.js` |
+| served script | `/_expo/static/js/web/index-8a9d08c8cf1af7d90fb44717a8e42e2e.js` |
 | 하단 메뉴 증빙 | 홈/출발/MY 확인 |
 
 ## 2. 판정 기준

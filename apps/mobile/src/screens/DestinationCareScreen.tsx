@@ -454,7 +454,7 @@ function TimeWheel({
       accessibilityLabel={accessibilityLabel}
       style={[styles.timeWheel, { borderColor: theme.border }]}
       contentContainerStyle={styles.timeWheelContent}
-      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 34 - 34) }}
+      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 44 - 44) }}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
@@ -1049,7 +1049,7 @@ const styles = StyleSheet.create({
   },
   timeWheel: {
     width: 76,
-    maxHeight: 108,
+    maxHeight: 136,
     borderRadius: radius.sm,
     borderWidth: 1,
   },
@@ -1057,7 +1057,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   timeWheelOption: {
-    minHeight: 34,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.xs,
@@ -1359,7 +1359,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   repeatDayToggle: {
-    minHeight: 42,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

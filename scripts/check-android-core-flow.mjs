@@ -560,6 +560,11 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await waitForApp();
     await assertText(page, "다음 비");
     await assertText(page, "잠실야구장");
+    await clickText(page, "비 그침");
+    await assertText(page, "외출 가이드");
+    await assertText(page, "우산 추천");
+    await clickAriaIncludes(page, "뒤로");
+    await assertText(page, "잠실야구장");
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
     await assertNoText(page, "첫 목적지를 추가해 주세요");

@@ -150,8 +150,9 @@ try {
     await assertText(page, "목적지 기준 알림 미리보기", viewport, "destination-care");
     await assertText(page, "이동수단", viewport, "destination-care");
     await assertText(page, "도착 희망", viewport, "destination-care");
-    await assertText(page, "숫자만 입력", viewport, "destination-care");
+    await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
     await assertText(page, "자동 여유", viewport, "destination-care");
+    await clickText(page, "이동수단");
     await assertText(page, "대중교통", viewport, "destination-care");
     await assertText(page, "반복 알림", viewport, "destination-care");
     await assertText(page, "ON", viewport, "destination-care");
