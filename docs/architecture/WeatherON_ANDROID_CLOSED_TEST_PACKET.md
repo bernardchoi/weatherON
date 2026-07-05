@@ -1,6 +1,6 @@
 # WeatherON Android Closed Test Packet
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-06
 > 목적: Google Play 폐쇄 테스트가 필요한 경우 계정 유형 확인부터 14일 운영 기록까지 한 장으로 진행한다.
 
 ## 1. 현재 상태
@@ -15,8 +15,8 @@
 | 테스터 초대 | 0/12 |
 | 테스터 opt-in | 0/12 |
 | 14일 운영 기록 | 0/14 |
-| production build | `32ed4d82-e676-43fa-a963-232a6610f573` |
-| AAB artifact | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab |
+| production build | `cb4fcc5f-1682-41d3-acae-64f951ced653` |
+| AAB artifact | https://expo.dev/artifacts/eas/9V4hpFeSRtRBF6pKH1q0l1tHtHU9GebrUup35Zgf_dk.aab |
 
 ## 2. 먼저 확정할 값
 
