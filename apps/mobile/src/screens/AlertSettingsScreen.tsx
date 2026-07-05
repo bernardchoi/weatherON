@@ -7,9 +7,9 @@ import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
 const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
-  { route: "H3", label: "H3 알림함", tone: "sky" },
-  { route: "H5", label: "H5 강수", tone: "clear" },
-  { route: "G2", label: "G2 목적지", tone: "gold" },
+  { route: "H3", label: "알림함", tone: "sky" },
+  { route: "H5", label: "강수", tone: "clear" },
+  { route: "G2", label: "목적지", tone: "gold" },
 ];
 
 export function AlertSettingsScreen({
@@ -93,7 +93,7 @@ export function AlertSettingsScreen({
         ) : null}
         {alertSettingsRouteState ? (
           <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }]}>
-            <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>알림 기준 조정</Text>
+            <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>고급 알림 기준</Text>
             <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
           </View>
         ) : null}
@@ -133,13 +133,6 @@ export function AlertSettingsScreen({
           testVerified={testNotificationVerified}
           actionLabel={testNotificationActionLabel}
           onPress={permissionReady ? () => onSendTestNotification("M2") : () => onRequestPermissionGate("notification", "M2", "general")}
-          theme={theme}
-        />
-
-        <DeliveryRouteTestPanel
-          enabled={permissionReady}
-          onSend={onSendTestNotification}
-          onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
           theme={theme}
         />
 
@@ -223,6 +216,12 @@ export function AlertSettingsScreen({
               onToggle={() => onToggleAlertPreference("quietHours")}
               theme={theme}
             />
+            <DeliveryRouteTestPanel
+              enabled={permissionReady}
+              onSend={onSendTestNotification}
+              onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
+              theme={theme}
+            />
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
               <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{notificationHistory[0]?.title ?? "아직 읽은 알림 없음"}</Text>
@@ -294,7 +293,7 @@ function DeliveryRouteTestPanel({
   return (
     <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
       <View style={styles.routeTestHeader}>
-        <Text style={[styles.routeTestTitle, { color: theme.text }]}>딥링크 확인</Text>
+        <Text style={[styles.routeTestTitle, { color: theme.text }]}>알림 도착 화면 확인</Text>
         <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>
       </View>
       <View style={styles.routeTestGrid}>
@@ -551,10 +550,10 @@ function getAlertReadinessCopy(
 
 function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteState"]>["focus"], returnTo?: P0RouteId) {
   const returnLabel = getRouteLabel(returnTo);
-  if (focus === "umbrella") return { title: "우산 알림 기준", caption: "우산 추천에서 이동", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 조건과 출발 준비 알림을 조정함" };
-  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·그침 알림 조건을 조정함" };
-  if (focus === "destination") return { title: "목적지 알림 기준", caption: "목적지 케어에서 이동", returnLabel, tone: "gold" as const, editBody: "목적지 출발 알림과 강수 기준을 조정함" };
-  return { title: "알림 기준", caption: "홈 알림에서 이동", returnLabel, tone: "warm" as const, editBody: "홈 알림에서 선택한 조건을 조정함" };
+  if (focus === "umbrella") return { title: "우산 알림 기준", caption: "우산 추천에서 이동", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 조건과 출발 준비 알림 적용 상태를 확인함" };
+  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·그침 알림 적용 상태를 확인함" };
+  if (focus === "destination") return { title: "목적지 알림 기준", caption: "목적지 케어에서 이동", returnLabel, tone: "gold" as const, editBody: "목적지 출발 알림과 자동 강수 기준을 확인함" };
+  return { title: "알림 기준", caption: "홈 알림에서 이동", returnLabel, tone: "warm" as const, editBody: "선택한 알림의 적용 상태를 확인함" };
 }
 
 function getRouteLabel(route?: P0RouteId) {

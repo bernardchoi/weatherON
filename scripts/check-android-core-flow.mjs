@@ -568,18 +568,15 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
       transportMode: "transit",
     });
     await clickAriaIncludes(page, "날씨 비교와 알림 상세 열기");
-    await clickAriaIncludes(page, "알림 조건 직접 조정 열기");
-    await clickAriaIncludes(page, "강수 기준 50%, 조정");
-    await clickAriaIncludes(page, "출발 전 60분, 조정");
-    await clickAriaIncludes(page, "바람 기준 8미터 매초, 조정");
-    await assertText(page, "강수 70%");
-    await assertText(page, "출발 120분 전");
-    await assertText(page, "바람 11m/s 기준");
-    await waitForPersistedDestinationAlertCondition(page, "잠실야구장", {
-      rainThresholdPct: 70,
-      leadTimeMinutes: 120,
-      windThresholdMs: 11,
-    });
+    await assertText(page, "자동 알림 기준");
+    await assertText(page, "강수 50% 이상이면 우산/강수 알림");
+    await clickAriaIncludes(page, "목적지 알림 고급 설정으로 이동");
+    await assertText(page, "고급 알림 기준");
+    await assertText(page, "목적지 출발 알림과 자동 강수 기준을 확인함");
+    await clickText(page, "고급 설정");
+    await assertText(page, "목적지 출발");
+    await assertText(page, "출발 60분 전 · 바람 8m/s");
+    await clickAriaIncludes(page, "뒤로");
 
     console.log("core-flow: destination add reload");
     await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
@@ -653,7 +650,7 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await waitForApp();
     await clickAriaIncludes(page, "알림 열기");
     await assertText(page, "알림 센터");
-    await assertText(page, "이력·딥링크 확인");
+    await assertText(page, "이력·도착 화면 확인");
     await clickAriaIncludes(page, "알림 센터 열기");
     await assertText(page, "최근 처리");
     await assertText(page, "잠실종합운동장 알림");
@@ -921,29 +918,6 @@ async function waitForPersistedDestinationSchedule(page, destinationName, expect
       }
       if (!destination?.schedulePreference) return false;
       return Object.entries(expected).every(([key, value]) => destination.schedulePreference[key] === value);
-    },
-    { timeout: 5000 },
-    destinationName,
-    expected,
-  );
-}
-
-async function waitForPersistedDestinationAlertCondition(page, destinationName, expected) {
-  await page.waitForFunction(
-    (destinationName, expected) => {
-      const rawValue = localStorage.getItem("weatheron.appState.v1");
-      if (!rawValue) return false;
-      let destination = null;
-      try {
-        const state = JSON.parse(rawValue);
-        destination = Array.isArray(state.savedDestinations)
-          ? state.savedDestinations.find((item) => item?.place?.name === destinationName)
-          : null;
-      } catch {
-        return false;
-      }
-      if (!destination?.alertCondition) return false;
-      return Object.entries(expected).every(([key, value]) => destination.alertCondition[key] === value);
     },
     { timeout: 5000 },
     destinationName,

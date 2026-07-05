@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Apply Status
 
-> 생성일: 2026-07-04
+> 생성일: 2026-07-05
 > 목적: 실기기 QA 결과 JSON 적용 상태와 실행 방법을 추적한다.
 
 ## 1. 현재 상태

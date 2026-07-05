@@ -864,7 +864,7 @@ function NotificationSidebar({
             style={[styles.sidebarCenterButton, { backgroundColor: theme.card, borderColor: theme.border }]}
           >
             <Text style={[styles.sidebarCenterText, { color: theme.text }]}>알림 센터</Text>
-            <Text style={[styles.sidebarCenterMeta, { color: theme.subtle }]}>이력·딥링크 확인</Text>
+            <Text style={[styles.sidebarCenterMeta, { color: theme.subtle }]}>이력·도착 화면 확인</Text>
           </Pressable>
 
           <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>

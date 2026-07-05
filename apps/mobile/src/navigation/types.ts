@@ -119,7 +119,6 @@ export type P0ScreenProps = {
   onReturnFromDestinationAdd: () => void;
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
-  onCycleDestinationAlertCondition: (field: keyof DestinationAlertCondition) => void;
   onSetDestinationTargetArrivalTime: (targetArrivalTime: string) => void;
   onSetDestinationTransportMode: (transportMode: DestinationTransportMode) => void;
   onToggleDestinationRepeat: () => void;

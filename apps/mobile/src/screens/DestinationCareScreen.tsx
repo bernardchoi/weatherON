@@ -19,7 +19,6 @@ export function DestinationCareScreen({
   onNavigate,
   onOpenAlertSettings,
   onToggleDestinationCare,
-  onCycleDestinationAlertCondition,
   onSetDestinationTargetArrivalTime,
   onSetDestinationTransportMode,
   onToggleDestinationRepeat,
@@ -196,66 +195,20 @@ export function DestinationCareScreen({
 
               <View style={styles.conditionHeader}>
                 <View style={styles.conditionCopy}>
-                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 조건</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>자동 알림 기준</Text>
                   <Text style={[styles.conditionSummary, { color: theme.text }]}>
-                    강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 {selectedDestinationAlertCondition.windThresholdMs}m/s 기준
+                    강수 {selectedDestinationAlertCondition.rainThresholdPct}% 이상이면 우산/강수 알림, 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 목적지 날씨 확인
                   </Text>
                 </View>
                 <Pressable
-                  accessibilityLabel="알림 전체 설정으로 이동"
+                  accessibilityLabel="목적지 알림 고급 설정으로 이동"
                   accessibilityRole="button"
                   onPress={() => onOpenAlertSettings("G2", "destination")}
                   style={[styles.detailButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
                 >
-                  <Text style={[styles.detailButtonText, { color: theme.text }]}>전체 설정</Text>
+                  <Text style={[styles.detailButtonText, { color: theme.text }]}>고급 설정</Text>
                 </Pressable>
               </View>
-
-              <Pressable
-                accessibilityLabel={conditionControlsOpen ? "알림 조건 직접 조정 닫기" : "알림 조건 직접 조정 열기"}
-                accessibilityRole="button"
-                onPress={() => setConditionControlsOpen((current) => !current)}
-                style={[styles.conditionToggle, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-              >
-                <Text style={[styles.conditionToggleText, { color: theme.text }]}>
-                  {conditionControlsOpen ? "조건 직접 조정 닫기" : "조건 직접 조정"}
-                </Text>
-                <Text style={[styles.conditionToggleIcon, { color: theme.gold }]}>{conditionControlsOpen ? "접기" : "열기"}</Text>
-              </Pressable>
-
-              {conditionControlsOpen ? (
-                <>
-                  <View style={styles.conditionSummaryGrid}>
-                    <ConditionSummaryPill label="자동 여유" value={`${bufferMinutes}분`} theme={theme} />
-                    <ConditionSummaryPill label="이동수단" value={getTransportModeLabel(transportMode)} theme={theme} />
-                    <ConditionSummaryPill label="반복" value={repeatSummary} tone={repeatEnabled ? "clear" : "default"} theme={theme} />
-                    {transportMode === "transit" ? <ConditionSummaryPill label="대중교통" value="배차/환승 변동 가능" tone="warm" theme={theme} /> : null}
-                  </View>
-                  <View style={styles.conditionGrid}>
-                    <ConditionButton
-                      label="강수 기준"
-                      value={`${selectedDestinationAlertCondition.rainThresholdPct}%`}
-                      accessibilityLabel={`강수 기준 ${selectedDestinationAlertCondition.rainThresholdPct}%, 조정`}
-                      onPress={() => onCycleDestinationAlertCondition("rainThresholdPct")}
-                      theme={theme}
-                    />
-                    <ConditionButton
-                      label="출발 전"
-                      value={`${selectedDestinationAlertCondition.leadTimeMinutes}분`}
-                      accessibilityLabel={`출발 전 ${selectedDestinationAlertCondition.leadTimeMinutes}분, 조정`}
-                      onPress={() => onCycleDestinationAlertCondition("leadTimeMinutes")}
-                      theme={theme}
-                    />
-                    <ConditionButton
-                      label="바람 기준"
-                      value={`${selectedDestinationAlertCondition.windThresholdMs}m/s`}
-                      accessibilityLabel={`바람 기준 ${selectedDestinationAlertCondition.windThresholdMs}미터 매초, 조정`}
-                      onPress={() => onCycleDestinationAlertCondition("windThresholdMs")}
-                      theme={theme}
-                    />
-                  </View>
-                </>
-              ) : null}
             </>
           ) : null}
         </View>
@@ -294,59 +247,6 @@ export function DestinationCareScreen({
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-    </View>
-  );
-}
-
-function ConditionButton({
-  label,
-  value,
-  accessibilityLabel,
-  onPress,
-  theme,
-}: {
-  label: string;
-  value: string;
-  accessibilityLabel: string;
-  onPress?: () => void;
-  theme: AppTheme;
-}) {
-  const content = (
-    <>
-      <Text style={[styles.conditionLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text style={[styles.conditionValue, { color: theme.gold }]}>{value}</Text>
-    </>
-  );
-  if (!onPress) {
-    return (
-      <View accessibilityLabel={accessibilityLabel} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-        {content}
-      </View>
-    );
-  }
-  return (
-    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={[styles.conditionButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      {content}
-    </Pressable>
-  );
-}
-
-function ConditionSummaryPill({
-  label,
-  value,
-  tone = "default",
-  theme,
-}: {
-  label: string;
-  value: string;
-  tone?: "default" | "warm" | "clear";
-  theme: AppTheme;
-}) {
-  const accent = tone === "warm" ? theme.warm : tone === "clear" ? theme.clear : theme.gold;
-  return (
-    <View style={[styles.conditionSummaryPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <Text numberOfLines={1} style={[styles.conditionSummaryLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text numberOfLines={1} style={[styles.conditionSummaryValue, { color: accent }]}>{value}</Text>
     </View>
   );
 }
@@ -1442,30 +1342,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "900",
   },
-  conditionSummaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  conditionSummaryPill: {
-    width: "48.7%",
-    minHeight: 58,
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  conditionSummaryLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  conditionSummaryValue: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
   detailButton: {
     minWidth: 54,
     minHeight: 44,
@@ -1478,50 +1354,6 @@ const styles = StyleSheet.create({
   detailButtonText: {
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "900",
-  },
-  conditionToggle: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  conditionToggleText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  conditionToggleIcon: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  conditionGrid: {
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-  conditionButton: {
-    flex: 1,
-    minHeight: 62,
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  conditionLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  conditionValue: {
-    fontSize: 15,
-    lineHeight: 20,
     fontWeight: "900",
   },
   timelineItem: {

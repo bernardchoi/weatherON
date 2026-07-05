@@ -1,6 +1,6 @@
 # WeatherON Android Install Status
 
-> 생성일: 2026-07-04
+> 생성일: 2026-07-05
 > 목적: 최신 Android preview APK 실기기 설치 상태와 설치 명령을 추적한다.
 
 ## 1. 현재 상태
@@ -24,7 +24,7 @@
 
 ## 3. 다음 조치
 
-- 설치 완료 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`에 실기기 QA 결과를 기록한다.
+- 대상 기기에 기대 버전 설치가 확인됐다.
 
 ## 4. 실행 명령
 

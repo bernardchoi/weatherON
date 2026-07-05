@@ -1,6 +1,6 @@
 # WeatherON Android Release Readiness Report
 
-> 생성일: 2026-07-04
+> 생성일: 2026-07-05
 > 목적: Android preview APK와 production AAB 기준 출시 준비 상태와 남은 차단 항목을 한 화면에 유지한다.
 
 ## 1. 요약
@@ -21,7 +21,7 @@
 | preview build 소스 일치 | 일치 |
 | 최신 production build | 90912651-fc84-47d0-91ce-9be096c2ff05 |
 | 최신 production build 상태 | FINISHED |
-| 현재 차단 | 스토어 스크린샷/Play 입력값/폐쇄 테스트 입력값 보완 필요 |
+| 현재 차단 | Play Console/스토어 제출 항목 미완료 |
 
 ## 2. 정적 준비 체크
 

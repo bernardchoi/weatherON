@@ -149,9 +149,6 @@ const defaultNotificationDeliveryStatus: NotificationDeliveryStatus = {
   scheduledCount: 0,
 };
 
-const rainThresholdSteps = [30, 50, 70];
-const leadTimeSteps = [30, 60, 120];
-const windThresholdSteps = [5, 8, 11];
 const appStateStorageKey = "weatheron.appState.v1";
 const notificationStateStorageKey = "weatheron.notificationState.v1";
 const weatherProviderResultStorageKey = "weatheron.weatherProviderResult.v1";
@@ -1038,23 +1035,6 @@ export function useWeatherOnAppState() {
     );
   }, [permissionReady, savedDestinations]);
 
-  const cycleSelectedDestinationAlertCondition = useCallback((field: keyof DestinationAlertCondition) => {
-    const steps = getDestinationAlertConditionSteps(field);
-    const currentValue = selectedDestinationAlertCondition[field];
-    const currentIndex = steps.indexOf(currentValue);
-    const nextValue = steps[(currentIndex + 1) % steps.length];
-    const nextCondition = { ...selectedDestinationAlertCondition, [field]: nextValue };
-    if (destinationSaved) {
-      setSavedDestinations((current) =>
-        current.map((destination) =>
-          destination.place.id === selectedDestinationPlace.id ? { ...destination, alertCondition: nextCondition, savedAtLabel: "업데이트됨" } : destination,
-        ),
-      );
-    } else {
-      setPreviewDestinationAlertCondition(nextCondition);
-    }
-  }, [destinationSaved, selectedDestinationAlertCondition, selectedDestinationPlace.id]);
-
   const setSelectedDestinationSchedulePreference = useCallback((nextPreference: DestinationSchedulePreference) => {
     setPreviewDestinationSchedulePreference(nextPreference);
     if (destinationSaved) {
@@ -1419,7 +1399,6 @@ export function useWeatherOnAppState() {
     returnFromDestinationAdd,
     toggleDestinationCare,
     toggleSavedDestinationCare,
-    cycleSelectedDestinationAlertCondition,
     setSelectedDestinationTargetArrivalTime,
     setSelectedDestinationTransportMode,
     toggleSelectedDestinationRepeat,
@@ -1504,12 +1483,6 @@ function getBackRoute(route: AppRouteId): AppRouteId {
 
 function getAccountResultReturnRoute(route: PermissionReturnRouteId): AccountGateReturnRouteId {
   return isP0Route(route) ? route : "H1";
-}
-
-function getDestinationAlertConditionSteps(field: keyof DestinationAlertCondition): number[] {
-  if (field === "rainThresholdPct") return rainThresholdSteps;
-  if (field === "leadTimeMinutes") return leadTimeSteps;
-  return windThresholdSteps;
 }
 
 function getP0RouteFromNotificationPayload(value?: string): P0RouteId | null {
