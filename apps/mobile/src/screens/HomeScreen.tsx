@@ -105,7 +105,7 @@ export function HomeScreen({
             <VisualDecisionCard
               label="나갈 시간"
               value={homeDecision.departureTime}
-              helper={destinationReady ? "도착 역산" : "목적지 추가"}
+              helper={destinationReady ? "도착 시간 기준" : "목적지 추가"}
               accent={theme.gold}
               icon={uiIconAssets.depart}
               theme={theme}
@@ -833,7 +833,7 @@ function NotificationSidebar({
               </Text>
               <Text style={[styles.sidebarTitle, { color: theme.text }]}>알림</Text>
               <Text style={[styles.sidebarMeta, { color: theme.subtle }]}>
-                {previewOnly ? "권한 전 예시 · 배지 제외" : `${notifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
+                {previewOnly ? "권한 켜기 전 예시" : `${notifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
               </Text>
             </View>
             <Pressable accessibilityLabel="알림 사이드바 닫기" accessibilityRole="button" onPress={onClose} style={[styles.closeIconButton, { borderColor: theme.border }]}>
@@ -922,7 +922,7 @@ type SidebarGroup = {
 
 function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications"], readNotificationIds: string[], previewOnly = false): SidebarGroup[] {
   if (previewOnly) {
-    return [{ title: "오늘 예정", meta: "권한 전 예시 알림 · 배지 제외", items: notifications.slice(0, 3) }];
+    return [{ title: "오늘 예정", meta: "권한 켜기 전 예시 알림", items: notifications.slice(0, 3) }];
   }
   const warningItems = notifications.filter((item, index) => {
     const route = item.deepLink as P0RouteId;

@@ -35,7 +35,7 @@ export function NotificationCenterScreen({
           <View>
             <Text style={[styles.title, { color: theme.text }]}>알림 센터</Text>
             <Text style={[styles.unread, { color: theme.subtle }]}>
-              {previewOnly ? "권한 전 예시 · 배지 제외" : `${activeNotifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
+              {previewOnly ? "권한 켜기 전 예시" : `${activeNotifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
             </Text>
           </View>
           <Pressable
@@ -57,7 +57,7 @@ export function NotificationCenterScreen({
               {previewOnly ? "권한을 켜면 실제 알림으로 전환" : hasUnread ? `${unreadCount}개 알림을 먼저 확인` : "오늘 알림은 모두 읽음"}
             </Text>
             <Text style={[styles.summaryBody, { color: theme.muted }]}>
-              {previewOnly ? "지금 보이는 항목은 읽지 않음 배지에 포함하지 않음" : "알림을 열면 관련 화면으로 이동하고 읽음 상태가 남음"}
+              {previewOnly ? "지금 보이는 항목은 예시라 읽지 않음 개수에 들어가지 않음" : "알림을 열면 관련 화면으로 이동하고 읽음 상태가 남음"}
             </Text>
           </View>
           <View style={styles.summaryActions}>

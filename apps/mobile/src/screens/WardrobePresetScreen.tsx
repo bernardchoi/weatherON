@@ -102,7 +102,7 @@ export function WardrobePresetScreen({
         </View>
       </Section>
 
-      <Section title="옷장 반영" caption={accountLinked ? "계정 저장 가능" : "현재 기기 미리보기 상태"} accent="gold">
+      <Section title="옷장 반영" caption={accountLinked ? "계정 저장 가능" : "이 기기에만 저장됨"} accent="gold">
         <View style={styles.actions}>
           <AppButton
             label={activeItem.owned ? "내 옷장 해제" : "내 옷장에 추가"}

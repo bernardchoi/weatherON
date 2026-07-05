@@ -101,7 +101,7 @@ export function StyleProfileScreen({
         </View>
       </Section>
 
-      <Section title="저장" caption={onboardingCompleted ? "저장하면 코디 추천에 바로 반영" : "온보딩에서는 알림 기준으로 이어짐"} accent="gold">
+      <Section title="저장" caption={onboardingCompleted ? "저장하면 코디 추천에 바로 반영" : "저장 후 알림 기준 설정으로 이어짐"} accent="gold">
         <View style={styles.actions}>
           <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
           <AppButton label="MY에 저장" onPress={() => onSaveStyleProfile("M1")} tone="secondary" />

@@ -34,7 +34,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
         </View>
         <View style={styles.primaryActions}>
           <AppButton label="계속" accessibilityLabel="스마트 알림 기준 단계로 계속" onPress={() => onNavigate("O5")} />
-          <AppButton label="건너뛰고 홈으로" accessibilityLabel="온보딩을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
+          <AppButton label="건너뛰고 홈으로" accessibilityLabel="소개를 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
           <Text style={[styles.helperText, { color: theme.subtle }]}>위치·알림 권한은 MY에서 따로 켤 수 있음</Text>
         </View>
       </View>

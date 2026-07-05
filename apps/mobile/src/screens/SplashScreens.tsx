@@ -12,7 +12,7 @@ export function AppEntrySplashScreen({ onCompleteOnboarding, onNavigate }: P0Scr
       primaryLabel="바로 시작하기"
       onPrimary={() => onCompleteOnboarding("H1")}
       footer="계정 없이 먼저 확인할 수 있어요"
-      secondaryLabel="온보딩 보기"
+      secondaryLabel="앱 소개 보기"
       onSecondary={() => onNavigate("O1")}
       progressIndex={0}
     />
@@ -23,7 +23,7 @@ export function OnboardingSplashScreen({ onCompleteOnboarding, onNavigate }: P0S
   return (
     <SplashFrame
       description="오늘의 외출, 미리 준비하세요"
-      primaryLabel="온보딩 시작"
+      primaryLabel="소개 시작하기"
       onPrimary={() => onNavigate("O2")}
       secondaryLabel="홈으로"
       onSecondary={() => onCompleteOnboarding("H1")}
