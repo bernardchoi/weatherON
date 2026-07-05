@@ -36,7 +36,9 @@ export function HomeScreen({
   const theme = useAppTheme();
   const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
   const activeNotifications = state.notifications.filter((item) => item.active);
-  const unreadNotificationCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+  const unreadNotificationCount = permissionReady
+    ? activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length
+    : 0;
   const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
   const currentWeather = state.destinationCare.originWeather;
@@ -806,9 +808,11 @@ function NotificationSidebar({
 }) {
   if (!visible) return null;
 
-  const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+  const effectiveReadNotificationIds = permissionReady ? readNotificationIds : notifications.map((item) => item.id);
+  const unreadCount = notifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).length;
   const hasUnread = unreadCount > 0;
-  const groups = buildSidebarGroups(notifications.slice(0, 6), readNotificationIds);
+  const previewOnly = !permissionReady;
+  const groups = buildSidebarGroups(notifications.slice(0, 6), effectiveReadNotificationIds, previewOnly);
   const recentHistory = notificationHistory.slice(0, 3);
 
   return (
@@ -829,7 +833,7 @@ function NotificationSidebar({
               </Text>
               <Text style={[styles.sidebarTitle, { color: theme.text }]}>알림</Text>
               <Text style={[styles.sidebarMeta, { color: theme.subtle }]}>
-                {notifications.length}개 활성 · 읽지 않음 {unreadCount}개
+                {previewOnly ? "권한 전 예시 · 배지 제외" : `${notifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
               </Text>
             </View>
             <Pressable accessibilityLabel="알림 사이드바 닫기" accessibilityRole="button" onPress={onClose} style={[styles.closeIconButton, { borderColor: theme.border }]}>
@@ -872,8 +876,9 @@ function NotificationSidebar({
               <SidebarNotificationGroup
                 key={group.title}
                 group={group}
-                readNotificationIds={readNotificationIds}
+                readNotificationIds={effectiveReadNotificationIds}
                 smartCareEnabled={smartCareEnabled}
+                previewOnly={previewOnly}
                 onOpen={onOpen}
                 theme={theme}
               />
@@ -915,7 +920,10 @@ type SidebarGroup = {
   items: P0ScreenProps["state"]["notifications"];
 };
 
-function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications"], readNotificationIds: string[]): SidebarGroup[] {
+function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications"], readNotificationIds: string[], previewOnly = false): SidebarGroup[] {
+  if (previewOnly) {
+    return [{ title: "오늘 예정", meta: "권한 전 예시 알림 · 배지 제외", items: notifications.slice(0, 3) }];
+  }
   const warningItems = notifications.filter((item, index) => {
     const route = item.deepLink as P0RouteId;
     return !readNotificationIds.includes(item.id) || route === "H5" || index === 0;
@@ -934,12 +942,14 @@ function SidebarNotificationGroup({
   smartCareEnabled,
   onOpen,
   theme,
+  previewOnly = false,
 }: {
   group: SidebarGroup;
   readNotificationIds: string[];
   smartCareEnabled: boolean;
   onOpen: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
+  previewOnly?: boolean;
 }) {
   return (
     <View style={styles.sidebarGroup}>
@@ -949,7 +959,7 @@ function SidebarNotificationGroup({
       </View>
       {group.items.map((item, index) => {
         const route = item.deepLink as P0RouteId;
-        const read = readNotificationIds.includes(item.id);
+        const read = previewOnly || readNotificationIds.includes(item.id);
         const color = getNotificationTone(theme, index, route);
         return (
           <Pressable
@@ -963,12 +973,12 @@ function SidebarNotificationGroup({
               <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
               <View style={styles.sidebarItemCopy}>
                 <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
-                <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
+                <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
                 <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
               </View>
             </View>
             <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
-              {read ? "확인됨" : "눌러서 확인"}
+              {previewOnly ? "예시" : read ? "확인됨" : "눌러서 확인"}
             </Text>
           </Pressable>
         );

@@ -84,6 +84,8 @@ export function OnboardingDestinationScreen({
           <AppButton label="나중에 할게요" accessibilityLabel="목적지 등록 없이 홈으로 완료" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
         </View>
       </Section>
+
+      <View style={styles.safeBottomPad} />
     </AppScreen>
   );
 }
@@ -177,5 +179,8 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: spacing.sm,
+  },
+  safeBottomPad: {
+    height: spacing.lg,
   },
 });

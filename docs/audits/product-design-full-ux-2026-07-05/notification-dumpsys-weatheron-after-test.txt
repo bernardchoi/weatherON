@@ -1,0 +1,73 @@
+3:    NotificationRecord(0x06296ab8: pkg=com.weatheron.mobile user=UserHandle{0} id=0 tag=weatheron:smart:rain-1h importance=3 key=0|com.weatheron.mobile|0|weatheron:smart:rain-1h|10299: Notification(channel=weatheron-smart-care shortcut=null contentView=null vibrate=null sound=null defaults=0 flags=AUTO_CANCEL|SILENT color=0x00000000 vis=PRIVATE))
+5:      opPkg=com.weatheron.mobile
+6:      icon=Icon(typ=RESOURCE pkg=com.weatheron.mobile id=0x7f0c0002)
+10:      key=0|com.weatheron.mobile|0|weatheron:smart:rain-1h|10299
+12:      groupKey=0|com.weatheron.mobile|0|weatheron:smart:rain-1h|10299
+15:            contentIntent=PendingIntent{76b091: PendingIntentRecord{8843756 com.weatheron.mobile startActivity (allowlist: dfe8d4:+30s0ms/0/NOTIFICATION_SERVICE/NotificationManagerService)}}
+28:                android.title=String (강수 알림)
+682:                android.text=String (비 시작 전 미리 알림)
+686:                android.appInfo=ApplicationInfo (ApplicationInfo{d7b8bf6 com.weatheron.mobile})
+728:      effectiveNotificationChannel=NotificationChannel{mId='weatheron-smart-care', mName=WeatherON 스마트 알림, mDescription=, mImportance=3, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=content://settings/system/notification_sound, mLights=false, mLightColor=-7548929, mVibrationPattern=[0, 250, 250, 250], mVibrationEffect=Composed{segments=[Step{amplitude=0.0, frequencyHz=0.0, duration=0}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}, Step{amplitude=0.0, frequencyHz=0.0, duration=250}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}], repeat=-1}, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=true, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=3, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+758:                android.title=null
+762:                android.text=null
+788:                android.title=String (Google)
+792:                android.text=String (새 알림 1개)
+867:                android.title=SpannableString (⏰ 삼성 대 SSG)
+872:                android.text=SpannableString (경기가 곧 시작됩니다.)
+885:                android.title.big=SpannableString (⏰ 삼성 대 SSG)
+951:                android.title=null
+955:                android.text=null
+981:                android.title=String (Google)
+985:                android.text=String (새 알림 1개)
+1057:                android.title=SpannableString (고양시: 28°)
+1062:                android.text=SpannableString (비 · 시간별 날씨 보기)
+1075:                android.title.big=SpannableString (고양시: 28°)
+1145:                android.title=String (😬)
+1156:                android.text=String (ㅋㅋㅋㅋ이게 더 웃기넼ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ)
+1245:                android.title=SpannableString (⚾ 오늘은 어떤 선수가 등장할까요?)
+1250:                android.text=SpannableString ((광고) [마일리지팩 x1] 받고 지금 확인하러 GO GO!(~19:00) (수신거부: 설정에서 변경 가능))
+1257:                android.bigText=SpannableString ((광고) [마일리지팩 x1] 받고 지금 확인하러 GO GO!(~19:00) (수신거부: 설정에서 변경 가능))
+1261:                android.summaryText=SpannableString ((광고) [마일리지팩 x1] 받고 지금 확인하러 GO GO!(~19:00) (수신거부: 설정에서 변경 가능))
+1262:                android.title.big=SpannableString (⚾ 오늘은 어떤 선수가 등장할까요?)
+1327:                android.title=null
+1331:                android.text=null
+1405:                android.title=String (보상이 곧 만료됩니다! ⏱)
+1410:                android.text=String (탭하여 XP 부스트가 만료되기 전에 받아가세요!)
+1487:                android.title=String (USB 디버깅 연결됨)
+1489:                android.text=String (USB 디버깅을 사용 중지하려면 탭하세요.)
+1557:                android.title=String (이 기기를 USB로 충전 중)
+1559:                android.text=String (옵션을 더 보려면 탭하세요.)
+1735:        NotificationChannel{mId='phone_incoming_call', mName=수신 전화, mDescription=, mImportance=4, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=null, mLights=true, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=false, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_UNKNOWN flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=true, mOriginalImp=4, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+1945:      AppSettings: com.weatheron.mobile (10299) importance=DEFAULT userSet=true essential=false
+1946:        NotificationChannel{mId='weatheron-smart-care', mName=WeatherON 스마트 알림, mDescription=, mImportance=3, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=content://settings/system/notification_sound, mLights=false, mLightColor=-7548929, mVibrationPattern=[0, 250, 250, 250], mVibrationEffect=Composed{segments=[Step{amplitude=0.0, frequencyHz=0.0, duration=0}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}, Step{amplitude=0.0, frequencyHz=0.0, duration=250}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}], repeat=-1}, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=true, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=3, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+1953:        NotificationChannel{mId='broadcastMessagesHighPriority', mName=수신 확인을 하지 않은 긴급상황 알림, mDescription=, mImportance=4, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=content://settings/system/notification_sound, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=true, mOriginalImp=4, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+1976:        NotificationChannel{mId='TelecomIncomingCalls', mName=수신 전화, mDescription=, mImportance=5, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=, mLights=true, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=false, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_UNKNOWN flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=true, mOriginalImp=5, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+2150:        NotificationChannel{mId='location_sharing_channel', mName=위치 공유 수신됨, mDescription=hasDescription , mImportance=3, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=content://settings/system/notification_sound, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=3, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+2367:        NotificationChannel{mId='com.google.android.libraries.communications.conference.CALL.v3', mName=수신 전화, mDescription=, mImportance=5, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=android.resource://com.google.android.gm/raw/thor_incoming_call_ringtone, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION_RINGTONE content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=5, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+2406:        NotificationChannel{mId='com.google.android.libraries.communications.conference.CALL.v3', mName=수신 전화, mDescription=, mImportance=5, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=android.resource://com.google.android.apps.tachyon/raw/incoming_loud, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='notification_group_for_calls', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION_RINGTONE content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=5, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+2611:    2026-06-29T20:27:11.831186 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2612:    2026-06-29T20:27:11.832054 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2614:    2026-06-29T20:34:27.603208 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2615:    2026-06-29T20:34:27.806327 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2617:    2026-06-29T22:43:23.159764 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2618:    2026-06-29T22:43:23.160106 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+2620:    2026-06-29T22:46:24.660485 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2621:    2026-06-29T22:46:24.663062 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+2623:    2026-06-30T12:02:00.190767 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2624:    2026-06-30T12:02:00.191062 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2626:    2026-06-30T12:02:28.756906 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2627:    2026-06-30T12:02:28.757678 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+2650:    2026-07-01T16:49:37.575530 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2651:    2026-07-01T16:49:37.576266 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2653:    2026-07-01T20:10:53.563421 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2654:    2026-07-01T20:10:53.665538 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2656:    2026-07-01T20:13:17.007266 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2657:    2026-07-01T20:13:17.007997 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2659:    2026-07-02T12:42:34.887350 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2660:    2026-07-02T12:42:34.888239 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2662:    2026-07-02T16:06:37.373415 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+2663:    2026-07-02T16:06:37.375033 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+3285:      key='com.weatheron.mobile',
+3405:    mKeys [Pair{761895977 0|com.duolingo|0|friends_quest_reward_reminder|10288}, Pair{761895984 0|com.duolingo|-1|friends_quest_reward_reminder|10288}, Pair{843024931 -1|android|32|null|1000}, Pair{843024954 -1|android|26|null|1000}, Pair{848696945 0|com.com2us.probaseball3d.normal.freefull.google.global.android.common|107586|null|10049}, Pair{850557337 0|com.instagram.android|64278|direct|206256299;thread_id:340282366841710301244259013163831336119|10240}, Pair{850953895 0|com.google.android.googlequicksearchbox|0|-1440934760::SUMMARY::wx|10145}, Pair{850953901 0|com.google.android.googlequicksearchbox|0|-1440934760::a:snotification:[0x394,wx.f,NOTIFICATION]|10145}, Pair{851521586 0|com.google.android.googlequicksearchbox|0|-1440934760::SUMMARY::sports|10145}, Pair{851521591 0|com.google.android.googlequicksearchbox|0|-1440934760::a:snotification:[0x45ae7490a78a4c21,intupdate.f,NOTIFICATION]|10145}, Pair{851745851 0|com.weatheron.mobile|0|weatheron:smart:rain-1h|10299}]
+3415:        0|com.weatheron.mobile|g:Aggregate_AlertingSection
+3416:            0|com.weatheron.mobile|0|weatheron:smart:rain-1h|10299

@@ -23,6 +23,7 @@
     "report:android-manual-action-packet": "node scripts/generate-android-manual-action-packet.mjs",
     "report:android-privacy-policy-packet": "node scripts/generate-android-privacy-policy-packet.mjs",
     "report:android-release-evidence-index": "node scripts/generate-android-release-evidence-index.mjs",
+    "report:mvp1-pilot-status": "node scripts/generate-mvp1-pilot-status.mjs",
     "prepare:android-release-local-files": "node scripts/prepare-android-release-local-files.mjs",
     "build:mockups": "vite build",
     "preview:mockups": "vite preview --host 127.0.0.1",

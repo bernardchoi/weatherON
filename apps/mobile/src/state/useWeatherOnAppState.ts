@@ -1501,7 +1501,8 @@ function shouldScheduleLocalNotification(notification: NotificationRuleEvaluatio
 }
 
 function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): string {
-  if (result.status === "scheduled") return `${result.scheduledCount}건 발송 예약`;
+  if (result.status === "scheduled" && result.scheduledCount > 0) return "5초 뒤 발송 예약됨";
+  if (result.status === "scheduled") return "예약 대기 없음";
   if (result.status === "verification-failed") return "예약 확인 실패";
   if (result.status === "permission-required") return "권한 필요";
   if (result.status === "cancelled") return "알림 예약 해제";

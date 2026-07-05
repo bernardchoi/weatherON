@@ -101,6 +101,8 @@ export function SmartCareOnboardingScreen({
           <AppButton label="나중에 할게요" accessibilityLabel="목적지 선택을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
         </View>
       </Section>
+
+      <View style={styles.safeBottomPad} />
     </AppScreen>
   );
 }
@@ -240,5 +242,8 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: spacing.sm,
+  },
+  safeBottomPad: {
+    height: spacing.lg,
   },
 });

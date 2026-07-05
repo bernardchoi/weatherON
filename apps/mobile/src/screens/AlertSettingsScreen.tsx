@@ -501,6 +501,7 @@ function getTestNotificationBody(permissionReady: boolean, statusLabel?: string,
   if (opened) return "수신·탭 확인됨";
   if (received) return "수신 확인됨";
   if (statusLabel === "예약 확인 실패") return "예약 확인 실패 · 기기 확인 필요";
+  if (statusLabel === "5초 뒤 발송 예약됨") return "발송 예약됨 · 잠시 뒤 도착";
   if (statusLabel) return `최근 ${statusLabel}`;
   return "5초 뒤 확인 알림 발송";
 }
@@ -533,8 +534,8 @@ function getAlertReadinessCopy(
     }
     return {
       title: "스마트 알림 확인 중",
-      body: "확인 알림 수신 전",
-      resultBody: "권한은 켜짐. 확인 알림으로 실제 도착을 확인해야 함",
+      body: "확인 알림을 보내 실제 도착을 확인",
+      resultBody: "권한은 켜짐. 확인 알림 수신 전이면 확인 알림으로 실제 도착을 확인해야 함",
       gateTitle: "알림 권한 정상",
       gateBody: "확인 알림 발송",
     };

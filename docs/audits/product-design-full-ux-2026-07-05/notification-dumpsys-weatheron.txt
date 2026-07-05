@@ -1,0 +1,52 @@
+28:                android.title=null
+32:                android.text=null
+58:                android.title=String (Google)
+62:                android.text=String (새 알림 1개)
+137:                android.title=SpannableString (⏰ 삼성 대 SSG)
+142:                android.text=SpannableString (경기가 곧 시작됩니다.)
+155:                android.title.big=SpannableString (⏰ 삼성 대 SSG)
+221:                android.title=null
+225:                android.text=null
+251:                android.title=String (Google)
+255:                android.text=String (새 알림 1개)
+327:                android.title=SpannableString (고양시: 28°)
+332:                android.text=SpannableString (비 · 시간별 날씨 보기)
+345:                android.title.big=SpannableString (고양시: 28°)
+415:                android.title=String (😬)
+426:                android.text=String (ㅋㅋㅋㅋ이게 더 웃기넼ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ)
+515:                android.title=SpannableString (⚾ 오늘은 어떤 선수가 등장할까요?)
+520:                android.text=SpannableString ((광고) [마일리지팩 x1] 받고 지금 확인하러 GO GO!(~19:00) (수신거부: 설정에서 변경 가능))
+532:                android.title.big=SpannableString (⚾ 오늘은 어떤 선수가 등장할까요?)
+597:                android.title=null
+601:                android.text=null
+675:                android.title=String (보상이 곧 만료됩니다! ⏱)
+680:                android.text=String (탭하여 XP 부스트가 만료되기 전에 받아가세요!)
+757:                android.title=String (USB 디버깅 연결됨)
+759:                android.text=String (USB 디버깅을 사용 중지하려면 탭하세요.)
+827:                android.title=String (이 기기를 USB로 충전 중)
+829:                android.text=String (옵션을 더 보려면 탭하세요.)
+1215:      AppSettings: com.weatheron.mobile (10299) importance=DEFAULT userSet=true essential=false
+1216:        NotificationChannel{mId='weatheron-smart-care', mName=WeatherON 스마트 알림, mDescription=, mImportance=3, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=content://settings/system/notification_sound, mLights=false, mLightColor=-7548929, mVibrationPattern=[0, 250, 250, 250], mVibrationEffect=Composed{segments=[Step{amplitude=0.0, frequencyHz=0.0, duration=0}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}, Step{amplitude=0.0, frequencyHz=0.0, duration=250}, Step{amplitude=-1.0, frequencyHz=0.0, duration=250}], repeat=-1}, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=true, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=3, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mEssential= false}
+1881:    2026-06-29T20:27:11.831186 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1882:    2026-06-29T20:27:11.832054 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1884:    2026-06-29T20:34:27.603208 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1885:    2026-06-29T20:34:27.806327 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1887:    2026-06-29T22:43:23.159764 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1888:    2026-06-29T22:43:23.160106 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+1890:    2026-06-29T22:46:24.660485 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1891:    2026-06-29T22:46:24.663062 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+1893:    2026-06-30T12:02:00.190767 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1894:    2026-06-30T12:02:00.191062 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1896:    2026-06-30T12:02:28.756906 - config: com.weatheron.mobile.dev|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1897:    2026-06-30T12:02:28.757678 - set_zen_mode: off,com.weatheron.mobile.dev|removeAutomaticZenRules
+1920:    2026-07-01T16:49:37.575530 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1921:    2026-07-01T16:49:37.576266 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1923:    2026-07-01T20:10:53.563421 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1924:    2026-07-01T20:10:53.665538 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1926:    2026-07-01T20:13:17.007266 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1927:    2026-07-01T20:13:17.007997 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1929:    2026-07-02T12:42:34.887350 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1930:    2026-07-02T12:42:34.888239 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+1932:    2026-07-02T16:06:37.373415 - config: com.weatheron.mobile|removeAutomaticZenRules (ORIGIN_SYSTEM) no changes
+1933:    2026-07-02T16:06:37.375033 - set_zen_mode: off,com.weatheron.mobile|removeAutomaticZenRules
+2555:      key='com.weatheron.mobile',

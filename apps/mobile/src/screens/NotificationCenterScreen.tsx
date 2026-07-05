@@ -12,6 +12,7 @@ export function NotificationCenterScreen({
   readNotificationIds,
   notificationHistory,
   smartCareEnabled,
+  permissionReady,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onClearNotificationHistory,
@@ -21,7 +22,9 @@ export function NotificationCenterScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const activeNotifications = state.notifications.filter((item) => item.active).slice(0, 6);
-  const unreadCount = activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+  const previewOnly = !permissionReady;
+  const effectiveReadNotificationIds = previewOnly ? activeNotifications.map((item) => item.id) : readNotificationIds;
+  const unreadCount = activeNotifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).length;
   const hasUnread = unreadCount > 0;
   const hasHistory = notificationHistory.length > 0;
 
@@ -32,7 +35,7 @@ export function NotificationCenterScreen({
           <View>
             <Text style={[styles.title, { color: theme.text }]}>알림 센터</Text>
             <Text style={[styles.unread, { color: theme.subtle }]}>
-              {activeNotifications.length}개 활성 · 읽지 않음 {unreadCount}개
+              {previewOnly ? "권한 전 예시 · 배지 제외" : `${activeNotifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
             </Text>
           </View>
           <Pressable
@@ -48,13 +51,13 @@ export function NotificationCenterScreen({
         <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.sky : theme.border }]}>
           <View style={styles.summaryCopy}>
             <Text style={[styles.summaryLabel, { color: hasUnread ? theme.skyLite : theme.clear }]}>
-              {hasUnread ? "확인 필요" : "새 알림 없음"}
+              {previewOnly ? "예시 알림" : hasUnread ? "확인 필요" : "새 알림 없음"}
             </Text>
             <Text style={[styles.summaryTitle, { color: theme.text }]}>
-              {hasUnread ? `${unreadCount}개 알림을 먼저 확인` : "오늘 알림은 모두 읽음"}
+              {previewOnly ? "권한을 켜면 실제 알림으로 전환" : hasUnread ? `${unreadCount}개 알림을 먼저 확인` : "오늘 알림은 모두 읽음"}
             </Text>
             <Text style={[styles.summaryBody, { color: theme.muted }]}>
-              알림을 열면 관련 화면으로 이동하고 읽음 상태가 남음
+              {previewOnly ? "지금 보이는 항목은 읽지 않음 배지에 포함하지 않음" : "알림을 열면 관련 화면으로 이동하고 읽음 상태가 남음"}
             </Text>
           </View>
           <View style={styles.summaryActions}>
@@ -83,12 +86,13 @@ export function NotificationCenterScreen({
           {activeNotifications.map((item, displayIndex) => {
             const route = item.deepLink as P0RouteId;
             const meta = getNotificationPresentation(displayIndex, route, item.title);
-            const read = readNotificationIds.includes(item.id);
+            const read = previewOnly || effectiveReadNotificationIds.includes(item.id);
             return (
               <NotificationCard
                 key={item.id}
                 meta={meta}
                 read={read}
+                previewOnly={previewOnly}
                 reason={smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}
                 targetLabel={getNotificationTargetLabel(route)}
                 onOpen={() => onOpenNotificationDeepLink(item.id, route)}
@@ -162,6 +166,7 @@ type NotificationPresentation = {
 function NotificationCard({
   meta,
   read,
+  previewOnly,
   reason,
   targetLabel,
   onOpen,
@@ -171,6 +176,7 @@ function NotificationCard({
 }: {
   meta: NotificationPresentation;
   read: boolean;
+  previewOnly?: boolean;
   reason: string;
   targetLabel: string;
   onOpen: () => void;
@@ -200,11 +206,12 @@ function NotificationCard({
           <Text style={[styles.cardTitle, { color: theme.text }]}>{meta.title}</Text>
           <Text style={[styles.cardTime, { color: theme.subtle }]}>{meta.time}</Text>
         </View>
-        <Text style={[styles.reason, { color: theme.muted }]}>{meta.detail || reason}</Text>
+        <Text style={[styles.reason, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : meta.detail || reason}</Text>
         <Text style={[styles.highlight, { color: toneColor }]}>{meta.highlight}</Text>
       </View>
       <View style={styles.cardMeta}>
         <View style={[styles.unreadDot, { backgroundColor: read ? theme.border : toneColor }]} />
+        {previewOnly ? <Text style={[styles.miniText, { color: theme.subtle }]}>예시</Text> : null}
         <Pressable accessibilityLabel={`${meta.title} 열기`} accessibilityRole="button" onPress={onOpen} style={styles.miniHit}>
           <Text style={[styles.miniText, { color: theme.text }]}>열기</Text>
         </Pressable>

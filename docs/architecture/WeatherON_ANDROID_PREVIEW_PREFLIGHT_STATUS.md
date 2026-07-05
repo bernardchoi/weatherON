@@ -66,7 +66,7 @@
 | `apps/mobile/dist` | 예 | 64 B | 있음 |
 | `apps/mobile/dist-web` | 예 | 587 KB | 있음 |
 | `node_modules` | 예 | 5.7 GB | 있음 |
-| `.git` | 예 | 690 MB | 있음 |
+| `.git` | 예 | 693 MB | 있음 |
 | `.npm-cache` | 예 | 893 MB | 있음 |
 
 ## 4. 다음 명령
