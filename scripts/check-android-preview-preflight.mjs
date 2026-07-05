@@ -29,7 +29,7 @@ const kmaServiceKeyReady = Boolean(serverEnv.KMA_SERVICE_KEY);
 const issues = [];
 const checks = [];
 
-check("Expo package", appConfig.android.package === "com.weatheron.mobile", appConfig.android.package);
+check("Expo package", appConfig.android.package === "com.mvp.weatheron", appConfig.android.package);
 check("Native applicationId", nativeApplicationId === appConfig.android.package, nativeApplicationId);
 check("Native versionCode", nativeVersionCode === appConfig.android.versionCode, String(nativeVersionCode));
 check("Native versionName", nativeVersionName === appConfig.version, nativeVersionName);

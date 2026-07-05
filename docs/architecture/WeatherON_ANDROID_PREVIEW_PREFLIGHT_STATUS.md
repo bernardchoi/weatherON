@@ -10,8 +10,8 @@
 | 상태 | 통과 |
 | issue 수 | 0 |
 | 소스 기준 Version | `0.1.0 (6)` |
-| Expo android.package | `com.weatheron.mobile` |
-| Native applicationId | `com.weatheron.mobile` |
+| Expo android.package | `com.mvp.weatheron` |
+| Native applicationId | `com.mvp.weatheron` |
 | Native versionCode | `6` |
 | Native versionName | `0.1.0` |
 | Weather client | `proxy` |
@@ -22,8 +22,8 @@
 
 | 체크 | 상태 | 근거 |
 |---|---|---|
-| Expo package | 통과 | `com.weatheron.mobile` |
-| Native applicationId | 통과 | `com.weatheron.mobile` |
+| Expo package | 통과 | `com.mvp.weatheron` |
+| Native applicationId | 통과 | `com.mvp.weatheron` |
 | Native versionCode | 통과 | `6` |
 | Native versionName | 통과 | `0.1.0` |
 | Weather client mode | 통과 | `proxy` |
@@ -61,12 +61,12 @@
 | 경로 | 존재 | 크기 | 제외 규칙 |
 |---|---|---|---|
 | `apps/mobile/android/app/build` | 예 | 3.0 GB | 있음 |
-| `apps/mobile/android/.gradle` | 예 | 19 MB | 있음 |
+| `apps/mobile/android/.gradle` | 예 | 20 MB | 있음 |
 | `apps/mobile/android/build` | 예 | 145 KB | 있음 |
 | `apps/mobile/dist` | 예 | 64 B | 있음 |
 | `apps/mobile/dist-web` | 예 | 587 KB | 있음 |
 | `node_modules` | 예 | 5.7 GB | 있음 |
-| `.git` | 예 | 535 MB | 있음 |
+| `.git` | 예 | 536 MB | 있음 |
 | `.npm-cache` | 예 | 893 MB | 있음 |
 
 ## 4. 다음 명령

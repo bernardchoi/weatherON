@@ -24,8 +24,8 @@
 
 | 항목 | 현재 상태 |
 |---|---|
-| Android package | `com.weatheron.mobile` |
-| Local debug package | `com.weatheron.mobile.dev` |
+| Android package | `com.mvp.weatheron` |
+| Local debug package | `com.mvp.weatheron.dev` |
 | 앱 버전 | `0.1.0` |
 | Android versionCode | `4` |
 | 최신 preview build | `29665e88-4da7-41f2-8178-9e85de34ecee` |
@@ -141,7 +141,7 @@
 | Android web export check | `npm run check:android-web-export` 통과. warning 1개 유지 |
 | EAS login | `npm run check:eas-login-state` 통과. `weatheron / dev@weatheron.app` |
 | EAS preview APK | `29665e88-4da7-41f2-8178-9e85de34ecee` FINISHED. artifact: `https://expo.dev/artifacts/eas/JGuXHi6pp0PtYN2z8Ogs5uJ9q00W7NxCecjagNY0NkU.apk` |
-| Local debug APK | `npx expo run:android`는 Metro development build이므로 `com.weatheron.mobile.dev`로 분리. EAS preview 설치본과 공존 가능 |
+| Local debug APK | `npx expo run:android`는 Metro development build이므로 `com.mvp.weatheron.dev`로 분리. EAS preview 설치본과 공존 가능 |
 | O2 DOM 검증 | `나가기 전 5초 판단`, `언제 나갈지`, `목적지는 다른지`, `비는 언제 그치는지` 확인 |
 | H1 DOM 검증 | `언제 나가야 함`, `목적지는 다른가`, `비는 언제 그침` 확인. 코디 섹션은 핵심 판단 뒤로 이동 |
 | G2 DOM 검증 | `목적지에서 바로 판단`, `08:10에 나가면 13:00 도착`, 날씨 비교, 출발 전 알림 흐름 확인 |
@@ -171,4 +171,4 @@
 | 2026-06-29 | MVP 0 1차 구현. O2/H1/G2/H5 상단 메시지 재정렬 및 web export/DOM/캡처 검증 |
 | 2026-06-29 | MVP 0 preview APK 빌드 시도. EAS 업로드는 완료됐으나 Android Free plan quota 초과로 큐 생성 실패 |
 | 2026-06-29 | 사용자 터미널의 no-wait build 2건 상태 확인. `419e3d2c-135b-41a1-88f6-3321ad5115f1`, `29665e88-4da7-41f2-8178-9e85de34ecee` 모두 FINISHED. 최신 설치 후보를 `29665e88-4da7-41f2-8178-9e85de34ecee`로 갱신 |
-| 2026-06-29 | EAS preview/production build와 local debug build 식별자 분리. local debug는 `com.weatheron.mobile.dev`, EAS preview/production은 `com.weatheron.mobile` 유지 |
+| 2026-06-29 | EAS preview/production build와 local debug build 식별자 분리. local debug는 `com.mvp.weatheron.dev`, EAS preview/production은 `com.mvp.weatheron` 유지 |

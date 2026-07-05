@@ -36,7 +36,7 @@
 
 | 항목 | 값 |
 |---|---|
-| 패키지 | `com.weatheron.mobile` |
+| 패키지 | `com.mvp.weatheron` |
 | 버전 | `0.1.0 (6)` |
 | production AAB build | `32ed4d82-e676-43fa-a963-232a6610f573` |
 | production AAB version | `0.1.0 (6)` |

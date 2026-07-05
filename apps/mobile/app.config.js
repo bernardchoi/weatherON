@@ -12,11 +12,11 @@ module.exports = () => {
     expo.scheme = "weatheron-dev";
     expo.ios = {
       ...expo.ios,
-      bundleIdentifier: "com.weatheron.mobile.dev",
+      bundleIdentifier: "com.mvp.weatheron.dev",
     };
     expo.android = {
       ...expo.android,
-      package: "com.weatheron.mobile.dev",
+      package: "com.mvp.weatheron.dev",
     };
   }
 

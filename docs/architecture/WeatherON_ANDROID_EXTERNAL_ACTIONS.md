@@ -60,7 +60,7 @@ npm run check:eas-build-status -- <eas-build-id>
 - Latest tracked preview artifact: https://expo.dev/artifacts/eas/Cq_28HC_Rdep_5qC2b8n_oGL8K6WC-dgZfFPRyO9Qqc.apk
 - 현재 ADB 상태: 기기 미감지
 - 최신 로컬 MVP 수정 반영 build: 사용자 승인 후 `npm run build:android:preview:no-wait` 실행했으나 EAS Free plan Android build quota 소진으로 실패. reset은 2026-07-01 예정
-- 최신 archive inspect: 2026-06-30 `/tmp/weatheron-eas-inspect` 75MB. `android/app/build` 제외 및 native `applicationId 'com.weatheron.mobile'` 보정 완료
+- 최신 archive inspect: 2026-06-30 `/tmp/weatheron-eas-inspect` 75MB. `android/app/build` 제외 및 native `applicationId 'com.mvp.weatheron'` 보정 완료
 
 ---
 

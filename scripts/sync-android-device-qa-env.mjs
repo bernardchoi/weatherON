@@ -74,12 +74,12 @@ function syncFromAdb() {
   const model = runAdb(["shell", "getprop", "ro.product.model"]).stdout.trim();
   const androidVersion = runAdb(["shell", "getprop", "ro.build.version.release"]).stdout.trim();
   const screenSize = normalizeShellValue(runAdb(["shell", "wm", "size"]).stdout, "Physical size:");
-  const installed = runAdb(["shell", "pm", "list", "packages", "com.weatheron.mobile"]).stdout.includes("com.weatheron.mobile");
+  const installed = runAdb(["shell", "pm", "list", "packages", "com.mvp.weatheron"]).stdout.includes("com.mvp.weatheron");
 
   fillIfEmpty("device", [brand, model].filter(Boolean).join(" ").trim());
   fillIfEmpty("androidVersion", androidVersion);
   fillIfEmpty("screenSize", screenSize === "미확인" ? "" : screenSize);
-  fillIfEmpty("installMethod", installed ? "ADB 확인: com.weatheron.mobile 설치됨" : "");
+  fillIfEmpty("installMethod", installed ? "ADB 확인: com.mvp.weatheron 설치됨" : "");
   fillIfEmpty("testedAt", `${kstDateTime()} KST`);
 
   if (!reportOnly && updates.length > 0) {

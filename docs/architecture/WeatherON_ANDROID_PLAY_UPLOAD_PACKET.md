@@ -8,7 +8,7 @@
 | 항목 | 값 |
 |---|---|
 | 앱 이름 | WeatherON |
-| Android package | `com.weatheron.mobile` |
+| Android package | `com.mvp.weatheron` |
 | 앱 버전 | `0.1.0` |
 | Android versionCode | `6` |
 | 소스 기준 버전 | `0.1.0 (6)` |

@@ -13,7 +13,7 @@
 | 항목 | 초안 | 상태 |
 |---|---|---|
 | 앱 이름 | WeatherON | 확정 후보 |
-| 패키지명 | `com.weatheron.mobile` | 반영 완료 |
+| 패키지명 | `com.mvp.weatheron` | 반영 완료 |
 | 버전 | `0.1.0` | preview 기준 |
 | versionCode | `6` | preview 기준 |
 | 앱 카테고리 | 날씨 | 1차 제출 기준 |

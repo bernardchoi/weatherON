@@ -16,7 +16,7 @@ Android를 1차 출시 대상으로 둔다.
 | 빌드 방식 | EAS Build |
 | 내부 확인 파일 | APK |
 | 스토어 제출 파일 | AAB |
-| Android package | `com.weatheron.mobile` |
+| Android package | `com.mvp.weatheron` |
 | Android versionCode | `6` |
 | EAS 로그인 상태 | `npm run check:eas-login-state` 결과 `logged_in` (`weatheron`, `dev@weatheron.app`) |
 | EAS projectId | `3bf39144-92a4-48a9-8bd8-ae09daf2a817` |
@@ -73,7 +73,7 @@ Base44 관련:
 
 | 순서 | 작업 | 대상 | 상태 |
 |---|---|---|---|
-| B1 | Android package 확정 | `com.weatheron.mobile` | 완료 |
+| B1 | Android package 확정 | `com.mvp.weatheron` | 완료 |
 | B2 | 앱 이름/slug/version 확인 | `apps/mobile/app.json` | 완료 |
 | B3 | versionCode 정책 추가 | `apps/mobile/app.json` 또는 app config | 완료 |
 | B4 | adaptive icon/splash 실기기 확인 | `assets/icon/*` | 진행 필요 |
@@ -87,7 +87,7 @@ Base44 관련:
 ```json
 {
   "android": {
-    "package": "com.weatheron.mobile",
+    "package": "com.mvp.weatheron",
     "versionCode": 6,
     "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
   }
@@ -178,7 +178,7 @@ npm run check:eas-production-build-status -- <eas-build-id>
 - `S1 ON Square` 분리 반영 preview build `da28ef88-3adb-4a25-858d-9e2e4ba62245`는 archive 업로드 크기 `62.6 MB`로 완료되었다.
 - `H3/H4/H5` 홈 활성 탭 보정 및 Android `versionCode=2` preview build `7c857db8-da31-4c95-88d8-0455546c1c4d`는 `FINISHED` 상태다.
 - 위치 권한 실기기 이슈 수정 후 다음 QA build는 Android `versionCode=3` 기준으로 생성한다.
-- 2026-06-30 최신 소스 `versionCode=5` preview build 시도는 EAS Free plan Android quota 소진으로 실패했다. 시도 중 archive `892 MB` 회귀가 확인되어 `.easignore`에 Android build 산출물 제외를 추가하고 native `applicationId`를 `com.weatheron.mobile`로 보정했다. 이후 `eas build:inspect --stage archive` 기준 archive stage는 75MB다.
+- 2026-06-30 최신 소스 `versionCode=5` preview build 시도는 EAS Free plan Android quota 소진으로 실패했다. 시도 중 archive `892 MB` 회귀가 확인되어 `.easignore`에 Android build 산출물 제외를 추가하고 native `applicationId`를 `com.mvp.weatheron`로 보정했다. 이후 `eas build:inspect --stage archive` 기준 archive stage는 75MB다.
 - UI 시각 완성도 개선 후 다음 QA build는 Android `versionCode=4` 기준으로 생성한다.
 - UI 문구/하단 탭 후속 보정 재검증 build는 Android `versionCode=5` 기준으로 생성한다.
 - D9/D13 실기기 QA 보정 재검증 build는 Android `versionCode=6` 기준으로 생성한다.

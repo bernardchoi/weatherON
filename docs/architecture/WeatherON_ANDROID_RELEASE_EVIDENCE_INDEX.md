@@ -8,7 +8,7 @@
 | 항목 | 값 |
 |---|---|
 | 앱 이름 | WeatherON |
-| Android package | `com.weatheron.mobile` |
+| Android package | `com.mvp.weatheron` |
 | Android versionCode | `6` |
 | 정적 체크 통과 | 23/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |

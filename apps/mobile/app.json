@@ -22,13 +22,13 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.weatheron.mobile",
+      "bundleIdentifier": "com.mvp.weatheron",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다."
       }
     },
     "android": {
-      "package": "com.weatheron.mobile",
+      "package": "com.mvp.weatheron",
       "versionCode": 6,
       "permissions": [
         "ACCESS_COARSE_LOCATION",

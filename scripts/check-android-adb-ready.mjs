@@ -38,7 +38,7 @@ if (adbDevices.errorCode === "ENOENT") {
     screenSize = normalizeShellValue(runAdb(selectedDevice, ["shell", "wm", "size"]).stdout, "Physical size:");
     density = normalizeShellValue(runAdb(selectedDevice, ["shell", "wm", "density"]).stdout, "Physical density:");
     androidVersion = runAdb(selectedDevice, ["shell", "getprop", "ro.build.version.release"]).stdout.trim() || "미확인";
-    packageInstalled = runAdb(selectedDevice, ["shell", "pm", "list", "packages", "com.weatheron.mobile"]).stdout.includes("com.weatheron.mobile")
+    packageInstalled = runAdb(selectedDevice, ["shell", "pm", "list", "packages", "com.mvp.weatheron"]).stdout.includes("com.mvp.weatheron")
       ? "설치됨"
       : "미설치";
   }

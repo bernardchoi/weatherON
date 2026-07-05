@@ -71,12 +71,12 @@ assert.equal(appConfig.slug, "weatheron");
 assert.equal(appConfig.scheme, "weatheron");
 assert.match(appConfig.version, /^\d+\.\d+\.\d+$/);
 
-assert.equal(appConfig.android?.package, "com.weatheron.mobile");
+assert.equal(appConfig.android?.package, "com.mvp.weatheron");
 assert.equal(Number.isInteger(appConfig.android?.versionCode), true);
 assert.ok(appConfig.android.versionCode >= 1);
 assertDocIncludes(androidAppBuildGradlePath, [
-  "namespace 'com.weatheron.mobile'",
-  "applicationId 'com.weatheron.mobile'",
+  "namespace 'com.mvp.weatheron'",
+  "applicationId 'com.mvp.weatheron'",
   `versionCode ${appConfig.android.versionCode}`,
   `versionName "${appConfig.version}"`,
 ]);

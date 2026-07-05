@@ -138,7 +138,7 @@ function isExpectedPackageInstalled(deviceId, expectedVersion) {
   const expected = expectedVersion.match(/^(.+?)\s*\((\d+)\)$/);
   if (!expected) return false;
   const [, versionName, versionCode] = expected;
-  const result = spawnSync(adbCommand, ["-s", deviceId, "shell", "dumpsys", "package", "com.weatheron.mobile"], {
+  const result = spawnSync(adbCommand, ["-s", deviceId, "shell", "dumpsys", "package", "com.mvp.weatheron"], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });
