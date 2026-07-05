@@ -23,7 +23,7 @@ npm run check:eas-production-build-status -- f13ec171-abf6-4cc3-9ea9-91fa055e761
 
 ## 3. 다음 액션
 
-- AAB artifact를 Play Console 내부/폐쇄 테스트 트랙 업로드 후보로 사용
+- Android package를 `com.weatheron.mobile`로 변경했으므로 production AAB 재빌드 후 artifact 갱신
 
 ## 4. 변경 이력
 

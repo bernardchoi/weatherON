@@ -72,7 +72,7 @@ const nextSteps = isEasLoggedIn && easProjectId
     ];
 
 const checks = [
-  check("Android package", appConfig.android?.package === "com.mvp.weatheron", appConfig.android?.package),
+  check("Android package", appConfig.android?.package === "com.weatheron.mobile", appConfig.android?.package),
   check("Android versionCode", Number.isInteger(appConfig.android?.versionCode) && appConfig.android.versionCode >= 1, String(appConfig.android?.versionCode)),
   check("위치 권한", hasAndroidPermission("ACCESS_COARSE_LOCATION") && hasAndroidPermission("ACCESS_FINE_LOCATION"), appConfig.android?.permissions?.join(", ") ?? ""),
   check("EAS preview APK profile", easConfig.build?.preview?.android?.buildType === "apk", easConfig.build?.preview?.android?.buildType),

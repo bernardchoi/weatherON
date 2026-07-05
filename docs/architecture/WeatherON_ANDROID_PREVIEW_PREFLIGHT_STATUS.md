@@ -1,6 +1,6 @@
 # WeatherON Android Preview Preflight Status
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-06
 > 목적: EAS preview build 재시도 전 native package, version, archive 제외 설정을 로컬에서 점검한다.
 
 ## 1. 요약
@@ -10,8 +10,8 @@
 | 상태 | 통과 |
 | issue 수 | 0 |
 | 소스 기준 Version | `0.1.0 (6)` |
-| Expo android.package | `com.mvp.weatheron` |
-| Native applicationId | `com.mvp.weatheron` |
+| Expo android.package | `com.weatheron.mobile` |
+| Native applicationId | `com.weatheron.mobile` |
 | Native versionCode | `6` |
 | Native versionName | `0.1.0` |
 | Weather client | `proxy` |
@@ -22,8 +22,8 @@
 
 | 체크 | 상태 | 근거 |
 |---|---|---|
-| Expo package | 통과 | `com.mvp.weatheron` |
-| Native applicationId | 통과 | `com.mvp.weatheron` |
+| Expo package | 통과 | `com.weatheron.mobile` |
+| Native applicationId | 통과 | `com.weatheron.mobile` |
 | Native versionCode | 통과 | `6` |
 | Native versionName | 통과 | `0.1.0` |
 | Weather client mode | 통과 | `proxy` |

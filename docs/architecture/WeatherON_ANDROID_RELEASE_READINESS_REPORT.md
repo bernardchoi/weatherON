@@ -8,7 +8,7 @@
 | 항목 | 값 |
 |---|---|
 | 앱 이름 | WeatherON |
-| Android package | `com.mvp.weatheron` |
+| Android package | `com.weatheron.mobile` |
 | 앱 버전 | `0.1.0` |
 | Android versionCode | `6` |
 | 정적 체크 통과 | 23/23 |
@@ -27,7 +27,7 @@
 
 | 체크 | 상태 | 근거 |
 |---|---|---|
-| Android package | 통과 | com.mvp.weatheron |
+| Android package | 통과 | com.weatheron.mobile |
 | Android versionCode | 통과 | 6 |
 | 위치 권한 | 통과 | ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION, POST_NOTIFICATIONS |
 | EAS preview APK profile | 통과 | apk |
