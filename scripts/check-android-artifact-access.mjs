@@ -34,6 +34,15 @@ for (const target of targets) {
   }
   const doc = readFileSync(target.sourcePath, "utf8");
   const url = normalizeTableValue(tableValue(doc, target.urlLabel));
+  if (url && !url.startsWith("https://") && url.endsWith(target.expectedExtension)) {
+    if (existsSync(join(rootDir, url))) {
+      rows.push(`| ${target.label} | ${url} | 로컬 파일 확인 | 통과 | ${url} |`);
+      continue;
+    }
+    issues.push(`${target.label} local artifact missing`);
+    rows.push(`| ${target.label} | ${url} | 로컬 파일 없음 | 실패 | - |`);
+    continue;
+  }
   if (!url || !url.startsWith("https://") || !url.endsWith(target.expectedExtension)) {
     issues.push(`${target.label} artifact URL invalid`);
     rows.push(`| ${target.label} | ${url || "미확인"} | URL 오류 | 실패 | - |`);

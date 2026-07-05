@@ -19,7 +19,7 @@
 | 최신 preview build version | `0.1.0 (6)` |
 | 소스 기준 version | `0.1.0 (6)` |
 | preview build 소스 일치 | 일치 |
-| 최신 production build | 90912651-fc84-47d0-91ce-9be096c2ff05 |
+| 최신 production build | 32ed4d82-e676-43fa-a963-232a6610f573 |
 | 최신 production build 상태 | FINISHED |
 | 현재 차단 | Play Console/스토어 제출 항목 미완료 |
 
@@ -67,7 +67,7 @@
 | `npm run build:android:preview` | 필요 시 사용자 승인 후 실행 |
 | `npm run check:eas-login-state` | 통과 |
 | `npm run check:eas-build-status -- N/A - local Gradle release APK` | 해당 없음 |
-| `npm run check:eas-production-build-status -- 90912651-fc84-47d0-91ce-9be096c2ff05` | 통과 |
+| `npm run check:eas-production-build-status -- 32ed4d82-e676-43fa-a963-232a6610f573` | 통과 |
 
 ## 4. 다음 작업
 
@@ -76,4 +76,4 @@
 3. 통과 화면으로 Android 스토어 스크린샷 캡처
 4. `WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md`의 사용자 입력값 확정
 5. Play Console 제출 전 `npm run check:android-store-submit-ready`
-6. `90912651-fc84-47d0-91ce-9be096c2ff05` AAB artifact를 Play Console 업로드 후보로 확인
+6. `32ed4d82-e676-43fa-a963-232a6610f573` AAB artifact를 Play Console 업로드 후보로 확인

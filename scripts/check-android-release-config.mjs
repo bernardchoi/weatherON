@@ -226,7 +226,7 @@ assertDocIncludes(storeScreenshotPacketPath, [
   "screenshot 기준 build",
   "capture:android-store-screenshot",
   "홈/출발/MY",
-  "하단 홈 > 코디 요약",
+  "홈 알림 > 알림 센터",
   "ADB 준비 상태",
   "check:android-adb-ready",
   "manifest",

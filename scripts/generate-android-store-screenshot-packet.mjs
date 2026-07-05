@@ -71,14 +71,14 @@ npm run check:android-adb-ready
 npm run capture:android-store-screenshot -- phone-01-home.png
 npm run capture:android-store-screenshot -- phone-02-destination-search.png
 npm run capture:android-store-screenshot -- phone-03-destination-care.png
-npm run capture:android-store-screenshot -- phone-04-outfit.png
+npm run capture:android-store-screenshot -- phone-04-notification-center.png
 npm run capture:android-store-screenshot -- phone-05-settings-policy.png
 npm run check:android-store-screenshots-ready
 \`\`\`
 
 ## 5. 주의
 
-- 하단 탭은 \`홈/출발/MY\` 기준이어야 하며, 코디 캡처는 홈의 코디 요약 카드 기준으로 진행한다.
+- 하단 탭은 \`홈/출발/MY\` 기준이어야 하며, MVP1 제외 기능인 코디/스타일 화면은 스토어 스크린샷에 포함하지 않는다.
 - 개발용 route id, 내부 상태값, placeholder 문구가 보이면 캡처하지 않는다.
 - Google Play 업로드 전 파일명은 본 문서와 동일하게 유지한다.
 - ADB 준비 상태가 \`불가\`이면 먼저 USB 디버깅 또는 에뮬레이터 연결을 복구한다.

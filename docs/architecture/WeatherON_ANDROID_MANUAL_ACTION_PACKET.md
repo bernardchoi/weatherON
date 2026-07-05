@@ -9,12 +9,12 @@
 |---|---|
 | preview APK build | `N/A - local Gradle release APK` |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| production AAB build | `90912651-fc84-47d0-91ce-9be096c2ff05` |
+| production AAB build | `32ed4d82-e676-43fa-a963-232a6610f573` |
 | production AAB 상태 | FINISHED |
-| AAB artifact | https://expo.dev/artifacts/eas/qCf2bVWNWVs_bgzWZlbMvlacPn0Y3OyxPo0rUvSQHa4.aab |
+| AAB artifact | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab |
 | Play 제출 blocker | 17 |
 | 실기기 QA 미검증 | 0 |
-| 스토어 스크린샷 issue | 1 |
+| 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |
 | 폐쇄 테스트 대기 항목 | 13 |
 
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
 | 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
-| 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 1개 issue |
+| 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
 | 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
@@ -69,10 +69,10 @@
 
 | 순서 | 파일명 | 화면 | 앱 내 이동 | 캡처 조건 |
 |---|---|---|---|---|
-| 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 코디 요약, 우산/알림 진입이 보임 |
+| 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 목적지 상태, 알림 진입이 보임 |
 | 2 | `phone-02-destination-search.png` | P1 목적지 검색 | 하단 출발 > 목적지 추가 | Kakao Local 결과 또는 fallback 결과가 보임 |
 | 3 | `phone-03-destination-care.png` | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 목적지 날씨와 케어 ON/OFF 상태가 보임 |
-| 4 | `phone-04-outfit.png` | C1 코디 추천 | 하단 홈 > 코디 요약 | 날씨 기반 착장과 추천 사유가 보임 |
+| 4 | `phone-04-notification-center.png` | M2 알림 센터 | 홈 알림 > 알림 센터 | 알림 목록과 조건 설정 진입이 보임 |
 | 5 | `phone-05-settings-policy.png` | M/R 정책 허브 | 하단 MY > 설정/정책 | 개인정보, 알림, 광고 설정 접근이 보임 |
 
 ## 5. Play 제출 입력값 회신표

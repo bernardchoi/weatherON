@@ -16,12 +16,12 @@
 |---|---|---|
 | preview build id | 통과 | readiness: N/A - local Gradle release APK<br>actionBoard: N/A - local Gradle release APK<br>evidence: N/A - local Gradle release APK<br>previewBuild: N/A - local Gradle release APK |
 | preview build status | 통과 | readiness: LOCAL BUILD SUCCESS<br>actionBoard: LOCAL BUILD SUCCESS<br>evidence: LOCAL BUILD SUCCESS<br>previewBuild: LOCAL BUILD SUCCESS |
-| production build id | 통과 | readiness: 90912651-fc84-47d0-91ce-9be096c2ff05<br>actionBoard: 90912651-fc84-47d0-91ce-9be096c2ff05<br>evidence: 90912651-fc84-47d0-91ce-9be096c2ff05<br>productionBuild: 90912651-fc84-47d0-91ce-9be096c2ff05 |
+| production build id | 통과 | readiness: 32ed4d82-e676-43fa-a963-232a6610f573<br>actionBoard: 32ed4d82-e676-43fa-a963-232a6610f573<br>evidence: 32ed4d82-e676-43fa-a963-232a6610f573<br>productionBuild: 32ed4d82-e676-43fa-a963-232a6610f573 |
 | production build status | 통과 | readiness: FINISHED<br>actionBoard: FINISHED<br>evidence: FINISHED<br>productionBuild: FINISHED<br>blockers: FINISHED |
 | store blocker count | 통과 | actionBoard: 17<br>evidence: 17<br>blockers: 17 |
 | artifact access issue count | 통과 | evidence: 0<br>artifactAccess: 0 |
 | device QA pending count | 통과 | actionBoard: 0<br>evidence: 0 |
-| screenshot issue count | 통과 | actionBoard: 1<br>evidence: 1<br>screenshotStatus: 1 |
+| screenshot issue count | 통과 | actionBoard: 0<br>evidence: 0<br>screenshotStatus: 0 |
 | screenshot ready count | 통과 | actionBoard: 5/5<br>evidence: 5/5<br>screenshotStatus: 5/5 |
 | store input missing count | 통과 | actionBoard: 9<br>evidence: 9 |
 | store input applied | 통과 | actionBoard: 미적용<br>evidence: 미적용<br>storeInputs: 미적용 |

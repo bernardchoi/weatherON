@@ -100,7 +100,7 @@ function localTemplate(file) {
         day: index + 1,
         date: "",
         activeTesters: "0",
-        version: "0.1.0 (2)",
+        version: "0.1.0 (6)",
         flow: "홈/출발/MY + 목적지 알림 설정",
         issueCount: "0",
         status: "미시작",

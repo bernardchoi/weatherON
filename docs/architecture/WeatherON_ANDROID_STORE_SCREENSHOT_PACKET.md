@@ -13,7 +13,7 @@
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | 저장 위치 | assets/store/android-screenshots/ |
 | manifest | `assets/store/android-screenshots/manifest.json` |
-| 현재 screenshot issue | 1 |
+| 현재 screenshot issue | 0 |
 | ADB 준비 상태 | 가능 |
 | ADB 선택 기기 | 000841458003652 |
 | ADB issue | 0 |
@@ -23,10 +23,10 @@
 
 | 순서 | 파일명 | 화면 | 앱 내 이동 | 캡처 조건 |
 |---|---|---|---|---|
-| 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 코디 요약, 우산/알림 진입이 보임 |
+| 1 | `phone-01-home.png` | H1 홈 | 하단 홈 | 현재 날씨, 목적지 상태, 알림 진입이 보임 |
 | 2 | `phone-02-destination-search.png` | P1 목적지 검색 | 하단 출발 > 목적지 추가 | Kakao Local 결과 또는 fallback 결과가 보임 |
 | 3 | `phone-03-destination-care.png` | G2 목적지 케어 | 하단 출발 > 목적지 카드 | 목적지 날씨와 케어 ON/OFF 상태가 보임 |
-| 4 | `phone-04-outfit.png` | C1 코디 추천 | 하단 홈 > 코디 요약 | 날씨 기반 착장과 추천 사유가 보임 |
+| 4 | `phone-04-notification-center.png` | M2 알림 센터 | 홈 알림 > 알림 센터 | 알림 목록과 조건 설정 진입이 보임 |
 | 5 | `phone-05-settings-policy.png` | M/R 정책 허브 | 하단 MY > 설정/정책 | 개인정보, 알림, 광고 설정 접근이 보임 |
 
 ## 3. 캡처 순서
@@ -47,14 +47,14 @@ npm run check:android-adb-ready
 npm run capture:android-store-screenshot -- phone-01-home.png
 npm run capture:android-store-screenshot -- phone-02-destination-search.png
 npm run capture:android-store-screenshot -- phone-03-destination-care.png
-npm run capture:android-store-screenshot -- phone-04-outfit.png
+npm run capture:android-store-screenshot -- phone-04-notification-center.png
 npm run capture:android-store-screenshot -- phone-05-settings-policy.png
 npm run check:android-store-screenshots-ready
 ```
 
 ## 5. 주의
 
-- 하단 탭은 `홈/출발/MY` 기준이어야 하며, 코디 캡처는 홈의 코디 요약 카드 기준으로 진행한다.
+- 하단 탭은 `홈/출발/MY` 기준이어야 하며, MVP1 제외 기능인 코디/스타일 화면은 스토어 스크린샷에 포함하지 않는다.
 - 개발용 route id, 내부 상태값, placeholder 문구가 보이면 캡처하지 않는다.
 - Google Play 업로드 전 파일명은 본 문서와 동일하게 유지한다.
 - ADB 준비 상태가 `불가`이면 먼저 USB 디버깅 또는 에뮬레이터 연결을 복구한다.

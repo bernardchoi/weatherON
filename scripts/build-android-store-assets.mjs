@@ -101,16 +101,16 @@ function drawBrand(context, icon) {
 
   context.fillStyle = colors.muted;
   context.font = "600 27px Manrope, Arial, sans-serif";
-  context.fillText("Dress for the weather", 82, 346);
+  context.fillText("Weather-aware departure care", 82, 346);
 
   context.fillStyle = colors.mint;
   context.font = "800 20px Manrope, Arial, sans-serif";
-  context.fillText("OUTFIT  ·  UMBRELLA  ·  DESTINATION CARE", 82, 394);
+  context.fillText("HOME  ·  ALERTS  ·  DESTINATION CARE", 82, 394);
 }
 
 function drawWeatherCards(context) {
-  drawCard(context, 590, 126, 300, 86, colors.white, colors.ink, "Outfit", "Rain jacket ready", colors.mint);
-  drawCard(context, 632, 226, 300, 86, colors.white, colors.ink, "Umbrella", "Carry before leaving", colors.sky);
+  drawCard(context, 590, 126, 300, 86, colors.white, colors.ink, "Home", "Weather summary", colors.mint);
+  drawCard(context, 632, 226, 300, 86, colors.white, colors.ink, "Alert", "Before leaving", colors.sky);
   drawCard(context, 566, 326, 300, 86, colors.white, colors.ink, "Destination", "Care ON for Jamsil", colors.gold);
 
   context.strokeStyle = "rgba(255,255,255,0.34)";

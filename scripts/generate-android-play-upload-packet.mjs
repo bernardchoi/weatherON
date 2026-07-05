@@ -15,6 +15,7 @@ const appConfig = JSON.parse(readFileSync(appJsonPath, "utf8")).expo;
 
 const buildId = normalizeTableValue(tableValue(productionBuildStatus, "EAS build id"));
 const buildState = normalizeTableValue(tableValue(productionBuildStatus, "Build 상태"));
+const buildVersion = normalizeTableValue(tableValue(productionBuildStatus, "Version"));
 const buildUrl = normalizeTableValue(tableValue(productionBuildStatus, "Build 링크"));
 const artifactUrl = normalizeTableValue(tableValue(productionBuildStatus, "AAB artifact"));
 const blockerCount = normalizeTableValue(tableValue(blockers, "blocker 수")) || "미확인";
@@ -22,7 +23,9 @@ const screenshotIssues = normalizeTableValue(tableValue(actionBoard, "스토어 
 const storeInputMissing = normalizeTableValue(tableValue(actionBoard, "local 스토어 입력 누락")) || "미확인";
 const qaPending = normalizeTableValue(tableValue(actionBoard, "실기기 QA 미검증")) || "미확인";
 const closedTestPending = normalizeTableValue(tableValue(actionBoard, "폐쇄 테스트 대기 항목")) || "미확인";
-const readyForUpload = buildState === "FINISHED" && /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.aab$/.test(artifactUrl);
+const sourceVersion = `${appConfig.version} (${appConfig.android?.versionCode})`;
+const sourceMatchesBuild = buildVersion === sourceVersion;
+const readyForUpload = buildState === "FINISHED" && /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.aab$/.test(artifactUrl) && sourceMatchesBuild;
 
 const report = `# WeatherON Android Play Upload Packet
 
@@ -37,8 +40,11 @@ const report = `# WeatherON Android Play Upload Packet
 | Android package | \`${appConfig.android?.package}\` |
 | 앱 버전 | \`${appConfig.version}\` |
 | Android versionCode | \`${appConfig.android?.versionCode}\` |
+| 소스 기준 버전 | \`${sourceVersion}\` |
 | EAS build id | \`${buildId}\` |
 | Build 상태 | ${buildState} |
+| Build 버전 | \`${buildVersion || "미확인"}\` |
+| 소스 일치 | ${sourceMatchesBuild ? "일치" : "불일치"} |
 | Build 링크 | ${buildUrl} |
 | AAB artifact | ${artifactUrl} |
 | 업로드 후보 여부 | ${readyForUpload ? "가능" : "불가"} |
@@ -59,7 +65,7 @@ const report = `# WeatherON Android Play Upload Packet
 2. 테스트 및 출시 > 내부 테스트 또는 폐쇄 테스트 트랙 선택
 3. 새 release 생성
 4. AAB artifact 업로드
-5. release name은 \`0.1.0 (2)\` 기준으로 입력
+5. release name은 \`${appConfig.version} (${appConfig.android?.versionCode})\` 기준으로 입력
 6. 출시 노트 초안 입력
 7. 저장 후 제출 전 blocker 문서 확인
 
@@ -67,10 +73,10 @@ const report = `# WeatherON Android Play Upload Packet
 
 \`\`\`text
 WeatherON Android preview build.
-- 날씨 기반 홈/코디/출발 흐름
+- 날씨 기반 홈/출발 흐름
 - 목적지 날씨 케어와 Kakao Local 검색
 - MY/정책/권한 설정
-- 최초 출시 범위 외 소셜 레이어 미공개
+- 최초 출시 범위 외 코디/스타일/소셜 레이어 미공개
 \`\`\`
 
 ## 5. 확인 명령
@@ -83,7 +89,8 @@ npm run report:android-release-action-board
 
 ## 6. 주의
 
-- AAB는 업로드 후보로 확보됐지만, Play 제출은 실기기 QA, 스토어 스크린샷, 정책 입력값, 폐쇄 테스트 준비가 끝난 뒤 진행한다.
+- AAB는 소스 기준 버전과 일치할 때만 Play 테스트 트랙 업로드 후보로 본다.
+- 소스 불일치이면 \`npm run build:android:production:no-wait\`로 새 production AAB를 만든 뒤 build id를 갱신한다.
 - AAB artifact URL은 Expo 로그인 세션 또는 권한에 따라 접근이 제한될 수 있으므로 업로드 전 다운로드 가능 여부를 한 번 확인한다.
 `;
 

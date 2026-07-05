@@ -4,7 +4,7 @@
   "appVersion": "0.1.0 (6)",
   "requiredCount": 5,
   "readyCount": 5,
-  "issueCount": 1,
+  "issueCount": 0,
   "recommended": {
     "format": "PNG",
     "orientation": "portrait",
@@ -41,13 +41,13 @@
       "sha256": "bf0dc0343023f80904c69864deaec7fcb31e1e11ad678a63e21eb0236fb1985f"
     },
     {
-      "filename": "phone-04-outfit.png",
-      "screen": "C1 코디 추천",
-      "route": "하단 홈 > 코디 요약",
+      "filename": "phone-04-notification-center.png",
+      "screen": "M2 알림 센터",
+      "route": "홈 알림 > 알림 센터",
       "status": "ready",
       "width": 1084,
       "height": 2412,
-      "sha256": "7028669fb09c451a6bcfdb32bd9158b906c3e9c7c018fd8d7a3b0b3568861414"
+      "sha256": "673c18bdf17d0cd6033b4ed25c673819b46903ee9aa7c80e8c75b99262ab70b4"
     },
     {
       "filename": "phone-05-settings-policy.png",

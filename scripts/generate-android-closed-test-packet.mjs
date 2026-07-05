@@ -19,6 +19,7 @@ const optedInCount = normalizeTableValue(tableValue(status, "테스터 opt-in"))
 const activeDays = normalizeTableValue(tableValue(status, "14일 운영 기록")) || "0/14";
 const aabArtifact = normalizeTableValue(tableValue(playUploadPacket, "AAB artifact"));
 const buildId = normalizeTableValue(tableValue(playUploadPacket, "EAS build id"));
+const sourceVersion = normalizeTableValue(tableValue(playUploadPacket, "소스 기준 버전")) || "0.1.0 (6)";
 
 const report = `# WeatherON Android Closed Test Packet
 
@@ -55,7 +56,7 @@ const report = `# WeatherON Android Closed Test Packet
 ## 3. 진행 순서
 
 1. Play Console 계정 유형 확인
-2. 신규 개인 계정이면 폐쇄 테스트 필요로 표시
+2. 2023-11-13 이후 생성된 신규 개인 계정이면 폐쇄 테스트 필요로 표시
 3. 폐쇄 테스트 불필요로 확정되면 테스터/14일 운영 기록은 생략하고 Play 제출 blocker만 해소
 4. 폐쇄 테스트가 필요하면 AAB artifact를 폐쇄 테스트 트랙에 업로드
 5. 테스터 12명 이상 초대
@@ -69,22 +70,28 @@ const report = `# WeatherON Android Closed Test Packet
 
 | Day | 날짜 | 활성 테스터 | 배포 버전 | 주요 플로우 | 이슈 수 | 메모 |
 |---|---|---|---|---|---|---|
-| 1 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 2 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 3 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 4 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 5 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 6 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 7 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 8 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 9 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 10 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 11 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 12 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 13 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 14 |  |  | 0.1.0 (2) | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 1 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 2 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 3 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 4 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 5 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 6 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 7 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 8 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 9 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 10 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 11 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 12 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 13 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 14 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
 
-## 5. 확인 명령
+## 5. 공식 기준 확인
+
+- Google Play 신규 개인 개발자 계정은 프로덕션 신청 전 12명 이상 테스터로 14일 이상 폐쇄 테스트가 필요할 수 있다.
+- 조직 계정 또는 기존 계정도 품질 검증을 위해 내부/폐쇄 테스트 트랙 운영은 유지한다.
+- Play Console 업로드 대상은 source version과 일치하는 production AAB artifact를 사용한다.
+
+## 6. 확인 명령
 
 \`\`\`bash
 npm run apply:android-closed-test-inputs

@@ -16,7 +16,7 @@ const expectedScreenshots = [
   ["phone-01-home.png", "H1 홈", "하단 홈"],
   ["phone-02-destination-search.png", "P1 목적지 검색", "하단 출발 > 목적지 추가"],
   ["phone-03-destination-care.png", "G2 목적지 케어", "하단 출발 > 목적지 카드"],
-  ["phone-04-outfit.png", "C1 코디 추천", "하단 홈 > 코디 요약"],
+  ["phone-04-notification-center.png", "M2 알림 센터", "홈 알림 > 알림 센터"],
   ["phone-05-settings-policy.png", "M/R 정책 허브", "하단 MY > 설정/정책"],
 ];
 
@@ -184,7 +184,7 @@ ${issues.length === 0 ? "- 없음" : issues.map((issue) => `- ${issue}`).join("\
 npm run capture:android-store-screenshot -- phone-01-home.png
 npm run capture:android-store-screenshot -- phone-02-destination-search.png
 npm run capture:android-store-screenshot -- phone-03-destination-care.png
-npm run capture:android-store-screenshot -- phone-04-outfit.png
+npm run capture:android-store-screenshot -- phone-04-notification-center.png
 npm run capture:android-store-screenshot -- phone-05-settings-policy.png
 npm run check:android-store-screenshots-ready
 WEATHERON_SCREENSHOT_REPORT_ONLY=1 npm run check:android-store-screenshots-ready

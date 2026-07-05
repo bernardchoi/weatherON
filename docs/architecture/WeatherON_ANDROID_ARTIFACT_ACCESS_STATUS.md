@@ -1,6 +1,6 @@
 # WeatherON Android Artifact Access Status
 
-> 생성일: 2026-06-28
+> 생성일: 2026-07-05
 > 목적: EAS preview APK와 production AAB artifact URL이 다운로드 가능한지 추적한다.
 
 ## 1. 현재 상태
@@ -14,8 +14,8 @@
 
 | 대상 | URL | 응답 | 상태 | 최종 URL |
 |---|---|---|---|---|
-| preview APK | https://expo.dev/artifacts/eas/bxWR-_rZCG9X8TmXwj_ni6LS1m_5BR5egVy3X8X-HQE.apk | HTTP 200 | 통과 | https://wf-artifacts.eascdn.net/builds/internal-st/3bf39144-92a4-48a9-8bd8-ae09daf2a817/819b6cba-7757-48a3-9f8e-92a4efd9c17c/019f0e83-8a53-75aa-bf44-827c38b43bb1/application-819b6cba-7757-48a3-9f8e-92a4efd9c17c.apk |
-| production AAB | https://expo.dev/artifacts/eas/qCf2bVWNWVs_bgzWZlbMvlacPn0Y3OyxPo0rUvSQHa4.aab | HTTP 200 | 통과 | https://wf-artifacts.eascdn.net/builds/store-rg/3bf39144-92a4-48a9-8bd8-ae09daf2a817/90912651-fc84-47d0-91ce-9be096c2ff05/019f0a3f-203a-77fe-8cdd-886e5f7051da/application-90912651-fc84-47d0-91ce-9be096c2ff05.aab |
+| preview APK | apps/mobile/android/app/build/outputs/apk/release/app-release.apk | 로컬 파일 확인 | 통과 | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
+| production AAB | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab | HTTP 200 | 통과 | https://wf-artifacts.eascdn.net/builds/store-rg/3bf39144-92a4-48a9-8bd8-ae09daf2a817/32ed4d82-e676-43fa-a963-232a6610f573/019f3244-bd41-71ca-ba88-8d534559a358/application-32ed4d82-e676-43fa-a963-232a6610f573.aab |
 
 ## 3. Issues
 
