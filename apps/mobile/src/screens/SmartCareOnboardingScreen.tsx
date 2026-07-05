@@ -3,20 +3,18 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { SmartCareScenario } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
 const scenarios: { value: SmartCareScenario; title: string; body: string }[] = [
-  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간·강수 알림" },
-  { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심 자동 케어" },
-  { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림과 준비 가이드 확장" },
+  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간과 비 알림 중심" },
+  { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심" },
+  { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림 확장" },
 ];
 
 export function SmartCareOnboardingScreen({
-  smartCareEnabled,
   smartCareScenario,
   permissionGateResult,
   onSetSmartCareScenario,
@@ -27,7 +25,7 @@ export function SmartCareOnboardingScreen({
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
   const permissionFeedback = getPermissionFeedback(permissionGateResult);
   return (
-    <AppScreen title="알림이 알아서 챙기게 할까요?" subtitle="기준만 고르면 상황에 맞춰 알림 시간을 조정함" badge="2 / 3">
+    <AppScreen title="알림을 간단히 켤까요?" subtitle="상황만 고르면 필요한 날씨만 자동으로 알려줌" badge="2 / 3">
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
@@ -42,24 +40,7 @@ export function SmartCareOnboardingScreen({
         </View>
       ) : null}
 
-      <Section title="알아서 챙기기" caption="날씨 변화와 이동 패턴에 맞춰 자동 보정" accent="gold">
-        <View style={[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <View style={styles.copy}>
-            <Text style={[styles.kicker, { color: theme.gold }]}>알아서 챙기기</Text>
-            <Text style={[styles.title, { color: theme.text }]}>{smartCareEnabled ? "날씨 변화와 이동 패턴에 맞춰 자동 보정" : "스마트 알림 준비"}</Text>
-            <View style={styles.pillRow}>
-              <StatusPill label={selectedScenario.title} tone="gold" />
-              <StatusPill label="필수 날씨 켬" tone="sky" />
-              <StatusPill label="목적지 케어" tone="clear" />
-            </View>
-          </View>
-          <View style={[styles.bellMark, { borderColor: theme.gold }]}>
-            <Text style={[styles.bellMarkText, { color: theme.gold }]}>!</Text>
-          </View>
-        </View>
-      </Section>
-
-      <Section title="주 사용 상황" caption="상황 1개만 선택하면 기본 알림 묶음을 적용" accent="clear">
+      <Section title="사용 상황" caption="하나만 고르면 기본 알림이 적용됨" accent="clear">
         <View style={styles.segmentRow}>
           {scenarios.map((item) => (
             <Pressable
@@ -84,16 +65,24 @@ export function SmartCareOnboardingScreen({
             <Text style={[styles.title, { color: theme.text }]}>{selectedScenario.title}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>{selectedScenario.body}</Text>
           </View>
-          <StatusPill label="선택" tone="clear" />
+          <Text style={[styles.selectedLabel, { color: theme.clear }]}>선택됨</Text>
         </View>
       </Section>
 
-      <Section title="작동 방식" caption="하루 최대 3건으로 묶고 수면 시간대에는 긴급 날씨만 보냄" accent="sky">
-        <View style={[styles.ruleSummary, { backgroundColor: theme.cardStrong }]}>
-          <Text style={[styles.ruleText, { color: theme.text }]}>강수·기상특보는 필수 알림</Text>
-          <Text style={[styles.ruleText, { color: theme.text }]}>출발 준비 알림은 첫 이동 전 1회</Text>
+      <View style={[styles.autoSummary, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <Text style={[styles.autoTitle, { color: theme.text }]}>자동으로 조정됨</Text>
+        <Text style={[styles.autoBody, { color: theme.muted }]}>
+          강수·기상특보는 우선 알림, 출발 준비는 첫 이동 전 1회만 보냄
+        </Text>
+        <View style={styles.autoPillRow}>
+          <View style={[styles.autoPill, { backgroundColor: `${theme.gold}22` }]}>
+            <Text style={[styles.autoPillText, { color: theme.gold }]}>{selectedScenario.title}</Text>
+          </View>
+          <View style={[styles.autoPill, { backgroundColor: `${theme.sky}22` }]}>
+            <Text style={[styles.autoPillText, { color: theme.sky }]}>필수 날씨</Text>
+          </View>
         </View>
-      </Section>
+      </View>
 
       <Section title="다음 단계" caption="목적지 등록은 선택이며 나중에 해도 자동 케어 유지" accent="gold">
         <View style={styles.actions}>
@@ -159,38 +148,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "700",
   },
-  statusCard: {
-    minHeight: 126,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  kicker: {
-    fontSize: 12,
-    fontWeight: "900",
-  },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  bellMark: {
-    width: 46,
-    height: 46,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 23,
-    borderWidth: 2,
-  },
-  bellMarkText: {
-    fontSize: 26,
-    fontWeight: "900",
-  },
   segmentRow: {
     flexDirection: "row",
     gap: spacing.xs,
@@ -217,6 +174,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  selectedLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
   copy: {
     flex: 1,
     gap: 5,
@@ -230,15 +192,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  ruleSummary: {
+  autoSummary: {
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.md,
+    borderWidth: 1,
   },
-  ruleText: {
-    fontSize: 13,
+  autoTitle: {
+    fontSize: 14,
     lineHeight: 18,
-    fontWeight: "800",
+    fontWeight: "900",
+  },
+  autoBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  autoPillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  autoPill: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  autoPillText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
   },
   actions: {
     gap: spacing.sm,

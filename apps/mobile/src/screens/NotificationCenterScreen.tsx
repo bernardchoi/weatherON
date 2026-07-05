@@ -16,7 +16,6 @@ export function NotificationCenterScreen({
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onClearNotificationHistory,
-  onEditNotificationCondition,
   onOpenNotificationDeepLink,
   onNavigate,
 }: P0ScreenProps) {
@@ -97,7 +96,6 @@ export function NotificationCenterScreen({
                 targetLabel={getNotificationTargetLabel(route)}
                 onOpen={() => onOpenNotificationDeepLink(item.id, route)}
                 onRead={() => onMarkNotificationRead(item.id)}
-                onEdit={() => onEditNotificationCondition(item.id, route)}
                 theme={theme}
               />
             );
@@ -171,7 +169,6 @@ function NotificationCard({
   targetLabel,
   onOpen,
   onRead,
-  onEdit,
   theme,
 }: {
   meta: NotificationPresentation;
@@ -181,7 +178,6 @@ function NotificationCard({
   targetLabel: string;
   onOpen: () => void;
   onRead: () => void;
-  onEdit: () => void;
   theme: AppTheme;
 }) {
   const toneColor = getToneColor(theme, meta.tone);
@@ -224,9 +220,6 @@ function NotificationCard({
           style={[styles.miniHit, { opacity: read ? 0.45 : 1 }]}
         >
           <Text style={[styles.miniText, { color: theme.subtle }]}>읽음</Text>
-        </Pressable>
-        <Pressable accessibilityLabel={`${meta.title} 조건 설정`} accessibilityRole="button" onPress={onEdit} style={styles.miniHit}>
-          <Text style={[styles.miniText, { color: theme.subtle }]}>조건</Text>
         </Pressable>
       </View>
     </View>

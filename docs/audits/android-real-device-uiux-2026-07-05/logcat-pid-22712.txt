@@ -1,0 +1,64 @@
+--------- beginning of system
+07-05 20:41:44.977 22712 22730 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-05 20:41:45.313 22712 22769 I eatheron.mobile: AssetManager2(0xb400006f6aa9a978) locale list changing from [] to [ko-KR]
+07-05 20:41:45.314 22712 22769 I WebViewFactory: Loading com.google.android.webview version 149.0.7827.159 (code 782715903)
+07-05 20:41:45.315 22712 22770 W HWUI    : Image decoding logging dropped!
+07-05 20:41:45.317 22712 22769 I eatheron.mobile: AssetManager2(0xb400006f6aa8e7b8) locale list changing from [] to [ko-KR]
+07-05 20:41:45.318 22712 22769 I eatheron.mobile: AssetManager2(0xb400006f6aa93f38) locale list changing from [] to [ko-KR]
+07-05 20:41:45.320 22712 22769 I eatheron.mobile: AssetManager2(0xb400006f6aa97138) locale list changing from [] to [ko-KR]
+07-05 20:41:45.321 22712 22769 I eatheron.mobile: AssetManager2(0xb400006f6aa99398) locale list changing from [] to [ko-KR]
+07-05 20:41:45.353 22712 22769 I cr_WVCFactoryProvider: version=149.0.7827.159 (782715903) minSdkVersion=29 multiprocess=true packageId=2 splits=<none>
+07-05 20:41:45.357 22712 22777 I chromium: [0705/204145.357667:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+07-05 20:41:45.357 22712 22777 I chromium: [0705/204145.357861:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+07-05 20:41:45.367 22712 22769 I cr_LibraryLoader: Successfully loaded native library
+07-05 20:41:45.367 22712 22769 I cr_CachingUmaRecorder: Flushed 41 samples from 19 histograms, 0 samples were dropped.
+07-05 20:42:29.717 22712 22873 W HWUI    : Image decoding logging dropped!
+07-05 20:42:29.718 22712 22872 W HWUI    : Image decoding logging dropped!
+07-05 20:42:29.718 22712 22874 W HWUI    : Image decoding logging dropped!
+07-05 20:43:08.430 22712 22931 W HWUI    : Image decoding logging dropped!
+07-05 20:43:29.205 22712 22739 W HWUI    : Image decoding logging dropped!
+07-05 20:43:29.205 22712 22739 W HWUI    : Image decoding logging dropped!
+07-05 20:43:29.230 22712 22963 W HWUI    : Image decoding logging dropped!
+07-05 20:43:29.230 22712 22961 W HWUI    : Image decoding logging dropped!
+07-05 20:43:47.831 22712 22712 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+07-05 20:43:47.831 22712 22712 I ImeTracker: com.weatheron.mobile:a0693ff: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true
+07-05 20:43:47.845 22712 22712 I AssistStructure: Flattened final assist data: 2476 bytes, containing 1 windows, 16 views
+07-05 20:43:47.850 22712 22712 I ImeTracker: com.weatheron.mobile:ede94326: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+07-05 20:43:47.850 22712 22712 I ImeTracker: com.weatheron.mobile:ede94326: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+07-05 20:43:47.897 22712 23008 W InteractionJankMonitor: Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.weatheron.mobile
+07-05 20:43:47.900 22712 22712 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.uimanager.RootViewManager
+07-05 20:43:48.107 22712 22712 I ImeTracker: com.weatheron.mobile:a0693ff: onShown
+07-05 20:44:41.260 22712 22712 I ImeTracker: system_server:fedbb806: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+07-05 20:44:47.429 22712 22712 I ImeTracker: system_server:4d049812: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+07-05 20:45:03.087 22712 22712 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ImeBackAnimationController@8ecfc70
+07-05 20:45:03.088 22712 22712 I ImeTracker: com.google.android.inputmethod.latin:863b997f: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 20:45:03.339 22712 22712 I ImeTracker: system_server:1833b57d: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+07-05 20:45:25.274 22712 22712 I ImeTracker: com.weatheron.mobile:13481794: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+07-05 20:45:25.275 22712 22712 I ImeTracker: com.weatheron.mobile:13481794: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 20:45:25.278 22712 22772 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.279 22712 22772 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.279 22712 22772 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.283 22712 22872 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.285 22712 22739 I ReactNativeJNI: instanceHandle is null, event of type topBlur will be dropped
+07-05 20:45:25.286 22712 22931 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.286 22712 22963 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.286 22712 22874 W HWUI    : Image decoding logging dropped!
+07-05 20:45:25.291 22712 22712 I ImeTracker: com.weatheron.mobile:b13ad193: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_CLOSE_CURRENT_SESSION fromUser false
+07-05 20:45:25.291 22712 22712 I ImeTracker: com.weatheron.mobile:b13ad193: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 20:45:47.642 22712 22712 I ImeTracker: com.weatheron.mobile:33eed357: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 20:46:07.269 22712 22712 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda12@8d50e63
+07-05 20:46:07.308 22712 22712 I ImeTracker: com.weatheron.mobile:5b9864ab: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 20:46:29.281 22712 22961 W HWUI    : Image decoding logging dropped!
+07-05 20:46:29.282 22712 22772 W HWUI    : Image decoding logging dropped!
+07-05 20:46:29.283 22712 22770 W HWUI    : Image decoding logging dropped!
+07-05 20:46:29.284 22712 22772 W HWUI    : Image decoding logging dropped!
+07-05 20:47:11.820 22712 23464 I PowerHalMgrImpl: perfLockAcq is supported. 
+07-05 20:47:11.827 22712 23464 I PowerHalMgrImpl: hdl:45405, pid:22712 
+07-05 20:47:11.829 22712 23464 I PowerHalMgrImpl: hdl:45406, pid:22712 
+07-05 20:47:11.833 22712 22730 E eatheron.mobile: legacy_receive_flag: 0
+07-05 20:47:12.169 22712 22712 I ScrollIdentify: on fling
+07-05 20:47:12.175 22712 23464 I PowerHalMgrImpl: hdl:45408, pid:22712 
+07-05 20:47:12.177 22712 23464 I PowerHalMgrImpl: hdl:45410, pid:22712 
+07-05 20:47:12.179 22712 23464 I PowerHalMgrImpl: hdl:45410, pid:22712 
+07-05 20:47:12.303 22712 23464 I PowerHalMgrImpl: hdl:45411, pid:22712 

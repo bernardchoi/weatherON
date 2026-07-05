@@ -19,8 +19,6 @@ export function MyScreen({
   temperatureUnit,
   distanceUnit,
   themeMode,
-  styleProfileSaved,
-  selectedStyles,
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -111,15 +109,6 @@ export function MyScreen({
             status="관리"
             tone="sky"
             onPress={() => onNavigate("M3")}
-            theme={theme}
-          />
-          <MenuRow
-            icon={uiIconAssets.shirt}
-            title="스타일 태그 설정"
-            meta={styleProfileSaved && selectedStyles.length > 0 ? `${selectedStyles.slice(0, 3).join("·")} 기준 적용 중` : "코디 추천 실루엣과 무드 기준"}
-            status={styleProfileSaved ? "적용 중" : "설정"}
-            tone={styleProfileSaved ? "clear" : "sky"}
-            onPress={() => onNavigate("O4")}
             theme={theme}
           />
         </View>

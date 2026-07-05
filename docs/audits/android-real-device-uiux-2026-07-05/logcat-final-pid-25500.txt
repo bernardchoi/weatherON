@@ -1,0 +1,10 @@
+--------- beginning of system
+07-05 21:01:33.250 25500 25517 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-05 21:03:23.838 25500 25500 I ImeTracker: com.weatheron.mobile:b14a5a1: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 21:04:25.579 25500 25500 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda12@70a9213
+07-05 21:04:25.618 25500 25500 I ImeTracker: com.weatheron.mobile:27642b09: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-05 21:05:24.168 25500 25678 W HWUI    : Image decoding logging dropped!
+07-05 21:05:24.170 25500 25679 W HWUI    : Image decoding logging dropped!
+07-05 21:05:24.171 25500 25555 W HWUI    : Image decoding logging dropped!
+07-05 21:05:24.176 25500 25680 W HWUI    : Image decoding logging dropped!
