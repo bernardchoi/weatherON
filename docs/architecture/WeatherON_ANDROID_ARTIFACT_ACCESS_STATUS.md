@@ -15,7 +15,7 @@
 | 대상 | URL | 응답 | 상태 | 최종 URL |
 |---|---|---|---|---|
 | preview APK | apps/mobile/android/app/build/outputs/apk/release/app-release.apk | 로컬 파일 확인 | 통과 | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| production AAB | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab | HTTP 200 | 통과 | https://wf-artifacts.eascdn.net/builds/store-rg/3bf39144-92a4-48a9-8bd8-ae09daf2a817/32ed4d82-e676-43fa-a963-232a6610f573/019f3244-bd41-71ca-ba88-8d534559a358/application-32ed4d82-e676-43fa-a963-232a6610f573.aab |
+| production AAB | https://expo.dev/artifacts/eas/9V4hpFeSRtRBF6pKH1q0l1tHtHU9GebrUup35Zgf_dk.aab | HTTP 200 | 통과 | https://wf-artifacts.eascdn.net/builds/store-rg/3bf39144-92a4-48a9-8bd8-ae09daf2a817/cb4fcc5f-1682-41d3-acae-64f951ced653/019f3291-9d22-730d-9a78-8ddff637efe5/application-cb4fcc5f-1682-41d3-acae-64f951ced653.aab |
 
 ## 3. Issues
 

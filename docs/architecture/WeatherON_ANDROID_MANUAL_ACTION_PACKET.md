@@ -9,9 +9,9 @@
 |---|---|
 | preview APK build | `N/A - local Gradle release APK` |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| production AAB build | `32ed4d82-e676-43fa-a963-232a6610f573` |
+| production AAB build | `cb4fcc5f-1682-41d3-acae-64f951ced653` |
 | production AAB 상태 | FINISHED |
-| AAB artifact | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab |
+| AAB artifact | https://expo.dev/artifacts/eas/9V4hpFeSRtRBF6pKH1q0l1tHtHU9GebrUup35Zgf_dk.aab |
 | Play 제출 blocker | 17 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |

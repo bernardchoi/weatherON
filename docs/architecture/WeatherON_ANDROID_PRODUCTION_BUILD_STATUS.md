@@ -7,18 +7,18 @@
 
 | 항목 | 값 |
 |---|---|
-| EAS build id | `32ed4d82-e676-43fa-a963-232a6610f573` |
+| EAS build id | `cb4fcc5f-1682-41d3-acae-64f951ced653` |
 | Build 상태 | FINISHED |
 | Platform | ANDROID |
 | Profile | production |
 | Version | `0.1.0 (6)` |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/32ed4d82-e676-43fa-a963-232a6610f573 |
-| AAB artifact | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab |
+| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/cb4fcc5f-1682-41d3-acae-64f951ced653 |
+| AAB artifact | https://expo.dev/artifacts/eas/9V4hpFeSRtRBF6pKH1q0l1tHtHU9GebrUup35Zgf_dk.aab |
 
 ## 2. 확인 명령
 
 ```bash
-npm run check:eas-production-build-status -- 32ed4d82-e676-43fa-a963-232a6610f573
+npm run check:eas-production-build-status -- cb4fcc5f-1682-41d3-acae-64f951ced653
 ```
 
 ## 3. 다음 액션
@@ -29,4 +29,4 @@ npm run check:eas-production-build-status -- 32ed4d82-e676-43fa-a963-232a6610f57
 
 | 날짜 | 내용 |
 |---|---|
-| 2026-07-05 | production build `32ed4d82-e676-43fa-a963-232a6610f573` 상태 FINISHED 확인 |
+| 2026-07-05 | production build `cb4fcc5f-1682-41d3-acae-64f951ced653` 상태 FINISHED 확인 |

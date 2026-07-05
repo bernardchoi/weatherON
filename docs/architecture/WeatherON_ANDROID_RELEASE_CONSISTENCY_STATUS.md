@@ -16,7 +16,7 @@
 |---|---|---|
 | preview build id | 통과 | readiness: N/A - local Gradle release APK<br>actionBoard: N/A - local Gradle release APK<br>evidence: N/A - local Gradle release APK<br>previewBuild: N/A - local Gradle release APK |
 | preview build status | 통과 | readiness: LOCAL BUILD SUCCESS<br>actionBoard: LOCAL BUILD SUCCESS<br>evidence: LOCAL BUILD SUCCESS<br>previewBuild: LOCAL BUILD SUCCESS |
-| production build id | 통과 | readiness: 32ed4d82-e676-43fa-a963-232a6610f573<br>actionBoard: 32ed4d82-e676-43fa-a963-232a6610f573<br>evidence: 32ed4d82-e676-43fa-a963-232a6610f573<br>productionBuild: 32ed4d82-e676-43fa-a963-232a6610f573 |
+| production build id | 통과 | readiness: cb4fcc5f-1682-41d3-acae-64f951ced653<br>actionBoard: cb4fcc5f-1682-41d3-acae-64f951ced653<br>evidence: cb4fcc5f-1682-41d3-acae-64f951ced653<br>productionBuild: cb4fcc5f-1682-41d3-acae-64f951ced653 |
 | production build status | 통과 | readiness: FINISHED<br>actionBoard: FINISHED<br>evidence: FINISHED<br>productionBuild: FINISHED<br>blockers: FINISHED |
 | store blocker count | 통과 | actionBoard: 17<br>evidence: 17<br>blockers: 17 |
 | artifact access issue count | 통과 | evidence: 0<br>artifactAccess: 0 |
