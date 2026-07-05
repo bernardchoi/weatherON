@@ -95,12 +95,15 @@ export function resolveAppTheme(themeMode: "system" | "light" | "dark" | undefin
   return systemMode === "light" ? appThemes.light : appThemes.dark;
 }
 
+// UI Design Spec v1.0 §8: card 20 / cardSm 16 / sheet 28 / tab 24 / pill 16|999
 export const radius = {
   xs: 4,
-  sm: 6,
-  md: 8,
-  lg: 8,
-  xl: 8,
+  sm: 10,
+  md: 16,
+  lg: 20,
+  xl: 20,
+  sheet: 28,
+  tab: 24,
   pill: 999,
 };
 

@@ -97,6 +97,7 @@
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-05 | UI 디자인 스펙 정합: radius 토큰 상향(card 20/cardSm 16/sheet 28/tab 24), 플로팅 탭바 적용, 알림 센터·권한 게이트·약관·제보 텍스트 아이콘 제거, 알림 미읽음 Gold 테두리 제거. tsc/product-quality/preview-preflight/shared 통과. MVP 1 테스트 피드백 기록 양식 신설 |
 | 2026-06-27 | preview APK 실기기 확인 후 제품 완성도 감사 문서 작성 |
 | 2026-06-27 | Android hardware back 버튼 복귀 정책 추가 |
 | 2026-06-27 | 앱 전용 파일 저장소 기반 상태 영속화 추가 |

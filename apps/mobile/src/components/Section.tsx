@@ -35,8 +35,9 @@ function getAccentColor(theme: ReturnType<typeof useAppTheme>, accent: NonNullab
 const styles = StyleSheet.create({
   section: {
     gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
     overflow: "hidden",
     shadowOpacity: 0.16,
@@ -45,12 +46,10 @@ const styles = StyleSheet.create({
   },
   accent: {
     position: "absolute",
-    left: spacing.md,
+    left: 0,
     top: 0,
-    width: 42,
-    height: 3,
-    borderBottomLeftRadius: radius.xs,
-    borderBottomRightRadius: radius.xs,
+    bottom: 0,
+    width: 3,
   },
   header: {
     gap: 5,

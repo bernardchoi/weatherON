@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -77,14 +78,14 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
             <PermissionCard
               title="목적지 저장"
               body="선택한 목적지를 출발 탭에 추가함"
-              mark="저장"
+              mark="pin"
               active
               ready
             />
             <PermissionCard
               title="출발 알림"
               body="비·출발 시간 알림은 권한 허용 후 켜짐"
-              mark="알림"
+              mark="myAlerts"
               active
               ready={permissionReady}
             />
@@ -95,7 +96,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
               <PermissionCard
                 title="위치 권한"
                 body="현재 위치 날씨 기준"
-                mark="위치"
+                mark="pin"
                 active
                 ready={locationReady}
               />
@@ -104,7 +105,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
               <PermissionCard
                 title="알림 권한"
                 body="강수·출발 알림 수신"
-                mark="알림"
+                mark="myAlerts"
                 active
                 ready={permissionReady}
               />
@@ -184,12 +185,16 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
   );
 }
 
-function PermissionCard({ title, body, mark, active, ready }: { title: string; body: string; mark: string; active: boolean; ready: boolean }) {
+function PermissionCard({ title, body, mark, active, ready }: { title: string; body: string; mark: keyof typeof uiIconAssets; active: boolean; ready: boolean }) {
   const theme = useAppTheme();
   return (
     <View style={[styles.permissionCard, { backgroundColor: theme.card, borderColor: theme.skyLite }]}>
       <View style={[styles.iconBox, { backgroundColor: active ? theme.sky : theme.cardMuted }]}>
-        <Text style={[styles.iconText, { color: active ? theme.onAccent : theme.skyLite }]}>{mark}</Text>
+        <Image
+          source={uiIconAssets[mark]}
+          style={[styles.iconImage, { tintColor: active ? theme.onAccent : theme.skyLite }]}
+          resizeMode="contain"
+        />
       </View>
       <View style={styles.copy}>
         <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
@@ -253,9 +258,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.sm,
   },
-  iconText: {
-    fontSize: 12,
-    fontWeight: "900",
+  iconImage: {
+    width: 18,
+    height: 18,
   },
   copy: {
     flex: 1,

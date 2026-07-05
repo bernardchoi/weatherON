@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
@@ -167,7 +168,11 @@ function ConsentRow({
 function CheckBox({ checked, theme }: { checked: boolean; theme: AppTheme }) {
   return (
     <View style={[styles.checkbox, { borderColor: checked ? theme.gold : theme.border, backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
-      <Text style={[styles.check, { color: checked ? theme.onAccent : "transparent" }]}>✓</Text>
+      <Image
+        source={uiIconAssets.check}
+        style={[styles.check, { tintColor: checked ? theme.onAccent : "transparent" }]}
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -252,8 +257,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   check: {
-    fontSize: 17,
-    fontWeight: "900",
+    width: 16,
+    height: 16,
   },
   consentCopy: {
     flex: 1,

@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { StatusPill } from "../components/StatusPill";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
@@ -44,9 +45,9 @@ export function NotificationCenterScreen({
           </Pressable>
         </View>
 
-        <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.gold : theme.border }]}>
+        <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.sky : theme.border }]}>
           <View style={styles.summaryCopy}>
-            <Text style={[styles.summaryLabel, { color: hasUnread ? theme.gold : theme.clear }]}>
+            <Text style={[styles.summaryLabel, { color: hasUnread ? theme.skyLite : theme.clear }]}>
               {hasUnread ? "확인 필요" : "새 알림 없음"}
             </Text>
             <Text style={[styles.summaryTitle, { color: theme.text }]}>
@@ -150,7 +151,7 @@ export function NotificationCenterScreen({
 }
 
 type NotificationPresentation = {
-  icon: string;
+  icon: keyof typeof uiIconAssets;
   title: string;
   time: string;
   detail: string;
@@ -192,7 +193,7 @@ function NotificationCard({
     >
       <View style={[styles.cardAccent, { backgroundColor: toneColor }]} />
       <View style={[styles.iconBox, { backgroundColor: theme.cardStrong }]}>
-        <Text style={[styles.iconText, { color: toneColor }]}>{meta.icon}</Text>
+        <Image source={uiIconAssets[meta.icon]} style={[styles.iconImage, { tintColor: toneColor }]} resizeMode="contain" />
       </View>
       <View style={styles.copy}>
         <View style={styles.cardTitleRow}>
@@ -233,7 +234,7 @@ function HistoryRow({
   theme: AppTheme;
 }) {
   const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : "읽음";
-  const dotColor = item.action === "open" ? theme.gold : item.action === "sent" ? theme.sky : theme.clear;
+  const dotColor = item.action === "open" ? theme.clear : item.action === "sent" ? theme.sky : theme.subtle;
   return (
     <View style={styles.historyRow}>
       <View style={[styles.historyDot, { backgroundColor: dotColor }]} />
@@ -258,7 +259,7 @@ function getNotificationTargetLabel(route: P0RouteId): string {
 function getNotificationPresentation(index: number, route: P0RouteId, fallbackTitle: string): NotificationPresentation {
   if (route === "G2") {
     return {
-      icon: "↗",
+      icon: "depart",
       title: fallbackTitle || "목적지 알림",
       time: "08:20",
       detail: "출발 전 목적지 날씨 다시 확인",
@@ -268,7 +269,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
   }
   if (route === "H5") {
     return {
-      icon: "비",
+      icon: "rain",
       title: fallbackTitle || "비 예보 사전 알림",
       time: "14:00",
       detail: "18시 시작 · 시간당 4mm · 21시 그침",
@@ -278,27 +279,27 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
   }
   if (route === "H4") {
     return {
-      icon: "☼",
+      icon: "uv",
       title: fallbackTitle || "오늘 준비 알림",
       time: "07:30",
       detail: "오늘 외출 전 준비 상태 확인",
       highlight: "오늘 준비 열기",
-      tone: "gold",
+      tone: "sky",
     };
   }
   if (index === 0) {
     return {
-      icon: "☼",
+      icon: "uv",
       title: "오늘의 외출 준비",
       time: "07:30",
       detail: "21° 맑음 · 출발 전 날씨 확인",
       highlight: "준비 상태 정상",
-      tone: "gold",
+      tone: "clear",
     };
   }
   if (index === 1) {
     return {
-      icon: "비",
+      icon: "rain",
       title: "비 예보 사전 알림",
       time: "14:00",
       detail: "18시 시작 · 시간당 4mm · 21시 그침",
@@ -308,7 +309,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
   }
   if (index === 2) {
     return {
-      icon: "↗",
+      icon: "depart",
       title: "목적지 변화",
       time: "08:20",
       detail: "출발 10분 전 · 목적지 날씨 다시 확인",
@@ -317,7 +318,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     };
   }
   return {
-    icon: "⌁",
+    icon: "clock",
     title: "출발 알림",
     time: "08:30",
     detail: "지금 출발하면 9:00 도착",
@@ -445,10 +446,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.sm,
   },
-  iconText: {
-    fontSize: 18,
-    lineHeight: 21,
-    fontWeight: "900",
+  iconImage: {
+    width: 18,
+    height: 18,
   },
   copy: {
     flex: 1,

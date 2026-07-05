@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -116,7 +117,9 @@ export function WeatherReportCompleteScreen({ onNavigate }: P0ScreenProps) {
   return (
     <AppScreen title="제보 완료" subtitle="비 · 오후 2:41 · 합정동" badge="완료">
       <View style={styles.completeMark}>
-        <Text style={[styles.check, { color: theme.clear }]}>✓</Text>
+        <View style={styles.check}>
+          <Image source={uiIconAssets.check} style={[styles.checkIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+        </View>
         <Text style={[styles.completeTitle, { color: theme.text }]}>제보 감사합니다!</Text>
         <Text style={[styles.body, { color: theme.muted }]}>확정됨 · 홈 오버레이 표시 중</Text>
       </View>
@@ -286,10 +289,12 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 2,
     borderColor: appColors.clear,
-    textAlign: "center",
-    lineHeight: 40,
-    fontSize: 28,
-    fontWeight: "900",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkIcon: {
+    width: 22,
+    height: 22,
   },
   completeTitle: {
     fontSize: 20,

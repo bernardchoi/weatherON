@@ -10,34 +10,39 @@ type BottomNavProps = {
   onNavigate: (route: P0RouteId) => void;
 };
 
+// UI Design Spec v1.0 §10: floating tab bar — bottom 18, left/right 16, height 64,
+// radius 24, active 5px dot + Gold icon/text, inactive Mist, icon 21px, press tint 0.12.
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const activeTabRoute = getActiveTabRoute(activeRoute);
   return (
-    <View style={[styles.wrap, { backgroundColor: theme.nav, borderTopColor: theme.navBorder }]}>
-      <View style={styles.nav}>
-        {bottomNavRoutes.map((route) => {
-          const active = route.id === activeTabRoute;
-          return (
-            <Pressable
-              accessibilityLabel={`${route.label} 탭`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              key={route.id}
-              onPress={() => onNavigate(route.id)}
-              style={[
-                styles.item,
-                active
-                  ? { backgroundColor: theme.cardStrong, borderColor: theme.gold }
-                  : { backgroundColor: "transparent", borderColor: "transparent" },
-              ]}
-            >
-              <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
-              <Text style={[styles.label, { color: active ? theme.gold : theme.subtle }]}>{route.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View
+      style={[
+        styles.wrap,
+        {
+          backgroundColor: theme.name === "light" ? theme.card : theme.cardStrong,
+          borderColor: theme.navBorder,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
+      {bottomNavRoutes.map((route) => {
+        const active = route.id === activeTabRoute;
+        return (
+          <Pressable
+            accessibilityLabel={`${route.label} 탭`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            key={route.id}
+            onPress={() => onNavigate(route.id)}
+            style={({ pressed }) => [styles.item, pressed ? { backgroundColor: theme.cardMuted } : null]}
+          >
+            <View style={[styles.activeDot, { backgroundColor: active ? theme.gold : "transparent" }]} />
+            <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
+            <Text style={[styles.label, { color: active ? theme.gold : theme.subtle }]}>{route.label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -65,23 +70,32 @@ function getTabIconSource(route: P0RouteId) {
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 16,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-  },
-  nav: {
+    marginHorizontal: 16,
+    marginBottom: 18,
+    marginTop: 6,
+    height: 64,
     flexDirection: "row",
-    gap: spacing.xs,
+    alignItems: "stretch",
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.tab,
+    borderWidth: 1,
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
   item: {
     flex: 1,
-    minHeight: 54,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.md,
-    gap: 3,
-    borderWidth: 1,
+    gap: 2,
+    borderRadius: radius.tab - 4,
+    marginVertical: 4,
+  },
+  activeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
   },
   label: {
     fontSize: 11,
