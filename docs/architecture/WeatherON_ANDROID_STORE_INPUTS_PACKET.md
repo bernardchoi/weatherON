@@ -13,7 +13,7 @@
 | placeholder 필드 수 | 0 |
 | 형식/검증 issue 수 | 0 |
 | 실제 입력 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_STORE_INPUTS.local.json |
-| 누락 필드 | developerEmail, privacyPolicyUrl, operatorName, supportContact, privacyOfficerName, privacyOfficerTitle, privacyOfficerContact, privacyPolicyEffectiveDate, playConsoleAccountType |
+| 누락 필드 | developerEmail, privacyPolicyUrl, playConsoleAccountType |
 
 ## 2. 입력 분류
 
@@ -21,15 +21,15 @@
 |---|---|---|---|
 | developerEmail | 누락 | dev@weatheron.app | Play 공개 개발자 이메일 |
 | developerWebsite | 입력됨 | 미입력 | 없으면 미입력 |
-| privacyPolicyUrl | 누락 | https://example.com/weatheron/privacy | 공개 HTTPS URL 필요 |
-| operatorName | 누락 | WeatherON | 공개 운영자명 |
-| supportContact | 누락 | dev@weatheron.app | 이메일 또는 전화번호 |
-| privacyOfficerName | 누락 | 담당자명 | 실명 또는 공개 책임자명 필요 |
-| privacyOfficerTitle | 누락 | 개인정보 보호책임자 | 공개 직책 |
-| privacyOfficerContact | 누락 | dev@weatheron.app | 이메일 또는 전화번호 |
-| privacyPolicyEffectiveDate | 누락 | 2026-07-01 | YYYY-MM-DD |
-| logRetentionMonths | 입력됨 | 12 | 1 이상 숫자 |
-| emailAuthService | 입력됨 | 이메일 인증 미도입 | 미도입이면 이메일 인증 미도입 |
+| privacyPolicyUrl | 누락 | 공개 HTTPS URL 필요 | Google Play 입력용 |
+| operatorName | 입력됨 | 최대현 / WeatherON | 공개 운영자명 |
+| supportContact | 입력됨 | support@weatheron.app | 이메일 |
+| privacyOfficerName | 입력됨 | 최대현 | 공개 책임자명 |
+| privacyOfficerTitle | 입력됨 | 개인정보 보호책임자 | 공개 직책 |
+| privacyOfficerContact | 입력됨 | support@weatheron.app | 이메일 |
+| privacyPolicyEffectiveDate | 입력됨 | 비공개 테스트 시작일 | 사용자 확정 기준 |
+| logRetentionMonths | 입력됨 | 테스트 종료 후 1개월 | 사용자 확정 |
+| emailAuthService | 입력됨 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. | 미도입 |
 | targetAge | 입력됨 | 만 14세 이상 | 14 포함 필요 |
 | playConsoleAccountType | 누락 | 개인 신규 | 개인 신규/개인 기존/조직 |
 
@@ -42,14 +42,14 @@
 | Google Play 공개 개발자 이메일 |  | 필수 |
 | 개발자 웹사이트 URL 또는 미입력 |  | 선택 |
 | 개인정보처리방침 공개 URL |  | HTTPS 필수 |
-| 운영자명 |  | 법인/개인사업자/서비스 운영자명 |
-| 고객센터 연락처 |  | 이메일 권장 |
-| 개인정보 보호책임자 성명 |  | 필수 |
-| 개인정보 보호책임자 직책 |  | 필수 |
-| 개인정보 보호책임자 연락처 |  | 이메일 또는 전화번호 |
-| 개인정보처리방침 시행일 |  | 예: 2026-07-01 |
-| 광고/사용 로그 보유기간 |  | 권장 초안: 12개월 |
-| 이메일 인증 발송 서비스 |  | 미도입이면 `이메일 인증 미도입` |
+| 운영자명 | 최대현 / WeatherON | 확정 |
+| 고객센터 연락처 | support@weatheron.app | 이메일 |
+| 개인정보 보호책임자 성명 | 최대현 | 확정 |
+| 개인정보 보호책임자 직책 | 개인정보 보호책임자 | 확정 |
+| 개인정보 보호책임자 연락처 | support@weatheron.app | 이메일 |
+| 개인정보처리방침 시행일 | 비공개 테스트 시작일 | 확정 |
+| 광고/사용 로그 보유기간 | 테스트 종료 후 1개월 | 확정 |
+| 이메일 인증 발송 서비스 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. | 미도입 |
 | 앱 카테고리 | 날씨 | 1차 제출 기준 |
 | 광고 포함 여부 | 아니오 | 현재 APK에 AdMob/광고 SDK 미포함 |
 | 타겟 연령 |  | 권장 초안: 만 14세 이상 |
@@ -63,15 +63,15 @@
 {
   "developerEmail": "dev@weatheron.app",
   "developerWebsite": "미입력",
-  "privacyPolicyUrl": "https://example.com/weatheron/privacy",
-  "operatorName": "WeatherON",
-  "supportContact": "dev@weatheron.app",
-  "privacyOfficerName": "담당자명",
+  "privacyPolicyUrl": "공개 HTTPS URL 입력",
+  "operatorName": "최대현 / WeatherON",
+  "supportContact": "support@weatheron.app",
+  "privacyOfficerName": "최대현",
   "privacyOfficerTitle": "개인정보 보호책임자",
-  "privacyOfficerContact": "dev@weatheron.app",
-  "privacyPolicyEffectiveDate": "2026-07-01",
-  "logRetentionMonths": "12",
-  "emailAuthService": "이메일 인증 미도입",
+  "privacyOfficerContact": "support@weatheron.app",
+  "privacyPolicyEffectiveDate": "테스트 시작일을 YYYY-MM-DD로 입력",
+  "logRetentionMonths": "1",
+  "emailAuthService": "현재 이메일 인증 발송 서비스를 사용하지 않습니다.",
   "targetAge": "만 14세 이상",
   "playConsoleAccountType": "개인 신규"
 }
@@ -80,7 +80,7 @@
 주의:
 - `privacyPolicyUrl`은 실제 공개 HTTPS URL이어야 한다.
 - `developerWebsite`는 웹사이트를 쓰지 않으면 `미입력`으로 둔다.
-- `privacyOfficerName`에는 실제 담당자명 또는 공개 가능한 책임자명을 넣는다.
+- `privacyOfficerName`에는 실제 성명 또는 공개 가능한 책임자명을 넣는다.
 - `playConsoleAccountType`은 `개인 신규`, `개인 기존`, `조직` 중 하나로 확정한다.
 
 ## 5. 검증 규칙

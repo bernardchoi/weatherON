@@ -12,7 +12,7 @@
 | Android versionCode | `6` |
 | 정적 체크 통과 | 23/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
-| production build | `f13ec171-abf6-4cc3-9ea9-91fa055e7613` / FINISHED |
+| production build | `4785d86a-56a4-43d4-8333-54035a7238de` / FINISHED |
 | artifact 접근 issue | 0 |
 | Play 제출 blocker | 17 |
 | 실기기 QA 미검증 | 0 |
@@ -34,7 +34,7 @@
 | 대상 | Build ID | 상태 | Artifact |
 |---|---|---|---|
 | Preview APK | `N/A - local Gradle release APK` | LOCAL BUILD SUCCESS | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| Production AAB | `f13ec171-abf6-4cc3-9ea9-91fa055e7613` | FINISHED | https://expo.dev/artifacts/eas/rSNbT6B0AW9GV5pBWlc6VcRkuLmcRVz2S1vY80Ax9Yk.aab |
+| Production AAB | `4785d86a-56a4-43d4-8333-54035a7238de` | FINISHED | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
 
 ## 3. 검증 명령 증빙
 

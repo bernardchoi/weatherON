@@ -12,7 +12,7 @@
 | preview build version | `0.1.0 (6)` |
 | 소스 기준 version | `0.1.0 (6)` |
 | preview build 소스 일치 | 일치 |
-| 최신 production build | `f13ec171-abf6-4cc3-9ea9-91fa055e7613` |
+| 최신 production build | `4785d86a-56a4-43d4-8333-54035a7238de` |
 | production build 상태 | FINISHED |
 | 정적 체크 통과 | 23/23 |
 | 실기기 QA 미검증 | 0 |

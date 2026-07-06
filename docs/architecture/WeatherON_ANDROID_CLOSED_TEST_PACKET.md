@@ -15,8 +15,8 @@
 | 테스터 초대 | 0/12 |
 | 테스터 opt-in | 0/12 |
 | 14일 운영 기록 | 0/14 |
-| production build | `cb4fcc5f-1682-41d3-acae-64f951ced653` |
-| AAB artifact | https://expo.dev/artifacts/eas/9V4hpFeSRtRBF6pKH1q0l1tHtHU9GebrUup35Zgf_dk.aab |
+| production build | `f13ec171-abf6-4cc3-9ea9-91fa055e7613` |
+| AAB artifact | https://expo.dev/artifacts/eas/rSNbT6B0AW9GV5pBWlc6VcRkuLmcRVz2S1vY80Ax9Yk.aab |
 
 ## 2. 먼저 확정할 값
 

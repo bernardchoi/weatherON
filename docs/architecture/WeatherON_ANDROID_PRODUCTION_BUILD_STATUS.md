@@ -7,26 +7,26 @@
 
 | 항목 | 값 |
 |---|---|
-| EAS build id | `f13ec171-abf6-4cc3-9ea9-91fa055e7613` |
+| EAS build id | `4785d86a-56a4-43d4-8333-54035a7238de` |
 | Build 상태 | FINISHED |
 | Platform | ANDROID |
 | Profile | production |
 | Version | `0.1.0 (6)` |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/f13ec171-abf6-4cc3-9ea9-91fa055e7613 |
-| AAB artifact | https://expo.dev/artifacts/eas/rSNbT6B0AW9GV5pBWlc6VcRkuLmcRVz2S1vY80Ax9Yk.aab |
+| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/4785d86a-56a4-43d4-8333-54035a7238de |
+| AAB artifact | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
 
 ## 2. 확인 명령
 
 ```bash
-npm run check:eas-production-build-status -- f13ec171-abf6-4cc3-9ea9-91fa055e7613
+npm run check:eas-production-build-status -- 4785d86a-56a4-43d4-8333-54035a7238de
 ```
 
 ## 3. 다음 액션
 
-- Android package를 `com.weatheron.mobile`로 변경했으므로 production AAB 재빌드 후 artifact 갱신
+- AAB artifact를 Play Console 내부/폐쇄 테스트 트랙 업로드 후보로 사용
 
 ## 4. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
-| 2026-07-06 | production build `f13ec171-abf6-4cc3-9ea9-91fa055e7613` 상태 FINISHED 확인 |
+| 2026-07-06 | production build `4785d86a-56a4-43d4-8333-54035a7238de` 상태 FINISHED 확인 |

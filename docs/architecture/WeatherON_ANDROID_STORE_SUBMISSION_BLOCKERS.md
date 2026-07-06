@@ -8,9 +8,9 @@
 | 항목 | 값 |
 |---|---|
 | 제출 가능 여부 | 불가 |
-| blocker 수 | 17 |
+| blocker 수 | 9 |
 | Production AAB 상태 | FINISHED |
-| Production AAB artifact | https://expo.dev/artifacts/eas/qCf2bVWNWVs_bgzWZlbMvlacPn0Y3OyxPo0rUvSQHa4.aab |
+| Production AAB artifact | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
 
 ## 2. Blockers
 
@@ -23,14 +23,6 @@
 - Play Console 계정 유형 확인 필요
 - 폐쇄 테스트 필요 여부 확정 필요
 - 폐쇄 테스트 테스터 그룹 준비 필요
-- 개인정보처리방침 placeholder 제거 필요: [YYYY-MM-DD]
-- 개인정보처리방침 placeholder 제거 필요: [회사명/개인사업자명]
-- 개인정보처리방침 placeholder 제거 필요: [고객센터 이메일/연락처]
-- 개인정보처리방침 placeholder 제거 필요: [ ]개월
-- 개인정보처리방침 placeholder 제거 필요: [이메일 인증 발송 서비스]
-- 개인정보처리방침 placeholder 제거 필요: [담당자명]
-- 개인정보처리방침 placeholder 제거 필요: [직책]
-- 개인정보처리방침 placeholder 제거 필요: [이메일/전화번호]
 
 ## 3. 처리 순서
 
@@ -54,14 +46,6 @@
 | Play Console 계정 유형 확인 필요 | 외부 작업 | 개인 신규/개인 기존/조직 계정 여부 확인 |
 | 폐쇄 테스트 필요 여부 확정 필요 | 외부 작업 | 계정 유형 기준으로 폐쇄 테스트 의무 여부 확정 |
 | 폐쇄 테스트 테스터 그룹 준비 필요 | 외부 작업 | 필요 시 최소 12명 테스터 opt-in 준비 |
-| 개인정보처리방침 placeholder 제거 필요: [YYYY-MM-DD] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [회사명/개인사업자명] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [고객센터 이메일/연락처] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [ ]개월 | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [이메일 인증 발송 서비스] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [담당자명] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [직책] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
-| 개인정보처리방침 placeholder 제거 필요: [이메일/전화번호] | 사용자 입력 | placeholder 값을 확정해 개인정보처리방침 HTML에 반영 |
 
 ## 5. 사용자 회신 최소 양식
 
@@ -72,14 +56,14 @@
 | Google Play 공개 개발자 이메일 |  |
 | 개발자 웹사이트 URL 또는 미입력 |  |
 | 개인정보처리방침 공개 URL |  |
-| 운영자명 |  |
-| 고객센터 연락처 |  |
-| 개인정보 보호책임자 성명 |  |
-| 개인정보 보호책임자 직책 |  |
-| 개인정보 보호책임자 연락처 |  |
-| 개인정보처리방침 시행일 |  |
-| 광고/사용 로그 보유기간 | 권장 초안: 12개월 |
-| 이메일 인증 발송 서비스 | 미도입이면 `이메일 인증 미도입` |
+| 운영자명 | 최대현 / WeatherON |
+| 고객센터 연락처 | support@weatheron.app |
+| 개인정보 보호책임자 성명 | 최대현 |
+| 개인정보 보호책임자 직책 | 개인정보 보호책임자 |
+| 개인정보 보호책임자 연락처 | support@weatheron.app |
+| 개인정보처리방침 시행일 | 비공개 테스트 시작일 |
+| 광고/사용 로그 보유기간 | 테스트 종료 후 1개월 |
+| 이메일 인증 발송 서비스 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. |
 | 타겟 연령 | 권장 초안: 만 14세 이상 |
 | Play Console 계정 유형 | 개인 신규 / 개인 기존 / 조직 |
 
