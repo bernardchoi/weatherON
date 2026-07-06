@@ -42,7 +42,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           <View style={styles.rainDecisionStrip}>
             <RainFact icon={uiIconAssets.clock} label="시작" value={rainStart} color={theme.sky} theme={theme} />
             <RainFact icon={uiIconAssets.drop} label="최대" value={`${peakAmount}mm`} color={theme.warm} theme={theme} />
-            <RainFact icon={uiIconAssets.check} label="그침" value={rainEnd} color={theme.clear} theme={theme} />
+            <RainFact icon={uiIconAssets.check} label="완화" value={rainEnd} color={theme.clear} theme={theme} />
           </View>
         </View>
 
@@ -53,9 +53,9 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           style={[styles.togglePanel, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>그침 알림</Text>
-            <Text style={[styles.toggleTitle, { color: theme.text }]}>비 그치면 알려줘</Text>
-            <Text style={[styles.toggleMeta, { color: theme.muted }]}>{rainEnd} 전후로 그침 알림을 받을지 선택</Text>
+            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>완화 알림</Text>
+            <Text style={[styles.toggleTitle, { color: theme.text }]}>비 약해지면 알려줘</Text>
+            <Text style={[styles.toggleMeta, { color: theme.muted }]}>{rainEnd} 전후로 완화 알림을 받을지 선택</Text>
           </View>
           <View style={[styles.toggleTrack, { backgroundColor: toggleColors.track, borderColor: toggleColors.trackBorder }]}>
             <View style={[styles.toggleKnob, { backgroundColor: toggleColors.knob, marginLeft: rainEndAlertEnabled ? 22 : 3 }]} />
@@ -254,7 +254,7 @@ function getRainWindow(items: RainBar[]) {
   return {
     start,
     end,
-    title: start === end ? `${start} 전후 비 가능` : `${start} 시작, ${end} 완화`,
+    title: start === end ? `${start} 비 시작·완화` : `${start} 시작, ${end} 완화`,
     body: end === "대기" ? "강수 신호 낮음" : `${end} 이후 외출 부담 낮음`,
   };
 }

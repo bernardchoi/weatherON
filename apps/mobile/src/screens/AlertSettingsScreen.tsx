@@ -58,7 +58,7 @@ export function AlertSettingsScreen({
   const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
   const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 확인 전") : "푸시 대기";
   const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel, testNotificationReceived, testNotificationOpened);
-  const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "다시 보내기" : "보내기") : "권한 켜기";
+  const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "테스트 다시 보내기" : "테스트 알림 보내기") : "권한 켜기";
 
   const goBack = () => {
     if (alertSettingsRouteState) onReturnFromAlertSettings();
@@ -270,9 +270,9 @@ function DeliveryCheckCard({
       <View style={styles.deliveryLines}>
         <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
         <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
-        <DeliveryLine label="확인" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
+        <DeliveryLine label="실제 수신" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
       </View>
-      <Pressable accessibilityLabel={`확인 알림 ${actionLabel}`} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
+      <Pressable accessibilityLabel={actionLabel} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
         <Text style={[styles.deliveryActionText, { color: permissionReady ? theme.sky : theme.warm }]}>{actionLabel}</Text>
       </Pressable>
     </View>
@@ -552,7 +552,7 @@ function getAlertReadinessCopy(
 function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteState"]>["focus"], returnTo?: P0RouteId) {
   const returnLabel = getRouteLabel(returnTo);
   if (focus === "umbrella") return { title: "우산 알림 기준", caption: "우산 추천에서 이동", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 조건과 출발 준비 알림 적용 상태를 확인함" };
-  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·그침 알림 적용 상태를 확인함" };
+  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·완화 알림 적용 상태를 확인함" };
   if (focus === "destination") return { title: "목적지 알림 기준", caption: "목적지 케어에서 이동", returnLabel, tone: "gold" as const, editBody: "목적지 출발 알림과 자동 강수 기준을 확인함" };
   return { title: "알림 기준", caption: "홈 알림에서 이동", returnLabel, tone: "warm" as const, editBody: "선택한 알림의 적용 상태를 확인함" };
 }

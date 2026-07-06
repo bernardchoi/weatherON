@@ -112,7 +112,7 @@ export function HomeScreen({
               onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
             />
             <VisualDecisionCard
-              label="비 그침"
+              label="비 완화"
               value={homeDecision.rainCompactTitle}
               helper={homeDecision.rainCompactBody}
               accent={getInfoAccent(theme)}
@@ -371,8 +371,8 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
   const firstRain = rainyHours[0];
   const lastRain = rainyHours[rainyHours.length - 1];
   return {
-    title: `${formatHour(firstRain.time)} 시작 · ${formatHour(lastRain.time)} 완화`,
-    body: `${care.name} 강수 ${threshold}% 기준 · 타임라인에서 그침 알림 조정 가능`,
+    title: `비 시작 ${formatHour(firstRain.time)} · 완화 ${formatHour(lastRain.time)}`,
+    body: `${care.name} 강수 ${threshold}% 기준 · 타임라인에서 완화 알림 조정 가능`,
     compactTitle: formatHour(lastRain.time),
     compactBody: `${formatHour(firstRain.time)} 시작`,
   };
@@ -519,8 +519,10 @@ function HomeDecisionHero({
           <View style={styles.weatherPrimaryCopy}>
             <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
             <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-              {currentLocationName} · 현재 {formatTemperature(current.tempC, temperatureUnit)}
+            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={2}>
+              {currentLocationName}
+              {"\n"}
+              현재 {formatTemperature(current.tempC, temperatureUnit)}
             </Text>
           </View>
         </View>

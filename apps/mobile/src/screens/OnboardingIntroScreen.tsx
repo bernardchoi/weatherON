@@ -11,7 +11,7 @@ import { radius, spacing } from "../theme/tokens";
 const featureCards = [
   { icon: uiIconAssets.depart, title: "출발시간", body: "도착 시간에서 이동 시간과 여유 시간을 빼서 바로 안내" },
   { icon: uiIconAssets.pin, title: "목적지 날씨", body: "현재 위치와 목적지 차이를 한 화면에서 비교" },
-  { icon: uiIconAssets.rain, title: "비 시작·그침", body: "강수 타임라인과 그침 알림을 먼저 확인" },
+  { icon: uiIconAssets.rain, title: "비 시작·완화", body: "강수 타임라인과 완화 알림을 먼저 확인" },
 ];
 
 export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
@@ -30,7 +30,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
         <View style={styles.quickStrip}>
           <QuickFact label="출발" value="08:10" color={theme.gold} textColor={theme.text} surface={theme.cardMuted} />
           <QuickFact label="목적지" value="비 30%" color={theme.sky} textColor={theme.text} surface={theme.cardMuted} />
-          <QuickFact label="그침" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
+          <QuickFact label="완화" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
         <View style={styles.primaryActions}>
           <AppButton label="계속" accessibilityLabel="스마트 알림 기준 단계로 계속" onPress={() => onNavigate("O5")} />

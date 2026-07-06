@@ -52,6 +52,7 @@ export function DestinationCareScreen({
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const destinationSaved = Boolean(selectedDestinationPlace);
   const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;
+  const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode, selectedDestinationTravelEstimate.status, destinationRain);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -92,7 +93,7 @@ export function DestinationCareScreen({
             <ArrivalControl
               label="자동 여유"
               value={`${bufferMinutes}분`}
-              caption="현재시각 기준"
+              caption={bufferReason.short}
               theme={theme}
             />
           </View>
@@ -126,7 +127,7 @@ export function DestinationCareScreen({
               {getDepartureFormulaCopy(targetArrivalTime, travelMinutes, bufferMinutes, selectedDestinationTravelEstimate.status)}
             </Text>
             <Text style={[styles.calculationMeta, { color: theme.subtle }]}>
-              {routeMeta}
+              {bufferReason.long} · {routeMeta}
             </Text>
           </View>
         </View>
@@ -400,10 +401,10 @@ function ArrivalControl({
 }
 
 const transportOptions: Array<{ mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]; label: string; caption: string }> = [
-  { mode: "auto", label: "자동", caption: "기본 경로" },
-  { mode: "walk", label: "도보", caption: "걷는 시간" },
-  { mode: "drive", label: "자차", caption: "도로 기준" },
-  { mode: "transit", label: "대중교통", caption: "대중교통은 배차/환승 변동 가능" },
+  { mode: "auto", label: "자동", caption: "기본 경로 · 선택 시 재계산" },
+  { mode: "walk", label: "도보", caption: "걷는 시간 · 선택 시 재계산" },
+  { mode: "drive", label: "자차", caption: "도로 기준 · 선택 시 재계산" },
+  { mode: "transit", label: "대중교통", caption: "배차/환승 변동 가능 · 선택 시 재계산" },
 ];
 
 const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
@@ -647,6 +648,27 @@ function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationScheduleP
 
 function getTransportOptionCaption(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
   return transportOptions.find((option) => option.mode === mode)?.caption ?? "기본 경로";
+}
+
+function getBufferReasonCopy(
+  bufferMinutes: number,
+  transportMode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
+  status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"],
+  destinationRain: number,
+) {
+  const transportReason = transportMode === "transit"
+    ? "배차/환승 변동"
+    : transportMode === "walk"
+      ? "도보 이동 여유"
+      : transportMode === "drive"
+        ? "도로 이동 여유"
+        : "기본 경로 여유";
+  const statusReason = status === "ready" ? "경로 확인됨" : status === "error" ? "경로 갱신 실패" : "경로 확인 전";
+  const weatherReason = destinationRain >= 50 ? "강수 가능성 반영" : "기본 날씨 여유";
+  return {
+    short: `${transportReason}`,
+    long: `여유 ${bufferMinutes}분: ${transportReason}, ${weatherReason}, ${statusReason}`,
+  };
 }
 
 function getRepeatSummary(enabled: boolean, days: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"]) {

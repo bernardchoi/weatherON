@@ -272,7 +272,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
       icon: "rain",
       title: fallbackTitle || "비 예보 사전 알림",
       time: "14:00",
-      detail: "18시 시작 · 시간당 4mm · 21시 그침",
+      detail: "18시 시작 · 시간당 4mm · 21시 완화",
       highlight: "강수 타임라인 보기",
       tone: "sky",
     };
@@ -302,7 +302,7 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
       icon: "rain",
       title: "비 예보 사전 알림",
       time: "14:00",
-      detail: "18시 시작 · 시간당 4mm · 21시 그침",
+      detail: "18시 시작 · 시간당 4mm · 21시 완화",
       highlight: "강수 타임라인 보기",
       tone: "sky",
     };

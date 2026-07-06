@@ -10,7 +10,7 @@ import { radius, spacing } from "../theme/tokens";
 
 const contentCards = [
   { label: "출발 판단", title: "10:50 출발", body: "목적지 13:00 도착 · 여유 10분" },
-  { label: "비 그침", title: "21:00 완화", body: "강수 타임라인에서 알림 조정" },
+  { label: "비 완화", title: "21:00 완화", body: "강수 타임라인에서 알림 조정" },
   { label: "챙길 것", title: "우산 · 방수 신발", body: "비 신호 기준 준비" },
   { label: "확장 예정", title: "여행·AI·소셜", body: "MVP 검증 이후 노출 확대" },
 ];

@@ -81,10 +81,10 @@ export function DestinationListScreen({
           <View style={[styles.prepMetricStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <PrepMetric label="날씨 비교" value={hasDestinations ? `${destinationCards.length}곳` : "대기"} tone="clear" theme={theme} />
             <PrepMetric label="출발" value={hasDestinations ? recommendedDepartureTime : "필요"} tone="gold" theme={theme} />
-            <PrepMetric label="비 그침" value={hasDestinations ? "확인" : "대기"} tone="sky" theme={theme} />
+            <PrepMetric label="비 완화" value={hasDestinations ? "확인" : "대기"} tone="sky" theme={theme} />
           </View>
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
-            {hasDestinations ? "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요" : "자주 가는 곳을 추가하면 출발 시간과 비 그침 알림을 계산해요"}
+            {hasDestinations ? "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요" : "자주 가는 곳을 추가하면 출발 시간과 비 완화 알림을 계산해요"}
           </Text>
         </View>
 
@@ -141,7 +141,7 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
       </View>
       <View style={styles.emptyBenefitGrid}>
         <EmptyBenefit icon={uiIconAssets.clock} title="출발 시간" body="도착 시간 기준 계산" color={theme.sky} theme={theme} />
-        <EmptyBenefit icon={uiIconAssets.rain} title="비 그침" body="강수 변화 먼저 확인" color={theme.clear} theme={theme} />
+        <EmptyBenefit icon={uiIconAssets.rain} title="비 완화" body="강수 변화 먼저 확인" color={theme.clear} theme={theme} />
       </View>
       <AppButton label="목적지 추가" accessibilityLabel="첫 목적지 추가하기" onPress={onAdd} tone="warning" />
     </View>
@@ -243,7 +243,7 @@ function DestinationCard({
           </Text>
         </View>
 
-        <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationWarningText(item)}</Text>
+        <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
       </Pressable>
 
     </View>
@@ -421,11 +421,13 @@ function trimAdministrativeSuffix(value: string) {
   return value.replace(/특별시|광역시|특별자치시|특별자치도|시|군|구$/u, "");
 }
 
-function getDestinationWarningText(item: DestinationCardModel) {
-  if (item.savedAtLabel === "방금 저장") return "방금 저장됨";
-  if (item.savedAtLabel === "업데이트됨") return "방금 업데이트됨";
-  if (item.savedAtLabel === "복구됨") return "방금 복구됨";
-  return item.warning;
+function getDestinationActionText(item: DestinationCardModel) {
+  if (item.tone === "warm" && item.warning.includes("강수")) return `다음 행동 · 우산 준비 · ${item.rainPct}`;
+  if (item.tone === "warm" && item.warning.includes("바람")) return "다음 행동 · 바람 대비 외투 확인";
+  if (!item.careEnabled) return "다음 행동 · 알림 켜고 출발 전 다시 확인";
+  if (item.savedAtLabel === "방금 저장") return "다음 행동 · 출발 시간과 강수 기준 확인";
+  if (item.savedAtLabel === "복구됨") return "다음 행동 · 복구된 목적지 알림 확인";
+  return "다음 행동 · 출발 시간 확인";
 }
 
 function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][number], care: P0ScreenProps["state"]["destinationCare"]) {
