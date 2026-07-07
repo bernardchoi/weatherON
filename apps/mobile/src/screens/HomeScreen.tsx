@@ -5,7 +5,7 @@ import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
@@ -200,7 +200,7 @@ function DestinationSelectorCard({
 }) {
   const hasDestinations = savedDestinations.length > 0;
   return (
-    <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.destinationSelectorHeader}>
         <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}14` }]}>
           <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
@@ -473,7 +473,7 @@ function HomeDecisionHero({
   return (
     <View
       accessibilityLabel="현재 날씨 요약"
-      style={[styles.decisionHero, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}
+      style={[styles.decisionHero, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}
     >
       <View style={styles.weatherShowcase}>
         <View style={[styles.weatherHalo, { backgroundColor: theme.cardMuted }]} />
@@ -527,7 +527,7 @@ function FeelsLikeCard({
       accessibilityLabel={`현재 위치 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
     >
       <View style={[styles.feelsLikeIconFrame, { backgroundColor: `${theme.clear}16` }]}>
         <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
@@ -582,7 +582,7 @@ function VisualDecisionCard({
       accessibilityLabel={`${label} ${value}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.visualDecisionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[styles.visualDecisionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
     >
       <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
         <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
@@ -997,9 +997,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
   },
   weatherShowcase: {
     minHeight: 216,
@@ -1404,6 +1401,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -10, height: 0 },
     shadowOpacity: 0.18,
     shadowRadius: 24,
+    elevation: 16,
   },
   sidebarHeader: {
     flexDirection: "row",

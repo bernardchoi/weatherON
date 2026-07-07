@@ -9,15 +9,17 @@
 |---|---|
 | EAS build id | `N/A - local Gradle release APK` |
 | Build 상태 | LOCAL BUILD SUCCESS |
-| Version | `0.1.0 (6)` |
-| 소스 기준 Version | `0.1.0 (6)` |
+| Version | `0.1.0 (7)` |
+| 소스 기준 Version | `0.1.0 (7)` |
 | QA 대상 일치 | 일치 |
 | Build 링크 | N/A |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | ADB 연결 | 가능 |
 | ADB 설치 상태 | 설치됨 |
 | 실기기 QA 미검증 | 0 |
-| 스토어 스크린샷 issue | 1 |
+| 스토어 스크린샷 issue | 0 |
+
+> 최신 `0.1.0 (7)`에서 재확인한 범위는 UI/UX 흐름 중심이다. D5/D7/D9/D11/D12/D13처럼 별도 환경 조작이나 알림 shade 확인이 필요한 항목은 기존 `0.1.0 (6)` 통과 증거를 유지하되, 정식 제출 전 최신 빌드로 재확인한다.
 
 ## 2. 실기기 직접 설치
 
@@ -61,7 +63,7 @@ npm run install:android-preview-apk
 | D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 G2 다크/라이트 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. 캡처 `/tmp/weatheron-qa-g2-dark.png`, `/tmp/weatheron-qa-g2-transport-after.png` 확인. crash log fatal/ANR 패턴 없음 |
 | D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
 | D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
-| D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | 실기기에서 `자동/도보/자차/대중교통` 옵션과 `대중교통은 배차/환승 변동 가능` 문구 확인. `도보` 선택 후 버튼이 `이동수단 도보, 선택 목록 열기`로 돌아오고 옵션 노드 잔존 없음. 캡처 `/tmp/weatheron-qa-g2-transport-open.png`, `/tmp/weatheron-qa-g2-transport-after.png` |
+| D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | `0.1.0 (7)` 실기기 QA에서 도착 편집기와 이동수단 드롭다운이 하단 탭바에 가리지 않음. 신사이바시역은 `자동 · 확인 필요`, 도보 `장거리 목적지는 도보 제외`, 자차/대중교통 `외부 경로 확인 필요` 표시. 증거 `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
 
 ### D9 목적지 검색 상세 케이스
 
@@ -89,7 +91,7 @@ npm run install:android-preview-apk
 ## 4. 결과 반영 방법
 
 실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
-`easBuildId`는 `N/A - local Gradle release APK`, `appVersion`은 `0.1.0 (6)`과 일치해야 한다.
+`easBuildId`는 `N/A - local Gradle release APK`, `appVersion`은 `0.1.0 (7)`과 일치해야 한다.
 
 ```bash
 npm run sync:android-device-qa-env

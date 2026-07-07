@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type MenuTone = "clear" | "gold" | "sky" | "warm";
 
@@ -58,7 +58,7 @@ export function MyScreen({
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
-          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.border }]}
+          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.border }, cardShadow(theme)]}
         >
           <View style={[styles.avatar, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky }]}>
             <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />
@@ -215,7 +215,7 @@ function MenuRow({
 }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityLabel={title} accessibilityRole="button" onPress={onPress} style={[styles.menuRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <Pressable accessibilityLabel={title} accessibilityRole="button" onPress={onPress} style={[styles.menuRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={[styles.menuIcon, { borderColor: `${color}66`, backgroundColor: "rgba(255,255,255,0.06)" }]}>
         <Image source={icon} style={[styles.menuIconImage, { tintColor: color }]} resizeMode="contain" />
       </View>
@@ -254,7 +254,7 @@ function ReadinessSummary({
   const color = getToneColor(theme, tone);
   const status = tone === "clear" ? "정상" : tone === "warm" ? "확인" : "설정";
   return (
-    <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.readinessCopy}>
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
         <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : tone === "warm" ? "확인 필요한 항목 있음" : "설정하면 더 정확해짐"}</Text>

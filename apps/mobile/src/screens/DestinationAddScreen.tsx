@@ -3,7 +3,7 @@ import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { AppButton } from "../components/AppButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 import { formatDistance } from "../utils/units";
 
 export function DestinationAddScreen({
@@ -113,7 +113,7 @@ export function DestinationAddScreen({
         </View>
 
         {visibleResults.length > 0 ? (
-          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <View style={[styles.resultPanelHeader, { borderBottomColor: theme.border }]}>
               <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>검색 결과</Text>
               <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{resultSortLabel}</Text>
@@ -154,7 +154,10 @@ export function DestinationAddScreen({
                       ) : null}
                     </View>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
-                      {getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit)} · {getProviderLabel(place.provider)}
+                      {[
+                        getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit),
+                        getProviderLabel(place.provider),
+                      ].filter(Boolean).join(" · ")}
                     </Text>
                     <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>
@@ -163,7 +166,7 @@ export function DestinationAddScreen({
             })}
           </View>
         ) : (
-          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus, hasQuery)}</Text>
             <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus, hasQuery)}</Text>
             <View style={styles.recoveryRow}>
@@ -330,10 +333,11 @@ function toRadians(value: number) {
 }
 
 function getProviderLabel(provider: string) {
-  if (provider === "kakao") return "Kakao";
-  if (provider === "google") return "Google";
+  // Kakao/Google은 검색 결과의 데이터 출처일 뿐 사용자 의사결정에 의미가 없어 표기하지 않는다.
+  // "좌표 검색"(openmeteo)과 "추천"(fixture)만 남긴다 — 둘 다 결과의 성격(좌표 근사 · 큐레이션된 장소)을 알려줘 의미가 있다.
   if (provider === "openmeteo") return "좌표 검색";
-  return "추천";
+  if (provider === "fixture") return "추천";
+  return "";
 }
 
 function BackGlyph({ color }: { color: string }) {

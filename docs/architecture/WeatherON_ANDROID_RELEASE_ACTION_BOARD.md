@@ -9,10 +9,10 @@
 |---|---|
 | 최신 preview build | `N/A - local Gradle release APK` |
 | build 상태 | LOCAL BUILD SUCCESS |
-| preview build version | `0.1.0 (6)` |
-| 소스 기준 version | `0.1.0 (6)` |
+| preview build version | `0.1.0 (7)` |
+| 소스 기준 version | `0.1.0 (7)` |
 | preview build 소스 일치 | 일치 |
-| 최신 production build | `4785d86a-56a4-43d4-8333-54035a7238de` |
+| 최신 production build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
 | production build 상태 | FINISHED |
 | 정적 체크 통과 | 23/23 |
 | 실기기 QA 미검증 | 0 |
@@ -42,7 +42,7 @@
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
 | 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
+| 2 | 실기기 QA | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` 기준 | 통과 · 개선 필요점 3건 |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
@@ -98,9 +98,11 @@ npm run check:eas-production-build-status -- <eas-build-id>
 | `WeatherON_ANDROID_ARTIFACT_ACCESS_STATUS.md` | preview APK와 production AAB artifact URL 접근성 |
 | `WeatherON_ANDROID_RELEASE_EVIDENCE_INDEX.md` | 빌드/검증/문서 증빙 인덱스 |
 | `WeatherON_ANDROID_RELEASE_CONSISTENCY_STATUS.md` | 출시 상태 문서 간 값 일치성 검증 |
+| `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` | 최신 release APK 실기기 UI/UX QA 증거 |
 
 ## 5. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
 | 2026-06-28 | Android release action board 최초 생성 |
+| 2026-07-08 | `0.1.0 (7)` release APK 실기기 UI/UX QA 결과와 최신 production AAB 후보 반영 |

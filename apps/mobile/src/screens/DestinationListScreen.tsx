@@ -5,7 +5,7 @@ import { AppButton } from "../components/AppButton";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 type DestinationCardModel = {
@@ -68,7 +68,7 @@ export function DestinationListScreen({
           />
         ) : null}
 
-        <View style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }]}>
+        <View style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.todayTop}>
             <View>
               <Text style={[styles.todayLabel, { color: theme.clear }]}>오늘 준비</Text>
@@ -129,7 +129,7 @@ export function DestinationListScreen({
 
 function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () => void }) {
   return (
-    <View style={[styles.emptyCard, { backgroundColor: theme.card, borderLeftColor: theme.gold, borderColor: theme.border }]}>
+    <View style={[styles.emptyCard, { backgroundColor: theme.card, borderLeftColor: theme.gold, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.emptyHeader}>
         <View style={[styles.emptyIconBox, { backgroundColor: theme.cardStrong }]}>
           <PlaceGlyph type="place" color={theme.gold} />
@@ -198,6 +198,7 @@ function DestinationCard({
           borderLeftColor: accent,
           borderColor: selected ? selectedAccent : "transparent",
         },
+        cardShadow(theme),
       ]}
     >
       <Pressable

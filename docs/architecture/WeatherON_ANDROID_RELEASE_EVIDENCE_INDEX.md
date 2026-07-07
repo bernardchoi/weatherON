@@ -9,10 +9,10 @@
 |---|---|
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
-| Android versionCode | `6` |
+| Android versionCode | `7` |
 | 정적 체크 통과 | 23/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
-| production build | `4785d86a-56a4-43d4-8333-54035a7238de` / FINISHED |
+| production build | `8d392e45-5aae-42a3-a196-59cb00153b28` / FINISHED |
 | artifact 접근 issue | 0 |
 | Play 제출 blocker | 17 |
 | 실기기 QA 미검증 | 0 |
@@ -34,7 +34,7 @@
 | 대상 | Build ID | 상태 | Artifact |
 |---|---|---|---|
 | Preview APK | `N/A - local Gradle release APK` | LOCAL BUILD SUCCESS | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| Production AAB | `4785d86a-56a4-43d4-8333-54035a7238de` | FINISHED | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
+| Production AAB | `8d392e45-5aae-42a3-a196-59cb00153b28` | FINISHED | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
 
 ## 3. 검증 명령 증빙
 
@@ -61,6 +61,7 @@
 | `WeatherON_ANDROID_ARTIFACT_ACCESS_STATUS.md` | APK/AAB artifact URL 접근성 |
 | `WeatherON_ANDROID_MANUAL_ACTION_PACKET.md` | 남은 수동 액션 통합 표 |
 | `WeatherON_ANDROID_DEVICE_QA_PACKET.md` | 실기기 QA 기입표 |
+| `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` | `0.1.0 (7)` release APK 실기기 UI/UX QA 증거 |
 | `WeatherON_ANDROID_WEB_EXPORT_STATUS.md` | mobile web export 번들/하단 탭/목업 혼입 점검 |
 | `WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md` | 8094 미리보기 서버가 최신 dist를 서빙하는지 점검 |
 | `WeatherON_ANDROID_STORE_SCREENSHOT_PACKET.md` | 스토어 스크린샷 캡처표 |
@@ -80,10 +81,10 @@
 - Android release config 정적 검증
 - 제품 품질 정적 검증
 - 수동 액션 패킷 생성 자동화
+- `0.1.0 (7)` release APK 실기기 UI/UX QA 증거 확보
 
 ## 6. 미완료 수동 범위
 
-- 실기기 QA 결과 입력
 - Google Play 스크린샷 5장 캡처
 - Play 제출/개인정보처리방침 실제 입력값 확정
 - 개인정보처리방침 공개 HTTPS URL 배포

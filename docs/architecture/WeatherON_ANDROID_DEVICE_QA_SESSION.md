@@ -7,6 +7,21 @@
 
 ## 1. QA 대상
 
+### 2026-07-07 local release APK UI/UX QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `0.1.0 (7)` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-07 21:00-21:08 KST |
+| QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
+| 주요 결과 | crash/ANR 없음. 홈, 출발 목록, 신사이바시 상세, 도착 편집기, 이동수단 드롭다운, MY, 권한, 스마트 알림 설정 확인. |
+| 남은 개선 | 홈 목적지 칩 말줄임, 홈 핵심 행동 카드 하단 밀림, 스마트 알림 설정 `실제 수신` 라벨 줄바꿈 |
+
 ### 2026-07-04 local release APK for Home/G1/G2 QA
 
 | 항목 | 값 |

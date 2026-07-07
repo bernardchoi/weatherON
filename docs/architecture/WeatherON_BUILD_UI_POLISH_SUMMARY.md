@@ -72,6 +72,10 @@
 | MVP 0 핵심 흐름 | `O2 -> H1 -> G2 -> H5` 상단 정보 구조를 출발시간, 목적지 날씨 차이, 비 시작/그침 알림 중심으로 재배치 |
 | 출발시간 역산 | G2에서 `자동/도보/자차/대중교통` 이동수단 선택, 도착 희망 `HH:mm` 직접 입력, 현재시각 기준 자동 여유시간 계산을 반영 |
 | 알림 설정 밀도 | `M2`를 스마트 알림 ON/OFF, 상태 태그, 빠른 액션, 필수 날씨/생활 루틴/목적지 출발 3행으로 축약 |
+| 카드 시각 깊이 | 공통 `cardShadow(theme)` 토큰을 추가해 Android release APK에서도 카드 음영이 보이도록 보정 |
+| 목적지 상세 조작 | 도착 시간과 이동수단을 상단 요약 칩에서 직접 열도록 정리하고, 드롭다운을 별도 패널로 분리해 하단 탭바 가림을 방지 |
+| 해외 목적지 경로 | 신사이바시역 같은 해외 목적지는 `자동 · 확인 필요`, `해외 경로 확인 필요`로 표시하고 도보 장거리 옵션을 비활성화 |
+| 목적지 검색 결과 | Kakao/Google 출처명은 사용자 판단에 실익이 낮아 숨기고, `좌표 검색`/`추천`처럼 결과 성격이 있는 출처만 표시 |
 
 ---
 
@@ -116,6 +120,7 @@
 | 접근성 | 자동 대비 후보는 0이지만 실제 기기에서 foreground/background 측정 필요 |
 | 터치 영역 | 일부 compact chip/button은 44px 미만. primary action은 44px 이상 유지 필요 |
 | 스토어 제출 | Play 제출 blocker 17개 잔존 |
+| 최신 실기기 UX | 홈 목적지 칩 말줄임, 홈 핵심 행동 카드 하단 밀림, 스마트 알림 설정 라벨 줄바꿈 개선 필요 |
 
 ---
 
@@ -160,6 +165,7 @@
 | `docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md` | Android 다음 액션과 blocker 현황 |
 | `docs/architecture/WeatherON_ANDROID_RELEASE_READINESS_REPORT.md` | Android release readiness 현황 |
 | `docs/audits/visual-qa-2026-06-25/report.md` | 43개 목업 화면 light/dark 시각 QA 결과 |
+| `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` | 최신 release APK 실기기 UI/UX QA 결과 |
 
 ---
 
@@ -172,3 +178,4 @@
 | 2026-06-29 | MVP 0 preview APK 빌드 시도. EAS 업로드는 완료됐으나 Android Free plan quota 초과로 큐 생성 실패 |
 | 2026-06-29 | 사용자 터미널의 no-wait build 2건 상태 확인. `419e3d2c-135b-41a1-88f6-3321ad5115f1`, `29665e88-4da7-41f2-8178-9e85de34ecee` 모두 FINISHED. 최신 설치 후보를 `29665e88-4da7-41f2-8178-9e85de34ecee`로 갱신 |
 | 2026-06-29 | EAS preview/production build와 local debug build 식별자 분리. local debug는 `com.weatheron.mobile.dev`, EAS preview/production은 `com.weatheron.mobile` 유지 |
+| 2026-07-08 | 최신 release APK 기준 카드 음영/목적지 상세/검색 결과 폴리싱과 실기기 UI/UX QA 리포트 반영 |

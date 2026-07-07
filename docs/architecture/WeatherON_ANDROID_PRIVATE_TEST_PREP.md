@@ -43,7 +43,7 @@
 | 소스 기준 버전 | `0.1.0 (7)` |
 | AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
 | 업로드 판정 | 현재 소스와 일치. 비공개 테스트 업로드 후보 |
-| 실기기 QA 리포트 | `docs/audits/android-real-device-uiux-2026-07-05/report.md` |
+| 실기기 QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
 
 ## 4. 콘솔 입력 필요값
 
