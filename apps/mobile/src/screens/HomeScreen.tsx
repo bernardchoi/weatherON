@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -42,7 +41,7 @@ export function HomeScreen({
   const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
   const currentWeather = state.destinationCare.originWeather;
-  const forecastPreview = buildForecastPreview(currentWeather, temperatureUnit);
+  const todayMinMax = getTodayMinMax(currentWeather);
   const currentLocationName = getDisplayLocationName(currentWeather.locationName);
   const current = currentWeather.current;
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
@@ -74,7 +73,7 @@ export function HomeScreen({
           <HomeDecisionHero
             current={current}
             currentLocationName={currentLocationName}
-            forecastPreview={forecastPreview}
+            todayMinMax={todayMinMax}
             locationStatus={locationStatus}
             temperatureUnit={temperatureUnit}
             theme={theme}
@@ -235,12 +234,15 @@ function DestinationSelectorCard({
                 style={[
                   styles.destinationChip,
                   {
-                    backgroundColor: selected ? `${theme.gold}18` : theme.cardStrong,
-                    borderColor: selected ? theme.gold : theme.border,
+                    backgroundColor: selected ? `${theme.clear}18` : theme.cardStrong,
+                    borderColor: selected ? theme.clear : theme.border,
                   },
                 ]}
               >
-                <Text style={[styles.destinationChipTitle, { color: selected ? theme.gold : theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
+                <View style={styles.destinationChipTitleRow}>
+                  {selected ? <Image source={uiIconAssets.check} style={[styles.destinationChipCheck, { tintColor: theme.clear }]} resizeMode="contain" /> : null}
+                  <Text style={[styles.destinationChipTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
+                </View>
                 <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
               </Pressable>
             );
@@ -426,76 +428,32 @@ function formatHour(value: string) {
   return `${String(date.getHours()).padStart(2, "0")}:00`;
 }
 
-function buildForecastPreview(
+function getTodayMinMax(
   weather: P0ScreenProps["state"]["destinationCare"]["originWeather"],
+): { minTempC: number; maxTempC: number } | null {
+  const today = weather.daily?.[0];
+  if (today) return { minTempC: today.minTempC, maxTempC: today.maxTempC };
+  if (weather.hourly.length > 0) {
+    const temps = weather.hourly.map((item) => item.tempC);
+    return { minTempC: Math.min(...temps), maxTempC: Math.max(...temps) };
+  }
+  return null;
+}
+
+function getHeroMetaLine(
+  current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"],
+  todayMinMax: { minTempC: number; maxTempC: number } | null,
   temperatureUnit: P0ScreenProps["temperatureUnit"],
 ) {
-  const hourly = getHourlyForecast(weather);
-  const daily = getDailyForecast(weather.daily, weather.hourly);
-  const nextHour = hourly[0];
-  const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
-  const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
-    if (!peak) return item;
-    return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
-  }, null);
-
-  return {
-    hourlyLabel: rainyHour ? "다음 비" : "다음 시간",
-    hourlyTitle: rainyHour ? formatHour(rainyHour.time) : nextHour ? formatHour(nextHour.time) : "확인",
-    hourlyBody: rainyHour ? `${rainyHour.rainProbabilityPct}%` : nextHour ? formatTemperature(nextHour.tempC, temperatureUnit) : "대기",
-    weeklyLabel: "주간 강수",
-    weeklyTitle: weeklyPeak ? formatDateLabel(weeklyPeak.date) : "주간",
-    weeklyBody: weeklyPeak ? `${weeklyPeak.rainProbabilityPct}%` : "대기",
-  };
-}
-
-function getHourlyForecast(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]): HourlyWeather[] {
-  if (weather.hourly.length > 0) return weather.hourly;
-  return [{
-    time: weather.observedAt,
-    tempC: weather.current.tempC,
-    rainProbabilityPct: weather.current.rainProbabilityPct,
-    precipitationMm: weather.current.precipitationMm,
-    windMs: weather.current.windMs,
-    condition: weather.current.condition,
-  }];
-}
-
-function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeather[]): DailyWeather[] {
-  if (daily && daily.length > 0) return daily;
-  const grouped = hourly.reduce<Record<string, HourlyWeather[]>>((acc, item) => {
-    const date = item.time.includes("T") ? item.time.slice(0, 10) : "오늘";
-    acc[date] = acc[date] ?? [];
-    acc[date].push(item);
-    return acc;
-  }, {});
-  return Object.entries(grouped).map(([date, items]) => ({
-    date,
-    minTempC: Math.min(...items.map((item) => item.tempC)),
-    maxTempC: Math.max(...items.map((item) => item.tempC)),
-    rainProbabilityPct: Math.max(...items.map((item) => item.rainProbabilityPct)),
-    precipitationMm: Number(items.reduce((sum, item) => sum + item.precipitationMm, 0).toFixed(1)),
-    windMs: Math.max(...items.map((item) => item.windMs)),
-    condition: selectDailyCondition(items),
-  }));
-}
-
-function selectDailyCondition(items: HourlyWeather[]) {
-  const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
-  return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
-}
-
-function formatDateLabel(value: string) {
-  if (value === "오늘") return value;
-  const match = value.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return value;
-  return `${Number(match[2])}/${Number(match[3])}`;
+  const feelsLike = `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`;
+  if (!todayMinMax) return feelsLike;
+  return `${feelsLike} · 최고 ${formatTemperature(todayMinMax.maxTempC, temperatureUnit)} · 최저 ${formatTemperature(todayMinMax.minTempC, temperatureUnit)}`;
 }
 
 function HomeDecisionHero({
   current,
   currentLocationName,
-  forecastPreview,
+  todayMinMax,
   locationStatus,
   temperatureUnit,
   theme,
@@ -503,7 +461,7 @@ function HomeDecisionHero({
 }: {
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
   currentLocationName: string;
-  forecastPreview: ReturnType<typeof buildForecastPreview>;
+  todayMinMax: { minTempC: number; maxTempC: number } | null;
   locationStatus: ReturnType<typeof getHomeLocationStatus>;
   temperatureUnit: P0ScreenProps["temperatureUnit"];
   theme: AppTheme;
@@ -519,21 +477,24 @@ function HomeDecisionHero({
     >
       <View style={styles.weatherShowcase}>
         <View style={[styles.weatherHalo, { backgroundColor: theme.cardMuted }]} />
-        <View style={styles.weatherPrimaryRow}>
+        <Pressable
+          accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
+          accessibilityRole="button"
+          onPress={onOpenForecast}
+          style={styles.weatherPrimaryColumn}
+        >
           <View style={[styles.weatherOrb, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}42` }]}>
             <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: current.condition === "rain" || current.condition === "storm" ? theme.sky : theme.gold }]} resizeMode="contain" />
           </View>
-          <View style={styles.weatherPrimaryCopy}>
-            <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
-            <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-              {currentLocationName}
-            </Text>
-            <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
-              현재 {formatTemperature(current.tempC, temperatureUnit)}
-            </Text>
-          </View>
-        </View>
+          <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+          <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+          <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+            {getHeroMetaLine(current, todayMinMax, temperatureUnit)}
+          </Text>
+          <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
+            {currentLocationName}
+          </Text>
+        </Pressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
           <Text style={[styles.statusBadgeText, { color: locationTone }]}>{locationStatus.value}</Text>
@@ -545,7 +506,6 @@ function HomeDecisionHero({
         <DecisionMetric icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
       </View>
       <FeelsLikeCard current={current} temperatureUnit={temperatureUnit} theme={theme} onPress={onOpenForecast} />
-      <ForecastPreviewRow preview={forecastPreview} theme={theme} onOpen={onOpenForecast} />
     </View>
   );
 }
@@ -589,75 +549,6 @@ function getFeelsLikeDeltaLabel(deltaC: number, temperatureUnit: P0ScreenProps["
   const roundedDelta = Math.round(deltaC);
   if (roundedDelta === 0) return "실제 기온과 같음";
   return `체감 ${formatTemperatureDelta(deltaC, temperatureUnit)}`;
-}
-
-function ForecastPreviewRow({
-  preview,
-  theme,
-  onOpen,
-}: {
-  preview: ReturnType<typeof buildForecastPreview>;
-  theme: AppTheme;
-  onOpen: () => void;
-}) {
-  return (
-    <View style={styles.forecastPreviewRow}>
-      <ForecastPreviewCard
-        label={preview.hourlyLabel}
-        title={preview.hourlyTitle}
-        body={preview.hourlyBody}
-        icon={uiIconAssets.clock}
-        accent={getInfoAccent(theme)}
-        theme={theme}
-        onPress={onOpen}
-      />
-      <ForecastPreviewCard
-        label={preview.weeklyLabel}
-        title={preview.weeklyTitle}
-        body={preview.weeklyBody}
-        icon={uiIconAssets.uv}
-        accent={getInfoAccent(theme)}
-        theme={theme}
-        onPress={onOpen}
-      />
-    </View>
-  );
-}
-
-function ForecastPreviewCard({
-  label,
-  title,
-  body,
-  icon,
-  accent,
-  theme,
-  onPress,
-}: {
-  label: string;
-  title: string;
-  body: string;
-  icon: number;
-  accent: string;
-  theme: AppTheme;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={`${label} 상세 보기`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.forecastPreviewCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-    >
-      <View style={[styles.forecastPreviewIconFrame, { backgroundColor: `${accent}16` }]}>
-        <Image source={icon} style={[styles.forecastPreviewIcon, { tintColor: accent }]} resizeMode="contain" />
-      </View>
-      <View style={styles.forecastPreviewCopy}>
-        <Text style={[styles.forecastPreviewLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
-        <Text style={[styles.forecastPreviewTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        <Text style={[styles.forecastPreviewBody, { color: theme.muted }]} numberOfLines={1}>{body}</Text>
-      </View>
-    </Pressable>
-  );
 }
 
 function DecisionMetric({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
@@ -777,7 +668,7 @@ function NotificationBellButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: unreadCount > 0 ? theme.sky : theme.border }]}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
@@ -1013,8 +904,9 @@ function SidebarHistoryRow({ item, theme }: { item: P0ScreenProps["notificationH
 function BellGlyph({ color }: { color: string }) {
   return (
     <View style={styles.iconFrame} accessibilityElementsHidden>
-      <View style={[styles.bellCup, { borderColor: color }]} />
-      <View style={[styles.bellBase, { backgroundColor: color }]} />
+      <View style={[styles.bellDome, { borderColor: color }]} />
+      <View style={[styles.bellRim, { backgroundColor: color }]} />
+      <View style={[styles.bellClapper, { backgroundColor: color }]} />
     </View>
   );
 }
@@ -1110,68 +1002,64 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
   },
   weatherShowcase: {
-    minHeight: 150,
+    minHeight: 216,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    paddingTop: 8,
+    paddingTop: 6,
   },
   weatherHalo: {
     position: "absolute",
     top: 2,
-    left: 18,
+    left: "50%",
+    marginLeft: -77,
     width: 154,
     height: 154,
     borderRadius: 77,
     opacity: 0.5,
   },
-  weatherPrimaryRow: {
+  weatherPrimaryColumn: {
     width: "100%",
-    minHeight: 128,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.lg,
-    paddingHorizontal: spacing.sm,
+    gap: 2,
+    paddingHorizontal: spacing.md,
     zIndex: 1,
   },
   weatherOrb: {
-    width: 92,
-    height: 92,
+    width: 80,
+    height: 80,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 56,
-    height: 56,
-  },
-  weatherPrimaryCopy: {
-    minWidth: 0,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    flex: 1,
-    maxWidth: 180,
+    width: 46,
+    height: 46,
   },
   showcaseTemp: {
+    marginTop: 8,
     fontSize: 58,
     lineHeight: 62,
     fontWeight: "900",
     letterSpacing: 0,
+    textAlign: "center",
   },
   showcaseCondition: {
     marginTop: -1,
     fontSize: 18,
     lineHeight: 23,
     fontWeight: "900",
+    textAlign: "center",
   },
   showcaseMeta: {
     marginTop: 5,
     maxWidth: "100%",
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
+    textAlign: "center",
   },
   showcaseMetaSub: {
     marginTop: 1,
@@ -1179,6 +1067,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "800",
+    textAlign: "center",
   },
   showcaseStatus: {
     position: "absolute",
@@ -1342,7 +1231,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  destinationChipTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  destinationChipCheck: {
+    width: 11,
+    height: 11,
+  },
   destinationChipTitle: {
+    flexShrink: 1,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
@@ -1454,51 +1353,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
   },
-  forecastPreviewRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  forecastPreviewCard: {
-    flex: 1,
-    minHeight: 82,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  forecastPreviewIconFrame: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-  },
-  forecastPreviewIcon: {
-    width: 24,
-    height: 24,
-  },
-  forecastPreviewCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
-  },
-  forecastPreviewLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  forecastPreviewTitle: {
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
-  forecastPreviewBody: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "900",
-  },
   cardStack: {
     gap: spacing.md,
     paddingTop: 4,
@@ -1508,7 +1362,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   bellBadge: {
@@ -1796,18 +1650,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  bellCup: {
-    width: 14,
-    height: 13,
+  bellDome: {
+    width: 15,
+    height: 12,
     borderWidth: 1.8,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    borderBottomWidth: 0,
+    borderBottomWidth: 1.8,
   },
-  bellBase: {
-    width: 13,
+  bellRim: {
+    width: 19,
     height: 2,
     marginTop: 1,
-    borderRadius: 2,
+    borderRadius: 1,
+  },
+  bellClapper: {
+    width: 3,
+    height: 3,
+    marginTop: 1.5,
+    borderRadius: 1.5,
   },
 });

@@ -144,6 +144,7 @@ export function DestinationCareScreen({
             transportLabel={transportLabel}
             transportSelectorOpen={transportSelectorOpen}
             walkUnavailable={walkUnavailable}
+            routeTimingReady={routeTimingReady}
             repeatEnabled={repeatEnabled}
             repeatDays={repeatDays}
             repeatDaysOpen={repeatDaysOpen}
@@ -458,6 +459,7 @@ function RepeatSchedulePanel({
   transportLabel,
   transportSelectorOpen,
   walkUnavailable,
+  routeTimingReady,
   repeatEnabled,
   repeatDays,
   repeatDaysOpen,
@@ -473,6 +475,7 @@ function RepeatSchedulePanel({
   transportLabel: string;
   transportSelectorOpen: boolean;
   walkUnavailable: boolean;
+  routeTimingReady: boolean;
   repeatEnabled: boolean;
   repeatDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
   repeatDaysOpen: boolean;
@@ -484,7 +487,7 @@ function RepeatSchedulePanel({
   onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
-  const transportCaption = getTransportOptionCaption(transportMode);
+  const transportCaption = getTransportOptionCaption(transportMode, routeTimingReady);
   return (
     <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <Pressable
@@ -500,11 +503,13 @@ function RepeatSchedulePanel({
           </View>
           <View style={styles.settingsCopy}>
             <Text style={[styles.settingsLabel, { color: theme.subtle }]}>이동수단</Text>
-            <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{transportLabel}</Text>
+            <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>
+              {transportMode === "auto" && !routeTimingReady ? "자동 · 확인 필요" : transportLabel}
+            </Text>
           </View>
         </View>
         <View style={styles.settingsTrailing}>
-          <Text style={[styles.settingsMeta, { color: transportMode === "transit" ? theme.warm : theme.gold }]} numberOfLines={1}>{transportCaption}</Text>
+          <Text style={[styles.settingsMeta, { color: transportMode === "transit" ? theme.warm : theme.gold }]} numberOfLines={2}>{transportCaption}</Text>
           <Text style={[styles.settingsChevron, { color: theme.subtle }]}>{transportSelectorOpen ? "닫기" : "변경"}</Text>
         </View>
       </Pressable>
@@ -514,7 +519,13 @@ function RepeatSchedulePanel({
           {transportOptions.map((option) => {
             const selected = transportMode === option.mode;
             const disabled = option.mode === "walk" && walkUnavailable;
-            const caption = disabled ? "장거리 목적지는 도보 제외" : option.caption;
+            const caption = disabled
+              ? "장거리 목적지는 도보 제외"
+              : !routeTimingReady
+                ? option.mode === "auto"
+                  ? "경로 API 확인 전 기본값 · 직접 선택하면 바로 반영됨"
+                  : "선택해도 Google 지도 등 외부 경로 확인 필요"
+                : option.caption;
             return (
               <Pressable
                 key={option.mode}
@@ -705,7 +716,13 @@ function isWalkUnavailable(distanceMeters: number) {
   return distanceMeters > 25_000;
 }
 
-function getTransportOptionCaption(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
+function getTransportOptionCaption(
+  mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
+  routeTimingReady: boolean,
+) {
+  if (!routeTimingReady) {
+    return mode === "auto" ? "경로 확인 전 · 직접 선택 가능" : "선택해도 외부 경로 확인 필요";
+  }
   return transportOptions.find((option) => option.mode === mode)?.caption ?? "기본 경로";
 }
 
@@ -1312,7 +1329,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   settingsTrailing: {
-    maxWidth: 106,
+    maxWidth: 138,
     alignItems: "flex-end",
     gap: 2,
   },
@@ -1320,6 +1337,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     fontWeight: "900",
+    textAlign: "right",
   },
   settingsChevron: {
     fontSize: 11,

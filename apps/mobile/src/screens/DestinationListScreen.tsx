@@ -186,6 +186,7 @@ function DestinationCard({
   onOpen: () => void;
 }) {
   const accent = theme.gold;
+  const selectedAccent = theme.clear;
   const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
   const warningColor = item.tone === "warm" ? theme.warm : theme.subtle;
   return (
@@ -195,7 +196,7 @@ function DestinationCard({
         {
           backgroundColor: selected ? theme.card : theme.card,
           borderLeftColor: accent,
-          borderColor: selected ? accent : "transparent",
+          borderColor: selected ? selectedAccent : "transparent",
         },
       ]}
     >
@@ -211,7 +212,10 @@ function DestinationCard({
             <PlaceGlyph type={item.icon} color={accent} />
           </View>
           <View style={styles.destinationTitleColumn}>
-            <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+            <View style={styles.destinationNameRow}>
+              {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
+              <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+            </View>
             <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
@@ -813,6 +817,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 2,
+  },
+  destinationNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  destinationSelectedCheck: {
+    width: 13,
+    height: 13,
   },
   destinationName: {
     flexShrink: 1,
