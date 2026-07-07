@@ -60,8 +60,10 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     cardMuted: "rgba(31,78,121,0.08)",
     clear: "#007F73",
     gold: "#C2410C",
-    sky: "#237BBD",
-    skyLite: "#237BBD",
+    // 2026-07-07 대비 실측: #237BBD 텍스트는 sky-soft 칩 배경(자기 색 9~13% 틴트) 위에서 3.8~4.0:1로 WCAG AA 4.5:1 미달.
+    // #1D6DA8로 조정해 흰 배경/카드/자기 틴트 배경 전 구간에서 4.5:1 이상 확보.
+    sky: "#1D6DA8",
+    skyLite: "#1D6DA8",
     warm: "#C84A2F",
     alert: "#B42318",
     text: "#142033",
