@@ -432,7 +432,13 @@ function getDestinationActionText(item: DestinationCardModel) {
 
 function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][number], care: P0ScreenProps["state"]["destinationCare"]) {
   const targetArrivalTime = destination.schedulePreference.targetArrivalTime;
-  const travelMinutes = getTravelMinutesForTransport(destination.travelEstimate, destination.schedulePreference.transportMode);
+  const travelMinutes = getTravelMinutesForTransport(destination.travelEstimate, destination.schedulePreference.transportMode, destination.place.countryCode);
+  if (typeof travelMinutes !== "number") {
+    return {
+      arrivalTime: targetArrivalTime,
+      departureTime: "경로 확인 전",
+    };
+  }
   const bufferMinutes = getAutoBufferMinutes(targetArrivalTime, travelMinutes);
   return {
     arrivalTime: targetArrivalTime,
@@ -460,22 +466,32 @@ function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCa
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
-  if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "08:10";
+  if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "확인 전";
   return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
 }
 
 function getTravelMinutesForTransport(
   estimate: P0ScreenProps["selectedDestinationTravelEstimate"],
   transportMode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
-): number {
+  destinationCountryCode?: PlaceSearchResult["countryCode"],
+): number | undefined {
+  if (isUnverifiedInternationalRoute(estimate, destinationCountryCode)) return undefined;
   const baseMinutes = estimate.travelMinutes || 35;
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   if (transportMode === "walk") {
+    if (distanceKm > 25) return baseMinutes;
     if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
     return Math.max(15, Math.ceil(baseMinutes * 1.8));
   }
   if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
   return baseMinutes;
+}
+
+function isUnverifiedInternationalRoute(
+  estimate: P0ScreenProps["selectedDestinationTravelEstimate"],
+  destinationCountryCode?: PlaceSearchResult["countryCode"],
+) {
+  return destinationCountryCode !== "KR" && estimate.status !== "ready";
 }
 
 function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number): number {

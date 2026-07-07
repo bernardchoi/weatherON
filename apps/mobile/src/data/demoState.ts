@@ -35,8 +35,8 @@ export type DemoStateOptions = {
 
 export type DestinationScheduleInput = {
   targetArrivalTime: string;
-  travelMinutes: number;
-  bufferMinutes: number;
+  travelMinutes?: number;
+  bufferMinutes?: number;
   transportMode?: DestinationTransportMode;
   repeatEnabled?: boolean;
   repeatDays?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
@@ -97,9 +97,9 @@ export function buildDemoStateFromWeatherResult(
     destinationWeather,
     careOn: hasDestination ? options.destinationCareEnabled ?? true : false,
     alertCondition: options.destinationAlertCondition,
-    travelMinutes: options.destinationSchedule?.travelMinutes ?? 40,
+    travelMinutes: options.destinationSchedule?.travelMinutes,
     targetArrivalTime: options.destinationSchedule?.targetArrivalTime ?? "13:00",
-    bufferMinutes: options.destinationSchedule?.bufferMinutes ?? 10,
+    bufferMinutes: options.destinationSchedule?.bufferMinutes,
     transportMode: options.destinationSchedule?.transportMode ?? "auto",
     travelProvider: options.destinationSchedule?.travelProvider,
     travelStatus: options.destinationSchedule?.travelStatus,

@@ -295,9 +295,12 @@ function buildHomeDecision(
   temperatureUnit: P0ScreenProps["temperatureUnit"],
 ) {
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? "13:00";
-  const travelMinutes = care.departureAdvice?.travelMinutes ?? 40;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
-  const departureTime = care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+  const travelMinutes = care.departureAdvice?.travelMinutes;
+  const bufferMinutes = care.departureAdvice?.bufferMinutes;
+  const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
+  const departureTime = routeTimingReady
+    ? care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes)
+    : "확인 전";
   const routeStatusLabel = getRouteStatusLabel(care.departureAdvice?.travelStatus);
   const destinationDiff = destinationReady
     ? buildDestinationDiff(care, temperatureUnit)
@@ -316,7 +319,11 @@ function buildHomeDecision(
 
   return {
     departureTime,
-    departureBody: destinationReady ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 · ${routeStatusLabel}` : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
+    departureBody: destinationReady
+      ? routeTimingReady
+        ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 · ${routeStatusLabel}`
+        : `${targetArrivalTime} 도착 · 해외 경로 확인 전`
+      : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
     destinationTitle: destinationDiff.title,
     destinationBody: destinationDiff.body,
     rainTitle: rainWindow.title,

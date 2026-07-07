@@ -1,0 +1,23 @@
+--------- beginning of system
+07-07 16:32:08.182 25444 25461 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-07 16:34:37.782 25444 25444 W Choreographer: Frame time is 0.06672  now = 492189964487489  timestampNanos = 492189964554209 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+07-07 16:35:07.569 25444 25500 W HWUI    : Image decoding logging dropped!
+07-07 16:35:07.569 25444 25500 W HWUI    : Image decoding logging dropped!
+07-07 16:35:07.570 25444 25500 W HWUI    : Image decoding logging dropped!
+07-07 16:35:07.571 25444 25503 W HWUI    : Image decoding logging dropped!
+07-07 16:36:13.905 25444 25444 W unknown:BridgelessReact: ReactHost{0}.onHostPause(activity)
+07-07 16:36:13.905 25444 25444 W unknown:BridgelessReact: ReactContext.onHostPause()
+07-07 16:36:13.908 25444 25444 W unknown:BridgelessReact: ReactHost{0}.onHostResume(activity)
+07-07 16:36:13.908 25444 25444 W unknown:BridgelessReact: ReactContext.onHostResume()
+07-07 16:36:13.949 25444 25444 I ImeTracker: com.weatheron.mobile:b1ea8eee: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-07 16:36:32.006 25444 25470 W HWUI    : Image decoding logging dropped!
+07-07 16:36:32.006 25444 25470 W HWUI    : Image decoding logging dropped!
+07-07 16:36:45.368 25444 25444 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+07-07 16:36:45.371 25444 25444 I ImeTracker: com.weatheron.mobile:2d943c73: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true
+07-07 16:36:45.381 25444 25444 I AssistStructure: Flattened final assist data: 2456 bytes, containing 1 windows, 16 views
+07-07 16:36:45.383 25444 25444 I ImeTracker: com.weatheron.mobile:e31ab431: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+07-07 16:36:45.383 25444 25444 I ImeTracker: com.weatheron.mobile:e31ab431: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+07-07 16:36:45.435 25444 25444 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.uimanager.RootViewManager
+07-07 16:36:45.440 25444 26259 W InteractionJankMonitor: Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.weatheron.mobile
+07-07 16:36:45.651 25444 25444 I ImeTracker: com.weatheron.mobile:2d943c73: onShown

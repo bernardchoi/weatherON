@@ -77,6 +77,8 @@ export type DestinationTravelEstimate = TravelEstimateResult & {
   destinationPlaceId: string;
 };
 
+const maxWalkableDestinationDistanceKm = 25;
+
 export type AccountGateState = {
   returnTo: AccountGateReturnRouteId;
   reason: GateReason;
@@ -235,12 +237,15 @@ export function useWeatherOnAppState() {
   const selectedDestinationTravelMinutes = getTravelMinutesForTransport(
     selectedDestinationTravelEstimate,
     selectedDestinationSchedulePreference.transportMode,
+    selectedDestinationPlace.countryCode,
   );
-  const selectedDestinationAutoBufferMinutes = getAutoBufferMinutes(
-    selectedDestinationSchedulePreference.targetArrivalTime,
-    selectedDestinationTravelMinutes,
-    nowMinuteTick,
-  );
+  const selectedDestinationAutoBufferMinutes = typeof selectedDestinationTravelMinutes === "number"
+    ? getAutoBufferMinutes(
+        selectedDestinationSchedulePreference.targetArrivalTime,
+        selectedDestinationTravelMinutes,
+        nowMinuteTick,
+      )
+    : undefined;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
       gender: styleGender === "men" ? "male" : styleGender === "women" ? "female" : "any",
@@ -1056,8 +1061,9 @@ export function useWeatherOnAppState() {
 
   const setSelectedDestinationTransportMode = useCallback((transportMode: DestinationTransportMode) => {
     const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+    const nextTransportMode = isWalkUnavailableForEstimate(selectedDestinationTravelEstimate, transportMode) ? "auto" : transportMode;
+    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode: nextTransportMode });
+  }, [previewDestinationSchedulePreference, selectedDestinationTravelEstimate, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeat = useCallback(() => {
     const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
@@ -1919,16 +1925,32 @@ function createDestinationTravelEstimate(originPlaceId: string, destinationPlace
   };
 }
 
-function getTravelMinutesForTransport(estimate: DestinationTravelEstimate, transportMode: DestinationTransportMode): number {
+function getTravelMinutesForTransport(
+  estimate: DestinationTravelEstimate,
+  transportMode: DestinationTransportMode,
+  destinationCountryCode?: PlaceSearchResult["countryCode"],
+): number | undefined {
+  if (isUnverifiedInternationalRoute(estimate, destinationCountryCode)) return undefined;
   const baseMinutes = estimate.travelMinutes || 35;
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   if (transportMode === "walk") {
+    if (distanceKm > maxWalkableDestinationDistanceKm) return baseMinutes;
     if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
     return Math.max(15, Math.ceil(baseMinutes * 1.8));
   }
   if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
   if (transportMode === "drive") return baseMinutes;
   return baseMinutes;
+}
+
+function isUnverifiedInternationalRoute(estimate: DestinationTravelEstimate, destinationCountryCode?: PlaceSearchResult["countryCode"]): boolean {
+  return destinationCountryCode !== "KR" && estimate.status !== "ready";
+}
+
+function isWalkUnavailableForEstimate(estimate: DestinationTravelEstimate, transportMode: DestinationTransportMode): boolean {
+  if (transportMode !== "walk") return false;
+  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
+  return distanceKm > maxWalkableDestinationDistanceKm;
 }
 
 function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number): number {
