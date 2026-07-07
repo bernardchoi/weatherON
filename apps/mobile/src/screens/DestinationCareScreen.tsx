@@ -10,6 +10,7 @@ export function DestinationCareScreen({
   permissionReady,
   state,
   destinationCareEnabled,
+  savedDestinations,
   selectedDestinationAlertCondition,
   selectedDestinationSchedulePreference,
   selectedDestinationTravelEstimate,
@@ -30,6 +31,9 @@ export function DestinationCareScreen({
   const originWeather = care.originWeather;
   const destinationWeather = care.destinationWeather;
   const headerTitle = selectedDestinationPlace?.name ?? care.name;
+  const justSaved = Boolean(
+    selectedDestinationPlace && savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id)?.savedAtLabel === "방금 저장",
+  );
   const departureTime = getRecommendedDepartureTime(care);
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? selectedDestinationSchedulePreference.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes ?? selectedDestinationTravelEstimate.travelMinutes;
@@ -39,6 +43,7 @@ export function DestinationCareScreen({
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [repeatDaysOpen, setRepeatDaysOpen] = useState(false);
+  const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const originRain = originWeather.current.rainProbabilityPct;
@@ -72,6 +77,13 @@ export function DestinationCareScreen({
           </View>
         </View>
 
+        {justSaved ? (
+          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+            <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
+            <Text style={[styles.savedBannerBody, { color: theme.muted }]}>아래 출발 시간과 날씨 비교가 이 목적지 기준으로 계산됨</Text>
+          </View>
+        ) : null}
+
         <View style={[styles.decisionPanel, { backgroundColor: theme.card, borderColor: theme.gold }]}>
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
@@ -97,13 +109,29 @@ export function DestinationCareScreen({
               theme={theme}
             />
           </View>
-          <ArrivalInputControl
-            label="도착 희망"
-            value={targetArrivalTime}
-            caption="5분 단위 스크롤 선택"
-            onSelectTime={onSetDestinationTargetArrivalTime}
-            theme={theme}
-          />
+          <Pressable
+            accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 ${arrivalEditorOpen ? "닫기" : "열기"}`}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: arrivalEditorOpen }}
+            onPress={() => setArrivalEditorOpen((current) => !current)}
+            style={[styles.arrivalToggleRow, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}
+          >
+            <View style={styles.arrivalToggleCopy}>
+              <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>도착 희망</Text>
+              <Text style={[styles.arrivalControlValue, { color: theme.text }]}>{targetArrivalTime}</Text>
+            </View>
+            <Text style={[styles.settingsChevron, { color: theme.gold }]}>{arrivalEditorOpen ? "닫기" : "시간 변경"}</Text>
+          </Pressable>
+
+          {arrivalEditorOpen ? (
+            <ArrivalInputControl
+              label="도착 희망"
+              value={targetArrivalTime}
+              caption="5분 단위 스크롤 선택"
+              onSelectTime={onSetDestinationTargetArrivalTime}
+              theme={theme}
+            />
+          ) : null}
           <RepeatSchedulePanel
             transportMode={transportMode}
             transportLabel={transportLabel}
@@ -795,6 +823,23 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "800",
   },
+  savedBanner: {
+    gap: 3,
+    padding: 14,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderLeftWidth: 2,
+  },
+  savedBannerTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+  savedBannerBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
   decisionPanel: {
     gap: spacing.sm,
     padding: 16,
@@ -915,6 +960,20 @@ const styles = StyleSheet.create({
   arrivalControls: {
     flexDirection: "row",
     gap: spacing.xs,
+  },
+  arrivalToggleRow: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 9,
+    borderRadius: radius.sm,
+    borderWidth: 0,
+  },
+  arrivalToggleCopy: {
+    gap: 2,
   },
   arrivalControl: {
     flex: 1,

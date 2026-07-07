@@ -112,7 +112,8 @@ function CloseGlyph({ color }: { color: string }) {
 function StarMark({ color }: { color: string }) {
   return (
     <View style={styles.starMark} accessibilityElementsHidden>
-      <Text style={[styles.starText, { color }]}>★</Text>
+      <View style={[styles.starSpike, styles.starSpikeWide, { backgroundColor: color }]} />
+      <View style={[styles.starSpike, styles.starSpikeTall, { backgroundColor: color }]} />
     </View>
   );
 }
@@ -198,10 +199,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  starText: {
-    fontSize: 31,
-    lineHeight: 34,
-    fontWeight: "900",
+  starSpike: {
+    position: "absolute",
+    borderRadius: 3,
+  },
+  starSpikeWide: {
+    width: 30,
+    height: 8,
+  },
+  starSpikeTall: {
+    width: 8,
+    height: 30,
   },
   heroTitle: {
     fontSize: 18,

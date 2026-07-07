@@ -6,6 +6,7 @@
 
 - 파일명: `WeatherON_MVP1_피드백_T{테스터ID}_{YYYYMMDD}.md`
 - 템플릿: `docs/planning/WeatherON_MVP1_테스트_피드백_기록_양식.md`
+- 설문 양식: `docs/planning/WeatherON_MVP1_비공개테스트_설문조사_양식.md`
 - 직접 식별자(이메일, 전화번호, 실명)는 기록하지 않는다.
 - 집계 명령: `npm run report:mvp1-pilot-status`
 

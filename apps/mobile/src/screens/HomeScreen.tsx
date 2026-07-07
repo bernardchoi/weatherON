@@ -519,9 +519,10 @@ function HomeDecisionHero({
           <View style={styles.weatherPrimaryCopy}>
             <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
             <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={2}>
+            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
               {currentLocationName}
-              {"\n"}
+            </Text>
+            <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
               현재 {formatTemperature(current.tempC, temperatureUnit)}
             </Text>
           </View>
@@ -1164,6 +1165,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "900",
+  },
+  showcaseMetaSub: {
+    marginTop: 1,
+    maxWidth: "100%",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
   },
   showcaseStatus: {
     position: "absolute",

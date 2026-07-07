@@ -41,9 +41,9 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         </View>
 
         <Panel title="추천 이유" theme={theme}>
-          <ReasonRow icon="◷" text={`${peakWindow} 강수 가능성 최대 ${peakRainProbability}%`} theme={theme} />
-          <ReasonRow icon="⌁" text={`시간당 최대 ${peakAmount}mm · ${getRainIntensityLabel(peakAmount)}`} theme={theme} />
-          <ReasonRow icon="≋" text={`풍속 초속 ${windSpeed.toFixed(0)}m · ${umbrella.reason}`} theme={theme} />
+          <ReasonRow icon="clock" text={`${peakWindow} 강수 가능성 최대 ${peakRainProbability}%`} theme={theme} />
+          <ReasonRow icon="drop" text={`시간당 최대 ${peakAmount}mm · ${getRainIntensityLabel(peakAmount)}`} theme={theme} />
+          <ReasonRow icon="wind" text={`풍속 초속 ${windSpeed.toFixed(0)}m · ${umbrella.reason}`} theme={theme} />
         </Panel>
 
         <Panel title="시간대별 강수확률" theme={theme}>
@@ -142,11 +142,39 @@ function InfoChip({ label, theme }: { label: string; theme: AppTheme }) {
   );
 }
 
-function ReasonRow({ icon, text, theme }: { icon: string; text: string; theme: AppTheme }) {
+function ReasonRow({ icon, text, theme }: { icon: "clock" | "drop" | "wind"; text: string; theme: AppTheme }) {
   return (
     <View style={styles.reasonRow}>
-      <Text style={[styles.reasonIcon, { color: theme.sky }]}>{icon}</Text>
+      <View style={styles.reasonIconBox}>
+        <ReasonGlyph type={icon} color={theme.sky} />
+      </View>
       <Text style={[styles.reasonText, { color: theme.text }]}>{text}</Text>
+    </View>
+  );
+}
+
+function ReasonGlyph({ type, color }: { type: "clock" | "drop" | "wind"; color: string }) {
+  if (type === "clock") {
+    return (
+      <View style={styles.clockGlyph} accessibilityElementsHidden>
+        <View style={[styles.clockFace, { borderColor: color }]} />
+        <View style={[styles.clockHandHour, { backgroundColor: color }]} />
+        <View style={[styles.clockHandMinute, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+  if (type === "drop") {
+    return (
+      <View style={styles.dropGlyph} accessibilityElementsHidden>
+        <View style={[styles.dropShape, { borderColor: color }]} />
+      </View>
+    );
+  }
+  return (
+    <View style={styles.windGlyph} accessibilityElementsHidden>
+      <View style={[styles.windLine, styles.windLineA, { backgroundColor: color }]} />
+      <View style={[styles.windLine, styles.windLineB, { backgroundColor: color }]} />
+      <View style={[styles.windLine, styles.windLineC, { backgroundColor: color }]} />
     </View>
   );
 }
@@ -393,12 +421,75 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
-  reasonIcon: {
+  reasonIconBox: {
     width: 16,
-    textAlign: "center",
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clockGlyph: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clockFace: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1.6,
+  },
+  clockHandHour: {
+    position: "absolute",
+    width: 1.6,
+    height: 4,
+    top: 4,
+    borderRadius: 2,
+  },
+  clockHandMinute: {
+    position: "absolute",
+    width: 4,
+    height: 1.6,
+    top: 7,
+    left: 8,
+    borderRadius: 2,
+  },
+  dropGlyph: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dropShape: {
+    width: 11,
+    height: 11,
+    borderWidth: 1.6,
+    borderRadius: 6,
+    borderTopLeftRadius: 0,
+    transform: [{ rotate: "45deg" }],
+  },
+  windGlyph: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  windLine: {
+    position: "absolute",
+    height: 1.6,
+    borderRadius: 2,
+  },
+  windLineA: {
+    width: 13,
+    top: 3,
+  },
+  windLineB: {
+    width: 9,
+    top: 7,
+  },
+  windLineC: {
+    width: 11,
+    top: 11,
   },
   reasonText: {
     flex: 1,

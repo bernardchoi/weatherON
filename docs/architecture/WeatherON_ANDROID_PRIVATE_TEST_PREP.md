@@ -1,6 +1,6 @@
 # WeatherON Android 비공개 테스트 준비
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-07
 > 목적: Google Play 비공개 테스트 시작 전 필요한 자료, 콘솔 입력, 로컬 검증 상태를 한 장으로 유지한다.
 
 ## 1. 결론
@@ -37,11 +37,11 @@
 | 항목 | 값 |
 |---|---|
 | 패키지 | `com.weatheron.mobile` |
-| 버전 | `0.1.0 (6)` |
-| production AAB build | `32ed4d82-e676-43fa-a963-232a6610f573` |
-| production AAB version | `0.1.0 (6)` |
-| 소스 기준 버전 | `0.1.0 (6)` |
-| AAB artifact | https://expo.dev/artifacts/eas/TtuoH-SIcOhNkxuW_YLm1OcmRb0kfwdmHKxBN1SAHgE.aab |
+| 버전 | `0.1.0 (7)` |
+| production AAB build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
+| production AAB version | `0.1.0 (7)` |
+| 소스 기준 버전 | `0.1.0 (7)` |
+| AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
 | 업로드 판정 | 현재 소스와 일치. 비공개 테스트 업로드 후보 |
 | 실기기 QA 리포트 | `docs/audits/android-real-device-uiux-2026-07-05/report.md` |
 

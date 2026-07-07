@@ -58,7 +58,7 @@ export function LocationChangeScreen({
   return (
     <AppScreen title="위치 변경" subtitle="현재 날씨 기준 위치를 선택하세요" badge={accountLinked ? "계정 연결됨" : "게스트"}>
       <View style={[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-        <Text style={[styles.searchIcon, { color: theme.subtle }]}>⌕</Text>
+        <SearchGlyph color={theme.subtle} />
         <TextInput
           accessibilityLabel="동 읍 면 검색"
           value={placeSearchQuery}
@@ -85,7 +85,7 @@ export function LocationChangeScreen({
         ]}
       >
         <View style={[styles.weatherIcon, { backgroundColor: theme.cardMuted, borderColor: theme.clear }]}>
-          <Text style={[styles.weatherGlyph, { color: theme.clear }]}>현</Text>
+          <CurrentLocationGlyph color={theme.clear} />
         </View>
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>현재 위치 사용</Text>
@@ -170,6 +170,24 @@ export function LocationChangeScreen({
         </Text>
       </View>
     </AppScreen>
+  );
+}
+
+function SearchGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.searchGlyph} accessibilityElementsHidden>
+      <View style={[styles.searchCircle, { borderColor: color }]} />
+      <View style={[styles.searchHandle, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function CurrentLocationGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.locationGlyph} accessibilityElementsHidden>
+      <View style={[styles.locationRing, { borderColor: color }]} />
+      <View style={[styles.locationCore, { backgroundColor: color }]} />
+    </View>
   );
 }
 
@@ -277,9 +295,46 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  searchIcon: {
-    fontSize: 22,
-    fontWeight: "900",
+  searchGlyph: {
+    width: 20,
+    height: 20,
+  },
+  searchCircle: {
+    position: "absolute",
+    left: 1,
+    top: 1,
+    width: 12,
+    height: 12,
+    borderWidth: 1.8,
+    borderRadius: 999,
+  },
+  searchHandle: {
+    position: "absolute",
+    left: 12,
+    top: 13,
+    width: 8,
+    height: 1.8,
+    borderRadius: 2,
+    transform: [{ rotate: "45deg" }],
+  },
+  locationGlyph: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locationRing: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.8,
+  },
+  locationCore: {
+    position: "absolute",
+    width: 5,
+    height: 5,
+    borderRadius: 3,
   },
   searchInput: {
     flex: 1,

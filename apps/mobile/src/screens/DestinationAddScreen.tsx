@@ -154,7 +154,7 @@ export function DestinationAddScreen({
                       ) : null}
                     </View>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
-                      {getCategoryLabel(place.category)} · {getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit)} · {getProviderLabel(place.provider)}
+                      {getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit)} · {getProviderLabel(place.provider)}
                     </Text>
                     <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>

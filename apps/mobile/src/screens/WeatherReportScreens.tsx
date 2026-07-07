@@ -10,13 +10,13 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { appColors, radius, spacing } from "../theme/tokens";
 
 const weatherOptions = [
-  { id: "clear", label: "맑음", icon: "☼" },
-  { id: "cloud", label: "흐림", icon: "▬" },
-  { id: "rain", label: "비", icon: "☔" },
-  { id: "snow", label: "눈", icon: "＊" },
-  { id: "wind", label: "강풍", icon: "≋" },
-  { id: "storm", label: "천둥", icon: "↯" },
-];
+  { id: "clear", label: "맑음" },
+  { id: "cloud", label: "흐림" },
+  { id: "rain", label: "비" },
+  { id: "snow", label: "눈" },
+  { id: "wind", label: "강풍" },
+  { id: "storm", label: "천둥" },
+] as const;
 
 const reportRows = [
   { weather: "비", place: "합정동", time: "오후 2:41", status: "확정" },
@@ -88,7 +88,7 @@ export function WeatherReportSubmitScreen({
               onPress={() => setSelected(item.id)}
               style={[styles.optionCard, { backgroundColor: active ? theme.cardStrong : theme.cardMuted, borderColor: active ? theme.sky : theme.border }]}
             >
-              <Text style={[styles.optionIcon, { color: active ? theme.sky : theme.subtle }]}>{item.icon}</Text>
+              <WeatherOptionGlyph id={item.id} color={active ? theme.sky : theme.subtle} />
               <Text style={[styles.optionLabel, { color: active ? theme.sky : theme.text }]}>{item.label}{active ? " · 선택" : ""}</Text>
             </Pressable>
           );
@@ -182,6 +182,61 @@ export function WeatherReportHistoryScreen({ onNavigate }: P0ScreenProps) {
   );
 }
 
+function WeatherOptionGlyph({ id, color }: { id: (typeof weatherOptions)[number]["id"]; color: string }) {
+  if (id === "clear") {
+    return (
+      <View style={styles.glyphBox} accessibilityElementsHidden>
+        <View style={[styles.sunCore, { borderColor: color }]} />
+        <View style={[styles.sunRay, styles.sunRayN, { backgroundColor: color }]} />
+        <View style={[styles.sunRay, styles.sunRayE, { backgroundColor: color }]} />
+        <View style={[styles.sunRay, styles.sunRayS, { backgroundColor: color }]} />
+        <View style={[styles.sunRay, styles.sunRayW, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+  if (id === "cloud") {
+    return (
+      <View style={styles.glyphBox} accessibilityElementsHidden>
+        <View style={[styles.cloudPuffBack, { borderColor: color }]} />
+        <View style={[styles.cloudPuffFront, { borderColor: color }]} />
+      </View>
+    );
+  }
+  if (id === "rain") {
+    return (
+      <View style={styles.glyphBox} accessibilityElementsHidden>
+        <View style={[styles.cloudPuffFront, { borderColor: color, top: 2 }]} />
+        <View style={[styles.rainDrop, styles.rainDropA, { backgroundColor: color }]} />
+        <View style={[styles.rainDrop, styles.rainDropB, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+  if (id === "snow") {
+    return (
+      <View style={styles.glyphBox} accessibilityElementsHidden>
+        <View style={[styles.snowArm, styles.snowArmA, { backgroundColor: color }]} />
+        <View style={[styles.snowArm, styles.snowArmB, { backgroundColor: color }]} />
+        <View style={[styles.snowArm, styles.snowArmC, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+  if (id === "wind") {
+    return (
+      <View style={styles.glyphBox} accessibilityElementsHidden>
+        <View style={[styles.windLine, styles.windLineA, { backgroundColor: color }]} />
+        <View style={[styles.windLine, styles.windLineB, { backgroundColor: color }]} />
+        <View style={[styles.windLine, styles.windLineC, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+  return (
+    <View style={styles.glyphBox} accessibilityElementsHidden>
+      <View style={[styles.boltTop, { backgroundColor: color }]} />
+      <View style={[styles.boltBottom, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.metric}>
@@ -258,10 +313,125 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  optionIcon: {
-    fontSize: 30,
-    lineHeight: 34,
-    fontWeight: "900",
+  glyphBox: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sunCore: {
+    position: "absolute",
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    borderWidth: 1.8,
+  },
+  sunRay: {
+    position: "absolute",
+    borderRadius: 2,
+  },
+  sunRayN: {
+    width: 1.8,
+    height: 7,
+    top: 0,
+  },
+  sunRayS: {
+    width: 1.8,
+    height: 7,
+    bottom: 0,
+  },
+  sunRayE: {
+    width: 7,
+    height: 1.8,
+    right: 0,
+  },
+  sunRayW: {
+    width: 7,
+    height: 1.8,
+    left: 0,
+  },
+  cloudPuffBack: {
+    position: "absolute",
+    top: 4,
+    left: 3,
+    width: 16,
+    height: 11,
+    borderRadius: 6,
+    borderWidth: 1.8,
+  },
+  cloudPuffFront: {
+    position: "absolute",
+    bottom: 4,
+    left: 7,
+    width: 18,
+    height: 11,
+    borderRadius: 6,
+    borderWidth: 1.8,
+  },
+  rainDrop: {
+    position: "absolute",
+    width: 1.8,
+    height: 6,
+    borderRadius: 2,
+    transform: [{ rotate: "18deg" }],
+  },
+  rainDropA: {
+    bottom: 0,
+    left: 9,
+  },
+  rainDropB: {
+    bottom: 0,
+    right: 8,
+  },
+  snowArm: {
+    position: "absolute",
+    width: 2,
+    height: 18,
+    borderRadius: 2,
+  },
+  snowArmA: {
+    transform: [{ rotate: "0deg" }],
+  },
+  snowArmB: {
+    transform: [{ rotate: "60deg" }],
+  },
+  snowArmC: {
+    transform: [{ rotate: "120deg" }],
+  },
+  windLine: {
+    position: "absolute",
+    height: 1.8,
+    borderRadius: 2,
+  },
+  windLineA: {
+    width: 20,
+    top: 8,
+  },
+  windLineB: {
+    width: 14,
+    top: 14,
+  },
+  windLineC: {
+    width: 17,
+    top: 20,
+  },
+  boltTop: {
+    position: "absolute",
+    width: 10,
+    height: 2,
+    top: 8,
+    left: 12,
+    borderRadius: 2,
+    transform: [{ rotate: "35deg" }],
+  },
+  boltBottom: {
+    position: "absolute",
+    width: 10,
+    height: 2,
+    bottom: 8,
+    left: 6,
+    borderRadius: 2,
+    transform: [{ rotate: "35deg" }],
   },
   optionLabel: {
     fontSize: 13,

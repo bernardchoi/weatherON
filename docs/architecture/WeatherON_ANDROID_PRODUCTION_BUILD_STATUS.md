@@ -1,24 +1,24 @@
 # WeatherON Android Production Build Status
 
-> 생성일: 2026-07-06
+> 생성일: 2026-07-07
 > 목적: Play Console 업로드용 EAS Android production AAB 빌드 상태와 artifact 생성 여부를 추적한다.
 
 ## 1. 현재 상태
 
 | 항목 | 값 |
 |---|---|
-| EAS build id | `4785d86a-56a4-43d4-8333-54035a7238de` |
+| EAS build id | `8d392e45-5aae-42a3-a196-59cb00153b28` |
 | Build 상태 | FINISHED |
 | Platform | ANDROID |
 | Profile | production |
-| Version | `0.1.0 (6)` |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/4785d86a-56a4-43d4-8333-54035a7238de |
-| AAB artifact | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
+| Version | `0.1.0 (7)` |
+| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/8d392e45-5aae-42a3-a196-59cb00153b28 |
+| AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
 
 ## 2. 확인 명령
 
 ```bash
-npm run check:eas-production-build-status -- 4785d86a-56a4-43d4-8333-54035a7238de
+npm run check:eas-production-build-status -- 8d392e45-5aae-42a3-a196-59cb00153b28
 ```
 
 ## 3. 다음 액션
@@ -29,4 +29,4 @@ npm run check:eas-production-build-status -- 4785d86a-56a4-43d4-8333-54035a7238d
 
 | 날짜 | 내용 |
 |---|---|
-| 2026-07-06 | production build `4785d86a-56a4-43d4-8333-54035a7238de` 상태 FINISHED 확인 |
+| 2026-07-07 | production build `8d392e45-5aae-42a3-a196-59cb00153b28` 상태 FINISHED 확인 |

@@ -5,6 +5,7 @@ apps/mobile/dist-web/
 apps/mobile/android/
 apps/mobile/.expo/
 .wrangler/
+.tmp-check/
 .env
 .env.local
 .env.*.local
