@@ -73,7 +73,8 @@
 
 1. local release APK `0.1.0 (7)` 기준 실기기 QA 결과 유지
 2. `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md`의 개선 필요점 추적
-3. 통과 화면으로 Android 스토어 스크린샷 캡처
-4. `WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md`의 사용자 입력값 확정
-5. Play Console 제출 전 `npm run check:android-store-submit-ready`
-6. `8d392e45-5aae-42a3-a196-59cb00153b28` AAB artifact를 Play Console 업로드 후보로 확인
+3. Android 비공개 테스트 14일 운영 안에 코디 추천/상세/저장 gate/옷장 프리셋 포함 build로 전환
+4. 통과 화면으로 Android 스토어 스크린샷 캡처
+5. `WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md`의 사용자 입력값 확정
+6. Play Console 제출 전 `npm run check:android-store-submit-ready`
+7. `8d392e45-5aae-42a3-a196-59cb00153b28` AAB artifact를 Play Console 업로드 후보로 확인

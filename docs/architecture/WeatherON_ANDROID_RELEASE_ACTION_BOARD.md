@@ -45,7 +45,7 @@
 | 2 | 실기기 QA | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` 기준 | 통과 · 개선 필요점 3건 |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
-| 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
+| 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |
 | 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
 | 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 17개 잔존 |
 
@@ -106,3 +106,4 @@ npm run check:eas-production-build-status -- <eas-build-id>
 |---|---|
 | 2026-06-28 | Android release action board 최초 생성 |
 | 2026-07-08 | `0.1.0 (7)` release APK 실기기 UI/UX QA 결과와 최신 production AAB 후보 반영 |
+| 2026-07-08 | 비공개 테스트 14일 운영 안에 코디 포함 build 검증을 출시 보드 액션에 반영 |
