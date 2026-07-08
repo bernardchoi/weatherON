@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -201,6 +201,9 @@ function DestinationSelectorCard({
   onAdd: () => void;
 }) {
   const hasDestinations = savedDestinations.length > 0;
+  const alternateDestinations = selectedDestinationId
+    ? savedDestinations.filter((destination) => destination.place.id !== selectedDestinationId)
+    : savedDestinations;
   return (
     <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.destinationSelectorHeader}>
@@ -222,35 +225,7 @@ function DestinationSelectorCard({
         </Pressable>
       </View>
 
-      {hasDestinations ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
-          {savedDestinations.map((destination) => {
-            const selected = destination.place.id === selectedDestinationId;
-            return (
-              <Pressable
-                key={destination.place.id}
-                accessibilityLabel={`${destination.place.name} 목적지 선택`}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => onSelect(destination.place)}
-                style={[
-                  styles.destinationChip,
-                  {
-                    backgroundColor: selected ? `${theme.clear}18` : theme.cardStrong,
-                    borderColor: selected ? theme.clear : theme.border,
-                  },
-                ]}
-              >
-                <View style={styles.destinationChipTitleRow}>
-                  {selected ? <Image source={uiIconAssets.check} style={[styles.destinationChipCheck, { tintColor: theme.clear }]} resizeMode="contain" /> : null}
-                  <Text style={[styles.destinationChipTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
-                </View>
-                <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : (
+      {!hasDestinations ? (
         <Pressable
           accessibilityLabel="목적지 추가하기"
           accessibilityRole="button"
@@ -260,7 +235,32 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
           <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 하단 카드가 목적지 기준으로 바뀜</Text>
         </Pressable>
-      )}
+      ) : alternateDestinations.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
+          {alternateDestinations.map((destination) => {
+            return (
+              <Pressable
+                key={destination.place.id}
+                accessibilityLabel={`${destination.place.name} 목적지로 변경`}
+                accessibilityRole="button"
+                onPress={() => onSelect(destination.place)}
+                style={[
+                  styles.destinationChip,
+                  {
+                    backgroundColor: theme.cardStrong,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <View style={styles.destinationChipTitleRow}>
+                  <Text style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
+                </View>
+                <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : null}
     </View>
   );
 }
@@ -715,6 +715,7 @@ function NotificationSidebar({
   const [bulkDismissing, setBulkDismissing] = useState(false);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const dragX = useRef(new Animated.Value(0)).current;
+  const touchCloseRef = useRef({ active: false, x: 0, y: 0 });
 
   useEffect(() => {
     if (visible) {
@@ -776,6 +777,7 @@ function NotificationSidebar({
   const panelPanResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
     onMoveShouldSetPanResponderCapture: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+    onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, gesture) => {
       dragX.setValue(Math.max(0, gesture.dx));
     },
@@ -788,6 +790,34 @@ function NotificationSidebar({
     },
     onPanResponderTerminate: animateSidebarBack,
   });
+
+  const handlePanelTouchStart = (event: GestureResponderEvent) => {
+    const { pageX, pageY } = event.nativeEvent;
+    touchCloseRef.current = { active: false, x: pageX, y: pageY };
+  };
+
+  const handlePanelTouchMove = (event: GestureResponderEvent) => {
+    const { pageX, pageY } = event.nativeEvent;
+    const dx = pageX - touchCloseRef.current.x;
+    const dy = pageY - touchCloseRef.current.y;
+    if (!touchCloseRef.current.active && dx > 14 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      touchCloseRef.current.active = true;
+    }
+    if (touchCloseRef.current.active) {
+      dragX.setValue(Math.max(0, dx));
+    }
+  };
+
+  const handlePanelTouchEnd = (event: GestureResponderEvent) => {
+    if (!touchCloseRef.current.active) return;
+    const dx = event.nativeEvent.pageX - touchCloseRef.current.x;
+    touchCloseRef.current.active = false;
+    if (dx > 82) {
+      closeBySwipe();
+      return;
+    }
+    animateSidebarBack();
+  };
 
   const handleMarkAllRead = () => {
     if (!hasUnread || bulkDismissing) return;
@@ -819,6 +849,11 @@ function NotificationSidebar({
             { transform: [{ translateX: panelTranslateX }] },
           ]}
           renderToHardwareTextureAndroid
+          collapsable={false}
+          onTouchStart={handlePanelTouchStart}
+          onTouchMove={handlePanelTouchMove}
+          onTouchEnd={handlePanelTouchEnd}
+          onTouchCancel={animateSidebarBack}
           {...panelPanResponder.panHandlers}
         >
           <View style={styles.sidebarHeader}>
@@ -1445,10 +1480,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-  },
-  destinationChipCheck: {
-    width: 11,
-    height: 11,
   },
   destinationChipTitle: {
     flexShrink: 1,

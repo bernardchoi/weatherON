@@ -101,6 +101,7 @@ export function NotificationCenterScreen({
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
         onMoveShouldSetPanResponderCapture: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderMove: (_, gesture) => {
           const dx = Math.max(0, gesture.dx);
           panelTranslateX.setValue(dx);
@@ -327,6 +328,7 @@ function NotificationCard({
           !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
         onMoveShouldSetPanResponderCapture: (_, gesture) =>
           !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderMove: (_, gesture) => {
           const dx = Math.min(0, gesture.dx);
           translateX.setValue(dx);
