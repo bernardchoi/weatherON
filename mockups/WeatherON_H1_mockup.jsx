@@ -939,14 +939,16 @@ export default function WeatherONHome({ navigate, routeState = {} } = {}) {
 
         <HomeStateRail accountLinked={accountLinked} onPermission={() => navigate?.('O3')}/>
 
-        {/* CARDS AREA */}
+        {/* CARDS AREA — top/bottom은 CWR 버튼(bottom:96,h:40→상단 y716)·탭바(bottom:18,h:64→상단 y770) 기준
+            역산: 첫 화면(비스크롤)에 판단 카드 3개(우산신호/AI장소추천/코디추천)가 다 보이도록
+            여백을 최소화하고, 스크롤 시 마지막 카드가 CWR 버튼에 가리지 않게 paddingBottom 확보 */}
         <div id="weatheron-h1-cards" style={{
-          position:'absolute', top:426, left:20, right:20, bottom:150,
-          display:'flex', flexDirection:'column', gap:9,
+          position:'absolute', top:420, left:20, right:20, bottom:144,
+          display:'flex', flexDirection:'column', gap:7,
           overflowY:'auto',
           scrollbarWidth:'none',
           msOverflowStyle:'none',
-          paddingBottom:8,
+          paddingBottom:24,
         }}>
           {loginHint && (
             <div style={{

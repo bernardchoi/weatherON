@@ -1182,11 +1182,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeContent: {
+    // 2026-07-08 실기기 QA: 홈 하단 판단 카드가 탭바에 일부 가려짐 확인.
+    // AppScreen.tsx의 navClearancePadding(140→176, 코디 탭 동일 이슈 수정 시 검증된 값)과
+    // 동일 근거(탭바 64 + margin 24 대비 여유)로 130 → 176으로 확대.
     minHeight: "100%",
     gap: spacing.md,
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 130,
+    paddingBottom: 176,
   },
   homeAtmosphere: {
     position: "absolute",

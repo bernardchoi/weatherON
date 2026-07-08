@@ -410,8 +410,9 @@ export default function WeatherON_C1({ navigate, routeState = {} } = {}) {
             </div>
           </div>
 
-          {/* Content */}
-          <div style={{ padding: "9px 20px", display: "flex", flexDirection: "column", gap: 7, height: "calc(852px - 250px)", overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none", paddingBottom: 28 }}>
+          {/* Content — 탭바(bottom:18,h:64→상단 y770) 기준 역산해 여백을 최소화,
+              '오늘의 판단' 카드가 탭바에 가리지 않도록 높이·하단 패딩 보정 */}
+          <div style={{ padding: "9px 20px", display: "flex", flexDirection: "column", gap: 7, height: "calc(852px - 224px)", overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none", paddingBottom: 36 }}>
 
             <RecommendationStateCard
               saved={outfitSaved}
