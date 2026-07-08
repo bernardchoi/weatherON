@@ -5,7 +5,9 @@ import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { spacing } from "../theme/tokens";
 
-const navClearancePadding = 140;
+// 2026-07-08 실기기 QA: 코디 탭 첫 진입 시 "오늘의 판단" 카드가 하단 탭바에 일부 가려짐 확인.
+// 이전 140 → 176으로 확대해 탭바(64 + margin 24) 대비 여유를 넓힘.
+const navClearancePadding = 176;
 
 type AppScreenProps = {
   title: string;

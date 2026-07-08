@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "31.5%",
-    minHeight: 142,
-    gap: spacing.xs,
-    padding: spacing.xs,
+    minHeight: 150,
+    gap: spacing.sm,
+    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },
