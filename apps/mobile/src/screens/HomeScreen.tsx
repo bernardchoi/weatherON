@@ -281,7 +281,7 @@ function isSelectorAddressNoise(value: string) {
 }
 
 function trimSelectorAddress(value: string) {
-  return value.replace(/특별시|광역시|특별자치시|특별자치도|시|군|구$/u, "");
+  return value.replace(/(특별자치시|특별자치도|광역시|특별시|시|군|구)$/u, "");
 }
 
 function getDestinationCategoryLabel(category: string) {

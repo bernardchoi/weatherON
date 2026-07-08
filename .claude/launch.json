@@ -9,9 +9,10 @@
     },
     {
       "name": "mobile-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "web", "--prefix", "apps/mobile"],
-      "port": 8081
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "npm run web --prefix apps/mobile -- --port \"$PORT\""],
+      "port": 8081,
+      "autoPort": true
     },
     {
       "name": "mobile-dist",
