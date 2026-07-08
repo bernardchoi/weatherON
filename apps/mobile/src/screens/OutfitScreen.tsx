@@ -7,7 +7,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 
 export function OutfitScreen({
@@ -28,7 +28,7 @@ export function OutfitScreen({
       : "프리셋 기준 추천 · 옷장을 추가하면 내 보유 옷을 우선 반영";
   return (
     <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} badge={`${state.outfit.matchPct}%`}>
-      <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
+      <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.criteriaHeader}>
           <View>
             <Text style={[styles.criteriaLabel, { color: theme.gold }]}>추천 기준</Text>
@@ -109,9 +109,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
   },
   criteriaHeader: {
     flexDirection: "row",

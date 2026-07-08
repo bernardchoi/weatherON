@@ -7,7 +7,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 import { formatOutfitTags, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 
 const categoryLabels = ["전체", "겉옷", "상의", "하의", "신발", "소품"];
@@ -39,7 +39,7 @@ export function WardrobePresetScreen({
 
   return (
     <AppScreen title="아이템 추가" subtitle="프리셋을 선택하거나 사진으로 등록" badge="옷장 추가">
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.gold }]}>옷장 추가</Text>
           <Text style={[styles.title, { color: theme.text }]}>{activeItem.name} 선택됨</Text>
@@ -62,8 +62,8 @@ export function WardrobePresetScreen({
 
       <Section title="필터" caption="아이템·계절·목적 기준" accent="sky">
         <FilterPills title="아이템" values={categoryLabels} />
-        <FilterPills title="계절" values={seasonLabels} />
-        <FilterPills title="목적" values={purposeLabels} />
+        <FilterPills title="계절" values={seasonLabels} withDivider />
+        <FilterPills title="목적" values={purposeLabels} withDivider />
       </Section>
 
       <Section title="선택됨" caption={`${getWardrobeCategoryLabel(activeItem.category)} · ${formatOutfitTags(activeItem.weatherTags)}`} accent="clear">
@@ -117,10 +117,10 @@ export function WardrobePresetScreen({
   );
 }
 
-function FilterPills({ title, values }: { title: string; values: string[] }) {
+function FilterPills({ title, values, withDivider = false }: { title: string; values: string[]; withDivider?: boolean }) {
   const theme = useAppTheme();
   return (
-    <View style={styles.filterGroup}>
+    <View style={[styles.filterGroup, withDivider ? [styles.filterGroupDivider, { borderTopColor: theme.border }] : null]}>
       <Text style={[styles.filterTitle, { color: theme.muted }]}>{title}</Text>
       <View style={styles.pillRow}>
         {values.map((item, index) => (
@@ -201,6 +201,10 @@ const styles = StyleSheet.create({
   },
   filterGroup: {
     gap: spacing.xs,
+  },
+  filterGroupDivider: {
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
   },
   filterTitle: {
     fontSize: 12,

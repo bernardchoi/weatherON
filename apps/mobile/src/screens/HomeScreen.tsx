@@ -127,7 +127,9 @@ export function HomeScreen({
               accent={getPackAccent(homeDecision.packTone, theme)}
               icon={homeDecision.packIcon}
               theme={theme}
-              onPress={() => onNavigate(destinationReady ? "H4" : "P1")}
+              onPress={() =>
+                onNavigate(homeDecision.packFocus === "umbrella" ? (destinationReady ? "H4" : "P1") : "C1")
+              }
             />
           </View>
         </View>
@@ -391,15 +393,15 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
 
 function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]) {
   if (weather.rainProbabilityPct >= 50 || weather.precipitationMm > 0) {
-    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella, packTone: "sky" as const };
+    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella, packTone: "sky" as const, packFocus: "umbrella" as const };
   }
   if (weather.windMs >= 7) {
-    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt, packTone: "warm" as const };
+    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
   if (weather.feelsLikeC <= 5) {
-    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt, packTone: "warm" as const };
+    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
-  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check, packTone: "clear" as const };
+  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check, packTone: "clear" as const, packFocus: "outfit" as const };
 }
 
 function getInfoAccent(theme: AppTheme): string {

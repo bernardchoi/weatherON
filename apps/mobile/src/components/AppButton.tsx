@@ -7,11 +7,12 @@ type AppButtonProps = {
   label: string;
   onPress: () => void;
   tone?: "primary" | "secondary" | "warning";
+  size?: "md" | "sm";
   accessibilityLabel?: string;
   disabled?: boolean;
 };
 
-export function AppButton({ label, onPress, tone = "primary", accessibilityLabel, disabled = false }: AppButtonProps) {
+export function AppButton({ label, onPress, tone = "primary", size = "md", accessibilityLabel, disabled = false }: AppButtonProps) {
   const theme = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
   const backgroundColor = tone === "primary" ? theme.clear : tone === "warning" ? theme.gold : theme.cardMuted;
@@ -41,10 +42,11 @@ export function AppButton({ label, onPress, tone = "primary", accessibilityLabel
       <Animated.View
         style={[
           styles.button,
+          size === "sm" ? styles.buttonSm : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
         ]}
       >
-        <Text style={[styles.label, { color }]}>{label}</Text>
+        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, { color }]}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -59,8 +61,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  buttonSm: {
+    minHeight: 34,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+  },
   label: {
     fontSize: 14,
     fontWeight: "900",
+  },
+  labelSm: {
+    fontSize: 12,
   },
 });

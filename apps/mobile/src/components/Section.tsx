@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 type SectionProps = {
   title: string;
@@ -14,13 +14,15 @@ export function Section({ title, caption, accent, children }: SectionProps) {
   const theme = useAppTheme();
   const accentColor = accent ? getAccentColor(theme, accent) : undefined;
   return (
-    <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
-      {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-        {caption ? <Text style={[styles.caption, { color: theme.muted }]}>{caption}</Text> : null}
+    <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme)]}>
+      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+          {caption ? <Text style={[styles.caption, { color: theme.muted }]}>{caption}</Text> : null}
+        </View>
+        {children}
       </View>
-      {children}
     </View>
   );
 }
@@ -33,6 +35,9 @@ function getAccentColor(theme: ReturnType<typeof useAppTheme>, accent: NonNullab
 }
 
 const styles = StyleSheet.create({
+  shadowWrap: {
+    borderRadius: radius.lg,
+  },
   section: {
     gap: spacing.md,
     paddingVertical: spacing.md,
@@ -40,9 +45,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     overflow: "hidden",
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
   },
   accent: {
     position: "absolute",

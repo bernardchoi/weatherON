@@ -4,7 +4,6 @@ import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
@@ -86,7 +85,6 @@ export function WardrobeScreen({
               item={item}
               onOpen={() => onOpenWardrobeItem(item.id)}
               onToggleOwned={() => onSetWardrobeItemOwned(item.id, !item.owned)}
-              badge={item.owned ? "내 옷장" : "프리셋"}
             />
           ))}
           <Pressable accessibilityRole="button" onPress={() => onNavigate("C3")} style={[styles.addTile, { borderColor: theme.border }]}>
@@ -110,12 +108,10 @@ function WardrobeItemCard({
   item,
   onOpen,
   onToggleOwned,
-  badge,
 }: {
   item: WardrobeItem;
   onOpen: () => void;
   onToggleOwned: () => void;
-  badge: string;
 }) {
   const theme = useAppTheme();
   const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
@@ -128,15 +124,13 @@ function WardrobeItemCard({
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
         <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </Pressable>
-      <View style={styles.cardFooter}>
-        <StatusPill label={badge} tone={item.owned ? "clear" : "sky"} />
-        <AppButton
-          label={item.owned ? "해제" : "추가"}
-          accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
-          onPress={onToggleOwned}
-          tone="secondary"
-        />
-      </View>
+      <AppButton
+        label={item.owned ? "해제" : "추가"}
+        accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+        onPress={onToggleOwned}
+        tone="secondary"
+        size="sm"
+      />
     </View>
   );
 }
@@ -230,12 +224,6 @@ const styles = StyleSheet.create({
   itemImage: {
     width: "92%",
     height: "92%",
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.xs,
   },
   itemName: {
     fontSize: 11,
