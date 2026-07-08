@@ -76,8 +76,11 @@ export const p0Routes: P0Route[] = [
   { id: "S3", label: "리액션", title: "날씨 리액션" },
 ];
 
+// 2026-07-08 출시 로드맵: 코디(C1~C4)가 출시 범위에 포함되어 코디 탭 복원.
+// 소셜(S1)은 검증 후 복원 전까지 launch-hidden 유지.
 export const bottomNavRoutes: P0Route[] = [
   { id: "H1", label: "홈", title: "오늘 준비" },
+  { id: "C1", label: "코디", title: "오늘 코디" },
   { id: "G1", label: "출발", title: "목적지 목록" },
   { id: "M1", label: "MY", title: "MY" },
 ];

@@ -1,6 +1,6 @@
 # WeatherON Android Manual Action Packet
 
-> 생성일: 2026-07-06
+> 생성일: 2026-07-08
 > 목적: 자동 빌드/검증 이후 사람이 직접 처리해야 하는 Android 출시 액션을 한 장으로 유지한다.
 
 ## 1. 현재 출시 상태
@@ -9,10 +9,10 @@
 |---|---|
 | preview APK build | `N/A - local Gradle release APK` |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| production AAB build | `4785d86a-56a4-43d4-8333-54035a7238de` |
+| production AAB build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
 | production AAB 상태 | FINISHED |
-| AAB artifact | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
-| Play 제출 blocker | 17 |
+| AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
+| Play 제출 blocker | 9 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |
@@ -22,13 +22,13 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
+| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (7) 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 `npm run build:android:preview:no-wait` 실행 | 필요 · 현재 APK 0.1.0 (6) |
+| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D13 판정 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
-| 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행 | 13개 대기 · 입력 13개 issue |
+| 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |
 | 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
-| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 17개 잔존 |
+| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 9개 잔존 |
 
 ## 3. 실기기 QA 기입표
 
@@ -38,8 +38,8 @@
 | D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | pm clear 후 MainActivity 실행, O1 온보딩 진입, crash log buffer 비어 있음 |
 | D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 보류 | H1/Guest/READY/OUTER 등 내부 route/dev label은 미노출. Android 권한 팝업 앱명 WeatherON Dev 노출은 출시 label 확정 필요 |
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
-| D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
-| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
+| D4-1 | 하단 탭 IA | 출시 후보 기준 `홈/코디/출발/MY` 표시, `소셜/우산/강수` 직접 탭 없음 | 보류 | 2026-07-08 로드맵 조정으로 코디 탭 복원. 새 preview APK에서 하단 탭 4탭 재확인 필요 |
+| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 통과 | 2026-07-08 web core-flow에서 코디 탭 추천/상세/저장 gate/옷장 프리셋 진입 통과. 실기기 새 APK 재확인 필요 |
 | D4-3 | 홈 목적지 카드 | 상단 현재 위치 날씨, 하단 목적지 선택 카드, 목적지 기준 `나갈 시간/비 그침/챙길 것` 카드 표시 | 통과 | local release APK 재빌드/재설치 후 실기기 홈에서 현재 위치 날씨, 목적지 선택 카드, 목적지 정보 3개 카드 확인. 캡처 `/tmp/weatheron-qa-home.png`, UI tree `/tmp/weatheron-ui-home.xml` |
 | D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
 | D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
@@ -82,14 +82,14 @@
 | Google Play 공개 개발자 이메일 |  | 필수 |
 | 개발자 웹사이트 URL 또는 미입력 |  | 선택 |
 | 개인정보처리방침 공개 URL |  | HTTPS 필수 |
-| 운영자명 |  | 법인/개인사업자/서비스 운영자명 |
-| 고객센터 연락처 |  | 이메일 권장 |
-| 개인정보 보호책임자 성명 |  | 필수 |
-| 개인정보 보호책임자 직책 |  | 필수 |
-| 개인정보 보호책임자 연락처 |  | 이메일 또는 전화번호 |
-| 개인정보처리방침 시행일 |  | 예: 2026-07-01 |
-| 광고/사용 로그 보유기간 |  | 권장 초안: 12개월 |
-| 이메일 인증 발송 서비스 |  | 미도입이면 `이메일 인증 미도입` |
+| 운영자명 | 최대현 / WeatherON | 확정 |
+| 고객센터 연락처 | support@weatheron.app | 이메일 |
+| 개인정보 보호책임자 성명 | 최대현 | 확정 |
+| 개인정보 보호책임자 직책 | 개인정보 보호책임자 | 확정 |
+| 개인정보 보호책임자 연락처 | support@weatheron.app | 이메일 |
+| 개인정보처리방침 시행일 | 비공개 테스트 시작일 | 확정 |
+| 광고/사용 로그 보유기간 | 테스트 종료 후 1개월 | 확정 |
+| 이메일 인증 발송 서비스 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. | 미도입 |
 | 앱 카테고리 | 날씨 | 1차 제출 기준 |
 | 광고 포함 여부 | 아니오 | 현재 APK에 AdMob/광고 SDK 미포함 |
 | 타겟 연령 |  | 권장 초안: 만 14세 이상 |
@@ -118,14 +118,6 @@
 - Play Console 계정 유형 확인 필요
 - 폐쇄 테스트 필요 여부 확정 필요
 - 폐쇄 테스트 테스터 그룹 준비 필요
-- 개인정보처리방침 placeholder 제거 필요: [YYYY-MM-DD]
-- 개인정보처리방침 placeholder 제거 필요: [회사명/개인사업자명]
-- 개인정보처리방침 placeholder 제거 필요: [고객센터 이메일/연락처]
-- 개인정보처리방침 placeholder 제거 필요: [ ]개월
-- 개인정보처리방침 placeholder 제거 필요: [이메일 인증 발송 서비스]
-- 개인정보처리방침 placeholder 제거 필요: [담당자명]
-- 개인정보처리방침 placeholder 제거 필요: [직책]
-- 개인정보처리방침 placeholder 제거 필요: [이메일/전화번호]
 
 ## 8. 반영 명령
 

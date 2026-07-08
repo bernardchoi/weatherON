@@ -225,7 +225,7 @@ assertDocIncludes(storeScreenshotPacketPath, [
   "캡처 목록",
   "screenshot 기준 build",
   "capture:android-store-screenshot",
-  "홈/출발/MY",
+  "홈/코디/출발/MY",
   "홈 알림 > 알림 센터",
   "ADB 준비 상태",
   "check:android-adb-ready",
@@ -297,7 +297,7 @@ assertDocIncludes(artifactAccessStatusPath, ["WeatherON Android Artifact Access 
 assertDocIncludes(productQualityAuditPath, ["WeatherON Android 제품 완성도 감사", "preview APK", "상태 영속화", "npm run check:android-product-quality", "다음 개선 순서"]);
 assertDocIncludes(webExportQaPath, ["WeatherON Android Web Export QA", "In-app browser", "390x844", "Android 실기기 재QA 필요", "WeatherON_ANDROID_WEB_EXPORT_STATUS.md", "WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md", "npm run export:android-web", "npm run check:android-core-flow"]);
 assertDocIncludes(webExportStatusPath, ["WeatherON Android Web Export Status", "AppNavigator", "BottomNav", "bottomNavRoutes", "preview-shell", "legacy dist-web", "npm run export:android-web"]);
-assertDocIncludes(webPreviewServerStatusPath, ["WeatherON Android Web Preview Server Status", "8094", "apps/mobile/dist/index.html", "홈/출발/MY", "check:android-web-preview-server"]);
+assertDocIncludes(webPreviewServerStatusPath, ["WeatherON Android Web Preview Server Status", "8094", "apps/mobile/dist/index.html", "홈/코디/출발/MY", "check:android-web-preview-server"]);
 assertDocIncludes(mapProviderCostComparisonPath, ["WeatherON Map Provider Cost Comparison", "Google Maps Geocoding 우선", "Mapbox", "비용 절감 대안", "Mapbox 키는 대안 PoC가 확정되기 전까지 발급하지 않는다"]);
 assertDocIncludes(deviceQaSessionPath, [
   "WeatherON Android Device QA Session",
@@ -307,7 +307,7 @@ assertDocIncludes(deviceQaSessionPath, [
   "D13",
   "알림 신뢰성",
   "D4-1",
-  "홈/출발/MY",
+  "홈/코디/출발/MY",
   "알림 설정",
   "check:android-core-flow",
   "apply:android-device-qa-results",

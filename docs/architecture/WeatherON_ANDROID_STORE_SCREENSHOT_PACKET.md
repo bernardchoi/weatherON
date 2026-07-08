@@ -1,6 +1,6 @@
 # WeatherON Android Store Screenshot Packet
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-08
 > 목적: Google Play 휴대전화 스크린샷 5장을 같은 기준 APK와 파일명으로 캡처하기 위한 작업 패킷이다.
 
 ## 1. 캡처 기준
@@ -54,7 +54,7 @@ npm run check:android-store-screenshots-ready
 
 ## 5. 주의
 
-- 하단 탭은 `홈/출발/MY` 기준이어야 하며, MVP1 제외 기능인 코디/스타일 화면은 스토어 스크린샷에 포함하지 않는다.
+- 하단 탭은 `홈/코디/출발/MY` 기준이어야 하며, 소셜 화면은 스토어 스크린샷에 포함하지 않는다.
 - 개발용 route id, 내부 상태값, placeholder 문구가 보이면 캡처하지 않는다.
 - Google Play 업로드 전 파일명은 본 문서와 동일하게 유지한다.
 - ADB 준비 상태가 `불가`이면 먼저 USB 디버깅 또는 에뮬레이터 연결을 복구한다.

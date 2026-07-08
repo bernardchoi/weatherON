@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "web", "--prefix", "apps/mobile"],
       "port": 8081
+    },
+    {
+      "name": "mobile-dist",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8094", "--directory", "apps/mobile/dist"],
+      "port": 8094
     }
   ]
 }

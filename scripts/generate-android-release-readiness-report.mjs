@@ -52,6 +52,7 @@ const nextSteps = isEasLoggedIn && easProjectId
           ? `\`${latestPreviewBuildId}\` 빌드 완료 대기 후 artifact 확인`
         : "`npm run build:android:preview`로 새 APK 필요 시 재빌드",
       "`WeatherON_ANDROID_APK_QA_체크리스트.md`에 실기기 결과 기록",
+      "Android 비공개 테스트 14일 운영 안에 코디 추천/상세/저장 gate/옷장 프리셋 포함 build로 전환",
       "통과 화면으로 Android 스토어 스크린샷 캡처",
       "`WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md`의 사용자 입력값 확정",
       "Play Console 제출 전 `npm run check:android-store-submit-ready`",

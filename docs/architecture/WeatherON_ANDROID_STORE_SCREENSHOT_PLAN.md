@@ -38,7 +38,7 @@
 
 1. `WeatherON_ANDROID_DEVICE_QA_SESSION.md`의 D1~D6 통과
 2. `npm run check:android-adb-ready`로 연결 기기와 화면 크기 확인
-3. 하단 탭 `홈/출발/MY` 확인, MVP1 제외 기능인 코디/스타일 화면은 캡처하지 않음
+3. 하단 탭 `홈/코디/출발/MY` 확인, 소셜 화면은 캡처하지 않음
 4. 내부 코드 `H1`, `Guest`, `READY`, `OUTER` 미노출 확인
 5. 앱 아이콘/스플래시 깨짐 없음 확인
 6. 작은 화면에서 버튼/텍스트 잘림 없음 확인

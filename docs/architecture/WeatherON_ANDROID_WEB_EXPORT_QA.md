@@ -22,7 +22,7 @@
 주의:
 - `http://127.0.0.1:8089/`는 `mockups/preview` 정적 서버라 실제 모바일 앱 QA 기준으로 보지 않는다.
 - 실제 Android 상태 영속화는 native 파일 저장소 기준이므로 최종 판정은 APK 실기기 재설치 후 한다.
-- 하단 메뉴 최종 기준은 `홈 / 출발 / MY`이다. `코디`, `소셜`, `우산`, `강수`가 하단에 보이면 구버전 preview/APK 또는 mockup preview를 보고 있는 상태로 판정한다.
+- 하단 메뉴 최종 기준은 `홈 / 코디 / 출발 / MY`이다. `소셜`, `우산`, `강수`가 하단에 보이면 구버전 preview/APK 또는 mockup preview를 보고 있는 상태로 판정한다.
 - `apps/mobile/dist-web`는 예전 web export 산출물이다. 8094 미리보기는 `apps/mobile/dist`를 기준으로 서빙한다.
 - Codex In-app browser가 URL 정책으로 `127.0.0.1` 자동 판독을 거부하는 경우에는 우회하지 않고 코드, 문서, 실기기 APK 기준으로 판정한다.
 - Node 24 환경에서 `expo start --web --host localhost --port 8094`가 `ERR_SOCKET_BAD_PORT`로 실패하면 `npm run export:android-web` 후 `python3 -m http.server 8094 --bind 127.0.0.1` 정적 서버로 확인한다.
@@ -42,7 +42,7 @@
 | 390x844 | 가로 overflow 없음 |
 | 430x932 | 가로 overflow 없음 |
 | 홈 진입 | `홈 먼저 보기` 후 홈 화면 이동 확인 |
-| 홈 하단탭 | MVP 기준 `홈`, `출발`, `MY` 라벨 확인 |
+| 홈 하단탭 | 출시 후보 기준 `홈`, `코디`, `출발`, `MY` 라벨 확인 |
 | QA용 직접 탭 | `우산`, `강수` 직접 탭 제거 확인. 홈/알림 흐름 내 진입은 유지 |
 | web export 번들 | `npm run check:android-web-export`로 실제 참조 JS가 mobile `AppNavigator`/`BottomNav`를 포함하고 `preview-shell` 목업 코드를 참조하지 않음을 확인 |
 | web preview 서버 | `npm run check:android-web-preview-server`로 8094 응답 HTML과 `apps/mobile/dist/index.html` 일치 여부 확인 |
@@ -62,7 +62,7 @@
 | 저장소 fallback | web storage 접근 환경 차이 가능성 확인 | `window.localStorage`, `document.defaultView.localStorage` fallback 보강 |
 | 상태 영속화 | web export reload에서는 홈 유지가 확인되지 않음 | Android APK 실기기에서 앱 재시작 기준으로 판정 |
 | 문구 정리 | 실기기 QA 전 계정/권한/목적지 화면의 내부 문구 추가 제거 | `npm run check:android-product-quality`로 반복 방지 |
-| 하단 탭 IA | QA용 `코디/소셜/우산/강수` 직접 탭이 MVP 공개 범위와 달랐음 | `홈/출발/MY`로 고정 |
+| 하단 탭 IA | QA용 `소셜/우산/강수` 직접 탭이 출시 후보 공개 범위와 달랐음 | `홈/코디/출발/MY`로 운영 |
 | 소셜 레이어 | 하단 소셜 진입이 MVP 핵심 판단과 약하게 연결됨 | 최초 출시 미공개 처리, 핵심 흐름 검증 후 추후 업데이트 |
 | 홈 계열 활성 탭 | 알림센터 `H3` 진입 시 하단 활성 탭이 비어 보일 수 있었음 | `H3/H4/H5`를 모두 홈 계열로 매핑 |
 | Expo web dev server | Node 24/freeport 조합에서 8094 포트 기동 실패 | web export + Python 정적 서버로 QA |
@@ -72,7 +72,7 @@
 ## 4. 다음 QA
 
 1. `7c857db8-da31-4c95-88d8-0455546c1c4d` APK 실기기 재설치
-2. 하단 탭 `홈/출발/MY` 표시 확인
+2. 하단 탭 `홈/코디/출발/MY` 표시 확인
 3. `출발 -> 목적지 추가` 진입 후 목적지 저장과 알림 설정 반영 확인
 4. 온보딩 완료 후 앱 완전 종료/재실행
 5. 홈 유지, 목적지 저장, 옷장 상태, 권한 상태 유지 확인
@@ -95,3 +95,4 @@
 | 2026-06-28 | Android `versionCode=2` preview build `7c857db8-da31-4c95-88d8-0455546c1c4d`를 최신 실기기 QA 대상으로 갱신 |
 | 2026-06-28 | `WeatherON_ANDROID_WEB_EXPORT_STATUS.md`와 `npm run check:android-web-export`로 mobile web export/목업 preview 혼동 방지 체크 추가 |
 | 2026-06-28 | `WeatherON_ANDROID_WEB_PREVIEW_SERVER_STATUS.md`와 `npm run check:android-web-preview-server`로 8094 서버 산출물 일치 여부 점검 추가 |
+| 2026-07-08 | 출시 로드맵 코디 포함 조정에 따라 web export QA 하단 탭 기준을 `홈/코디/출발/MY`로 갱신 |

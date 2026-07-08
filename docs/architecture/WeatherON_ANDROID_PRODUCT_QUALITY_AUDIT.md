@@ -45,7 +45,7 @@
 | 실기기 밀도 보정 | AppScreen/Section 간격과 패딩 축소로 작은 화면 첫 화면 정보 밀도 개선 |
 | 데이터 일관성 | 홈 날씨 카드와 코디 추천 사유가 시간별 최대 강수/바람 기준을 함께 사용하도록 보정 |
 | QA 컨트롤 제거 | 홈 날씨 상태 패널의 QA용 상태 토글을 사용자용 현재 상태 문구로 대체 |
-| 하단 탭 IA | QA용 `코디/소셜/우산/강수` 직접 탭을 제거하고 MVP 기준 `홈/출발/MY`로 고정 |
+| 하단 탭 IA | QA용 `우산/강수` 직접 탭 제거 유지. 2026-07-08 출시 로드맵에 따라 `코디` 탭 복원, `홈/코디/출발/MY` 4탭 운영. `소셜`만 검증 후 복원 |
 | 소셜 레이어 | `S1 ON Square`는 최초 출시 미공개 처리, 핵심 MVP 판단 흐름과 분리 |
 | 반복 방지 | `npm run check:android-product-quality` 정적 체크와 `npm run check:android-core-flow` 클릭 흐름 체크 추가 |
 | 하단 탭 가림 회귀 | `npm run check:android-core-flow`에서 목적지/강수/코디 하단 CTA가 하단 탭 위로 노출되는지 확인 |
@@ -69,7 +69,7 @@
 7. 비 시작/그침 알림 조건 저장과 앱 재시작 후 상태 영속화 QA
 7. EAS quota reset 후 최신 보정본 기준 새 preview APK 생성
 8. 기본 내비게이션 스택 도입 검토
-9. 새 preview APK에서 하단 탭 `홈/출발/MY`, 목적지 추가/알림 설정, 하단 CTA 가림 없음 재확인
+9. 새 preview APK에서 하단 탭 `홈/코디/출발/MY`, 코디 추천/상세/저장 gate/옷장 진입, 목적지 추가/알림 설정, 하단 CTA 가림 없음 재확인
 10. `소셜`/`ON Square`는 MVP 검증 완료 전까지 사용자 화면 미공개 유지
 11. 이미지 자산 최적화와 `.easignore` 효과 재측정
 12. Beta 전 스토어 스크린샷 캡처와 제출 blocker 17개 해소
@@ -81,7 +81,7 @@
 | TypeScript | `npx tsc -p apps/mobile/tsconfig.json --noEmit` 통과 |
 | Android release config | `npm run check:android-release` 통과 |
 | Product quality | `npm run check:android-product-quality` 통과 |
-| Core flow | `npm run check:android-core-flow` 통과. 홈 CTA, 목적지 비교, 강수 알림, 코디 기준 저장, 옷장 추가, 하단 탭 가림 회귀 포함 |
+| Core flow | `npm run check:android-core-flow` 통과. 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 코디 저장 계정 gate, 목적지 비교, 강수 알림, 코디 기준 저장, 옷장 추가, 하단 탭 가림 회귀 포함 |
 | 통합 게이트 | `npm run check:android-local-release-ready` 통과 |
 | 실기기 QA | `WeatherON_ANDROID_APK_QA_체크리스트.md` 기준으로 결과 기록 |
 
@@ -97,6 +97,7 @@
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-08 | 출시 로드맵 코디 포함 조정 반영: 하단 탭 `홈/코디/출발/MY` 4탭 복원, core-flow에 코디 탭 추천/상세/저장/옷장 진입·계정 gate 검사 추가, product-quality/web-export/preview-server 게이트 4탭 기준 동기화 |
 | 2026-07-05 | 폐쇄 테스트 문구 정리: `배지 제외`·`도착 역산`·`온보딩`·`미리보기 상태` 등 내부/스펙 톤 문구를 사용자 카피로 교체(H1 사이드바, H3, C3, O1/O4, 스플래시). 목업 정합: M1에 스타일 태그 설정 행 추가(O4 진입), 탭바 라벨 타이포·dot 간격 목업 수치 동기화. 전 게이트 재통과 |
 | 2026-07-05 | UI 디자인 스펙 정합: radius 토큰 상향(card 20/cardSm 16/sheet 28/tab 24), 플로팅 탭바 적용, 알림 센터·권한 게이트·약관·제보 텍스트 아이콘 제거, 알림 미읽음 Gold 테두리 제거. tsc/product-quality/preview-preflight/shared 통과. MVP 1 테스트 피드백 기록 양식 신설 |
 | 2026-06-27 | preview APK 실기기 확인 후 제품 완성도 감사 문서 작성 |

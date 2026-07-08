@@ -346,7 +346,7 @@ MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른
 
 | 영역 | 스펙 | 상태 |
 |---|---|---|
-| 탭 구성 | 목업 기준 5탭 | 3탭(홈/출발/MY) 운영. MVP 제품 범위 예외로 기록됨(`WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md` 하단 탭 IA). 코디/소셜은 검증 후 복원 |
+| 탭 구성 | 목업 기준 5탭 | 4탭(홈/코디/출발/MY) 운영. 2026-07-08 출시 로드맵에 따라 코디 탭 복원. 소셜은 검증 후 복원(`WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md` 하단 탭 IA) |
 | 탭 스타일 | floating tab bar, radius 24, active dot | 반영됨. `BottomNav` 좌우 16/하단 18 마진, 높이 64, radius 24, 5px Gold dot, 비활성 Mist |
 | 카드 radius | card 20 / cardSm 16 / sheet 28 | 반영됨. `tokens.ts` radius lg 20 / md 16 / sheet 28 / tab 24 |
 | 텍스트 아이콘 | 금지 | 반영됨. 알림 센터/권한 게이트/약관·제보 체크는 2026-07-05에 ui-icons 이미지로 교체. 2026-07-07에 날씨 제보(맑음/흐림/비/눈/강풍/천둥), 우산 추천 이유(시간/강수량/바람), 위치 변경 검색·현재 위치, 프리미엄 배지에 남아있던 유니코드 기호(☼▬☔＊≋↯◷⌁⌕현★)를 전부 View 기반 drawn glyph로 교체 완료 |
@@ -376,6 +376,7 @@ MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-08 (4차) | 출시 로드맵 코디 포함 조정 반영: 하단 탭을 `홈/코디/출발/MY` 4탭으로 복원(코디 탭 C1, C1~C4 활성 매핑), 소셜 탭만 검증 후 복원으로 유지. product-quality/web-export/preview-server/core-flow 게이트를 4탭 기준으로 동기화 |
 | 2026-07-08 (3차) | 홈 상단 날씨 상태 아이콘 출력 Pad를 80→96px, 내부 아이콘을 46→60px로 확대하고 halo/showcase 여백을 동기화. 실기기 A142에서 Pad bounds `[429,377][654,602]`, 아이콘 bounds `[471,419][611,560]`로 잘림 없음 확인 |
 | 2026-07-08 (2차) | 모션 시스템 도입(8장): 화면 전환(`ScreenTransition`, opacity+translateY 240ms), 알림 사이드바 슬라이드(Modal fade → 스크림 페이드+패널 translateX 260/200ms, 닫힘 애니메이션 재생 후 언마운트), 탭바 프레스 tint(0→0.12, 120ms), AppButton 프레스 scale+opacity(110ms)를 RN `Animated`로 구현. 실기기 느낌 부재 피드백에 대응 |
 | 2026-07-08 | 카드 그림자 시스템 도입: `cardShadow(theme)` 토큰으로 목업 BrandCard 음영을 v1.0 도달 가능 전 화면(홈/출발/MY/케어/추가/H2~H6/M2~M4/P2~P3/A/O/R 라인) 최상위 카드에 적용, 중첩·반투명 표면 적용 금지 규칙 명문화(8장). 홈 히어로를 목업 원본 세로 중앙 정렬로 재구성(시간별/주간 예보 카드 제거, 히어로 탭→H6 연결, 종 아이콘 재작도). G2 도착/이동 요약 칩을 탭 확장형으로 통합(중복 행·계산식 스트립 제거). 목적지 검색 결과의 Kakao/Google 출처 표기 제거. 선택 상태 색을 Gold→Clear로 분리. E2E(core-flow)와 품질 게이트를 현행 UI에 동기화 |

@@ -135,7 +135,7 @@ topActions.push(
   ],
   [
     "폐쇄 테스트 준비",
-    "`WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행",
+    "`WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증",
     closedTestInputsAppliedStatus === "적용됨" && closedTestPendingCount === 0 ? "완료" : `${closedTestPendingCount}개 대기 · 입력 ${closedTestInputsIssueCount}개 issue`,
   ],
   ["Production AAB", "`npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인", latestProductionBuildStatus === "FINISHED" ? "완료" : latestProductionBuildStatus],

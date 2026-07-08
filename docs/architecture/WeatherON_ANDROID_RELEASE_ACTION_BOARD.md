@@ -1,6 +1,6 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-07-06
+> 생성일: 2026-07-08
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
@@ -9,12 +9,12 @@
 |---|---|
 | 최신 preview build | `N/A - local Gradle release APK` |
 | build 상태 | LOCAL BUILD SUCCESS |
-| preview build version | `0.1.0 (7)` |
+| preview build version | `0.1.0 (6)` |
 | 소스 기준 version | `0.1.0 (7)` |
-| preview build 소스 일치 | 일치 |
+| preview build 소스 일치 | 불일치 |
 | 최신 production build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
 | production build 상태 | FINISHED |
-| 정적 체크 통과 | 23/23 |
+| 정적 체크 통과 | 22/23 |
 | 실기기 QA 미검증 | 0 |
 | 실기기 QA 결과 적용 | 적용됨 |
 | 스토어 스크린샷 issue | 0 |
@@ -29,8 +29,8 @@
 | 스토어 입력값 누락 필드 | 9 |
 | 스토어 입력값 placeholder | 0 |
 | 스토어 입력값 형식/검증 issue | 0 |
-| Play 제출 blocker | 17 |
-| 사용자/외부 입력 미확정 | 13 |
+| Play 제출 blocker | 9 |
+| 사용자/외부 입력 미확정 | 5 |
 | 폐쇄 테스트 대기 항목 | 13 |
 | 폐쇄 테스트 입력값 적용 | 미적용 |
 | 폐쇄 테스트 입력값 issue | 13 |
@@ -41,13 +41,13 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` 기준 | 통과 · 개선 필요점 3건 |
+| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (7) 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 `npm run build:android:preview:no-wait` 실행 | 필요 · 현재 APK 0.1.0 (6) |
+| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D13 판정 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |
 | 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
-| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 17개 잔존 |
+| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 9개 잔존 |
 
 ## 3. 실행 명령
 
@@ -98,12 +98,9 @@ npm run check:eas-production-build-status -- <eas-build-id>
 | `WeatherON_ANDROID_ARTIFACT_ACCESS_STATUS.md` | preview APK와 production AAB artifact URL 접근성 |
 | `WeatherON_ANDROID_RELEASE_EVIDENCE_INDEX.md` | 빌드/검증/문서 증빙 인덱스 |
 | `WeatherON_ANDROID_RELEASE_CONSISTENCY_STATUS.md` | 출시 상태 문서 간 값 일치성 검증 |
-| `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` | 최신 release APK 실기기 UI/UX QA 증거 |
 
 ## 5. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
 | 2026-06-28 | Android release action board 최초 생성 |
-| 2026-07-08 | `0.1.0 (7)` release APK 실기기 UI/UX QA 결과와 최신 production AAB 후보 반영 |
-| 2026-07-08 | 비공개 테스트 14일 운영 안에 코디 포함 build 검증을 출시 보드 액션에 반영 |

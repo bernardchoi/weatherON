@@ -15,9 +15,9 @@
 | 응답 상태 | 200 OK |
 | dist index | 있음 |
 | index.html 일치 | 일치 |
-| dist script | `/_expo/static/js/web/index-3dc3e3d32c28720056c28c53fdbc3a77.js` |
-| served script | `/_expo/static/js/web/index-3dc3e3d32c28720056c28c53fdbc3a77.js` |
-| 하단 메뉴 증빙 | 홈/출발/MY 확인 |
+| dist script | `/_expo/static/js/web/index-13b6d48916f42cfe73696f083074faf7.js` |
+| served script | `/_expo/static/js/web/index-13b6d48916f42cfe73696f083074faf7.js` |
+| 하단 메뉴 증빙 | 홈/코디/출발/MY 확인 |
 
 ## 2. 판정 기준
 
@@ -25,7 +25,7 @@
 |---|---|
 | 서버 루트 | 8094 응답 HTML이 `apps/mobile/dist/index.html`과 일치 |
 | JS 번들 | 응답 HTML의 script가 dist index의 script와 일치 |
-| 하단 메뉴 | dist 번들에 `홈/출발/MY` 포함, 최초 출시 미공개 `코디/소셜` 및 `우산/강수` 하단 라벨 없음 |
+| 하단 메뉴 | dist 번들에 `홈/코디/출발/MY` 포함, 최초 출시 미공개 `소셜` 및 `우산/강수` 하단 라벨 없음 |
 
 ## 3. Issues
 

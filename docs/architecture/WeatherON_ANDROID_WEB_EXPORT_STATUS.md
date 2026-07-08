@@ -11,8 +11,8 @@
 | issue 수 | 0 |
 | warning 수 | 1 |
 | index.html | apps/mobile/dist/index.html |
-| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-49344638a25fc0256629d7497cf7e017.js |
-| 보조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-557f0c1f3e8ae9e1b1ce55d686dca3da.js<br>apps/mobile/dist/_expo/static/js/web/index-bf232c36d8dca39cd37f35f07452406a.js |
+| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-13b6d48916f42cfe73696f083074faf7.js |
+| 보조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-37f1d8314388d1efb61370e312bb3966.js<br>apps/mobile/dist/_expo/static/js/web/index-c624d1c03633fb7f70395b73d6e8d301.js |
 | 전체 JS 번들 | 3 |
 | legacy dist-web stale marker | apps/mobile/dist-web/_expo/static/js/web/index-e66bb30f16a8f0efa5d87aff1bfa73e0.js |
 
@@ -21,7 +21,7 @@
 | 항목 | 기준 |
 |---|---|
 | 앱 엔트리 | 참조 JS에 `AppNavigator`, `BottomNav`, `bottomNavRoutes` 포함 |
-| 하단 탭 | 참조 JS에 `홈/출발/MY` 라벨 포함. 최초 출시에서는 코디/소셜 등 확장 레이어 미공개 |
+| 하단 탭 | 참조 JS에 `홈/코디/출발/MY` 라벨 포함. 최초 출시에서는 소셜 등 확장 레이어 미공개 |
 | 목업 혼입 | 참조 JS에 `preview-shell`, `mockup screens`, `목업` 없음 |
 | 보조 JS | index.html이 참조하지 않으면 실제 렌더에는 영향 없음. 목업 마커가 들어 있을 때만 warning으로 기록 |
 | legacy dist-web | `apps/mobile/dist-web`는 이전 산출물이다. 존재하더라도 `apps/mobile/dist`를 기준으로 서빙한다 |

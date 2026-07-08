@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Packet
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-08
 > 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D13 QA를 바로 수행할 수 있게 한 장으로 정리한다.
 
 ## 1. 설치 대상
@@ -9,9 +9,9 @@
 |---|---|
 | EAS build id | `N/A - local Gradle release APK` |
 | Build 상태 | LOCAL BUILD SUCCESS |
-| Version | `0.1.0 (7)` |
+| Version | `0.1.0 (6)` |
 | 소스 기준 Version | `0.1.0 (7)` |
-| QA 대상 일치 | 일치 |
+| QA 대상 일치 | 불일치 · 새 preview build 필요 |
 | Build 링크 | N/A |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | ADB 연결 | 가능 |
@@ -19,9 +19,9 @@
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 
-> 최신 `0.1.0 (7)`에서 재확인한 범위는 UI/UX 흐름 중심이다. D5/D7/D9/D11/D12/D13처럼 별도 환경 조작이나 알림 shade 확인이 필요한 항목은 기존 `0.1.0 (6)` 통과 증거를 유지하되, 정식 제출 전 최신 빌드로 재확인한다.
-
 ## 2. 실기기 직접 설치
+
+> 주의: 현재 APK는 최신 소스 기준이 아니다. D1~D13 정식 재검증은 새 preview APK 생성 후 진행한다.
 
 
 1. Android 기기에서 APK artifact 링크를 연다.
@@ -51,8 +51,8 @@ npm run install:android-preview-apk
 | D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | pm clear 후 MainActivity 실행, O1 온보딩 진입, crash log buffer 비어 있음 |
 | D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 보류 | H1/Guest/READY/OUTER 등 내부 route/dev label은 미노출. Android 권한 팝업 앱명 WeatherON Dev 노출은 출시 label 확정 필요 |
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
-| D4-1 | 하단 탭 IA | MVP 기준 `홈/출발/MY` 표시, `코디/소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
-| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 기준 저장, 옷장 추가, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
+| D4-1 | 하단 탭 IA | 출시 후보 기준 `홈/코디/출발/MY` 표시, `소셜/우산/강수` 직접 탭 없음 | 보류 | 2026-07-08 로드맵 조정으로 코디 탭 복원. 새 preview APK에서 하단 탭 4탭 재확인 필요 |
+| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 통과 | 2026-07-08 web core-flow에서 코디 탭 추천/상세/저장 gate/옷장 프리셋 진입 통과. 실기기 새 APK 재확인 필요 |
 | D4-3 | 홈 목적지 카드 | 상단 현재 위치 날씨, 하단 목적지 선택 카드, 목적지 기준 `나갈 시간/비 그침/챙길 것` 카드 표시 | 통과 | local release APK 재빌드/재설치 후 실기기 홈에서 현재 위치 날씨, 목적지 선택 카드, 목적지 정보 3개 카드 확인. 캡처 `/tmp/weatheron-qa-home.png`, UI tree `/tmp/weatheron-ui-home.xml` |
 | D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
 | D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
@@ -63,7 +63,7 @@ npm run install:android-preview-apk
 | D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 G2 다크/라이트 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. 캡처 `/tmp/weatheron-qa-g2-dark.png`, `/tmp/weatheron-qa-g2-transport-after.png` 확인. crash log fatal/ANR 패턴 없음 |
 | D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
 | D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
-| D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | `0.1.0 (7)` 실기기 QA에서 도착 편집기와 이동수단 드롭다운이 하단 탭바에 가리지 않음. 신사이바시역은 `자동 · 확인 필요`, 도보 `장거리 목적지는 도보 제외`, 자차/대중교통 `외부 경로 확인 필요` 표시. 증거 `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
+| D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | 실기기에서 `자동/도보/자차/대중교통` 옵션과 `대중교통은 배차/환승 변동 가능` 문구 확인. `도보` 선택 후 버튼이 `이동수단 도보, 선택 목록 열기`로 돌아오고 옵션 노드 잔존 없음. 캡처 `/tmp/weatheron-qa-g2-transport-open.png`, `/tmp/weatheron-qa-g2-transport-after.png` |
 
 ### D9 목적지 검색 상세 케이스
 
@@ -90,8 +90,8 @@ npm run install:android-preview-apk
 
 ## 4. 결과 반영 방법
 
-실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
-`easBuildId`는 `N/A - local Gradle release APK`, `appVersion`은 `0.1.0 (7)`과 일치해야 한다.
+새 preview build 생성 후 실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
+`easBuildId`와 `appVersion`은 새 preview build 확인 후 갱신된 `WeatherON_ANDROID_BUILD_STATUS.md` 값과 일치해야 한다.
 
 ```bash
 npm run sync:android-device-qa-env

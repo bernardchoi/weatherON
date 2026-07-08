@@ -20,6 +20,9 @@ const activeDays = normalizeTableValue(tableValue(status, "14일 운영 기록")
 const aabArtifact = normalizeTableValue(tableValue(playUploadPacket, "AAB artifact"));
 const buildId = normalizeTableValue(tableValue(playUploadPacket, "EAS build id"));
 const sourceVersion = normalizeTableValue(tableValue(playUploadPacket, "소스 기준 버전")) || "0.1.0 (6)";
+// 2026-07-08 출시 로드맵: 14일 운영 안에 코디 포함 build로 전환해야 한다.
+// 운영 표의 버전은 코디 포함 후속 build를 뜻하는 `+` 표기를 사용한다.
+const outfitBuildVersion = sourceVersion.endsWith(")") ? sourceVersion.replace(/\)$/, "+)") : `${sourceVersion}+`;
 
 const report = `# WeatherON Android Closed Test Packet
 
@@ -40,6 +43,7 @@ const report = `# WeatherON Android Closed Test Packet
 | 14일 운영 기록 | ${activeDays} |
 | production build | \`${buildId}\` |
 | AAB artifact | ${aabArtifact} |
+| 14일 내 코디 포함 | 필요 |
 
 ## 2. 먼저 확정할 값
 
@@ -61,8 +65,9 @@ const report = `# WeatherON Android Closed Test Packet
 4. 폐쇄 테스트가 필요하면 AAB artifact를 폐쇄 테스트 트랙에 업로드
 5. 테스터 12명 이상 초대
 6. 테스터 12명 이상 opt-in 확인
-7. Day 1~14 운영 기록 작성
-8. 주요 이슈와 해결 상태 기록
+7. Day 1~14 운영 중 코디 포함 build로 전환
+8. 코디 추천/상세/저장 gate/옷장 프리셋 검증 기록
+9. 주요 이슈와 해결 상태 기록
 
 ## 4. 운영 기록 최소 항목
 
@@ -70,20 +75,20 @@ const report = `# WeatherON Android Closed Test Packet
 
 | Day | 날짜 | 활성 테스터 | 배포 버전 | 주요 플로우 | 이슈 수 | 메모 |
 |---|---|---|---|---|---|---|
-| 1 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 2 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 3 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 4 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 5 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 6 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 7 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 8 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 9 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 10 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 11 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 12 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 13 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
-| 14 |  |  | ${sourceVersion} | 홈/출발/MY + 목적지 알림 설정 |  |  |
+| 1 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 목적지 알림 설정 + 코디 추천 |  |  |
+| 2 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 상세 |  |  |
+| 3 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 저장 gate |  |  |
+| 4 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 옷장 프리셋 |  |  |
+| 5 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 추천 |  |  |
+| 6 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 상세 |  |  |
+| 7 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 저장 gate |  |  |
+| 8 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 옷장 프리셋 |  |  |
+| 9 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 추천 |  |  |
+| 10 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 상세 |  |  |
+| 11 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 저장 gate |  |  |
+| 12 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 옷장 프리셋 |  |  |
+| 13 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 추천/상세 회귀 |  |  |
+| 14 |  |  | ${outfitBuildVersion} | 홈/출발/MY + 코디 출시 후보 점검 |  |  |
 
 ## 5. 공식 기준 확인
 

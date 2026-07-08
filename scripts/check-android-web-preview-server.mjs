@@ -94,20 +94,21 @@ function checkBottomNavBundle(sources) {
 
   const required = [
     ['label:"홈"', 'label:"\\ud648"'],
+    ['label:"코디"', 'label:"\\ucf54\\ub514"'],
     ['label:"출발"', 'label:"\\ucd9c\\ubc1c"'],
     ['label:"MY"'],
   ];
-  const stale = ['label:"코디"', 'label:"\\ucf54\\ub514"', 'label:"소셜"', 'label:"\\uc18c\\uc15c"', 'label:"우산"', 'label:"\\uc6b0\\uc0b0"', 'label:"강수"', 'label:"\\uac15\\uc218"'];
+  const stale = ['label:"소셜"', 'label:"\\uc18c\\uc15c"', 'label:"우산"', 'label:"\\uc6b0\\uc0b0"', 'label:"강수"', 'label:"\\uac15\\uc218"'];
   const missing = required.filter((snippets) => !snippets.some((snippet) => bottomNavText.includes(snippet)));
   const staleFound = stale.filter((snippet) => bottomNavText.includes(snippet));
 
   if (missing.length > 0) {
-    issues.push("dist bundle does not prove bottom nav labels 홈/출발/MY");
+    issues.push("dist bundle does not prove bottom nav labels 홈/코디/출발/MY");
   }
   if (staleFound.length > 0) {
     issues.push(`dist bundle contains stale bottom nav labels: ${staleFound.join(", ")}`);
   }
-  return missing.length === 0 && staleFound.length === 0 ? "홈/출발/MY 확인" : "확인 필요";
+  return missing.length === 0 && staleFound.length === 0 ? "홈/코디/출발/MY 확인" : "확인 필요";
 }
 
 function bottomNavRoutesText(bundleTexts) {
@@ -149,7 +150,7 @@ function writeReport() {
 |---|---|
 | 서버 루트 | 8094 응답 HTML이 \`apps/mobile/dist/index.html\`과 일치 |
 | JS 번들 | 응답 HTML의 script가 dist index의 script와 일치 |
-| 하단 메뉴 | dist 번들에 \`홈/출발/MY\` 포함, 최초 출시 미공개 \`코디/소셜\` 및 \`우산/강수\` 하단 라벨 없음 |
+| 하단 메뉴 | dist 번들에 \`홈/코디/출발/MY\` 포함, 최초 출시 미공개 \`소셜\` 및 \`우산/강수\` 하단 라벨 없음 |
 
 ## 3. Issues
 

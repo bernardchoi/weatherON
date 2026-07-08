@@ -120,11 +120,14 @@ assertSourceIncludes("apps/mobile/src/navigation/routes.ts", ['label: "출발"',
 assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\n  "C3",\n  "C4",', '  "O4",\n  "R3",']);
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
-assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
+assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "C1";', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
 assertSourceIncludes("scripts/check-android-core-flow.mjs", [
   "assertClearOfBottomNav",
   "bottom nav overlap risk",
+  "checkOutfitLaunchFlow",
+  "checkOutfitSaveGateFlow",
+  '"코디 탭"',
   "checkNotificationPermissionRecovery",
   "checkPersistedWeatherFallbackFlow",
   "checkAlertSettingsDestinationEmptyFlow",
@@ -877,10 +880,10 @@ function assertBottomNavRoutes(relativePath) {
   const match = text.match(/export const bottomNavRoutes:[\s\S]*?\n\];/);
   assert.ok(match, `${relativePath} must define bottomNavRoutes`);
   const bottomNavText = match[0];
-  for (const snippet of ['id: "H1"', 'label: "홈"', 'id: "G1"', 'label: "출발"', 'id: "M1"', 'label: "MY"']) {
+  for (const snippet of ['id: "H1"', 'label: "홈"', 'id: "C1"', 'label: "코디"', 'id: "G1"', 'label: "출발"', 'id: "M1"', 'label: "MY"']) {
     assert.ok(bottomNavText.includes(snippet), `${relativePath} bottomNavRoutes must include: ${snippet}`);
   }
-  for (const snippet of ['id: "C1"', 'label: "코디"', 'id: "S1"', 'label: "소셜"', 'id: "H3"', 'id: "H4"', 'id: "H5"', 'label: "우산"', 'label: "강수"']) {
+  for (const snippet of ['id: "S1"', 'label: "소셜"', 'id: "H3"', 'id: "H4"', 'id: "H5"', 'label: "우산"', 'label: "강수"']) {
     assert.ok(!bottomNavText.includes(snippet), `${relativePath} bottomNavRoutes must not include: ${snippet}`);
   }
 }

@@ -98,6 +98,8 @@ try {
   await installCoreFlowFetchMock(page);
   await runCoreFlowStep("load seeded app", () => loadSeededApp(page));
   await runCoreFlowStep("home decision flow", () => checkHomeDecisionFlow(page));
+  await runCoreFlowStep("outfit launch flow", () => checkOutfitLaunchFlow(page));
+  await runCoreFlowStep("outfit save gate", () => checkOutfitSaveGateFlow(browser));
   await runCoreFlowStep("notification permission recovery", () => checkNotificationPermissionRecovery(browser));
   await runCoreFlowStep("app permissions recovery", () => checkAppPermissionsRecovery(browser));
   await runCoreFlowStep("persisted weather fallback", () => checkPersistedWeatherFallbackFlow(browser));
@@ -204,6 +206,62 @@ async function checkHomeDecisionFlow(page) {
   await clickAriaIncludes(page, "뒤로");
   await clickText(page, "홈");
   await assertText(page, "최고 ");
+}
+
+// 2026-07-08 출시 로드맵: 코디 추천(C1) → 상세(C4) → 저장 → 옷장(C2) → 아이템 추가(C3) 진입 검증.
+async function checkOutfitLaunchFlow(page) {
+  await clickAriaIncludes(page, "코디 탭");
+  await assertText(page, "추천 기준");
+  await assertText(page, "오늘 입을 세트");
+  await assertBottomNav(page);
+  await assertClearOfBottomNav(page, "상세 보기");
+
+  await clickText(page, "상세 보기");
+  await assertText(page, "착장 구성");
+  await assertText(page, "코디 저장");
+  await clickText(page, "코디 저장");
+  await assertText(page, "저장 완료");
+
+  await clickAriaIncludes(page, "코디 탭");
+  await assertText(page, "오늘 입을 세트");
+  await clickText(page, "옷장");
+  await assertText(page, "내 옷장");
+  await clickText(page, "옷 추가");
+  await assertText(page, "옷장 프리셋");
+  await clickAriaIncludes(page, "홈 탭");
+  await assertText(page, "최고 ");
+}
+
+// 계정 미연결 상태에서 코디 저장이 계정 gate(A2)로 이어지는지 검증.
+async function checkOutfitSaveGateFlow(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  try {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+    page.on("console", (message) => logs.push(`${message.type()}: ${message.text()}`));
+    page.on("pageerror", (error) => issues.push(`page error: ${error.message}`));
+    await installCoreFlowFetchMock(page);
+
+    await page.evaluateOnNewDocument((state) => {
+      localStorage.setItem(
+        "weatheron.appState.v1",
+        JSON.stringify({
+          ...state,
+          accountLinked: false,
+          termsRequiredAccepted: false,
+        }),
+      );
+    }, seedState);
+    await page.goto(withCacheBust(previewUrl, "outfitSaveGate"), { waitUntil: "networkidle0", timeout: 25000 });
+    await waitForApp();
+    await clickAriaIncludes(page, "코디 탭");
+    await clickText(page, "상세 보기");
+    await assertText(page, "착장 구성");
+    await clickText(page, "계정 연결 후 저장");
+    await assertText(page, "계정 연결");
+  } finally {
+    await context.close();
+  }
 }
 
 async function checkNotificationPermissionRecovery(browser) {
