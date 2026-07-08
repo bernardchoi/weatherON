@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -707,7 +707,31 @@ function NotificationSidebar({
   onOpen: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
 }) {
-  if (!visible) return null;
+  const [mounted, setMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: 200,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setMounted(false);
+    });
+  }, [progress, visible]);
+
+  if (!mounted) return null;
 
   const effectiveReadNotificationIds = permissionReady ? readNotificationIds : notifications.map((item) => item.id);
   const unreadCount = notifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).length;
@@ -715,18 +739,29 @@ function NotificationSidebar({
   const previewOnly = !permissionReady;
   const groups = buildSidebarGroups(notifications.slice(0, 6), effectiveReadNotificationIds, previewOnly);
   const recentHistory = notificationHistory.slice(0, 3);
+  const panelTranslateX = progress.interpolate({ inputRange: [0, 1], outputRange: [420, 0] });
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
       <View style={styles.sidebarLayer}>
-        <Pressable
-          accessible={false}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          onPress={onClose}
-          style={styles.sidebarScrim}
-        />
-        <View style={[styles.sidebarPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
+        <Animated.View
+          style={[styles.sidebarScrim, { opacity: progress }]}
+        >
+          <Pressable
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            onPress={onClose}
+            style={styles.sidebarScrimTouchable}
+          />
+        </Animated.View>
+        <Animated.View
+          style={[
+            styles.sidebarPanel,
+            { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow },
+            { transform: [{ translateX: panelTranslateX }] },
+          ]}
+        >
           <View style={styles.sidebarHeader}>
             <View style={styles.sidebarTitleGroup}>
               <Text style={[styles.sidebarKicker, { color: hasUnread ? getInfoAccent(theme) : theme.clear }]}>
@@ -809,7 +844,7 @@ function NotificationSidebar({
           >
             <Text style={[styles.sidebarSettingsText, { color: theme.onAccent }]}>알림 설정으로 이동</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -999,7 +1034,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 216,
+    minHeight: 230,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -1007,12 +1042,12 @@ const styles = StyleSheet.create({
   },
   weatherHalo: {
     position: "absolute",
-    top: 2,
+    top: 0,
     left: "50%",
-    marginLeft: -77,
-    width: 154,
-    height: 154,
-    borderRadius: 77,
+    marginLeft: -88,
+    width: 176,
+    height: 176,
+    borderRadius: 88,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
@@ -1024,16 +1059,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 80,
-    height: 80,
+    width: 96,
+    height: 96,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 46,
-    height: 46,
+    width: 60,
+    height: 60,
   },
   showcaseTemp: {
     marginTop: 8,
@@ -1388,6 +1423,9 @@ const styles = StyleSheet.create({
   sidebarScrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(6, 14, 24, 0.48)",
+  },
+  sidebarScrimTouchable: {
+    ...StyleSheet.absoluteFillObject,
   },
   sidebarPanel: {
     width: "86%",

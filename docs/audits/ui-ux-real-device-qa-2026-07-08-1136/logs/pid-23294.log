@@ -1,0 +1,11 @@
+--------- beginning of system
+07-08 11:38:30.419 23294 23332 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-08 11:38:33.864 23294 23382 W HWUI    : Image decoding logging dropped!
+07-08 11:38:41.800 23294 23301 W System  : A resource failed to call close.
+07-08 11:38:41.800 23294 23301 W System  : A resource failed to call close.
+07-08 11:39:59.311 23294 23421 W HWUI    : Image decoding logging dropped!
+07-08 11:41:56.671 23294 23383 W HWUI    : Image decoding logging dropped!
+07-08 11:41:56.672 23294 23383 W HWUI    : Image decoding logging dropped!
+07-08 11:41:56.674 23294 23414 W HWUI    : Image decoding logging dropped!
+07-08 11:41:56.675 23294 23417 W HWUI    : Image decoding logging dropped!

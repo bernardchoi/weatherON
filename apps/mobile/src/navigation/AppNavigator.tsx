@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { BackHandler, StyleSheet, useColorScheme, View } from "react-native";
 import { BottomNav } from "../components/BottomNav";
+import { ScreenTransition } from "../components/ScreenTransition";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
 import { HomeScreen } from "../screens/HomeScreen";
 import { LocationChangeScreen } from "../screens/LocationChangeScreen";
@@ -168,6 +169,7 @@ export function AppNavigator() {
   return (
     <AppThemeProvider theme={theme}>
       <View style={[styles.root, { backgroundColor: theme.background }]}>
+      <ScreenTransition key={route}>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
@@ -221,6 +223,7 @@ export function AppNavigator() {
           onComplete={appState.completePermissionGate}
         />
       ) : null}
+      </ScreenTransition>
         {isLaunchVisibleP0Route(route) && route !== "G6" ? <BottomNav activeRoute={bottomNavActiveRoute} onNavigate={appState.navigate} /> : null}
         {route === "A4" || route === "R1" || route === "R2" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
         {route === "O4" && appState.styleProfileReturnRoute ? (

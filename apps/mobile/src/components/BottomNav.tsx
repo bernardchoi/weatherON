@@ -1,5 +1,5 @@
-import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useRef } from "react";
+import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -29,21 +29,59 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
       {bottomNavRoutes.map((route) => {
         const active = route.id === activeTabRoute;
         return (
-          <Pressable
-            accessibilityLabel={`${route.label} 탭`}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
+          <TabButton
             key={route.id}
+            routeId={route.id}
+            label={route.label}
+            active={active}
+            tintColor={theme.cardMuted}
             onPress={() => onNavigate(route.id)}
-            style={({ pressed }) => [styles.item, pressed ? { backgroundColor: theme.cardMuted } : null]}
           >
             <View style={[styles.activeDot, { backgroundColor: active ? theme.gold : "transparent" }]} />
             <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
             <Text style={[styles.label, { color: active ? theme.gold : theme.subtle }]}>{route.label}</Text>
-          </Pressable>
+          </TabButton>
         );
       })}
     </View>
+  );
+}
+
+// UI Design Spec v1.0 §10: 프레스 tint overlay opacity 0.12, 120ms.
+function TabButton({
+  routeId,
+  label,
+  active,
+  tintColor,
+  onPress,
+  children,
+}: {
+  routeId: P0RouteId;
+  label: string;
+  active: boolean;
+  tintColor: string;
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  const tint = useRef(new Animated.Value(0)).current;
+
+  const animateTo = (toValue: number) => {
+    Animated.timing(tint, { toValue, duration: 120, useNativeDriver: true }).start();
+  };
+
+  return (
+    <Pressable
+      accessibilityLabel={`${label} 탭`}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      onPressIn={() => animateTo(0.12)}
+      onPressOut={() => animateTo(0)}
+      style={styles.item}
+    >
+      <Animated.View style={[StyleSheet.absoluteFillObject, styles.itemTint, { backgroundColor: tintColor, opacity: tint }]} />
+      {children}
+    </Pressable>
   );
 }
 
@@ -91,6 +129,10 @@ const styles = StyleSheet.create({
     gap: 3,
     borderRadius: 14,
     marginVertical: 4,
+    overflow: "hidden",
+  },
+  itemTint: {
+    borderRadius: 14,
   },
   activeDot: {
     width: 5,
