@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -151,7 +151,7 @@ export function DestinationCareScreen({
             />
           </View>
 
-          {arrivalEditorOpen ? (
+          <DropdownMotion visible={arrivalEditorOpen} maxHeight={292}>
             <ArrivalInputControl
               label="도착 희망"
               value={targetArrivalTime}
@@ -159,8 +159,8 @@ export function DestinationCareScreen({
               onSelectTime={onSetDestinationTargetArrivalTime}
               theme={theme}
             />
-          ) : null}
-          {transportSelectorOpen ? (
+          </DropdownMotion>
+          <DropdownMotion visible={transportSelectorOpen} maxHeight={260}>
             <TransportDropdown
               transportMode={transportMode}
               walkUnavailable={walkUnavailable}
@@ -171,7 +171,7 @@ export function DestinationCareScreen({
               }}
               theme={theme}
             />
-          ) : null}
+          </DropdownMotion>
           <RepeatSchedulePanel
             repeatEnabled={repeatEnabled}
             repeatDays={repeatDays}
@@ -207,7 +207,7 @@ export function DestinationCareScreen({
             <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "상세"}</Text>
           </Pressable>
 
-          {detailPanelOpen ? (
+          <DropdownMotion visible={detailPanelOpen} maxHeight={520}>
             <>
               <View style={styles.compareGrid}>
                 <CompareMetric
@@ -263,7 +263,7 @@ export function DestinationCareScreen({
                 </Pressable>
               </View>
             </>
-          ) : null}
+          </DropdownMotion>
         </View>
 
         <Pressable
@@ -426,7 +426,7 @@ function TimeWheel({
       accessibilityLabel={accessibilityLabel}
       style={[styles.timeWheel, { borderColor: theme.border }]}
       contentContainerStyle={styles.timeWheelContent}
-      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 44 - 44) }}
+      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 48 - 48) }}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
@@ -577,7 +577,7 @@ function RepeatSchedulePanel({
         </Pressable>
       </View>
 
-      {repeatEnabled ? (
+      <DropdownMotion visible={repeatEnabled} maxHeight={58}>
         <Pressable
           accessibilityLabel={repeatDaysOpen ? "반복 요일 선택 닫기" : "반복 요일 선택 열기"}
           accessibilityRole="button"
@@ -588,9 +588,9 @@ function RepeatSchedulePanel({
           <Text style={[styles.repeatDayToggleText, { color: theme.text }]}>요일 선택</Text>
           <Text style={[styles.repeatDayToggleMeta, { color: theme.clear }]}>{repeatDaysOpen ? "닫기" : repeatSummary}</Text>
         </Pressable>
-      ) : null}
+      </DropdownMotion>
 
-      {repeatEnabled && repeatDaysOpen ? (
+      <DropdownMotion visible={repeatEnabled && repeatDaysOpen} maxHeight={96}>
         <View style={styles.repeatDayRow}>
           {repeatDayOptions.map((option) => {
             const selected = repeatDays.includes(option.day);
@@ -608,8 +608,37 @@ function RepeatSchedulePanel({
             );
           })}
         </View>
-      ) : null}
+      </DropdownMotion>
     </View>
+  );
+}
+
+function DropdownMotion({ visible, maxHeight, children }: { visible: boolean; maxHeight: number; children: React.ReactNode }) {
+  const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const [rendered, setRendered] = useState(visible);
+
+  useEffect(() => {
+    if (visible) setRendered(true);
+    Animated.timing(progress, {
+      toValue: visible ? 1 : 0,
+      duration: visible ? 260 : 190,
+      easing: visible ? Easing.out(Easing.exp) : Easing.in(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished && !visible) setRendered(false);
+    });
+  }, [progress, visible]);
+
+  if (!rendered) return null;
+
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] });
+  const scaleY = progress.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] });
+  const animatedMaxHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [0, maxHeight] });
+
+  return (
+    <Animated.View style={[styles.dropdownMotion, { maxHeight: animatedMaxHeight, opacity: progress, transform: [{ translateY }, { scaleY }] }]}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -1035,14 +1064,14 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   arrivalWheelRow: {
-    minHeight: 110,
+    minHeight: 120,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
   timeWheel: {
     width: 76,
-    maxHeight: 136,
+    maxHeight: 148,
     borderRadius: radius.sm,
     borderWidth: 1,
   },
@@ -1050,7 +1079,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   timeWheelOption: {
-    minHeight: 44,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.xs,
@@ -1289,6 +1318,9 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  dropdownMotion: {
+    overflow: "hidden",
   },
   transportDropdownRow: {
     minHeight: 52,

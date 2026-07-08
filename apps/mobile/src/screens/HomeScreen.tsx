@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -29,6 +29,7 @@ export function HomeScreen({
   onSetWeatherProviderMode,
   onRefreshWeather,
   onSelectDestinationPlace,
+  onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onOpenNotificationDeepLink,
 }: P0ScreenProps) {
@@ -155,6 +156,7 @@ export function HomeScreen({
         theme={theme}
         onClose={() => setNotificationSidebarOpen(false)}
         onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        onMarkNotificationRead={onMarkNotificationRead}
         onOpenSettings={() => {
           setNotificationSidebarOpen(false);
           onNavigate("M2");
@@ -689,6 +691,7 @@ function NotificationSidebar({
   permissionReady,
   onClose,
   onMarkAllNotificationsRead,
+  onMarkNotificationRead,
   onOpenSettings,
   onOpenCenter,
   onOpen,
@@ -702,28 +705,32 @@ function NotificationSidebar({
   permissionReady: boolean;
   onClose: () => void;
   onMarkAllNotificationsRead: () => void;
+  onMarkNotificationRead: (id: string) => void;
   onOpenSettings: () => void;
   onOpenCenter: () => void;
   onOpen: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
 }) {
   const [mounted, setMounted] = useState(visible);
+  const [bulkDismissing, setBulkDismissing] = useState(false);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const dragX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       setMounted(true);
+      dragX.setValue(0);
       Animated.timing(progress, {
         toValue: 1,
-        duration: 260,
-        easing: Easing.out(Easing.cubic),
+        duration: 320,
+        easing: Easing.out(Easing.exp),
         useNativeDriver: true,
       }).start();
       return;
     }
     Animated.timing(progress, {
       toValue: 0,
-      duration: 200,
+      duration: 230,
       easing: Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
@@ -737,9 +744,59 @@ function NotificationSidebar({
   const unreadCount = notifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).length;
   const hasUnread = unreadCount > 0;
   const previewOnly = !permissionReady;
-  const groups = buildSidebarGroups(notifications.slice(0, 6), effectiveReadNotificationIds, previewOnly);
+  const visibleNotifications = previewOnly
+    ? notifications.slice(0, 6)
+    : notifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).slice(0, 6);
+  const groups = buildSidebarGroups(visibleNotifications, effectiveReadNotificationIds, previewOnly);
   const recentHistory = notificationHistory.slice(0, 3);
-  const panelTranslateX = progress.interpolate({ inputRange: [0, 1], outputRange: [420, 0] });
+  const panelBaseTranslateX = progress.interpolate({ inputRange: [0, 1], outputRange: [420, 0] });
+  const panelTranslateX = Animated.add(panelBaseTranslateX, dragX);
+
+  const animateSidebarBack = () => {
+    Animated.spring(dragX, {
+      toValue: 0,
+      damping: 18,
+      stiffness: 180,
+      mass: 0.8,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeBySwipe = () => {
+    Animated.timing(dragX, {
+      toValue: 420,
+      duration: 220,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) onClose();
+    });
+  };
+
+  const panelPanResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+    onMoveShouldSetPanResponderCapture: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+    onPanResponderMove: (_, gesture) => {
+      dragX.setValue(Math.max(0, gesture.dx));
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (gesture.dx > 82 || gesture.vx > 0.55) {
+        closeBySwipe();
+        return;
+      }
+      animateSidebarBack();
+    },
+    onPanResponderTerminate: animateSidebarBack,
+  });
+
+  const handleMarkAllRead = () => {
+    if (!hasUnread || bulkDismissing) return;
+    setBulkDismissing(true);
+    setTimeout(() => {
+      onMarkAllNotificationsRead();
+      setBulkDismissing(false);
+    }, 260);
+  };
 
   return (
     <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
@@ -761,6 +818,8 @@ function NotificationSidebar({
             { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow },
             { transform: [{ translateX: panelTranslateX }] },
           ]}
+          renderToHardwareTextureAndroid
+          {...panelPanResponder.panHandlers}
         >
           <View style={styles.sidebarHeader}>
             <View style={styles.sidebarTitleGroup}>
@@ -772,9 +831,6 @@ function NotificationSidebar({
                 {previewOnly ? "권한 켜기 전 예시" : `${notifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
               </Text>
             </View>
-            <Pressable accessibilityLabel="알림 사이드바 닫기" accessibilityRole="button" onPress={onClose} style={[styles.closeIconButton, { borderColor: theme.border }]}>
-              <Text style={[styles.closeIconText, { color: theme.text }]}>닫기</Text>
-            </Pressable>
           </View>
 
           {!permissionReady ? (
@@ -791,7 +847,7 @@ function NotificationSidebar({
             accessibilityRole="button"
             accessibilityState={{ disabled: !hasUnread }}
             disabled={!hasUnread}
-            onPress={onMarkAllNotificationsRead}
+            onPress={handleMarkAllRead}
             style={[styles.markAllButton, { backgroundColor: theme.cardMuted, borderColor: hasUnread ? getInfoAccent(theme) : theme.border, opacity: hasUnread ? 1 : 0.54 }]}
           >
             <Text style={[styles.markAllText, { color: hasUnread ? getInfoAccent(theme) : theme.subtle }]}>전체 읽음</Text>
@@ -808,7 +864,7 @@ function NotificationSidebar({
           </Pressable>
 
           <ScrollView style={styles.sidebarScroll} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
-            {groups.map((group) => (
+            {groups.map((group, groupIndex) => (
               <SidebarNotificationGroup
                 key={group.title}
                 group={group}
@@ -816,6 +872,9 @@ function NotificationSidebar({
                 smartCareEnabled={smartCareEnabled}
                 previewOnly={previewOnly}
                 onOpen={onOpen}
+                onDismiss={onMarkNotificationRead}
+                bulkDismissing={bulkDismissing}
+                dismissBaseDelay={groupIndex * 84}
                 theme={theme}
               />
             ))}
@@ -828,10 +887,12 @@ function NotificationSidebar({
               </View>
               {recentHistory.length > 0 ? recentHistory.map((item) => <SidebarHistoryRow key={item.id} item={item} theme={theme} />) : null}
             </View>
-            {notifications.length === 0 ? (
+            {visibleNotifications.length === 0 ? (
               <View style={[styles.sidebarEmpty, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.sidebarEmptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
-                <Text style={[styles.sidebarEmptyBody, { color: theme.muted }]}>조건을 켜면 여기에서 바로 확인 가능</Text>
+                <Text style={[styles.sidebarEmptyTitle, { color: theme.text }]}>{notifications.length === 0 ? "활성 알림 없음" : "새 알림 없음"}</Text>
+                <Text style={[styles.sidebarEmptyBody, { color: theme.muted }]}>
+                  {notifications.length === 0 ? "조건을 켜면 여기에서 바로 확인 가능" : "읽음 처리한 알림은 알림 센터 이력에 남음"}
+                </Text>
               </View>
             ) : null}
           </ScrollView>
@@ -877,6 +938,9 @@ function SidebarNotificationGroup({
   readNotificationIds,
   smartCareEnabled,
   onOpen,
+  onDismiss,
+  bulkDismissing,
+  dismissBaseDelay,
   theme,
   previewOnly = false,
 }: {
@@ -884,6 +948,9 @@ function SidebarNotificationGroup({
   readNotificationIds: string[];
   smartCareEnabled: boolean;
   onOpen: (id: string, route: P0RouteId) => void;
+  onDismiss: (id: string) => void;
+  bulkDismissing: boolean;
+  dismissBaseDelay: number;
   theme: AppTheme;
   previewOnly?: boolean;
 }) {
@@ -898,27 +965,138 @@ function SidebarNotificationGroup({
         const read = previewOnly || readNotificationIds.includes(item.id);
         const color = getNotificationTone(theme, index, route);
         return (
-          <Pressable
+          <SidebarNotificationItem
             key={item.id}
-            accessibilityLabel={`${item.title} 열기`}
-            accessibilityRole="button"
-            onPress={() => onOpen(item.id, route)}
-            style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
-          >
-            <View style={styles.sidebarItemMain}>
-              <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
-              <View style={styles.sidebarItemCopy}>
-                <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
-                <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
-                <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
-              </View>
-            </View>
-            <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
-              {previewOnly ? "예시" : read ? "확인됨" : "눌러서 확인"}
-            </Text>
-          </Pressable>
+            item={item}
+            route={route}
+            read={read}
+            color={color}
+            previewOnly={previewOnly}
+            smartCareEnabled={smartCareEnabled}
+            bulkDismissing={bulkDismissing}
+            dismissDelay={dismissBaseDelay + index * 34}
+            onOpen={() => onOpen(item.id, route)}
+            onDismiss={() => onDismiss(item.id)}
+            theme={theme}
+          />
         );
       })}
+    </View>
+  );
+}
+
+function SidebarNotificationItem({
+  item,
+  route,
+  read,
+  color,
+  previewOnly,
+  smartCareEnabled,
+  bulkDismissing,
+  dismissDelay,
+  onOpen,
+  onDismiss,
+  theme,
+}: {
+  item: P0ScreenProps["state"]["notifications"][number];
+  route: P0RouteId;
+  read: boolean;
+  color: string;
+  previewOnly: boolean;
+  smartCareEnabled: boolean;
+  bulkDismissing: boolean;
+  dismissDelay: number;
+  onOpen: () => void;
+  onDismiss: () => void;
+  theme: AppTheme;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+  const dismissedRef = useRef(false);
+
+  const animateDismiss = (commit = true) => {
+    if (previewOnly || dismissedRef.current) return;
+    dismissedRef.current = true;
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -360,
+        duration: 220,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished && commit) onDismiss();
+    });
+  };
+
+  useEffect(() => {
+    if (!bulkDismissing || previewOnly) return;
+    const timeout = setTimeout(() => animateDismiss(false), dismissDelay);
+    return () => clearTimeout(timeout);
+  }, [bulkDismissing, dismissDelay, previewOnly]);
+
+  const itemPanResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+    onMoveShouldSetPanResponderCapture: (_, gesture) => !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+    onPanResponderMove: (_, gesture) => {
+      const dx = Math.min(0, gesture.dx);
+      translateX.setValue(dx);
+      opacity.setValue(Math.max(0.7, 1 + dx / 380));
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (gesture.dx < -68 || gesture.vx < -0.55) {
+        animateDismiss();
+        return;
+      }
+      Animated.parallel([
+        Animated.spring(translateX, {
+          toValue: 0,
+          damping: 18,
+          stiffness: 190,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 150,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    },
+  });
+
+  return (
+    <View style={styles.sidebarSwipeShell}>
+      <View style={[styles.sidebarDeleteBackground, { backgroundColor: theme.warm }]}>
+        <Text style={[styles.sidebarDeleteText, { color: theme.background }]}>삭제</Text>
+      </View>
+      <Animated.View style={{ opacity, transform: [{ translateX }] }} {...itemPanResponder.panHandlers}>
+        <Pressable
+          accessibilityLabel={`${item.title} 열기`}
+          accessibilityRole="button"
+          onPress={onOpen}
+          style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
+        >
+          <View style={styles.sidebarItemMain}>
+            <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
+            <View style={styles.sidebarItemCopy}>
+              <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
+              <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
+              <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
+            </View>
+          </View>
+          <Text style={[styles.sidebarOpenHint, { color: read ? theme.subtle : theme.text }]}>
+            {previewOnly ? "예시" : read ? "확인됨" : "눌러서 확인"}
+          </Text>
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -1575,6 +1753,25 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  sidebarSwipeShell: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: radius.md,
+  },
+  sidebarDeleteBackground: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 82,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sidebarDeleteText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   sidebarItemMain: {
     flexDirection: "row",

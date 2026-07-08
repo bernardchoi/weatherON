@@ -1,0 +1,10 @@
+--------- beginning of system
+07-08 14:22:18.710  6863  6930 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-08 14:26:33.571  6863  6863 W unknown:BridgelessReact: ReactHost{0}.onUserLeaveHint(activity)
+07-08 14:26:33.571  6863  6863 I PowerHalMgrImpl: perfLockAcq is supported. 
+07-08 14:26:33.572  6863  6863 W unknown:BridgelessReact: ReactHost{0}.onHostPause(activity)
+07-08 14:26:33.572  6863  6863 W unknown:BridgelessReact: ReactContext.onHostPause()
+07-08 14:27:20.307  6863  6863 W unknown:BridgelessReact: ReactHost{0}.onHostResume(activity)
+07-08 14:27:20.307  6863  6863 W unknown:BridgelessReact: ReactContext.onHostResume()
+07-08 14:27:20.335  6863  6863 I ImeTracker: com.weatheron.mobile:8f5662b6: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN

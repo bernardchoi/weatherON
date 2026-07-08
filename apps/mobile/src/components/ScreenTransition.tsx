@@ -9,18 +9,19 @@ export function ScreenTransition({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
+      duration: 320,
+      easing: Easing.out(Easing.exp),
       useNativeDriver: true,
     });
     animation.start();
     return () => animation.stop();
   }, [progress]);
 
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [14, 0] });
+  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
 
   return (
-    <Animated.View style={[styles.fill, { opacity: progress, transform: [{ translateY }] }]}>
+    <Animated.View style={[styles.fill, { opacity, transform: [{ translateY }] }]}>
       {children}
     </Animated.View>
   );

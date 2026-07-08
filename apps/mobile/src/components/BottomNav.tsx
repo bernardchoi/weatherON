@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -66,7 +66,12 @@ function TabButton({
   const tint = useRef(new Animated.Value(0)).current;
 
   const animateTo = (toValue: number) => {
-    Animated.timing(tint, { toValue, duration: 120, useNativeDriver: true }).start();
+    Animated.timing(tint, {
+      toValue,
+      duration: 170,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -117,10 +122,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: radius.tab,
     borderWidth: 1,
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    elevation: 6,
   },
   item: {
     flex: 1,

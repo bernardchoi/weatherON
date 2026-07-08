@@ -162,6 +162,7 @@ export function useWeatherOnAppState() {
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
   const [umbrellaReturnRoute, setUmbrellaReturnRoute] = useState<P0RouteId>("H1");
+  const [notificationCenterReturnRoute, setNotificationCenterReturnRoute] = useState<P0RouteId>("H1");
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
   const [weatherProviderMode, setWeatherProviderMode] = useState<WeatherProviderMode>("ready");
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
@@ -656,6 +657,7 @@ export function useWeatherOnAppState() {
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
     if (nextRoute === "H4") setUmbrellaReturnRoute(route === "H5" ? "H5" : "H1");
+    if (nextRoute === "H3" && isP0Route(route) && route !== "H3") setNotificationCenterReturnRoute(route);
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
   }, [route]);
 
@@ -853,6 +855,9 @@ export function useWeatherOnAppState() {
     }
     if (route === "M2") {
       setAlertSettingsRouteState({ returnTo: "H1", focus: "general" });
+    }
+    if (route === "H3") {
+      setNotificationCenterReturnRoute("H1");
     }
     setRoute(route);
   }, [savedDestinations, state.notifications]);
@@ -1312,10 +1317,14 @@ export function useWeatherOnAppState() {
       setRoute(umbrellaReturnRoute);
       return true;
     }
+    if (route === "H3") {
+      setRoute(notificationCenterReturnRoute);
+      return true;
+    }
     const backRoute = getBackRoute(route);
     setRoute(backRoute);
     return true;
-  }, [destinationAddReturnRoute, gate?.returnTo, permissionGate?.returnTo, route, styleProfileReturnRoute, umbrellaReturnRoute]);
+  }, [destinationAddReturnRoute, gate?.returnTo, notificationCenterReturnRoute, permissionGate?.returnTo, route, styleProfileReturnRoute, umbrellaReturnRoute]);
 
   return {
     route,

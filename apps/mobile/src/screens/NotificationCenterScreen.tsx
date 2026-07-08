@@ -1,5 +1,5 @@
-import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { StatusPill } from "../components/StatusPill";
 import type { P0RouteId } from "../navigation/routes";
@@ -18,17 +18,120 @@ export function NotificationCenterScreen({
   onClearNotificationHistory,
   onOpenNotificationDeepLink,
   onNavigate,
+  onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const { width } = useWindowDimensions();
+  const panelTranslateX = useRef(new Animated.Value(36)).current;
+  const panelOpacity = useRef(new Animated.Value(0.98)).current;
+  const closingRef = useRef(false);
+  const [bulkDismissing, setBulkDismissing] = useState(false);
   const activeNotifications = state.notifications.filter((item) => item.active).slice(0, 6);
   const previewOnly = !permissionReady;
   const effectiveReadNotificationIds = previewOnly ? activeNotifications.map((item) => item.id) : readNotificationIds;
   const unreadCount = activeNotifications.filter((item) => !effectiveReadNotificationIds.includes(item.id)).length;
+  const visibleNotifications = previewOnly
+    ? activeNotifications
+    : activeNotifications.filter((item) => !effectiveReadNotificationIds.includes(item.id));
   const hasUnread = unreadCount > 0;
   const hasHistory = notificationHistory.length > 0;
 
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(panelTranslateX, {
+        toValue: 0,
+        duration: 280,
+        easing: Easing.out(Easing.exp),
+        useNativeDriver: true,
+      }),
+      Animated.timing(panelOpacity, {
+        toValue: 1,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [panelOpacity, panelTranslateX]);
+
+  const resetPanelPosition = () => {
+    Animated.parallel([
+      Animated.spring(panelTranslateX, {
+        toValue: 0,
+        damping: 18,
+        stiffness: 180,
+        mass: 0.8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(panelOpacity, {
+        toValue: 1,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closePanel = () => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    Animated.parallel([
+      Animated.timing(panelTranslateX, {
+        toValue: Math.max(width, 360),
+        duration: 240,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(panelOpacity, {
+        toValue: 0.88,
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        onGoBack();
+        return;
+      }
+      closingRef.current = false;
+    });
+  };
+
+  const panelPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+        onMoveShouldSetPanResponderCapture: (_, gesture) => gesture.dx > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+        onPanResponderMove: (_, gesture) => {
+          const dx = Math.max(0, gesture.dx);
+          panelTranslateX.setValue(dx);
+          panelOpacity.setValue(Math.max(0.88, 1 - dx / Math.max(width * 1.8, 1)));
+        },
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dx > 92 || gesture.vx > 0.55) {
+            closePanel();
+            return;
+          }
+          resetPanelPosition();
+        },
+        onPanResponderTerminate: resetPanelPosition,
+      }),
+    [panelOpacity, panelTranslateX, width],
+  );
+
+  const handleMarkAllRead = () => {
+    if (!hasUnread || bulkDismissing) return;
+    setBulkDismissing(true);
+    setTimeout(() => {
+      onMarkAllNotificationsRead();
+      setBulkDismissing(false);
+    }, 260);
+  };
+
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <Animated.View
+      {...panelPanResponder.panHandlers}
+      style={[styles.shell, { backgroundColor: theme.background, opacity: panelOpacity, transform: [{ translateX: panelTranslateX }] }]}
+    >
       <ScrollView style={styles.panelScroll} contentContainerStyle={styles.panelContent}>
         <View style={styles.header}>
           <View>
@@ -37,14 +140,6 @@ export function NotificationCenterScreen({
               {previewOnly ? "권한 켜기 전 예시" : `${activeNotifications.length}개 활성 · 읽지 않음 ${unreadCount}개`}
             </Text>
           </View>
-          <Pressable
-            accessibilityLabel="알림 센터 닫기"
-            accessibilityRole="button"
-            onPress={() => onNavigate("H1")}
-            style={[styles.closeButton, { borderColor: theme.border }]}
-          >
-            <Text style={[styles.closeText, { color: theme.text }]}>닫기</Text>
-          </Pressable>
         </View>
 
         <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.sky : theme.border }, cardShadow(theme)]}>
@@ -65,7 +160,7 @@ export function NotificationCenterScreen({
               accessibilityRole="button"
               accessibilityState={{ disabled: !hasUnread }}
               disabled={!hasUnread}
-              onPress={onMarkAllNotificationsRead}
+              onPress={handleMarkAllRead}
               style={[styles.actionButton, { borderColor: theme.border, opacity: hasUnread ? 1 : 0.48 }]}
             >
               <Text style={[styles.actionButtonText, { color: theme.text }]}>전체 읽음</Text>
@@ -82,7 +177,7 @@ export function NotificationCenterScreen({
         </View>
 
         <View style={styles.notificationList}>
-          {activeNotifications.map((item, displayIndex) => {
+          {visibleNotifications.map((item, displayIndex) => {
             const route = item.deepLink as P0RouteId;
             const meta = getNotificationPresentation(displayIndex, route, item.title);
             const read = previewOnly || effectiveReadNotificationIds.includes(item.id);
@@ -96,14 +191,18 @@ export function NotificationCenterScreen({
                 targetLabel={getNotificationTargetLabel(route)}
                 onOpen={() => onOpenNotificationDeepLink(item.id, route)}
                 onRead={() => onMarkNotificationRead(item.id)}
+                bulkDismissing={bulkDismissing}
+                dismissDelay={displayIndex * 28}
                 theme={theme}
               />
             );
           })}
-          {activeNotifications.length === 0 ? (
+          {visibleNotifications.length === 0 ? (
             <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
-              <Text style={[styles.emptyBody, { color: theme.muted }]}>알림 조건을 켜면 여기에서 바로 열어볼 수 있음</Text>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>{activeNotifications.length === 0 ? "활성 알림 없음" : "새 알림 없음"}</Text>
+              <Text style={[styles.emptyBody, { color: theme.muted }]}>
+                {activeNotifications.length === 0 ? "알림 조건을 켜면 여기에서 바로 열어볼 수 있음" : "읽음 처리한 알림은 최근 처리에 남음"}
+              </Text>
             </View>
           ) : null}
         </View>
@@ -142,13 +241,9 @@ export function NotificationCenterScreen({
           <Pressable accessibilityLabel="알림 설정 열기" accessibilityRole="button" onPress={() => onNavigate("M2")}>
             <Text style={[styles.footerAction, { color: theme.subtle }]}>알림 설정</Text>
           </Pressable>
-          <Text style={[styles.footerDot, { color: theme.subtle }]}>·</Text>
-          <Pressable accessibilityLabel="홈으로 돌아가기" accessibilityRole="button" onPress={() => onNavigate("H1")}>
-            <Text style={[styles.footerAction, { color: theme.subtle }]}>홈으로</Text>
-          </Pressable>
         </View>
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -169,6 +264,8 @@ function NotificationCard({
   targetLabel,
   onOpen,
   onRead,
+  bulkDismissing,
+  dismissDelay,
   theme,
 }: {
   meta: NotificationPresentation;
@@ -178,51 +275,137 @@ function NotificationCard({
   targetLabel: string;
   onOpen: () => void;
   onRead: () => void;
+  bulkDismissing: boolean;
+  dismissDelay: number;
   theme: AppTheme;
 }) {
   const toneColor = getToneColor(theme, meta.tone);
-  return (
-    <View
-      accessibilityLabel={`${meta.title}, ${read ? "읽음" : "읽지 않음"}, ${targetLabel}로 이동 가능`}
-      style={[
-        styles.notificationCard,
-        {
-          backgroundColor: theme.card,
-          borderColor: read ? theme.border : toneColor,
-          opacity: read ? 0.72 : 1,
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(read ? 0.72 : 1)).current;
+  const dismissedRef = useRef(false);
+
+  const animateDismiss = (commit = true) => {
+    if (previewOnly || dismissedRef.current) return;
+    dismissedRef.current = true;
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -420,
+        duration: 230,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 210,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished && commit) onRead();
+    });
+  };
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: read ? 0.72 : 1,
+      duration: 180,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [opacity, read]);
+
+  useEffect(() => {
+    if (!bulkDismissing || previewOnly) return;
+    const timeout = setTimeout(() => animateDismiss(false), dismissDelay);
+    return () => clearTimeout(timeout);
+  }, [bulkDismissing, dismissDelay, previewOnly]);
+
+  const cardPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+        onMoveShouldSetPanResponderCapture: (_, gesture) =>
+          !previewOnly && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+        onPanResponderMove: (_, gesture) => {
+          const dx = Math.min(0, gesture.dx);
+          translateX.setValue(dx);
+          opacity.setValue(Math.max(0.72, 1 + dx / 460));
         },
-        cardShadow(theme),
-      ]}
-    >
-      <View style={[styles.cardAccent, { backgroundColor: toneColor }]} />
-      <View style={[styles.iconBox, { backgroundColor: theme.cardStrong }]}>
-        <Image source={uiIconAssets[meta.icon]} style={[styles.iconImage, { tintColor: toneColor }]} resizeMode="contain" />
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dx < -78 || gesture.vx < -0.55) {
+            animateDismiss();
+            return;
+          }
+          Animated.parallel([
+            Animated.spring(translateX, {
+              toValue: 0,
+              damping: 18,
+              stiffness: 190,
+              mass: 0.8,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: read ? 0.72 : 1,
+              duration: 160,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start();
+        },
+      }),
+    [opacity, previewOnly, read, translateX],
+  );
+
+  return (
+    <View style={styles.swipeShell}>
+      <View style={[styles.swipeDeleteBackground, { backgroundColor: theme.warm }]}>
+        <Text style={[styles.swipeDeleteText, { color: theme.background }]}>삭제</Text>
       </View>
-      <View style={styles.copy}>
-        <View style={styles.cardTitleRow}>
-          <Text style={[styles.cardTitle, { color: theme.text }]}>{meta.title}</Text>
-          <Text style={[styles.cardTime, { color: theme.subtle }]}>{meta.time}</Text>
+      <Animated.View
+        {...cardPanResponder.panHandlers}
+        accessibilityLabel={`${meta.title}, ${read ? "읽음" : "읽지 않음"}, ${targetLabel}로 이동 가능`}
+        style={[
+          styles.notificationCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: read ? theme.border : toneColor,
+            opacity,
+            transform: [{ translateX }],
+          },
+          cardShadow(theme),
+        ]}
+      >
+        <View style={[styles.cardAccent, { backgroundColor: toneColor }]} />
+        <View style={[styles.iconBox, { backgroundColor: theme.cardStrong }]}>
+          <Image source={uiIconAssets[meta.icon]} style={[styles.iconImage, { tintColor: toneColor }]} resizeMode="contain" />
         </View>
-        <Text style={[styles.reason, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : meta.detail || reason}</Text>
-        <Text style={[styles.highlight, { color: toneColor }]}>{meta.highlight}</Text>
-      </View>
-      <View style={styles.cardMeta}>
-        <View style={[styles.unreadDot, { backgroundColor: read ? theme.border : toneColor }]} />
-        {previewOnly ? <Text style={[styles.miniText, { color: theme.subtle }]}>예시</Text> : null}
-        <Pressable accessibilityLabel={`${meta.title} 열기`} accessibilityRole="button" onPress={onOpen} style={styles.miniHit}>
-          <Text style={[styles.miniText, { color: theme.text }]}>열기</Text>
-        </Pressable>
-        <Pressable
-          accessibilityLabel={`${meta.title} 읽음 처리`}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: read }}
-          disabled={read}
-          onPress={onRead}
-          style={[styles.miniHit, { opacity: read ? 0.45 : 1 }]}
-        >
-          <Text style={[styles.miniText, { color: theme.subtle }]}>읽음</Text>
-        </Pressable>
-      </View>
+        <View style={styles.copy}>
+          <View style={styles.cardTitleRow}>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{meta.title}</Text>
+            <Text style={[styles.cardTime, { color: theme.subtle }]}>{meta.time}</Text>
+          </View>
+          <Text style={[styles.reason, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : meta.detail || reason}</Text>
+          <Text style={[styles.highlight, { color: toneColor }]}>{meta.highlight}</Text>
+        </View>
+        <View style={styles.cardMeta}>
+          <View style={[styles.unreadDot, { backgroundColor: read ? theme.border : toneColor }]} />
+          {previewOnly ? <Text style={[styles.miniText, { color: theme.subtle }]}>예시</Text> : null}
+          <Pressable accessibilityLabel={`${meta.title} 열기`} accessibilityRole="button" onPress={onOpen} style={styles.miniHit}>
+            <Text style={[styles.miniText, { color: theme.text }]}>열기</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel={`${meta.title} 읽음 처리`}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: read }}
+            disabled={read}
+            onPress={() => animateDismiss()}
+            style={[styles.miniHit, { opacity: read ? 0.45 : 1 }]}
+          >
+            <Text style={[styles.miniText, { color: theme.subtle }]}>읽음</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
     </View>
   );
 }
@@ -352,7 +535,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     gap: spacing.md,
   },
   title: {
@@ -364,17 +547,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "800",
-  },
-  closeButton: {
-    minHeight: 40,
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  closeText: {
-    fontSize: 14,
     fontWeight: "800",
   },
   notificationList: {
@@ -419,6 +591,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  swipeShell: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: radius.md,
+  },
+  swipeDeleteBackground: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 92,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  swipeDeleteText: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",

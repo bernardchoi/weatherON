@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Animated, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
@@ -19,7 +19,12 @@ export function AppButton({ label, onPress, tone = "primary", accessibilityLabel
   const color = tone === "primary" || tone === "warning" ? theme.onAccent : theme.text;
 
   const animateTo = (toValue: number) => {
-    Animated.timing(scale, { toValue, duration: 110, useNativeDriver: true }).start();
+    Animated.timing(scale, {
+      toValue,
+      duration: 150,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
   };
   const pressOpacity = scale.interpolate({ inputRange: [0.97, 1], outputRange: [0.88, 1] });
 
