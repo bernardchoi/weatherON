@@ -1,0 +1,24 @@
+--------- beginning of system
+07-08 17:36:32.247 26849 26976 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+07-08 17:36:32.694 26849 27019 W ResourcesManager: Found a null ResourcesImpl, skipped.
+--------- beginning of main
+07-08 17:37:43.083 26849 27015 W HWUI    : Image decoding logging dropped!
+07-08 17:38:15.859 26849 27688 I PowerHalMgrImpl: perfLockAcq is supported. 
+07-08 17:38:15.862 26849 27688 I PowerHalMgrImpl: hdl:64066, pid:26849 
+07-08 17:38:15.865 26849 27688 I PowerHalMgrImpl: hdl:64067, pid:26849 
+07-08 17:38:15.868 26849 26976 E eatheron.mobile: legacy_receive_flag: 0
+07-08 17:38:16.321 26849 26849 I ScrollIdentify: on fling
+07-08 17:38:16.329 26849 27688 I PowerHalMgrImpl: hdl:64070, pid:26849 
+07-08 17:38:16.333 26849 27688 I PowerHalMgrImpl: hdl:64071, pid:26849 
+07-08 17:38:16.337 26849 27688 I PowerHalMgrImpl: hdl:64072, pid:26849 
+07-08 17:38:16.798 26849 27688 I PowerHalMgrImpl: hdl:64073, pid:26849 
+07-08 17:40:20.052 26849 27024 W HWUI    : Image decoding logging dropped!
+07-08 17:40:20.053 26849 27024 W HWUI    : Image decoding logging dropped!
+07-08 17:40:20.053 26849 27024 W HWUI    : Image decoding logging dropped!
+07-08 17:40:20.053 26849 27024 W HWUI    : Image decoding logging dropped!
+07-08 17:41:30.253 26849 26849 I ImeTracker: com.weatheron.mobile:82ae7586: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-08 17:41:58.134 26849 26849 I ScrollIdentify: on fling
+07-08 17:41:58.139 26849 27688 I PowerHalMgrImpl: hdl:64095, pid:26849 
+07-08 17:41:58.625 26849 26849 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda12@a1635a
+07-08 17:41:58.643 26849 27688 I PowerHalMgrImpl: hdl:64097, pid:26849 
+07-08 17:41:58.675 26849 26849 I ImeTracker: com.weatheron.mobile:ac209fe: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN

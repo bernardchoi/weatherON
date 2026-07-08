@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-08 local release APK Outfit Tab QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `0.1.0 (7)` |
+| APK sha256 | `97b96dfc5bb4c8ecc6e83ea258916cd935dba3e23afcc37da732e0f8b0c91235` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-08 17:36-18:11 KST |
+| QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-08-1736/report.md` |
+| 주요 결과 | crash/ANR 없음. 홈/코디/출발/MY 4탭, 코디 추천, 코디 상세, 코디 저장 완료 상태, 출발, MY, 알림 사이드바 스와이프 닫힘 확인. C4 저장 완료 CTA 하단 여백 보정 후 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인. |
+| 남은 개선 | 없음. C4 저장 완료 CTA 하단 여백 이슈 해결 확인. |
+
 ### 2026-07-08 local release APK UI/UX QA
 
 | 항목 | 값 |
@@ -91,8 +107,8 @@
 | D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | pm clear 후 MainActivity 실행, O1 온보딩 진입, crash log buffer 비어 있음 |
 | D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 보류 | H1/Guest/READY/OUTER 등 내부 route/dev label은 미노출. Android 권한 팝업 앱명 WeatherON Dev 노출은 출시 label 확정 필요 |
 | D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
-| D4-1 | 하단 탭 IA | 출시 후보 기준 `홈/코디/출발/MY` 표시, `소셜/우산/강수` 직접 탭 없음 | 보류 | 2026-07-08 로드맵 조정으로 코디 탭 복원. 새 preview APK에서 하단 탭 4탭 재확인 필요 |
-| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 통과 | 2026-07-08 web core-flow에서 코디 탭 추천/상세/저장 gate/옷장 프리셋 진입 통과. 실기기 새 APK 재확인 필요 |
+| D4-1 | 하단 탭 IA | 출시 후보 기준 `홈/코디/출발/MY` 표시, `소셜/우산/강수` 직접 탭 없음 | 통과 | `0.1.0 (7)` 실기기에서 홈/코디/출발/MY 4탭 표시와 C1~C4 코디 활성 탭 매핑 확인 |
+| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 통과 | 2026-07-08 C4 저장 완료 CTA 하단 여백 보정 후 web core-flow와 실기기 재확인 통과. 실기기 bounds 기준 저장 완료 버튼 bottom 1745, 탭바 top 2164 |
 | D4-3 | 홈 목적지 카드 | 상단 현재 위치 날씨, 하단 목적지 선택 카드, 목적지 기준 `나갈 시간/비 그침/챙길 것` 카드 표시 | 통과 | local release APK 재빌드/재설치 후 실기기 홈에서 현재 위치 날씨, 목적지 선택 카드, 목적지 정보 3개 카드 확인. 캡처 `/tmp/weatheron-qa-home.png`, UI tree `/tmp/weatheron-ui-home.xml` |
 | D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (6) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
 | D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
@@ -227,3 +243,5 @@ npm run report:android-release-action-board
 | 2026-07-04 | local release APK `0.1.0 (6)` 재빌드/재설치 후 홈 목적지 선택 카드와 목적지 정보 3개 카드 확인. G2 이동수단 드롭다운 옵션 표시, 대중교통 안내 문구, 수단 선택 후 자동 닫힘 확인 |
 | 2026-07-04 | 실기기 `000841458003652`에서 G1 목적지 요약 카드 축소 UI, G2 도착 희망 시/분 스크롤 선택, 이동수단 드롭다운 자동 닫힘, G2 다크/라이트 색상 대비, crash log fatal/ANR 패턴 없음 확인 |
 | 2026-07-08 | local release APK `0.1.0 (7)` 재빌드/재설치 후 홈/출발/신사이바시 상세/MY/권한/스마트 알림 설정 재확인. G2 도착 편집기+이동수단 드롭다운 탭바 겹침 없음, 해외 장거리 도보 시간 미노출, crash/fatal/ANR 패턴 없음 확인 |
+| 2026-07-08 | local release APK `0.1.0 (7)` 재빌드/재설치 후 코디 탭 복원 QA. 홈/코디/출발/MY 4탭, C1 추천, C4 상세, 저장 완료 상태, 알림 사이드바 스와이프 닫힘 확인. C4 저장 완료 CTA 하단 여백 이슈 초기 발견 |
+| 2026-07-08 | C4 저장 완료 CTA 하단 여백 보정 후 local release APK 재빌드/재설치. 저장 완료 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인. D4-2 통과로 갱신 |

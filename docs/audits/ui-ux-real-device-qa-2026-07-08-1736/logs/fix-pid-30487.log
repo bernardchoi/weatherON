@@ -1,0 +1,109 @@
+--------- beginning of system
+07-08 18:09:52.073 30487 30774 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-08 18:09:52.090 30487 30487 I eatheron.mobile: AssetManager2(0xb400006f6aa79318) locale list changing from [] to [ko-KR]
+07-08 18:09:52.098 30487 30487 I eatheron.mobile: AssetManager2(0xb400006f6aa75ad8) locale list changing from [] to [ko-KR]
+07-08 18:09:52.102 30487 30487 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+07-08 18:09:52.133 30487 30487 W unknown:BridgelessReact: ReactHost{0}.startSurface(surfaceId = 0): Schedule
+07-08 18:09:52.133 30487 30487 W unknown:BridgelessReact: ReactHost{0}.attachSurface(surfaceId = 0)
+07-08 18:09:52.133 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask()
+07-08 18:09:52.134 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Start
+07-08 18:09:52.134 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getJSBundleLoader()
+07-08 18:09:52.134 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactContext(): Creating BridgelessReactContext
+07-08 18:09:52.135 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Creating ReactInstance
+07-08 18:09:52.144 30487 30487 I ContentCaptureHelper: Setting logging level to OFF
+07-08 18:09:52.148 30487 30487 W unknown:BridgelessReact: ReactHost{0}.onHostResume(activity)
+07-08 18:09:52.148 30487 30487 W unknown:BridgelessReact: ReactContext.onHostResume()
+07-08 18:09:52.150 30487 30543 I PowerHalWrapper: PowerHalWrapper.getInstance 
+07-08 18:09:52.153 30487 30487 I SurfaceFactory: [static] sSurfaceFactory = com.mediatek.view.impl.SurfaceFactoryImpl@9da7b41
+07-08 18:09:52.157 30487 30791 E HWUI    : attachRenderThreadToJvm
+07-08 18:09:52.157 30487 30792 E HWUI    : attachRenderThreadToJvm
+07-08 18:09:52.157 30487 30792 E HWUI    : AM IS NOT NULL!
+07-08 18:09:52.157 30487 30791 E HWUI    : AM IS NOT NULL!
+07-08 18:09:52.180 30487 30487 E eatheron.mobile: [perfctl] 30487 30487 FPSGO ver:0
+07-08 18:09:52.180 30487 30487 E eatheron.mobile: [perfctl] 0 0 0 0
+07-08 18:09:52.198 30487 30774 I GrallocExtra: gralloc_extra_query:is_SW3D 0
+07-08 18:09:52.224 30487 30487 I ImeTracker: com.weatheron.mobile:513c1683: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-08 18:09:52.261 30487 30785 I ExpoModulesCore: ✅ AppContext was initialized
+07-08 18:09:52.266 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Loading JS Bundle
+07-08 18:09:52.266 30487 30785 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Calling DevSupportManagerBase.onNewReactContextCreated(reactContext)
+07-08 18:09:52.267 30487 30785 W unknown:BridgelessReact: ReactHost{0}.startSurface(surfaceId = 0): Execute
+07-08 18:09:52.267 30487 30487 W unknown:BridgelessReact: ReactContext.onHostResume()
+07-08 18:09:52.267 30487 30487 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Executing ReactInstanceEventListeners
+07-08 18:09:52.294 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.safeareaview.ReactSafeAreaViewManager
+07-08 18:09:52.295 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.safeareaview.ReactSafeAreaViewShadowNode
+07-08 18:09:52.296 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.modal.ReactModalHostManager
+07-08 18:09:52.296 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.uimanager.LayoutShadowNode
+07-08 18:09:52.297 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageViewManager
+07-08 18:09:52.297 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageShadowNode
+07-08 18:09:52.298 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.progressbar.ReactProgressBarViewManager
+07-08 18:09:52.298 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.progressbar.ProgressBarShadowNode
+07-08 18:09:52.299 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollViewManager
+07-08 18:09:52.300 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.image.ReactImageManager
+07-08 18:09:52.301 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactTextViewManager
+07-08 18:09:52.302 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactTextShadowNode
+07-08 18:09:52.304 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollContainerViewManager
+07-08 18:09:52.306 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.unimplementedview.ReactUnimplementedViewManager
+07-08 18:09:52.307 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactScrollViewManager
+07-08 18:09:52.308 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.view.ReactViewManager
+07-08 18:09:52.309 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.drawer.ReactDrawerLayoutManager
+07-08 18:09:52.310 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager
+07-08 18:09:52.311 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchShadowNode
+07-08 18:09:52.313 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextViewManager
+07-08 18:09:52.313 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextShadowNode
+07-08 18:09:52.314 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.swiperefresh.SwipeRefreshLayoutManager
+07-08 18:09:52.315 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactRawTextManager
+07-08 18:09:52.315 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactRawTextShadowNode
+07-08 18:09:52.316 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputManager
+07-08 18:09:52.317 30487 30786 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputShadowNode
+07-08 18:09:52.320 30487 30786 W BridgelessReactContext: [WARNING] Bridgeless doesn't support CatalystInstance. Accessing an API that's not part of the new architecture is not encouraged usage.
+07-08 18:09:52.324 30487 30786 I ExpoModulesCore: ✅ JSI interop was installed
+07-08 18:09:52.330 30487 30786 I ExpoModulesCore: ✅ Constants were exported
+07-08 18:09:52.340 30487 30786 I ReactNativeJS: Running "main"
+07-08 18:09:52.432 30487 30812 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.441 30487 30811 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.506 30487 30816 I eatheron.mobile: AssetManager2(0xb400006f6aaa2358) locale list changing from [] to [ko-KR]
+07-08 18:09:52.506 30487 30816 I WebViewFactory: Loading com.google.android.webview version 149.0.7827.159 (code 782715903)
+07-08 18:09:52.507 30487 30816 I eatheron.mobile: AssetManager2(0xb400006f6aaa32f8) locale list changing from [] to [ko-KR]
+07-08 18:09:52.507 30487 30816 I eatheron.mobile: AssetManager2(0xb400006f6aaa2038) locale list changing from [] to [ko-KR]
+07-08 18:09:52.508 30487 30816 I eatheron.mobile: AssetManager2(0xb400006f6aaa2678) locale list changing from [] to [ko-KR]
+07-08 18:09:52.509 30487 30816 I eatheron.mobile: AssetManager2(0xb400006f6aaa2cb8) locale list changing from [] to [ko-KR]
+07-08 18:09:52.527 30487 30820 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.528 30487 30821 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.528 30487 30819 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.536 30487 30822 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.537 30487 30824 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.538 30487 30823 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.539 30487 30812 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.540 30487 30811 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.542 30487 30819 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.542 30487 30820 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.544 30487 30822 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.546 30487 30821 W HWUI    : Image decoding logging dropped!
+07-08 18:09:52.551 30487 30816 I cr_WVCFactoryProvider: version=149.0.7827.159 (782715903) minSdkVersion=29 multiprocess=true packageId=2 splits=<none>
+07-08 18:09:52.566 30487 30816 I cr_LibraryLoader: Successfully loaded native library
+07-08 18:09:52.572 30487 30816 I cr_CachingUmaRecorder: Flushed 41 samples from 19 histograms, 0 samples were dropped.
+07-08 18:09:52.572 30487 30827 I chromium: [INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+07-08 18:09:52.572 30487 30827 I chromium: [INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+07-08 18:09:53.784 30487 30497 W System  : A resource failed to call close. 
+07-08 18:09:53.784 30487 30497 W System  : A resource failed to call close. 
+07-08 18:10:18.928 30487 30823 W HWUI    : Image decoding logging dropped!
+07-08 18:10:18.951 30487 30811 W HWUI    : Image decoding logging dropped!
+07-08 18:10:18.957 30487 30819 W HWUI    : Image decoding logging dropped!
+07-08 18:10:18.967 30487 30824 W HWUI    : Image decoding logging dropped!
+07-08 18:10:18.978 30487 30812 W HWUI    : Image decoding logging dropped!
+07-08 18:10:38.389 30487 30820 W HWUI    : Image decoding logging dropped!
+07-08 18:10:42.404 30487 30928 I PowerHalMgrImpl: perfLockAcq is supported. 
+07-08 18:10:42.410 30487 30928 I PowerHalMgrImpl: hdl:64298, pid:30487 
+07-08 18:10:42.414 30487 30774 E eatheron.mobile: legacy_receive_flag: 0
+07-08 18:10:42.414 30487 30928 I PowerHalMgrImpl: hdl:64298, pid:30487 
+07-08 18:10:42.918 30487 30487 I ScrollIdentify: on fling
+07-08 18:10:42.921 30487 30928 I PowerHalMgrImpl: hdl:64300, pid:30487 
+07-08 18:10:42.927 30487 30928 I PowerHalMgrImpl: hdl:64302, pid:30487 
+07-08 18:10:42.930 30487 30928 I PowerHalMgrImpl: hdl:64303, pid:30487 
+07-08 18:10:43.238 30487 30928 I PowerHalMgrImpl: hdl:64304, pid:30487 
+07-08 18:10:46.731 30487 30928 I PowerHalMgrImpl: hdl:64308, pid:30487 
+07-08 18:10:46.731 30487 30928 I PowerHalMgrImpl: hdl:64308, pid:30487 
+07-08 18:10:47.265 30487 30487 I ScrollIdentify: on fling
+07-08 18:10:47.272 30487 30928 I PowerHalMgrImpl: hdl:64310, pid:30487 
+07-08 18:10:50.278 30487 30928 I PowerHalMgrImpl: hdl:64312, pid:30487 

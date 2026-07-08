@@ -221,6 +221,7 @@ async function checkOutfitLaunchFlow(page) {
   await assertText(page, "코디 저장");
   await clickText(page, "코디 저장");
   await assertText(page, "저장 완료");
+  await assertButtonClearOfBottomNav(page, "저장 완료");
 
   await clickAriaIncludes(page, "코디 탭");
   await assertText(page, "오늘 입을 세트");
@@ -914,6 +915,36 @@ async function assertClearOfBottomNav(page, label) {
     return {
       ok: false,
       reason: `${label} rect bottom must be above nav top: ${failures.join(", ")}`,
+    };
+  }, label);
+
+  if (!result.ok) throw new Error(`bottom nav overlap risk: ${result.reason}`);
+}
+
+async function assertButtonClearOfBottomNav(page, label) {
+  const result = await page.evaluate(async (label) => {
+    const buttons = [...document.querySelectorAll("[role=button],button")].filter((element) => {
+      const value = (element.getAttribute("aria-label") || element.innerText || element.textContent || "").trim();
+      return value === label;
+    });
+    const navTarget = document.querySelector('[aria-label="홈 탭"]');
+    if (buttons.length === 0 || !navTarget) return { ok: false, reason: `missing button or nav: ${label}` };
+
+    const failures = [];
+    for (const button of buttons) {
+      button.scrollIntoView({ block: "end", inline: "nearest" });
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      const buttonRect = button.getBoundingClientRect();
+      const navRect = navTarget.getBoundingClientRect();
+      const visible = buttonRect.bottom <= navRect.top - 8 && buttonRect.top >= 0 && buttonRect.bottom <= window.innerHeight;
+      if (visible) return { ok: true, reason: `${label} button clear of bottom nav` };
+      failures.push(`${Math.round(buttonRect.bottom)} > ${Math.round(navRect.top)}`);
+    }
+
+    return {
+      ok: false,
+      reason: `${label} button rect bottom must be above nav top: ${failures.join(", ")}`,
     };
   }, label);
 

@@ -1,6 +1,6 @@
 # WeatherON Android Play Upload Packet
 
-> 생성일: 2026-07-07
+> 생성일: 2026-07-08
 > 목적: Play Console 내부/폐쇄 테스트 트랙에 업로드할 production AAB와 업로드 전 확인값을 한 장으로 유지한다.
 
 ## 1. AAB 업로드 대상
@@ -24,7 +24,7 @@
 
 | 항목 | 상태 |
 |---|---|
-| Play 제출 blocker | 17 |
+| Play 제출 blocker | 9 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |

@@ -134,7 +134,7 @@ const report = `# WeatherON Android Release Evidence Index
 
 ## 6. 미완료 수동 범위
 
-- 실기기 QA 결과 입력
+- 실기기 QA 결과는 \`WeatherON_ANDROID_DEVICE_QA_SESSION.md\`와 최신 audit report에 기록됨. C4 저장 완료 CTA 하단 여백은 보정 후 해결 확인
 - Google Play 스크린샷 5장 캡처
 - Play 제출/개인정보처리방침 실제 입력값 확정
 - 개인정보처리방침 공개 HTTPS URL 배포

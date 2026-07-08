@@ -89,7 +89,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
           <StatusPill label={termsRequiredAccepted ? "약관 완료" : "약관 필요"} tone={termsRequiredAccepted ? "clear" : "warm"} />
           <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
         </View>
-        <View style={styles.actions}>
+        <View style={[styles.actions, styles.saveActions]}>
           <AppButton
             label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
             onPress={() => onRequireAccount("save-outfit", "C4")}
@@ -211,6 +211,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
     flexWrap: "wrap",
+  },
+  saveActions: {
+    paddingBottom: spacing.lg,
   },
 });
 

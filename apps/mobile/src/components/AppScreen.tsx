@@ -5,6 +5,8 @@ import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { spacing } from "../theme/tokens";
 
+const navClearancePadding = 140;
+
 type AppScreenProps = {
   title: string;
   subtitle?: string;
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: 20,
     paddingTop: spacing.sm,
-    paddingBottom: 110,
+    paddingBottom: navClearancePadding,
     minHeight: "100%",
   },
   atmosphere: {
