@@ -8,7 +8,7 @@ import { StatusPill } from "../components/StatusPill";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { PermissionGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 type PermissionGateScreenProps = {
   gate: PermissionGateState | null;
@@ -42,7 +42,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
 
   return (
     <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한">
-      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.actionHeader}>
           <View style={styles.copy}>
             <Text style={[styles.actionTitle, { color: theme.text }]}>{gateLabel}</Text>
@@ -175,7 +175,7 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
   const theme = useAppTheme();
   const color = tone === "clear" ? theme.clear : theme.skyLite;
   return (
-    <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: `${color}66` }]}>
+    <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: `${color}66` }, cardShadow(theme)]}>
       <View style={[styles.resultDot, { backgroundColor: color }]} />
       <View style={styles.copy}>
         <Text style={[styles.resultTitle, { color: theme.text }]}>{title}</Text>
@@ -188,7 +188,7 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
 function PermissionCard({ title, body, mark, active, ready }: { title: string; body: string; mark: keyof typeof uiIconAssets; active: boolean; ready: boolean }) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.permissionCard, { backgroundColor: theme.card, borderColor: theme.skyLite }]}>
+    <View style={[styles.permissionCard, { backgroundColor: theme.card, borderColor: theme.skyLite }, cardShadow(theme)]}>
       <View style={[styles.iconBox, { backgroundColor: active ? theme.sky : theme.cardMuted }]}>
         <Image
           source={uiIconAssets[mark]}

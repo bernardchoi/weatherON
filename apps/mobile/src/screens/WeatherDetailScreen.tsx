@@ -4,7 +4,7 @@ import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
 
@@ -35,7 +35,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
           </View>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.heroMain}>
             <View style={[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
               <Image source={getConditionIcon(current.condition)} style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme) }]} resizeMode="contain" />
@@ -96,7 +96,7 @@ function WeatherFact({ icon, label, value, color, theme }: { icon: number; label
 
 function ForecastPanel({ title, meta, theme, children }: { title: string; meta: string; theme: AppTheme; children: React.ReactNode }) {
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[styles.panel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.panelHeader}>
         <Text style={[styles.panelTitle, { color: theme.text }]}>{title}</Text>
         <Text style={[styles.panelMeta, { color: theme.subtle }]}>{meta}</Text>

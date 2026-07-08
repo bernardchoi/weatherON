@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
   accountLinked,
@@ -42,7 +42,7 @@ export function AccountManagementScreen({
           <Text style={[styles.title, { color: theme.text }]}>계정 관리</Text>
         </View>
 
-        <View style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={[styles.avatar, { borderColor: accountReady ? theme.clear : theme.gold }]}>
             <PersonGlyph color={accountReady ? theme.clear : theme.gold} />
           </View>
@@ -56,7 +56,7 @@ export function AccountManagementScreen({
           accessibilityLabel={primaryAccessibilityLabel}
           accessibilityRole="button"
           onPress={handlePrimaryAccountAction}
-          style={[styles.primaryRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          style={[styles.primaryRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
         >
           <View style={styles.actionIcon}>
             <DoorGlyph color={primaryTone} />
@@ -66,7 +66,7 @@ export function AccountManagementScreen({
         </Pressable>
 
         {accountLinked ? (
-          <View style={[styles.dangerPanel, { backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }]}>
+          <View style={[styles.dangerPanel, { backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }, cardShadow(theme)]}>
             <Text style={[styles.dangerTitle, { color: dangerConfirm === "none" ? theme.text : theme.warm }]}>
               {dangerConfirm === "none" ? "로그아웃 및 탈퇴" : dangerConfirm === "signout" ? "로그아웃 확인" : "회원 탈퇴 확인"}
             </Text>

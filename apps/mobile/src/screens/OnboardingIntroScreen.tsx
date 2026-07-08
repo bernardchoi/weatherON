@@ -6,7 +6,7 @@ import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const featureCards = [
   { icon: uiIconAssets.depart, title: "출발시간", body: "도착 시간에서 이동 시간과 여유 시간을 빼서 바로 안내" },
@@ -19,7 +19,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
 
   return (
     <AppScreen title="나가기 전 5초 판단" subtitle="언제 나가고, 비는 언제 그치고, 뭘 챙길지만 먼저 확인" badge="1 / 3">
-      <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.brandTop}>
           <Image source={brandAssets.iconPrimary} style={styles.brandIcon} resizeMode="contain" />
           <View style={styles.brandCopy}>

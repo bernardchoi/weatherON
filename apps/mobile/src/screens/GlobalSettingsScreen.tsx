@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function GlobalSettingsScreen({
   temperatureUnit,
@@ -33,7 +33,7 @@ export function GlobalSettingsScreen({
           <Text style={[styles.title, { color: theme.text }]}>표시 설정</Text>
         </View>
 
-        <View style={[styles.unitCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.unitCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View>
             <Text style={[styles.sectionLabel, { color: theme.muted }]}>단위</Text>
             <Text style={[styles.sectionCaption, { color: theme.subtle }]}>홈, 출발, 목적지 화면에 바로 반영</Text>
@@ -56,7 +56,7 @@ export function GlobalSettingsScreen({
           />
         </View>
 
-        <View style={[styles.themeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.themeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <View>
             <Text style={[styles.sectionLabel, { color: theme.muted }]}>테마</Text>
             <Text style={[styles.sectionCaption, { color: theme.subtle }]}>앱 전체 색상 모드</Text>
@@ -77,7 +77,7 @@ export function GlobalSettingsScreen({
           </View>
         </View>
 
-        <View accessibilityLabel={`표시 설정 요약, ${stateSummary}`} style={[styles.summaryCard, { backgroundColor: theme.cardStrong, borderColor: theme.skyLite }]}>
+        <View accessibilityLabel={`표시 설정 요약, ${stateSummary}`} style={[styles.summaryCard, { backgroundColor: theme.cardStrong, borderColor: theme.skyLite }, cardShadow(theme)]}>
           <Text style={[styles.summaryLabel, { color: theme.skyLite }]}>표시 설정 요약</Text>
           <Text style={[styles.summaryText, { color: theme.text }]}>{stateSummary}</Text>
           <View style={styles.scopeList}>
@@ -92,7 +92,7 @@ export function GlobalSettingsScreen({
           accessibilityRole="switch"
           accessibilityState={{ checked: reducedTransparency }}
           onPress={onToggleReducedTransparency}
-          style={[styles.effectCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          style={[styles.effectCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
         >
           <View style={styles.effectCopy}>
             <Text style={[styles.effectTitle, { color: theme.text }]}>화면 효과</Text>

@@ -527,7 +527,7 @@ function FeelsLikeCard({
       accessibilityLabel={`현재 위치 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
       <View style={[styles.feelsLikeIconFrame, { backgroundColor: `${theme.clear}16` }]}>
         <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />

@@ -127,8 +127,8 @@ try {
     await loadSeededApp(page, appState);
     console.log(`small-screen: ${viewport.name}/home loaded`);
 
-    await assertAnyText(page, ["다음 비", "다음 시간"], viewport, "home");
-    await assertText(page, "주간 강수", viewport, "home");
+    await assertText(page, "최고 ", viewport, "home");
+    await assertText(page, "비 완화", viewport, "home");
     console.log(`small-screen: ${viewport.name}/home text`);
     await checkLayout(page, viewport, "home");
     console.log(`small-screen: ${viewport.name}/home layout`);
@@ -148,12 +148,13 @@ try {
     console.log(`small-screen: ${viewport.name}/destination-care`);
     await clickText(page, "잠실종합운동장");
     await assertText(page, "목적지 기준 알림 미리보기", viewport, "destination-care");
-    await assertText(page, "이동수단", viewport, "destination-care");
-    await assertText(page, "도착 희망", viewport, "destination-care");
-    await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
+    await assertText(page, "출발시간 역산", viewport, "destination-care");
     await assertText(page, "자동 여유", viewport, "destination-care");
     await clickText(page, "이동수단");
     await assertText(page, "대중교통", viewport, "destination-care");
+    await checkLayout(page, viewport, "destination-care");
+    await clickText(page, "도착 희망 시각");
+    await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
     await assertText(page, "반복 알림", viewport, "destination-care");
     await assertText(page, "ON", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
@@ -189,7 +190,7 @@ try {
     await onboardingPage.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await loadSeededApp(onboardingPage, onboardingState);
     await assertText(onboardingPage, "오늘의 외출, 미리 준비하세요", viewport, "onboarding");
-    await assertText(onboardingPage, "온보딩 시작", viewport, "onboarding");
+    await assertText(onboardingPage, "소개 시작하기", viewport, "onboarding");
     await assertText(onboardingPage, "홈으로", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");

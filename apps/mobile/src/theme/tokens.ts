@@ -120,6 +120,8 @@ export const spacing = {
 // 목업 BrandCard 기준(WeatherON_design_system.jsx): boxShadow 0 6px 16px rgba(0,0,0,0.30) — 라이트/다크 공통 고정값.
 // RN은 shadow*가 iOS/web에서만 렌더링되고 Android는 elevation이 있어야 카드 뒷면 음영이 실제로 보인다.
 // shadowColor에 theme.shadow(자체 알파 내장)를 쓰면 shadowOpacity와 알파가 곱해져 지나치게 옅어지므로 순수 블랙 기준으로 직접 지정한다.
+// 사용 규칙: 화면 배경 위 최상위 "불투명" 카드에만 적용한다. 카드 안에 중첩된 표면이나
+// cardMuted 같은 반투명 배경에 쓰면 Android elevation이 부모 표면 위로 두꺼운 그림자 아티팩트를 만든다.
 export function cardShadow(theme: AppTheme) {
   return {
     shadowColor: "#000000",

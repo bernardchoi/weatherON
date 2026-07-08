@@ -6,7 +6,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const contentCards = [
   { label: "출발 판단", title: "10:50 출발", body: "목적지 13:00 도착 · 여유 10분" },
@@ -19,7 +19,7 @@ export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   return (
     <AppScreen title="광고 배치 기준" subtitle="콘텐츠와 광고를 명확히 구분" badge="광고">
-      <View style={[styles.homePreview, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.homePreview, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <Text style={[styles.previewLocation, { color: theme.text }]}>서울 마포구 합정동</Text>
         <Text style={[styles.previewTemp, { color: theme.text }]}>22°</Text>
         <Text style={[styles.previewCondition, { color: theme.muted }]}>맑음</Text>
@@ -35,7 +35,7 @@ export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
 
       <View style={styles.contentStack}>
         {contentCards.slice(1).map((item) => (
-          <View key={item.label} style={[styles.contentCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View key={item.label} style={[styles.contentCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <View style={styles.copy}>
               <Text style={[styles.smallLabel, { color: item.label === "확장 예정" ? theme.subtle : theme.gold }]}>{item.label}</Text>
               <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>

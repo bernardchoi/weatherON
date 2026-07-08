@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-08 local release APK UI/UX QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `0.1.0 (7)` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-08 00:11-00:21 KST |
+| QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-08-0011/report.md` |
+| 주요 결과 | crash/ANR 없음. 홈, 출발 목록, 신사이바시 상세, 도착 편집기, 이동수단 드롭다운, MY, 권한, 스마트 알림 설정 확인. 해외 목적지에서 비현실 도보 시간과 전날 출발 시간 미노출 확인. |
+| 해결 확인 | 도착 시간 편집기와 이동수단 드롭다운 동시 표시 시 탭바 겹침 없음. 장거리 도보 옵션은 `장거리 목적지는 도보 제외`로 비활성 표시. |
+| 남은 개선 | 스마트 알림 설정 `실제 수신` 라벨 줄바꿈 확인. 후속 코드에서 라벨 폭 보정, 재실기기 확인 필요. |
+
 ### 2026-07-07 local release APK UI/UX QA
 
 | 항목 | 값 |
@@ -210,3 +226,4 @@ npm run report:android-release-action-board
 | 2026-07-03 | local release APK `0.1.0 (6)` 재빌드/재설치 후 D7/D8/D10/D11/D12/D13 최신 설치본 기준 재판정 통과. 위치/알림 권한, 네트워크, 화면 크기, 라이트 모드 원복 확인 || 2026-07-03 | 실기기 QA 결과 JSON 반영 |
 | 2026-07-04 | local release APK `0.1.0 (6)` 재빌드/재설치 후 홈 목적지 선택 카드와 목적지 정보 3개 카드 확인. G2 이동수단 드롭다운 옵션 표시, 대중교통 안내 문구, 수단 선택 후 자동 닫힘 확인 |
 | 2026-07-04 | 실기기 `000841458003652`에서 G1 목적지 요약 카드 축소 UI, G2 도착 희망 시/분 스크롤 선택, 이동수단 드롭다운 자동 닫힘, G2 다크/라이트 색상 대비, crash log fatal/ANR 패턴 없음 확인 |
+| 2026-07-08 | local release APK `0.1.0 (7)` 재빌드/재설치 후 홈/출발/신사이바시 상세/MY/권한/스마트 알림 설정 재확인. G2 도착 편집기+이동수단 드롭다운 탭바 겹침 없음, 해외 장거리 도보 시간 미노출, crash/fatal/ANR 패턴 없음 확인 |

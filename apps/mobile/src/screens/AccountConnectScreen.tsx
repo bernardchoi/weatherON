@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AccountConnectScreenProps = {
   gate: AccountGateState | null;
@@ -42,21 +42,21 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.heroTitle, { color: theme.text }]}>계정 상태를 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
           <Text style={[styles.heroBody, { color: theme.muted }]}>
             계정을 연결하면 저장·동기화 상태를{"\n"}이어서 사용할 수 있어요
           </Text>
         </View>
 
-        <View style={[styles.stepNotice, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.stepNotice, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.stepKicker, { color: theme.gold }]}>다음 단계</Text>
           <Text style={[styles.stepTitle, { color: theme.text }]}>약관 확인 후 원래 화면으로 돌아감</Text>
           <Text style={[styles.stepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도이며 MY에서 따로 켤 수 있음</Text>
         </View>
 
         {destinationName ? (
-          <View style={[styles.contextCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.contextCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <Text style={[styles.contextKicker, { color: theme.gold }]}>{resumeLabel}</Text>
             <Text style={[styles.contextTitle, { color: theme.text }]}>{destinationName}</Text>
             <Text style={[styles.contextBody, { color: theme.muted }]}>계정 연결 후 이 목적지의 날씨 비교와 출발 알림을 이어서 저장해요</Text>

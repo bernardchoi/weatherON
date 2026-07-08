@@ -4,7 +4,7 @@ import type { PlaceSearchResult } from "@weatheron/shared";
 import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 type FilterId = "all" | "sports" | "outdoor" | "season" | "culture";
 
@@ -124,12 +124,12 @@ export function DestinationHubScreen({
           })}
         </View>
 
-        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
           <Text style={[styles.stateText, { color: theme.text }]}>카테고리별 강수·바람·출발 알림 기준을 목적지 카드에서 바로 확인해요</Text>
         </View>
 
-        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+        <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.stateHeader}>
             <View style={styles.stateCopy}>
               <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
@@ -159,6 +159,7 @@ export function DestinationHubScreen({
                     borderColor: selectedDestinationPlace.id === card.place.id ? theme.clear : "transparent",
                     borderLeftColor: card.accent === "warm" ? theme.warm : theme.clear,
                   },
+                  cardShadow(theme),
                 ]}
               >
                 <Image source={card.image} style={styles.destinationImage} resizeMode="cover" />
@@ -175,7 +176,7 @@ export function DestinationHubScreen({
               </Pressable>
             ))
           ) : (
-            <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
               <Text style={[styles.destinationName, { color: theme.text }]}>매칭 목적지 없음</Text>
               <Text style={[styles.destinationMeta, { color: theme.subtle }]}>목적지를 추가하거나 전체 필터로 돌아가요</Text>
             </View>

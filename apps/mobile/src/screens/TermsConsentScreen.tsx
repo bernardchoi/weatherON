@@ -5,7 +5,7 @@ import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type TermsConsentScreenProps = {
   gate: AccountGateState | null;
@@ -62,7 +62,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
 
   return (
     <AppScreen title="약관 동의" subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요" badge="필수">
-      <View style={[styles.progressCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.progressCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.clear }]}>약관 상태</Text>
           <Text style={[styles.headline, { color: theme.text }]}>{statusLabel}</Text>
@@ -81,7 +81,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         accessibilityRole="checkbox"
         accessibilityState={{ checked: allAccepted }}
         onPress={toggleAll}
-        style={[styles.allRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+        style={[styles.allRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
       >
         <CheckBox checked={allAccepted} theme={theme} />
         <View style={styles.copy}>
@@ -90,7 +90,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         </View>
       </Pressable>
 
-      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }]}>
+      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }, cardShadow(theme)]}>
         <View style={styles.actionCopy}>
           <Text style={[styles.gateTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
           <Text style={[styles.body, { color: theme.muted }]}>
@@ -115,7 +115,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         </Pressable>
       </View>
 
-      <View style={[styles.listPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.listPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         {consentItems.map((item, index) => (
           <ConsentRow
             key={item.key}

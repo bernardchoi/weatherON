@@ -495,7 +495,7 @@ function TransportDropdown({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       {transportOptions.map((option) => {
         const selected = transportMode === option.mode;
         const disabled = option.mode === "walk" && walkUnavailable;
@@ -555,7 +555,7 @@ function RepeatSchedulePanel({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }, cardShadow(theme)]}>
+    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.settingsRow}>
         <View style={styles.settingsRowMain}>
           <View style={[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }]}>

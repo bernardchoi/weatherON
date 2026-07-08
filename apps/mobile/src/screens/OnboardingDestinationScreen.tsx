@@ -7,7 +7,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const recommendationLabels = ["회사", "학교", "공항", "숙소"];
 
@@ -29,7 +29,7 @@ export function OnboardingDestinationScreen({
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
 
-      <View style={[styles.heroFrame, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={[styles.heroFrame, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <Image source={onboardingAssets.destinationCare} style={styles.heroImage} resizeMode="cover" />
       </View>
 
@@ -54,7 +54,7 @@ export function OnboardingDestinationScreen({
       </Section>
 
       <Section title={canUseSelection ? "현재 후보" : "목적지 선택 필요"} caption="장소 검색에서 같은 목적지 상태를 공유" accent="clear">
-        <View style={[styles.destinationCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.destinationCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.text }]}>{canUseSelection ? selectedDestinationPlace.name : "장소 검색 후 선택"}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>

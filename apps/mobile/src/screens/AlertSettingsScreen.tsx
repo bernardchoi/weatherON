@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
 const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
@@ -81,7 +81,7 @@ export function AlertSettingsScreen({
         </View>
 
         {alertSettingsRouteState ? (
-          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <View style={styles.contextCopy}>
               <Text style={[styles.contextKicker, { color: getToneColor(theme, focusMeta.tone) }]}>{focusMeta.caption}</Text>
               <Text style={[styles.contextTitle, { color: theme.text }]}>{focusMeta.title}</Text>
@@ -92,7 +92,7 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
         {alertSettingsRouteState ? (
-          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }]}>
+          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme)]}>
             <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>고급 알림 기준</Text>
             <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
           </View>
@@ -103,7 +103,7 @@ export function AlertSettingsScreen({
           accessibilityRole="switch"
           accessibilityState={{ checked: smartCareEnabled }}
           onPress={onToggleSmartCare}
-          style={[styles.heroCard, { backgroundColor: theme.cardStrong, borderColor: smartCareEnabled ? "rgba(244,182,63,0.40)" : theme.border }]}
+          style={[styles.heroCard, { backgroundColor: theme.cardStrong, borderColor: smartCareEnabled ? "rgba(244,182,63,0.40)" : theme.border }, cardShadow(theme)]}
         >
           <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
             <BellGlyph color={theme.gold} />
@@ -119,7 +119,7 @@ export function AlertSettingsScreen({
         </Pressable>
 
         {permissionGateResult?.returnTo === "M2" ? (
-          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
             <Text style={[styles.resultTitle, { color: theme.text }]}>{permissionGateResult.message}</Text>
           </View>
         ) : null}
@@ -175,7 +175,7 @@ export function AlertSettingsScreen({
         </Pressable>
 
         {advancedOpen ? (
-          <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <AdvancedToggleRow
               title="강수 상세"
               body={`비 시작 전·그칠 시각 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%`}
@@ -257,7 +257,7 @@ function DeliveryCheckCard({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.deliveryCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.deliveryCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.deliveryHeader}>
         <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${theme.sky}55` }]}>
           <AlertIcon type="bell" color={theme.sky} />
@@ -291,7 +291,7 @@ function DeliveryRouteTestPanel({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.routeTestHeader}>
         <Text style={[styles.routeTestTitle, { color: theme.text }]}>알림 도착 화면 확인</Text>
         <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>
@@ -346,7 +346,7 @@ function AlertRow({
 }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityLabel={`${title}, ${status}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.alertRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <Pressable accessibilityLabel={`${title}, ${status}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.alertRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${color}44` }]}>
         <AlertIcon type={icon} color={color} />
       </View>
@@ -770,7 +770,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   deliveryLineLabel: {
-    width: 34,
+    width: 50,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",

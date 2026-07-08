@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGoBack, onOpenAlertSettings }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -30,7 +30,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
           <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }]}>
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }, cardShadow(theme)]}>
           <UmbrellaGlyph color={theme.text} />
           <Text style={[styles.heroTitle, { color: theme.text }]}>{umbrella.title}</Text>
           <View style={styles.chipRow}>
@@ -104,7 +104,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
           </View>
         </Panel>
 
-        <View style={[styles.statePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.statePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.stateLabel, { color: theme.gold }]}>UMBRELLA</Text>
           <Text style={[styles.stateText, { color: theme.muted }]}>{umbrella.title} · {peakWindow} · {umbrella.reason}</Text>
         </View>
@@ -127,7 +127,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
 
 function Panel({ title, theme, children }: { title: string; theme: AppTheme; children: React.ReactNode }) {
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card }]}>
+    <View style={[styles.panel, { backgroundColor: theme.card }, cardShadow(theme)]}>
       <Text style={[styles.panelTitle, { color: theme.muted }]}>{title}</Text>
       {children}
     </View>

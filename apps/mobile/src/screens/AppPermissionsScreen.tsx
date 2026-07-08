@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function AppPermissionsScreen({
   deviceLocationState,
@@ -31,7 +31,7 @@ export function AppPermissionsScreen({
           <Text style={[styles.title, { color: theme.text }]}>앱 권한 관리</Text>
         </View>
 
-        <View style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.sectionLabel, { color: theme.muted }]}>권한 상태</Text>
           {resultCopy ? (
             <View style={[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>

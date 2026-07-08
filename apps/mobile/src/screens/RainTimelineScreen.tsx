@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -29,7 +29,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           <Text style={[styles.title, { color: theme.text }]}>강수 타임라인</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }]}>
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }, cardShadow(theme)]}>
           <View style={styles.heroTop}>
             <View style={[styles.rainIconFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
               <Image source={uiIconAssets.rain} style={[styles.rainIconImage, { tintColor: theme.sky }]} resizeMode="contain" />
@@ -107,7 +107,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           accessibilityRole="button"
           accessibilityLabel={`우산 추천 보기, ${umbrella.title}`}
           onPress={() => onNavigate("H4")}
-          style={[styles.umbrellaCard, { backgroundColor: theme.cardStrong, borderColor: getUmbrellaCardColor(umbrella.level, theme) }]}
+          style={[styles.umbrellaCard, { backgroundColor: theme.cardStrong, borderColor: getUmbrellaCardColor(umbrella.level, theme) }, cardShadow(theme)]}
         >
           <View style={[styles.umbrellaIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
             <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaCardColor(umbrella.level, theme) }]} resizeMode="contain" />
@@ -150,7 +150,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card, borderLeftColor: accentColor ?? "transparent" }, accentColor ? styles.panelAccent : null]}>
+    <View style={[styles.panel, { backgroundColor: theme.card, borderLeftColor: accentColor ?? "transparent" }, accentColor ? styles.panelAccent : null, cardShadow(theme)]}>
       <Text style={[styles.panelTitle, { color: theme.muted }]}>{title}</Text>
       {children}
     </View>

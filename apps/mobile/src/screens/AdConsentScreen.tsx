@@ -7,7 +7,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AdConsentMode } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const consentOptions: { mode: AdConsentMode; title: string; body: string; badge: string }[] = [
   { mode: "personalized", title: "동의", body: "날씨·위치 맥락을 활용해 더 관련성 높은 광고를 표시", badge: "맞춤" },
@@ -19,7 +19,7 @@ export function AdConsentScreen({ adConsentMode, onSetAdConsentMode, onNavigate 
   const theme = useAppTheme();
   return (
     <AppScreen title="광고 개인화 설정" subtitle="사용자가 언제든 변경할 수 있는 광고 동의 상태" badge="광고">
-      <View style={[styles.weatherPreview, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.weatherPreview, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <Text style={[styles.previewLocation, { color: theme.muted }]}>서울 마포구 합정동</Text>
         <Text style={[styles.previewTemp, { color: theme.text }]}>22°</Text>
         <Text style={[styles.previewCondition, { color: theme.muted }]}>맑음</Text>
@@ -28,7 +28,7 @@ export function AdConsentScreen({ adConsentMode, onSetAdConsentMode, onNavigate 
         </View>
       </View>
 
-      <View style={[styles.consentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.consentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.handle} />
         <Text style={[styles.panelTitle, { color: theme.text }]}>광고 개인화 설정</Text>
         <Text style={[styles.panelBody, { color: theme.muted }]}>동의하지 않아도 광고는 계속 표시됩니다.</Text>

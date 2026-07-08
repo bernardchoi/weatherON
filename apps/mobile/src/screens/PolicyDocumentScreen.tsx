@@ -5,7 +5,7 @@ import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyDocuments: Record<PolicyDocumentType, { title: string; updated: string; summary: string; points: string[]; notice: string }> = {
   privacy: {
@@ -76,7 +76,7 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
           <Text style={[styles.screenTitle, { color: theme.text }]} numberOfLines={1}>{document.title}</Text>
         </View>
 
-        <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.text }]}>{document.title}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>{document.summary}</Text>
@@ -85,7 +85,7 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
 
         <View style={styles.pointList}>
           {document.points.map((point, index) => (
-            <View key={point} style={[styles.pointRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <View key={point} style={[styles.pointRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
               <Text style={[styles.stepNumber, { color: theme.gold }]}>{index + 1}.</Text>
               <Text style={[styles.pointText, { color: theme.text }]}>{point}</Text>
             </View>

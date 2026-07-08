@@ -7,7 +7,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AgeBand, FitPreference, StyleGender } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const genderOptions: { value: StyleGender; label: string }[] = [
   { value: "all", label: "공통" },
@@ -81,7 +81,7 @@ export function StyleProfileScreen({
       </Section>
 
       <Section title="스타일" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
-        <View style={[styles.previewCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.previewCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.previewIllustration}>
             <View style={[styles.clothTile, { backgroundColor: theme.cardStrong }]}>
               <Text style={[styles.clothText, { color: theme.clear }]}>상의</Text>

@@ -6,7 +6,7 @@ import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { SmartCareScenario } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const scenarios: { value: SmartCareScenario; title: string; body: string }[] = [
   { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간과 비 알림 중심" },
@@ -31,7 +31,7 @@ export function SmartCareOnboardingScreen({
       </View>
 
       {permissionFeedback ? (
-        <View style={[styles.feedbackCard, { backgroundColor: theme.cardStrong, borderColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }]}>
+        <View style={[styles.feedbackCard, { backgroundColor: theme.cardStrong, borderColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }, cardShadow(theme)]}>
           <View style={[styles.feedbackDot, { backgroundColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }]} />
           <View style={styles.copy}>
             <Text style={[styles.feedbackTitle, { color: theme.text }]}>{permissionFeedback.title}</Text>
@@ -60,7 +60,7 @@ export function SmartCareOnboardingScreen({
             </Pressable>
           ))}
         </View>
-        <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+        <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.text }]}>{selectedScenario.title}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>{selectedScenario.body}</Text>
@@ -69,7 +69,7 @@ export function SmartCareOnboardingScreen({
         </View>
       </Section>
 
-      <View style={[styles.autoSummary, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.autoSummary, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <Text style={[styles.autoTitle, { color: theme.text }]}>자동으로 조정됨</Text>
         <Text style={[styles.autoBody, { color: theme.muted }]}>
           강수·기상특보는 우선 알림, 출발 준비는 첫 이동 전 1회만 보냄

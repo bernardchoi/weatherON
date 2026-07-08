@@ -5,7 +5,7 @@ import { AppScreen } from "../components/AppScreen";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function LocationChangeScreen({
   state,
@@ -57,7 +57,7 @@ export function LocationChangeScreen({
 
   return (
     <AppScreen title="위치 변경" subtitle="현재 날씨 기준 위치를 선택하세요" badge={accountLinked ? "계정 연결됨" : "게스트"}>
-      <View style={[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <SearchGlyph color={theme.subtle} />
         <TextInput
           accessibilityLabel="동 읍 면 검색"
@@ -69,7 +69,7 @@ export function LocationChangeScreen({
         />
       </View>
       {showShortQueryHint ? (
-        <View style={[styles.searchHint, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.searchHint, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.searchHintText, { color: theme.subtle }]}>2글자 이상 입력하면 위치 후보를 검색함</Text>
           <LocationRecoveryButton label="검색어 지우기" accessibilityLabel="위치 검색어 지우기" onPress={() => onSearchPlaces("")} compact />
         </View>
@@ -82,6 +82,7 @@ export function LocationChangeScreen({
         style={[
           styles.currentRow,
           { backgroundColor: theme.cardStrong, borderColor: locationReady && weatherLocationMode === "auto" ? theme.clear : theme.border },
+          cardShadow(theme),
         ]}
       >
         <View style={[styles.weatherIcon, { backgroundColor: theme.cardMuted, borderColor: theme.clear }]}>
@@ -100,7 +101,7 @@ export function LocationChangeScreen({
           <Text style={[styles.groupTitle, { color: theme.muted }]}>{locationSectionTitle}</Text>
           <Text style={[styles.groupMeta, { color: theme.subtle }]}>{locationSectionMeta}</Text>
         </View>
-        <View style={[styles.savedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.savedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           {listedPlaces.length > 0 ? (
             listedPlaces.map((place, index) => (
               <Pressable
@@ -154,13 +155,13 @@ export function LocationChangeScreen({
         accessibilityLabel={addLocationLabel}
         accessibilityRole="button"
         onPress={() => (accountLinked ? onNavigate("P1") : onRequireAccount("destination-care", "H2"))}
-        style={[styles.addRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+        style={[styles.addRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
       >
         <Text style={[styles.addPlus, { color: theme.subtle }]}>＋</Text>
         <Text style={[styles.addText, { color: theme.muted }]}>{addLocationLabel}</Text>
       </Pressable>
 
-      <View style={[styles.statusBox, { backgroundColor: theme.cardStrong }]}>
+      <View style={[styles.statusBox, { backgroundColor: theme.cardStrong }, cardShadow(theme)]}>
         <Text style={[styles.statusTitle, { color: theme.clear }]}>{locationCopy.statusTitle}</Text>
         <Text style={[styles.meta, { color: theme.muted }]}>
           {isPlaceSearchLoading ? "검색 중" : `${state.weather.locationName} 기준 · ${locationCopy.statusBody(hasSavedDestinations, savedDestinations.length)}`}

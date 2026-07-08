@@ -4,7 +4,7 @@ import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyRows: { type: PolicyDocumentType; icon: number; title: string; body: string }[] = [
   { type: "privacy", icon: uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
@@ -27,7 +27,7 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenPr
           <Text style={[styles.screenTitle, { color: theme.text }]}>정책</Text>
         </View>
 
-        <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           {policyRows.map((item, index) => (
             <Pressable
               accessibilityLabel={`${item.title}, ${item.body}`}

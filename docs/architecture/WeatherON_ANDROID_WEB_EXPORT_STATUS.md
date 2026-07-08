@@ -1,6 +1,6 @@
 # WeatherON Android Web Export Status
 
-> 생성일: 2026-07-06
+> 생성일: 2026-07-08
 > 목적: 8094 보조 미리보기가 목업 preview가 아니라 실제 mobile web export인지 점검한다.
 
 ## 1. 현재 상태
@@ -11,7 +11,7 @@
 | issue 수 | 0 |
 | warning 수 | 1 |
 | index.html | apps/mobile/dist/index.html |
-| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-7e10bee2d5be3c6924c012f5afba0f96.js |
+| 참조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-857c44775d394ab8fc66ba127ea6b221.js |
 | 보조 JS 번들 | apps/mobile/dist/_expo/static/js/web/index-775a7832fdd126cfcf36133d173006d3.js<br>apps/mobile/dist/_expo/static/js/web/index-e050bd5cad5cfd06fbdec9618fe01b27.js |
 | 전체 JS 번들 | 3 |
 | legacy dist-web stale marker | apps/mobile/dist-web/_expo/static/js/web/index-e66bb30f16a8f0efa5d87aff1bfa73e0.js |

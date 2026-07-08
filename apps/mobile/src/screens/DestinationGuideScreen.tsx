@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
 
@@ -43,7 +43,7 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           <Image source={placeImage} style={styles.heroImage} resizeMode="cover" />
         </View>
 
-        <View style={[styles.guideState, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+        <View style={[styles.guideState, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.guideStateTop}>
             <Text style={[styles.eyebrow, { color: theme.clear }]}>GUIDE</Text>
             <View style={[styles.readyPill, { backgroundColor: theme.cardMuted }]}>
@@ -76,7 +76,7 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           />
         </View>
 
-        <View style={[styles.guideCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }]}>
+        <View style={[styles.guideCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.guideHead}>
             <View style={styles.guideHeadCopy}>
               <Text style={[styles.sectionLabel, { color: theme.muted }]}>{categoryLabel} 준비 가이드</Text>
@@ -104,7 +104,7 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           </View>
         </View>
 
-        <View style={[styles.adCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.adCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.adLabel, { color: theme.subtle }]}>AD</Text>
           <Text style={[styles.adText, { color: theme.muted }]}>스포츠 브랜드 협찬 카드</Text>
         </View>

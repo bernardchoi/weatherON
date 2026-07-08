@@ -5,7 +5,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function NotificationCenterScreen({
   state,
@@ -47,7 +47,7 @@ export function NotificationCenterScreen({
           </Pressable>
         </View>
 
-        <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.sky : theme.border }]}>
+        <View style={[styles.summaryBox, { backgroundColor: theme.cardStrong, borderColor: hasUnread ? theme.sky : theme.border }, cardShadow(theme)]}>
           <View style={styles.summaryCopy}>
             <Text style={[styles.summaryLabel, { color: hasUnread ? theme.skyLite : theme.clear }]}>
               {previewOnly ? "예시 알림" : hasUnread ? "확인 필요" : "새 알림 없음"}
@@ -101,14 +101,14 @@ export function NotificationCenterScreen({
             );
           })}
           {activeNotifications.length === 0 ? (
-            <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
               <Text style={[styles.emptyTitle, { color: theme.text }]}>활성 알림 없음</Text>
               <Text style={[styles.emptyBody, { color: theme.muted }]}>알림 조건을 켜면 여기에서 바로 열어볼 수 있음</Text>
             </View>
           ) : null}
         </View>
 
-        <View style={[styles.historyBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.historyBox, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.historyHeader}>
             <View>
               <Text style={[styles.historyTitle, { color: theme.text }]}>최근 처리</Text>
@@ -191,6 +191,7 @@ function NotificationCard({
           borderColor: read ? theme.border : toneColor,
           opacity: read ? 0.72 : 1,
         },
+        cardShadow(theme),
       ]}
     >
       <View style={[styles.cardAccent, { backgroundColor: toneColor }]} />
