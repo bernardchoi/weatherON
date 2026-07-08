@@ -7,10 +7,11 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
+import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
-// 코디 홈 카드는 출시 직전 이 플래그만 켜서 노출한다.
-const HOME_OUTFIT_CARD_VISIBLE = false;
+// 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
+const HOME_OUTFIT_CARD_VISIBLE = true;
 const HOME_OUTFIT_FALLBACK_IMAGE = "assets/outfits/weatheron-outfit-light-rain-jacket-v1.png";
 
 export function HomeScreen({
@@ -84,7 +85,6 @@ export function HomeScreen({
             <HomeOutfitPreviewCard
               outfit={state.outfit}
               packTitle={homeDecision.packTitle}
-              packBody={homeDecision.packBody}
               theme={theme}
               onPress={() => onNavigate("C1")}
             />
@@ -599,13 +599,11 @@ function VisualDecisionCard({
 function HomeOutfitPreviewCard({
   outfit,
   packTitle,
-  packBody,
   theme,
   onPress,
 }: {
   outfit: P0ScreenProps["state"]["outfit"];
   packTitle: string;
-  packBody: string;
   theme: AppTheme;
   onPress: () => void;
 }) {
@@ -623,7 +621,7 @@ function HomeOutfitPreviewCard({
           {outfit.decisionText || packTitle}
         </Text>
         <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
-          {packBody} · 대표 착장 준비
+          {getOutfitVariantLabel(outfit.variant)} · 매칭 {outfit.matchPct}%
         </Text>
       </View>
       <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.cardMuted }]}>
