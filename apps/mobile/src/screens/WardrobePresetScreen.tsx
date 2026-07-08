@@ -68,7 +68,7 @@ export function WardrobePresetScreen({
 
       <Section title="선택됨" caption={`${getWardrobeCategoryLabel(activeItem.category)} · ${formatOutfitTags(activeItem.weatherTags)}`} accent="clear">
         <View style={[styles.selectedCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardStrong }]}>
+          <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardMuted }]}>
             {activeImage ? <Image source={activeImage} style={styles.selectedImage} resizeMode="contain" /> : null}
           </View>
           <View style={styles.copy}>

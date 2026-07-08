@@ -19,11 +19,11 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
 
   return (
     <AppScreen title="코디 상세" subtitle={state.outfit.decisionText} badge={`${state.outfit.matchPct}%`}>
-      <Section title={state.outfit.decisionText} caption="아이템별 추천 근거와 시간대 판단" accent="clear">
+      <Section title="오늘 입을 세트" caption="아이템별 추천 근거와 시간대 판단" accent="clear">
         <View style={styles.heroGrid}>
           {heroItems.map(([slot, item]) =>
             item ? (
-              <View key={slot} style={[styles.heroTile, { backgroundColor: theme.cardStrong }]}>
+              <View key={slot} style={[styles.heroTile, { backgroundColor: theme.cardMuted }]}>
                 {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
                   <Image source={outfitImageAssets[item.imageUrl]} style={styles.heroImage} resizeMode="contain" />
                 ) : (
@@ -35,7 +35,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
         </View>
         <View style={styles.timeChipRow}>
           {state.outfit.timeAdvice.slice(0, 3).map((item) => (
-            <View key={item.time} style={[styles.timeChip, { backgroundColor: theme.cardStrong }]}>
+            <View key={item.time} style={[styles.timeChip, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.timeChipTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
               <Text numberOfLines={1} style={[styles.timeChipText, { color: theme.text }]}>{item.text}</Text>
             </View>
@@ -43,7 +43,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
         </View>
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
-          <StatusPill label={`${Math.round(state.weather.current.tempC)}도~${Math.round(state.weather.current.feelsLikeC)}도`} tone="sky" />
+          <StatusPill label={formatTempLabel(state.weather.current.tempC, state.weather.current.feelsLikeC)} tone="sky" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="gold" />
         </View>
       </Section>
@@ -77,11 +77,11 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
         ))}
       </Section>
 
-      <Section title="저장 흐름" caption={outfitSaved ? "코디 저장 완료. 추천 목록과 상세가 같은 상태를 공유함" : "저장하려면 계정 연결 화면으로 이동해야 함"} accent="warm">
+      <Section title="저장 흐름" caption={outfitSaved ? "코디가 저장됐어요. 코디 탭에서 계속 확인할 수 있어요" : "저장하려면 계정 연결이 필요해요"} accent="warm">
         {accountGateResult?.returnTo === "C4" && accountGateResult.pendingAction === "save-outfit" ? (
           <View style={[styles.resultBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
             <Text style={[styles.resultTitle, { color: theme.clear }]}>{accountGateResult.message}</Text>
-            <Text style={[styles.resultCopy, { color: theme.muted }]}>계정 연결과 약관 동의 후 저장 상태로 복귀함</Text>
+            <Text style={[styles.resultCopy, { color: theme.muted }]}>계정 연결과 약관 동의를 확인했어요</Text>
           </View>
         ) : null}
         <View style={styles.pillRow}>
@@ -94,6 +94,7 @@ export function OutfitDetailScreen({ state, accountLinked, termsRequiredAccepted
             label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
             onPress={() => onRequireAccount("save-outfit", "C4")}
             tone={outfitSaved ? "secondary" : "warning"}
+            disabled={outfitSaved}
           />
           <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
         </View>
@@ -224,4 +225,10 @@ function formatAdviceTime(value: string) {
   }
   const match = value.match(/T(\d{2})/);
   return match ? `${match[1]}:00` : value;
+}
+
+function formatTempLabel(tempC: number, feelsLikeC: number) {
+  const temp = Math.round(tempC);
+  const feelsLike = Math.round(feelsLikeC);
+  return temp === feelsLike ? `${temp}도` : `${temp}도 · 체감 ${feelsLike}도`;
 }

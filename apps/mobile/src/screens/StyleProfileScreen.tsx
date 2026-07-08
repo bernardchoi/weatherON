@@ -83,10 +83,10 @@ export function StyleProfileScreen({
       <Section title="스타일" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
         <View style={[styles.previewCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.previewIllustration}>
-            <View style={[styles.clothTile, { backgroundColor: theme.cardStrong }]}>
+            <View style={[styles.clothTile, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.clothText, { color: theme.clear }]}>상의</Text>
             </View>
-            <View style={[styles.clothTile, { backgroundColor: theme.cardStrong }]}>
+            <View style={[styles.clothTile, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.clothText, { color: theme.clear }]}>하의</Text>
             </View>
           </View>

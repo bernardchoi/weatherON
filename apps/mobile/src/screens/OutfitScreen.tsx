@@ -38,15 +38,15 @@ export function OutfitScreen({
         </View>
         <Text style={[styles.criteriaBody, { color: theme.muted }]}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>옷장</Text>
             <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 매칭</Text>
           </View>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>스타일</Text>
             <Text style={[styles.criteriaStatValue, { color: theme.gold }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
           </View>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardStrong }]}>
+          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>저장</Text>
             <Text style={[styles.criteriaStatValue, { color: outfitSaved ? theme.clear : theme.sky }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
           </View>
