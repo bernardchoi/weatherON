@@ -656,10 +656,10 @@ export function useWeatherOnAppState() {
     setAlertSettingsRouteState(null);
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
-    if (nextRoute === "H4") setUmbrellaReturnRoute(route === "H5" ? "H5" : "H1");
+    if (nextRoute === "H4" && isP0Route(route)) setUmbrellaReturnRoute(route === "H4" ? umbrellaReturnRoute : route);
     if (nextRoute === "H3" && isP0Route(route) && route !== "H3") setNotificationCenterReturnRoute(route);
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
-  }, [route]);
+  }, [route, umbrellaReturnRoute]);
 
   const returnFromDestinationAdd = useCallback(() => {
     setRoute(destinationAddReturnRoute);

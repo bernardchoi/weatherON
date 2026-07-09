@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
 import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -14,15 +14,26 @@ type AppScreenProps = {
   subtitle?: string;
   badge?: string;
   heroAction?: React.ReactNode;
+  onBack?: () => void;
   children: React.ReactNode;
 };
 
-export function AppScreen({ title, subtitle, badge, heroAction, children }: AppScreenProps) {
+export function AppScreen({ title, subtitle, badge, heroAction, onBack, children }: AppScreenProps) {
   const theme = useAppTheme();
   return (
     <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
       <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
       <View style={styles.hero}>
+        {onBack ? (
+          <Pressable
+            accessibilityLabel="뒤로"
+            accessibilityRole="button"
+            onPress={onBack}
+            style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+          >
+            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
+          </Pressable>
+        ) : null}
         <View style={styles.heroText}>
           <Image
             source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
@@ -71,8 +82,25 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingTop: spacing.md,
   },
+  backButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
+    marginTop: spacing.sm,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  backGlyph: {
+    marginTop: -2,
+    fontSize: 29,
+    lineHeight: 31,
+    fontWeight: "800",
+  },
   heroText: {
     flex: 1,
+    minWidth: 0,
   },
   heroMeta: {
     alignItems: "flex-end",

@@ -25,6 +25,7 @@ export function WardrobeScreen({
   onOpenWardrobeItem,
   onSetWardrobeItemOwned,
   accountLinked,
+  onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
@@ -39,7 +40,7 @@ export function WardrobeScreen({
   });
 
   return (
-    <AppScreen title="내 옷장" subtitle="보유 옷과 추천 프리셋을 한곳에서 관리" badge="옷장">
+    <AppScreen title="내 옷장" subtitle="보유 옷과 추천 프리셋을 한곳에서 관리" badge="옷장" onBack={onGoBack}>
       <View style={styles.topBar}>
         <FilterRow
           values={categories}

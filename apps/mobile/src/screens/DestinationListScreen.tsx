@@ -217,7 +217,7 @@ function DestinationCard({
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
               <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
             </View>
-            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
+            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={2}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
   },
   destinationTop: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.xs,
   },
   destinationIconFrame: {
@@ -805,6 +805,7 @@ const styles = StyleSheet.create({
     height: 34,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 1,
     borderRadius: radius.pill,
   },
   destinationTitleRow: {
@@ -820,6 +821,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   destinationNameRow: {
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -827,8 +829,10 @@ const styles = StyleSheet.create({
   destinationSelectedCheck: {
     width: 13,
     height: 13,
+    flexShrink: 0,
   },
   destinationName: {
+    flex: 1,
     flexShrink: 1,
     minWidth: 0,
     fontSize: 14,
@@ -837,8 +841,9 @@ const styles = StyleSheet.create({
   },
   destinationArea: {
     flexShrink: 1,
+    minWidth: 0,
     fontSize: 11,
-    lineHeight: 15,
+    lineHeight: 16,
     fontWeight: "800",
   },
   readyPill: {
@@ -847,6 +852,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xs,
+    marginTop: 5,
     borderRadius: radius.pill,
   },
   readyText: {
@@ -855,6 +861,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   chevron: {
+    marginTop: 5,
     fontSize: 17,
     lineHeight: 20,
     fontWeight: "700",

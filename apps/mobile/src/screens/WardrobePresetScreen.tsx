@@ -20,6 +20,7 @@ export function WardrobePresetScreen({
   accountLinked,
   onSetWardrobeItemOwned,
   onNavigate,
+  onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const activeItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
@@ -27,7 +28,7 @@ export function WardrobePresetScreen({
 
   if (!activeItem) {
     return (
-      <AppScreen title="옷장 프리셋" subtitle="선택된 프리셋이 없음" badge="프리셋">
+      <AppScreen title="옷장 프리셋" subtitle="선택된 프리셋이 없음" badge="프리셋" onBack={onGoBack}>
         <Section title="준비 상태" caption="옷장에서 항목을 먼저 선택해줘야 함">
           <Text style={styles.empty}>목록에서 상세 보기를 눌러 다시 접근</Text>
           <AppButton label="옷장으로" onPress={() => onNavigate("C2")} />
@@ -38,7 +39,7 @@ export function WardrobePresetScreen({
   const activeImage = outfitImageAssets[activeItem.imageUrl];
 
   return (
-    <AppScreen title="아이템 추가" subtitle="프리셋을 선택하거나 사진으로 등록" badge="옷장 추가">
+    <AppScreen title="아이템 추가" subtitle="프리셋을 선택하거나 사진으로 등록" badge="옷장 추가" onBack={onGoBack}>
       <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.gold }]}>옷장 추가</Text>
