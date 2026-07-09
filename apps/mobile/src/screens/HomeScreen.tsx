@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   decisionHero: {
-    minHeight: 268,
+    minHeight: 216,
     gap: spacing.xs,
     padding: spacing.sm,
     borderRadius: radius.xl,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -36,9 +37,7 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onCancel} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton onPress={onCancel} />
           <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
         </View>
 
@@ -149,15 +148,6 @@ function getProviderMark(providerId: ProviderTone) {
   return "@";
 }
 
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -186,14 +176,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   title: {
     fontSize: 20,
@@ -364,26 +346,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 15,
     fontWeight: "700",
-  },
-  chevronLeft: {
-    width: 16,
-    height: 16,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }, { translateY: -3 }],
-  },
-  chevronLeftBottom: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }, { translateY: 3 }],
   },
 });

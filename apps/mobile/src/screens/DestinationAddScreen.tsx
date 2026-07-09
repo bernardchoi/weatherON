@@ -1,6 +1,7 @@
 import React from "react";
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppButton } from "../components/AppButton";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
@@ -63,14 +64,7 @@ export function DestinationAddScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="뒤로"
-            onPress={onReturnFromDestinationAdd}
-            style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-          >
-            <BackGlyph color={theme.subtle} />
-          </Pressable>
+          <BackButton onPress={onReturnFromDestinationAdd} />
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>목적지 추가</Text>
             <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 고르면 케어 기준이 맞춰짐</Text>
@@ -340,15 +334,6 @@ function getProviderLabel(provider: string) {
   return "";
 }
 
-function BackGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.backGlyph} accessibilityElementsHidden>
-      <View style={[styles.backLineTop, { backgroundColor: color }]} />
-      <View style={[styles.backLineBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function SearchGlyph({ color }: { color: string }) {
   return (
     <View style={styles.searchGlyph} accessibilityElementsHidden>
@@ -394,36 +379,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    width: 16,
-    height: 16,
-  },
-  backLineTop: {
-    position: "absolute",
-    left: 3,
-    top: 5,
-    width: 9,
-    height: 1.8,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }],
-  },
-  backLineBottom: {
-    position: "absolute",
-    left: 3,
-    top: 10,
-    width: 9,
-    height: 1.8,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }],
   },
   headerCopy: {
     flex: 1,

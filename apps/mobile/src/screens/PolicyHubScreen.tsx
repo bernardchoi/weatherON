@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -21,9 +22,7 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenPr
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="MY로 돌아가기" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton accessibilityLabel="MY로 돌아가기" onPress={() => onNavigate("M1")} />
           <Text style={[styles.screenTitle, { color: theme.text }]}>정책</Text>
         </View>
 
@@ -48,15 +47,6 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenPr
           ))}
         </View>
       </ScrollView>
-    </View>
-  );
-}
-
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
     </View>
   );
 }
@@ -89,14 +79,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   screenTitle: {
     fontSize: 20,
@@ -145,22 +127,5 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
     fontWeight: "800",
-  },
-  chevronLeft: {
-    width: 18,
-    height: 18,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "-45deg" }, { translateY: -2 }],
-  },
-  chevronLeftBottom: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "45deg" }, { translateY: 2 }],
   },
 });

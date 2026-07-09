@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
@@ -19,9 +20,7 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("G1")} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-          </Pressable>
+          <BackButton onPress={() => onNavigate("G1")} />
           <Text style={[styles.title, { color: theme.text }]}>여행 플래너</Text>
           <View style={[styles.premiumTag, { backgroundColor: `${theme.sky}18`, borderColor: theme.sky }]}>
             <Text style={[styles.premiumText, { color: theme.sky }]}>프리미엄</Text>
@@ -142,20 +141,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 30,
-    lineHeight: 30,
-    fontWeight: "300",
   },
   title: {
     flex: 1,

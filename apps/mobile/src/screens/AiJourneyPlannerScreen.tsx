@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
@@ -39,9 +40,7 @@ export function AiJourneyPlannerScreen({ permissionReady, permissionGateResult, 
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("G3")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <BackGlyph color={theme.subtle} />
-          </Pressable>
+          <BackButton onPress={() => onNavigate("G3")} />
           <Text style={[styles.title, { color: theme.text }]}>AI 종주 플래너</Text>
           <View style={[styles.premiumTag, { backgroundColor: `${theme.sky}18`, borderColor: theme.sky }]}>
             <Text style={[styles.premiumText, { color: theme.sky }]}>프리미엄</Text>
@@ -154,15 +153,6 @@ function getResultColor(tone: string, theme: AppTheme) {
   return theme.warm;
 }
 
-function BackGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.backGlyph} accessibilityElementsHidden>
-      <View style={[styles.backLineTop, { backgroundColor: color }]} />
-      <View style={[styles.backLineBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function ArrowGlyph({ color }: { color: string }) {
   return (
     <View style={styles.arrowGlyph} accessibilityElementsHidden>
@@ -211,36 +201,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    width: 14,
-    height: 16,
-  },
-  backLineTop: {
-    position: "absolute",
-    left: 2,
-    top: 4,
-    width: 10,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "-42deg" }],
-  },
-  backLineBottom: {
-    position: "absolute",
-    left: 2,
-    bottom: 4,
-    width: 10,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "42deg" }],
   },
   title: {
     flex: 1,

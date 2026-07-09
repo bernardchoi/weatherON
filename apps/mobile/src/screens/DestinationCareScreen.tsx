@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -72,9 +73,7 @@ export function DestinationCareScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("G1")} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-          </Pressable>
+          <BackButton onPress={() => onNavigate("G1")} />
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
@@ -426,13 +425,22 @@ function TimeWheel({
   const scrollRef = useRef<ScrollView>(null);
   const selectedIndex = Math.max(0, options.indexOf(selectedValue));
 
-  // 선택된 값이 뷰포트 중앙에 오도록 스크롤 위치를 맞춘다. react-native-web에서는 contentOffset
-  // prop이 초기 마운트 시 적용되지 않아(드롭다운 열면 항상 목록 맨 위가 보임) ref.scrollTo로 직접 맞춘다.
+  // 선택된 값이 뷰포트 중앙에 오도록 스크롤 위치를 맞춘다.
   const centerOffset = Math.max(0, selectedIndex * TIME_WHEEL_ROW_HEIGHT - (TIME_WHEEL_VIEWPORT - TIME_WHEEL_ROW_HEIGHT) / 2);
+  const centerOffsetRef = useRef(centerOffset);
+  centerOffsetRef.current = centerOffset;
+
+  // 이 휠은 높이가 0→목표값으로 애니메이션되는 DropdownMotion(overflow:hidden) 안에 있다.
+  // requestAnimationFrame 한 프레임 뒤에 scrollTo를 호출하면 웹에서는 통하지만, 실기기에서는
+  // 네이티브 레이아웃이 그 시점에 아직 잡히지 않아 스크롤이 씹히는 경우가 있었다(첫 프레임에
+  // 목록 맨 위 00/01/02가 보이던 버그). onLayout은 플랫폼 관계없이 실제 레이아웃이 끝난 뒤에만
+  // 불리므로, 그 시점에 맞춰 스크롤해야 두 플랫폼 모두에서 안정적으로 동작한다.
+  const handleLayout = () => {
+    scrollRef.current?.scrollTo({ y: centerOffsetRef.current, animated: false });
+  };
+
   useEffect(() => {
-    // 드롭다운 펼침 애니메이션(maxHeight 0→열림) 동안 레이아웃이 안정된 뒤 스크롤되도록 다음 프레임에 실행.
-    const frame = requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: centerOffset, animated: false }));
-    return () => cancelAnimationFrame(frame);
+    scrollRef.current?.scrollTo({ y: centerOffset, animated: false });
   }, [centerOffset]);
 
   return (
@@ -442,6 +450,8 @@ function TimeWheel({
       style={[styles.timeWheel, { borderColor: theme.border }]}
       contentContainerStyle={styles.timeWheelContent}
       contentOffset={{ x: 0, y: centerOffset }}
+      onLayout={handleLayout}
+      onContentSizeChange={handleLayout}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
@@ -853,20 +863,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 30,
-    lineHeight: 30,
-    fontWeight: "300",
   },
   headerCopy: {
     flex: 1,

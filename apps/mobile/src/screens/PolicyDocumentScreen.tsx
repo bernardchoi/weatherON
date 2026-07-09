@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
+import { BackButton } from "../components/BackButton";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
@@ -70,9 +71,7 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="상단 정책 목록으로 돌아가기" accessibilityRole="button" onPress={onReturnFromPolicyDocument} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton accessibilityLabel="상단 정책 목록으로 돌아가기" onPress={onReturnFromPolicyDocument} />
           <Text style={[styles.screenTitle, { color: theme.text }]} numberOfLines={1}>{document.title}</Text>
         </View>
 
@@ -107,15 +106,6 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
   );
 }
 
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -144,14 +134,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   screenTitle: {
     flex: 1,
@@ -215,22 +197,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
-  },
-  chevronLeft: {
-    width: 18,
-    height: 18,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "-45deg" }, { translateY: -2 }],
-  },
-  chevronLeftBottom: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "45deg" }, { translateY: 2 }],
   },
 });

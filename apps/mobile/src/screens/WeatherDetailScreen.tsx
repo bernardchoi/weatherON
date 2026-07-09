@@ -1,7 +1,8 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -26,9 +27,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onGoBack} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-          </Pressable>
+          <BackButton onPress={onGoBack} />
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>날씨 상세</Text>
             <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>{getDisplayLocationName(weather.locationName)}</Text>
@@ -233,20 +232,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 30,
-    lineHeight: 30,
-    fontWeight: "300",
   },
   headerCopy: {
     flex: 1,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -71,9 +72,7 @@ export function AlertSettingsScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={goBack} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton onPress={goBack} />
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>스마트 알림 설정</Text>
             <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>기본은 자동, 필요한 경우만 세부 조정</Text>
@@ -445,15 +444,6 @@ function RouteGlyph({ color }: { color: string }) {
   );
 }
 
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function ChevronDown({ color, open }: { color: string; open: boolean }) {
   return (
     <View style={[styles.chevronDown, open ? styles.chevronDownOpen : null]} accessibilityElementsHidden>
@@ -602,14 +592,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   headerCopy: {
     flex: 1,
@@ -1065,27 +1047,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.6,
     borderRadius: 6,
     transform: [{ rotate: "-18deg" }],
-  },
-  chevronLeft: {
-    width: 16,
-    height: 16,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }, { translateY: -3 }],
-  },
-  chevronLeftBottom: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }, { translateY: 3 }],
   },
   chevronDown: {
     width: 18,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { placeImageAssets } from "../assets";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
@@ -22,14 +23,7 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="뒤로"
-            onPress={() => onNavigate("P3")}
-            style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-          >
-            <BackGlyph color={theme.subtle} />
-          </Pressable>
+          <BackButton onPress={() => onNavigate("P3")} />
           <View style={styles.headerCopy}>
             <View style={styles.titleRow}>
               <CategoryBadge color={theme.muted} />
@@ -231,15 +225,6 @@ function getPlaceImage(category: string) {
   return placeImageAssets.beach;
 }
 
-function BackGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.backGlyph} accessibilityElementsHidden>
-      <View style={[styles.backLineTop, { backgroundColor: color }]} />
-      <View style={[styles.backLineBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function CategoryBadge({ color }: { color: string }) {
   return (
     <View style={[styles.categoryBadge, { borderColor: color }]} accessibilityElementsHidden>
@@ -286,36 +271,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    width: 16,
-    height: 16,
-  },
-  backLineTop: {
-    position: "absolute",
-    left: 3,
-    top: 5,
-    width: 9,
-    height: 1.8,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }],
-  },
-  backLineBottom: {
-    position: "absolute",
-    left: 3,
-    top: 10,
-    width: 9,
-    height: 1.8,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }],
   },
   headerCopy: {
     flex: 1,

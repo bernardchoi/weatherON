@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -25,9 +26,7 @@ export function AppPermissionsScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton onPress={() => onNavigate("M1")} />
           <Text style={[styles.title, { color: theme.text }]}>앱 권한 관리</Text>
         </View>
 
@@ -116,15 +115,6 @@ function PermissionCard({
           <Text style={[styles.secondaryActionText, { color: theme.text }]}>{secondaryLabel}</Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
-
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
     </View>
   );
 }
@@ -275,14 +265,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
   title: {
     fontSize: 20,
     lineHeight: 25,
@@ -396,23 +378,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
-  },
-  chevronLeft: {
-    width: 18,
-    height: 18,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "-45deg" }, { translateY: -2 }],
-  },
-  chevronLeftBottom: {
-    width: 10,
-    height: 2,
-    borderRadius: radius.pill,
-    transform: [{ rotate: "45deg" }, { translateY: 2 }],
   },
   bottomSpacer: {
     height: 42,

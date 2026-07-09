@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
@@ -36,9 +37,7 @@ export function AccountManagementScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton onPress={() => onNavigate("M1")} />
           <Text style={[styles.title, { color: theme.text }]}>계정 관리</Text>
         </View>
 
@@ -135,15 +134,6 @@ function DoorGlyph({ color }: { color: string }) {
   );
 }
 
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function ChevronRight({ color }: { color: string }) {
   return (
     <View style={styles.chevronRight} accessibilityElementsHidden>
@@ -181,14 +171,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   title: {
     fontSize: 20,
@@ -340,27 +322,6 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 2,
     transform: [{ rotate: "-45deg" }, { translateY: 2 }],
-  },
-  chevronLeft: {
-    width: 16,
-    height: 16,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }, { translateY: -3 }],
-  },
-  chevronLeftBottom: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }, { translateY: 3 }],
   },
   chevronRight: {
     width: 16,

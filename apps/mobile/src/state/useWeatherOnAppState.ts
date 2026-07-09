@@ -163,6 +163,8 @@ export function useWeatherOnAppState() {
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
   const [umbrellaReturnRoute, setUmbrellaReturnRoute] = useState<P0RouteId>("H1");
   const [notificationCenterReturnRoute, setNotificationCenterReturnRoute] = useState<P0RouteId>("H1");
+  const [wardrobeReturnRoute, setWardrobeReturnRoute] = useState<P0RouteId>("C1");
+  const [wardrobePresetReturnRoute, setWardrobePresetReturnRoute] = useState<P0RouteId>("C1");
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
   const [weatherProviderMode, setWeatherProviderMode] = useState<WeatherProviderMode>("ready");
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
@@ -658,6 +660,10 @@ export function useWeatherOnAppState() {
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
     if (nextRoute === "H4" && isP0Route(route)) setUmbrellaReturnRoute(route === "H4" ? umbrellaReturnRoute : route);
     if (nextRoute === "H3" && isP0Route(route) && route !== "H3") setNotificationCenterReturnRoute(route);
+    // 옷장(C2)·프리셋(C3)은 코디 메인(C1)과 코디 상세(C4) 양쪽에서 진입 가능해, 뒤로가기가
+    // 항상 C1로 고정되면 코디 상세에서 들어왔을 때 엉뚱한 화면으로 돌아간다. 실제 진입 경로를 기억한다.
+    if (nextRoute === "C2" && isP0Route(route) && route !== "C2") setWardrobeReturnRoute(route);
+    if (nextRoute === "C3" && isP0Route(route) && route !== "C3") setWardrobePresetReturnRoute(route);
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
   }, [route, umbrellaReturnRoute]);
 
@@ -1321,14 +1327,33 @@ export function useWeatherOnAppState() {
       setRoute(notificationCenterReturnRoute);
       return true;
     }
+    if (route === "C2") {
+      setRoute(wardrobeReturnRoute);
+      return true;
+    }
+    if (route === "C3") {
+      setRoute(wardrobePresetReturnRoute);
+      return true;
+    }
     const backRoute = getBackRoute(route);
     setRoute(backRoute);
     return true;
-  }, [destinationAddReturnRoute, gate?.returnTo, notificationCenterReturnRoute, permissionGate?.returnTo, route, styleProfileReturnRoute, umbrellaReturnRoute]);
+  }, [
+    destinationAddReturnRoute,
+    gate?.returnTo,
+    notificationCenterReturnRoute,
+    permissionGate?.returnTo,
+    route,
+    styleProfileReturnRoute,
+    umbrellaReturnRoute,
+    wardrobePresetReturnRoute,
+    wardrobeReturnRoute,
+  ]);
 
   return {
     route,
     styleProfileReturnRoute,
+    umbrellaReturnRoute,
     state,
     useDestinationWeather,
     umbrellaReviewed,
@@ -1453,8 +1478,6 @@ function getBackRoute(route: AppRouteId): AppRouteId {
       return "O2";
     case "O6":
       return "O5";
-    case "C2":
-    case "C3":
     case "C4":
       return "C1";
     case "H3":

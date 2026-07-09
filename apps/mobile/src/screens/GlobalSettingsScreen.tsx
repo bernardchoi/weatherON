@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -27,9 +28,7 @@ export function GlobalSettingsScreen({
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={() => onNavigate("M1")} style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <ChevronLeft color={theme.muted} />
-          </Pressable>
+          <BackButton onPress={() => onNavigate("M1")} />
           <Text style={[styles.title, { color: theme.text }]}>표시 설정</Text>
         </View>
 
@@ -154,15 +153,6 @@ function SegmentRow({
   );
 }
 
-function ChevronLeft({ color }: { color: string }) {
-  return (
-    <View style={styles.chevronLeft} accessibilityElementsHidden>
-      <View style={[styles.chevronLeftTop, { backgroundColor: color }]} />
-      <View style={[styles.chevronLeftBottom, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
 function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
   if (mode === "light") return "라이트";
   if (mode === "dark") return "다크";
@@ -201,14 +191,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
   },
   title: {
     fontSize: 20,
@@ -374,26 +356,5 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 10,
-  },
-  chevronLeft: {
-    width: 16,
-    height: 16,
-    justifyContent: "center",
-  },
-  chevronLeftTop: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "-45deg" }, { translateY: -3 }],
-  },
-  chevronLeftBottom: {
-    position: "absolute",
-    left: 4,
-    width: 9,
-    height: 2,
-    borderRadius: 2,
-    transform: [{ rotate: "45deg" }, { translateY: 3 }],
   },
 });

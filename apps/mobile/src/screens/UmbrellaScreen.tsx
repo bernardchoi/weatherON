@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
+import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -25,9 +26,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Pressable accessibilityLabel="뒤로" accessibilityRole="button" onPress={onGoBack} style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-          </Pressable>
+          <BackButton onPress={onGoBack} />
           <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
         </View>
 
@@ -301,20 +300,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 30,
-    lineHeight: 30,
-    fontWeight: "300",
   },
   title: {
     fontSize: 21,

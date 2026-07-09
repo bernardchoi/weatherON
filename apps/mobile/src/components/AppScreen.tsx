@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
+import { BackButton } from "./BackButton";
 import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { spacing } from "../theme/tokens";
@@ -15,49 +16,59 @@ type AppScreenProps = {
   badge?: string;
   heroAction?: React.ReactNode;
   onBack?: () => void;
+  // 스크롤 밖에 고정하는 하단 영역. 저장/취소처럼 화면 어디서든 바로 눌러야 하는 주요 액션을 담는다 —
+  // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
+  footer?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function AppScreen({ title, subtitle, badge, heroAction, onBack, children }: AppScreenProps) {
+export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, children }: AppScreenProps) {
   const theme = useAppTheme();
   return (
-    <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
-      <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-      <View style={styles.hero}>
-        {onBack ? (
-          <Pressable
-            accessibilityLabel="뒤로"
-            accessibilityRole="button"
-            onPress={onBack}
-            style={[styles.backButton, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            <Text style={[styles.backGlyph, { color: theme.text }]}>‹</Text>
-          </Pressable>
-        ) : null}
-        <View style={styles.heroText}>
-          <Image
-            source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
-            style={styles.wordmark}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-          {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
-        </View>
-        {badge || heroAction ? (
-          <View style={styles.heroMeta}>
-            {badge ? <StatusPill label={badge} tone="gold" /> : null}
-            {heroAction}
+    <View style={styles.shell}>
+      <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        <View style={styles.hero}>
+          {onBack ? (
+            <View style={styles.backButtonSlot}>
+              <BackButton onPress={onBack} />
+            </View>
+          ) : null}
+          <View style={styles.heroText}>
+            <Image
+              source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
+              style={styles.wordmark}
+              resizeMode="contain"
+            />
+            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+            {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
           </View>
-        ) : null}
-      </View>
-      {children}
-    </ScrollView>
+          {badge || heroAction ? (
+            <View style={styles.heroMeta}>
+              {badge ? <StatusPill label={badge} tone="gold" /> : null}
+              {heroAction}
+            </View>
+          ) : null}
+        </View>
+        {children}
+      </ScrollView>
+      {footer ? <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }]}>{footer}</View> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    borderTopWidth: 1,
   },
   content: {
     gap: spacing.md,
@@ -82,21 +93,9 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingTop: spacing.md,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+  backButtonSlot: {
     alignSelf: "flex-start",
     marginTop: spacing.sm,
-    borderRadius: 18,
-    borderWidth: 1,
-  },
-  backGlyph: {
-    marginTop: -2,
-    fontSize: 29,
-    lineHeight: 31,
-    fontWeight: "800",
   },
   heroText: {
     flex: 1,

@@ -25,28 +25,30 @@ export function OutfitDetailScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
-  const heroItems = items.filter(([slot]) => slot !== "accessory").slice(0, 4);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
 
   return (
-    <AppScreen title="코디 상세" subtitle={state.outfit.decisionText} badge={`${state.outfit.matchPct}%`} onBack={onGoBack}>
-      <Section title="오늘 입을 세트" caption="착장 구성과 추천 근거를 함께 확인" accent="clear">
-        <View style={styles.heroGrid}>
-          {heroItems.map(([slot, item]) =>
-            item ? (
-              <View key={slot} style={[styles.heroTile, { backgroundColor: theme.cardMuted }]}>
-                {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
-                  <Image source={outfitImageAssets[item.imageUrl]} style={styles.heroImage} resizeMode="contain" />
-                ) : (
-                  <Text style={[styles.thumbText, { color: theme.clear }]}>{getOutfitSlotLabel(slot)}</Text>
-                )}
-              </View>
-            ) : null,
-          )}
+    <AppScreen
+      title="코디 상세"
+      subtitle={state.outfit.decisionText}
+      badge={`${state.outfit.matchPct}%`}
+      onBack={onGoBack}
+      footer={
+        <View style={[styles.actions, styles.saveActions]}>
+          <AppButton
+            label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
+            onPress={() => onRequireAccount("save-outfit", "C4")}
+            tone={outfitSaved ? "secondary" : "warning"}
+            disabled={outfitSaved}
+          />
+          <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
         </View>
-        <View style={[styles.itemList, { borderTopColor: theme.border }]}>
+      }
+    >
+      <Section title="오늘 입을 세트" caption="착장 구성과 추천 근거를 함께 확인" accent="clear">
+        <View style={styles.itemList}>
           {items.map(([slot, item]) =>
             item ? (
               <View key={slot} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
@@ -117,38 +119,12 @@ export function OutfitDetailScreen({
           <StatusPill label={termsRequiredAccepted ? "약관 완료" : "약관 필요"} tone={termsRequiredAccepted ? "clear" : "warm"} />
           <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
         </View>
-        <View style={[styles.actions, styles.saveActions]}>
-          <AppButton
-            label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
-            onPress={() => onRequireAccount("save-outfit", "C4")}
-            tone={outfitSaved ? "secondary" : "warning"}
-            disabled={outfitSaved}
-          />
-          <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
-        </View>
       </Section>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  heroGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  heroTile: {
-    width: "48%",
-    height: 96,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.lg,
-    overflow: "hidden",
-  },
-  heroImage: {
-    width: "88%",
-    height: 86,
-  },
   timeChipRow: {
     flexDirection: "row",
     gap: spacing.xs,
@@ -173,8 +149,6 @@ const styles = StyleSheet.create({
   },
   itemList: {
     gap: spacing.xs,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
   },
   itemRow: {
     flexDirection: "row",
