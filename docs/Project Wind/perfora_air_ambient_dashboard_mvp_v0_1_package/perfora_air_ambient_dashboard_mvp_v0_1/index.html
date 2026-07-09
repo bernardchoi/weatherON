@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfora Air — Ambient Dashboard MVP v0.1</title>
+  <meta name="description" content="Perfora Air Ambient Dashboard MVP v0.1 — invisible context into matte air surfaces, density and quiet signals." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="src/perfora-air.v0.1.css" />
+  <link rel="stylesheet" href="src/perfora-air.components.v0.1.css" />
+  <link rel="stylesheet" href="src/mvp.css" />
+</head>
+<body data-pa-mode="day" data-screen="home" data-scenario="normal">
+  <div class="app-shell" id="app">
+    <aside class="brand-panel" aria-label="Perfora Air project information">
+      <div class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p class="eyebrow">Ambient Dashboard MVP v0.1</p>
+      <h1>PERFORA AIR</h1>
+      <p class="brand-subtitle">보이지 않는 바람과 데이터를 표면의 밀도, 빛, 흐름으로 번역하는 반응형 UI 시스템.</p>
+
+      <section class="side-section">
+        <h2>Design stance</h2>
+        <ul class="principle-list">
+          <li><strong>Matte Air</strong><span>광택보다 차분한 공기감</span></li>
+          <li><strong>Soft Density</strong><span>패턴은 장식이 아니라 상태값</span></li>
+          <li><strong>Quiet Signal</strong><span>빛은 피드백, 과장은 금지</span></li>
+          <li><strong>Text First</strong><span>중요 상태는 문장으로 먼저</span></li>
+        </ul>
+      </section>
+
+      <section class="side-section">
+        <h2>Scenario</h2>
+        <div class="segmented" role="group" aria-label="Scenario selector">
+          <button class="seg-btn" data-scenario-button="calm">Calm</button>
+          <button class="seg-btn is-active" data-scenario-button="normal">Normal</button>
+          <button class="seg-btn" data-scenario-button="live">Live</button>
+          <button class="seg-btn" data-scenario-button="alert">Alert</button>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <h2>Atmosphere</h2>
+        <div class="mode-grid" role="group" aria-label="Atmosphere mode selector">
+          <button class="mode-swatch is-active" data-mode-button="day"><span></span>Day</button>
+          <button class="mode-swatch" data-mode-button="dusk"><span></span>Dusk</button>
+          <button class="mode-swatch" data-mode-button="rainy"><span></span>Rainy</button>
+          <button class="mode-swatch" data-mode-button="night"><span></span>Night</button>
+        </div>
+      </section>
+
+      <section class="side-section compact-note">
+        <h2>Difference</h2>
+        <p>Liquid Glass처럼 굴절을 강조하지 않고, Material 3처럼 색상 체계에만 머물지 않는다. 이 MVP는 <strong>맥락 → 밀도/흐름/문장</strong> 변환을 검증한다.</p>
+      </section>
+    </aside>
+
+    <main class="phone-stage" aria-label="Ambient Dashboard interactive MVP">
+      <div class="device-frame">
+        <div class="device-screen">
+          <header class="app-header">
+            <div>
+              <p class="eyebrow" id="headerKicker">Good Morning</p>
+              <h2 id="screenTitle">Yokohama</h2>
+            </div>
+            <button class="icon-button" id="gustButton" aria-label="Trigger subtle gust animation">↗</button>
+          </header>
+
+          <section class="screen-view is-active" data-view="home" aria-labelledby="home-title">
+            <div class="pa-surface-frame pa-atmosphere-panel atmosphere-hero" data-pa-surface="air" data-state="normal">
+              <div class="pa-density-field" data-pa-density="normal"></div>
+              <div class="ambient-flow" aria-hidden="true"></div>
+              <div class="pa-lumen-layer"></div>
+              <div class="pa-content hero-content">
+                <div class="hero-topline">
+                  <p id="home-title" class="section-label">오늘의 공기</p>
+                  <span class="status-pill" id="statusPill">Normal</span>
+                </div>
+                <div class="hero-reading">
+                  <span class="temperature" id="temperatureValue">24°</span>
+                  <span class="weather-symbol" id="weatherSymbol" aria-hidden="true">☼</span>
+                </div>
+                <p class="hero-summary" id="heroSummary">공기가 살짝 습하지만 안정적입니다.</p>
+                <div class="metric-row" aria-label="Current metrics">
+                  <span><b id="humidityValue">62%</b><small>습도</small></span>
+                  <span><b id="windValue">NW 3.2</b><small>m/s</small></span>
+                  <span><b id="aqiValue">18</b><small>AQI</small></span>
+                </div>
+                <div class="recommendation-card">
+                  <span class="recommendation-icon" aria-hidden="true">◌</span>
+                  <p id="recommendationText">짧은 환기 후 집중하기 좋은 상태입니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="quick-grid" aria-label="Ambient dashboard signal cards">
+              <article class="pa-surface-frame pa-signal-card metric-card" data-pa-surface="still">
+                <div class="mini-density" aria-hidden="true"></div>
+                <p class="section-label">Air Quality</p>
+                <h3 id="airQualityLabel">Good</h3>
+                <p><span id="pmValue">18</span> PM2.5 · 쾌적</p>
+              </article>
+              <article class="pa-surface-frame pa-signal-card metric-card" data-pa-surface="still">
+                <p class="section-label">Schedule</p>
+                <h3 id="scheduleLabel">4 events</h3>
+                <p id="scheduleText">15:30 집중 시간이 있습니다.</p>
+              </article>
+              <article class="pa-surface-frame pa-signal-card metric-card" data-pa-surface="still">
+                <p class="section-label">Indoor</p>
+                <h3 id="indoorLabel">Balanced</h3>
+                <p id="indoorText">공기청정기 자동 모드 유지.</p>
+              </article>
+              <article class="pa-surface-frame pa-signal-card metric-card" data-pa-surface="still">
+                <p class="section-label">Signal</p>
+                <h3 id="signalLabel">Quiet</h3>
+                <p id="signalText">중요 알림 없음.</p>
+              </article>
+            </div>
+
+            <section class="pa-surface-frame timeline-card" data-pa-surface="still">
+              <div class="timeline-heading">
+                <div>
+                  <p class="section-label">Day Flow</p>
+                  <h3>하루의 밀도</h3>
+                </div>
+                <span id="timelineMeta">calm → live</span>
+              </div>
+              <div class="ambient-timeline" id="homeTimeline" aria-label="Day flow timeline"></div>
+            </section>
+          </section>
+
+          <section class="screen-view" data-view="flow" aria-labelledby="flow-title">
+            <div class="pa-surface-frame detail-panel" data-pa-surface="air">
+              <div class="pa-density-field" data-pa-density="live"></div>
+              <div class="pa-content">
+                <p class="section-label" id="flow-title">Air Flow</p>
+                <div class="ring-layout">
+                  <div class="wind-ring" aria-label="Wind direction and speed">
+                    <svg viewBox="0 0 180 180" role="img" aria-labelledby="windRingTitle windRingDesc">
+                      <title id="windRingTitle">Wind flow ring</title>
+                      <desc id="windRingDesc">North-west wind, 3.2 meters per second</desc>
+                      <circle cx="90" cy="90" r="72" class="ring-track" />
+                      <circle cx="90" cy="90" r="72" class="ring-progress" pathLength="100" />
+                      <line x1="90" y1="90" x2="90" y2="28" class="ring-needle" id="windNeedle" />
+                      <text x="90" y="82" text-anchor="middle" class="ring-value" id="ringWindValue">3.2</text>
+                      <text x="90" y="105" text-anchor="middle" class="ring-unit">m/s</text>
+                      <text x="90" y="18" text-anchor="middle" class="ring-axis">N</text>
+                      <text x="166" y="94" text-anchor="middle" class="ring-axis">E</text>
+                      <text x="90" y="172" text-anchor="middle" class="ring-axis">S</text>
+                      <text x="14" y="94" text-anchor="middle" class="ring-axis">W</text>
+                    </svg>
+                  </div>
+                  <div class="ring-copy">
+                    <h3 id="windHeading">NW 3.2 m/s</h3>
+                    <p id="windCopy">약한 북서풍입니다. 실내 환기에는 부담이 적습니다.</p>
+                  </div>
+                </div>
+                <div class="chip-row">
+                  <span class="pa-context-chip">체감 <b id="feelsLikeChip">24°</b></span>
+                  <span class="pa-context-chip">습도 <b id="humidityChip">62%</b></span>
+                  <span class="pa-context-chip">UV <b id="uvChip">3</b></span>
+                </div>
+              </div>
+            </div>
+            <section class="pa-surface-frame timeline-card" data-pa-surface="still">
+              <p class="section-label">Hourly Air</p>
+              <div class="hourly-list" id="hourlyList"></div>
+            </section>
+            <article class="pa-surface-frame recommendation-detail" data-pa-surface="signal">
+              <p class="section-label">Recommendation</p>
+              <h3 id="flowRecommendationTitle">10분 환기 추천</h3>
+              <p id="flowRecommendationCopy">실내 공기와 외부 공기 상태가 모두 안정적입니다.</p>
+            </article>
+          </section>
+
+          <section class="screen-view" data-view="homeair" aria-labelledby="homeair-title">
+            <div class="pa-surface-frame detail-panel" data-pa-surface="air">
+              <div class="pa-density-field" data-pa-density="normal"></div>
+              <div class="pa-content">
+                <p class="section-label" id="homeair-title">Smart Home Air</p>
+                <h3 id="homeAirHeadline">거실 공기가 안정적입니다</h3>
+                <p id="homeAirCopy">공기청정기는 자동 모드, 습도 센서는 정상 범위입니다.</p>
+                <button class="pa-air-button" data-pa-variant="primary" id="autoModeButton">자동 모드 유지</button>
+              </div>
+            </div>
+            <div class="device-list" id="deviceList" aria-label="Smart home device list"></div>
+          </section>
+
+          <section class="screen-view" data-view="schedule" aria-labelledby="schedule-title">
+            <div class="pa-surface-frame detail-panel" data-pa-surface="air">
+              <div class="pa-density-field" data-pa-density="normal"></div>
+              <div class="pa-content">
+                <p class="section-label" id="schedule-title">Day Flow</p>
+                <h3 id="dayFlowHeadline">오후에 집중 구간이 있습니다</h3>
+                <p id="dayFlowCopy">회의 사이의 90분을 깊은 작업 시간으로 확보하세요.</p>
+              </div>
+            </div>
+            <div class="schedule-list" id="scheduleList"></div>
+          </section>
+
+          <section class="screen-view" data-view="modes" aria-labelledby="modes-title">
+            <div class="pa-surface-frame detail-panel" data-pa-surface="veil">
+              <div class="pa-content">
+                <p class="section-label" id="modes-title">Modes & Accessibility</p>
+                <h3>표면 효과를 사용자가 조절합니다</h3>
+                <p>모션, 투명도, 대비, 저전력, 경고 문장 우선 방식을 즉시 확인할 수 있습니다.</p>
+              </div>
+            </div>
+            <div class="setting-list" aria-label="Accessibility controls">
+              <label class="setting-row"><span><b>Reduced Motion</b><small>흐름/펄스 모션 축소</small></span><input type="checkbox" data-toggle-class="reduced-motion"></label>
+              <label class="setting-row"><span><b>Reduced Transparency</b><small>투명도와 blur 제거</small></span><input type="checkbox" data-toggle-class="reduced-transparency"></label>
+              <label class="setting-row"><span><b>High Contrast</b><small>문자와 경계 대비 강화</small></span><input type="checkbox" data-toggle-class="high-contrast"></label>
+              <label class="setting-row"><span><b>Low Power</b><small>실시간 패턴 효과 정적화</small></span><input type="checkbox" data-toggle-class="low-power"></label>
+              <label class="setting-row"><span><b>Text-first Alert</b><small>경고는 효과보다 문장 우선</small></span><input type="checkbox" data-toggle-class="text-first" checked></label>
+            </div>
+          </section>
+
+          <nav class="pa-surface-frame pa-flow-dock flow-dock" data-pa-surface="veil" aria-label="Primary navigation">
+            <button class="pa-flow-dock__item" data-nav="home" aria-current="page"><span>⌂</span><small>Home</small></button>
+            <button class="pa-flow-dock__item" data-nav="flow"><span>≋</span><small>Flow</small></button>
+            <button class="pa-flow-dock__item" data-nav="homeair"><span>▣</span><small>Home</small></button>
+            <button class="pa-flow-dock__item" data-nav="schedule"><span>◷</span><small>Day</small></button>
+            <button class="pa-flow-dock__item" data-nav="modes"><span>⚙</span><small>Modes</small></button>
+          </nav>
+        </div>
+      </div>
+    </main>
+
+    <aside class="inspector-panel" aria-label="MVP system inspector">
+      <section class="side-section">
+        <h2>Active state</h2>
+        <div class="token-readout" id="tokenReadout"></div>
+      </section>
+      <section class="side-section">
+        <h2>MVP scope</h2>
+        <ol class="scope-list">
+          <li>Ambient Dashboard 홈</li>
+          <li>Air Flow 상세</li>
+          <li>Smart Home Air</li>
+          <li>Day Flow 일정</li>
+          <li>Modes & Accessibility</li>
+        </ol>
+      </section>
+      <section class="side-section compact-note">
+        <h2>Validation target</h2>
+        <p>사용자가 숫자를 읽기 전에 “상태”를 감지하고, 필요한 행동을 한 문장으로 이해하는지 확인한다.</p>
+      </section>
+    </aside>
+  </div>
+
+  <script src="src/mvp.js"></script>
+</body>
+</html>

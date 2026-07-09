@@ -1,11 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, Text, UIManager, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
+
+// 안드로이드 실기기에서 Animated(overflow:hidden + maxHeight)로 드롭다운을 열면 레이아웃은
+// 목표 높이까지 갱신되지만 화면이 그 상태로 다시 그려지지 않는 경우가 있었다(도착 희망 시각
+// 휠이 완전히 비어 보이던 버그). LayoutAnimation은 네이티브 레이아웃 트랜지션을 사용해
+// 이 문제 없이 펼침/접힘을 부드럽게 처리한다.
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export function DestinationCareScreen({
   permissionReady,
@@ -115,14 +123,17 @@ export function DestinationCareScreen({
               theme={theme}
               expanded={arrivalEditorOpen}
               accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 ${arrivalEditorOpen ? "닫기" : "열기"}`}
-              onPress={() => setArrivalEditorOpen((current) => {
-                const nextOpen = !current;
-                if (nextOpen) {
-                  setTransportSelectorOpen(false);
-                  setRepeatDaysOpen(false);
-                }
-                return nextOpen;
-              })}
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setArrivalEditorOpen((current) => {
+                  const nextOpen = !current;
+                  if (nextOpen) {
+                    setTransportSelectorOpen(false);
+                    setRepeatDaysOpen(false);
+                  }
+                  return nextOpen;
+                });
+              }}
             />
             <SummaryChip
               icon={uiIconAssets.depart}
@@ -150,7 +161,7 @@ export function DestinationCareScreen({
             />
           </View>
 
-          <DropdownMotion visible={arrivalEditorOpen} maxHeight={292}>
+          {arrivalEditorOpen ? (
             <ArrivalInputControl
               label="도착 희망"
               value={targetArrivalTime}
@@ -158,7 +169,7 @@ export function DestinationCareScreen({
               onSelectTime={onSetDestinationTargetArrivalTime}
               theme={theme}
             />
-          </DropdownMotion>
+          ) : null}
           <DropdownMotion visible={transportSelectorOpen} maxHeight={260}>
             <TransportDropdown
               transportMode={transportMode}
@@ -661,7 +672,10 @@ function DropdownMotion({ visible, maxHeight, children }: { visible: boolean; ma
   const animatedMaxHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [0, maxHeight] });
 
   return (
-    <Animated.View style={[styles.dropdownMotion, { maxHeight: animatedMaxHeight, opacity: progress, transform: [{ translateY }, { scaleY }] }]}>
+    <Animated.View
+      collapsable={false}
+      style={[styles.dropdownMotion, { maxHeight: animatedMaxHeight, opacity: progress, transform: [{ translateY }, { scaleY }] }]}
+    >
       {children}
     </Animated.View>
   );
@@ -1082,7 +1096,7 @@ const styles = StyleSheet.create({
   },
   timeWheel: {
     width: 76,
-    maxHeight: 148,
+    height: 148,
     borderRadius: radius.sm,
     borderWidth: 1,
   },

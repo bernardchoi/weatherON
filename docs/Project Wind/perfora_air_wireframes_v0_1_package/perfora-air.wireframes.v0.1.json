@@ -1,0 +1,183 @@
+{
+  "name": "Perfora Air Screen Wireframes",
+  "version": "0.1",
+  "date": "2026-07-09",
+  "principles": [
+    "Atmosphere first",
+    "Text first",
+    "Density as meaning",
+    "Quiet motion",
+    "Matte over glossy",
+    "Accessible by default"
+  ],
+  "screens": [
+    {
+      "id": "S01",
+      "name": "Home / Ambient Dashboard",
+      "goal": "앱 진입 3초 안에 전체 날씨, 공기질, 일정, 실내 상태를 파악한다.",
+      "components": [
+        "AtmospherePanel",
+        "SignalCard",
+        "AmbientTimeline",
+        "FlowDock"
+      ],
+      "regions": [
+        {
+          "slot": "header",
+          "content": "screen title + location/time context"
+        },
+        {
+          "slot": "primary",
+          "component": "AtmospherePanel",
+          "state": "normal"
+        },
+        {
+          "slot": "secondary",
+          "component": "SignalCardGrid",
+          "items": [
+            "air quality",
+            "schedule",
+            "indoor",
+            "alerts"
+          ]
+        },
+        {
+          "slot": "navigation",
+          "component": "FlowDock",
+          "active": "home"
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "Weather Detail / Air Flow",
+      "goal": "바람, 습도, 시간별 흐름을 행동 판단으로 번역한다.",
+      "components": [
+        "LumenRing",
+        "DensityField",
+        "ContextChip",
+        "AmbientTimeline",
+        "SignalCard"
+      ],
+      "regions": [
+        {
+          "slot": "primary",
+          "component": "LumenRing",
+          "state": "live",
+          "data": [
+            "windDirection",
+            "windSpeed"
+          ]
+        },
+        {
+          "slot": "chips",
+          "component": "ContextChip",
+          "items": [
+            "feelsLike",
+            "humidity",
+            "uv"
+          ]
+        },
+        {
+          "slot": "flow",
+          "component": "AmbientTimeline",
+          "data": "hourly air flow"
+        },
+        {
+          "slot": "recommendation",
+          "component": "SignalCard",
+          "state": "normal"
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "Smart Home Air",
+      "goal": "실내 공기질과 기기 상태에서 지금 필요한 행동을 판단한다.",
+      "components": [
+        "AtmospherePanel",
+        "SignalCard",
+        "AirButton",
+        "FlowDock"
+      ],
+      "regions": [
+        {
+          "slot": "primary",
+          "component": "AtmospherePanel",
+          "state": "calm"
+        },
+        {
+          "slot": "deviceList",
+          "component": "SignalCard",
+          "items": [
+            "Air Purifier",
+            "Robot Vacuum",
+            "Humidity Sensor",
+            "Window Sensor"
+          ]
+        },
+        {
+          "slot": "primaryAction",
+          "component": "AirButton",
+          "label": "자동 모드 유지"
+        }
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "Day Flow / Schedule",
+      "goal": "하루의 일정 밀도, 집중 구간, 이동 흐름을 한 화면에서 파악한다.",
+      "components": [
+        "SignalCard",
+        "AmbientTimeline",
+        "ContextChip",
+        "FlowDock"
+      ],
+      "regions": [
+        {
+          "slot": "summary",
+          "component": "SignalCard",
+          "state": "normal"
+        },
+        {
+          "slot": "timeline",
+          "component": "AmbientTimeline",
+          "state": "live"
+        },
+        {
+          "slot": "focusRecommendation",
+          "component": "SignalCard",
+          "state": "calm"
+        }
+      ]
+    },
+    {
+      "id": "S05",
+      "name": "Modes & Accessibility",
+      "goal": "모션, 투명도, 대비, 배터리 소모, 경고 방식을 사용자가 제어한다.",
+      "components": [
+        "DataVeil",
+        "ContextChip",
+        "AirButton",
+        "FlowDock"
+      ],
+      "regions": [
+        {
+          "slot": "preview",
+          "component": "SurfaceFrame",
+          "state": "normal"
+        },
+        {
+          "slot": "settings",
+          "items": [
+            "Reduced Motion",
+            "Reduced Transparency",
+            "High Contrast",
+            "Low Power",
+            "Text-first Alert"
+          ]
+        }
+      ]
+    }
+  ]
+}

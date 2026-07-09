@@ -1,0 +1,9 @@
+{
+  "name": "Perfora Air Ambient Dashboard MVP",
+  "short_name": "Perfora Air",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FCFCF9",
+  "theme_color": "#F7F8F6",
+  "description": "A matte atmospheric UI prototype that turns invisible context into density, light, and flow."
+}
