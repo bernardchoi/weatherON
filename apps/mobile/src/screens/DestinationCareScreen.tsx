@@ -405,6 +405,9 @@ function ArrivalInputControl({
   );
 }
 
+const TIME_WHEEL_ROW_HEIGHT = 48;
+const TIME_WHEEL_VIEWPORT = 148;
+
 function TimeWheel({
   accessibilityLabel,
   options,
@@ -420,13 +423,25 @@ function TimeWheel({
   theme: AppTheme;
   onSelect: (value: string) => void;
 }) {
+  const scrollRef = useRef<ScrollView>(null);
   const selectedIndex = Math.max(0, options.indexOf(selectedValue));
+
+  // 선택된 값이 뷰포트 중앙에 오도록 스크롤 위치를 맞춘다. react-native-web에서는 contentOffset
+  // prop이 초기 마운트 시 적용되지 않아(드롭다운 열면 항상 목록 맨 위가 보임) ref.scrollTo로 직접 맞춘다.
+  const centerOffset = Math.max(0, selectedIndex * TIME_WHEEL_ROW_HEIGHT - (TIME_WHEEL_VIEWPORT - TIME_WHEEL_ROW_HEIGHT) / 2);
+  useEffect(() => {
+    // 드롭다운 펼침 애니메이션(maxHeight 0→열림) 동안 레이아웃이 안정된 뒤 스크롤되도록 다음 프레임에 실행.
+    const frame = requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: centerOffset, animated: false }));
+    return () => cancelAnimationFrame(frame);
+  }, [centerOffset]);
+
   return (
     <ScrollView
+      ref={scrollRef}
       accessibilityLabel={accessibilityLabel}
       style={[styles.timeWheel, { borderColor: theme.border }]}
       contentContainerStyle={styles.timeWheelContent}
-      contentOffset={{ x: 0, y: Math.max(0, selectedIndex * 48 - 48) }}
+      contentOffset={{ x: 0, y: centerOffset }}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >

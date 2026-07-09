@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-09 local release APK Product QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `0.1.0 (7)` |
+| APK sha256 | `648b3a8343cc3becdfe266e1bcaabe63ee9dafbef2cbc9af3ee478fd105f6ba1` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-09 11:19-11:22 KST |
+| QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-09-1122/report.md` |
+| 주요 결과 | `ExpoLinearGradient` native ViewManager 미등록 릴리즈 크래시를 RN View 배경 레이어로 대체해 해결. 재빌드/재설치 후 홈, 코디, 출발, MY, 알림 사이드바 스와이프 닫힘 확인. crash log 비어 있음. |
+| 남은 개선 | 코디 탭 첫 화면 하단에서 다음 카드 일부가 탭바 뒤로 이어져 보이는 컷 기준 재검토 필요. |
+
 ### 2026-07-08 local release APK Outfit Tab QA
 
 | 항목 | 값 |

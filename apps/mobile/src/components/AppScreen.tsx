@@ -5,9 +5,10 @@ import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { spacing } from "../theme/tokens";
 
-// 2026-07-08 실기기 QA: 코디 탭 첫 진입 시 "오늘의 판단" 카드가 하단 탭바에 일부 가려짐 확인.
-// 이전 140 → 176으로 확대해 탭바(64 + margin 24) 대비 여유를 넓힘.
-const navClearancePadding = 176;
+// 탭바는 스크롤 영역과 겹치지 않는 별도 레이아웃(플렉스 형제)이라 탭바를 가릴 걱정 없이
+// 스크롤 끝의 시각적 여유만 담당하면 된다. 176은 다른 화면의 padding 값을 그대로 복사해 온
+// 값으로, 실제로는 탭바와 스크롤 콘텐츠 사이에 필요 이상의 빈 스크롤 구간을 만들었다.
+const navClearancePadding = 24;
 
 type AppScreenProps = {
   title: string;

@@ -49,7 +49,6 @@ export function HomeScreen({
   const current = currentWeather.current;
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
-  const destinationSelectorLabel = selectedDestination ? getDestinationSelectorMeta(selectedDestination.place) : "목적지 추가 필요";
 
   return (
     <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
@@ -92,8 +91,6 @@ export function HomeScreen({
 
         <View style={styles.destinationSection}>
           <DestinationSelectorCard
-            selectedDestinationName={selectedDestination?.place.name ?? "목적지 없음"}
-            selectedDestinationMeta={destinationSelectorLabel}
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
             theme={theme}
@@ -147,6 +144,9 @@ export function HomeScreen({
         </View>
       </ScrollView>
 
+      {/* 카드 위를 가로지르는 전경 날씨 레이어 — iOS 날씨앱처럼 비/눈이 화면 앞을 지나가는 느낌. 터치는 통과. */}
+      <WeatherBackground condition={current.condition} theme={theme} variant="overlay" />
+
       <NotificationSidebar
         visible={notificationSidebarOpen}
         notifications={activeNotifications}
@@ -185,16 +185,12 @@ function getHomeLocationStatus(
 }
 
 function DestinationSelectorCard({
-  selectedDestinationName,
-  selectedDestinationMeta,
   savedDestinations,
   selectedDestinationId,
   theme,
   onSelect,
   onAdd,
 }: {
-  selectedDestinationName: string;
-  selectedDestinationMeta: string;
   savedDestinations: P0ScreenProps["savedDestinations"];
   selectedDestinationId?: string;
   theme: AppTheme;
@@ -202,9 +198,9 @@ function DestinationSelectorCard({
   onAdd: () => void;
 }) {
   const hasDestinations = savedDestinations.length > 0;
-  const alternateDestinations = selectedDestinationId
-    ? savedDestinations.filter((destination) => destination.place.id !== selectedDestinationId)
-    : savedDestinations;
+  const headerCaption = hasDestinations
+    ? `저장한 ${savedDestinations.length}곳 · 눌러서 전환`
+    : "목적지를 추가하면 이 카드가 목적지 기준으로 바뀜";
 
   return (
     <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
@@ -214,8 +210,7 @@ function DestinationSelectorCard({
         </View>
         <View style={styles.destinationSelectorCopy}>
           <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>목적지 기준</Text>
-          <Text style={[styles.destinationSelectorTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestinationName}</Text>
-          <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{selectedDestinationMeta}</Text>
+          <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>
         </View>
         <Pressable
           accessibilityLabel="목적지 추가"
@@ -237,24 +232,39 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
           <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 하단 카드가 목적지 기준으로 바뀜</Text>
         </Pressable>
-      ) : alternateDestinations.length > 0 ? (
+      ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
-          {alternateDestinations.map((destination) => (
-            <Pressable
-              key={destination.place.id}
-              accessibilityLabel={`${destination.place.name} 목적지로 변경`}
-              accessibilityRole="button"
-              onPress={() => onSelect(destination.place)}
-              style={[styles.destinationChip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-            >
-              <Text style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
-              <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>
-                {getDestinationSelectorMeta(destination.place)}
-              </Text>
-            </Pressable>
-          ))}
+          {savedDestinations.map((destination) => {
+            const selected = destination.place.id === selectedDestinationId;
+            return (
+              <Pressable
+                key={destination.place.id}
+                accessibilityLabel={`${destination.place.name} 목적지${selected ? " 선택됨" : "로 전환"}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onSelect(destination.place)}
+                style={[
+                  styles.destinationChip,
+                  {
+                    backgroundColor: selected ? `${theme.gold}1F` : theme.cardStrong,
+                    borderColor: selected ? theme.gold : theme.border,
+                  },
+                ]}
+              >
+                <View style={styles.destinationChipTitleRow}>
+                  {selected ? <View style={[styles.destinationChipDot, { backgroundColor: theme.gold }]} /> : null}
+                  <Text style={[styles.destinationChipTitle, { color: selected ? theme.gold : theme.text }]} numberOfLines={1}>
+                    {destination.place.name}
+                  </Text>
+                </View>
+                <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>
+                  {getDestinationSelectorMeta(destination.place)}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
-      ) : null}
+      )}
     </View>
   );
 }
@@ -1174,13 +1184,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeContent: {
-    // 홈 탭바는 스크롤 영역과 겹치지 않는 별도 레이아웃이라 탭바 회피용 여백은 불필요.
-    // 스크롤 끝에서의 시각적 여유만 담당한다.
+    // 홈은 스크롤 없이 한 화면에 들어오는 "한눈 판단" 화면이 목표다. 탭바는 별도 레이아웃이라
+    // 회피 여백이 필요 없고, 카드 높이·간격을 압축해 판단 그리드까지 한 화면에 담는다.
     minHeight: "100%",
-    gap: spacing.sm,
+    gap: spacing.xs,
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   topBar: {
     minHeight: 46,
@@ -1212,31 +1222,31 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   decisionStack: {
-    gap: spacing.sm,
-    paddingTop: 2,
+    gap: spacing.xs,
+    paddingTop: 0,
   },
   decisionHero: {
-    minHeight: 348,
-    gap: spacing.sm,
+    minHeight: 268,
+    gap: spacing.xs,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 196,
+    minHeight: 150,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    paddingTop: 4,
+    paddingTop: 2,
   },
   weatherHalo: {
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -76,
-    width: 152,
-    height: 152,
-    borderRadius: 76,
+    marginLeft: -62,
+    width: 124,
+    height: 124,
+    borderRadius: 62,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
@@ -1248,21 +1258,21 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 78,
-    height: 78,
+    width: 62,
+    height: 62,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
   },
   showcaseTemp: {
-    marginTop: 6,
-    fontSize: 50,
-    lineHeight: 54,
+    marginTop: 4,
+    fontSize: 44,
+    lineHeight: 48,
     fontWeight: "900",
     letterSpacing: 0,
     textAlign: "center",
@@ -1270,7 +1280,7 @@ const styles = StyleSheet.create({
   showcaseCondition: {
     marginTop: -1,
     fontSize: 16,
-    lineHeight: 21,
+    lineHeight: 20,
     fontWeight: "900",
     textAlign: "center",
   },
@@ -1336,7 +1346,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   feelsLikeCard: {
-    minHeight: 62,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -1346,15 +1356,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   feelsLikeIconFrame: {
-    width: 38,
-    height: 38,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   feelsLikeIcon: {
-    width: 21,
-    height: 21,
+    width: 18,
+    height: 18,
   },
   feelsLikeCopy: {
     flex: 1,
@@ -1384,12 +1394,12 @@ const styles = StyleSheet.create({
   destinationSelectorCard: {
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   destinationSelectorHeader: {
-    minHeight: 42,
+    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
@@ -1413,11 +1423,6 @@ const styles = StyleSheet.create({
   destinationSelectorLabel: {
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: "900",
-  },
-  destinationSelectorTitle: {
-    fontSize: 14,
-    lineHeight: 18,
     fontWeight: "900",
   },
   destinationSelectorMeta: {
@@ -1445,12 +1450,22 @@ const styles = StyleSheet.create({
   },
   destinationChip: {
     width: 118,
-    minHeight: 54,
+    minHeight: 48,
     justifyContent: "center",
     gap: 2,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  destinationChipTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  destinationChipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
   },
   destinationChipTitle: {
     flexShrink: 1,
@@ -1487,17 +1502,17 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 96,
+    minHeight: 84,
     alignItems: "center",
-    gap: 5,
+    gap: 4,
     justifyContent: "center",
-    padding: spacing.sm,
+    padding: spacing.xs,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   visualIconFrame: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -1522,11 +1537,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 126,
+    minHeight: 102,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.md,
+    padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -1551,15 +1566,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitImageFrame: {
-    width: 92,
-    height: 92,
+    width: 76,
+    height: 76,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   homeOutfitImage: {
-    width: 84,
-    height: 84,
+    width: 70,
+    height: 70,
   },
   homeOutfitIcon: {
     width: 34,

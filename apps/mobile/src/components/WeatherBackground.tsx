@@ -1,11 +1,10 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
 import type { WeatherCondition } from "@weatheron/shared";
 import type { AppTheme } from "../theme/tokens";
 
 // docs/planning/WeatherON_planning_v5.html §20 "날씨 다이나믹 배경 애니메이션 — 홈(H1)"
-// 6종 그라디언트 + 상태별 모션 레이어(파티클 수·opacity·주기)를 그대로 옮긴 구현.
+// 네이티브 gradient 모듈 없이 RN View 레이어로 6종 배경색 + 상태별 모션을 구성한다.
 // 라이트 모드는 동일 모티프를 유지하되 각 색상을 흰색 쪽으로 리틴트한다(스펙 "색·opacity만 리틴트" 지침).
 type MotionState = "clear" | "cloud" | "rain" | "snow" | "storm" | "night";
 
@@ -23,35 +22,60 @@ const LIGHT_RETINT_RATIO = 0.8;
 type Props = {
   condition: WeatherCondition | string;
   theme: AppTheme;
+  // "scene": 그라디언트 배경 + 전체 화면 파티클(카드 뒤에 깔림).
+  // "overlay": 배경 없이 옅은 파티클만 — 카드 위에 얹어 iOS 날씨앱처럼 "비가 화면 앞을 지나가는" 느낌을 준다.
+  variant?: "scene" | "overlay";
 };
 
-// 카드가 전부 불투명해 배경은 화면 상단 여백·카드 사이 여백·좌우 인셋에서만 비친다.
-// 그 좁은 틈에서도 날씨가 체감되도록 전체 화면 높이를 덮는 레이어로 깔고,
-// 빗줄기·눈송이·별은 스펙 지침대로 상단 1/3 대역에만 제한한다.
-export function WeatherBackground({ condition, theme }: Props) {
+// iOS 27 날씨앱처럼 날씨 모션이 화면 전체를 채우도록, 파티클(비·눈·별)을 상단 1/3이 아니라
+// 화면 전체 높이에 걸쳐 떨어뜨린다. 카드가 불투명이라 카드 뒤 파티클은 카드 사이 여백에서만 보이고,
+// 추가로 variant="overlay" 레이어를 카드 위에 얹으면 비가 UI 앞을 가로지르는 것처럼 보인다.
+export function WeatherBackground({ condition, theme, variant = "scene" }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const isNight = useIsNightHour();
   const enabled = useAnimationEnabled();
   const motionState = resolveMotionState(condition, isNight);
   const gradientColors = useMemo(() => resolveGradient(motionState, theme.name), [motionState, theme.name]);
-  const topBand = Math.round(windowHeight / 3);
+  const fullBand = Math.max(windowHeight, 320);
+
+  if (variant === "overlay") {
+    // 카드 위에 얹히는 전경 레이어: 비/폭풍/눈에만, 성긴 밀도·낮은 대비로 가독성을 해치지 않게.
+    return (
+      <View pointerEvents="none" style={styles.wrap}>
+        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={26} enabled={enabled} foreground /> : null}
+        {motionState === "storm" ? <RainDropsLayer height={fullBand} color={theme.sky} count={38} enabled={enabled} intense foreground /> : null}
+        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={22} enabled={enabled} foreground /> : null}
+      </View>
+    );
+  }
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <LinearGradient colors={gradientColors} start={{ x: 0.15, y: 0 }} end={{ x: 0.85, y: 1 }} style={StyleSheet.absoluteFill} />
+      <GradientBackdrop colors={gradientColors} />
       <View style={StyleSheet.absoluteFill}>
         {motionState === "clear" ? <GlowPulseLayer color={theme.gold} enabled={enabled} /> : null}
-        {motionState === "cloud" ? <CloudDriftLayer height={topBand * 1.6} enabled={enabled} /> : null}
-        {motionState === "rain" ? <RainDropsLayer height={topBand} color={theme.sky} count={60} enabled={enabled} /> : null}
+        {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.55} enabled={enabled} /> : null}
+        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={90} enabled={enabled} /> : null}
         {motionState === "storm" ? (
           <>
-            <RainDropsLayer height={topBand} color={theme.sky} count={90} enabled={enabled} intense />
+            <RainDropsLayer height={fullBand} color={theme.sky} count={120} enabled={enabled} intense />
             <LightningFlashLayer enabled={enabled} />
           </>
         ) : null}
-        {motionState === "snow" ? <SnowFlakesLayer height={topBand} count={45} enabled={enabled} /> : null}
-        {motionState === "night" ? <StarTwinkleLayer height={topBand * 1.8} count={22} enabled={enabled} /> : null}
+        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={64} enabled={enabled} /> : null}
+        {motionState === "night" ? <StarTwinkleLayer height={windowHeight} count={30} enabled={enabled} /> : null}
       </View>
+    </View>
+  );
+}
+
+function GradientBackdrop({ colors }: { colors: [string, string, string] }) {
+  return (
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: colors[1] }]}>
+      <View style={[StyleSheet.absoluteFill, styles.gradientTop, { backgroundColor: colors[0] }]} />
+      <View style={[StyleSheet.absoluteFill, styles.gradientBottom, { backgroundColor: colors[2] }]} />
+      <View style={[styles.gradientOrb, styles.gradientOrbLarge, { backgroundColor: colors[0] }]} />
+      <View style={[styles.gradientOrb, styles.gradientOrbSmall, { backgroundColor: colors[2] }]} />
     </View>
   );
 }
@@ -241,12 +265,14 @@ function RainDropsLayer({
   count,
   enabled,
   intense = false,
+  foreground = false,
 }: {
   height: number;
   color: string;
   count: number;
   enabled: boolean;
   intense?: boolean;
+  foreground?: boolean;
 }) {
   const dropBand = Math.max(height, 220);
   const particles = useMemo<RainParticleSpec[]>(
@@ -259,10 +285,12 @@ function RainDropsLayer({
       })),
     [count, intense],
   );
+  // 카드 위에 얹히는 전경 레이어는 가독성을 위해 더 옅게.
+  const dropOpacity = foreground ? 0.1 : intense ? 0.2 : 0.15;
   return (
     <>
       {particles.map((particle, index) => (
-        <RainDrop key={index} band={dropBand} color={color} opacity={intense ? 0.2 : 0.15} particle={particle} enabled={enabled} />
+        <RainDrop key={index} band={dropBand} color={color} opacity={dropOpacity} particle={particle} enabled={enabled} />
       ))}
     </>
   );
@@ -318,7 +346,7 @@ function RainDrop({
 
 type SnowParticleSpec = { left: number; startPhase: number; duration: number; size: number; sway: number };
 
-function SnowFlakesLayer({ height, count, enabled }: { height: number; count: number; enabled: boolean }) {
+function SnowFlakesLayer({ height, count, enabled, foreground = false }: { height: number; count: number; enabled: boolean; foreground?: boolean }) {
   const band = Math.max(height, 220);
   const particles = useMemo<SnowParticleSpec[]>(
     () =>
@@ -331,16 +359,17 @@ function SnowFlakesLayer({ height, count, enabled }: { height: number; count: nu
       })),
     [count],
   );
+  const peakOpacity = foreground ? 0.14 : 0.22;
   return (
     <>
       {particles.map((particle, index) => (
-        <SnowFlake key={index} band={band} particle={particle} enabled={enabled} />
+        <SnowFlake key={index} band={band} particle={particle} enabled={enabled} peakOpacity={peakOpacity} />
       ))}
     </>
   );
 }
 
-function SnowFlake({ band, particle, enabled }: { band: number; particle: SnowParticleSpec; enabled: boolean }) {
+function SnowFlake({ band, particle, enabled, peakOpacity }: { band: number; particle: SnowParticleSpec; enabled: boolean; peakOpacity: number }) {
   const fall = useRef(new Animated.Value(particle.startPhase)).current;
   const sway = useRef(new Animated.Value(0)).current;
 
@@ -370,7 +399,7 @@ function SnowFlake({ band, particle, enabled }: { band: number; particle: SnowPa
 
   const translateY = fall.interpolate({ inputRange: [0, 1], outputRange: [-10, band] });
   const translateX = sway.interpolate({ inputRange: [0, 1], outputRange: [-particle.sway, particle.sway] });
-  const flakeOpacity = fall.interpolate({ inputRange: [0, 0.1, 0.9, 1], outputRange: [0, 0.22, 0.22, 0] });
+  const flakeOpacity = fall.interpolate({ inputRange: [0, 0.1, 0.9, 1], outputRange: [0, peakOpacity, peakOpacity, 0] });
 
   return (
     <Animated.View
@@ -481,6 +510,32 @@ const styles = StyleSheet.create({
   wrap: {
     ...StyleSheet.absoluteFillObject,
     overflow: "hidden",
+  },
+  gradientTop: {
+    bottom: "48%",
+    opacity: 0.72,
+  },
+  gradientBottom: {
+    top: "42%",
+    opacity: 0.52,
+  },
+  gradientOrb: {
+    position: "absolute",
+    borderRadius: 999,
+  },
+  gradientOrbLarge: {
+    top: "8%",
+    right: "-22%",
+    width: 420,
+    height: 420,
+    opacity: 0.16,
+  },
+  gradientOrbSmall: {
+    left: "-18%",
+    bottom: "2%",
+    width: 360,
+    height: 360,
+    opacity: 0.13,
   },
   glow: {
     position: "absolute",

@@ -14,9 +14,11 @@
 | Build 상태 | LOCAL BUILD SUCCESS |
 | Version | 0.1.0 (7) |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
+| APK sha256 | 648b3a8343cc3becdfe266e1bcaabe63ee9dafbef2cbc9af3ee478fd105f6ba1 |
 | 선택 기기 | 000841458003652 |
 | adb 경로 | /Users/daehyeonchoi/Library/Android/sdk/platform-tools/adb |
 | 로컬 APK | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
+| 최신 QA 리포트 | docs/audits/ui-ux-real-device-qa-2026-07-09-1122/report.md |
 
 ## 2. Issues
 
@@ -24,7 +26,7 @@
 
 ## 3. 다음 조치
 
-- 설치 완료 후 `WeatherON_ANDROID_DEVICE_QA_SESSION.md`에 실기기 QA 결과를 기록한다.
+- 코디 탭 첫 화면 하단 컷 기준은 다음 UI/UX 보정 때 재검토한다.
 
 ## 4. 실행 명령
 
