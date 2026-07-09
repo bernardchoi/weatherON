@@ -5,7 +5,12 @@
     "nameKo": "오버핏 가디건",
     "asset": "weatheron-outfit-cardigan-v1.png",
     "source": "weatheron-outfit-cardigan-source-v1.png",
-    "weatherTags": ["coolMorning", "layering", "spring", "fall"]
+    "weatherTags": [
+      "coolMorning",
+      "layering",
+      "spring",
+      "fall"
+    ]
   },
   {
     "id": "linenTshirt",
@@ -13,7 +18,11 @@
     "nameKo": "린넨 티셔츠",
     "asset": "weatheron-outfit-linen-tshirt-v1.png",
     "source": "weatheron-outfit-linen-tshirt-source-v1.png",
-    "weatherTags": ["warmDay", "breathable", "summer"]
+    "weatherTags": [
+      "warmDay",
+      "breathable",
+      "summer"
+    ]
   },
   {
     "id": "slimSlacks",
@@ -21,7 +30,11 @@
     "nameKo": "슬림 슬랙스",
     "asset": "weatheron-outfit-slim-slacks-v1.png",
     "source": "weatheron-outfit-slim-slacks-source-v1.png",
-    "weatherTags": ["cityWalk", "windLight", "allSeason"]
+    "weatherTags": [
+      "cityWalk",
+      "windLight",
+      "allSeason"
+    ]
   },
   {
     "id": "lowSneakers",
@@ -29,7 +42,11 @@
     "nameKo": "로우 스니커즈",
     "asset": "weatheron-outfit-low-sneakers-v1.png",
     "source": "weatheron-outfit-low-sneakers-source-v1.png",
-    "weatherTags": ["dry", "walking", "travel"]
+    "weatherTags": [
+      "dry",
+      "walking",
+      "travel"
+    ]
   },
   {
     "id": "trenchCoat",
@@ -37,7 +54,12 @@
     "nameKo": "라이트 트렌치코트",
     "asset": "weatheron-outfit-trench-coat-v1.png",
     "source": "weatheron-outfit-trench-coat-source-v1.png",
-    "weatherTags": ["cool", "windLight", "spring", "fall"]
+    "weatherTags": [
+      "cool",
+      "windLight",
+      "spring",
+      "fall"
+    ]
   },
   {
     "id": "windbreaker",
@@ -45,7 +67,12 @@
     "nameKo": "패커블 윈드브레이커",
     "asset": "weatheron-outfit-windbreaker-v1.png",
     "source": "weatheron-outfit-windbreaker-source-v1.png",
-    "weatherTags": ["rainLight", "wind", "travel", "layering"]
+    "weatherTags": [
+      "rainLight",
+      "wind",
+      "travel",
+      "layering"
+    ]
   },
   {
     "id": "zipHoodie",
@@ -53,7 +80,11 @@
     "nameKo": "집업 후디",
     "asset": "weatheron-outfit-zip-hoodie-v1.png",
     "source": "weatheron-outfit-zip-hoodie-source-v1.png",
-    "weatherTags": ["cool", "casual", "layering"]
+    "weatherTags": [
+      "cool",
+      "casual",
+      "layering"
+    ]
   },
   {
     "id": "stripedLongSleeve",
@@ -61,7 +92,12 @@
     "nameKo": "스트라이프 롱슬리브",
     "asset": "weatheron-outfit-striped-long-sleeve-v1.png",
     "source": "weatheron-outfit-striped-long-sleeve-source-v1.png",
-    "weatherTags": ["mild", "spring", "fall", "casual"]
+    "weatherTags": [
+      "mild",
+      "spring",
+      "fall",
+      "casual"
+    ]
   },
   {
     "id": "wideDenim",
@@ -69,7 +105,11 @@
     "nameKo": "와이드 데님",
     "asset": "weatheron-outfit-wide-denim-v1.png",
     "source": "weatheron-outfit-wide-denim-source-v1.png",
-    "weatherTags": ["casual", "cityWalk", "allSeason"]
+    "weatherTags": [
+      "casual",
+      "cityWalk",
+      "allSeason"
+    ]
   },
   {
     "id": "pleatedSkirt",
@@ -77,7 +117,12 @@
     "nameKo": "플리츠 미디 스커트",
     "asset": "weatheron-outfit-pleated-skirt-v1.png",
     "source": "weatheron-outfit-pleated-skirt-source-v1.png",
-    "weatherTags": ["mild", "cityWalk", "spring", "fall"]
+    "weatherTags": [
+      "mild",
+      "cityWalk",
+      "spring",
+      "fall"
+    ]
   },
   {
     "id": "chelseaBoots",
@@ -85,7 +130,12 @@
     "nameKo": "첼시 부츠",
     "asset": "weatheron-outfit-chelsea-boots-v1.png",
     "source": "weatheron-outfit-chelsea-boots-source-v1.png",
-    "weatherTags": ["cool", "rainLight", "cityWalk", "fall"]
+    "weatherTags": [
+      "cool",
+      "rainLight",
+      "cityWalk",
+      "fall"
+    ]
   },
   {
     "id": "navyCap",
@@ -93,7 +143,12 @@
     "nameKo": "네이비 볼캡",
     "asset": "weatheron-outfit-navy-cap-v1.png",
     "source": "weatheron-outfit-navy-cap-source-v1.png",
-    "weatherTags": ["sun", "uv", "casual", "travel"]
+    "weatherTags": [
+      "sun",
+      "uv",
+      "casual",
+      "travel"
+    ]
   },
   {
     "id": "lightRainJacket",
@@ -101,7 +156,12 @@
     "nameKo": "라이트 레인 재킷",
     "asset": "weatheron-outfit-light-rain-jacket-v1.png",
     "source": "weatheron-outfit-light-rain-jacket-source-v1.png",
-    "weatherTags": ["rain", "wind", "cool", "travel"]
+    "weatherTags": [
+      "rain",
+      "wind",
+      "cool",
+      "travel"
+    ]
   },
   {
     "id": "compactUmbrella",
@@ -109,7 +169,11 @@
     "nameKo": "컴팩트 우산",
     "asset": "weatheron-outfit-compact-umbrella-v1.png",
     "source": "weatheron-outfit-compact-umbrella-source-v1.png",
-    "weatherTags": ["rain", "commute", "travel"]
+    "weatherTags": [
+      "rain",
+      "commute",
+      "travel"
+    ]
   },
   {
     "id": "knitSweater",
@@ -117,7 +181,12 @@
     "nameKo": "소프트 니트 스웨터",
     "asset": "weatheron-outfit-knit-sweater-v1.png",
     "source": "weatheron-outfit-knit-sweater-source-v1.png",
-    "weatherTags": ["cold", "layering", "fall", "winter"]
+    "weatherTags": [
+      "cold",
+      "layering",
+      "fall",
+      "winter"
+    ]
   },
   {
     "id": "waterproofSneakers",
@@ -125,6 +194,117 @@
     "nameKo": "방수 로우 스니커즈",
     "asset": "weatheron-outfit-waterproof-sneakers-v1.png",
     "source": "weatheron-outfit-waterproof-sneakers-source-v1.png",
-    "weatherTags": ["rainLight", "walking", "commute", "travel"]
+    "weatherTags": [
+      "rainLight",
+      "walking",
+      "commute",
+      "travel"
+    ]
+  },
+  {
+    "id": "oxfordShirt",
+    "category": "top",
+    "nameKo": "옥스퍼드 셔츠",
+    "asset": "weatheron-outfit-oxford-shirt-v1.png",
+    "source": "weatheron-outfit-oxford-shirt-source-v1.png",
+    "weatherTags": [
+      "mild",
+      "commute",
+      "formal",
+      "spring",
+      "fall"
+    ]
+  },
+  {
+    "id": "blackTurtleneck",
+    "category": "top",
+    "nameKo": "블랙 터틀넥",
+    "asset": "weatheron-outfit-black-turtleneck-v1.png",
+    "source": "weatheron-outfit-black-turtleneck-source-v1.png",
+    "weatherTags": [
+      "cold",
+      "layering",
+      "formal",
+      "fall",
+      "winter"
+    ]
+  },
+  {
+    "id": "chinoShorts",
+    "category": "bottom",
+    "nameKo": "치노 쇼츠",
+    "asset": "weatheron-outfit-chino-shorts-v1.png",
+    "source": "weatheron-outfit-chino-shorts-source-v1.png",
+    "weatherTags": [
+      "warmDay",
+      "breathable",
+      "summer",
+      "travel"
+    ]
+  },
+  {
+    "id": "taperedJoggers",
+    "category": "bottom",
+    "nameKo": "테이퍼드 조거 팬츠",
+    "asset": "weatheron-outfit-tapered-joggers-v1.png",
+    "source": "weatheron-outfit-tapered-joggers-source-v1.png",
+    "weatherTags": [
+      "cityWalk",
+      "windLight",
+      "casual",
+      "travel"
+    ]
+  },
+  {
+    "id": "ankleRainBoots",
+    "category": "shoes",
+    "nameKo": "앵클 레인부츠",
+    "asset": "weatheron-outfit-ankle-rain-boots-v1.png",
+    "source": "weatheron-outfit-ankle-rain-boots-source-v1.png",
+    "weatherTags": [
+      "rain",
+      "wind",
+      "commute",
+      "travel"
+    ]
+  },
+  {
+    "id": "tanLoafers",
+    "category": "shoes",
+    "nameKo": "탄 로퍼",
+    "asset": "weatheron-outfit-tan-loafers-v1.png",
+    "source": "weatheron-outfit-tan-loafers-source-v1.png",
+    "weatherTags": [
+      "dry",
+      "commute",
+      "formal",
+      "spring"
+    ]
+  },
+  {
+    "id": "ribbedBeanie",
+    "category": "accessory",
+    "nameKo": "리브드 비니",
+    "asset": "weatheron-outfit-ribbed-beanie-v1.png",
+    "source": "weatheron-outfit-ribbed-beanie-source-v1.png",
+    "weatherTags": [
+      "cold",
+      "wind",
+      "winter",
+      "travel"
+    ]
+  },
+  {
+    "id": "crossbodyBag",
+    "category": "accessory",
+    "nameKo": "크로스바디 백",
+    "asset": "weatheron-outfit-crossbody-bag-v1.png",
+    "source": "weatheron-outfit-crossbody-bag-source-v1.png",
+    "weatherTags": [
+      "cityWalk",
+      "commute",
+      "travel",
+      "allSeason"
+    ]
   }
 ]

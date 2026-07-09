@@ -1,0 +1,282 @@
+--- /mnt/data/perfora_air_ambient_dashboard_mvp_v0_1_app.html	2026-07-09 10:47:15.372459201 +0000
++++ /mnt/data/perfora_air_ambient_dashboard_mvp_v0_1_a11y_patched.html	2026-07-09 10:54:46.959366389 +0000
+@@ -64,7 +64,7 @@
+   --pa-color-graphite-300: #B9C1C9;
+ 
+   --pa-color-signal-info: #5E8FD4;
+-  --pa-color-signal-success: #4DA479;
++  --pa-color-signal-success: #2F805D;
+   --pa-color-signal-notice: #6C9BE0;
+   --pa-color-signal-warn: #D29A4A;
+   --pa-color-signal-danger: #D46666;
+@@ -76,7 +76,7 @@
+   --pa-bg-subtle: var(--pa-color-mist-50);
+   --pa-text-primary: var(--pa-color-graphite-950);
+   --pa-text-secondary: var(--pa-color-graphite-700);
+-  --pa-text-tertiary: var(--pa-color-graphite-500);
++  --pa-text-tertiary: var(--pa-color-graphite-600);
+   --pa-text-inverse: #FFFFFF;
+   --pa-border-quiet: rgba(83, 97, 112, 0.12);
+   --pa-border-default: rgba(83, 97, 112, 0.18);
+@@ -322,7 +322,8 @@
+ [data-pa-mode="night"] {
+   --pa-bg-canvas: var(--pa-color-night-900);
+   --pa-text-primary: #F7FAFF;
+-  --pa-text-secondary: rgba(247, 250, 255, 0.76);
++  --pa-text-secondary: rgba(247, 250, 255, 0.78);
++  --pa-text-tertiary: rgba(247, 250, 255, 0.76);
+   --pa-bg-raised: var(--pa-color-night-800);
+   --pa-surface-still-fill: rgba(23, 36, 58, 0.82);
+   --pa-surface-still-border: rgba(211, 230, 255, 0.14);
+@@ -632,11 +633,12 @@
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {
+-  .pa-density-field,
+-  .pa-lumen-layer,
+-  .pa-lumen-ring {
++  *,
++  *::before,
++  *::after {
+     animation: none !important;
+     transition-duration: 0ms !important;
++    scroll-behavior: auto !important;
+   }
+ }
+ 
+@@ -690,6 +692,50 @@
+ button { cursor: pointer; }
+ strong, b { font-weight: 650; }
+ 
++.sr-only {
++  position: absolute !important;
++  width: 1px !important;
++  height: 1px !important;
++  padding: 0 !important;
++  margin: -1px !important;
++  overflow: hidden !important;
++  clip: rect(0, 0, 0, 0) !important;
++  white-space: nowrap !important;
++  border: 0 !important;
++}
++.skip-link {
++  position: fixed;
++  z-index: 999;
++  top: 12px;
++  left: 12px;
++  min-height: 44px;
++  display: inline-flex;
++  align-items: center;
++  padding: 10px 14px;
++  border-radius: var(--pa-radius-full);
++  background: var(--pa-color-graphite-950);
++  color: #fff;
++  text-decoration: none;
++  transform: translateY(-160%);
++  transition: transform var(--pa-duration-state) var(--pa-ease-standard);
++}
++.skip-link:focus-visible {
++  transform: translateY(0);
++  outline: 3px solid var(--pa-color-air-300);
++  outline-offset: 3px;
++}
++
++button:focus-visible,
++input:focus-visible,
++.seg-btn:focus-visible,
++.mode-swatch:focus-visible,
++.icon-button:focus-visible,
++.setting-row input:focus-visible {
++  outline: 2px solid var(--pa-color-air-600);
++  outline-offset: 3px;
++}
++
++
+ .app-shell {
+   width: min(1480px, calc(100vw - 32px));
+   min-height: 100vh;
+@@ -779,7 +825,7 @@
+   border-radius: var(--pa-radius-full);
+   background: rgba(255,255,255,0.52);
+   color: var(--pa-text-secondary);
+-  min-height: 36px;
++  min-height: 44px;
+   padding: 0 12px;
+   transition: transform var(--pa-duration-tap), background var(--pa-duration-state), border-color var(--pa-duration-state);
+ }
+@@ -883,7 +929,7 @@
+   font-weight: 560;
+ }
+ .icon-button {
+-  width: 42px; height: 42px;
++  width: 44px; height: 44px;
+   border-radius: 50%;
+   border: 1px solid var(--pa-border-default);
+   background: rgba(255,255,255,0.62);
+@@ -1215,6 +1261,57 @@
+   color: #8C5B18;
+ }
+ 
++body[data-pa-mode="night"] .seg-btn,
++body[data-pa-mode="night"] .mode-swatch,
++body[data-pa-mode="night"] .icon-button {
++  background: rgba(16, 24, 39, 0.58);
++  color: #F7FAFF;
++  border-color: rgba(211, 230, 255, 0.28);
++}
++body[data-pa-mode="night"] .seg-btn.is-active,
++body[data-pa-mode="night"] .mode-swatch.is-active,
++body[data-pa-mode="night"] .pa-flow-dock__item[aria-current="page"] {
++  color: #F7FAFF;
++  background: rgba(63, 108, 169, 0.42);
++  border-color: rgba(211, 230, 255, 0.44);
++}
++body[data-pa-mode="night"] button:focus-visible,
++body[data-pa-mode="night"] input:focus-visible {
++  outline-color: var(--pa-color-air-300);
++}
++
++body[data-pa-mode="night"] .metric-row span,
++body[data-pa-mode="night"] .recommendation-card,
++body[data-pa-mode="night"] .token-row,
++body[data-pa-mode="night"] .pa-context-chip,
++body[data-pa-mode="night"] .status-pill {
++  background: rgba(16, 24, 39, 0.58);
++  border-color: rgba(211, 230, 255, 0.24);
++  color: #F7FAFF;
++}
++body[data-pa-mode="night"] .status-pill {
++  color: #F7FAFF;
++  background: rgba(63, 108, 169, 0.42);
++}
++body[data-pa-mode="night"][data-scenario="alert"] .status-pill,
++body[data-pa-mode="night"][data-scenario="alert"] .hero-summary::before {
++  color: #FFE4B8;
++}
++body[data-pa-mode="night"][data-scenario="alert"] .status-pill {
++  background: rgba(140, 91, 24, 0.50);
++  border-color: rgba(255, 228, 184, 0.40);
++}
++body[data-pa-mode="night"] .recommendation-icon,
++body[data-pa-mode="night"] .device-icon,
++body[data-pa-mode="night"] .schedule-time {
++  background: rgba(63, 108, 169, 0.34);
++  color: #F7FAFF;
++}
++body[data-pa-mode="night"] .token-row code {
++  color: var(--pa-color-air-300);
++}
++
++
+ @media (max-width: 1120px) {
+   .app-shell { grid-template-columns: 1fr minmax(390px, 480px); align-items: start; padding-top: 24px; }
+   .inspector-panel { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 0 0 24px; }
+@@ -1236,6 +1333,8 @@
+ </style>
+ </head>
+ <body data-pa-mode="day" data-screen="home" data-scenario="normal">
++  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
++  <div id="a11yStatus" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+   <div class="app-shell" id="app">
+     <aside class="brand-panel" aria-label="Perfora Air project information">
+       <div class="brand-mark" aria-hidden="true">
+@@ -1258,20 +1357,20 @@
+       <section class="side-section">
+         <h2>Scenario</h2>
+         <div class="segmented" role="group" aria-label="Scenario selector">
+-          <button class="seg-btn" data-scenario-button="calm">Calm</button>
+-          <button class="seg-btn is-active" data-scenario-button="normal">Normal</button>
+-          <button class="seg-btn" data-scenario-button="live">Live</button>
+-          <button class="seg-btn" data-scenario-button="alert">Alert</button>
++          <button class="seg-btn" data-scenario-button="calm" aria-pressed="false">Calm</button>
++          <button class="seg-btn is-active" data-scenario-button="normal" aria-pressed="true">Normal</button>
++          <button class="seg-btn" data-scenario-button="live" aria-pressed="false">Live</button>
++          <button class="seg-btn" data-scenario-button="alert" aria-pressed="false">Alert</button>
+         </div>
+       </section>
+ 
+       <section class="side-section">
+         <h2>Atmosphere</h2>
+         <div class="mode-grid" role="group" aria-label="Atmosphere mode selector">
+-          <button class="mode-swatch is-active" data-mode-button="day"><span></span>Day</button>
+-          <button class="mode-swatch" data-mode-button="dusk"><span></span>Dusk</button>
+-          <button class="mode-swatch" data-mode-button="rainy"><span></span>Rainy</button>
+-          <button class="mode-swatch" data-mode-button="night"><span></span>Night</button>
++          <button class="mode-swatch is-active" data-mode-button="day" aria-pressed="true"><span aria-hidden="true"></span>Day</button>
++          <button class="mode-swatch" data-mode-button="dusk" aria-pressed="false"><span aria-hidden="true"></span>Dusk</button>
++          <button class="mode-swatch" data-mode-button="rainy" aria-pressed="false"><span aria-hidden="true"></span>Rainy</button>
++          <button class="mode-swatch" data-mode-button="night" aria-pressed="false"><span aria-hidden="true"></span>Night</button>
+         </div>
+       </section>
+ 
+@@ -1281,7 +1380,7 @@
+       </section>
+     </aside>
+ 
+-    <main class="phone-stage" aria-label="Ambient Dashboard interactive MVP">
++    <main class="phone-stage" id="main-content" tabindex="-1" aria-label="Ambient Dashboard interactive MVP">
+       <div class="device-frame">
+         <div class="device-screen">
+           <header class="app-header">
+@@ -1296,7 +1395,7 @@
+             <div class="pa-surface-frame pa-atmosphere-panel atmosphere-hero" data-pa-surface="air" data-state="normal">
+               <div class="pa-density-field" data-pa-density="normal"></div>
+               <div class="ambient-flow" aria-hidden="true"></div>
+-              <div class="pa-lumen-layer"></div>
++              <div class="pa-lumen-layer" aria-hidden="true"></div>
+               <div class="pa-content hero-content">
+                 <div class="hero-topline">
+                   <p id="home-title" class="section-label">오늘의 공기</p>
+@@ -1442,11 +1541,11 @@
+           </section>
+ 
+           <nav class="pa-surface-frame pa-flow-dock flow-dock" data-pa-surface="veil" aria-label="Primary navigation">
+-            <button class="pa-flow-dock__item" data-nav="home" aria-current="page"><span>⌂</span><small>Home</small></button>
+-            <button class="pa-flow-dock__item" data-nav="flow"><span>≋</span><small>Flow</small></button>
+-            <button class="pa-flow-dock__item" data-nav="homeair"><span>▣</span><small>Home</small></button>
+-            <button class="pa-flow-dock__item" data-nav="schedule"><span>◷</span><small>Day</small></button>
+-            <button class="pa-flow-dock__item" data-nav="modes"><span>⚙</span><small>Modes</small></button>
++            <button class="pa-flow-dock__item" data-nav="home" aria-current="page" aria-label="Home dashboard"><span aria-hidden="true">⌂</span><small>Home</small></button>
++            <button class="pa-flow-dock__item" data-nav="flow" aria-label="Air Flow detail"><span aria-hidden="true">≋</span><small>Flow</small></button>
++            <button class="pa-flow-dock__item" data-nav="homeair" aria-label="Smart Home Air"><span aria-hidden="true">▣</span><small>Air</small></button>
++            <button class="pa-flow-dock__item" data-nav="schedule" aria-label="Day Flow schedule"><span aria-hidden="true">◷</span><small>Day</small></button>
++            <button class="pa-flow-dock__item" data-nav="modes" aria-label="Modes and accessibility settings"><span aria-hidden="true">⚙</span><small>Modes</small></button>
+           </nav>
+         </div>
+       </div>
+@@ -1649,7 +1748,8 @@
+     const field = $('.pa-density-field', hero);
+     if (field) field.dataset.paDensity = data.density;
+   }
+-  $$('.seg-btn').forEach(btn => btn.classList.toggle('is-active', btn.dataset.scenarioButton === name));
++  $$('.seg-btn').forEach(btn => { const active = btn.dataset.scenarioButton === name; btn.classList.toggle('is-active', active); btn.setAttribute('aria-pressed', active ? 'true' : 'false'); });
++  setText('a11yStatus', `Scenario changed to ${data.label}. ${data.summary}`);
+   const progress = $('.ring-progress');
+   if (progress) progress.style.strokeDasharray = `${Math.min(92, Math.round(data.windSpeed * 9))} 100`;
+   const needle = $('#windNeedle');
+@@ -1666,9 +1766,10 @@
+ function updateMode(name) {
+   currentMode = name;
+   document.body.dataset.paMode = name;
+-  $$('.mode-swatch').forEach(btn => btn.classList.toggle('is-active', btn.dataset.modeButton === name));
++  $$('.mode-swatch').forEach(btn => { const active = btn.dataset.modeButton === name; btn.classList.toggle('is-active', active); btn.setAttribute('aria-pressed', active ? 'true' : 'false'); });
+   const kicker = { day: 'Good Morning', dusk: 'Good Evening', rainy: 'Rainy Mode', night: 'Good Night' }[name] || 'Good Morning';
+   setText('headerKicker', kicker);
++  setText('a11yStatus', `Atmosphere mode changed to ${name}.`);
+   updateReadout();
+ }
+ 
+@@ -1682,11 +1783,13 @@
+   });
+   const titles = { home: 'Yokohama', flow: 'Air Flow', homeair: 'Living Room', schedule: 'Day Flow', modes: 'Modes' };
+   setText('screenTitle', titles[screen] || 'Yokohama');
++  setText('a11yStatus', `Screen changed to ${titles[screen] || 'Yokohama'}.`);
+   updateReadout();
+ }
+ 
+ function toggleClass(name, active) {
+   document.body.classList.toggle(name, active);
++  setText('a11yStatus', `${name} ${active ? 'enabled' : 'disabled'}.`);
+   updateReadout();
+ }
+ 

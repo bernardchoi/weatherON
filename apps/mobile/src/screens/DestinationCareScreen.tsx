@@ -15,6 +15,19 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+// DropdownMotion(다른 드롭다운들)의 열림 260ms easeOut / 닫힘 190ms easeIn 감각과 맞춰,
+// 기본 easeInEaseOut 프리셋보다 방향별로 더 부드럽게 느껴지도록 별도 설정한다.
+const ARRIVAL_EDITOR_OPEN_ANIMATION = {
+  duration: 260,
+  create: { type: LayoutAnimation.Types.easeOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.easeOut },
+};
+const ARRIVAL_EDITOR_CLOSE_ANIMATION = {
+  duration: 190,
+  update: { type: LayoutAnimation.Types.easeIn },
+  delete: { type: LayoutAnimation.Types.easeIn, property: LayoutAnimation.Properties.opacity },
+};
+
 export function DestinationCareScreen({
   permissionReady,
   state,
@@ -124,15 +137,13 @@ export function DestinationCareScreen({
               expanded={arrivalEditorOpen}
               accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 ${arrivalEditorOpen ? "닫기" : "열기"}`}
               onPress={() => {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setArrivalEditorOpen((current) => {
-                  const nextOpen = !current;
-                  if (nextOpen) {
-                    setTransportSelectorOpen(false);
-                    setRepeatDaysOpen(false);
-                  }
-                  return nextOpen;
-                });
+                const nextOpen = !arrivalEditorOpen;
+                LayoutAnimation.configureNext(nextOpen ? ARRIVAL_EDITOR_OPEN_ANIMATION : ARRIVAL_EDITOR_CLOSE_ANIMATION);
+                setArrivalEditorOpen(nextOpen);
+                if (nextOpen) {
+                  setTransportSelectorOpen(false);
+                  setRepeatDaysOpen(false);
+                }
               }}
             />
             <SummaryChip

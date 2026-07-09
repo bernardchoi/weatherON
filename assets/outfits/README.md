@@ -20,10 +20,19 @@ MVP mockup assets for the C1 outfit recommendation and H1 compact outfit preview
 - `weatheron-outfit-compact-umbrella-v1.png`: navy compact folding umbrella, transparent PNG.
 - `weatheron-outfit-knit-sweater-v1.png`: oatmeal ribbed knit sweater, transparent PNG.
 - `weatheron-outfit-waterproof-sneakers-v1.png`: white low waterproof sneakers, transparent PNG.
+- `weatheron-outfit-oxford-shirt-v1.png`: light blue oxford button-down shirt, transparent PNG.
+- `weatheron-outfit-black-turtleneck-v1.png`: charcoal black mock-neck turtleneck knit top, transparent PNG.
+- `weatheron-outfit-chino-shorts-v1.png`: beige chino shorts, transparent PNG.
+- `weatheron-outfit-tapered-joggers-v1.png`: black tapered jogger pants, transparent PNG.
+- `weatheron-outfit-ankle-rain-boots-v1.png`: matte black ankle rain boots, transparent PNG.
+- `weatheron-outfit-tan-loafers-v1.png`: tan leather loafers, transparent PNG.
+- `weatheron-outfit-ribbed-beanie-v1.png`: burgundy ribbed beanie, transparent PNG.
+- `weatheron-outfit-crossbody-bag-v1.png`: taupe nylon crossbody bag, transparent PNG.
 
 Source chroma-key files are kept with `-source-v1.png` suffix.
 `outfit-assets.json` is the development manifest for category and weather-condition mapping.
-`weatheron-outfit-contact-v2.png` is the visual QA contact sheet for the added set.
+`weatheron-outfit-contact-v2.png` is the visual QA contact sheet for the first added set.
+`weatheron-outfit-contact-v3.png` is the visual QA contact sheet for the extended preset set.
 
 ## Design Direction
 

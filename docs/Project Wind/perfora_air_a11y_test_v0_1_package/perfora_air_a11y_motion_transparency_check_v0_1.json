@@ -1,0 +1,32 @@
+{
+  "base": {
+    "flowAnimation": "drift",
+    "flowDuration": "9s",
+    "viewAnimation": "viewIn",
+    "cardBackdrop": "blur(8px)",
+    "cardBg": "rgba(0, 0, 0, 0)",
+    "densityOpacity": "0.16"
+  },
+  "bodyReducedMotion": {
+    "flowAnimation": "none",
+    "flowDuration": "0s",
+    "viewAnimation": "none",
+    "cardBackdrop": "blur(8px)",
+    "cardBg": "rgba(0, 0, 0, 0)",
+    "densityOpacity": "0.16"
+  },
+  "bodyReducedTransparency": {
+    "flowAnimation": "drift",
+    "flowDuration": "9s",
+    "viewAnimation": "viewIn",
+    "cardBackdrop": "none",
+    "cardBg": "rgb(252, 252, 249)",
+    "densityOpacity": "0.16"
+  },
+  "systemPrefersReducedMotion": {
+    "flowAnimation": "none",
+    "flowDuration": "0s",
+    "viewAnimation": "none",
+    "cardBackdrop": "blur(8px)"
+  }
+}
