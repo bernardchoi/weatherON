@@ -11,6 +11,7 @@ const stroke = 1.8 * scale;
 const black = "#111827";
 
 const icons = {
+  "card-umbrella": drawCardUmbrella,
   "my-permissions": drawShieldCheck,
   "my-alerts": drawBell,
   "my-display": drawDisplay,
@@ -79,6 +80,27 @@ function drawShield(ctx) {
     ["L", 4.8, 6.2],
     ["L", 12, 3.4],
     ["Z"],
+  ]);
+}
+
+function drawCardUmbrella(ctx) {
+  strokePath(ctx, [
+    ["M", 4.5, 11.3],
+    ["C", 5.3, 6.8, 8.6, 4.2, 12, 4.2],
+    ["C", 15.4, 4.2, 18.7, 6.8, 19.5, 11.3],
+    ["L", 4.5, 11.3],
+    ["Z"],
+  ]);
+  strokePath(ctx, [
+    ["M", 12, 11.3],
+    ["L", 12, 18.1],
+    ["C", 12, 19.8, 10.7, 20.8, 9.5, 19.7],
+    ["M", 12, 4.4],
+    ["L", 12, 2.8],
+    ["M", 8, 8.6],
+    ["L", 9.9, 11.3],
+    ["M", 16, 8.6],
+    ["L", 14.1, 11.3],
   ]);
 }
 

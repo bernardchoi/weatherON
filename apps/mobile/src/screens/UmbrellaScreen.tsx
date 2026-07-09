@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -31,7 +32,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         </View>
 
         <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }, cardShadow(theme)]}>
-          <UmbrellaGlyph color={theme.text} />
+          <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: theme.text }]} resizeMode="contain" />
           <Text style={[styles.heroTitle, { color: theme.text }]}>{umbrella.title}</Text>
           <View style={styles.chipRow}>
             <InfoChip label={getUmbrellaLevelLabel(umbrella.level)} theme={theme} />
@@ -90,7 +91,11 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                 ]}
               >
                 <View style={styles.optionIcon}>
-                  <SmallUmbrellaGlyph color={item.recommended ? theme.sky : theme.subtle} />
+                  <Image
+                    source={uiIconAssets.umbrella}
+                    style={[styles.smallUmbrellaIcon, { tintColor: item.recommended ? theme.sky : theme.subtle }]}
+                    resizeMode="contain"
+                  />
                 </View>
                 <View style={styles.optionCopy}>
                   <View style={styles.optionTitleRow}>
@@ -175,26 +180,6 @@ function ReasonGlyph({ type, color }: { type: "clock" | "drop" | "wind"; color: 
       <View style={[styles.windLine, styles.windLineA, { backgroundColor: color }]} />
       <View style={[styles.windLine, styles.windLineB, { backgroundColor: color }]} />
       <View style={[styles.windLine, styles.windLineC, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
-function UmbrellaGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.umbrellaGlyph} accessibilityElementsHidden>
-      <View style={[styles.umbrellaCanopy, { borderColor: color }]} />
-      <View style={[styles.umbrellaStem, { backgroundColor: color }]} />
-      <View style={[styles.umbrellaHook, { borderColor: color }]} />
-    </View>
-  );
-}
-
-function SmallUmbrellaGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.smallGlyph} accessibilityElementsHidden>
-      <View style={[styles.smallCanopy, { borderColor: color }]} />
-      <View style={[styles.smallStem, { backgroundColor: color }]} />
-      <View style={[styles.smallHook, { borderColor: color }]} />
     </View>
   );
 }
@@ -347,38 +332,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderLeftWidth: 2,
   },
-  umbrellaGlyph: {
-    width: 46,
-    height: 34,
-    alignItems: "center",
-  },
-  umbrellaCanopy: {
-    position: "absolute",
-    top: 0,
-    width: 32,
-    height: 17,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
-  umbrellaStem: {
-    position: "absolute",
-    top: 15,
-    width: 2,
-    height: 18,
-    borderRadius: 2,
-  },
-  umbrellaHook: {
-    position: "absolute",
-    bottom: 1,
-    left: 22,
-    width: 9,
-    height: 8,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderBottomRightRadius: 7,
+  umbrellaIcon: {
+    width: 42,
+    height: 42,
   },
   heroTitle: {
     fontSize: 23,
@@ -585,38 +541,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0,
   },
-  smallGlyph: {
-    width: 22,
-    height: 21,
-    alignItems: "center",
-  },
-  smallCanopy: {
-    position: "absolute",
-    top: 1,
-    width: 18,
-    height: 10,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-  },
-  smallStem: {
-    position: "absolute",
-    top: 10,
-    width: 2,
-    height: 10,
-    borderRadius: 2,
-  },
-  smallHook: {
-    position: "absolute",
-    bottom: 0,
-    left: 11,
-    width: 6,
-    height: 6,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderBottomRightRadius: 5,
+  smallUmbrellaIcon: {
+    width: 20,
+    height: 20,
   },
   statePanel: {
     gap: 2,
