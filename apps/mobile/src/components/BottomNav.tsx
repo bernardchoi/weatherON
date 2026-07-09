@@ -39,7 +39,15 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           >
             <View style={[styles.activeDot, { backgroundColor: active ? theme.gold : "transparent" }]} />
             <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
-            <Text style={[styles.label, { color: active ? theme.gold : theme.subtle }]}>{route.label}</Text>
+            <Text
+              style={[styles.label, { color: active ? theme.gold : theme.subtle }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.9}
+              allowFontScaling={false}
+            >
+              {route.label}
+            </Text>
           </TabButton>
         );
       })}
@@ -146,9 +154,13 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   label: {
+    minWidth: 42,
+    maxWidth: 54,
     fontSize: 11,
     lineHeight: 13,
     fontWeight: "600",
+    textAlign: "center",
+    includeFontPadding: false,
   },
   iconImage: {
     width: 21,

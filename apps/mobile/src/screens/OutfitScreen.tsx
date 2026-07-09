@@ -63,26 +63,17 @@ export function OutfitScreen({
         {state.outfit.reasons.slice(0, 1).map((reason) => (
           <Text key={reason} style={[styles.reason, { color: theme.muted }]}>· {reason}</Text>
         ))}
+        <View style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}>
+          {state.outfit.timeAdvice.slice(0, 2).map((item) => (
+            <View key={item.time} style={styles.advicePreviewRow}>
+              <Text style={[styles.advicePreviewTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+              <Text style={[styles.advicePreviewText, { color: theme.text }]} numberOfLines={1}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
         <View style={styles.actions}>
           <AppButton label="상세 보기" onPress={() => onNavigate("C4")} />
           <AppButton label="우산 확인" onPress={() => onNavigate("H4")} tone="secondary" />
-        </View>
-      </Section>
-
-      <Section title="오늘의 판단" caption="시간대별 착장 기준" accent="gold">
-        {state.outfit.timeAdvice.map((item) => (
-          <View key={item.time} style={[styles.timelineRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.time, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
-            <Text style={[styles.timelineText, { color: theme.text }]}>{item.text}</Text>
-          </View>
-        ))}
-      </Section>
-
-      <Section title="스타일 기준" caption={styleProfileSaved ? selectedStyles.join(" · ") : "추천 기준 저장 필요"} accent="sky">
-        <View style={styles.actions}>
-          <AppButton label="스타일 기준 수정" onPress={() => onNavigate("O4")} />
-          <AppButton label="MY" onPress={() => onNavigate("M1")} tone="secondary" />
-          <AppButton label="옷장" onPress={() => onNavigate("C2")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
@@ -162,27 +153,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
   },
+  advicePreview: {
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+  },
+  advicePreviewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  advicePreviewTime: {
+    width: 44,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  advicePreviewText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
   actions: {
     flexDirection: "row",
     gap: spacing.sm,
     flexWrap: "wrap",
-  },
-  timelineRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-  },
-  time: {
-    width: 58,
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  timelineText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
   },
 });
