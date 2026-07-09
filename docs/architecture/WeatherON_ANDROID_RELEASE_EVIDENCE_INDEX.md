@@ -9,10 +9,10 @@
 |---|---|
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
-| Android versionCode | `7` |
+| Android versionCode | `8` |
 | 정적 체크 통과 | 23/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
-| production build | `8d392e45-5aae-42a3-a196-59cb00153b28` / FINISHED |
+| production build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` / LOCAL BUILD SUCCESS, EAS IN_QUEUE |
 | artifact 접근 issue | 0 |
 | Play 제출 blocker | 9 |
 | 실기기 QA 미검증 | 0 |
@@ -34,7 +34,7 @@
 | 대상 | Build ID | 상태 | Artifact |
 |---|---|---|---|
 | Preview APK | `N/A - local Gradle release APK` | LOCAL BUILD SUCCESS | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| Production AAB | `8d392e45-5aae-42a3-a196-59cb00153b28` | FINISHED | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
+| Production AAB | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` | LOCAL BUILD SUCCESS / EAS IN_QUEUE | builds/weatheron-v0.1.0-versionCode8.aab |
 
 ## 3. 검증 명령 증빙
 
@@ -74,7 +74,7 @@
 ## 5. 완료된 자동화 범위
 
 - preview APK build 완료 및 artifact URL 확보
-- production AAB build 완료 및 artifact URL 확보
+- production AAB local build 완료 및 artifact 확보
 - APK/AAB URL HTTP 200 접근 확인
 - store asset 후보 생성
 - Android release config 정적 검증

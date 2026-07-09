@@ -10,14 +10,15 @@
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
 | 앱 버전 | `0.1.0` |
-| Android versionCode | `7` |
-| 소스 기준 버전 | `0.1.0 (7)` |
-| EAS build id | `8d392e45-5aae-42a3-a196-59cb00153b28` |
-| Build 상태 | FINISHED |
-| Build 버전 | `0.1.0 (7)` |
+| Android versionCode | `8` |
+| 소스 기준 버전 | `0.1.0 (8)` |
+| EAS build id | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` |
+| Build 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| Build 버전 | `0.1.0 (8)` |
 | 소스 일치 | 일치 |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/8d392e45-5aae-42a3-a196-59cb00153b28 |
-| AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
+| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1 |
+| AAB artifact | `builds/weatheron-v0.1.0-versionCode8.aab` |
+| AAB SHA-256 | `a5673b88cfa10e15918408b8fc91eafdcf01fc9a7beac7c2a0eb0b64be107f34` |
 | 업로드 후보 여부 | 가능 |
 
 ## 2. 업로드 전 남은 확인
@@ -36,24 +37,25 @@
 2. 테스트 및 출시 > 내부 테스트 또는 폐쇄 테스트 트랙 선택
 3. 새 release 생성
 4. AAB artifact 업로드
-5. release name은 `0.1.0 (7)` 기준으로 입력
+5. release name은 `0.1.0 (8)` 기준으로 입력
 6. 출시 노트 초안 입력
 7. 저장 후 제출 전 blocker 문서 확인
 
 ## 4. 출시 노트 초안
 
 ```text
-WeatherON Android preview build.
-- 날씨 기반 홈/출발 흐름
-- 목적지 날씨 케어와 Kakao Local 검색
-- MY/정책/권한 설정
-- 최초 출시 범위 외 코디/스타일/소셜 레이어 미공개
+WeatherON Android 비공개 테스트 업데이트 0.1.0 (8)
+- 코디 프리셋 아이템을 확장해 추천/옷장 화면의 선택 폭을 넓혔습니다.
+- 코디 탭, 코디 상세, 저장 완료 상태, 홈 대표 코디 노출 흐름을 보정했습니다.
+- 목적지 케어의 도착 시각/이동수단 설정 동작과 화면 전환감을 다듬었습니다.
+- 홈, 출발, MY, 알림 사이드바, 권한/정책 화면의 실기기 QA 결과를 반영했습니다.
+- 접근성/스토어 제출 점검 자료와 Android AAB 업로드 패킷을 최신화했습니다.
 ```
 
 ## 5. 확인 명령
 
 ```bash
-npm run check:eas-production-build-status -- 8d392e45-5aae-42a3-a196-59cb00153b28
+npm run check:eas-production-build-status -- 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1
 npm run check:android-store-submit-ready
 npm run report:android-release-action-board
 ```
