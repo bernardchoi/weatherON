@@ -9,13 +9,13 @@ import type { AppTheme } from "../theme/tokens";
 type MotionState = "clear" | "cloud" | "rain" | "snow" | "storm" | "night";
 
 const DARK_GRADIENTS: Record<Exclude<MotionState, "night">, [string, string, string]> = {
-  clear: ["#0B1E3D", "#1A3A6B", "#2D5FA6"],
-  cloud: ["#1A2A3A", "#2D4A5E", "#4A7090"],
-  rain: ["#0D1F2D", "#1B3A52", "#2E6080"],
+  clear: ["#17365D", "#255985", "#4AA3DF"],
+  cloud: ["#1F3E58", "#2E5B76", "#5E87A8"],
+  rain: ["#17324A", "#245475", "#3E789B"],
   snow: ["#E8F4F8", "#C8E4F0", "#A8CCDF"],
-  storm: ["#2A1A3A", "#4A2A6B", "#6B3A8A"],
+  storm: ["#35244F", "#5A3B7A", "#7A55A2"],
 };
-const NIGHT_GRADIENT: [string, string, string] = ["#060E1F", "#0D1E3A", "#122040"];
+const NIGHT_GRADIENT: [string, string, string] = ["#10243F", "#17365D", "#1F4E79"];
 
 const LIGHT_RETINT_RATIO = 0.8;
 

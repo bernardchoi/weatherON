@@ -136,6 +136,11 @@
 | 4 | H5 강수 타임라인 정리 | 1차 반영. 비 시작/그침 시간과 알림 토글이 상단에 노출됨 |
 | 5 | 실기기 QA | 작은 화면 360x800, 큰 화면 430x932에서 겹침/잘림/터치 문제 없음 |
 
+### 6-2. 차기 UI 시스템 트랙
+
+Project Wind는 출시 후 대규모 UI 업데이트를 위한 신규 디자인 시스템 연구 프로젝트다.
+현행 MVP/v1.0 폴리싱 범위에는 즉시 반영하지 않고, 별도 프로토타입에서 바람의 탑 기반 반응형 표면, 빛, 밀도, 모션 토큰을 검증한 뒤 차기 UI 개편 후보로 다룬다.
+
 ## 6-1. MVP 0 1차 구현 검증
 
 | 검증 | 결과 |
@@ -160,6 +165,8 @@
 | 문서 | 역할 |
 |---|---|
 | `docs/planning/WeatherON_기능_출시_로드맵.md` | MVP 0~1, Beta, v1.0, v1.1+ 기준 |
+| `docs/Project Wind/yokohama_tower_of_winds_ui_design_system.md` | 출시 후 대규모 UI 업데이트용 신규 디자인 시스템 연구 |
+| `docs/Project Wind/tower_of_winds_ui_trademark_supplement_2026-07-09.md` | Project Wind 네이밍/상표 리스크 보충 검토 |
 | `docs/planning/WeatherON_MVP_기능_PRD.md` | MVP 기능 상세 명세 |
 | `docs/architecture/WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md` | 제품 완성도 감사와 Android 보정 이력 |
 | `docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md` | Android 다음 액션과 blocker 현황 |
@@ -179,3 +186,4 @@
 | 2026-06-29 | 사용자 터미널의 no-wait build 2건 상태 확인. `419e3d2c-135b-41a1-88f6-3321ad5115f1`, `29665e88-4da7-41f2-8178-9e85de34ecee` 모두 FINISHED. 최신 설치 후보를 `29665e88-4da7-41f2-8178-9e85de34ecee`로 갱신 |
 | 2026-06-29 | EAS preview/production build와 local debug build 식별자 분리. local debug는 `com.weatheron.mobile.dev`, EAS preview/production은 `com.weatheron.mobile` 유지 |
 | 2026-07-08 | 최신 release APK 기준 카드 음영/목적지 상세/검색 결과 폴리싱과 실기기 UI/UX QA 리포트 반영 |
+| 2026-07-09 | Project Wind를 출시 후 대규모 UI 업데이트용 신규 디자인 시스템 연구 트랙으로 연결 |

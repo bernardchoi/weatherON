@@ -27,14 +27,14 @@ export type AppTheme = {
 export const appThemes: Record<AppThemeName, AppTheme> = {
   dark: {
     name: "dark",
-    background: "#10243F",
-    backgroundAlt: "#1F4E79",
-    nav: "rgba(10,23,48,0.96)",
+    background: "#17365D",
+    backgroundAlt: "#2A5D8F",
+    nav: "rgba(23,54,93,0.95)",
     navBorder: "rgba(248,251,255,0.10)",
     card: "#214A78",
-    cardStrong: "#17365D",
+    cardStrong: "#1F4E79",
     cardSoft: "#2A5D8F",
-    cardMuted: "rgba(248,251,255,0.10)",
+    cardMuted: "rgba(248,251,255,0.12)",
     clear: "#2FC6A3",
     gold: "#F4B63F",
     sky: "#4AA3DF",
@@ -45,7 +45,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     muted: "rgba(215,230,245,0.82)",
     subtle: "rgba(215,230,245,0.80)",
     border: "rgba(255,255,255,0.12)",
-    shadow: "rgba(0,0,0,0.34)",
+    shadow: "rgba(0,0,0,0.28)",
     onAccent: "#10243F",
   },
   light: {

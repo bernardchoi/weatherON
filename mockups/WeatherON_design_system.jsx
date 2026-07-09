@@ -13,8 +13,8 @@ import { useState } from "react";
 ─────────────────────────────────────────────────────────────────────── */
 
 /* ── Brand / Functional Color Tokens ── */
-export const NAVY      = '#10243F'; // 다크 BG — 기존 Navy보다 덜 탁하고 더 선명한 기준색
-export const NAVY_DARK = '#17365D'; // 다크 Surface
+export const NAVY      = '#17365D'; // 다크 BG — 기존 #10243F보다 가볍고 선명한 페이지 배경
+export const NAVY_DARK = '#1F4E79'; // 다크 Surface
 export const PANEL     = '#214A78'; // 다크 Elevated — 기본 카드 패널
 export const PANEL_L1  = '#2A5D8F'; // L1 — 바텀시트 표면
 export const PANEL_L2  = '#3470A6'; // L2 — 시트 내부 중첩 요소
@@ -31,7 +31,7 @@ export const MIST      = '#B9CBE0';
 export const INK   = (a) => `rgba(232,237,246,${a})`;
 export const MISTL = (a) => `rgba(185,203,224,${a})`;
 
-export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #1F4E79 54%, #4AA3DF 120%)`;
+export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #2A5D8F 54%, #4AA3DF 120%)`;
 export const RADIUS = { card: 20, cardSm: 16, sheet: 28, pill: 16, tab: 24 }; // squircle 근사
 
 /* ── 라이트 모드 토큰 (2026-06-25 보정) ────────────────────────────────
