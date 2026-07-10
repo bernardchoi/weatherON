@@ -1,0 +1,173 @@
+import React from "react";
+import { Image, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native";
+import { useAppTheme } from "../theme/AppThemeContext";
+import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+
+export type AppListTone = "clear" | "gold" | "sky" | "warm";
+
+type AppListGroupProps = {
+  children: React.ReactNode;
+};
+
+type AppListRowProps = {
+  icon: ImageSourcePropType;
+  title: string;
+  subtitle?: string;
+  value?: string;
+  tone?: AppListTone;
+  right?: React.ReactNode;
+  divider?: boolean;
+  onPress?: () => void;
+  accessibilityLabel?: string;
+  accessibilityRole?: "button" | "switch";
+  accessibilityState?: { checked?: boolean; disabled?: boolean; selected?: boolean };
+};
+
+export function AppListGroup({ children }: AppListGroupProps) {
+  const theme = useAppTheme();
+  return (
+    <View style={[styles.group, { backgroundColor: theme.cardStrong }, cardShadow(theme)]}>
+      {children}
+    </View>
+  );
+}
+
+export function AppListRow({
+  icon,
+  title,
+  subtitle,
+  value,
+  tone = "sky",
+  right,
+  divider = false,
+  onPress,
+  accessibilityLabel,
+  accessibilityRole = "button",
+  accessibilityState,
+}: AppListRowProps) {
+  const theme = useAppTheme();
+  const color = getToneColor(theme, tone);
+  const content = (
+    <>
+      {divider ? <View style={[styles.divider, { backgroundColor: theme.border }]} /> : null}
+      <View style={[styles.iconFrame, { backgroundColor: `${color}16` }]}>
+        <Image source={icon} style={[styles.icon, { tintColor: color }]} resizeMode="contain" />
+      </View>
+      <View style={styles.copy}>
+        <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
+      </View>
+      {right ?? (value ? <Text style={[styles.value, { color }]} numberOfLines={1}>{value}</Text> : null)}
+      {onPress && accessibilityRole !== "switch" ? <Chevron color={theme.subtle} /> : null}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityLabel={accessibilityLabel ?? title}
+        accessibilityRole={accessibilityRole}
+        accessibilityState={accessibilityState}
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, pressed ? { backgroundColor: theme.cardMuted } : null]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return <View style={styles.row}>{content}</View>;
+}
+
+function getToneColor(theme: AppTheme, tone: AppListTone) {
+  if (tone === "clear") return theme.clear;
+  if (tone === "gold") return theme.gold;
+  if (tone === "warm") return theme.warm;
+  return theme.sky;
+}
+
+function Chevron({ color }: { color: string }) {
+  return (
+    <View style={styles.chevron} accessibilityElementsHidden>
+      <View style={[styles.chevronTop, { backgroundColor: color }]} />
+      <View style={[styles.chevronBottom, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  group: {
+    borderRadius: radius.lg,
+    overflow: "hidden",
+  },
+  row: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    paddingVertical: spacing.sm,
+  },
+  divider: {
+    position: "absolute",
+    top: 0,
+    left: 66,
+    right: 14,
+    height: StyleSheet.hairlineWidth,
+  },
+  iconFrame: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+  },
+  icon: {
+    width: 22,
+    height: 22,
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  title: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  subtitle: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  value: {
+    maxWidth: 82,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    textAlign: "right",
+  },
+  chevron: {
+    width: 14,
+    height: 18,
+  },
+  chevronTop: {
+    position: "absolute",
+    right: 2,
+    top: 5,
+    width: 8,
+    height: 1.6,
+    borderRadius: 2,
+    transform: [{ rotate: "45deg" }],
+  },
+  chevronBottom: {
+    position: "absolute",
+    right: 2,
+    top: 10,
+    width: 8,
+    height: 1.6,
+    borderRadius: 2,
+    transform: [{ rotate: "-45deg" }],
+  },
+});

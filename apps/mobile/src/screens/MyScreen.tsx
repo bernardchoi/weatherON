@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
+import { AppListGroup, AppListRow } from "../components/AppListRow";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -83,49 +84,47 @@ export function MyScreen({
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text>
 
-        <View style={styles.menuList}>
-          <MenuRow
+        <AppListGroup>
+          <AppListRow
             icon={uiIconAssets.myPermissions}
             title="앱 권한 관리"
-            meta={`위치 ${locationState.status} · 알림 ${alertState.status}`}
-            status={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
+            subtitle={`위치 ${locationState.status} · 알림 ${alertState.status}`}
+            value={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
             tone={permissionTone}
             onPress={() => onNavigate("M4")}
-            theme={theme}
           />
-          <MenuRow
+          <AppListRow
             icon={uiIconAssets.myAlerts}
             title="스마트 알림 설정"
-            meta={alertState.meta}
-            status={alertState.status}
+            subtitle={alertState.meta}
+            value={alertState.status}
             tone={alertState.tone}
+            divider
             onPress={() => onNavigate("M2")}
-            theme={theme}
           />
-          <MenuRow
+          <AppListRow
             icon={uiIconAssets.myDisplay}
             title="표시 설정"
-            meta={globalSettingsSummary}
-            status="관리"
+            subtitle={globalSettingsSummary}
+            value="관리"
             tone="sky"
+            divider
             onPress={() => onNavigate("M3")}
-            theme={theme}
           />
-        </View>
+        </AppListGroup>
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>정보</Text>
 
-        <View style={styles.menuList}>
-          <MenuRow
+        <AppListGroup>
+          <AppListRow
             icon={uiIconAssets.myPolicy}
             title="정책 및 법적 고지"
-            meta="개인정보 · 약관 · 오픈소스"
-            status="보기"
+            subtitle="개인정보 · 약관 · 오픈소스"
+            value="보기"
             tone="sky"
             onPress={() => onNavigate("R1")}
-            theme={theme}
           />
-        </View>
+        </AppListGroup>
 
         <Text style={[styles.appVersion, { color: theme.subtle }]}>WeatherON v0.1.0</Text>
 
@@ -196,48 +195,6 @@ function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
   return "시스템";
 }
 
-function MenuRow({
-  icon,
-  title,
-  meta,
-  status,
-  tone,
-  onPress,
-  theme,
-}: {
-  icon: number;
-  title: string;
-  meta: string;
-  status: string;
-  tone: MenuTone;
-  onPress: () => void;
-  theme: AppTheme;
-}) {
-  const color = getToneColor(theme, tone);
-  return (
-    <Pressable accessibilityLabel={title} accessibilityRole="button" onPress={onPress} style={[styles.menuRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-      <View style={[styles.menuIcon, { borderColor: `${color}66`, backgroundColor: "rgba(255,255,255,0.06)" }]}>
-        <Image source={icon} style={[styles.menuIconImage, { tintColor: color }]} resizeMode="contain" />
-      </View>
-      <View style={styles.menuCopy}>
-        <Text style={[styles.menuTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.menuMeta, { color: theme.subtle }]} numberOfLines={1}>{meta}</Text>
-      </View>
-      <View
-        style={[
-          styles.statusPill,
-          isActionLabel(status)
-            ? { backgroundColor: "transparent", borderColor: theme.border }
-            : { backgroundColor: `${color}22`, borderColor: "transparent" },
-        ]}
-      >
-        <Text style={[styles.statusTextSmall, { color: isActionLabel(status) ? theme.muted : color }]}>{status}</Text>
-      </View>
-      <Chevron color={theme.subtle} />
-    </Pressable>
-  );
-}
-
 function ReadinessSummary({
   alertSummary,
   destinationSummary,
@@ -293,10 +250,6 @@ function getToneColor(theme: AppTheme, tone: MenuTone) {
   if (tone === "sky") return theme.sky;
   if (tone === "warm") return theme.warm;
   return theme.clear;
-}
-
-function isActionLabel(status: string) {
-  return status === "관리" || status === "보기";
 }
 
 const styles = StyleSheet.create({
@@ -406,56 +359,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "700",
-  },
-  menuList: {
-    gap: spacing.sm,
-  },
-  menuRow: {
-    minHeight: 62,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  menuIcon: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  menuIconImage: {
-    width: 21,
-    height: 21,
-  },
-  menuCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  menuTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  menuMeta: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
-  },
-  statusPill: {
-    minHeight: 26,
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-  },
-  statusTextSmall: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
   },
   readinessCard: {
     minHeight: 82,
