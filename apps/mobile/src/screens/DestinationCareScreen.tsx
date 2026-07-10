@@ -1,33 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, Text, UIManager, View } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { destinationFallbackImageAsset, destinationImageAssets, destinationVisualAssets, placeImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
+import { BottomSheet } from "../components/BottomSheet";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationVisualKind, getDestinationVisualRegion, getKnownDestinationAssetId } from "../utils/destination-visual-resolver";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
-
-// 안드로이드 실기기에서 Animated(overflow:hidden + maxHeight)로 드롭다운을 열면 레이아웃은
-// 목표 높이까지 갱신되지만 화면이 그 상태로 다시 그려지지 않는 경우가 있었다(도착 희망 시각
-// 휠이 완전히 비어 보이던 버그). LayoutAnimation은 네이티브 레이아웃 트랜지션을 사용해
-// 이 문제 없이 펼침/접힘을 부드럽게 처리한다.
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-// DropdownMotion(다른 드롭다운들)의 열림 260ms easeOut / 닫힘 190ms easeIn 감각과 맞춰,
-// 기본 easeInEaseOut 프리셋보다 방향별로 더 부드럽게 느껴지도록 별도 설정한다.
-const ARRIVAL_EDITOR_OPEN_ANIMATION = {
-  duration: 260,
-  create: { type: LayoutAnimation.Types.easeOut, property: LayoutAnimation.Properties.opacity },
-  update: { type: LayoutAnimation.Types.easeOut },
-};
-const ARRIVAL_EDITOR_CLOSE_ANIMATION = {
-  duration: 190,
-  update: { type: LayoutAnimation.Types.easeIn },
-  delete: { type: LayoutAnimation.Types.easeIn, property: LayoutAnimation.Properties.opacity },
-};
 
 export function DestinationCareScreen({
   permissionReady,
@@ -142,17 +122,8 @@ export function DestinationCareScreen({
               meta={routeTimingReady ? `${departureTime} 출발` : "출발 계산 보류"}
               color={theme.sky}
               theme={theme}
-              expanded={arrivalEditorOpen}
-              accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 ${arrivalEditorOpen ? "닫기" : "열기"}`}
-              onPress={() => {
-                const nextOpen = !arrivalEditorOpen;
-                LayoutAnimation.configureNext(nextOpen ? ARRIVAL_EDITOR_OPEN_ANIMATION : ARRIVAL_EDITOR_CLOSE_ANIMATION);
-                setArrivalEditorOpen(nextOpen);
-                if (nextOpen) {
-                  setTransportSelectorOpen(false);
-                  setRepeatDaysOpen(false);
-                }
-              }}
+              accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 시트 열기`}
+              onPress={() => setArrivalEditorOpen(true)}
             />
             <SummaryChip
               icon={uiIconAssets.depart}
@@ -161,16 +132,8 @@ export function DestinationCareScreen({
               meta={routeTimingReady ? transportLabel : "해외 경로"}
               color={theme.gold}
               theme={theme}
-              expanded={transportSelectorOpen}
-              accessibilityLabel={`이동수단 ${transportLabel}, 선택 목록 ${transportSelectorOpen ? "닫기" : "열기"}`}
-              onPress={() => setTransportSelectorOpen((current) => {
-                const nextOpen = !current;
-                if (nextOpen) {
-                  setArrivalEditorOpen(false);
-                  setRepeatDaysOpen(false);
-                }
-                return nextOpen;
-              })}
+              accessibilityLabel={`이동수단 ${transportLabel}, 선택 시트 열기`}
+              onPress={() => setTransportSelectorOpen(true)}
             />
             <ArrivalControl
               label="자동 여유"
@@ -180,27 +143,6 @@ export function DestinationCareScreen({
             />
           </View>
 
-          {arrivalEditorOpen ? (
-            <ArrivalInputControl
-              label="도착 희망"
-              value={targetArrivalTime}
-              caption="5분 단위 스크롤 선택"
-              onSelectTime={onSetDestinationTargetArrivalTime}
-              theme={theme}
-            />
-          ) : null}
-          <DropdownMotion visible={transportSelectorOpen} maxHeight={260}>
-            <TransportDropdown
-              transportMode={transportMode}
-              walkUnavailable={walkUnavailable}
-              routeTimingReady={routeTimingReady}
-              onSetTransportMode={(mode) => {
-                setTransportSelectorOpen(false);
-                onSetDestinationTransportMode(mode);
-              }}
-              theme={theme}
-            />
-          </DropdownMotion>
           <RepeatSchedulePanel
             repeatEnabled={repeatEnabled}
             repeatDays={repeatDays}
@@ -329,6 +271,47 @@ export function DestinationCareScreen({
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      <BottomSheet
+        visible={arrivalEditorOpen}
+        onClose={() => setArrivalEditorOpen(false)}
+        accessibilityLabel="도착 희망 시각 선택 시트"
+      >
+        <Text style={[styles.sheetTitle, { color: theme.text }]}>도착 희망 시각</Text>
+        <ArrivalInputControl
+          label="도착 희망"
+          value={targetArrivalTime}
+          caption="5분 단위 스크롤 선택"
+          onSelectTime={onSetDestinationTargetArrivalTime}
+          theme={theme}
+        />
+        <Pressable
+          accessibilityLabel="도착 희망 시각 확인"
+          accessibilityRole="button"
+          onPress={() => setArrivalEditorOpen(false)}
+          style={[styles.sheetConfirmButton, { backgroundColor: theme.gold }]}
+        >
+          <Text style={[styles.sheetConfirmText, { color: theme.onAccent }]}>확인</Text>
+        </Pressable>
+      </BottomSheet>
+
+      <BottomSheet
+        visible={transportSelectorOpen}
+        onClose={() => setTransportSelectorOpen(false)}
+        accessibilityLabel="이동수단 선택 시트"
+      >
+        <Text style={[styles.sheetTitle, { color: theme.text }]}>이동수단 선택</Text>
+        <TransportDropdown
+          transportMode={transportMode}
+          walkUnavailable={walkUnavailable}
+          routeTimingReady={routeTimingReady}
+          onSetTransportMode={(mode) => {
+            setTransportSelectorOpen(false);
+            onSetDestinationTransportMode(mode);
+          }}
+          theme={theme}
+        />
+      </BottomSheet>
     </View>
   );
 }
@@ -350,7 +333,6 @@ function SummaryChip({
   meta,
   color,
   theme,
-  expanded,
   accessibilityLabel,
   onPress,
 }: {
@@ -360,31 +342,17 @@ function SummaryChip({
   meta: string;
   color: string;
   theme: AppTheme;
-  expanded: boolean;
   accessibilityLabel: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityState={{ expanded }}
-      onPress={onPress}
-      style={[
-        styles.summaryChip,
-        {
-          backgroundColor: expanded ? `${color}14` : "transparent",
-          borderColor: expanded ? color : "transparent",
-          borderWidth: expanded ? 1 : 0,
-        },
-      ]}
-    >
+    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={styles.summaryChip}>
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
       <Text numberOfLines={1} style={[styles.summaryLabel, { color: theme.subtle }]}>{label}</Text>
       <Text numberOfLines={1} style={[styles.summaryValue, { color: theme.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.summaryMeta, { color }]}>{expanded ? "닫기" : meta}</Text>
+      <Text numberOfLines={1} style={[styles.summaryMeta, { color }]}>{meta}</Text>
     </Pressable>
   );
 }
@@ -887,6 +855,20 @@ function getDestinationImage(place: P0ScreenProps["selectedDestinationPlace"]) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
+  },
+  sheetTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  sheetConfirmButton: {
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  sheetConfirmText: {
+    fontSize: 15,
+    fontWeight: "900",
   },
   scroll: {
     flex: 1,
