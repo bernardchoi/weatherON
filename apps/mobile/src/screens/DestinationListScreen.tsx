@@ -240,12 +240,16 @@ function DestinationCard({
         </View>
 
         <View style={styles.destinationBottom}>
-          <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
-            출발 {item.departureTime} · 도착 {item.arrivalTime}
-          </Text>
-          <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>
-            반복 {item.repeatLabel}
-          </Text>
+          <View style={styles.timeLine}>
+            <Image source={uiIconAssets.clock} style={[styles.timeIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+            <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
+              {item.departureTime} → {item.arrivalTime}
+            </Text>
+          </View>
+          <View style={styles.repeatLine}>
+            <Image source={uiIconAssets.check} style={[styles.repeatIcon, { tintColor: theme.subtle }]} resizeMode="contain" />
+            <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>{item.repeatLabel}</Text>
+          </View>
         </View>
 
         <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
@@ -310,9 +314,13 @@ function ResultBanner({
 
 function PrepMetric({ label, value, tone, theme }: { label: string; value: string; tone: "clear" | "gold" | "sky"; theme: AppTheme }) {
   const color = tone === "clear" ? theme.clear : tone === "sky" ? theme.sky : theme.gold;
+  const icon = tone === "clear" ? uiIconAssets.check : tone === "sky" ? uiIconAssets.rain : uiIconAssets.clock;
   return (
     <View style={styles.prepMetric}>
-      <Text style={[styles.prepMetricLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
+      <View style={styles.prepMetricLabelRow}>
+        <Image source={icon} style={[styles.prepMetricIcon, { tintColor: color }]} resizeMode="contain" />
+        <Text style={[styles.prepMetricLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
+      </View>
       <Text style={[styles.prepMetricValue, { color }]} numberOfLines={1}>{value}</Text>
     </View>
   );
@@ -683,6 +691,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0,
   },
+  prepMetricLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  prepMetricIcon: {
+    width: 12,
+    height: 12,
+  },
   prepMetricValue: {
     fontSize: 13,
     lineHeight: 18,
@@ -934,6 +951,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.xs,
+  },
+  timeLine: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  timeIcon: {
+    width: 13,
+    height: 13,
+  },
+  repeatLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  repeatIcon: {
+    width: 11,
+    height: 11,
   },
   timeText: {
     flex: 1,

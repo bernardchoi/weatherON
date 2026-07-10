@@ -190,7 +190,7 @@ async function checkHomeDecisionFlow(page) {
   await assertText(page, "최고 ");
 
   await clickText(page, "홈");
-  await assertText(page, "목적지 추가 필요");
+  await assertText(page, "목적지 추가");
   await clickText(page, "나갈 시간");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
@@ -225,7 +225,8 @@ async function checkOutfitLaunchFlow(page) {
 
   await clickAriaIncludes(page, "코디 탭");
   await assertText(page, "오늘 입을 세트");
-  await clickText(page, "옷장");
+  await clickText(page, "상세 보기");
+  await clickText(page, "내 옷장 보기");
   await assertText(page, "내 옷장");
   await clickText(page, "옷 추가");
   await assertText(page, "옷장 프리셋");
@@ -642,7 +643,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "최고 ");
     await assertText(page, "잠실야구장");
     await clickText(page, "출발");
-    await assertText(page, "도착 09:30");
+    await assertText(page, "→ 09:30");
     await clickAriaIncludes(page, "잠실야구장 목적지 상세 보기");
     await assertText(page, "09:30 도착");
     await assertText(page, "대중교통");

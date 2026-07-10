@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { OutfitGrid } from "../components/OutfitGrid";
@@ -36,18 +37,18 @@ export function OutfitScreen({
           </View>
           <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="warning" />
         </View>
-        <Text style={[styles.criteriaBody, { color: theme.muted }]}>{wardrobeCaption}</Text>
+        <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
-            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>옷장</Text>
+            <Image source={uiIconAssets.shirt} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 매칭</Text>
           </View>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
-            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>스타일</Text>
+            <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.gold }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: theme.gold }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
           </View>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
-            <Text style={[styles.criteriaStatLabel, { color: theme.subtle }]}>저장</Text>
+            <Image source={uiIconAssets.check} style={[styles.criteriaStatIcon, { tintColor: outfitSaved ? theme.clear : theme.sky }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: outfitSaved ? theme.clear : theme.sky }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
           </View>
         </View>
@@ -61,7 +62,10 @@ export function OutfitScreen({
           <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
         </View>
         {state.outfit.reasons.slice(0, 1).map((reason) => (
-          <Text key={reason} style={[styles.reason, { color: theme.muted }]}>· {reason}</Text>
+          <View key={reason} style={styles.reasonRow}>
+            <Image source={uiIconAssets.check} style={[styles.reasonIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <Text style={[styles.reason, { color: theme.muted }]} numberOfLines={1}>{reason}</Text>
+          </View>
         ))}
         <View style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}>
           {state.outfit.timeAdvice.slice(0, 2).map((item) => (
@@ -135,9 +139,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
   },
-  criteriaStatLabel: {
-    fontSize: 10,
-    fontWeight: "800",
+  criteriaStatIcon: {
+    width: 16,
+    height: 16,
   },
   criteriaStatValue: {
     fontSize: 12,
@@ -149,9 +153,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   reason: {
+    flex: 1,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "700",
+  },
+  reasonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  reasonIcon: {
+    width: 15,
+    height: 15,
   },
   advicePreview: {
     gap: spacing.xs,

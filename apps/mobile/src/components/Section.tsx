@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
@@ -13,18 +14,35 @@ type SectionProps = {
 export function Section({ title, caption, accent, children }: SectionProps) {
   const theme = useAppTheme();
   const accentColor = accent ? getAccentColor(theme, accent) : undefined;
+  const icon = getSectionIcon(title);
   return (
     <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme)]}>
       <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
         {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-          {caption ? <Text style={[styles.caption, { color: theme.muted }]}>{caption}</Text> : null}
+          <View style={[styles.iconFrame, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>
+            <Image source={icon} style={[styles.icon, { tintColor: accentColor ?? theme.skyLite }]} resizeMode="contain" />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+            {caption ? <Text style={[styles.caption, { color: theme.muted }]} numberOfLines={2}>{caption}</Text> : null}
+          </View>
         </View>
         {children}
       </View>
     </View>
   );
+}
+
+function getSectionIcon(title: string): ImageSourcePropType {
+  if (/(비|강수|우산|날씨|제보)/u.test(title)) return uiIconAssets.rain;
+  if (/(코디|옷|스타일|프리셋|착장)/u.test(title)) return uiIconAssets.shirt;
+  if (/(목적지|장소|위치|핀|도시)/u.test(title)) return uiIconAssets.pin;
+  if (/(알림|출발|이동|다음)/u.test(title)) return uiIconAssets.depart;
+  if (/(시간|이력|최근)/u.test(title)) return uiIconAssets.clock;
+  if (/(정책|문서|동의|계정|저장)/u.test(title)) return uiIconAssets.myPolicy;
+  if (/(설정|기준|필터|상태|정보)/u.test(title)) return uiIconAssets.settings;
+  return uiIconAssets.check;
 }
 
 function getAccentColor(theme: ReturnType<typeof useAppTheme>, accent: NonNullable<SectionProps["accent"]>) {
@@ -54,7 +72,25 @@ const styles = StyleSheet.create({
     width: 3,
   },
   header: {
-    gap: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  iconFrame: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  icon: {
+    width: 19,
+    height: 19,
   },
   title: {
     fontSize: 17,
