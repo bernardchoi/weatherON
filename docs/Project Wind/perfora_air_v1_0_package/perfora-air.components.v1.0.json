@@ -1,0 +1,551 @@
+{
+  "$schema": "./perfora-air.components.schema.v1.0.json",
+  "$metadata": {
+    "name": "Perfora Air Components",
+    "version": "1.0.0",
+    "status": "stable",
+    "date": "2026-07-10",
+    "tokenDependency": "perfora-air.tokens.v1.0.json",
+    "principles": [
+      "Matte Air",
+      "Soft Density",
+      "Quiet Signal",
+      "Text First"
+    ],
+    "codename": "Perfora Air",
+    "publicNameStatus": "internal-codename-only"
+  },
+  "shared": {
+    "states": [
+      "calm",
+      "normal",
+      "live",
+      "alert",
+      "critical"
+    ],
+    "modes": [
+      "day",
+      "dusk",
+      "night",
+      "rainy"
+    ],
+    "stateDefaults": {
+      "calm": {
+        "surface": "still",
+        "density": "calm",
+        "lumen": "whisper",
+        "flow": "still"
+      },
+      "normal": {
+        "surface": "air",
+        "density": "normal",
+        "lumen": "soft",
+        "flow": "drift"
+      },
+      "live": {
+        "surface": "air",
+        "density": "live",
+        "lumen": "notice",
+        "flow": "slow"
+      },
+      "alert": {
+        "surface": "signal",
+        "density": "alert",
+        "lumen": "alert",
+        "flow": "gust",
+        "requiresText": true
+      },
+      "critical": {
+        "surface": "signal",
+        "density": "critical",
+        "lumen": "critical",
+        "flow": "gust",
+        "requiresText": true,
+        "textFirst": true
+      }
+    },
+    "visualCaps": {
+      "specularMax": 0.04,
+      "lumenOpacityMax": 0.32,
+      "blurMaxPx": 16,
+      "animatedComponentsPerScreenMax": 2
+    },
+    "accessibility": [
+      "Do not communicate state through color, light, or pattern alone.",
+      "Use text and icon labels for alert and critical states.",
+      "Respect prefers-reduced-motion and prefers-reduced-transparency.",
+      "Use visible outline for focus states.",
+      "Interactive targets should be at least 44x44px."
+    ]
+  },
+  "components": {
+    "SurfaceFrame": {
+      "status": "stable",
+      "exposure": "internal",
+      "layer": "primitive",
+      "purpose": "Shared matte atmospheric surface for cards, panels, overlays, and docks.",
+      "anatomy": [
+        "root",
+        "matteFill",
+        "quietBorder",
+        "optionalDensity",
+        "optionalLumen",
+        "contentSlot"
+      ],
+      "variants": {
+        "surface": [
+          "still",
+          "air",
+          "signal",
+          "veil",
+          "nocturne"
+        ]
+      },
+      "props": {
+        "surface": "still|air|signal|veil|nocturne|auto",
+        "state": "PerforaState",
+        "density": "PerforaDensity|none|auto",
+        "lumen": "PerforaLumen|none|auto",
+        "interactive": "boolean"
+      },
+      "tokens": [
+        "sys.surface.*",
+        "sys.density.*",
+        "sys.lumen.*",
+        "sys.flow.*"
+      ],
+      "a11y": [
+        "Surface itself carries no semantic meaning.",
+        "Decorative density and lumen layers are aria-hidden."
+      ]
+    },
+    "DensityField": {
+      "status": "stable",
+      "exposure": "internal|advanced",
+      "layer": "primitive",
+      "purpose": "Express density, flow, urgency, and invisible context through subtle pattern fields.",
+      "anatomy": [
+        "patternBase",
+        "densityScale",
+        "directionAngle",
+        "mask",
+        "optionalFlowAnimation"
+      ],
+      "variants": {
+        "variant": [
+          "dot",
+          "stream",
+          "bar",
+          "ring"
+        ],
+        "density": [
+          "calm",
+          "normal",
+          "live",
+          "alert",
+          "critical"
+        ]
+      },
+      "props": {
+        "density": "PerforaDensity",
+        "variant": "dot|stream|bar|ring",
+        "angleDeg": "number",
+        "animated": "boolean",
+        "mask": "none|left|right|top|bottom|radial"
+      },
+      "tokens": [
+        "sys.density.*",
+        "sys.flow.*"
+      ],
+      "a11y": [
+        "Default aria-hidden=true.",
+        "Equivalent textual status must exist elsewhere."
+      ]
+    },
+    "AirButton": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "control",
+      "purpose": "Primary and secondary actions with quiet lumen feedback.",
+      "anatomy": [
+        "root",
+        "leadingIcon",
+        "label",
+        "trailingIconOrValue",
+        "lumenFeedbackLayer"
+      ],
+      "variants": {
+        "variant": [
+          "primary",
+          "secondary",
+          "outline",
+          "ghost",
+          "danger"
+        ],
+        "size": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      },
+      "props": {
+        "variant": "primary|secondary|outline|ghost|danger",
+        "size": "sm|md|lg",
+        "state": "PerforaState",
+        "loading": "boolean",
+        "disabled": "boolean"
+      },
+      "tokens": [
+        "ref.radius.*",
+        "ref.dimension.*",
+        "sys.lumen.*",
+        "sys.surface.signal"
+      ],
+      "a11y": [
+        "Button label is required.",
+        "Use visible focus outline.",
+        "Loading state preserves purpose text."
+      ]
+    },
+    "ContextChip": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "control",
+      "purpose": "Compact status, filter, metric, or action chip.",
+      "anatomy": [
+        "icon",
+        "label",
+        "value",
+        "statusDot",
+        "removeButton"
+      ],
+      "variants": {
+        "variant": [
+          "status",
+          "metric",
+          "filter",
+          "action"
+        ],
+        "state": [
+          "calm",
+          "normal",
+          "live",
+          "alert",
+          "critical"
+        ]
+      },
+      "props": {
+        "variant": "status|metric|filter|action",
+        "selected": "boolean",
+        "label": "string",
+        "value": "string|number",
+        "removable": "boolean"
+      },
+      "tokens": [
+        "component.contextChip.*",
+        "sys.surface.still",
+        "sys.lumen.*"
+      ],
+      "a11y": [
+        "Selectable chips use button/checkbox/radio semantics.",
+        "Status dot must not be the only status indicator."
+      ]
+    },
+    "AtmospherePanel": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "context-container",
+      "purpose": "Hero panel for aggregate environmental or contextual state.",
+      "anatomy": [
+        "SurfaceFrame",
+        "Header",
+        "PrimaryReadout",
+        "ContextSentence",
+        "MetricCluster",
+        "DensityField",
+        "OptionalLumenRing",
+        "RecommendedActionRow"
+      ],
+      "variants": {
+        "variant": [
+          "weather",
+          "home",
+          "day",
+          "sports",
+          "wellness"
+        ],
+        "size": [
+          "compact",
+          "regular",
+          "expanded"
+        ],
+        "state": [
+          "calm",
+          "normal",
+          "live",
+          "alert",
+          "critical"
+        ]
+      },
+      "props": {
+        "primaryValue": "string|number",
+        "primaryUnit": "string",
+        "summary": "string",
+        "metrics": "ContextMetric[]",
+        "action": "ActionSpec",
+        "visual": "density|ring|flow|none"
+      },
+      "tokens": [
+        "component.atmospherePanel.*",
+        "sys.surface.air",
+        "sys.density.*",
+        "sys.lumen.*",
+        "sys.flow.*"
+      ],
+      "a11y": [
+        "Summary sentence is required.",
+        "Primary value must be read with unit.",
+        "Ambient visual is decorative unless labeled separately."
+      ]
+    },
+    "SignalCard": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "context-container",
+      "purpose": "Single metric, event, device, alert, or action summary card.",
+      "anatomy": [
+        "SurfaceFrame",
+        "Header",
+        "TitleOrValue",
+        "Subtitle",
+        "MiniVisual",
+        "StatusMarker",
+        "Action"
+      ],
+      "variants": {
+        "variant": [
+          "metric",
+          "event",
+          "device",
+          "alert",
+          "action"
+        ],
+        "size": [
+          "compact",
+          "regular",
+          "expanded"
+        ]
+      },
+      "props": {
+        "label": "string",
+        "title": "string",
+        "value": "string|number",
+        "unit": "string",
+        "subtitle": "string",
+        "miniVisual": "none|density|sparkline|ring",
+        "interactive": "boolean"
+      },
+      "tokens": [
+        "component.signalCard.*",
+        "sys.surface.still",
+        "sys.density.*",
+        "sys.lumen.*"
+      ],
+      "a11y": [
+        "Do not nest a button inside a button-like card.",
+        "Mini visual needs text alternative or aria-hidden."
+      ]
+    },
+    "DataVeil": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "overlay",
+      "purpose": "Stable modal/sheet/popover surface that suppresses background without glossy glass effects.",
+      "anatomy": [
+        "backdropSuppression",
+        "sheetOrModal",
+        "handle",
+        "header",
+        "body",
+        "actionArea"
+      ],
+      "variants": {
+        "variant": [
+          "sheet",
+          "modal",
+          "popover",
+          "inlineDetail"
+        ]
+      },
+      "props": {
+        "open": "boolean",
+        "title": "string",
+        "description": "string",
+        "dismissible": "boolean",
+        "primaryAction": "ActionSpec",
+        "secondaryAction": "ActionSpec"
+      },
+      "tokens": [
+        "component.dataVeil.*",
+        "sys.surface.veil"
+      ],
+      "a11y": [
+        "Use role=dialog and aria-modal for modal/sheet.",
+        "Trap focus while open.",
+        "Connect title with aria-labelledby."
+      ]
+    },
+    "LumenRing": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "visualization",
+      "purpose": "Circular indicator for value, direction, progress, pulse, or status.",
+      "anatomy": [
+        "track",
+        "valueArc",
+        "directionMarker",
+        "densityHalo",
+        "centerLabel",
+        "centerValue",
+        "ticks"
+      ],
+      "variants": {
+        "variant": [
+          "gauge",
+          "progress",
+          "compass",
+          "pulse",
+          "status"
+        ],
+        "size": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      },
+      "props": {
+        "value": "number",
+        "min": "number",
+        "max": "number",
+        "unit": "string",
+        "label": "string",
+        "directionDeg": "number",
+        "showTicks": "boolean"
+      },
+      "tokens": [
+        "component.lumenRing.*",
+        "sys.lumen.*"
+      ],
+      "a11y": [
+        "Use progressbar semantics when applicable.",
+        "Compass direction must be available as text.",
+        "Pulse stops in reduced motion."
+      ]
+    },
+    "FlowDock": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "navigation",
+      "purpose": "Low-contrast navigation or quick action dock that fits the current atmosphere.",
+      "anatomy": [
+        "SurfaceFrame",
+        "itemList",
+        "icon",
+        "label",
+        "activeIndicator",
+        "quickActionSlot"
+      ],
+      "variants": {
+        "variant": [
+          "navigation",
+          "quickAction",
+          "hybrid",
+          "rail"
+        ]
+      },
+      "props": {
+        "items": "FlowDockItem[]",
+        "activeId": "string",
+        "primaryAction": "ActionSpec"
+      },
+      "tokens": [
+        "component.flowDock.*",
+        "sys.surface.still",
+        "sys.lumen.soft"
+      ],
+      "a11y": [
+        "Use nav landmark.",
+        "Set aria-current=page on active item.",
+        "Touch target >= 44px."
+      ]
+    },
+    "AmbientTimeline": {
+      "status": "stable",
+      "exposure": "public",
+      "layer": "visualization",
+      "purpose": "Time-based flow of forecast, schedule, session, game, or metric states.",
+      "anatomy": [
+        "timeAxis",
+        "densityBand",
+        "eventMarkers",
+        "valueLine",
+        "currentMarker",
+        "callout"
+      ],
+      "variants": {
+        "variant": [
+          "forecast",
+          "schedule",
+          "session",
+          "game",
+          "metric"
+        ]
+      },
+      "props": {
+        "points": "TimelinePoint[]",
+        "currentIndex": "number",
+        "showValueLine": "boolean",
+        "showDensityBand": "boolean",
+        "summary": "string"
+      },
+      "tokens": [
+        "sys.density.*",
+        "sys.lumen.*",
+        "sys.flow.*"
+      ],
+      "a11y": [
+        "Provide summary text.",
+        "Offer table alternative in detail view.",
+        "Do not rely on color or pattern alone."
+      ]
+    }
+  },
+  "implementationPriority": [
+    "SurfaceFrame",
+    "DensityField",
+    "AirButton",
+    "ContextChip",
+    "SignalCard",
+    "AtmospherePanel",
+    "LumenRing",
+    "FlowDock",
+    "DataVeil",
+    "AmbientTimeline"
+  ],
+  "qualityGates": {
+    "required": [
+      "text-first state description",
+      "44px interactive target",
+      "visible keyboard focus",
+      "reduced motion fallback",
+      "reduced transparency fallback",
+      "no color-only state communication"
+    ],
+    "visualCaps": {
+      "specularMax": 0.04,
+      "lumenOpacityMax": 0.32,
+      "blurMaxPx": 16,
+      "animatedComponentsPerScreenMax": 2
+    }
+  }
+}

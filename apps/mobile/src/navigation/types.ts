@@ -78,6 +78,7 @@ export type P0ScreenProps = {
   smartCareScenario: SmartCareScenario;
   wardrobeItems: WardrobeItem[];
   selectedWardrobeItemId: string;
+  recentlyRemovedWardrobeItemId: string | null;
   onboardingCompleted: boolean;
   isWeatherLoading: boolean;
   accountLinked: boolean;
@@ -104,6 +105,8 @@ export type P0ScreenProps = {
   onToggleStyleTag: (tag: string) => void;
   onSetWardrobeItemOwned: (itemId: string, owned: boolean) => void;
   onOpenWardrobeItem: (itemId: string) => void;
+  onRemoveWardrobeItem: (itemId: string) => void;
+  onRestoreRemovedWardrobeItem: () => void;
   onSaveStyleProfile: (returnTo?: PermissionReturnRouteId) => void;
   onSetSmartCareScenario: (scenario: SmartCareScenario) => void;
   onCompleteSmartCareOnboarding: () => void;

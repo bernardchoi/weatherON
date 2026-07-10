@@ -283,7 +283,7 @@ assertSourceIncludes("apps/mobile/src/screens/OutfitScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/WardrobeScreen.tsx", [
   "내 옷장에 추가",
-  "내 옷장에서 해제",
+  "내 옷장에서 삭제",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/StyleProfileScreen.tsx", [
   "onboardingCompleted",
@@ -382,10 +382,10 @@ assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
   "표시 설정",
-  "표시 설정 요약",
+  "현재 적용",
   "투명 효과",
   "getDistanceUnitLabel",
-  "accessibilityState={{ selected",
+  "accessibilityState={{ checked",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
   "2곳 저장됨",
@@ -743,10 +743,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "rainPill",
   "repeatLabel",
   "getRepeatLabel",
-  "반복",
   "도착",
   "강수",
-  "출발 {item.departureTime} · 도착 {item.arrivalTime}",
+  "{item.departureTime} → {item.arrivalTime}",
 ]);
 assertSourceIncludes("apps/mobile/src/data/demoState.ts", [
   "destinationWeatherById",

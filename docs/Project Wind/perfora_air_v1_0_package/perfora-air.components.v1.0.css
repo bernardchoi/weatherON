@@ -1,0 +1,271 @@
+/* Perfora Air Components v1.0 starter CSS
+ * Requires perfora-air.v1.0.css token file.
+ * Intent: matte, light, quiet. No glossy refraction or sparkle effects.
+ */
+
+.pa-surface-frame {
+  position: relative;
+  overflow: hidden;
+  color: var(--pa-text-primary);
+  border: 1px solid var(--pa-surface-air-border);
+  border-radius: var(--pa-radius-lg);
+  background: var(--pa-surface-air-fill);
+  box-shadow: var(--pa-surface-air-shadow);
+  backdrop-filter: blur(var(--pa-surface-air-blur));
+  -webkit-backdrop-filter: blur(var(--pa-surface-air-blur));
+}
+
+.pa-surface-frame[data-pa-surface="still"] {
+  background: var(--pa-surface-still-fill);
+  border-color: var(--pa-surface-still-border);
+  box-shadow: var(--pa-surface-still-shadow);
+  backdrop-filter: blur(var(--pa-surface-still-blur));
+  -webkit-backdrop-filter: blur(var(--pa-surface-still-blur));
+}
+
+.pa-surface-frame[data-pa-surface="signal"] {
+  background: var(--pa-surface-signal-fill);
+  border-color: var(--pa-surface-signal-border);
+  box-shadow: var(--pa-surface-signal-shadow);
+  backdrop-filter: blur(var(--pa-surface-signal-blur));
+  -webkit-backdrop-filter: blur(var(--pa-surface-signal-blur));
+}
+
+.pa-surface-frame[data-pa-surface="veil"] {
+  background: var(--pa-surface-veil-fill);
+  border-color: var(--pa-surface-veil-border);
+  box-shadow: var(--pa-surface-veil-shadow);
+  backdrop-filter: blur(var(--pa-surface-veil-blur));
+  -webkit-backdrop-filter: blur(var(--pa-surface-veil-blur));
+}
+
+.pa-surface-frame[data-pa-surface="nocturne"] {
+  background: var(--pa-surface-nocturne-fill);
+  border-color: var(--pa-surface-nocturne-border);
+  box-shadow: var(--pa-surface-nocturne-shadow);
+  color: var(--pa-text-inverse);
+}
+
+.pa-density-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--pa-density-normal-opacity);
+  background-image: radial-gradient(
+    circle,
+    rgba(95, 143, 209, 1) var(--pa-density-normal-dot-size),
+    transparent var(--pa-density-normal-dot-size)
+  );
+  background-size: var(--pa-density-normal-gap) var(--pa-density-normal-gap);
+  mask-image: linear-gradient(120deg, transparent 0%, black 38%, black 78%, transparent 100%);
+}
+
+.pa-density-field[data-pa-density="calm"] {
+  opacity: var(--pa-density-calm-opacity);
+  background-size: var(--pa-density-calm-gap) var(--pa-density-calm-gap);
+}
+
+.pa-density-field[data-pa-density="live"] {
+  opacity: var(--pa-density-live-opacity);
+  background-size: var(--pa-density-live-gap) var(--pa-density-live-gap);
+}
+
+.pa-density-field[data-pa-density="alert"] {
+  opacity: var(--pa-density-alert-opacity);
+  background-size: var(--pa-density-alert-gap) var(--pa-density-alert-gap);
+}
+
+.pa-density-field[data-pa-density="critical"] {
+  opacity: var(--pa-density-critical-opacity);
+  background-size: var(--pa-density-critical-gap) var(--pa-density-critical-gap);
+}
+
+.pa-lumen-layer {
+  position: absolute;
+  inset: auto 12px 12px auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: var(--pa-lumen-soft-opacity);
+  background: radial-gradient(circle, var(--pa-lumen-soft-color) 0%, transparent 68%);
+  filter: blur(var(--pa-lumen-soft-spread));
+}
+
+.pa-content {
+  position: relative;
+  z-index: 1;
+}
+
+.pa-air-button {
+  min-height: 44px;
+  padding: 0 var(--pa-space-16);
+  border-radius: var(--pa-radius-full);
+  border: 1px solid var(--pa-border-default);
+  background: var(--pa-surface-still-fill);
+  color: var(--pa-text-primary);
+  font-family: var(--pa-font-sans);
+  font-size: var(--pa-type-label-size);
+  font-weight: var(--pa-type-label-weight);
+  transition: background var(--pa-duration-state) var(--pa-ease-standard),
+              border-color var(--pa-duration-state) var(--pa-ease-standard),
+              transform var(--pa-duration-tap) var(--pa-ease-standard);
+}
+
+.pa-air-button[data-pa-variant="primary"] {
+  background: color-mix(in srgb, var(--pa-color-air-100) 84%, white);
+  border-color: var(--pa-border-active);
+}
+
+.pa-air-button[data-pa-variant="danger"] {
+  background: color-mix(in srgb, var(--pa-color-signal-danger) 10%, white);
+  border-color: color-mix(in srgb, var(--pa-color-signal-danger) 34%, transparent);
+}
+
+.pa-air-button:hover:not(:disabled) {
+  border-color: var(--pa-border-active);
+}
+
+.pa-air-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pa-air-button:focus-visible,
+.pa-context-chip:focus-visible,
+.pa-flow-dock__item:focus-visible {
+  outline: 2px solid var(--pa-color-air-600);
+  outline-offset: 2px;
+}
+
+.pa-context-chip {
+  min-height: var(--pa-context-chip-height);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pa-space-6);
+  padding-inline: var(--pa-context-chip-padding-inline);
+  border-radius: var(--pa-context-chip-radius);
+  border: 1px solid var(--pa-border-quiet);
+  background: var(--pa-surface-still-fill);
+  color: var(--pa-text-secondary);
+  font: var(--pa-type-label-weight) var(--pa-type-label-size)/var(--pa-type-label-line) var(--pa-font-sans);
+}
+
+.pa-atmosphere-panel {
+  min-height: var(--pa-atmosphere-panel-min-height);
+  padding: var(--pa-atmosphere-panel-padding);
+  border-radius: var(--pa-atmosphere-panel-radius);
+}
+
+.pa-atmosphere-panel__value {
+  font-family: var(--pa-font-sans);
+  font-size: var(--pa-type-display-size);
+  line-height: var(--pa-type-display-line);
+  letter-spacing: var(--pa-type-display-tracking);
+  font-weight: var(--pa-type-display-weight);
+}
+
+.pa-signal-card {
+  min-height: var(--pa-signal-card-min-height);
+  padding: var(--pa-signal-card-padding);
+  border-radius: var(--pa-signal-card-radius);
+}
+
+.pa-data-veil {
+  padding: var(--pa-data-veil-padding);
+  border-radius: var(--pa-data-veil-radius);
+}
+
+.pa-lumen-ring {
+  width: var(--pa-lumen-ring-size-md);
+  height: var(--pa-lumen-ring-size-md);
+  border-radius: 999px;
+  border: var(--pa-lumen-ring-stroke) solid color-mix(in srgb, var(--pa-lumen-soft-color) 72%, transparent);
+  box-shadow: 0 0 var(--pa-lumen-soft-spread) rgba(175, 205, 247, var(--pa-lumen-ring-glow-cap-opacity));
+}
+
+.pa-flow-dock {
+  min-height: var(--pa-flow-dock-height);
+  padding-inline: var(--pa-flow-dock-padding-inline);
+  border-radius: var(--pa-flow-dock-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--pa-space-8);
+}
+
+.pa-flow-dock__item {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--pa-text-secondary);
+  border-radius: var(--pa-radius-full);
+}
+
+.pa-flow-dock__item[aria-current="page"] {
+  color: var(--pa-color-air-600);
+  background: color-mix(in srgb, var(--pa-color-air-100) 72%, white);
+}
+
+.pa-ambient-timeline {
+  position: relative;
+  min-height: 96px;
+  padding: var(--pa-space-16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-density-field,
+  .pa-lumen-layer,
+  .pa-lumen-ring {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pa-surface-frame,
+  .pa-atmosphere-panel,
+  .pa-signal-card,
+  .pa-data-veil,
+  .pa-flow-dock {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--pa-color-paper-0) !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .pa-density-field,
+  .pa-lumen-layer {
+    opacity: 0.08 !important;
+  }
+}
+
+
+/* Project Wind v1.0 stable behavior */
+:where(.pa-air-button, .pa-context-chip[role="button"], .pa-flow-dock__item) {
+  min-width: var(--pa-interactive-target-min);
+  min-height: var(--pa-interactive-target-min);
+  touch-action: manipulation;
+}
+
+:where(.pa-air-button, .pa-context-chip[role="button"], .pa-flow-dock__item):disabled,
+:where(.pa-air-button, .pa-context-chip[role="button"], .pa-flow-dock__item)[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+[data-pa-loading="true"] { cursor: progress; }
+[data-pa-text-first="true"] :where(.pa-density-field, .pa-lumen-layer) { opacity: 0.08; }
+
+@media (forced-colors: active) {
+  :where(.pa-surface-frame, .pa-air-button, .pa-context-chip, .pa-flow-dock) {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+
+  :where(.pa-density-field, .pa-lumen-layer) { display: none; }
+  :where(.pa-air-button, .pa-context-chip, .pa-flow-dock__item):focus-visible { outline: 2px solid Highlight; }
+}

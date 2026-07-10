@@ -208,6 +208,7 @@ export function useWeatherOnAppState() {
   const [smartCareScenario, setSmartCareScenario] = useState<SmartCareScenario>("outing");
   const [wardrobeOwnedItemIds, setWardrobeOwnedItemIds] = useState<string[]>([]);
   const [selectedWardrobeItemId, setSelectedWardrobeItemId] = useState<string>(presetWardrobe[0]?.id ?? "");
+  const [recentlyRemovedWardrobeItemId, setRecentlyRemovedWardrobeItemId] = useState<string | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [styleProfileReturnRoute, setStyleProfileReturnRoute] = useState<P0RouteId | null>(null);
   const [destinationAddReturnRoute, setDestinationAddReturnRoute] = useState<DestinationAddReturnRouteId>("G1");
@@ -708,6 +709,7 @@ export function useWeatherOnAppState() {
     setRecentlyRemovedDestination(null);
     setWardrobeOwnedItemIds([]);
     setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+    setRecentlyRemovedWardrobeItemId(null);
     setAccountGateResult(null);
     setRoute("M1");
   }, []);
@@ -731,6 +733,19 @@ export function useWeatherOnAppState() {
     setSelectedWardrobeItemId(itemId);
     setRoute("C3");
   }, []);
+
+  const removeWardrobeItem = useCallback((itemId: string) => {
+    setWardrobeOwnedItemIds((current) => current.filter((id) => id !== itemId));
+    setRecentlyRemovedWardrobeItemId(itemId);
+  }, []);
+
+  const restoreRemovedWardrobeItem = useCallback(() => {
+    if (!recentlyRemovedWardrobeItemId) return;
+    setWardrobeOwnedItemIds((current) =>
+      current.includes(recentlyRemovedWardrobeItemId) ? current : [recentlyRemovedWardrobeItemId, ...current],
+    );
+    setRecentlyRemovedWardrobeItemId(null);
+  }, [recentlyRemovedWardrobeItemId]);
 
   const saveStyleProfile = useCallback((returnTo: PermissionReturnRouteId = "O5") => {
     setStyleProfileSaved(true);
@@ -1394,6 +1409,7 @@ export function useWeatherOnAppState() {
     selectedStyles,
     wardrobe,
     selectedWardrobeItemId,
+    recentlyRemovedWardrobeItemId,
     smartCareScenario,
     onboardingCompleted,
     isWeatherLoading,
@@ -1424,6 +1440,8 @@ export function useWeatherOnAppState() {
     toggleStyleTag,
     setWardrobeItemOwned,
     openWardrobeItem,
+    removeWardrobeItem,
+    restoreRemovedWardrobeItem,
     saveStyleProfile,
     setSmartCareScenario,
     completeSmartCareOnboarding,

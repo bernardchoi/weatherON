@@ -1,19 +1,19 @@
 # WeatherON Android Store Inputs Packet
 
-> 생성일: 2026-07-05
+> 생성일: 2026-07-10
 > 목적: Google Play 제출과 개인정보처리방침 공개에 필요한 외부 입력값을 한 장에서 회신하고 JSON으로 반영한다.
 
 ## 1. 현재 상태
 
 | 항목 | 값 |
 |---|---|
-| blocker 수 | 17 |
+| blocker 수 | 11 |
 | 입력값 issue 수 | 9 |
 | 누락 필드 수 | 9 |
 | placeholder 필드 수 | 0 |
 | 형식/검증 issue 수 | 0 |
 | 실제 입력 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_STORE_INPUTS.local.json |
-| 누락 필드 | developerEmail, privacyPolicyUrl, playConsoleAccountType |
+| 누락 필드 | developerEmail, privacyPolicyUrl, operatorName, supportContact, privacyOfficerName, privacyOfficerTitle, privacyOfficerContact, privacyPolicyEffectiveDate, playConsoleAccountType |
 
 ## 2. 입력 분류
 
@@ -21,15 +21,15 @@
 |---|---|---|---|
 | developerEmail | 누락 | dev@weatheron.app | Play 공개 개발자 이메일 |
 | developerWebsite | 입력됨 | 미입력 | 없으면 미입력 |
-| privacyPolicyUrl | 누락 | 공개 HTTPS URL 필요 | Google Play 입력용 |
-| operatorName | 입력됨 | 최대현 / WeatherON | 공개 운영자명 |
-| supportContact | 입력됨 | support@weatheron.app | 이메일 |
-| privacyOfficerName | 입력됨 | 최대현 | 공개 책임자명 |
-| privacyOfficerTitle | 입력됨 | 개인정보 보호책임자 | 공개 직책 |
-| privacyOfficerContact | 입력됨 | support@weatheron.app | 이메일 |
-| privacyPolicyEffectiveDate | 입력됨 | 비공개 테스트 시작일 | 사용자 확정 기준 |
-| logRetentionMonths | 입력됨 | 테스트 종료 후 1개월 | 사용자 확정 |
-| emailAuthService | 입력됨 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. | 미도입 |
+| privacyPolicyUrl | 누락 | https://example.com/weatheron/privacy | 공개 HTTPS URL 필요 |
+| operatorName | 누락 | WeatherON | 공개 운영자명 |
+| supportContact | 누락 | dev@weatheron.app | 이메일 또는 전화번호 |
+| privacyOfficerName | 누락 | 담당자명 | 실명 또는 공개 책임자명 필요 |
+| privacyOfficerTitle | 누락 | 개인정보 보호책임자 | 공개 직책 |
+| privacyOfficerContact | 누락 | dev@weatheron.app | 이메일 또는 전화번호 |
+| privacyPolicyEffectiveDate | 누락 | 2026-07-01 | YYYY-MM-DD |
+| logRetentionMonths | 입력됨 | 12 | 1 이상 숫자 |
+| emailAuthService | 입력됨 | 이메일 인증 미도입 | 미도입이면 이메일 인증 미도입 |
 | targetAge | 입력됨 | 만 14세 이상 | 14 포함 필요 |
 | playConsoleAccountType | 누락 | 개인 신규 | 개인 신규/개인 기존/조직 |
 
@@ -63,15 +63,15 @@
 {
   "developerEmail": "dev@weatheron.app",
   "developerWebsite": "미입력",
-  "privacyPolicyUrl": "공개 HTTPS URL 입력",
-  "operatorName": "최대현 / WeatherON",
-  "supportContact": "support@weatheron.app",
-  "privacyOfficerName": "최대현",
+  "privacyPolicyUrl": "https://example.com/weatheron/privacy",
+  "operatorName": "WeatherON",
+  "supportContact": "dev@weatheron.app",
+  "privacyOfficerName": "담당자명",
   "privacyOfficerTitle": "개인정보 보호책임자",
-  "privacyOfficerContact": "support@weatheron.app",
-  "privacyPolicyEffectiveDate": "테스트 시작일을 YYYY-MM-DD로 입력",
-  "logRetentionMonths": "1",
-  "emailAuthService": "현재 이메일 인증 발송 서비스를 사용하지 않습니다.",
+  "privacyOfficerContact": "dev@weatheron.app",
+  "privacyPolicyEffectiveDate": "2026-07-01",
+  "logRetentionMonths": "12",
+  "emailAuthService": "이메일 인증 미도입",
   "targetAge": "만 14세 이상",
   "playConsoleAccountType": "개인 신규"
 }
@@ -80,7 +80,7 @@
 주의:
 - `privacyPolicyUrl`은 실제 공개 HTTPS URL이어야 한다.
 - `developerWebsite`는 웹사이트를 쓰지 않으면 `미입력`으로 둔다.
-- `privacyOfficerName`에는 실제 성명 또는 공개 가능한 책임자명을 넣는다.
+- `privacyOfficerName`에는 실제 담당자명 또는 공개 가능한 책임자명을 넣는다.
 - `playConsoleAccountType`은 `개인 신규`, `개인 기존`, `조직` 중 하나로 확정한다.
 
 ## 5. 검증 규칙

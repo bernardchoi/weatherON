@@ -39,6 +39,48 @@ export const placeImageAssets = {
   hotel: require("../../../assets/place-categories/weatheron-place-hotel-v1.png"),
 };
 
+export const destinationImageAssets: Record<string, number> = {
+  "kr-gangneung-anmok-beach": require("../../../assets/destinations/weatheron-destination-anmok-beach-gen-v1.jpg"),
+  "kr-jamsil-baseball-stadium": require("../../../assets/destinations/weatheron-destination-jamsil-stadium-gen-v1.jpg"),
+  "jp-tokyo-station": require("../../../assets/destinations/weatheron-destination-tokyo-station-gen-v1.jpg"),
+  "jp-shinsaibashi-station": require("../../../assets/destinations/weatheron-destination-shinsaibashi-gen-v1.jpg"),
+  "jp-namba-station": require("../../../assets/destinations/weatheron-destination-namba-gen-v1.jpg"),
+  "global-new-york-central-park": require("../../../assets/destinations/weatheron-destination-central-park-gen-v1.jpg"),
+};
+
+export const destinationFallbackImageAsset = require("../../../assets/destinations/weatheron-destination-generic-city-gen-v1.jpg");
+
+export const destinationVisualAssets: Record<string, number> = {
+  "KR:church": require("../../../assets/destinations/weatheron-destination-kr-church-gen-v1.jpg"),
+  "JP:church": require("../../../assets/destinations/weatheron-destination-jp-church-gen-v1.jpg"),
+  "EU:church": require("../../../assets/destinations/weatheron-destination-eu-church-gen-v1.jpg"),
+  "KR:temple": require("../../../assets/destinations/weatheron-destination-kr-temple-gen-v1.jpg"),
+  "JP:temple": require("../../../assets/destinations/weatheron-destination-jp-shrine-gen-v1.jpg"),
+  "KR:football": require("../../../assets/destinations/weatheron-destination-kr-football-stadium-gen-v1.jpg"),
+  "JP:football": require("../../../assets/destinations/weatheron-destination-jp-football-stadium-gen-v1.jpg"),
+  "EU:football": require("../../../assets/destinations/weatheron-destination-eu-football-stadium-gen-v1.jpg"),
+  "KR:school": require("../../../assets/destinations/weatheron-destination-kr-school-gen-v1.jpg"),
+  "JP:school": require("../../../assets/destinations/weatheron-destination-jp-school-gen-v1.jpg"),
+  "KR:hospital": require("../../../assets/destinations/weatheron-destination-kr-hospital-gen-v1.jpg"),
+  "JP:hospital": require("../../../assets/destinations/weatheron-destination-jp-hospital-gen-v1.jpg"),
+  "KR:airport": require("../../../assets/destinations/weatheron-destination-kr-airport-gen-v1.jpg"),
+  "JP:airport": require("../../../assets/destinations/weatheron-destination-jp-airport-gen-v1.jpg"),
+  "KR:mountain": require("../../../assets/destinations/weatheron-destination-kr-mountain-gen-v1.jpg"),
+  "JP:mountain": require("../../../assets/destinations/weatheron-destination-jp-mountain-gen-v1.jpg"),
+  "KR:museum": require("../../../assets/destinations/weatheron-destination-kr-museum-gen-v1.jpg"),
+  "JP:museum": require("../../../assets/destinations/weatheron-destination-jp-museum-gen-v1.jpg"),
+  "KR:rail": require("../../../assets/destinations/weatheron-destination-kr-rail-station-gen-v1.jpg"),
+  "JP:rail": require("../../../assets/destinations/weatheron-destination-jp-rail-station-gen-v1.jpg"),
+  "EU:rail": require("../../../assets/destinations/weatheron-destination-eu-rail-station-gen-v1.jpg"),
+  "KR:metro": require("../../../assets/destinations/weatheron-destination-kr-metro-entrance-gen-v1.jpg"),
+  "JP:metro": require("../../../assets/destinations/weatheron-destination-jp-metro-entrance-gen-v1.jpg"),
+  "EU:metro": require("../../../assets/destinations/weatheron-destination-eu-metro-entrance-gen-v1.jpg"),
+  "KR:bus": require("../../../assets/destinations/weatheron-destination-kr-bus-terminal-gen-v1.jpg"),
+  "JP:bus": require("../../../assets/destinations/weatheron-destination-jp-bus-terminal-gen-v1.jpg"),
+  "KR:ferry": require("../../../assets/destinations/weatheron-destination-kr-ferry-terminal-gen-v1.jpg"),
+  "JP:ferry": require("../../../assets/destinations/weatheron-destination-jp-ferry-terminal-gen-v1.jpg"),
+};
+
 export const onboardingAssets = {
   ready: require("../../../assets/onboarding/weatheron-onboarding-o2-ready-5sec-v1.png"),
   destinationCare: require("../../../assets/onboarding/weatheron-onboarding-o6-destination-care-v1.png"),
@@ -61,6 +103,7 @@ export const uiIconAssets = {
   wind: require("../../../assets/ui-icons/card-wind.png"),
   uv: require("../../../assets/ui-icons/card-uv.png"),
   check: require("../../../assets/ui-icons/card-check.png"),
+  trash: require("../../../assets/ui-icons/card-trash.png"),
   settings: require("../../../assets/ui-icons/card-settings.png"),
   pin: require("../../../assets/ui-icons/card-pin.png"),
   myPermissions: require("../../../assets/ui-icons/my-permissions.png"),

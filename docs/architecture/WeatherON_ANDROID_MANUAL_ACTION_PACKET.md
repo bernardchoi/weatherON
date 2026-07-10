@@ -1,6 +1,6 @@
 # WeatherON Android Manual Action Packet
 
-> 생성일: 2026-07-08
+> 생성일: 2026-07-10
 > 목적: 자동 빌드/검증 이후 사람이 직접 처리해야 하는 Android 출시 액션을 한 장으로 유지한다.
 
 ## 1. 현재 출시 상태
@@ -9,10 +9,10 @@
 |---|---|
 | preview APK build | `N/A - local Gradle release APK` |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
-| production AAB build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
-| production AAB 상태 | FINISHED |
-| AAB artifact | https://expo.dev/artifacts/eas/5n1D01__lz03aiLZ6KqtJcTEPTwDEQnJgWCtiyrGNa8.aab |
-| Play 제출 blocker | 9 |
+| production AAB build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` |
+| production AAB 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| AAB artifact | builds/weatheron-v0.1.0-versionCode8.aab |
+| Play 제출 blocker | 11 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |
@@ -22,13 +22,13 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
+| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (8) 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 `npm run build:android:preview:no-wait` 실행 | 필요 · 현재 APK 0.1.0 (7) |
+| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D13 판정 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |
-| 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
-| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 9개 잔존 |
+| 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 11개 잔존 |
 
 ## 3. 실기기 QA 기입표
 
@@ -109,6 +109,8 @@
 
 ## 7. 현재 blocker
 
+- Production AAB build 완료 필요
+- Production AAB artifact URL 확인 필요
 - 개발자 이메일 확정 필요
 - 개발자 웹사이트 입력 여부 결정 필요
 - 개인정보처리방침 공개 URL 확정 필요

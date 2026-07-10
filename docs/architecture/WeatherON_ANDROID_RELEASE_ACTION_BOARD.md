@@ -1,6 +1,6 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-07-08
+> 생성일: 2026-07-10
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
@@ -10,17 +10,17 @@
 | 최신 preview build | `N/A - local Gradle release APK` |
 | build 상태 | LOCAL BUILD SUCCESS |
 | preview build version | `0.1.0 (7)` |
-| 소스 기준 version | `0.1.0 (7)` |
-| preview build 소스 일치 | 일치 |
-| 최신 production build | `8d392e45-5aae-42a3-a196-59cb00153b28` |
-| production build 상태 | FINISHED |
-| 정적 체크 통과 | 23/23 |
+| 소스 기준 version | `0.1.0 (8)` |
+| preview build 소스 일치 | 불일치 |
+| 최신 production build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` |
+| production build 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| 정적 체크 통과 | 22/23 |
 | 실기기 QA 미검증 | 0 |
-| 실기기 QA 결과 적용 | 적용됨 |
+| 실기기 QA 결과 적용 | 미적용 |
 | 스토어 스크린샷 issue | 0 |
 | 스토어 스크린샷 준비 | 5/5 |
 | ADB 연결 | 가능 |
-| APK 설치 | 설치됨 |
+| APK 설치 | 설치 가능 |
 | local 입력 파일 issue | 0 |
 | local 스토어 입력 누락 | 9 |
 | local QA 환경/결과 누락 | 0/0 |
@@ -29,7 +29,7 @@
 | 스토어 입력값 누락 필드 | 9 |
 | 스토어 입력값 placeholder | 0 |
 | 스토어 입력값 형식/검증 issue | 0 |
-| Play 제출 blocker | 9 |
+| Play 제출 blocker | 11 |
 | 사용자/외부 입력 미확정 | 5 |
 | 폐쇄 테스트 대기 항목 | 13 |
 | 폐쇄 테스트 입력값 적용 | 미적용 |
@@ -41,13 +41,13 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
-| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
+| 1 | 최신 MVP preview APK | 현재 소스 0.1.0 (8) 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 `npm run build:android:preview:no-wait` 실행 | 필요 · 현재 APK 0.1.0 (7) |
+| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D13 판정 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |
-| 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | 완료 |
-| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 9개 잔존 |
+| 6 | Production AAB | `npm run check:eas-production-build-status -- <build-id>` 기준 FINISHED 확인 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| 7 | 스토어 blocker | `npm run check:android-store-submit-ready` 기준 해소 | 11개 잔존 |
 
 ## 3. 실행 명령
 

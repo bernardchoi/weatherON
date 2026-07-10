@@ -12,6 +12,7 @@ const black = "#111827";
 
 const icons = {
   "card-umbrella": drawCardUmbrella,
+  "card-trash": drawTrash,
   "my-permissions": drawShieldCheck,
   "my-alerts": drawBell,
   "my-display": drawDisplay,
@@ -102,6 +103,28 @@ function drawCardUmbrella(ctx) {
     ["M", 16, 8.6],
     ["L", 14.1, 11.3],
   ]);
+}
+
+function drawTrash(ctx) {
+  strokePath(ctx, [["M", 4, 6], ["L", 20, 6]]);
+  strokePath(ctx, [
+    ["M", 9, 6],
+    ["L", 9, 4],
+    ["Q", 9, 3, 10, 3],
+    ["L", 14, 3],
+    ["Q", 15, 3, 15, 4],
+    ["L", 15, 6],
+  ]);
+  strokePath(ctx, [
+    ["M", 6.4, 6],
+    ["L", 7.3, 20],
+    ["Q", 7.4, 21, 8.4, 21],
+    ["L", 15.6, 21],
+    ["Q", 16.6, 21, 16.7, 20],
+    ["L", 17.6, 6],
+  ]);
+  strokePath(ctx, [["M", 10.2, 10], ["L", 10.5, 17]]);
+  strokePath(ctx, [["M", 13.8, 10], ["L", 13.5, 17]]);
 }
 
 function drawDocument(ctx) {

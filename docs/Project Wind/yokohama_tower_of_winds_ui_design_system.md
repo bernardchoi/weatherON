@@ -881,26 +881,26 @@ function mapAirStateToTokens(state: AirState) {
 3. **Lumen**: 빛은 장식이 아니라 상태 피드백이다.
 4. **Flow**: 모션은 귀여운 애니메이션이 아니라 맥락의 흐름이다.
 
-네이밍은 현재 기준으로 **Perfora Air**가 가장 설득력 있다. 바람의 탑의 펀칭 메탈, 공기 흐름, 빛의 투과, 반응형 표면이라는 핵심을 모두 담기 때문이다. 더 독창적인 조어를 원하면 **Poralux**, 프레임워크/개발자 생태계로 확장하려면 **Windframe**, 모션·발광 중심의 감성 이름으로는 **Driftlight**, 야간 테마명으로는 **Noctilum**을 추천한다.
+`Perfora Air`는 이 철학을 구현한 내부 코드명으로 유지한다. 외부 상표는 보충 리포트에서 확인한 충돌 위험 때문에 확정하지 않으며, `Windframe`, `Vento`, `Driftlight` 등 위험 후보는 사용하지 않는다.
 
 ---
 
-## 17. 다음 단계 제안
+## 17. v1.0 완료 상태와 다음 단계
 
-1. **네이밍 2차 검토**  
-   Perfora Air, Poralux, Windframe을 중심으로 상표 DB·도메인·GitHub/npm/Figma 커뮤니티 검색.
+1. **완료**
+   무드보드, v0.1 토큰/컴포넌트/wireframe, Ambient Dashboard, 자동 접근성 패치 결과를 Perfora Air v1.0 stable internal package로 통합했다.
 
-2. **시각 무드보드 제작**  
-   낮의 금속성, 밤의 빛, 펀칭 패턴, 도시 야간 조명, 센서 그래픽을 5개 보드로 분리.
+2. **완료**
+   357개 token path, 10개 stable component, 237개 CSS variable, 로컬 schema, release manifest, build/check 명령을 고정했다.
 
-3. **토큰 v0.1 정의**  
-   surface, density, lumen, flow, signal, a11y 토큰을 Figma variables와 CSS variables로 병렬 정의.
+3. **제품 채택 전 필요**
+   WeatherON 차기 메이저 UI 채택 ADR, React Native token adapter, 화면별 목업과 component implementation을 제작한다.
 
-4. **Ambient Dashboard MVP**  
-   날씨·일정·공기질 데이터를 이용해 3개 화면 제작: 홈, 상세, 설정.
+4. **제품 채택 전 필요**
+   iOS/Android 실제 기기 성능, reduced mode, VoiceOver/TalkBack, 저시력 사용자 테스트를 진행한다.
 
-5. **접근성 테스트**  
-   reduced motion, reduced transparency, high contrast 모드에서 동일 정보가 정확히 전달되는지 검증.
+5. **외부 공개 전 필요**
+   완전 조어형 외부 명칭을 별도 선정하고 공식 상표 DB와 변리사 검토를 완료한다.
 
 ---
 

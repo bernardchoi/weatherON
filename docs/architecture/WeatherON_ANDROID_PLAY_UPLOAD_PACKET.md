@@ -1,6 +1,6 @@
 # WeatherON Android Play Upload Packet
 
-> 생성일: 2026-07-08
+> 생성일: 2026-07-10
 > 목적: Play Console 내부/폐쇄 테스트 트랙에 업로드할 production AAB와 업로드 전 확인값을 한 장으로 유지한다.
 
 ## 1. AAB 업로드 대상
@@ -17,15 +17,14 @@
 | Build 버전 | `0.1.0 (8)` |
 | 소스 일치 | 일치 |
 | Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1 |
-| AAB artifact | `builds/weatheron-v0.1.0-versionCode8.aab` |
-| AAB SHA-256 | `a5673b88cfa10e15918408b8fc91eafdcf01fc9a7beac7c2a0eb0b64be107f34` |
-| 업로드 후보 여부 | 가능 |
+| AAB artifact | builds/weatheron-v0.1.0-versionCode8.aab |
+| 업로드 후보 여부 | 불가 |
 
 ## 2. 업로드 전 남은 확인
 
 | 항목 | 상태 |
 |---|---|
-| Play 제출 blocker | 9 |
+| Play 제출 blocker | 11 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |
@@ -44,12 +43,11 @@
 ## 4. 출시 노트 초안
 
 ```text
-WeatherON Android 비공개 테스트 업데이트 0.1.0 (8)
-- 코디 프리셋 아이템을 확장해 추천/옷장 화면의 선택 폭을 넓혔습니다.
-- 코디 탭, 코디 상세, 저장 완료 상태, 홈 대표 코디 노출 흐름을 보정했습니다.
-- 목적지 케어의 도착 시각/이동수단 설정 동작과 화면 전환감을 다듬었습니다.
-- 홈, 출발, MY, 알림 사이드바, 권한/정책 화면의 실기기 QA 결과를 반영했습니다.
-- 접근성/스토어 제출 점검 자료와 Android AAB 업로드 패킷을 최신화했습니다.
+WeatherON Android preview build.
+- 날씨 기반 홈/출발 흐름
+- 목적지 날씨 케어와 Kakao Local 검색
+- MY/정책/권한 설정
+- 최초 출시 범위 외 코디/스타일/소셜 레이어 미공개
 ```
 
 ## 5. 확인 명령

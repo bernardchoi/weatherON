@@ -171,7 +171,7 @@ await build({
   format: "esm",
   jsx: "automatic",
   target: "es2022",
-  loader: { ".png": "dataurl" },
+  loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
   external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-status-bar"],
   logLevel: "silent",
 });

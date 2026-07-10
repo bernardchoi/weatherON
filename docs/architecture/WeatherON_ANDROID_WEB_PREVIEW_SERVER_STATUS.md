@@ -1,6 +1,6 @@
 # WeatherON Android Web Preview Server Status
 
-> 생성일: 2026-07-09
+> 생성일: 2026-07-10
 > 목적: 8094 미리보기가 최신 `apps/mobile/dist` 산출물을 그대로 서빙하는지 확인한다.
 
 ## 1. 현재 상태
@@ -15,8 +15,8 @@
 | 응답 상태 | 200 OK |
 | dist index | 있음 |
 | index.html 일치 | 일치 |
-| dist script | `/_expo/static/js/web/index-afbac865e67c0c2758cba44ed4d6f663.js` |
-| served script | `/_expo/static/js/web/index-afbac865e67c0c2758cba44ed4d6f663.js` |
+| dist script | `/_expo/static/js/web/index-4e2bf59a72e29e6ad88a83d0e39efdf3.js` |
+| served script | `/_expo/static/js/web/index-4e2bf59a72e29e6ad88a83d0e39efdf3.js` |
 | 하단 메뉴 증빙 | 홈/코디/출발/MY 확인 |
 
 ## 2. 판정 기준

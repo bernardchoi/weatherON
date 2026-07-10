@@ -10,7 +10,7 @@
 | 제출 가능 여부 | 가능 |
 | issue 수 | 0 |
 | 기준 build id | N/A - local Gradle release APK |
-| 기준 app version | 0.1.0 (6) |
+| 기준 app version | 0.1.0 (7) |
 | 저장 위치 | `assets/store/android-screenshots/` |
 | manifest | `assets/store/android-screenshots/manifest.json` |
 | 준비 완료 파일 | 5/5 |

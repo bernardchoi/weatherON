@@ -1,6 +1,6 @@
 # WeatherON Android Privacy Policy Packet
 
-> 생성일: 2026-07-06
+> 생성일: 2026-07-10
 > 목적: Google Play 제출 전 개인정보처리방침 placeholder 제거와 공개 HTTPS URL 준비를 별도로 추적한다.
 
 ## 1. 현재 상태
@@ -8,7 +8,7 @@
 | 항목 | 값 |
 |---|---|
 | 개인정보처리방침 파일 | `docs/policy/weatheron_privacy_policy.html` |
-| Play 제출 blocker | 17 |
+| Play 제출 blocker | 11 |
 | 남은 placeholder 수 | 0 |
 | 입력 JSON 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_STORE_INPUTS.local.json |
 
@@ -21,21 +21,15 @@
 | 항목 | 회신값 | 메모 |
 |---|---|---|
 | 개인정보처리방침 공개 URL |  | HTTPS 필수 |
-| 시행일 | 비공개 테스트 시작일 | 사용자 확정 |
-| 운영자/회사명 | 최대현 / WeatherON | 사용자 확정 |
-| 고객센터 이메일 | support@weatheron.app | 사용자 확정 |
-| 개인정보 보호책임자 | 최대현 | 사용자 확정 |
-| 개인정보 보호책임자 직책 | 개인정보 보호책임자 | 직책 미입력으로 공개 직책 처리 |
-| 개인정보 보호책임자 연락처 | support@weatheron.app | 고객센터 이메일과 동일 |
-| 보관 기간 | 테스트 종료 후 1개월 | 사용자 확정 |
-| 이메일 인증 서비스 | 현재 WeatherON은 이메일 인증 발송 서비스를 사용하지 않습니다. | 사용자 확정 |
 
 ## 4. 공개 전 확인
 
-1. HTML 파일을 공개 HTTPS URL에 배포
-2. 공개 URL을 Play Console 앱 콘텐츠 > 개인정보처리방침에 입력
-3. 공개 URL 확정 후 `WeatherON_ANDROID_STORE_INPUTS.local.json`에 반영
-4. `npm run check:android-store-submit-ready` 재실행
+1. 위 회신값으로 `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성
+2. `npm run apply:android-store-inputs` 실행
+3. `docs/policy/weatheron_privacy_policy.html`에서 placeholder 0개 확인
+4. HTML 파일을 공개 HTTPS URL에 배포
+5. 공개 URL을 Play Console 앱 콘텐츠 > 개인정보처리방침에 입력
+6. `npm run check:android-store-submit-ready` 재실행
 
 ## 5. 확인 명령
 
@@ -49,4 +43,4 @@ npm run report:android-privacy-policy-packet
 
 - `privacyPolicyUrl`은 `https://` 공개 URL이어야 한다.
 - `example.com`, `담당자명` 같은 샘플 값은 적용 스크립트에서 실패 처리된다.
-- 공개 배포 전 최종 문구 검토가 필요하다.
+- 정식 제출 전 법무 검토 필요.

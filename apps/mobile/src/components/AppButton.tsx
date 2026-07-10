@@ -56,6 +56,7 @@ export function AppButton({ label, onPress, tone = "primary", size = "md", acces
 }
 
 function getButtonIcon(label: string): ImageSourcePropType {
+  if (/(삭제|해제|제거)/u.test(label)) return uiIconAssets.trash;
   if (/(우산|비|날씨|제보)/u.test(label)) return uiIconAssets.umbrella;
   if (/(코디|옷|아이템)/u.test(label)) return uiIconAssets.shirt;
   if (/(목적지|장소|위치|도시|핀)/u.test(label)) return uiIconAssets.pin;

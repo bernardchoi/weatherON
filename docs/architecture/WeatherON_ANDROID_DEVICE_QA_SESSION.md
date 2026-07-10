@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-10 local release APK v8 재검증 (아이콘 어포던스 폴리시 이후)
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `0.1.0 (8)` |
+| APK sha256 | `b659ebbdb843be6cffbbc6a6578055d6cb4493e53b7a1ef34a1a077c8ea81fcd` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-10 11:38-11:44 KST |
+| QA 리포트 | `docs/audits/android-real-device-v8-2026-07-10-r2/report.md` |
+| 주요 결과 | `c98a58ad5` 아이콘 어포던스 폴리시 커밋 반영 후 재빌드/재설치. 이전 v8 리포트에서 no-op으로 보고된 코디 `상세 보기` → C4 이동을 픽셀 좌표 기준으로 재확인한 결과 정상 동작 확인. 코디 상세 back, 출발, MY, 알림 사이드바, Android 뒤로가기 모두 정상. crash/ANR/FATAL 패턴 없음 |
+| 남은 개선 | 코디 `상세 보기` no-op 재현 실패 — 이전 세션의 일시적 탭 미스 또는 이번 아이콘 폴리시로 인한 터치 영역 확대가 원인일 가능성. 코드 변경 없이 종결. O 시리즈 온보딩/D9 목적지 검색/D13 알림 발송/권한 거부 상태는 이번 세션에서 미검증 |
+
 ### 2026-07-09 local release APK Product QA
 
 | 항목 | 값 |

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, Text, UIManager, View } from "react-native";
-import { uiIconAssets } from "../assets";
+import { destinationFallbackImageAsset, destinationImageAssets, destinationVisualAssets, placeImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { getDestinationVisualKind, getDestinationVisualRegion, getKnownDestinationAssetId } from "../utils/destination-visual-resolver";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 // 안드로이드 실기기에서 Animated(overflow:hidden + maxHeight)로 드롭다운을 열면 레이아웃은
@@ -83,6 +84,7 @@ export function DestinationCareScreen({
   const destinationSaved = Boolean(selectedDestinationPlace);
   const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;
   const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode);
+  const destinationImage = getDestinationImage(selectedDestinationPlace);
 
   useEffect(() => {
     if (transportMode === "walk" && walkUnavailable) onSetDestinationTransportMode("auto");
@@ -112,6 +114,12 @@ export function DestinationCareScreen({
         ) : null}
 
         <View style={[styles.decisionPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme)]}>
+          <View accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.decisionImageFrame, { borderColor: theme.border }]}>
+            <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
+            <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.generatedImageBadgeText, { color: theme.subtle }]}>AI 이미지</Text>
+            </View>
+          </View>
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
@@ -859,6 +867,23 @@ function getCareCtaLabel(permissionReady: boolean, destinationCareEnabled: boole
   return "목적지 케어 켜기";
 }
 
+function getDestinationImage(place: P0ScreenProps["selectedDestinationPlace"]) {
+  const exactAsset = destinationImageAssets[place.id];
+  if (exactAsset) return exactAsset;
+  const knownPlaceAssetId = getKnownDestinationAssetId(place);
+  if (knownPlaceAssetId) return destinationImageAssets[knownPlaceAssetId];
+  const visualKind = getDestinationVisualKind(place);
+  const region = getDestinationVisualRegion(place.countryCode);
+  const regionalAsset = destinationVisualAssets[`${region}:${visualKind}`];
+  if (regionalAsset) return regionalAsset;
+  if (place.category === "beach") return placeImageAssets.beach;
+  if (place.category === "sports") return placeImageAssets.baseball;
+  if (place.category === "mountain") return placeImageAssets.mountain;
+  if (place.category === "airport") return placeImageAssets.airport;
+  if (place.category === "hotel") return placeImageAssets.hotel;
+  return destinationFallbackImageAsset;
+}
+
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -954,15 +979,35 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   decisionImageFrame: {
-    width: 86,
-    height: 104,
+    height: 126,
+    alignSelf: "stretch",
+    marginTop: -16,
+    marginHorizontal: -16,
     overflow: "hidden",
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    borderBottomLeftRadius: radius.sm,
+    borderBottomRightRadius: radius.sm,
+    borderBottomWidth: 1,
   },
   decisionImage: {
     width: "100%",
     height: "100%",
+  },
+  generatedImageBadge: {
+    position: "absolute",
+    right: spacing.sm,
+    bottom: spacing.sm,
+    minHeight: 24,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+    opacity: 0.9,
+  },
+  generatedImageBadgeText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
   },
   decisionEyebrow: {
     fontSize: 11,

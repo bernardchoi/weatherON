@@ -162,7 +162,7 @@ function value(text, label) {
 function splitBuild(raw) {
   const normalized = normalize(raw);
   const separator = " / ";
-  const separatorIndex = normalized.lastIndexOf(separator);
+  const separatorIndex = normalized.indexOf(separator);
   if (separatorIndex === -1) return { id: normalized, status: "" };
   return {
     id: normalized.slice(0, separatorIndex).trim(),

@@ -8,12 +8,14 @@
 | 항목 | 값 |
 |---|---|
 | 제출 가능 여부 | 불가 |
-| blocker 수 | 9 |
-| Production AAB 상태 | FINISHED |
-| Production AAB artifact | https://expo.dev/artifacts/eas/dG_9cDHI-iV7-ln-Iqv8yvGkWLVsyZH6fDqLEq9PAEo.aab |
+| blocker 수 | 11 |
+| Production AAB 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
+| Production AAB artifact | builds/weatheron-v0.1.0-versionCode8.aab |
 
 ## 2. Blockers
 
+- Production AAB build 완료 필요
+- Production AAB artifact URL 확인 필요
 - 개발자 이메일 확정 필요
 - 개발자 웹사이트 입력 여부 결정 필요
 - 개인정보처리방침 공개 URL 확정 필요
@@ -37,6 +39,8 @@
 
 | Blocker | 분류 | 해소 방법 |
 |---|---|---|
+| Production AAB build 완료 필요 | 빌드 | Play Console 업로드용 production AAB build 상태를 FINISHED로 갱신 |
+| Production AAB artifact URL 확인 필요 | 빌드 | production AAB artifact URL을 확인하고 상태 문서에 반영 |
 | 개발자 이메일 확정 필요 | 사용자 입력 | Play Console 공개 개발자 연락처 이메일 확정 |
 | 개발자 웹사이트 입력 여부 결정 필요 | 사용자 입력 | 웹사이트를 입력할지, 입력한다면 공개 HTTPS URL 확정 |
 | 개인정보처리방침 공개 URL 확정 필요 | 외부 배포 | HTML 초안을 공개 HTTPS URL로 배포 후 스토어 문서에 반영 |
@@ -56,14 +60,14 @@
 | Google Play 공개 개발자 이메일 |  |
 | 개발자 웹사이트 URL 또는 미입력 |  |
 | 개인정보처리방침 공개 URL |  |
-| 운영자명 | 최대현 / WeatherON |
-| 고객센터 연락처 | support@weatheron.app |
-| 개인정보 보호책임자 성명 | 최대현 |
-| 개인정보 보호책임자 직책 | 개인정보 보호책임자 |
-| 개인정보 보호책임자 연락처 | support@weatheron.app |
-| 개인정보처리방침 시행일 | 비공개 테스트 시작일 |
-| 광고/사용 로그 보유기간 | 테스트 종료 후 1개월 |
-| 이메일 인증 발송 서비스 | 현재 이메일 인증 발송 서비스를 사용하지 않습니다. |
+| 운영자명 |  |
+| 고객센터 연락처 |  |
+| 개인정보 보호책임자 성명 |  |
+| 개인정보 보호책임자 직책 |  |
+| 개인정보 보호책임자 연락처 |  |
+| 개인정보처리방침 시행일 |  |
+| 광고/사용 로그 보유기간 | 권장 초안: 12개월 |
+| 이메일 인증 발송 서비스 | 미도입이면 `이메일 인증 미도입` |
 | 타겟 연령 | 권장 초안: 만 14세 이상 |
 | Play Console 계정 유형 | 개인 신규 / 개인 기존 / 조직 |
 

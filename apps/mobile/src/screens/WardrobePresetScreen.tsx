@@ -1,163 +1,205 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { FilterRow } from "../components/FilterRow";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
-import { formatOutfitTags, getWardrobeCategoryLabel } from "../utils/outfitLabels";
+import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
+import type { WardrobeItem } from "@weatheron/shared";
 
-const categoryLabels = ["전체", "겉옷", "상의", "하의", "신발", "소품"];
-const seasonLabels = ["전체", "봄가을", "여름", "겨울"];
-const purposeLabels = ["전체", "비", "바람", "출근", "여행"];
+const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
+const seasons = ["all", "spring", "summer", "fall", "winter"] as const;
+const purposes = ["all", "commute", "school", "travel", "outdoor", "formal", "daily"] as const;
+
+type CategoryFilter = (typeof categories)[number];
+type SeasonFilter = (typeof seasons)[number];
+type PurposeFilter = (typeof purposes)[number];
 
 export function WardrobePresetScreen({
   wardrobeItems,
   selectedWardrobeItemId,
-  accountLinked,
   onSetWardrobeItemOwned,
   onNavigate,
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const activeItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
-  const presetItems = wardrobeItems.slice(0, 6);
+  const [query, setQuery] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>("all");
+  const [seasonFilter, setSeasonFilter] = React.useState<SeasonFilter>("all");
+  const [purposeFilter, setPurposeFilter] = React.useState<PurposeFilter>("all");
+  const [previewId, setPreviewId] = React.useState(selectedWardrobeItemId || wardrobeItems[0]?.id || "");
 
-  if (!activeItem) {
-    return (
-      <AppScreen title="옷장 프리셋" subtitle="선택된 프리셋이 없음" badge="프리셋" onBack={onGoBack}>
-        <Section title="준비 상태" caption="옷장에서 항목을 먼저 선택해줘야 함">
-          <Text style={styles.empty}>목록에서 상세 보기를 눌러 다시 접근</Text>
-          <AppButton label="옷장으로" onPress={() => onNavigate("C2")} />
-        </Section>
-      </AppScreen>
-    );
-  }
-  const activeImage = outfitImageAssets[activeItem.imageUrl];
+  const ownedCount = wardrobeItems.filter((item) => item.owned).length;
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredItems = wardrobeItems.filter((item) => {
+    const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
+    const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
+    const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
+    const queryMatch = normalizedQuery.length === 0 || item.name.toLowerCase().includes(normalizedQuery);
+    return categoryMatch && seasonMatch && purposeMatch && queryMatch;
+  });
+
+  const previewItem = wardrobeItems.find((item) => item.id === previewId) ?? filteredItems[0];
 
   return (
-    <AppScreen title="아이템 추가" subtitle="프리셋을 선택하거나 사진으로 등록" badge="옷장 추가" onBack={onGoBack}>
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-        <View style={styles.copy}>
-          <Text style={[styles.kicker, { color: theme.gold }]}>옷장 추가</Text>
-          <Text style={[styles.title, { color: theme.text }]}>{activeItem.name} 선택됨</Text>
-        </View>
-        <StatusPill label="준비" tone="clear" />
-      </View>
-
-      <View style={[styles.segment, { backgroundColor: theme.cardMuted }]}>
-        <View style={[styles.segmentActive, { backgroundColor: theme.gold }]}>
-          <Text style={[styles.segmentText, { color: theme.onAccent }]}>프리셋 선택</Text>
-        </View>
-        <View style={styles.segmentPassive}>
-          <Text style={[styles.segmentText, { color: theme.muted }]}>사진으로 등록</Text>
-        </View>
-      </View>
-
-      <View style={[styles.searchBox, { backgroundColor: theme.cardMuted }]}>
-        <Text style={[styles.searchText, { color: theme.subtle }]}>아이템, 날씨, 목적 검색</Text>
+    <AppScreen
+      title="아이템 추가"
+      subtitle="프리셋에서 골라 내 옷장에 추가"
+      badge={`${ownedCount}/${wardrobeItems.length} 보유`}
+      onBack={onGoBack}
+    >
+      <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="아이템 이름 검색"
+          placeholderTextColor={theme.subtle}
+          style={[styles.searchInput, { color: theme.text }]}
+          accessibilityLabel="아이템 이름 검색"
+          returnKeyType="search"
+        />
       </View>
 
       <Section title="필터" caption="아이템·계절·목적 기준" accent="sky">
-        <FilterPills title="아이템" values={categoryLabels} />
-        <FilterPills title="계절" values={seasonLabels} withDivider />
-        <FilterPills title="목적" values={purposeLabels} withDivider />
-      </Section>
-
-      <Section title="선택됨" caption={`${getWardrobeCategoryLabel(activeItem.category)} · ${formatOutfitTags(activeItem.weatherTags)}`} accent="clear">
-        <View style={[styles.selectedCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardMuted }]}>
-            {activeImage ? <Image source={activeImage} style={styles.selectedImage} resizeMode="contain" /> : null}
-          </View>
-          <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.text }]}>{activeItem.name}</Text>
-            <Text style={[styles.copyText, { color: theme.muted }]}>
-              {formatOutfitTags(activeItem.seasons)} · {formatOutfitTags(activeItem.purposes)}
-            </Text>
-          </View>
-          <StatusPill label={activeItem.owned ? "내 옷장" : "선택됨"} tone={activeItem.owned ? "clear" : "gold"} />
-        </View>
-      </Section>
-
-      <Section title="프리셋" caption={`${presetItems.length}개 미리보기`} accent="gold">
-        <View style={styles.presetGrid}>
-          {presetItems.map((item) => {
-            const imageSource = outfitImageAssets[item.imageUrl];
-            const selected = item.id === activeItem.id;
-            return (
-              <View
-                key={item.id}
-                style={[styles.presetCard, { backgroundColor: theme.cardMuted, borderColor: selected ? theme.gold : theme.border }]}
-              >
-                <View style={[styles.presetImageWrap, { backgroundColor: theme.cardStrong }]}>
-                  {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMode="contain" /> : null}
-                </View>
-                <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
-                <Text style={[styles.presetMeta, { color: theme.muted }]} numberOfLines={1}>{formatOutfitTags(item.weatherTags)}</Text>
-              </View>
-            );
-          })}
-        </View>
-      </Section>
-
-      <Section title="옷장 반영" caption={accountLinked ? "계정 저장 가능" : "이 기기에만 저장됨"} accent="gold">
-        <View style={styles.actions}>
-          <AppButton
-            label={activeItem.owned ? "내 옷장 해제" : "내 옷장에 추가"}
-            onPress={() => onSetWardrobeItemOwned(activeItem.id, !activeItem.owned)}
-            tone="warning"
+        <View style={styles.filterStack}>
+          <FilterRow
+            values={categories}
+            activeValue={categoryFilter}
+            onSelect={(value) => setCategoryFilter(value as CategoryFilter)}
+            renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
           />
+          <FilterRow
+            values={seasons}
+            activeValue={seasonFilter}
+            onSelect={(value) => setSeasonFilter(value as SeasonFilter)}
+            renderLabel={(value) => (value === "all" ? "계절 전체" : formatOutfitTags([value]))}
+          />
+          <FilterRow
+            values={purposes}
+            activeValue={purposeFilter}
+            onSelect={(value) => setPurposeFilter(value as PurposeFilter)}
+            renderLabel={(value) => (value === "all" ? "목적 전체" : getOutfitTagLabel(value))}
+          />
+        </View>
+      </Section>
+
+      {previewItem ? (
+        <Section
+          title="미리보기"
+          caption={`${getWardrobeCategoryLabel(previewItem.category)} · ${formatOutfitTags(previewItem.seasons)} · ${formatOutfitTags(previewItem.purposes)}`}
+          accent="clear"
+        >
+          <View style={[styles.selectedCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+            <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardMuted }]}>
+              {outfitImageAssets[previewItem.imageUrl] ? (
+                <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMode="contain" />
+              ) : null}
+            </View>
+            <View style={styles.copy}>
+              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{previewItem.name}</Text>
+              <Text style={[styles.copyText, { color: theme.muted }]} numberOfLines={1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
+            </View>
+            <AppButton
+              label={previewItem.owned ? "해제" : "추가"}
+              accessibilityLabel={`${previewItem.name} ${previewItem.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+              onPress={() => onSetWardrobeItemOwned(previewItem.id, !previewItem.owned)}
+              tone="warning"
+              size="sm"
+            />
+          </View>
+        </Section>
+      ) : null}
+
+      <Section title="프리셋 전체" caption={`${filteredItems.length}개 · 카드를 눌러 미리보고 바로 추가`} accent="gold">
+        {filteredItems.length === 0 ? (
+          <Text style={[styles.empty, { color: theme.muted }]}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>
+        ) : (
+          <View style={styles.presetGrid}>
+            {filteredItems.map((item) => (
+              <PresetCard
+                key={item.id}
+                item={item}
+                selected={item.id === previewItem?.id}
+                onPreview={() => setPreviewId(item.id)}
+                onToggleOwned={() => onSetWardrobeItemOwned(item.id, !item.owned)}
+              />
+            ))}
+          </View>
+        )}
+      </Section>
+
+      <Section title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
+        <View style={styles.actions}>
           <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" />
-          <AppButton label="옷장 목록" onPress={() => onNavigate("C2")} tone="secondary" />
+          <AppButton label="내 옷장" onPress={() => onNavigate("C2")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
   );
 }
 
-function FilterPills({ title, values, withDivider = false }: { title: string; values: string[]; withDivider?: boolean }) {
+function PresetCard({
+  item,
+  selected,
+  onPreview,
+  onToggleOwned,
+}: {
+  item: WardrobeItem;
+  selected: boolean;
+  onPreview: () => void;
+  onToggleOwned: () => void;
+}) {
   const theme = useAppTheme();
+  const imageSource = outfitImageAssets[item.imageUrl];
   return (
-    <View style={[styles.filterGroup, withDivider ? [styles.filterGroupDivider, { borderTopColor: theme.border }] : null]}>
-      <Text style={[styles.filterTitle, { color: theme.muted }]}>{title}</Text>
-      <View style={styles.pillRow}>
-        {values.map((item, index) => (
-          <View
-            key={item}
-            style={[
-              styles.filterPill,
-              { backgroundColor: index === 0 ? theme.gold : theme.cardMuted, borderColor: index === 0 ? theme.gold : theme.border },
-            ]}
-          >
-            <Text style={[styles.filterText, { color: index === 0 ? theme.onAccent : theme.muted }]}>{item}</Text>
-          </View>
-        ))}
-      </View>
+    <View
+      style={[
+        styles.presetCard,
+        { backgroundColor: theme.cardMuted, borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border },
+      ]}
+    >
+      <Pressable accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
+        <View style={[styles.presetImageWrap, { backgroundColor: theme.cardStrong }]}>
+          {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMode="contain" /> : null}
+        </View>
+        <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
+        <Text style={[styles.presetMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
+      </Pressable>
+      <AppButton
+        label={item.owned ? "해제" : "추가"}
+        accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+        onPress={onToggleOwned}
+        tone="secondary"
+        size="sm"
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  statusCard: {
-    minHeight: 74,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    padding: spacing.md,
+  searchBox: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  searchInput: {
+    fontSize: 14,
+    fontWeight: "800",
+    padding: 0,
+  },
+  filterStack: {
+    gap: spacing.sm,
   },
   copy: {
     flex: 1,
     gap: 4,
-  },
-  kicker: {
-    fontSize: 12,
-    fontWeight: "900",
   },
   title: {
     fontSize: 16,
@@ -167,65 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "800",
-  },
-  segment: {
-    minHeight: 48,
-    flexDirection: "row",
-    gap: spacing.xs,
-    padding: 4,
-    borderRadius: radius.lg,
-  },
-  segmentActive: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  segmentPassive: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  searchBox: {
-    minHeight: 44,
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.lg,
-  },
-  searchText: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  filterGroup: {
-    gap: spacing.xs,
-  },
-  filterGroupDivider: {
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-  },
-  filterTitle: {
-    fontSize: 12,
-    fontWeight: "900",
-  },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  filterPill: {
-    minHeight: 34,
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: "900",
   },
   selectedCard: {
     minHeight: 78,
@@ -254,11 +237,14 @@ const styles = StyleSheet.create({
   },
   presetCard: {
     width: "31.5%",
-    minHeight: 126,
-    gap: spacing.xs,
-    padding: spacing.xs,
+    minHeight: 150,
+    gap: spacing.sm,
+    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  presetMain: {
+    gap: spacing.xs,
   },
   presetImageWrap: {
     height: 66,

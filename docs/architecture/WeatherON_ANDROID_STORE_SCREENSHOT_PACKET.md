@@ -1,6 +1,6 @@
 # WeatherON Android Store Screenshot Packet
 
-> 생성일: 2026-07-08
+> 생성일: 2026-07-10
 > 목적: Google Play 휴대전화 스크린샷 5장을 같은 기준 APK와 파일명으로 캡처하기 위한 작업 패킷이다.
 
 ## 1. 캡처 기준
@@ -9,7 +9,7 @@
 |---|---|
 | 기준 preview build | `N/A - local Gradle release APK` |
 | screenshot 기준 build | `N/A - local Gradle release APK` |
-| screenshot 기준 app version | `0.1.0 (6)` |
+| screenshot 기준 app version | `0.1.0 (7)` |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | 저장 위치 | assets/store/android-screenshots/ |
 | manifest | `assets/store/android-screenshots/manifest.json` |

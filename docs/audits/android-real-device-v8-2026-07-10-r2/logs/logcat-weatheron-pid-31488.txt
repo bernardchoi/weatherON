@@ -1,0 +1,10 @@
+--------- beginning of main
+07-10 11:42:38.486 31488 31565 W HWUI    : Image decoding logging dropped!
+07-10 11:42:38.531 31488 31569 W HWUI    : Image decoding logging dropped!
+07-10 11:43:16.379 31488 31560 W HWUI    : Image decoding logging dropped!
+07-10 11:43:27.729 31488 31570 W HWUI    : Image decoding logging dropped!
+07-10 11:43:27.733 31488 31559 W HWUI    : Image decoding logging dropped!
+07-10 11:43:27.733 31488 31559 W HWUI    : Image decoding logging dropped!
+07-10 11:44:10.094 31488 31488 I ImeTracker: com.weatheron.mobile:61cacc95: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+07-10 11:44:23.478 31488 31488 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda12@cf349fc
+07-10 11:44:23.530 31488 31488 I ImeTracker: com.weatheron.mobile:22c2f83d: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN

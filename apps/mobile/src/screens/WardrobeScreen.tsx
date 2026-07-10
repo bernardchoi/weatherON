@@ -3,10 +3,11 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { FilterRow } from "../components/FilterRow";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
 
@@ -21,9 +22,11 @@ type WardrobePurposeFilter = (typeof purposes)[number];
 export function WardrobeScreen({
   wardrobeItems,
   selectedStyles,
+  recentlyRemovedWardrobeItemId,
   onNavigate,
   onOpenWardrobeItem,
-  onSetWardrobeItemOwned,
+  onRemoveWardrobeItem,
+  onRestoreRemovedWardrobeItem,
   accountLinked,
   onGoBack,
 }: P0ScreenProps) {
@@ -32,7 +35,12 @@ export function WardrobeScreen({
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
 
-  const filteredItems = wardrobeItems.filter((item) => {
+  const ownedItems = wardrobeItems.filter((item) => item.owned);
+  const removedItem = recentlyRemovedWardrobeItemId
+    ? wardrobeItems.find((item) => item.id === recentlyRemovedWardrobeItemId)
+    : undefined;
+
+  const filteredItems = ownedItems.filter((item) => {
     const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
     const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
     const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
@@ -40,7 +48,7 @@ export function WardrobeScreen({
   });
 
   return (
-    <AppScreen title="내 옷장" subtitle="보유 옷과 추천 프리셋을 한곳에서 관리" badge="옷장" onBack={onGoBack}>
+    <AppScreen title="내 옷장" subtitle="보유한 옷을 확인하고 정리" badge={`${ownedItems.length}개 보유`} onBack={onGoBack}>
       <View style={styles.topBar}>
         <FilterRow
           values={categories}
@@ -50,17 +58,20 @@ export function WardrobeScreen({
         />
       </View>
 
+      {removedItem ? (
+        <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
+      ) : null}
+
       <Section title="옷장" caption={accountLinked ? "저장 상태 계정 연결됨" : "저장 시 계정 연결 필요"} accent="gold">
         <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.gold }]}>옷장 확인 가능 · 저장 시 계정 연결</Text>
+            <Text style={[styles.title, { color: theme.gold }]}>내 옷장 {ownedItems.length}개 보유 중</Text>
             <Text style={[styles.itemMeta, { color: theme.muted }]}>추천으로 복귀하거나 프리셋을 내 옷장에 추가 가능</Text>
           </View>
-          <AppButton label="보기" onPress={() => onNavigate("C3")} tone="secondary" />
+          <AppButton label="추천으로 복귀" onPress={() => onNavigate("C1")} tone="secondary" />
         </View>
         <View style={styles.heroActions}>
-          <AppButton label="추천으로 복귀" onPress={() => onNavigate("C1")} tone="secondary" />
-          <AppButton label="옷 추가" onPress={() => onNavigate("C3")} tone="warning" />
+          <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
         </View>
       </Section>
 
@@ -79,20 +90,29 @@ export function WardrobeScreen({
             renderLabel={(value) => (value === "all" ? "목적 전체" : getOutfitTagLabel(value))}
           />
         </View>
-        <View style={styles.grid}>
-          {filteredItems.map((item) => (
-            <WardrobeItemCard
-              key={item.id}
-              item={item}
-              onOpen={() => onOpenWardrobeItem(item.id)}
-              onToggleOwned={() => onSetWardrobeItemOwned(item.id, !item.owned)}
-            />
-          ))}
-          <Pressable accessibilityRole="button" onPress={() => onNavigate("C3")} style={[styles.addTile, { borderColor: theme.border }]}>
-            <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
-            <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
-          </Pressable>
-        </View>
+        {ownedItems.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>
+            <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
+          </View>
+        ) : filteredItems.length === 0 ? (
+          <Text style={[styles.emptyText, { color: theme.muted }]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
+        ) : (
+          <View style={styles.grid}>
+            {filteredItems.map((item) => (
+              <WardrobeItemCard
+                key={item.id}
+                item={item}
+                onOpen={() => onOpenWardrobeItem(item.id)}
+                onRemove={() => onRemoveWardrobeItem(item.id)}
+              />
+            ))}
+            <Pressable accessibilityRole="button" onPress={() => onNavigate("C3")} style={[styles.addTile, { borderColor: theme.border }]}>
+              <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
+              <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
+            </Pressable>
+          </View>
+        )}
       </Section>
 
       <Section title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
@@ -108,16 +128,16 @@ export function WardrobeScreen({
 function WardrobeItemCard({
   item,
   onOpen,
-  onToggleOwned,
+  onRemove,
 }: {
   item: WardrobeItem;
   onOpen: () => void;
-  onToggleOwned: () => void;
+  onRemove: () => void;
 }) {
   const theme = useAppTheme();
   const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
   return (
-    <View style={[styles.card, { backgroundColor: theme.cardMuted, borderColor: item.owned ? theme.clear : theme.border }]}>
+    <View style={[styles.card, { backgroundColor: theme.cardMuted, borderColor: theme.clear }]}>
       <Pressable accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.imageWell, { backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
@@ -126,9 +146,9 @@ function WardrobeItemCard({
         <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </Pressable>
       <AppButton
-        label={item.owned ? "해제" : "추가"}
-        accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
-        onPress={onToggleOwned}
+        label="삭제"
+        accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
+        onPress={onRemove}
         tone="secondary"
         size="sm"
       />
@@ -136,37 +156,29 @@ function WardrobeItemCard({
   );
 }
 
-function FilterRow({
-  values,
-  activeValue,
-  onSelect,
-  renderLabel,
+function RemovedItemBanner({
+  itemName,
+  onRestore,
+  theme,
 }: {
-  values: readonly string[];
-  activeValue: string;
-  onSelect: (value: string) => void;
-  renderLabel: (value: string) => string;
+  itemName: string;
+  onRestore: () => void;
+  theme: AppTheme;
 }) {
-  const theme = useAppTheme();
   return (
-    <View style={styles.filterRow}>
-      {values.map((value) => (
-        <Pressable
-          key={value}
-          accessibilityRole="button"
-          accessibilityState={{ selected: activeValue === value }}
-          onPress={() => onSelect(value)}
-          style={[
-            styles.filterButton,
-            {
-              backgroundColor: activeValue === value ? theme.gold : theme.cardMuted,
-              borderColor: activeValue === value ? theme.gold : theme.border,
-            },
-          ]}
-        >
-          <Text style={[styles.filterText, { color: activeValue === value ? theme.onAccent : theme.muted }]}>{renderLabel(value)}</Text>
-        </Pressable>
-      ))}
+    <View style={[styles.removedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.warm }]}>
+      <View style={styles.removedCopy}>
+        <Text style={[styles.removedTitle, { color: theme.warm }]}>옷 삭제됨</Text>
+        <Text style={[styles.itemMeta, { color: theme.muted }]}>{itemName}을 다시 복구할 수 있어요</Text>
+      </View>
+      <Pressable
+        accessibilityLabel={`${itemName} 복구`}
+        accessibilityRole="button"
+        onPress={onRestore}
+        style={[styles.restoreButton, { backgroundColor: theme.gold }]}
+      >
+        <Text style={[styles.restoreButtonText, { color: theme.onAccent }]}>복구</Text>
+      </Pressable>
     </View>
   );
 }
@@ -256,21 +268,41 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  emptyState: {
     gap: spacing.sm,
+    alignItems: "flex-start",
   },
-  filterButton: {
-    minHeight: 34,
+  emptyText: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  removedBanner: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  removedCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  removedTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  restoreButton: {
+    minHeight: 36,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,
-    borderWidth: 1,
   },
-  filterText: {
-    fontSize: 12,
+  restoreButtonText: {
+    fontSize: 13,
     fontWeight: "900",
   },
 });

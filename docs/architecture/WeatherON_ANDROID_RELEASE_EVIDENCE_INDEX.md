@@ -1,6 +1,6 @@
 # WeatherON Android Release Evidence Index
 
-> 생성일: 2026-07-08
+> 생성일: 2026-07-10
 > 목적: Android 출시 준비의 빌드, 검증, 문서 증빙 위치를 한 곳에서 추적한다.
 
 ## 1. 현재 증빙 요약
@@ -10,11 +10,11 @@
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
 | Android versionCode | `8` |
-| 정적 체크 통과 | 23/23 |
+| 정적 체크 통과 | 22/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
-| production build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` / LOCAL BUILD SUCCESS, EAS IN_QUEUE |
+| production build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` / LOCAL BUILD SUCCESS / EAS IN_QUEUE |
 | artifact 접근 issue | 0 |
-| Play 제출 blocker | 9 |
+| Play 제출 blocker | 11 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | 스토어 스크린샷 준비 | 5/5 |
@@ -74,7 +74,7 @@
 ## 5. 완료된 자동화 범위
 
 - preview APK build 완료 및 artifact URL 확보
-- production AAB local build 완료 및 artifact 확보
+- production AAB build 완료 및 artifact URL 확보
 - APK/AAB URL HTTP 200 접근 확인
 - store asset 후보 생성
 - Android release config 정적 검증
