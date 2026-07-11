@@ -269,7 +269,6 @@ export function DestinationCareScreen({
           </Pressable>
         ) : null}
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       <BottomSheet
@@ -877,7 +876,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 188,
+    paddingBottom: spacing.lg,
     minHeight: "100%",
   },
   atmosphere: {
@@ -1556,9 +1555,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "800",
-  },
-  bottomSpacer: {
-    height: 84,
   },
   ctaWrap: {
     paddingTop: spacing.xs,

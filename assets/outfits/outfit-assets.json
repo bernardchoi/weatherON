@@ -306,5 +306,245 @@
       "travel",
       "allSeason"
     ]
+  },
+  {
+    "id": "navyShellParka",
+    "category": "outer",
+    "nameKo": "네이비 셸 파카",
+    "asset": "weatheron-outfit-navy-shell-parka-v1.png",
+    "source": "weatheron-outfit-navy-shell-parka-source-v1.png",
+    "weatherTags": ["rain", "wind", "cold", "outdoor"]
+  },
+  {
+    "id": "camelTrenchCoat",
+    "category": "outer",
+    "nameKo": "카멜 트렌치코트",
+    "asset": "weatheron-outfit-camel-trench-coat-v1.png",
+    "source": "weatheron-outfit-camel-trench-coat-source-v1.png",
+    "weatherTags": ["wind", "dry", "commute", "formal"]
+  },
+  {
+    "id": "ivoryQuiltedJacket",
+    "category": "outer",
+    "nameKo": "아이보리 퀼팅 재킷",
+    "asset": "weatheron-outfit-ivory-quilted-jacket-v1.png",
+    "source": "weatheron-outfit-ivory-quilted-jacket-source-v1.png",
+    "weatherTags": ["cold", "wind", "commute", "daily"]
+  },
+  {
+    "id": "charcoalPeacoat",
+    "category": "outer",
+    "nameKo": "차콜 피코트",
+    "asset": "weatheron-outfit-charcoal-peacoat-v1.png",
+    "source": "weatheron-outfit-charcoal-peacoat-source-v1.png",
+    "weatherTags": ["cold", "wind", "formal", "commute"]
+  },
+  {
+    "id": "sandFleeceZipJacket",
+    "category": "outer",
+    "nameKo": "샌드 플리스 집업",
+    "asset": "weatheron-outfit-sand-fleece-zip-jacket-v1.png",
+    "source": "weatheron-outfit-sand-fleece-zip-jacket-source-v1.png",
+    "weatherTags": ["cold", "wind", "outdoor", "travel"]
+  },
+  {
+    "id": "slateLongDownCoat",
+    "category": "outer",
+    "nameKo": "슬레이트 롱다운 코트",
+    "asset": "weatheron-outfit-slate-long-down-coat-v1.png",
+    "source": "weatheron-outfit-slate-long-down-coat-source-v1.png",
+    "weatherTags": ["cold", "wind", "winter", "outdoor"]
+  },
+  {
+    "id": "heatherZipHoodie",
+    "category": "top",
+    "nameKo": "헤더 집업 후디",
+    "asset": "weatheron-outfit-heather-zip-hoodie-v1.png",
+    "source": "weatheron-outfit-heather-zip-hoodie-source-v1.png",
+    "weatherTags": ["dry", "cold", "casual", "travel"]
+  },
+  {
+    "id": "burgundyMerinoCrewneck",
+    "category": "top",
+    "nameKo": "버건디 메리노 크루넥",
+    "asset": "weatheron-outfit-burgundy-merino-crewneck-v1.png",
+    "source": "weatheron-outfit-burgundy-merino-crewneck-source-v1.png",
+    "weatherTags": ["cold", "dry", "commute", "formal"]
+  },
+  {
+    "id": "bretonKnit",
+    "category": "top",
+    "nameKo": "브르통 스트라이프 니트",
+    "asset": "weatheron-outfit-breton-knit-v1.png",
+    "source": "weatheron-outfit-breton-knit-source-v1.png",
+    "weatherTags": ["dry", "wind", "spring", "fall"]
+  },
+  {
+    "id": "charcoalThermalLongSleeve",
+    "category": "top",
+    "nameKo": "차콜 써멀 긴팔",
+    "asset": "weatheron-outfit-charcoal-thermal-long-sleeve-v1.png",
+    "source": "weatheron-outfit-charcoal-thermal-long-sleeve-source-v1.png",
+    "weatherTags": ["cold", "dry", "outdoor", "winter"]
+  },
+  {
+    "id": "skyKnitPolo",
+    "category": "top",
+    "nameKo": "스카이 니트 폴로",
+    "asset": "weatheron-outfit-sky-knit-polo-v1.png",
+    "source": "weatheron-outfit-sky-knit-polo-source-v1.png",
+    "weatherTags": ["dry", "commute", "formal", "spring"]
+  },
+  {
+    "id": "beigeDryFitTshirt",
+    "category": "top",
+    "nameKo": "베이지 드라이핏 티셔츠",
+    "asset": "weatheron-outfit-beige-dry-fit-tshirt-v1.png",
+    "source": "weatheron-outfit-beige-dry-fit-tshirt-source-v1.png",
+    "weatherTags": ["heat", "dry", "summer", "outdoor"]
+  },
+  {
+    "id": "indigoDenimShirt",
+    "category": "top",
+    "nameKo": "인디고 데님 셔츠",
+    "asset": "weatheron-outfit-indigo-denim-shirt-v1.png",
+    "source": "weatheron-outfit-indigo-denim-shirt-source-v1.png",
+    "weatherTags": ["dry", "wind", "casual", "fall"]
+  },
+  {
+    "id": "rustCorduroyOvershirt",
+    "category": "top",
+    "nameKo": "러스트 코듀로이 오버셔츠",
+    "asset": "weatheron-outfit-rust-corduroy-overshirt-v1.png",
+    "source": "weatheron-outfit-rust-corduroy-overshirt-source-v1.png",
+    "weatherTags": ["cold", "dry", "fall", "casual"]
+  },
+  {
+    "id": "creamWideCottonPants",
+    "category": "bottom",
+    "nameKo": "크림 와이드 코튼 팬츠",
+    "asset": "weatheron-outfit-cream-wide-cotton-pants-v1.png",
+    "source": "weatheron-outfit-cream-wide-cotton-pants-source-v1.png",
+    "weatherTags": ["dry", "heat", "commute", "spring"]
+  },
+  {
+    "id": "indigoStraightDenim",
+    "category": "bottom",
+    "nameKo": "인디고 스트레이트 데님",
+    "asset": "weatheron-outfit-indigo-straight-denim-v1.png",
+    "source": "weatheron-outfit-indigo-straight-denim-source-v1.png",
+    "weatherTags": ["dry", "casual", "school", "fall"]
+  },
+  {
+    "id": "taupeCargoPants",
+    "category": "bottom",
+    "nameKo": "토프 카고 팬츠",
+    "asset": "weatheron-outfit-taupe-cargo-pants-v1.png",
+    "source": "weatheron-outfit-taupe-cargo-pants-source-v1.png",
+    "weatherTags": ["wind", "dry", "outdoor", "travel"]
+  },
+  {
+    "id": "charcoalPleatedSkirt",
+    "category": "bottom",
+    "nameKo": "차콜 플리츠 미디 스커트",
+    "asset": "weatheron-outfit-charcoal-pleated-skirt-v1.png",
+    "source": "weatheron-outfit-charcoal-pleated-skirt-source-v1.png",
+    "weatherTags": ["dry", "formal", "commute", "school"]
+  },
+  {
+    "id": "beigeLinenWidePants",
+    "category": "bottom",
+    "nameKo": "베이지 린넨 와이드 팬츠",
+    "asset": "weatheron-outfit-beige-linen-wide-pants-v1.png",
+    "source": "weatheron-outfit-beige-linen-wide-pants-source-v1.png",
+    "weatherTags": ["heat", "dry", "summer", "travel"]
+  },
+  {
+    "id": "slateFleeceJoggers",
+    "category": "bottom",
+    "nameKo": "슬레이트 플리스 조거",
+    "asset": "weatheron-outfit-slate-fleece-joggers-v1.png",
+    "source": "weatheron-outfit-slate-fleece-joggers-source-v1.png",
+    "weatherTags": ["cold", "dry", "travel", "outdoor"]
+  },
+  {
+    "id": "charcoalTrailRunners",
+    "category": "shoes",
+    "nameKo": "차콜 트레일 러너",
+    "asset": "weatheron-outfit-charcoal-trail-runners-v1.png",
+    "source": "weatheron-outfit-charcoal-trail-runners-source-v1.png",
+    "weatherTags": ["rain", "wind", "outdoor", "travel"]
+  },
+  {
+    "id": "offwhiteCanvasSneakers",
+    "category": "shoes",
+    "nameKo": "오프화이트 캔버스 스니커즈",
+    "asset": "weatheron-outfit-offwhite-canvas-sneakers-v1.png",
+    "source": "weatheron-outfit-offwhite-canvas-sneakers-source-v1.png",
+    "weatherTags": ["dry", "school", "casual", "spring"]
+  },
+  {
+    "id": "blackLeatherDerby",
+    "category": "shoes",
+    "nameKo": "블랙 레더 더비",
+    "asset": "weatheron-outfit-black-leather-derby-v1.png",
+    "source": "weatheron-outfit-black-leather-derby-source-v1.png",
+    "weatherTags": ["dry", "formal", "commute", "allSeason"]
+  },
+  {
+    "id": "brownSuedeLoafers",
+    "category": "shoes",
+    "nameKo": "브라운 스웨이드 로퍼",
+    "asset": "weatheron-outfit-brown-suede-loafers-v1.png",
+    "source": "weatheron-outfit-brown-suede-loafers-source-v1.png",
+    "weatherTags": ["dry", "formal", "commute", "spring"]
+  },
+  {
+    "id": "taupeWinterBoots",
+    "category": "shoes",
+    "nameKo": "토프 방한 앵클부츠",
+    "asset": "weatheron-outfit-taupe-winter-boots-v1.png",
+    "source": "weatheron-outfit-taupe-winter-boots-source-v1.png",
+    "weatherTags": ["cold", "wind", "winter", "outdoor"]
+  },
+  {
+    "id": "blackSportSandals",
+    "category": "shoes",
+    "nameKo": "블랙 스포츠 샌들",
+    "asset": "weatheron-outfit-black-sport-sandals-v1.png",
+    "source": "weatheron-outfit-black-sport-sandals-source-v1.png",
+    "weatherTags": ["heat", "dry", "summer", "outdoor"]
+  },
+  {
+    "id": "navyBaseballCap",
+    "category": "accessory",
+    "nameKo": "네이비 볼캡",
+    "asset": "weatheron-outfit-navy-baseball-cap-v1.png",
+    "source": "weatheron-outfit-navy-baseball-cap-source-v1.png",
+    "weatherTags": ["heat", "dry", "outdoor", "summer"]
+  },
+  {
+    "id": "oatmealCashmereScarf",
+    "category": "accessory",
+    "nameKo": "오트밀 캐시미어 머플러",
+    "asset": "weatheron-outfit-oatmeal-cashmere-scarf-v1.png",
+    "source": "weatheron-outfit-oatmeal-cashmere-scarf-source-v1.png",
+    "weatherTags": ["cold", "wind", "winter", "commute"]
+  },
+  {
+    "id": "charcoalPackableTote",
+    "category": "accessory",
+    "nameKo": "차콜 패커블 토트",
+    "asset": "weatheron-outfit-charcoal-packable-tote-v1.png",
+    "source": "weatheron-outfit-charcoal-packable-tote-source-v1.png",
+    "weatherTags": ["dry", "commute", "travel", "allSeason"]
+  },
+  {
+    "id": "brownLeatherGloves",
+    "category": "accessory",
+    "nameKo": "브라운 레더 글러브",
+    "asset": "weatheron-outfit-brown-leather-gloves-v1.png",
+    "source": "weatheron-outfit-brown-leather-gloves-source-v1.png",
+    "weatherTags": ["cold", "wind", "winter", "formal"]
   }
 ]

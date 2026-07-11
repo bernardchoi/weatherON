@@ -439,21 +439,16 @@ function getTodayMinMax(
 ): { minTempC: number; maxTempC: number } | null {
   const today = weather.daily?.[0];
   if (today) return { minTempC: today.minTempC, maxTempC: today.maxTempC };
-  if (weather.hourly.length > 0) {
-    const temps = weather.hourly.map((item) => item.tempC);
-    return { minTempC: Math.min(...temps), maxTempC: Math.max(...temps) };
-  }
-  return null;
+  if (weather.hourly.length === 0) return null;
+  const temperatures = weather.hourly.map((hour) => hour.tempC);
+  return { minTempC: Math.min(...temperatures), maxTempC: Math.max(...temperatures) };
 }
 
-function getHeroMetaLine(
-  current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"],
-  todayMinMax: { minTempC: number; maxTempC: number } | null,
+function getHeroTemperatureRange(
+  todayMinMax: { minTempC: number; maxTempC: number },
   temperatureUnit: P0ScreenProps["temperatureUnit"],
 ) {
-  const feelsLike = `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`;
-  if (!todayMinMax) return feelsLike;
-  return `${feelsLike} · 최고 ${formatTemperature(todayMinMax.maxTempC, temperatureUnit)} · 최저 ${formatTemperature(todayMinMax.minTempC, temperatureUnit)}`;
+  return `최고 ${formatTemperature(todayMinMax.maxTempC, temperatureUnit)} · 최저 ${formatTemperature(todayMinMax.minTempC, temperatureUnit)}`;
 }
 
 function HomeDecisionHero({
@@ -494,9 +489,11 @@ function HomeDecisionHero({
           </View>
           <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
           <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-          <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-            {getHeroMetaLine(current, todayMinMax, temperatureUnit)}
-          </Text>
+          {todayMinMax ? (
+            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+              {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+            </Text>
+          ) : null}
           <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
             {currentLocationName}
           </Text>
@@ -1243,10 +1240,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -62,
-    width: 124,
-    height: 124,
-    borderRadius: 62,
+    marginLeft: -72,
+    width: 144,
+    height: 144,
+    borderRadius: 72,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
@@ -1258,16 +1255,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 62,
-    height: 62,
+    width: 80,
+    height: 80,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 38,
-    height: 38,
+    width: 52,
+    height: 52,
   },
   showcaseTemp: {
     marginTop: 4,
