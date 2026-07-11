@@ -8,6 +8,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
+import { useIsNightHour } from "../utils/useIsNightHour";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
@@ -468,7 +469,10 @@ function HomeDecisionHero({
   theme: AppTheme;
   onOpenForecast: () => void;
 }) {
-  const weatherIcon = current.condition === "rain" || current.condition === "storm" ? uiIconAssets.rain : uiIconAssets.uv;
+  const isNight = useIsNightHour();
+  const isClear = current.condition !== "rain" && current.condition !== "storm";
+  const weatherIcon = !isClear ? uiIconAssets.rain : isNight ? uiIconAssets.clearNight : uiIconAssets.uv;
+  const weatherAccentColor = !isClear ? theme.sky : isNight ? theme.skyLite : theme.gold;
   const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.skyLite : theme.warm;
 
   return (
@@ -484,8 +488,8 @@ function HomeDecisionHero({
           onPress={onOpenForecast}
           style={styles.weatherPrimaryColumn}
         >
-          <View style={[styles.weatherOrb, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}42` }]}>
-            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: current.condition === "rain" || current.condition === "storm" ? theme.sky : theme.gold }]} resizeMode="contain" />
+          <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
+            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
           </View>
           <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
           <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
@@ -1230,7 +1234,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 150,
+    minHeight: 176,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -1240,10 +1244,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -72,
-    width: 144,
-    height: 144,
-    borderRadius: 72,
+    marginLeft: -88,
+    width: 176,
+    height: 176,
+    borderRadius: 88,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
@@ -1255,16 +1259,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 80,
-    height: 80,
+    width: 112,
+    height: 112,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 52,
-    height: 52,
+    width: 76,
+    height: 76,
   },
   showcaseTemp: {
     marginTop: 4,

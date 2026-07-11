@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
 import type { WeatherCondition } from "@weatheron/shared";
 import type { AppTheme } from "../theme/tokens";
+import { useIsNightHour } from "../utils/useIsNightHour";
 
 // docs/planning/WeatherON_planning_v5.html §20 "날씨 다이나믹 배경 애니메이션 — 홈(H1)"
 // 네이티브 gradient 모듈 없이 RN View 레이어로 6종 배경색 + 상태별 모션을 구성한다.
@@ -120,22 +121,6 @@ function startRepeating(getAnimation: () => Animated.CompositeAnimation, onItera
   return () => {
     cancelled = true;
   };
-}
-
-// 실제 일출·일몰 데이터가 아직 없어 로컬 시각 기준(19시~6시)으로 근사한다.
-// TODO: 날씨 상세 화면의 일출·일몰 계산이 공용화되면 그 값으로 교체.
-function useIsNightHour(): boolean {
-  const [isNight, setIsNight] = useState(() => isNightHour(new Date()));
-  useEffect(() => {
-    const timer = setInterval(() => setIsNight(isNightHour(new Date())), 5 * 60 * 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return isNight;
-}
-
-function isNightHour(date: Date): boolean {
-  const hour = date.getHours();
-  return hour >= 19 || hour < 6;
 }
 
 // Reduce Motion 접근성 설정과 앱 포그라운드 상태를 함께 반영해 애니메이션 on/off를 결정한다.

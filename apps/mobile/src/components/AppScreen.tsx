@@ -6,9 +6,11 @@ import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { spacing } from "../theme/tokens";
 
-// 실기기 QA 기준: 공통 AppScreen은 하단 탭바와 함께 쓰이는 화면이 많아
-// 스크롤 끝 콘텐츠가 탭바 아래로 물리지 않도록 탭바 높이+마진만큼 안전 여백을 둔다.
-const navClearancePadding = 112;
+// AppNavigator에서 BottomNav는 스크롤 영역과 겹치지 않는 별도 레이아웃(flex:1 형제)이라
+// 탭바를 가릴 걱정 없이 스크롤 끝의 시각적 여유만 담당하면 된다.
+// (과거 이 값을 탭바 높이+마진만큼(112)으로 키운 적이 있는데, 콘텐츠가 짧은 화면(예: 코디)에서
+// 불필요한 스크롤을 만드는 부작용이 있어 다시 최소 여백으로 되돌림.)
+const navClearancePadding = spacing.xl;
 
 type AppScreenProps = {
   title: string;
