@@ -172,7 +172,7 @@ export function AppNavigator() {
   return (
     <AppThemeProvider theme={theme}>
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenTransition key={route}>
+      <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack}>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}

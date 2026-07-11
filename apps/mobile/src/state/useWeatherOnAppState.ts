@@ -1365,6 +1365,8 @@ export function useWeatherOnAppState() {
     wardrobeReturnRoute,
   ]);
 
+  const canGoBack = route !== "A1" && route !== "H1" && route !== "O1" && route !== "O2";
+
   return {
     route,
     styleProfileReturnRoute,
@@ -1424,6 +1426,7 @@ export function useWeatherOnAppState() {
     permissionGate,
     navigate,
     goBack,
+    canGoBack,
     openAlertSettings,
     returnFromAlertSettings,
     openPolicyDocument,
