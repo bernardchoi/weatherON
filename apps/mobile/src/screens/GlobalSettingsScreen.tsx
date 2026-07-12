@@ -27,7 +27,7 @@ export function GlobalSettingsScreen({
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, opacity: theme.reducedTransparency ? 0 : 0.34 }]} />
 
         <View style={styles.header}>
           <BackButton onPress={() => onNavigate("M1")} />

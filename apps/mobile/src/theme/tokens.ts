@@ -2,6 +2,9 @@ export type AppThemeName = "dark" | "light";
 
 export type AppTheme = {
   name: AppThemeName;
+  // 표시 설정의 "투명 효과 줄이기" 상태. 화면은 이 값을 직접 분기하지 않고,
+  // 아래 토큰의 불투명 변형을 받아 동일한 색상 체계를 유지한다.
+  reducedTransparency: boolean;
   background: string;
   backgroundAlt: string;
   nav: string;
@@ -27,6 +30,7 @@ export type AppTheme = {
 export const appThemes: Record<AppThemeName, AppTheme> = {
   dark: {
     name: "dark",
+    reducedTransparency: false,
     background: "#17365D",
     backgroundAlt: "#2A5D8F",
     nav: "rgba(23,54,93,0.95)",
@@ -50,6 +54,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
   },
   light: {
     name: "light",
+    reducedTransparency: false,
     background: "#F5F9FC",
     backgroundAlt: "#D7EAF7",
     nav: "rgba(255,255,255,0.94)",
@@ -91,10 +96,46 @@ export const appColors = {
   border: appThemes.dark.border,
 };
 
-export function resolveAppTheme(themeMode: "system" | "light" | "dark" | undefined, systemMode: "light" | "dark" | null | undefined): AppTheme {
-  if (themeMode === "light") return appThemes.light;
-  if (themeMode === "dark") return appThemes.dark;
-  return systemMode === "light" ? appThemes.light : appThemes.dark;
+export function resolveAppTheme(
+  themeMode: "system" | "light" | "dark" | undefined,
+  systemMode: "light" | "dark" | null | undefined,
+  reducedTransparency = false,
+): AppTheme {
+  const baseTheme = themeMode === "light"
+    ? appThemes.light
+    : themeMode === "dark"
+      ? appThemes.dark
+      : systemMode === "light"
+        ? appThemes.light
+        : appThemes.dark;
+
+  if (!reducedTransparency) return baseTheme;
+
+  // 반투명 패널·탭 바·보조 텍스트·구분선을 불투명 표면으로 바꾼다.
+  // 개별 화면마다 조건을 두지 않아도 테마 토큰을 쓰는 모든 화면에 즉시 적용된다.
+  return baseTheme.name === "dark"
+    ? {
+        ...baseTheme,
+        reducedTransparency: true,
+        nav: "#17365D",
+        navBorder: "#40688D",
+        cardMuted: "#315B85",
+        muted: "#D7E6F5",
+        subtle: "#C6D9EA",
+        border: "#40688D",
+        shadow: "#0B1E32",
+      }
+    : {
+        ...baseTheme,
+        reducedTransparency: true,
+        nav: "#FFFFFF",
+        navBorder: "#C7D8E6",
+        cardMuted: "#E4EDF4",
+        muted: "#344256",
+        subtle: "#526174",
+        border: "#C7D8E6",
+        shadow: "#1F4E79",
+      };
 }
 
 // UI Design Spec v1.0 §8: card 20 / cardSm 16 / sheet 28 / tab 24 / pill 16|999

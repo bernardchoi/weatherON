@@ -52,7 +52,7 @@ import { appColors, resolveAppTheme } from "../theme/tokens";
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
   const systemTheme = useColorScheme();
-  const theme = resolveAppTheme(appState.themeMode, systemTheme);
+  const theme = resolveAppTheme(appState.themeMode, systemTheme, appState.reducedTransparency);
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.umbrellaReturnRoute);
 
