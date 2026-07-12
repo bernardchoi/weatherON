@@ -127,9 +127,22 @@ await writeFile(
       current: await buildDemoState(false),
       destination: await buildDemoState(true),
       multiDestination: await buildDemoState(false, "ready", {
+        notificationNow: new Date("2026-06-26T06:00:00+09:00").getTime(),
         savedDestinations: [
-          { place: gangneungPlace, careEnabled: true, alertCondition: { rainThresholdPct: 70, leadTimeMinutes: 120, windThresholdMs: 8 } },
-          { place: jamsilPlace, careEnabled: true, alertCondition: { rainThresholdPct: 70, leadTimeMinutes: 30, windThresholdMs: 5 } },
+          {
+            place: gangneungPlace,
+            careEnabled: true,
+            alertCondition: { rainThresholdPct: 70, leadTimeMinutes: 120, windThresholdMs: 8 },
+            schedulePreference: { targetArrivalTime: "13:00", transportMode: "auto", repeatEnabled: false, repeatDays: [] },
+            travelEstimate: { travelMinutes: 180, travelProvider: "fallback", travelStatus: "ready" },
+          },
+          {
+            place: jamsilPlace,
+            careEnabled: true,
+            alertCondition: { rainThresholdPct: 10, leadTimeMinutes: 30, windThresholdMs: 5 },
+            schedulePreference: { targetArrivalTime: "10:00", transportMode: "auto", repeatEnabled: true, repeatDays: ["fri"] },
+            travelEstimate: { travelMinutes: 45, travelProvider: "fallback", travelStatus: "ready" },
+          },
         ],
       }),
       stale: await buildDemoState(false, "stale"),
@@ -225,6 +238,7 @@ assert.equal(demoResults.httpProvider.destination.source, "kma");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
+assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.scheduledAt === "2026-06-25T23:30:00.000Z"));
 assert.equal(demoResults.stale.weatherProvider.status, "stale");
 assert.equal(demoResults.stale.weather.stale, true);
 assert.equal(demoResults.fallback.weatherProvider.status, "fallback");

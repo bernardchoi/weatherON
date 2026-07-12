@@ -481,7 +481,7 @@ export function useWeatherOnAppState() {
       permissionReady,
       smartCareEnabled,
       preferences: alertPreferences,
-      ids: notifications.map((item) => `${item.id}:${item.active}:${item.reason}`),
+      ids: notifications.map((item) => `${item.id}:${item.active}:${item.reason}:${item.scheduledAt ?? ""}`),
     });
     if (localNotificationSyncKeyRef.current === syncKey) return;
     localNotificationSyncKeyRef.current = syncKey;
@@ -1560,7 +1560,7 @@ function shouldScheduleLocalNotification(notification: NotificationRuleEvaluatio
 }
 
 function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): string {
-  if (result.status === "scheduled" && result.scheduledCount > 0) return "5초 뒤 발송 예약됨";
+  if (result.status === "scheduled" && result.scheduledCount > 0) return "알림 예약 완료";
   if (result.status === "scheduled") return "예약 대기 없음";
   if (result.status === "verification-failed") return "예약 확인 실패";
   if (result.status === "permission-required") return "권한 필요";

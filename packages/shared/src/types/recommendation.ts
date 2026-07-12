@@ -73,6 +73,8 @@ export type NotificationRuleEvaluation = NotificationRule & {
   active: boolean;
   title: string;
   reason: string;
+  /** 실제 기기 알림을 발송할 절대 시각. 시간 기준이 없는 안내 알림은 예약하지 않음. */
+  scheduledAt?: string;
   conditionSummary?: string;
   ruleVersion: string;
 };

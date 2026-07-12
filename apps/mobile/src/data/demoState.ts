@@ -31,6 +31,7 @@ export type DemoStateOptions = {
   savedDestinations?: DestinationNotificationInput[];
   wardrobe?: WardrobeItem[];
   preferenceProfile?: UserPreferenceProfile;
+  notificationNow?: number;
 };
 
 export type DestinationScheduleInput = {
@@ -87,6 +88,8 @@ export function buildDemoStateFromWeatherResult(
         destinationSnapshots: weatherProviderResult.destinationSnapshots,
         destinationCareOn: options.destinationCareEnabled ?? true,
         savedDestinations: options.savedDestinations,
+        fallbackSchedule: options.destinationSchedule,
+        nowMs: options.notificationNow ?? Date.now(),
       })
     : [];
   const destinationCare = buildDestinationCare({
@@ -150,6 +153,8 @@ function buildDestinationNotifications(
     destinationSnapshots: WeatherSnapshot[];
     destinationCareOn: boolean;
     savedDestinations?: DestinationNotificationInput[];
+    fallbackSchedule?: DestinationScheduleInput;
+    nowMs: number;
   },
 ): NotificationRuleEvaluation[] {
   const destinationRule = defaultNotificationRules.find((rule) => rule.type === "destination");
@@ -168,6 +173,8 @@ function buildDestinationNotifications(
             careEnabled: options.destinationCareOn,
             alertCondition:
               options.destinationAlertCondition ?? destinationWeatherAlertConditionFallback(),
+            schedulePreference: options.fallbackSchedule,
+            travelEstimate: options.fallbackSchedule,
           },
         ];
 
@@ -175,18 +182,132 @@ function buildDestinationNotifications(
     const destinationWeather =
       options.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id) ??
       relabelWeatherSnapshot(fallbackDestinationWeather, destination.place);
+    const timing = getDestinationNotificationTiming(destination, destinationWeather, options.nowMs);
+    const weatherAtDeparture = timing ? getWeatherAtDeparture(destinationWeather, timing.departureAt) : undefined;
     const [notification] = evaluateNotificationRules(activeWeather, {
       rules: [{ ...destinationRule, id: `${destinationRule.id}:${destination.place.id}` }],
       destinationAlertCondition: destination.alertCondition,
       destinationCareOn: destination.careEnabled,
       destinationCategory: destination.place.category,
-      destinationWeather,
+      destinationWeather: weatherAtDeparture ?? destinationWeather,
     });
     return {
       ...notification,
       title: `${destination.place.name} 알림`,
+      active: Boolean(timing && notification.active),
+      reason: timing && notification.active ? notification.reason : "도착 희망시간 기준 예보 확인 대기",
+      scheduledAt: timing && notification.active ? timing.scheduledAt.toISOString() : undefined,
     };
   });
+}
+
+type DestinationNotificationTiming = {
+  departureAt: Date;
+  scheduledAt: Date;
+};
+
+function getDestinationNotificationTiming(
+  destination: DestinationNotificationInput,
+  weather: WeatherSnapshot,
+  nowMs: number,
+): DestinationNotificationTiming | null {
+  const schedule = destination.schedulePreference;
+  const targetArrivalTime = schedule?.targetArrivalTime;
+  if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
+
+  const travelMinutes = getTravelMinutes(schedule?.transportMode, destination.travelEstimate?.travelMinutes);
+  if (typeof travelMinutes !== "number") return null;
+  const arrivalAt = getNextArrivalAt(targetArrivalTime, schedule?.repeatEnabled ?? false, schedule?.repeatDays ?? [], nowMs, travelMinutes, destination.alertCondition.leadTimeMinutes);
+  if (!arrivalAt) return null;
+  const bufferMinutes = getAutoBufferMinutes(arrivalAt.getTime() - nowMs, travelMinutes);
+  const departureAt = new Date(arrivalAt.getTime() - (travelMinutes + bufferMinutes) * 60_000);
+  const scheduledAt = new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60_000);
+  if (scheduledAt.getTime() <= nowMs) return null;
+  if (!getWeatherAtDeparture(weather, departureAt)) return null;
+  return { departureAt, scheduledAt };
+}
+
+function getNextArrivalAt(
+  targetArrivalTime: string,
+  repeatEnabled: boolean,
+  repeatDays: DestinationScheduleInput["repeatDays"],
+  nowMs: number,
+  travelMinutes: number,
+  leadTimeMinutes: number,
+): Date | null {
+  const [hourText, minuteText] = targetArrivalTime.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const now = new Date(nowMs);
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const arrivalAt = new Date(now);
+    arrivalAt.setHours(hour, minute, 0, 0);
+    arrivalAt.setDate(now.getDate() + offset);
+    if (repeatEnabled && !repeatDays?.includes(getRepeatDay(arrivalAt))) continue;
+    const latestAllowedTime = nowMs + (travelMinutes + leadTimeMinutes) * 60_000;
+    if (arrivalAt.getTime() > latestAllowedTime) return arrivalAt;
+  }
+  return null;
+}
+
+function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date): WeatherSnapshot | null {
+  const departureMs = departureAt.getTime();
+  const closestHour = weather.hourly.reduce<{ hour: WeatherSnapshot["hourly"][number]; distance: number } | null>((closest, hour) => {
+    const hourMs = getWeatherHourTimestamp(hour.time, weather.observedAt);
+    if (!Number.isFinite(hourMs)) return closest;
+    const candidate = { hour, distance: Math.abs(hourMs - departureMs) };
+    return !closest || candidate.distance < closest.distance ? candidate : closest;
+  }, null);
+  if (!closestHour || closestHour.distance > 2 * 60 * 60_000) return null;
+  return {
+    ...weather,
+    current: {
+      ...weather.current,
+      rainProbabilityPct: closestHour.hour.rainProbabilityPct,
+      precipitationMm: closestHour.hour.precipitationMm,
+      windMs: closestHour.hour.windMs,
+      condition: closestHour.hour.condition as WeatherSnapshot["current"]["condition"],
+    },
+    hourly: [closestHour.hour],
+  };
+}
+
+function getWeatherHourTimestamp(hourTime: string, observedAt: string): number {
+  if (isValidTimeText(hourTime)) {
+    const [hourText, minuteText] = hourTime.split(":");
+    const observed = new Date(observedAt);
+    observed.setHours(Number(hourText), Number(minuteText), 0, 0);
+    return observed.getTime();
+  }
+  return Date.parse(hourTime);
+}
+
+function getTravelMinutes(mode: DestinationTransportMode | undefined, baseTravelMinutes: number | undefined): number | undefined {
+  if (typeof baseTravelMinutes !== "number" || baseTravelMinutes <= 0) return undefined;
+  if (mode === "transit") return Math.max(12, Math.ceil(baseTravelMinutes * 1.25) + 8);
+  if (mode === "walk") return Math.max(15, Math.ceil(baseTravelMinutes * 1.8));
+  return baseTravelMinutes;
+}
+
+function getAutoBufferMinutes(arrivalOffsetMs: number, travelMinutes: number): number {
+  const freeWindow = Math.floor(arrivalOffsetMs / 60_000) - travelMinutes;
+  if (freeWindow <= 30) return 0;
+  if (freeWindow <= 90) return 5;
+  if (freeWindow <= 180) return 10;
+  if (freeWindow <= 360) return 15;
+  return 20;
+}
+
+function getRepeatDay(date: Date): NonNullable<DestinationScheduleInput["repeatDays"]>[number] {
+  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][date.getDay()] as NonNullable<DestinationScheduleInput["repeatDays"]>[number];
+}
+
+function isValidTimeText(value: string): boolean {
+  if (!/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hourText, minuteText] = value.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
 }
 
 function destinationWeatherAlertConditionFallback(): DestinationAlertCondition {

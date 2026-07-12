@@ -19,7 +19,7 @@ export type LocalNotificationResponsePayload = {
   notificationId?: string;
 };
 
-type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission">;
+type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt">;
 type ExpoNotification = Parameters<ExpoNotificationsModule["addNotificationReceivedListener"]>[0] extends (notification: infer Notification) => void
   ? Notification
   : never;
@@ -73,12 +73,11 @@ export async function syncLocalWeatherNotifications(options: {
   if (!permission.granted) return { status: "permission-required", scheduledCount: 0 };
 
   const activeNotifications = options.notifications
-    .filter((item) => item.active && item.requiresPushPermission)
-    .slice(0, 3);
+    .filter((item) => item.active && item.requiresPushPermission && isFutureScheduledAt(item.scheduledAt));
   await cancelSmartScheduledNotifications(Notifications);
 
   await Promise.all(
-    activeNotifications.map((item, index) =>
+    activeNotifications.map((item) =>
       Notifications.scheduleNotificationAsync({
         identifier: `${smartNotificationIdentifierPrefix}${item.id}`,
         content: {
@@ -90,8 +89,8 @@ export async function syncLocalWeatherNotifications(options: {
           },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 60 * (index + 1),
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: new Date(item.scheduledAt!),
           channelId: notificationChannelId,
         },
       }),
@@ -103,6 +102,12 @@ export async function syncLocalWeatherNotifications(options: {
     status: scheduledCount >= activeNotifications.length ? "scheduled" : "verification-failed",
     scheduledCount,
   };
+}
+
+function isFutureScheduledAt(value: string | undefined): value is string {
+  if (!value) return false;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
 export async function scheduleLocalNotificationTest(options: {
