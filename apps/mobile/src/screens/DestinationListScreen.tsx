@@ -1,7 +1,8 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { PlaceSearchResult } from "@weatheron/shared";
 import { AppButton } from "../components/AppButton";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -110,7 +111,7 @@ export function DestinationListScreen({
 
         {hasDestinations ? (
           <View style={styles.secondaryActions}>
-            <Pressable
+            <FeedbackPressable
               accessibilityLabel="목록 하단 목적지 추가"
               accessibilityRole="button"
               onPress={() => onNavigate("P1")}
@@ -118,7 +119,7 @@ export function DestinationListScreen({
             >
               <Text style={[styles.addDestinationIcon, { color: theme.gold }]}>+</Text>
               <Text style={[styles.addDestinationText, { color: theme.text }]}>목적지 추가</Text>
-            </Pressable>
+            </FeedbackPressable>
           </View>
         ) : null}
 
@@ -201,7 +202,7 @@ function DestinationCard({
         cardShadow(theme),
       ]}
     >
-      <Pressable
+      <FeedbackPressable
         accessibilityLabel={`${item.title} 목적지 상세 보기`}
         accessibilityRole="button"
         accessibilityState={{ selected }}
@@ -253,7 +254,7 @@ function DestinationCard({
         </View>
 
         <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
-      </Pressable>
+      </FeedbackPressable>
 
     </View>
   );
@@ -285,9 +286,9 @@ function RemovedDestinationBanner({
         <Text style={[styles.resultTitle, { color: theme.warm }]}>목적지 삭제됨</Text>
         <Text style={[styles.resultBody, { color: theme.muted }]}>{destinationName}을 다시 복구할 수 있어요</Text>
       </View>
-      <Pressable accessibilityLabel={`${destinationName} 목적지 복구`} accessibilityRole="button" onPress={onRestore} style={[styles.restoreButton, { backgroundColor: theme.gold }]}>
+      <FeedbackPressable accessibilityLabel={`${destinationName} 목적지 복구`} accessibilityRole="button" onPress={onRestore} style={[styles.restoreButton, { backgroundColor: theme.gold }]}>
         <Text style={[styles.restoreButtonText, { color: theme.onAccent }]}>복구</Text>
-      </Pressable>
+      </FeedbackPressable>
     </View>
   );
 }

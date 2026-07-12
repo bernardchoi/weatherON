@@ -228,8 +228,8 @@ async function checkOutfitLaunchFlow(page) {
   await clickText(page, "상세 보기");
   await clickText(page, "내 옷장 보기");
   await assertText(page, "내 옷장");
-  await clickText(page, "옷 추가");
-  await assertText(page, "옷장 프리셋");
+  await clickText(page, "아이템 추가");
+  await assertText(page, "프리셋 전체");
   await clickAriaIncludes(page, "홈 탭");
   await assertText(page, "최고 ");
 }
@@ -711,11 +711,10 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await assertText(page, "이력·도착 화면 확인");
     await clickAriaIncludes(page, "알림 센터 열기");
     await assertText(page, "최근 처리");
-    await assertText(page, "잠실종합운동장 알림");
-    await clickAriaIncludes(page, "잠실종합운동장 알림 열기");
-    await assertText(page, "목적지 기준 알림 미리보기");
-    await assertText(page, "잠실종합운동장");
-    await waitForNotificationHistoryOpen(page, "G2", "잠실종합운동장");
+    await assertText(page, "강수 알림");
+    await clickAriaIncludes(page, "강수 알림 열기");
+    await assertText(page, "강수 타임라인");
+    await waitForNotificationHistoryOpen(page, "H5", "강수 알림");
   } finally {
     await context.close();
   }

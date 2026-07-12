@@ -24,7 +24,7 @@ export function AppButton({ label, onPress, tone = "primary", size = "md", acces
   const animateTo = (toValue: number) => {
     Animated.timing(scale, {
       toValue,
-      duration: 150,
+      duration: 110,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();

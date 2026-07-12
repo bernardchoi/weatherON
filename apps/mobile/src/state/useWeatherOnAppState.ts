@@ -39,6 +39,7 @@ import {
   type LocalNotificationSyncResult,
 } from "../providers/localNotifications";
 import { getRouteLabel } from "../navigation/routeLabels";
+import { getMinutesUntilTimeInZone } from "../utils/zonedDateTime";
 
 export type { DestinationTransportMode };
 export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -170,7 +171,7 @@ export function useWeatherOnAppState() {
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
   const [deviceLocationState, setDeviceLocationState] = useState<DeviceLocationState>(initialDeviceLocationState);
   const [deviceWeatherLocation, setDeviceWeatherLocation] = useState<KmaWeatherLocationPreset | null>(null);
-  const [manualWeatherLocation, setManualWeatherLocation] = useState<KmaWeatherLocationPreset>(defaultSeoulWeatherLocation);
+  const [manualWeatherLocation, setManualWeatherLocation] = useState<WeatherLocationPreset>(defaultSeoulWeatherLocation);
   const [savedDestinations, setSavedDestinations] = useState<SavedDestination[]>([]);
   const [recentlyRemovedDestination, setRecentlyRemovedDestination] = useState<SavedDestination | null>(null);
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
@@ -248,6 +249,7 @@ export function useWeatherOnAppState() {
         selectedDestinationSchedulePreference.targetArrivalTime,
         selectedDestinationTravelMinutes,
         nowMinuteTick,
+        selectedDestinationPlace.timezone,
       )
     : undefined;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
@@ -353,6 +355,7 @@ export function useWeatherOnAppState() {
               name: selectedDestinationPlace.name,
               category: selectedDestinationPlace.category,
               countryCode: selectedDestinationPlace.countryCode,
+              timezone: selectedDestinationPlace.timezone,
             }
           : undefined,
         destinationAlertCondition: selectedDestinationAlertCondition,
@@ -588,7 +591,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const selectWeatherLocation = useCallback((place: PlaceSearchResult) => {
-    setManualWeatherLocation(createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id));
+    setManualWeatherLocation(createWeatherLocationFromPlace(place));
     setWeatherLocationMode("manual");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
@@ -810,42 +813,36 @@ export function useWeatherOnAppState() {
     setAlertPreferences((current) => ({ ...current, [key]: !current[key] }));
   }, []);
 
+  // 알림·목적지 진입점 3곳(알림 조건 수정, 알림 조건 편집, 딥링크)이 공유하는 저장 목적지 포커스 처리.
+  const focusSavedDestination = useCallback((destination: SavedDestination) => {
+    setSelectedDestinationPlace(destination.place);
+    setDestinationSelectionReady(true);
+    setPreviewDestinationCareEnabled(destination.careEnabled);
+    setPreviewDestinationAlertCondition(destination.alertCondition);
+    setDestinationHubFilterState("all");
+    setUseDestinationWeather(false);
+    setWeatherProviderMode("ready");
+    setWeatherRefreshTick((value) => value + 1);
+  }, []);
+
   const editDestinationAlertCondition = useCallback((placeId: string) => {
     const matchedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
-    if (matchedDestination) {
-      setSelectedDestinationPlace(matchedDestination.place);
-      setDestinationSelectionReady(true);
-      setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
-      setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
-      setDestinationHubFilterState("all");
-      setUseDestinationWeather(false);
-      setWeatherProviderMode("ready");
-      setWeatherRefreshTick((value) => value + 1);
-    }
+    if (matchedDestination) focusSavedDestination(matchedDestination);
     setRoute("G2");
-  }, [savedDestinations]);
+  }, [focusSavedDestination, savedDestinations]);
 
   const editNotificationCondition = useCallback((id: string, route: P0RouteId) => {
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
     if (destinationPlaceId) {
       const matchedDestination = savedDestinations.find((destination) => destination.place.id === destinationPlaceId);
-      if (matchedDestination) {
-        setSelectedDestinationPlace(matchedDestination.place);
-        setDestinationSelectionReady(true);
-        setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
-        setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
-        setDestinationHubFilterState("all");
-        setUseDestinationWeather(false);
-        setWeatherProviderMode("ready");
-        setWeatherRefreshTick((value) => value + 1);
-      }
+      if (matchedDestination) focusSavedDestination(matchedDestination);
       setAlertSettingsRouteState({ returnTo: "G2", focus: "destination" });
       setRoute("M2");
       return;
     }
     setAlertSettingsRouteState({ returnTo: route, focus: getAlertSettingsFocusFromRoute(route) });
     setRoute("M2");
-  }, [savedDestinations]);
+  }, [focusSavedDestination, savedDestinations]);
 
   const openNotificationDeepLink = useCallback((id: string, route: P0RouteId) => {
     setReadNotificationIds((current) => (current.includes(id) ? current : [...current, id]));
@@ -863,16 +860,7 @@ export function useWeatherOnAppState() {
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
     if (destinationPlaceId && route === "G2") {
       const matchedDestination = savedDestinations.find((destination) => destination.place.id === destinationPlaceId);
-      if (matchedDestination) {
-        setSelectedDestinationPlace(matchedDestination.place);
-        setDestinationSelectionReady(true);
-        setPreviewDestinationCareEnabled(matchedDestination.careEnabled);
-        setPreviewDestinationAlertCondition(matchedDestination.alertCondition);
-        setDestinationHubFilterState("all");
-        setUseDestinationWeather(false);
-        setWeatherProviderMode("ready");
-        setWeatherRefreshTick((value) => value + 1);
-      }
+      if (matchedDestination) focusSavedDestination(matchedDestination);
     }
     if (route === "M2") {
       setAlertSettingsRouteState({ returnTo: "H1", focus: "general" });
@@ -881,7 +869,7 @@ export function useWeatherOnAppState() {
       setNotificationCenterReturnRoute("H1");
     }
     setRoute(route);
-  }, [savedDestinations, state.notifications]);
+  }, [focusSavedDestination, savedDestinations, state.notifications]);
 
   const sendTestNotification = useCallback(async (route: P0RouteId = "M2") => {
     if (!permissionReady) {
@@ -1719,7 +1707,7 @@ type PersistedAppState = {
   previewDestinationSchedulePreference: DestinationSchedulePreference;
   previewDestinationTravelEstimate: DestinationTravelEstimate;
   weatherLocationMode: WeatherLocationMode;
-  manualWeatherLocation: KmaWeatherLocationPreset;
+  manualWeatherLocation: WeatherLocationPreset;
   temperatureUnit: TemperatureUnit;
   weightUnit: WeightUnit;
   distanceUnit: DistanceUnit;
@@ -1901,7 +1889,7 @@ function normalizePersistedAppState(value: unknown): PersistedAppState {
     previewDestinationSchedulePreference: normalizeDestinationSchedulePreference(record.previewDestinationSchedulePreference, selectedDestinationPlace),
     previewDestinationTravelEstimate: normalizeDestinationTravelEstimate(record.previewDestinationTravelEstimate, defaultSeoulWeatherLocation, selectedDestinationPlace),
     weatherLocationMode: record.weatherLocationMode === "manual" ? "manual" : "auto",
-    manualWeatherLocation: isKmaWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
+    manualWeatherLocation: isWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
     temperatureUnit: record.temperatureUnit === "fahrenheit" ? "fahrenheit" : "celsius",
     weightUnit: record.weightUnit === "pound" ? "pound" : "kilogram",
     distanceUnit: record.distanceUnit === "mile" ? "mile" : "meter",
@@ -2006,25 +1994,15 @@ function isWalkUnavailableForEstimate(estimate: DestinationTravelEstimate, trans
   return distanceKm > maxWalkableDestinationDistanceKm;
 }
 
-function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number): number {
-  const arrivalOffset = getMinutesUntilTime(targetArrivalTime, nowMs);
-  if (arrivalOffset === null) return 10;
+function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number, timeZone: string): number {
+  if (!isValidTimeText(targetArrivalTime)) return 10;
+  const arrivalOffset = getMinutesUntilTimeInZone(targetArrivalTime, nowMs, timeZone);
   const freeWindow = arrivalOffset - travelMinutes;
   if (freeWindow <= 30) return 0;
   if (freeWindow <= 90) return 5;
   if (freeWindow <= 180) return 10;
   if (freeWindow <= 360) return 15;
   return 20;
-}
-
-function getMinutesUntilTime(time: string, nowMs: number): number | null {
-  if (!isValidTimeText(time)) return null;
-  const [hourText, minuteText] = time.split(":");
-  const targetMinutes = Number(hourText) * 60 + Number(minuteText);
-  const now = new Date(nowMs);
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const dayMinutes = 24 * 60;
-  return ((targetMinutes - currentMinutes) % dayMinutes + dayMinutes) % dayMinutes;
 }
 
 function isValidTimeText(value: string): boolean {
@@ -2037,9 +2015,9 @@ function isValidTimeText(value: string): boolean {
 
 function getActiveWeatherLocation(
   mode: WeatherLocationMode,
-  manualLocation: KmaWeatherLocationPreset,
+  manualLocation: WeatherLocationPreset,
   deviceLocation: KmaWeatherLocationPreset | null,
-): KmaWeatherLocationPreset {
+): WeatherLocationPreset {
   return mode === "manual" ? manualLocation : deviceLocation ?? seongsuWeatherLocation;
 }
 
@@ -2226,17 +2204,15 @@ function isGeoCoordinate(value: unknown): value is PlaceSearchResult["coordinate
   return typeof record.latitude === "number" && typeof record.longitude === "number";
 }
 
-function isKmaWeatherLocationPreset(value: unknown): value is KmaWeatherLocationPreset {
+function isWeatherLocationPreset(value: unknown): value is WeatherLocationPreset {
   if (!value || typeof value !== "object") return false;
-  const record = value as Partial<KmaWeatherLocationPreset>;
+  const record = value as Partial<WeatherLocationPreset>;
   return (
     typeof record.locationId === "string" &&
     typeof record.locationName === "string" &&
     (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
     isGeoCoordinate(record.coordinate) &&
-    typeof record.timezone === "string" &&
-    typeof record.grid?.nx === "number" &&
-    typeof record.grid?.ny === "number"
+    typeof record.timezone === "string"
   );
 }
 

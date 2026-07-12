@@ -226,11 +226,13 @@ function normalizeBaseUrl(baseUrl: string): string {
 }
 
 export function getKmaForecastBaseDateTime(now = new Date()): { baseDate: string; baseTime: string } {
+  // KMA 발표 시각은 KST 기준이라 기기 시간대와 무관하게 KST 벽시계로 계산한다(KST는 DST 없음).
+  const kstNow = new Date(now.getTime() + (now.getTimezoneOffset() + 9 * 60) * 60_000);
   const baseTimes = [2, 5, 8, 11, 14, 17, 20, 23];
-  const candidate = new Date(now.getTime());
+  const candidate = new Date(kstNow.getTime());
   let selectedHour: number | undefined;
   for (const hour of baseTimes) {
-    if (now.getHours() > hour || (now.getHours() === hour && now.getMinutes() >= 10)) selectedHour = hour;
+    if (kstNow.getHours() > hour || (kstNow.getHours() === hour && kstNow.getMinutes() >= 10)) selectedHour = hour;
   }
   if (selectedHour == null) {
     candidate.setDate(candidate.getDate() - 1);

@@ -153,12 +153,14 @@ try {
     await clickText(page, "이동수단");
     await assertText(page, "대중교통", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
-    await clickText(page, "도착 희망 시각");
+    await clickAriaIncludes(page, "대중교통 이동수단 선택");
+    await clickAriaIncludes(page, "도착 희망 시각");
     await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
     await assertText(page, "반복 알림", viewport, "destination-care");
     await assertText(page, "ON", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
     await screenshot(page, viewport, "destination-care");
+    await clickAriaIncludes(page, "도착 희망 시각 확인");
 
     console.log(`small-screen: ${viewport.name}/notification-sidebar`);
     await clickText(page, "홈");
@@ -359,6 +361,21 @@ async function clickBell(page) {
     return true;
   });
   if (!clicked) throw new Error("missing notification bell");
+  await waitForUi();
+}
+
+async function clickAriaIncludes(page, labelPart) {
+  const clicked = await page.evaluate((targetLabel) => {
+    const target = [...document.querySelectorAll("[aria-label]")].find((element) =>
+      (element.getAttribute("aria-label") || "").includes(targetLabel),
+    );
+    if (!target) return false;
+    target.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true }));
+    target.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true }));
+    target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    return true;
+  }, labelPart);
+  if (!clicked) throw new Error(`missing aria clickable: ${labelPart}`);
   await waitForUi();
 }
 

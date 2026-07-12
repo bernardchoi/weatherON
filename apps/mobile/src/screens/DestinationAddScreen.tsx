@@ -1,7 +1,8 @@
 import React from "react";
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
@@ -60,7 +61,13 @@ export function DestinationAddScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
@@ -116,7 +123,7 @@ export function DestinationAddScreen({
               const selected = selectedDestinationPlace.id === place.id;
               const duplicate = (duplicateNameCounts.get(place.name) ?? 0) > 1;
               return (
-                <Pressable
+                <FeedbackPressable
                   accessibilityLabel={`${place.name} 목적지 선택`}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
@@ -155,7 +162,7 @@ export function DestinationAddScreen({
                     </Text>
                     <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>
-                </Pressable>
+                </FeedbackPressable>
               );
             })}
           </View>
@@ -189,14 +196,14 @@ export function DestinationAddScreen({
 function SearchRecoveryButton({ label, accessibilityLabel, onPress }: { label: string; accessibilityLabel: string; onPress: () => void }) {
   const theme = useAppTheme();
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onPress}
       style={[styles.retryButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
     >
       <Text style={[styles.retryButtonText, { color: theme.text }]}>{label}</Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 

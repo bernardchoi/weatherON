@@ -72,6 +72,18 @@ await writeFile(
         locationName: "강릉 안목해변",
         countryCode: "KR",
       }),
+      openmeteoHourlyHumidity: normalizeOpenMeteoWeather({
+        ...openMeteoFixture,
+        current: {
+          ...openMeteoFixture.current,
+          time: openMeteoFixture.hourly?.time?.[1],
+          relative_humidity_2m: undefined,
+        },
+      }, {
+        locationId: "kr-gangneung-beach",
+        locationName: "강릉 안목해변",
+        countryCode: "KR",
+      }),
       placeSearchDefault: searchFixturePlaces(""),
       placeSearchSports: searchFixturePlaces("잠실"),
       seoulGrid: convertWgs84ToKmaGrid({ latitude: 37.5665, longitude: 126.978 }),
@@ -89,6 +101,7 @@ await writeFile(
     const { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
+    const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
     const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
@@ -162,6 +175,9 @@ await writeFile(
       httpUrls: requestedUrls,
       kmaBaseEarly: getKmaForecastBaseDateTime(new Date("2026-06-26T01:59:00+09:00")),
       kmaBaseMorning: getKmaForecastBaseDateTime(new Date("2026-06-26T05:10:00+09:00")),
+      seoulWallTime: createDateAtTimeInZone({ year: 2026, month: 6, day: 26 }, "10:00", "Asia/Seoul").toISOString(),
+      newYorkWallTime: createDateAtTimeInZone({ year: 2026, month: 6, day: 26 }, "10:00", "America/New_York").toISOString(),
+      newYorkMinutesUntil: getMinutesUntilTimeInZone("10:00", new Date("2026-06-26T12:00:00Z").getTime(), "America/New_York"),
     };
   `,
 );
@@ -225,6 +241,7 @@ assert.equal(results.openmeteo.source, "openmeteo");
 assert.equal(results.openmeteo.current.condition, "clear");
 assert.equal(results.openmeteo.current.feelsLikeC, 31);
 assert.equal(results.openmeteo.hourly[1].windMs, 4.81);
+assert.equal(results.openmeteoHourlyHumidity.current.humidityPct, 66);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");
@@ -260,6 +277,9 @@ assert.ok(demoResults.httpUrls.some((url) => url.includes("getVilageFcst")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("temperature_2m")));
 assert.deepEqual(demoResults.kmaBaseEarly, { baseDate: "20260625", baseTime: "2300" });
 assert.deepEqual(demoResults.kmaBaseMorning, { baseDate: "20260626", baseTime: "0500" });
+assert.equal(demoResults.seoulWallTime, "2026-06-26T01:00:00.000Z");
+assert.equal(demoResults.newYorkWallTime, "2026-06-26T14:00:00.000Z");
+assert.equal(demoResults.newYorkMinutesUntil, 120);
 
 await rm(outDir, { recursive: true, force: true });
 

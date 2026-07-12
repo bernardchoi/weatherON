@@ -25,7 +25,7 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
       precipitationMm,
       rainProbabilityPct: hourly[0]?.rainProbabilityPct ?? (precipitationMm > 0 ? 80 : 0),
       windMs: kmhToMs(current.wind_speed_10m ?? 0),
-      humidityPct: current.relative_humidity_2m ?? hourly[0]?.rainProbabilityPct ?? 0,
+      humidityPct: current.relative_humidity_2m ?? getCurrentHourlyHumidity(payload) ?? 0,
       uvIndex: current.uv_index ?? payload.hourly?.uv_index?.[0],
     },
     hourly,
@@ -33,6 +33,24 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     source: "openmeteo",
     stale: options.stale ?? false,
   };
+}
+
+function getCurrentHourlyHumidity(payload: OpenMeteoResponse): number | undefined {
+  const humidityValues = payload.hourly?.relative_humidity_2m;
+  if (!humidityValues?.length) return undefined;
+
+  const currentTime = payload.current?.time;
+  const hourlyTimes = payload.hourly?.time ?? [];
+  if (currentTime) {
+    const exactIndex = hourlyTimes.indexOf(currentTime);
+    if (exactIndex >= 0) return humidityValues[exactIndex];
+
+    const currentHour = currentTime.slice(0, 13);
+    const hourIndex = hourlyTimes.findIndex((time) => time.slice(0, 13) === currentHour);
+    if (hourIndex >= 0) return humidityValues[hourIndex];
+  }
+
+  return humidityValues[0];
 }
 
 function buildHourly(payload: OpenMeteoResponse): HourlyWeather[] {

@@ -186,11 +186,14 @@ Spacing은 구현 토큰 `xs 6`, `sm 10`, `md 14`, `lg 18`, `xl 24`를 기본으
 | 알림 사이드바 | 스크림 opacity 0→1, 패널 translateX 420→0(닫을 때 역재생 후 언마운트) | 진입 260ms cubic-out, 퇴장 200ms cubic-in |
 | 탭바 프레스 | tint overlay opacity 0→0.12 (spec §10과 동일 값을 실제 애니메이션으로 구현) | 120ms |
 | 1차 CTA(AppButton) 프레스 | scale 1→0.97 + opacity 1→0.88 | 110ms |
+| 일반 탭 요소 | `FeedbackPressable` state layer opacity 0→0.12 | 120ms |
 
 규칙:
 - RN `Animated` API만 사용한다(reanimated 등 신규 네이티브 의존성 추가 금지 — Expo 관리형 워크플로에서 추가 네이티브 링킹 없이 즉시 쓸 수 있어야 함).
 - 오버레이(Modal 등)는 `visible` prop이 꺼져도 즉시 언마운트하지 말고, 내부 `mounted` state로 퇴장 애니메이션이 끝난 뒤 언마운트한다. 그렇지 않으면 열 때만 애니메이션되고 닫을 때는 순간 사라진다.
 - 탭 전환(홈/코디/출발/MY)과 드릴인 전환에 같은 트랜지션을 쓴다. 방향(전진/후진)을 구분하는 슬라이드는 라우터가 실제 네비게이션 스택을 갖지 않아 방향을 신뢰할 수 없으므로 도입하지 않는다 — 잘못된 방향의 슬라이드가 무전환보다 나쁘다.
+- OS의 모션 감소 설정이 켜지면 `ScreenTransition`의 페이드·이동을 생략하고 즉시 전환한다.
+- 검색 결과, 카드, 리스트 행, 세그먼트, 설정 토글은 공통 `FeedbackPressable`을 사용해 눌림 상태를 일관되게 전달한다.
 
 ---
 
@@ -388,6 +391,7 @@ MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-12 | 실기기 전체 UI·UX 회귀 반영: `FeedbackPressable` 120ms state layer를 홈·출발·목적지·MY·설정 주요 인터랙션에 확대, 탭/CTA 타이밍을 스펙값으로 통일, 화면 전환 240ms 및 OS 모션 감소 대응, 목적지 검색의 키보드 열린 상태 첫 탭 누락 수정, 투명 효과 설정 명칭·스위치 모션 정리. core-flow·small-screen 게이트를 현행 UI와 동기화 |
 | 2026-07-10 | Project Wind Perfora Air v1.0을 stable internal design-system release로 확정. 현행 MVP/v1.0 미적용, 차기 메이저 UI 채택 게이트와 source of truth 연결 |
 | 2026-07-09 (3차) | Project Wind를 출시 후 대규모 UI 업데이트용 신규 디자인 시스템 연구 트랙으로 명시. 현행 MVP/v1.0 UI 기준은 본 통합 스펙 유지 |
 | 2026-07-09 | QA 빌드 실기기 검증 반영: 홈 첫 화면 밀도 압축으로 하단 판단 카드 탭바 가림 재현 없음 확인, 목적지 선택 카드는 선택 목적지 중복 노출을 제거하고 저장 목적지 칩의 선택 상태로 전환. 전역 Pretendard 로드(`expo-font`) 적용. 릴리즈 크래시 원인이던 `expo-linear-gradient` 의존을 제거하고 `WeatherBackground`를 RN View 레이어 배경으로 대체 |

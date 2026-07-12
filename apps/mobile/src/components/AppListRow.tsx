@@ -1,7 +1,8 @@
 import React from "react";
-import { Image, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { FeedbackPressable } from "./FeedbackPressable";
 
 export type AppListTone = "clear" | "gold" | "sky" | "warm";
 
@@ -64,15 +65,15 @@ export function AppListRow({
 
   if (onPress) {
     return (
-      <Pressable
+      <FeedbackPressable
         accessibilityLabel={accessibilityLabel ?? title}
         accessibilityRole={accessibilityRole}
         accessibilityState={accessibilityState}
         onPress={onPress}
-        style={({ pressed }) => [styles.row, pressed ? { backgroundColor: theme.cardMuted } : null]}
+        style={styles.row}
       >
         {content}
-      </Pressable>
+      </FeedbackPressable>
     );
   }
 

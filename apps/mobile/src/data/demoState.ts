@@ -19,13 +19,20 @@ import type {
 } from "@weatheron/shared";
 import { runtimeWeatherProvider } from "../providers/weatherProvider";
 import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
+import {
+  addZonedCalendarDays,
+  createDateAtTimeInZone,
+  getWeekdayForZonedDate,
+  getZonedDateTimeParts,
+  parseDateTimeInZone,
+} from "../utils/zonedDateTime";
 
 export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
 
 export type DemoStateOptions = {
   hasDestination?: boolean;
   destinationCareEnabled?: boolean;
-  destination?: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode">;
+  destination?: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode" | "timezone">;
   destinationAlertCondition?: DestinationAlertCondition;
   destinationSchedule?: DestinationScheduleInput;
   savedDestinations?: DestinationNotificationInput[];
@@ -46,7 +53,7 @@ export type DestinationScheduleInput = {
 };
 
 export type DestinationNotificationInput = {
-  place: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode">;
+  place: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode" | "timezone">;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
   schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
@@ -169,6 +176,7 @@ function buildDestinationNotifications(
               name: options.destination?.name ?? fallbackDestinationWeather.locationName,
               category: options.destination?.category ?? "beach",
               countryCode: options.destination?.countryCode ?? fallbackDestinationWeather.countryCode,
+              timezone: options.destination?.timezone ?? getDefaultTimeZone(options.destination?.countryCode ?? fallbackDestinationWeather.countryCode),
             },
             careEnabled: options.destinationCareOn,
             alertCondition:
@@ -183,7 +191,9 @@ function buildDestinationNotifications(
       options.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id) ??
       relabelWeatherSnapshot(fallbackDestinationWeather, destination.place);
     const timing = getDestinationNotificationTiming(destination, destinationWeather, options.nowMs);
-    const weatherAtDeparture = timing ? getWeatherAtDeparture(destinationWeather, timing.departureAt) : undefined;
+    const weatherAtDeparture = timing
+      ? getWeatherAtDeparture(destinationWeather, timing.departureAt, destination.place.timezone)
+      : undefined;
     const [notification] = evaluateNotificationRules(activeWeather, {
       rules: [{ ...destinationRule, id: `${destinationRule.id}:${destination.place.id}` }],
       destinationAlertCondition: destination.alertCondition,
@@ -217,13 +227,21 @@ function getDestinationNotificationTiming(
 
   const travelMinutes = getTravelMinutes(schedule?.transportMode, destination.travelEstimate?.travelMinutes);
   if (typeof travelMinutes !== "number") return null;
-  const arrivalAt = getNextArrivalAt(targetArrivalTime, schedule?.repeatEnabled ?? false, schedule?.repeatDays ?? [], nowMs, travelMinutes, destination.alertCondition.leadTimeMinutes);
+  const arrivalAt = getNextArrivalAt(
+    targetArrivalTime,
+    schedule?.repeatEnabled ?? false,
+    schedule?.repeatDays ?? [],
+    nowMs,
+    travelMinutes,
+    destination.alertCondition.leadTimeMinutes,
+    destination.place.timezone,
+  );
   if (!arrivalAt) return null;
   const bufferMinutes = getAutoBufferMinutes(arrivalAt.getTime() - nowMs, travelMinutes);
   const departureAt = new Date(arrivalAt.getTime() - (travelMinutes + bufferMinutes) * 60_000);
   const scheduledAt = new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60_000);
   if (scheduledAt.getTime() <= nowMs) return null;
-  if (!getWeatherAtDeparture(weather, departureAt)) return null;
+  if (!getWeatherAtDeparture(weather, departureAt, destination.place.timezone)) return null;
   return { departureAt, scheduledAt };
 }
 
@@ -234,26 +252,23 @@ function getNextArrivalAt(
   nowMs: number,
   travelMinutes: number,
   leadTimeMinutes: number,
+  timeZone: string,
 ): Date | null {
-  const [hourText, minuteText] = targetArrivalTime.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  const now = new Date(nowMs);
+  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
   for (let offset = 0; offset <= 7; offset += 1) {
-    const arrivalAt = new Date(now);
-    arrivalAt.setHours(hour, minute, 0, 0);
-    arrivalAt.setDate(now.getDate() + offset);
-    if (repeatEnabled && !repeatDays?.includes(getRepeatDay(arrivalAt))) continue;
+    const arrivalDate = addZonedCalendarDays(nowParts, offset);
+    const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
+    if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(arrivalDate))) continue;
     const latestAllowedTime = nowMs + (travelMinutes + leadTimeMinutes) * 60_000;
     if (arrivalAt.getTime() > latestAllowedTime) return arrivalAt;
   }
   return null;
 }
 
-function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date): WeatherSnapshot | null {
+function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date, timeZone: string): WeatherSnapshot | null {
   const departureMs = departureAt.getTime();
   const closestHour = weather.hourly.reduce<{ hour: WeatherSnapshot["hourly"][number]; distance: number } | null>((closest, hour) => {
-    const hourMs = getWeatherHourTimestamp(hour.time, weather.observedAt);
+    const hourMs = getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone);
     if (!Number.isFinite(hourMs)) return closest;
     const candidate = { hour, distance: Math.abs(hourMs - departureMs) };
     return !closest || candidate.distance < closest.distance ? candidate : closest;
@@ -272,14 +287,14 @@ function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date): Wea
   };
 }
 
-function getWeatherHourTimestamp(hourTime: string, observedAt: string): number {
+function getWeatherHourTimestamp(hourTime: string, observedAt: string, timeZone: string): number {
   if (isValidTimeText(hourTime)) {
     const [hourText, minuteText] = hourTime.split(":");
-    const observed = new Date(observedAt);
-    observed.setHours(Number(hourText), Number(minuteText), 0, 0);
-    return observed.getTime();
+    const observed = parseDateTimeInZone(observedAt, timeZone);
+    const observedParts = getZonedDateTimeParts(observed, timeZone);
+    return createDateAtTimeInZone(observedParts, `${hourText}:${minuteText}`, timeZone).getTime();
   }
-  return Date.parse(hourTime);
+  return parseDateTimeInZone(hourTime, timeZone).getTime();
 }
 
 function getTravelMinutes(mode: DestinationTransportMode | undefined, baseTravelMinutes: number | undefined): number | undefined {
@@ -298,10 +313,6 @@ function getAutoBufferMinutes(arrivalOffsetMs: number, travelMinutes: number): n
   return 20;
 }
 
-function getRepeatDay(date: Date): NonNullable<DestinationScheduleInput["repeatDays"]>[number] {
-  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][date.getDay()] as NonNullable<DestinationScheduleInput["repeatDays"]>[number];
-}
-
 function isValidTimeText(value: string): boolean {
   if (!/^\d{2}:\d{2}$/.test(value)) return false;
   const [hourText, minuteText] = value.split(":");
@@ -316,6 +327,12 @@ function destinationWeatherAlertConditionFallback(): DestinationAlertCondition {
     leadTimeMinutes: 60,
     windThresholdMs: 8,
   };
+}
+
+function getDefaultTimeZone(countryCode: PlaceSearchResult["countryCode"]): string {
+  if (countryCode === "KR") return "Asia/Seoul";
+  if (countryCode === "JP") return "Asia/Tokyo";
+  return "UTC";
 }
 
 function getDestinationWeatherSnapshot(

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { WeatherBackground } from "../components/WeatherBackground";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -213,18 +214,18 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>목적지 기준</Text>
           <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>
         </View>
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel="목적지 추가"
           accessibilityRole="button"
           onPress={onAdd}
           style={[styles.destinationSelectorAddButton, { backgroundColor: "transparent", borderColor: theme.border }]}
         >
           <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
-        </Pressable>
+        </FeedbackPressable>
       </View>
 
       {!hasDestinations ? (
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel="목적지 추가하기"
           accessibilityRole="button"
           onPress={onAdd}
@@ -232,13 +233,13 @@ function DestinationSelectorCard({
         >
           <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
           <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 하단 카드가 목적지 기준으로 바뀜</Text>
-        </Pressable>
+        </FeedbackPressable>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
           {savedDestinations.map((destination) => {
             const selected = destination.place.id === selectedDestinationId;
             return (
-              <Pressable
+              <FeedbackPressable
                 key={destination.place.id}
                 accessibilityLabel={`${destination.place.name} 목적지${selected ? " 선택됨" : "로 전환"}`}
                 accessibilityRole="button"
@@ -261,7 +262,7 @@ function DestinationSelectorCard({
                 <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>
                   {getDestinationSelectorMeta(destination.place)}
                 </Text>
-              </Pressable>
+              </FeedbackPressable>
             );
           })}
         </ScrollView>
@@ -482,7 +483,7 @@ function HomeDecisionHero({
     >
       <View style={styles.weatherShowcase}>
         <View style={[styles.weatherHalo, { backgroundColor: theme.cardMuted }]} />
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
           accessibilityRole="button"
           onPress={onOpenForecast}
@@ -501,7 +502,7 @@ function HomeDecisionHero({
           <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
             {currentLocationName}
           </Text>
-        </Pressable>
+        </FeedbackPressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
           <Text style={[styles.statusBadgeText, { color: locationTone }]}>{locationStatus.value}</Text>
@@ -530,7 +531,7 @@ function FeelsLikeCard({
 }) {
   const delta = current.feelsLikeC - current.tempC;
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={`현재 위치 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -548,7 +549,7 @@ function FeelsLikeCard({
       <Text style={[styles.feelsLikeValue, { color: theme.text }]} numberOfLines={1}>
         {formatTemperature(current.feelsLikeC, temperatureUnit)}
       </Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 
@@ -585,7 +586,7 @@ function VisualDecisionCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={`${label} ${value}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -597,7 +598,7 @@ function VisualDecisionCard({
       <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
       <Text style={[styles.visualDecisionValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
       <Text style={[styles.visualDecisionHelper, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 
@@ -614,7 +615,7 @@ function HomeOutfitPreviewCard({
 }) {
   const imageSource = getHomeOutfitPreviewImage(outfit);
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={`오늘 코디 ${outfit.decisionText}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -636,7 +637,7 @@ function HomeOutfitPreviewCard({
           <Image source={uiIconAssets.shirt} style={[styles.homeOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
         )}
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 
@@ -669,7 +670,7 @@ function NotificationBellButton({
 }) {
   const label = smartCareEnabled ? `알림 열기, 읽지 않음 ${unreadCount}개` : "알림 열기, 스마트 케어 꺼짐";
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
@@ -681,7 +682,7 @@ function NotificationBellButton({
           <Text style={[styles.bellBadgeText, { color: theme.onAccent }]}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
         </View>
       ) : null}
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 

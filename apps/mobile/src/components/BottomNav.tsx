@@ -76,7 +76,7 @@ function TabButton({
   const animateTo = (toValue: number) => {
     Animated.timing(tint, {
       toValue,
-      duration: 170,
+      duration: 120,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();

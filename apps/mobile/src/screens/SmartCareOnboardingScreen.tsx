@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
@@ -43,7 +44,7 @@ export function SmartCareOnboardingScreen({
       <Section title="사용 상황" caption="하나만 고르면 기본 알림이 적용됨" accent="clear">
         <View style={styles.segmentRow}>
           {scenarios.map((item) => (
-            <Pressable
+            <FeedbackPressable
               accessibilityRole="radio"
               accessibilityState={{ checked: item.value === smartCareScenario }}
               key={item.value}
@@ -57,7 +58,7 @@ export function SmartCareOnboardingScreen({
               ]}
             >
               <Text style={[styles.segmentText, { color: item.value === smartCareScenario ? theme.onAccent : theme.text }]}>{item.title}</Text>
-            </Pressable>
+            </FeedbackPressable>
           ))}
         </View>
         <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>

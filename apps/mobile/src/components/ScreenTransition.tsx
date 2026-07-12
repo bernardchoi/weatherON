@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "react-native";
 
 const EDGE_ACTIVATION_WIDTH = 24;
 const SWIPE_COMPLETE_DISTANCE_RATIO = 0.3;
@@ -19,21 +19,34 @@ export function ScreenTransition({
   const progress = useRef(new Animated.Value(0)).current;
   const swipeX = useRef(new Animated.Value(0)).current;
   const { width } = useWindowDimensions();
+  const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (active) setReduceMotionEnabled(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: 320,
-      easing: Easing.out(Easing.exp),
+      duration: reduceMotionEnabled ? 0 : 240,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     });
     animation.start();
     return () => animation.stop();
-  }, [progress]);
+  }, [progress, reduceMotionEnabled]);
 
   // iOS 표준 동작인 좌측 가장자리 스와이프로 뒤로가기를 재현한다.
-  const panResponder = useRef(
-    PanResponder.create({
+  const panResponder = useMemo(
+    () => PanResponder.create({
       onMoveShouldSetPanResponderCapture: (_, gesture) =>
         Platform.OS === "ios" &&
         canGoBack &&
@@ -49,22 +62,26 @@ export function ScreenTransition({
         if (shouldComplete) {
           Animated.timing(swipeX, {
             toValue: width,
-            duration: 220,
+            duration: reduceMotionEnabled ? 0 : 220,
             easing: Easing.out(Easing.ease),
             useNativeDriver: true,
           }).start(() => onGoBack?.());
+        } else if (reduceMotionEnabled) {
+          swipeX.setValue(0);
         } else {
           Animated.spring(swipeX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
         }
       },
       onPanResponderTerminate: () => {
-        Animated.spring(swipeX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
+        if (reduceMotionEnabled) swipeX.setValue(0);
+        else Animated.spring(swipeX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
       },
-    })
-  ).current;
+    }),
+    [canGoBack, onGoBack, reduceMotionEnabled, swipeX, width],
+  );
 
-  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] });
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
+  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled ? 1 : 0.96, 1] });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled ? 0 : 10, 0] });
 
   return (
     <Animated.View

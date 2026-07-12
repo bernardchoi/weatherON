@@ -30,7 +30,7 @@ export type WeatherProviderResult = {
 };
 
 export type WeatherProviderOptions = {
-  currentLocation?: KmaWeatherLocationPreset;
+  currentLocation?: WeatherLocationPreset;
   destinationLocation?: WeatherLocationPreset;
   destinationLocations?: WeatherLocationPreset[];
 };
@@ -124,7 +124,7 @@ export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback")
 
 async function fetchWeatherSnapshot(
   client: WeatherClient,
-  location: WeatherLocationPreset | KmaWeatherLocationPreset,
+  location: WeatherLocationPreset,
   stale: boolean,
   preferKma?: boolean,
 ): Promise<WeatherSnapshot> {
@@ -166,7 +166,7 @@ async function fetchOpenMeteoSnapshot(
   });
 }
 
-function shouldUseKmaForecast(location: WeatherLocationPreset | KmaWeatherLocationPreset, preferKma?: boolean): location is KmaWeatherLocationPreset {
+function shouldUseKmaForecast(location: WeatherLocationPreset, preferKma?: boolean): location is KmaWeatherLocationPreset {
   const enabled = preferKma ?? getWeatherRuntimeConfig().clientMode === "proxy";
   return enabled && location.countryCode === "KR" && "grid" in location;
 }

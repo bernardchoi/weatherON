@@ -1,8 +1,9 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { BackButton } from "../components/BackButton";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
@@ -99,15 +100,13 @@ export function GlobalSettingsScreen({
         <AppListGroup>
           <AppListRow
             icon={uiIconAssets.settings}
-            title="투명 효과"
-            subtitle={reducedTransparency ? "효과 줄임" : "기본 효과"}
+            title="투명 효과 줄이기"
+            subtitle={reducedTransparency ? "반투명 패널·탭 바를 단색으로 표시" : "기본 투명 효과 사용"}
             tone="sky"
             right={(
-              <View style={[styles.effectSwitchTrack, { backgroundColor: reducedTransparency ? theme.gold : theme.cardMuted }]}>
-                <View style={[styles.effectSwitchKnob, { backgroundColor: reducedTransparency ? theme.onAccent : theme.text }, reducedTransparency ? styles.effectSwitchKnobOn : null]} />
-              </View>
+              <AnimatedEffectSwitch enabled={reducedTransparency} />
             )}
-            accessibilityLabel={`투명 효과 ${reducedTransparency ? "줄임" : "기본"}`}
+            accessibilityLabel={`투명 효과 줄이기 ${reducedTransparency ? "켜짐" : "꺼짐"}`}
             accessibilityRole="switch"
             accessibilityState={{ checked: reducedTransparency }}
             onPress={onToggleReducedTransparency}
@@ -140,7 +139,7 @@ function SegmentControl({
   return (
     <View style={[styles.segmentControl, wide ? styles.segmentControlWide : null, { backgroundColor: theme.nav }]}>
       {options.map((option) => (
-        <Pressable
+        <FeedbackPressable
           key={option.label}
           accessibilityLabel={`${label} ${option.label}`}
           accessibilityRole="button"
@@ -149,8 +148,36 @@ function SegmentControl({
           style={[styles.segmentOption, { backgroundColor: option.active ? theme.gold : "transparent" }]}
         >
           <Text style={[styles.segmentText, { color: option.active ? theme.onAccent : theme.subtle }]}>{option.label}</Text>
-        </Pressable>
+        </FeedbackPressable>
       ))}
+    </View>
+  );
+}
+
+function AnimatedEffectSwitch({ enabled }: { enabled: boolean }) {
+  const theme = useAppTheme();
+  const progress = React.useRef(new Animated.Value(enabled ? 1 : 0)).current;
+
+  React.useEffect(() => {
+    const animation = Animated.timing(progress, {
+      toValue: enabled ? 1 : 0,
+      duration: 160,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [enabled, progress]);
+
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
+  return (
+    <View style={[styles.effectSwitchTrack, { backgroundColor: enabled ? theme.gold : theme.cardMuted }]}>
+      <Animated.View
+        style={[
+          styles.effectSwitchKnob,
+          { backgroundColor: enabled ? theme.onAccent : theme.text, transform: [{ translateX }] },
+        ]}
+      />
     </View>
   );
 }
@@ -266,9 +293,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: radius.pill,
-  },
-  effectSwitchKnobOn: {
-    alignSelf: "flex-end",
   },
   footerLinks: {
     minHeight: 38,

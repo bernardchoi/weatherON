@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius } from "../theme/tokens";
+import { FeedbackPressable } from "./FeedbackPressable";
 
 type BackButtonProps = {
   onPress: () => void;
@@ -13,14 +14,14 @@ type BackButtonProps = {
 export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButtonProps) {
   const theme = useAppTheme();
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onPress}
       style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
       <ChevronLeft color={theme.text} />
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 

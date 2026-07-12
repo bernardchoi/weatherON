@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { destinationFallbackImageAsset, destinationImageAssets, destinationVisualAssets, placeImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import { BottomSheet } from "../components/BottomSheet";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -162,7 +163,7 @@ export function DestinationCareScreen({
         ) : null}
 
         <View style={[styles.detailPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-          <Pressable
+          <FeedbackPressable
             accessibilityLabel={detailPanelOpen ? "날씨 비교와 알림 상세 닫기" : "날씨 비교와 알림 상세 열기"}
             accessibilityRole="button"
             accessibilityState={{ expanded: detailPanelOpen }}
@@ -176,7 +177,7 @@ export function DestinationCareScreen({
               </Text>
             </View>
             <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "상세"}</Text>
-          </Pressable>
+          </FeedbackPressable>
 
           <DropdownMotion visible={detailPanelOpen} maxHeight={520}>
             <>
@@ -224,20 +225,20 @@ export function DestinationCareScreen({
                     강수 {selectedDestinationAlertCondition.rainThresholdPct}% 이상이면 우산/강수 알림, 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 목적지 날씨 확인
                   </Text>
                 </View>
-                <Pressable
+                <FeedbackPressable
                   accessibilityLabel="목적지 알림 고급 설정으로 이동"
                   accessibilityRole="button"
                   onPress={() => onOpenAlertSettings("G2", "destination")}
                   style={[styles.detailButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
                 >
                   <Text style={[styles.detailButtonText, { color: theme.text }]}>고급 설정</Text>
-                </Pressable>
+                </FeedbackPressable>
               </View>
             </>
           </DropdownMotion>
         </View>
 
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel={ctaLabel}
           accessibilityRole="button"
           onPress={onToggleDestinationCare}
@@ -251,10 +252,10 @@ export function DestinationCareScreen({
           ]}
         >
           <Text style={[styles.ctaText, { color: destinationCareEnabled ? ctaAccent : theme.onAccent }]}>{ctaLabel}</Text>
-        </Pressable>
+        </FeedbackPressable>
 
         {destinationSaved ? (
-          <Pressable
+          <FeedbackPressable
             accessibilityLabel={`${destinationName} 목적지 삭제`}
             accessibilityRole="button"
             onPress={() => {
@@ -266,7 +267,7 @@ export function DestinationCareScreen({
           >
             <Text style={[styles.deleteDestinationTitle, { color: theme.warm }]}>목적지 삭제</Text>
             <Text style={[styles.deleteDestinationBody, { color: theme.muted }]}>삭제 후 출발 목록에서 바로 복구 가능</Text>
-          </Pressable>
+          </FeedbackPressable>
         ) : null}
 
       </ScrollView>
@@ -284,14 +285,14 @@ export function DestinationCareScreen({
           onSelectTime={onSetDestinationTargetArrivalTime}
           theme={theme}
         />
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel="도착 희망 시각 확인"
           accessibilityRole="button"
           onPress={() => setArrivalEditorOpen(false)}
           style={[styles.sheetConfirmButton, { backgroundColor: theme.gold }]}
         >
           <Text style={[styles.sheetConfirmText, { color: theme.onAccent }]}>확인</Text>
-        </Pressable>
+        </FeedbackPressable>
       </BottomSheet>
 
       <BottomSheet
@@ -345,14 +346,14 @@ function SummaryChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={styles.summaryChip}>
+    <FeedbackPressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={styles.summaryChip}>
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
       <Text numberOfLines={1} style={[styles.summaryLabel, { color: theme.subtle }]}>{label}</Text>
       <Text numberOfLines={1} style={[styles.summaryValue, { color: theme.text }]}>{value}</Text>
       <Text numberOfLines={1} style={[styles.summaryMeta, { color }]}>{meta}</Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 
@@ -455,7 +456,7 @@ function TimeWheel({
       {options.map((option) => {
         const selected = selectedValue === option;
         return (
-          <Pressable
+          <FeedbackPressable
             key={`${suffix}-${option}`}
             accessibilityLabel={`${option}${suffix} 선택`}
             accessibilityRole="button"
@@ -464,7 +465,7 @@ function TimeWheel({
             style={[styles.timeWheelOption, { backgroundColor: selected ? `${theme.gold}18` : "transparent" }]}
           >
             <Text style={[styles.timeWheelOptionText, { color: selected ? theme.gold : theme.subtle }]}>{option}</Text>
-          </Pressable>
+          </FeedbackPressable>
         );
       })}
     </ScrollView>
@@ -529,7 +530,7 @@ function TransportDropdown({
               : "선택해도 Google 지도 등 외부 경로 확인 필요"
             : option.caption;
         return (
-          <Pressable
+          <FeedbackPressable
             key={option.mode}
             accessibilityLabel={`${option.label} 이동수단 선택${selected ? ", 현재 선택됨" : ""}${disabled ? ", 장거리 목적지에서 비활성" : ""}`}
             accessibilityRole="button"
@@ -550,7 +551,7 @@ function TransportDropdown({
               <Text style={[styles.transportDropdownCaption, { color: disabled ? theme.warm : theme.subtle }]}>{caption}</Text>
             </View>
             {selected ? <Text style={[styles.transportSelectedText, { color: theme.gold }]}>선택됨</Text> : null}
-          </Pressable>
+          </FeedbackPressable>
         );
       })}
     </View>
@@ -588,7 +589,7 @@ function RepeatSchedulePanel({
             <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{repeatSummary}</Text>
           </View>
         </View>
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel={repeatEnabled ? "반복 알림 끄기" : "반복 알림 켜기"}
           accessibilityRole="switch"
           accessibilityState={{ checked: repeatEnabled }}
@@ -596,11 +597,11 @@ function RepeatSchedulePanel({
           style={[styles.repeatSwitch, { backgroundColor: repeatEnabled ? theme.clear : theme.cardMuted, borderColor: repeatEnabled ? theme.clear : theme.border }]}
         >
           <Text style={[styles.repeatSwitchText, { color: repeatEnabled ? theme.background : theme.subtle }]}>{repeatEnabled ? "ON" : "OFF"}</Text>
-        </Pressable>
+        </FeedbackPressable>
       </View>
 
       <DropdownMotion visible={repeatEnabled} maxHeight={58}>
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel={repeatDaysOpen ? "반복 요일 선택 닫기" : "반복 요일 선택 열기"}
           accessibilityRole="button"
           accessibilityState={{ expanded: repeatDaysOpen }}
@@ -609,7 +610,7 @@ function RepeatSchedulePanel({
         >
           <Text style={[styles.repeatDayToggleText, { color: theme.text }]}>요일 선택</Text>
           <Text style={[styles.repeatDayToggleMeta, { color: theme.clear }]}>{repeatDaysOpen ? "닫기" : repeatSummary}</Text>
-        </Pressable>
+        </FeedbackPressable>
       </DropdownMotion>
 
       <DropdownMotion visible={repeatEnabled && repeatDaysOpen} maxHeight={96}>
@@ -617,7 +618,7 @@ function RepeatSchedulePanel({
           {repeatDayOptions.map((option) => {
             const selected = repeatDays.includes(option.day);
             return (
-              <Pressable
+              <FeedbackPressable
                 key={option.day}
                 accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
                 accessibilityRole="button"
@@ -626,7 +627,7 @@ function RepeatSchedulePanel({
                 style={[styles.repeatDayChip, { backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
               >
                 <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
-              </Pressable>
+              </FeedbackPressable>
             );
           })}
         </View>

@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -55,7 +56,7 @@ export function MyScreen({
           <Text style={[styles.title, { color: theme.text }]}>마이</Text>
         </View>
 
-        <Pressable
+        <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
@@ -72,7 +73,7 @@ export function MyScreen({
             <Text style={[styles.profilePillText, { color: theme.text }]}>{profileAction}</Text>
           </View>
           <Chevron color={theme.subtle} />
-        </Pressable>
+        </FeedbackPressable>
 
         <ReadinessSummary
           alertSummary={alertState.summary}
