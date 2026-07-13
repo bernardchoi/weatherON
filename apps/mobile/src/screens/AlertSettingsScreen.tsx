@@ -15,7 +15,6 @@ const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone
 ];
 
 export function AlertSettingsScreen({
-  state,
   smartCareEnabled,
   permissionReady,
   permissionGateResult,
@@ -27,7 +26,6 @@ export function AlertSettingsScreen({
   selectedDestinationAlertCondition,
   onToggleSmartCare,
   onToggleAlertPreference,
-  onEditNotificationCondition,
   onSendTestNotification,
   onRequestPermissionGate,
   onReturnFromAlertSettings,
@@ -139,32 +137,29 @@ export function AlertSettingsScreen({
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림 종류</Text>
 
-        <View style={styles.alertList}>
-          <AlertRow
+        <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
+          <AlertSummaryRow
             icon="rain"
             title="필수 날씨"
             body={permissionReady ? "강수·특보 기준 도달 예상" : "푸시만 대기"}
             status={permissionReady ? "항상" : "권한 필요"}
             tone={permissionReady ? "sky" : "clear"}
-            onPress={() => onEditNotificationCondition(state.notifications[0]?.id ?? "rain", state.notifications[0]?.deepLink as P0RouteId)}
             theme={theme}
           />
-          <AlertRow
+          <AlertSummaryRow
             icon="sun"
             title="생활 루틴"
             body={smartCareEnabled ? "출발 준비·내일 체크" : "스마트 알림 꺼짐"}
             status={deliveryReady ? "자동" : smartCareEnabled ? "권한 필요" : "중지"}
             tone="gold"
-            onPress={() => onEditNotificationCondition(state.notifications[1]?.id ?? "daily", state.notifications[1]?.deepLink as P0RouteId)}
             theme={theme}
           />
-          <AlertRow
+          <AlertSummaryRow
             icon="route"
             title="목적지 출발"
             body={destinationReady ? `${savedDestinations.length}개 목적지` : "목적지 추가 필요"}
             status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
             tone="clear"
-            onPress={() => onNavigate(destinationReady ? "G1" : "P1")}
             theme={theme}
           />
         </View>
@@ -336,13 +331,12 @@ function DeliveryLine({ label, value, tone, theme }: { label: string; value: str
   );
 }
 
-function AlertRow({
+function AlertSummaryRow({
   icon,
   title,
   body,
   status,
   tone,
-  onPress,
   theme,
 }: {
   icon: "rain" | "sun" | "route";
@@ -350,23 +344,22 @@ function AlertRow({
   body: string;
   status: string;
   tone: AlertTone;
-  onPress: () => void;
   theme: AppTheme;
 }) {
   const color = getToneColor(theme, tone);
   return (
-    <Pressable accessibilityLabel={`${title}, ${status}, ${body}`} accessibilityRole="button" onPress={onPress} style={[styles.alertRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-      <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${color}44` }]}>
+    <View accessible accessibilityLabel={`${title}, ${status}, ${body}`} style={[styles.alertSummaryRow, { borderBottomColor: theme.border }]}>
+      <View style={[styles.alertSummaryIcon, { backgroundColor: `${color}16` }]}>
         <AlertIcon type={icon} color={color} />
       </View>
-      <View style={styles.rowCopy}>
-        <Text style={[styles.rowTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.rowBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+      <View style={styles.alertSummaryCopy}>
+        <Text style={[styles.alertSummaryTitle, { color: theme.text }]}>{title}</Text>
+        <Text style={[styles.alertSummaryBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
       </View>
-      <View style={[styles.statusPill, { backgroundColor: `${color}22` }]}>
+      <View style={[styles.alertSummaryStatus, { backgroundColor: `${color}20` }]}>
         <Text style={[styles.statusPillText, { color }]}>{status}</Text>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -840,18 +833,25 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  rowCopy: {
-    flex: 1,
-    gap: 4,
+  alertSummaryIcon: {
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
   },
-  rowTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+  alertSummaryCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  alertSummaryTitle: {
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
-  rowBody: {
+  alertSummaryBody: {
     fontSize: 11,
-    lineHeight: 16,
+    lineHeight: 15,
     fontWeight: "700",
   },
   groupLabel: {
@@ -861,16 +861,22 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   alertList: {
-    gap: 8,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
   },
-  alertRow: {
-    minHeight: 64,
+  alertSummaryRow: {
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: 10,
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  alertSummaryStatus: {
+    minHeight: 24,
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
   },
   statusPill: {
     minHeight: 28,
