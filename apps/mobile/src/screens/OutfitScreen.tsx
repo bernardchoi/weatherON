@@ -28,7 +28,12 @@ export function OutfitScreen({
       ? `내 옷장 ${ownedItemCount}개 반영 · 추천 세트 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
       : "프리셋 기준 추천 · 옷장을 추가하면 내 보유 옷을 우선 반영";
   return (
-    <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} badge={`${state.outfit.matchPct}%`}>
+    <AppScreen
+      title="코디"
+      subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)}
+      badge={`${state.outfit.matchPct}%`}
+      showWordmark={false}
+    >
       <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.criteriaHeader}>
           <View>

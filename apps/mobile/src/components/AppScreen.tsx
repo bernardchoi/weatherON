@@ -18,13 +18,14 @@ type AppScreenProps = {
   badge?: string;
   heroAction?: React.ReactNode;
   onBack?: () => void;
+  showWordmark?: boolean;
   // 스크롤 밖에 고정하는 하단 영역. 저장/취소처럼 화면 어디서든 바로 눌러야 하는 주요 액션을 담는다 —
   // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
   footer?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, children }: AppScreenProps) {
+export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, showWordmark = true, children }: AppScreenProps) {
   const theme = useAppTheme();
   return (
     <View style={styles.shell}>
@@ -37,11 +38,13 @@ export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, 
             </View>
           ) : null}
           <View style={styles.heroText}>
-            <Image
-              source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
-              style={styles.wordmark}
-              resizeMode="contain"
-            />
+            {showWordmark ? (
+              <Image
+                source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
+                style={styles.wordmark}
+                resizeMode="contain"
+              />
+            ) : null}
             <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
             {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
           </View>
@@ -77,7 +80,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: spacing.sm,
     paddingBottom: navClearancePadding,
-    minHeight: "100%",
+    flexGrow: 1,
   },
   atmosphere: {
     position: "absolute",

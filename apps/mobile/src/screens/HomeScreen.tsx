@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { Animated, Easing, Image, Modal, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { WeatherBackground } from "../components/WeatherBackground";
@@ -55,7 +55,20 @@ export function HomeScreen({
   return (
     <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
       <WeatherBackground condition={current.condition} theme={theme} />
-      <ScrollView style={styles.homeScroll} contentContainerStyle={styles.homeContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.homeScroll}
+        contentContainerStyle={styles.homeContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isWeatherLoading}
+            onRefresh={onRefreshWeather}
+            tintColor={theme.clear}
+            colors={[theme.clear]}
+            progressBackgroundColor={theme.cardStrong}
+          />
+        }
+      >
         <View style={styles.topBar}>
           <View style={[styles.modePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
             <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
