@@ -41,6 +41,7 @@
     "deploy:cloudflare-worker": "npx --yes --cache ./.npm-cache wrangler deploy",
     "check:mobile-proxy-reachable": "node scripts/check-mobile-proxy-reachability.mjs",
     "check:android-release": "node scripts/check-android-release-config.mjs",
+    "check:platform-versions": "node scripts/check-platform-versions.mjs",
     "check:android-build-ready": "node scripts/check-android-build-ready.mjs",
     "check:android-product-quality": "node scripts/check-android-product-quality.mjs",
     "check:android-preview-preflight": "node scripts/check-android-preview-preflight.mjs",
