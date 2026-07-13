@@ -1,6 +1,6 @@
-# WeatherON Android Preview APK QA 체크리스트
+# WeatherON Android QA APK 체크리스트
 
-> 목적: `npm run build:android:preview`로 생성한 Android APK를 실제 기기 또는 에뮬레이터에서 검증하는 기준을 유지한다.
+> 목적: `npm run build:android:qa`로 생성한 Android QA APK를 실제 기기 또는 에뮬레이터에서 검증하는 기준을 유지한다.
 > 기준일: 2026-06-28
 
 ---
@@ -9,9 +9,9 @@
 
 | 항목 | 기준 |
 |---|---|
-| 빌드 산출물 | EAS `preview` profile APK |
-| 빌드 명령 | `npm run build:android:preview` |
-| 비대기 빌드 | `npm run build:android:preview:no-wait` |
+| 빌드 산출물 | 알림 수신·딥링크 QA는 EAS `qa` profile APK |
+| 빌드 명령 | `npm run build:android:qa` |
+| 비대기 빌드 | `npm run build:android:qa:no-wait` |
 | 빌드 상태 확인 | `npm run check:eas-build-status -- <eas-build-id>` |
 | 사전 로컬 게이트 | `npm run check:android-build-ready` |
 | 설치 대상 | Android 실제 기기 우선, 필요 시 에뮬레이터 |
@@ -26,7 +26,7 @@
 npm run check:android-build-ready
 npm run check:android-product-quality
 npm run check:eas-login-state
-npm run build:android:preview
+npm run build:android:qa
 npm run check:eas-build-status -- <eas-build-id>
 ```
 
@@ -34,8 +34,8 @@ npm run check:eas-build-status -- <eas-build-id>
 - `check:android-build-ready`가 통과해야 한다.
 - `check:android-product-quality`가 내부 코드/개발 문구 노출을 차단해야 한다.
 - `check:eas-login-state`가 Expo 계정명을 반환해야 한다.
-- `build:android:preview`가 APK 다운로드 링크를 반환해야 한다.
-- `build:android:preview:no-wait`로 시작한 경우 `check:eas-build-status`가 `FINISHED`를 반환해야 APK QA로 넘어간다.
+- `build:android:qa`가 APK 다운로드 링크를 반환해야 한다.
+- `build:android:qa:no-wait`로 시작한 경우 `check:eas-build-status`가 `FINISHED`를 반환해야 APK QA로 넘어간다.
 
 ---
 
@@ -79,7 +79,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | 작은 화면 | 360x800급에서 가로 overflow 없음 | 미검증 |
 | 큰 화면 | 430x932급에서 카드 간격/버튼 정상 | 미검증 |
 | 앱 백그라운드/복귀 | 상태 유지, 중복 알림/중복 저장 없음 | 미검증 |
-| 알림 신뢰성 | 테스트 알림 예약, 5초 내 시스템 알림 수신, 알림 탭 M2 딥링크, 앱 재실행 후 예약/이력 상태 확인 | 미검증 |
+| 알림 신뢰성 | `qa` APK에서만 테스트 알림 예약, 5초 내 시스템 알림 수신, 알림 탭 M2 딥링크, 앱 재실행 후 예약/이력 상태 확인 | 미검증 |
 | Android 뒤로가기 | 주요 화면에서 예상 경로로 이동 | 미검증 |
 | 입력 키보드 | P1 검색 입력 시 버튼/결과 가림 없음 | 미검증 |
 

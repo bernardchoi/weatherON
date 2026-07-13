@@ -20,6 +20,15 @@ assert.equal(parsedExpoConfig.android?.package, "com.weatheron.mobile");
 assert.equal(Number.isInteger(parsedExpoConfig.android?.versionCode), true);
 assert.ok(parsedExpoConfig.android.versionCode >= 1);
 assert.ok(parsedExpoConfig.android?.permissions?.includes("ACCESS_FINE_LOCATION"));
+assert.equal(parsedExpoConfig.extra?.enableNotificationQaTools, false);
+
+const qaExpoConfig = await runCapture("npx", ["expo", "config", "--json", "--type", "public"], {
+  cwd: `${rootDir}/apps/mobile`,
+  env: { ...process.env, EAS_BUILD_PROFILE: "qa", WEATHERON_BUILD_VARIANT: "qa" },
+});
+const parsedQaExpoConfig = JSON.parse(qaExpoConfig);
+assert.equal(parsedQaExpoConfig.extra?.enableNotificationQaTools, true);
+assert.equal(parsedQaExpoConfig.extra?.weatheronBuildVariant, "qa");
 
 console.log("android build readiness check passed");
 

@@ -7,18 +7,36 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "development"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "qa": {
+      "distribution": "internal",
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "qa"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "preview"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "production"
+      },
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.0"
       },

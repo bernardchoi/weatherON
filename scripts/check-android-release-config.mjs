@@ -87,12 +87,17 @@ assertAssetExists(appConfig.splash?.image, "expo.splash.image");
 assertAssetExists(appConfig.android.adaptiveIcon?.foregroundImage, "android.adaptiveIcon.foregroundImage");
 assert.equal(mobilePackageConfig.dependencies?.["expo-file-system"], "~18.1.11");
 
-assert.equal(easConfig.cli?.appVersionSource, "local");
+assert.equal(easConfig.cli?.appVersionSource, "remote");
 assert.equal(easConfig.build?.development?.developmentClient, true);
 assert.equal(easConfig.build?.development?.distribution, "internal");
 assert.equal(easConfig.build?.development?.android?.buildType, "apk");
+assert.equal(easConfig.build?.qa?.distribution, "internal");
+assert.equal(easConfig.build?.qa?.env?.WEATHERON_BUILD_VARIANT, "qa");
+assert.equal(easConfig.build?.qa?.android?.buildType, "apk");
 assert.equal(easConfig.build?.preview?.distribution, "internal");
+assert.equal(easConfig.build?.preview?.env?.WEATHERON_BUILD_VARIANT, "preview");
 assert.equal(easConfig.build?.preview?.android?.buildType, "apk");
+assert.equal(easConfig.build?.production?.env?.WEATHERON_BUILD_VARIANT, "production");
 assert.equal(easConfig.build?.production?.android?.buildType, "app-bundle");
 assertDocIncludes(easIgnorePath, [".git", ".git/", "node_modules/", ".npm-cache/", "dist/", "apps/mobile/dist/", "apps/mobile/dist-web/", "apps/mobile/android/**/build/", "docs/", "mockups/", "brand/", "assets/store/"]);
 assertDocIncludes(mobileEasIgnorePath, [".git", ".git/", "node_modules/", ".expo/", "dist/", "dist-web/", "web-build/", "android/.gradle/", "android/**/build/", "ios/build/"]);
@@ -103,6 +108,18 @@ assert.equal(mobilePackageConfig.scripts?.["eas:init"], "npx --yes --cache ../..
 assert.equal(
   mobilePackageConfig.scripts?.["build:android:development"],
   "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile development",
+);
+assert.equal(
+  mobilePackageConfig.scripts?.["build:android:qa"],
+  "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile qa",
+);
+assert.equal(
+  mobilePackageConfig.scripts?.["build:android:qa:no-wait"],
+  "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile qa --no-wait",
+);
+assert.equal(
+  mobilePackageConfig.scripts?.["build:ios:qa"],
+  "npx --yes --cache ../../.npm-cache eas-cli build --platform ios --profile qa",
 );
 assert.equal(
   mobilePackageConfig.scripts?.["build:android:preview"],
@@ -167,6 +184,18 @@ assert.equal(
   "npm --workspace @weatheron/mobile run build:android:preview",
 );
 assert.equal(
+  packageConfig.scripts?.["build:android:qa"],
+  "npm --workspace @weatheron/mobile run build:android:qa",
+);
+assert.equal(
+  packageConfig.scripts?.["build:android:qa:no-wait"],
+  "npm --workspace @weatheron/mobile run build:android:qa:no-wait",
+);
+assert.equal(
+  packageConfig.scripts?.["build:ios:qa"],
+  "npm --workspace @weatheron/mobile run build:ios:qa",
+);
+assert.equal(
   packageConfig.scripts?.["build:android:preview:no-wait"],
   "npm --workspace @weatheron/mobile run build:android:preview:no-wait",
 );
@@ -207,7 +236,7 @@ if (existsSync(releaseDocPath)) {
   assert.ok(releaseDoc.includes("weatheron_privacy_policy.html"));
 }
 
-assertDocIncludes(apkQaDocPath, ["npm run build:android:preview", "Android Preview APK QA", "WEATHERON_PROXY_SMOKE=1", "WeatherON_ANDROID_WEB_EXPORT_QA.md"]);
+assertDocIncludes(apkQaDocPath, ["npm run build:android:qa", "WeatherON Android QA APK 체크리스트", "WEATHERON_PROXY_SMOKE=1", "WeatherON_ANDROID_WEB_EXPORT_QA.md"]);
 assertDocIncludes(storeListingDocPath, ["짧은 설명", "긴 설명 초안", "데이터 보안 초안", "weatheron_privacy_policy.html", "WeatherON_ANDROID_STORE_INPUTS_REQUIRED.md"]);
 assertDocIncludes(storeInputsRequiredPath, ["WeatherON Android Store Inputs Required", "개발자 이메일", "개인정보처리방침 URL"]);
 assertDocIncludes(storeInputsPacketPath, ["WeatherON Android Store Inputs Packet", "입력 분류", "JSON 입력 템플릿", "검증 규칙", "apply:android-store-inputs"]);

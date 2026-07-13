@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
+import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -55,6 +56,7 @@ export function AlertSettingsScreen({
     notificationResult === "skipped",
     testNotificationVerified,
     testNotificationOpened,
+    isNotificationQaBuild,
   );
   const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
   const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 확인 전") : "푸시 대기";
@@ -123,15 +125,10 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <DeliveryCheckCard
+        <NotificationStatusCard
           deliveryCountLabel={deliveryStatus.countLabel}
           deliveryStatusLabel={deliveryStatus.statusLabel}
           permissionReady={permissionReady}
-          testBody={testNotificationBody}
-          testStatusLabel={deliveryStatusLabel}
-          testVerified={testNotificationVerified}
-          actionLabel={testNotificationActionLabel}
-          onPress={permissionReady ? () => onSendTestNotification("M2") : () => onRequestPermissionGate("notification", "M2", "general")}
           theme={theme}
         />
 
@@ -220,12 +217,17 @@ export function AlertSettingsScreen({
               onToggle={() => onToggleAlertPreference("quietHours")}
               theme={theme}
             />
-            <DeliveryRouteTestPanel
-              enabled={permissionReady}
-              onSend={onSendTestNotification}
-              onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
-              theme={theme}
-            />
+            {isNotificationQaBuild ? (
+              <NotificationQaPanel
+                enabled={permissionReady}
+                testBody={testNotificationBody}
+                testStatusLabel={deliveryStatusLabel}
+                actionLabel={testNotificationActionLabel}
+                onSend={onSendTestNotification}
+                onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
+                theme={theme}
+              />
+            ) : null}
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
               <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{notificationHistory[0]?.title ?? "아직 읽은 알림 없음"}</Text>
@@ -239,25 +241,15 @@ export function AlertSettingsScreen({
   );
 }
 
-function DeliveryCheckCard({
+function NotificationStatusCard({
   deliveryCountLabel,
   deliveryStatusLabel,
   permissionReady,
-  testBody,
-  testStatusLabel,
-  testVerified,
-  actionLabel,
-  onPress,
   theme,
 }: {
   deliveryCountLabel: string;
   deliveryStatusLabel: string;
   permissionReady: boolean;
-  testBody: string;
-  testStatusLabel: string;
-  testVerified: boolean;
-  actionLabel: string;
-  onPress: () => void;
   theme: AppTheme;
 }) {
   return (
@@ -267,29 +259,31 @@ function DeliveryCheckCard({
           <AlertIcon type="bell" color={theme.sky} />
         </View>
         <View style={styles.deliveryTitleCopy}>
-          <Text style={[styles.deliveryTitle, { color: theme.text }]}>푸시 확인</Text>
-          <Text style={[styles.deliveryBody, { color: theme.subtle }]}>권한, 예약, 실제 수신을 따로 확인함</Text>
+          <Text style={[styles.deliveryTitle, { color: theme.text }]}>알림 상태</Text>
+          <Text style={[styles.deliveryBody, { color: theme.subtle }]}>권한과 예약 상태를 확인함</Text>
         </View>
       </View>
       <View style={styles.deliveryLines}>
         <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
         <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
-        <DeliveryLine label="실제 수신" value={`${testStatusLabel} · ${testBody}`} tone={testVerified ? "sky" : "gold"} theme={theme} />
       </View>
-      <Pressable accessibilityLabel={actionLabel} accessibilityRole="button" onPress={onPress} style={[styles.deliveryAction, { backgroundColor: permissionReady ? `${theme.sky}22` : `${theme.warm}22` }]}>
-        <Text style={[styles.deliveryActionText, { color: permissionReady ? theme.sky : theme.warm }]}>{actionLabel}</Text>
-      </Pressable>
     </View>
   );
 }
 
-function DeliveryRouteTestPanel({
+function NotificationQaPanel({
   enabled,
+  testBody,
+  testStatusLabel,
+  actionLabel,
   onSend,
   onRequestPermission,
   theme,
 }: {
   enabled: boolean;
+  testBody: string;
+  testStatusLabel: string;
+  actionLabel: string;
   onSend: (route: P0RouteId) => void;
   onRequestPermission: () => void;
   theme: AppTheme;
@@ -297,9 +291,13 @@ function DeliveryRouteTestPanel({
   return (
     <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.routeTestHeader}>
-        <Text style={[styles.routeTestTitle, { color: theme.text }]}>알림 도착 화면 확인</Text>
+        <Text style={[styles.routeTestTitle, { color: theme.text }]}>개발용 알림 QA</Text>
         <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>
       </View>
+      <Text style={[styles.deliveryBody, { color: theme.subtle }]}>{`${testStatusLabel} · ${testBody}`}</Text>
+      <Pressable accessibilityLabel={actionLabel} accessibilityRole="button" onPress={enabled ? () => onSend("M2") : onRequestPermission} style={[styles.deliveryAction, { backgroundColor: enabled ? `${theme.sky}22` : `${theme.warm}22` }]}>
+        <Text style={[styles.deliveryActionText, { color: enabled ? theme.sky : theme.warm }]}>{actionLabel}</Text>
+      </Pressable>
       <View style={styles.routeTestGrid}>
         {testRouteTargets.map((item) => {
           const color = getToneColor(theme, item.tone);
@@ -505,6 +503,7 @@ function getAlertReadinessCopy(
   skippedPermission: boolean,
   testNotificationVerified: boolean,
   testNotificationOpened: boolean,
+  notificationQaEnabled: boolean,
 ) {
   if (!smartCareEnabled) {
     return {
@@ -516,6 +515,15 @@ function getAlertReadinessCopy(
     };
   }
   if (permissionReady) {
+    if (!notificationQaEnabled) {
+      return {
+        title: "스마트 알림 준비됨",
+        body: "필요한 날씨와 생활 알림을 자동 적용",
+        resultBody: "권한과 예약 상태에 맞춰 스마트 알림을 자동 적용함",
+        gateTitle: "알림 권한 정상",
+        gateBody: "예약 상태 확인 가능",
+      };
+    }
     if (testNotificationVerified) {
       return {
         title: "스마트 알림 확인됨",

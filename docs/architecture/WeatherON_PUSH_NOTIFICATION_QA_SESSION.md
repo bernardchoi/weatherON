@@ -1,5 +1,20 @@
 # WeatherON Push Notification QA Session
 
+## 0. 빌드 노출 기준
+
+테스트 발송과 route별 딥링크 검증은 사용자 기능이 아닌 개발용 QA 도구로 분리한다.
+
+| 빌드 | EAS profile | 테스트 발송 노출 | 용도 |
+| --- | --- | --- | --- |
+| QA | `qa` | 노출 | 실기기 알림 수신·딥링크 검증 |
+| 플랫폼 테스트 | `preview` | 미노출 | Android 내부 테스트 APK |
+| 플랫폼 테스트/출시 | `production` | 미노출 | TestFlight, Play AAB, 스토어 후보 |
+
+- QA 빌드: `npm run build:android:qa`, `npm run build:ios:qa`
+- 기준 플래그: `apps/mobile/app.config.js`의 `extra.enableNotificationQaTools`
+- `qa` 외 profile과 로컬 기본 빌드는 `false`여야 함.
+- 사용자 M2에는 권한·예약 상태만 표시. 테스트 발송과 route별 확인은 QA 빌드의 고급 설정 내부에서만 표시.
+
 ## 1. 범위
 
 | 항목 | 상태 | 증거 |
