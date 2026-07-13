@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
+import { CompletionStatus } from "../components/CompletionStatus";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -39,6 +40,12 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
             <InfoChip label={getWindLabel(windSpeed)} theme={theme} />
           </View>
         </View>
+
+        <CompletionStatus
+          visible={umbrellaReviewed}
+          title="우산 준비 완료"
+          message={`${peakWindow} 출발 전 알림 시간을 설정하면 놓치지 않아요`}
+        />
 
         <Panel title="추천 이유" theme={theme}>
           <ReasonRow icon="clock" text={`${peakWindow} 강수 가능성 최대 ${peakRainProbability}%`} theme={theme} />

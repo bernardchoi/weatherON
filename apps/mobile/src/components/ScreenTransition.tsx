@@ -11,10 +11,12 @@ export function ScreenTransition({
   children,
   canGoBack = false,
   onGoBack,
+  variant = "detail",
 }: {
   children: React.ReactNode;
   canGoBack?: boolean;
   onGoBack?: () => void;
+  variant?: "tab" | "detail";
 }) {
   const progress = useRef(new Animated.Value(0)).current;
   const swipeX = useRef(new Animated.Value(0)).current;
@@ -36,13 +38,13 @@ export function ScreenTransition({
   useEffect(() => {
     const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: reduceMotionEnabled ? 0 : 240,
+      duration: reduceMotionEnabled ? 0 : variant === "tab" ? 140 : 240,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     });
     animation.start();
     return () => animation.stop();
-  }, [progress, reduceMotionEnabled]);
+  }, [progress, reduceMotionEnabled, variant]);
 
   // iOS 표준 동작인 좌측 가장자리 스와이프로 뒤로가기를 재현한다.
   const panResponder = useMemo(
@@ -80,8 +82,8 @@ export function ScreenTransition({
     [canGoBack, onGoBack, reduceMotionEnabled, swipeX, width],
   );
 
-  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled ? 1 : 0.96, 1] });
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled ? 0 : 10, 0] });
+  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled ? 1 : variant === "tab" ? 0.985 : 0.96, 1] });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [reduceMotionEnabled || variant === "tab" ? 0 : 10, 0] });
 
   return (
     <Animated.View

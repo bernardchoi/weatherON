@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, View } from "react-native";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -21,6 +21,13 @@ type WardrobeCategory = (typeof wardrobeCategories)[number];
 type SeasonFilter = (typeof seasons)[number];
 type PurposeFilter = (typeof purposes)[number];
 
+const accordionLayout = {
+  duration: 180,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.easeInEaseOut },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+};
+
 export function WardrobePresetScreen({
   wardrobeItems,
   selectedWardrobeItemId,
@@ -35,6 +42,7 @@ export function WardrobePresetScreen({
   const [purposeFilter, setPurposeFilter] = React.useState<PurposeFilter>("all");
   const [previewId, setPreviewId] = React.useState(selectedWardrobeItemId || wardrobeItems[0]?.id || "");
   const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
+  const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(false);
 
   const ownedCount = wardrobeItems.filter((item) => item.owned).length;
   const normalizedQuery = query.trim().toLowerCase();
@@ -63,6 +71,24 @@ export function WardrobePresetScreen({
     if (expandedCategory === null || groupedItems[expandedCategory].length > 0) return;
     setExpandedCategory(wardrobeCategories.find((category) => groupedItems[category].length > 0) ?? null);
   }, [categoryFilter, expandedCategory, groupedItems]);
+
+  React.useEffect(() => {
+    if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.(true);
+    let active = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (active) setReduceMotionEnabled(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+
+  const toggleCategory = (category: WardrobeCategory) => {
+    if (!reduceMotionEnabled) LayoutAnimation.configureNext(accordionLayout);
+    setExpandedCategory((current) => current === category ? null : category);
+  };
 
   return (
     <AppScreen
@@ -149,7 +175,7 @@ export function WardrobePresetScreen({
                 items={groupedItems[category]}
                 expanded={expandedCategory === category}
                 selectedItemId={previewItem?.id}
-                onToggle={() => setExpandedCategory((current) => current === category ? null : category)}
+                onToggle={() => toggleCategory(category)}
                 onPreview={setPreviewId}
                 onToggleOwned={onSetWardrobeItemOwned}
               />
@@ -199,6 +225,23 @@ function PresetCategory({
 }) {
   const theme = useAppTheme();
   const categoryLabel = getWardrobeCategoryLabel(category);
+  const contentOpacity = React.useRef(new Animated.Value(expanded ? 1 : 0)).current;
+
+  React.useEffect(() => {
+    if (!expanded) {
+      contentOpacity.stopAnimation();
+      contentOpacity.setValue(0);
+      return;
+    }
+    contentOpacity.setValue(0);
+    const animation = Animated.timing(contentOpacity, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [contentOpacity, expanded]);
 
   return (
     <View style={[styles.categoryCard, { backgroundColor: theme.cardMuted, borderColor: expanded ? theme.gold : theme.border }]}>
@@ -217,6 +260,7 @@ function PresetCategory({
       </Pressable>
       {expanded ? (
         items.length > 0 ? (
+          <Animated.View style={{ opacity: contentOpacity }}>
           <View style={styles.presetGrid}>
             {items.map((item) => (
               <PresetCard
@@ -228,6 +272,7 @@ function PresetCategory({
               />
             ))}
           </View>
+          </Animated.View>
         ) : (
           <Text style={[styles.categoryEmpty, { color: theme.muted }]}>현재 조건에 맞는 아이템 없음</Text>
         )

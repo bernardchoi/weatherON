@@ -176,7 +176,7 @@ export function AppNavigator() {
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <SystemBars theme={theme} />
         <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack}>
+        <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
@@ -241,6 +241,10 @@ export function AppNavigator() {
       </SafeAreaView>
     </AppThemeProvider>
   );
+}
+
+function isPrimaryTabRoute(route: AppRouteId) {
+  return route === "H1" || route === "C1" || route === "G1" || route === "M1";
 }
 
 function SystemBars({ theme }: { theme: AppTheme }) {

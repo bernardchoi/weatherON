@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
@@ -116,13 +117,7 @@ export function WeatherReportCompleteScreen({ onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   return (
     <AppScreen title="제보 완료" subtitle="비 · 오후 2:41 · 합정동" badge="완료">
-      <View style={styles.completeMark}>
-        <View style={styles.check}>
-          <Image source={uiIconAssets.check} style={[styles.checkIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-        </View>
-        <Text style={[styles.completeTitle, { color: theme.text }]}>제보 감사합니다!</Text>
-        <Text style={[styles.body, { color: theme.muted }]}>확정됨 · 홈 오버레이 표시 중</Text>
-      </View>
+      <CompletionStatus visible title="제보 완료" message="확정됨 · 홈 오버레이 표시 중" />
 
       <Section title="주변 제보 현황" caption="확정된 제보가 홈 화면에 반영됨" accent="clear">
         <View style={styles.simpleCard}>

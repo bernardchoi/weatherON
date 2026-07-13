@@ -2,6 +2,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import { outfitImageAssets } from "../assets";
@@ -36,14 +37,22 @@ export function OutfitDetailScreen({
       badge={`${state.outfit.matchPct}%`}
       onBack={onGoBack}
       footer={
-        <View style={[styles.actions, styles.saveActions]}>
-          <AppButton
-            label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
-            onPress={() => onRequireAccount("save-outfit", "C4")}
-            tone={outfitSaved ? "secondary" : "warning"}
-            disabled={outfitSaved}
+        <View style={styles.footer}>
+          <CompletionStatus
+            visible={outfitSaved}
+            compact
+            title="코디 저장 완료"
+            message="저장한 코디는 코디 탭에서 계속 확인할 수 있어요"
           />
-          <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
+          <View style={[styles.actions, styles.saveActions]}>
+            <AppButton
+              label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
+              onPress={() => onRequireAccount("save-outfit", "C4")}
+              tone={outfitSaved ? "secondary" : "warning"}
+              disabled={outfitSaved}
+            />
+            <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
+          </View>
         </View>
       }
     >
@@ -219,6 +228,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
     flexWrap: "wrap",
+  },
+  footer: {
+    gap: spacing.xs,
   },
   saveActions: {
     paddingBottom: spacing.lg,
