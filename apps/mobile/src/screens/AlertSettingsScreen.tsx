@@ -193,7 +193,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="자기 전 체크"
-              body="내일 날씨 미확인 시 1회"
+              body="매일 저녁 9시, 내일 날씨 확인 알림"
               enabled={alertPreferences.bedtime}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("bedtime")}

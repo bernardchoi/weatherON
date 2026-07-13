@@ -16,6 +16,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
     .map(([timeKey, bucket]) => buildHourly(timeKey, bucket));
   const first = hourly[0];
   const firstBucket = grouped[Object.keys(grouped).sort()[0]];
+  const firstHumidityPct = toNumber(firstBucket?.REH, 0);
 
   return {
     id: `weather-${options.locationId}-${options.observedAt ?? first.time}`,
@@ -25,12 +26,12 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
     observedAt: options.observedAt ?? toIsoLike(first.time, options.timezone),
     current: {
       tempC: first.tempC,
-      feelsLikeC: toNumber(firstBucket?.TMX ?? firstBucket?.TMP, first.tempC),
+      feelsLikeC: calculateFeelsLikeC(first.tempC, firstHumidityPct, first.windMs),
       condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY),
       precipitationMm: first.precipitationMm,
       rainProbabilityPct: first.rainProbabilityPct,
       windMs: first.windMs,
-      humidityPct: toNumber(firstBucket?.REH, 0),
+      humidityPct: firstHumidityPct,
       uvIndex: undefined,
     },
     hourly,
@@ -106,6 +107,30 @@ function parseKmaPrecipitation(value: string | number | undefined): number {
   if (trimmed.includes("1mm 미만")) return 0.5;
   const match = trimmed.match(/[\d.]+/);
   return match ? Number(match[0]) : 0;
+}
+
+function calculateFeelsLikeC(tempC: number, humidityPct: number, windMs: number): number {
+  if (tempC <= 10 && windMs >= 1.3) {
+    const windKmh = windMs * 3.6;
+    const windChillC = 13.12 + 0.6215 * tempC - 11.37 * windKmh ** 0.16 + 0.3965 * tempC * windKmh ** 0.16;
+    return Math.round(windChillC * 10) / 10;
+  }
+  if (tempC >= 27 && humidityPct > 0) {
+    const tempF = (tempC * 9) / 5 + 32;
+    const heatIndexF =
+      -42.379 +
+      2.04901523 * tempF +
+      10.14333127 * humidityPct -
+      0.22475541 * tempF * humidityPct -
+      0.00683783 * tempF * tempF -
+      0.05481717 * humidityPct * humidityPct +
+      0.00122874 * tempF * tempF * humidityPct +
+      0.00085282 * tempF * humidityPct * humidityPct -
+      0.00000199 * tempF * tempF * humidityPct * humidityPct;
+    const heatIndexC = ((heatIndexF - 32) * 5) / 9;
+    return Math.round(heatIndexC * 10) / 10;
+  }
+  return tempC;
 }
 
 function toNumber(value: string | number | undefined, fallback: number): number {

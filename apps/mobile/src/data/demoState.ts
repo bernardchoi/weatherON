@@ -26,6 +26,7 @@ import {
   getZonedDateTimeParts,
   parseDateTimeInZone,
 } from "../utils/zonedDateTime";
+import { getTravelMinutesForTransport } from "../utils/travelEstimate";
 
 export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
 
@@ -44,6 +45,7 @@ export type DemoStateOptions = {
 export type DestinationScheduleInput = {
   targetArrivalTime: string;
   travelMinutes?: number;
+  distanceMeters?: number;
   bufferMinutes?: number;
   transportMode?: DestinationTransportMode;
   repeatEnabled?: boolean;
@@ -57,7 +59,11 @@ export type DestinationNotificationInput = {
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
   schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
-  travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "travelProvider" | "travelStatus">;
+  // 저장된 목적지는 실제 TravelEstimateResult(provider/status 필드명)를, 미저장 임시 목적지는
+  // DestinationScheduleInput(travelProvider/travelStatus 필드명)을 그대로 재사용해 넘기므로 두 필드명을 모두 허용한다.
+  travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
+    status?: DestinationScheduleInput["travelStatus"];
+  };
 };
 
 export function buildDemoStateFromWeatherResult(
@@ -85,9 +91,13 @@ export function buildDemoStateFromWeatherResult(
   const baseNotificationRules = defaultNotificationRules.filter(
     (rule) => rule.type !== "destination" && rule.type !== "umbrella" && rule.type !== "shoes",
   );
-  const notifications = evaluateNotificationRules(activeWeather, {
-    rules: baseNotificationRules,
-  });
+  const notifications = withBedtimeSchedule(
+    evaluateNotificationRules(activeWeather, {
+      rules: baseNotificationRules,
+    }),
+    options.notificationNow ?? Date.now(),
+    getDefaultTimeZone(weatherProviderResult.current.countryCode),
+  );
   const destinationNotifications = hasDestination
     ? buildDestinationNotifications(activeWeather, weatherProviderResult.destination, {
         destination: options.destination,
@@ -107,7 +117,7 @@ export function buildDemoStateFromWeatherResult(
     destinationWeather,
     careOn: hasDestination ? options.destinationCareEnabled ?? true : false,
     alertCondition: options.destinationAlertCondition,
-    travelMinutes: options.destinationSchedule?.travelMinutes,
+    travelMinutes: getTravelMinutes(options.destinationSchedule?.transportMode, options.destinationSchedule, options.destination?.countryCode),
     targetArrivalTime: options.destinationSchedule?.targetArrivalTime ?? "13:00",
     bufferMinutes: options.destinationSchedule?.bufferMinutes,
     transportMode: options.destinationSchedule?.transportMode ?? "auto",
@@ -225,7 +235,7 @@ function getDestinationNotificationTiming(
   const targetArrivalTime = schedule?.targetArrivalTime;
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
-  const travelMinutes = getTravelMinutes(schedule?.transportMode, destination.travelEstimate?.travelMinutes);
+  const travelMinutes = getTravelMinutes(schedule?.transportMode, destination.travelEstimate, destination.place.countryCode);
   if (typeof travelMinutes !== "number") return null;
   const arrivalAt = getNextArrivalAt(
     targetArrivalTime,
@@ -297,11 +307,22 @@ function getWeatherHourTimestamp(hourTime: string, observedAt: string, timeZone:
   return parseDateTimeInZone(hourTime, timeZone).getTime();
 }
 
-function getTravelMinutes(mode: DestinationTransportMode | undefined, baseTravelMinutes: number | undefined): number | undefined {
+function getTravelMinutes(
+  mode: DestinationTransportMode | undefined,
+  travelEstimate: DestinationNotificationInput["travelEstimate"],
+  destinationCountryCode: PlaceSearchResult["countryCode"] | undefined,
+): number | undefined {
+  const baseTravelMinutes = travelEstimate?.travelMinutes;
   if (typeof baseTravelMinutes !== "number" || baseTravelMinutes <= 0) return undefined;
-  if (mode === "transit") return Math.max(12, Math.ceil(baseTravelMinutes * 1.25) + 8);
-  if (mode === "walk") return Math.max(15, Math.ceil(baseTravelMinutes * 1.8));
-  return baseTravelMinutes;
+  return getTravelMinutesForTransport(
+    {
+      travelMinutes: baseTravelMinutes,
+      distanceMeters: travelEstimate?.distanceMeters ?? 0,
+      status: travelEstimate?.status ?? travelEstimate?.travelStatus ?? "fallback",
+    },
+    mode ?? "auto",
+    destinationCountryCode,
+  );
 }
 
 function getAutoBufferMinutes(arrivalOffsetMs: number, travelMinutes: number): number {
@@ -333,6 +354,24 @@ function getDefaultTimeZone(countryCode: PlaceSearchResult["countryCode"]): stri
   if (countryCode === "KR") return "Asia/Seoul";
   if (countryCode === "JP") return "Asia/Tokyo";
   return "UTC";
+}
+
+const bedtimeReminderHour = 21;
+
+function withBedtimeSchedule(notifications: NotificationRuleEvaluation[], nowMs: number, timeZone: string): NotificationRuleEvaluation[] {
+  return notifications.map((notification) =>
+    notification.type === "bedtime"
+      ? { ...notification, scheduledAt: getNextBedtimeReminderAt(nowMs, timeZone).toISOString() }
+      : notification,
+  );
+}
+
+function getNextBedtimeReminderAt(nowMs: number, timeZone: string): Date {
+  const bedtimeTime = `${String(bedtimeReminderHour).padStart(2, "0")}:00`;
+  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
+  const todayAt = createDateAtTimeInZone(nowParts, bedtimeTime, timeZone);
+  if (todayAt.getTime() > nowMs) return todayAt;
+  return createDateAtTimeInZone(addZonedCalendarDays(nowParts, 1), bedtimeTime, timeZone);
 }
 
 function getDestinationWeatherSnapshot(

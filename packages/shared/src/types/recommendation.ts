@@ -61,9 +61,9 @@ export type DestinationCare = {
 
 export type NotificationRule = {
   id: string;
-  type: "routine" | "rain" | "umbrella" | "shoes" | "destination";
+  type: "routine" | "rain" | "umbrella" | "shoes" | "destination" | "bedtime";
   enabled: boolean;
-  triggerWindow: "morning" | "before-departure" | "rain-1h" | "rain-3h" | "destination-change";
+  triggerWindow: "morning" | "before-departure" | "rain-1h" | "rain-3h" | "destination-change" | "bedtime";
   requiresAccount: boolean;
   requiresPushPermission: boolean;
   deepLink: "H1" | "H4" | "H5" | "G2" | "M2";

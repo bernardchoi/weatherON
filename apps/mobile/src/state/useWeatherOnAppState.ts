@@ -40,6 +40,7 @@ import {
 } from "../providers/localNotifications";
 import { getRouteLabel } from "../navigation/routeLabels";
 import { getMinutesUntilTimeInZone } from "../utils/zonedDateTime";
+import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
 
 export type { DestinationTransportMode };
 export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -77,8 +78,6 @@ export type DestinationTravelEstimate = TravelEstimateResult & {
   originPlaceId: string;
   destinationPlaceId: string;
 };
-
-const maxWalkableDestinationDistanceKm = 25;
 
 export type AccountGateState = {
   returnTo: AccountGateReturnRouteId;
@@ -362,7 +361,10 @@ export function useWeatherOnAppState() {
         destinationSchedule: {
           targetArrivalTime: selectedDestinationSchedulePreference.targetArrivalTime,
           bufferMinutes: selectedDestinationAutoBufferMinutes,
-          travelMinutes: selectedDestinationTravelMinutes,
+          // 이동수단별 최종 이동시간(도보 거리 기반 계산 포함)은 demoState 쪽에서 동일한 공식으로
+          // 다시 계산하므로, 여기서는 가공 전 원본 이동시간·거리를 넘긴다.
+          travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
+          distanceMeters: selectedDestinationTravelEstimate.distanceMeters,
           transportMode: selectedDestinationSchedulePreference.transportMode,
           travelProvider: selectedDestinationTravelEstimate.provider,
           travelStatus: selectedDestinationTravelEstimate.status,
@@ -662,14 +664,14 @@ export function useWeatherOnAppState() {
     setAlertSettingsRouteState(null);
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
-    if (nextRoute === "H4" && isP0Route(route)) setUmbrellaReturnRoute(route === "H4" ? umbrellaReturnRoute : route);
+    if (nextRoute === "H4" && isP0Route(route) && route !== "H4") setUmbrellaReturnRoute(route);
     if (nextRoute === "H3" && isP0Route(route) && route !== "H3") setNotificationCenterReturnRoute(route);
     // 옷장(C2)·프리셋(C3)은 코디 메인(C1)과 코디 상세(C4) 양쪽에서 진입 가능해, 뒤로가기가
     // 항상 C1로 고정되면 코디 상세에서 들어왔을 때 엉뚱한 화면으로 돌아간다. 실제 진입 경로를 기억한다.
     if (nextRoute === "C2" && isP0Route(route) && route !== "C2") setWardrobeReturnRoute(route);
     if (nextRoute === "C3" && isP0Route(route) && route !== "C3") setWardrobePresetReturnRoute(route);
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
-  }, [route, umbrellaReturnRoute]);
+  }, [route]);
 
   const returnFromDestinationAdd = useCallback(() => {
     setRoute(destinationAddReturnRoute);
@@ -982,15 +984,15 @@ export function useWeatherOnAppState() {
   const saveSelectedDestination = useCallback((careEnabled = true) => {
     setDestinationSelectionReady(true);
     setSavedDestinations((current) => {
+      const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
       const nextDestination: SavedDestination = {
         place: selectedDestinationPlace,
         careEnabled,
         alertCondition: selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition,
         schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
         travelEstimate: selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate,
-        savedAtLabel: current.some((destination) => destination.place.id === selectedDestinationPlace.id) ? "업데이트됨" : "방금 저장",
+        savedAtLabel: exists ? "업데이트됨" : "방금 저장",
       };
-      const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
       return exists
         ? current.map((destination) => (destination.place.id === selectedDestinationPlace.id ? nextDestination : destination))
         : [nextDestination, ...current];
@@ -1208,20 +1210,8 @@ export function useWeatherOnAppState() {
       setWeatherProviderMode("ready");
       setUseDestinationWeather(false);
       setDeviceLocationState({ status: "requesting", message: "현재 위치 확인 중" });
-      if (!locationReady) {
-        const result = await requestDeviceWeatherLocation();
-        permissionCompleted = result.status === "granted";
-        setDeviceLocationState(result);
-        if (permissionCompleted && result.location) {
-          setLocationReady(true);
-          setDeviceWeatherLocation(result.location);
-        } else {
-          setLocationReady(false);
-          setDeviceWeatherLocation(null);
-          setWeatherLocationMode("manual");
-        }
-      } else if (deviceWeatherLocation) {
-        setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation ?? seongsuWeatherLocation });
+      if (locationReady && deviceWeatherLocation) {
+        setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation });
       } else {
         const result = await requestDeviceWeatherLocation();
         permissionCompleted = result.status === "granted";
@@ -1543,6 +1533,7 @@ function shouldScheduleLocalNotification(notification: NotificationRuleEvaluatio
   if (!notification.active || !notification.requiresPushPermission) return false;
   if (notification.type === "rain") return preferences.rainDetail;
   if (notification.type === "destination") return preferences.destination;
+  if (notification.type === "bedtime") return preferences.bedtime;
   if (notification.type === "routine") return preferences.routine;
   return preferences.routine;
 }
@@ -1966,33 +1957,6 @@ function createDestinationTravelEstimate(originPlaceId: string, destinationPlace
   };
 }
 
-function getTravelMinutesForTransport(
-  estimate: DestinationTravelEstimate,
-  transportMode: DestinationTransportMode,
-  destinationCountryCode?: PlaceSearchResult["countryCode"],
-): number | undefined {
-  if (isUnverifiedInternationalRoute(estimate, destinationCountryCode)) return undefined;
-  const baseMinutes = estimate.travelMinutes || 35;
-  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
-  if (transportMode === "walk") {
-    if (distanceKm > maxWalkableDestinationDistanceKm) return baseMinutes;
-    if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
-    return Math.max(15, Math.ceil(baseMinutes * 1.8));
-  }
-  if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
-  if (transportMode === "drive") return baseMinutes;
-  return baseMinutes;
-}
-
-function isUnverifiedInternationalRoute(estimate: DestinationTravelEstimate, destinationCountryCode?: PlaceSearchResult["countryCode"]): boolean {
-  return destinationCountryCode !== "KR" && estimate.status !== "ready";
-}
-
-function isWalkUnavailableForEstimate(estimate: DestinationTravelEstimate, transportMode: DestinationTransportMode): boolean {
-  if (transportMode !== "walk") return false;
-  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
-  return distanceKm > maxWalkableDestinationDistanceKm;
-}
 
 function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number, timeZone: string): number {
   if (!isValidTimeText(targetArrivalTime)) return 10;

@@ -50,6 +50,15 @@ export const defaultNotificationRules: NotificationRule[] = [
     requiresPushPermission: true,
     deepLink: "G2",
   },
+  {
+    id: "bedtime-check",
+    type: "bedtime",
+    enabled: true,
+    triggerWindow: "bedtime",
+    requiresAccount: false,
+    requiresPushPermission: true,
+    deepLink: "H1",
+  },
 ];
 
 export type NotificationEvaluationOptions = {
@@ -114,7 +123,7 @@ function isRuleActive(
     destinationSignals?: DestinationAlertSignals;
   },
 ): boolean {
-  if (rule.type === "routine") return true;
+  if (rule.type === "routine" || rule.type === "bedtime") return true;
   if (rule.type === "rain" || rule.type === "umbrella") return umbrellaLevel === "recommended" || umbrellaLevel === "required";
   if (rule.type === "shoes") return shoesLevel === "recommended";
   if (rule.type === "destination") {
@@ -130,6 +139,7 @@ function getRuleTitle(rule: NotificationRule): string {
     umbrella: "우산 알림",
     shoes: "신발 알림",
     destination: "목적지 알림",
+    bedtime: "자기 전 체크",
   };
   return titleByType[rule.type];
 }
@@ -155,6 +165,7 @@ function getRuleReason(
     return "현재 조건에서는 대기";
   }
   if (rule.type === "routine") return "오늘 준비 카드 확인 가능";
+  if (rule.type === "bedtime") return "내일 날씨 미리 확인";
   if (rule.type === "rain") return "비 시작 전 미리 알림";
   if (rule.type === "shoes") return shoesTitle;
   if (rule.type === "destination") return getDestinationActiveReason(context.destinationCondition, context.destinationSignals, context.destinationShoesTitle);
