@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { BackHandler, StyleSheet, useColorScheme, View } from "react-native";
+import * as NavigationBar from "expo-navigation-bar";
+import { BackHandler, Platform, SafeAreaView, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { BottomNav } from "../components/BottomNav";
 import { ScreenTransition } from "../components/ScreenTransition";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
@@ -47,7 +48,7 @@ import { OnboardingDestinationScreen } from "../screens/OnboardingDestinationScr
 import { AppEntrySplashScreen, OnboardingSplashScreen } from "../screens/SplashScreens";
 import { useWeatherOnAppState } from "../state/useWeatherOnAppState";
 import { AppThemeProvider } from "../theme/AppThemeContext";
-import { appColors, resolveAppTheme } from "../theme/tokens";
+import { appColors, resolveAppTheme, type AppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
@@ -171,8 +172,10 @@ export function AppNavigator() {
 
   return (
     <AppThemeProvider theme={theme}>
-      <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <SystemBars theme={theme} />
+        <View style={[styles.root, { backgroundColor: theme.background }]}>
+        <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack}>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
@@ -226,14 +229,39 @@ export function AppNavigator() {
           onComplete={appState.completePermissionGate}
         />
       ) : null}
-      </ScreenTransition>
-        {isLaunchVisibleP0Route(route) && route !== "G6" ? <BottomNav activeRoute={bottomNavActiveRoute} onNavigate={appState.navigate} /> : null}
-        {route === "A4" || route === "R1" || route === "R2" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
-        {route === "O4" && appState.styleProfileReturnRoute ? (
-          <BottomNav activeRoute={appState.styleProfileReturnRoute} onNavigate={appState.navigate} />
-        ) : null}
-      </View>
+        </ScreenTransition>
+          {isLaunchVisibleP0Route(route) && route !== "G6" ? <BottomNav activeRoute={bottomNavActiveRoute} onNavigate={appState.navigate} /> : null}
+          {route === "A4" || route === "R1" || route === "R2" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
+          {route === "O4" && appState.styleProfileReturnRoute ? (
+            <BottomNav activeRoute={appState.styleProfileReturnRoute} onNavigate={appState.navigate} />
+          ) : null}
+        </View>
+      </SafeAreaView>
     </AppThemeProvider>
+  );
+}
+
+function SystemBars({ theme }: { theme: AppTheme }) {
+  const isDarkTheme = theme.name === "dark";
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    void Promise.all([
+      NavigationBar.setBackgroundColorAsync(theme.background),
+      NavigationBar.setBorderColorAsync(theme.background),
+      NavigationBar.setButtonStyleAsync(isDarkTheme ? "light" : "dark"),
+    ]).catch(() => {
+      // Android 제조사별 시스템 UI 제약으로 설정이 거부돼도 앱 렌더링은 유지한다.
+    });
+  }, [isDarkTheme, theme.background]);
+
+  return (
+    <StatusBar
+      backgroundColor={theme.background}
+      barStyle={isDarkTheme ? "light-content" : "dark-content"}
+      translucent={false}
+    />
   );
 }
 
@@ -247,6 +275,9 @@ function getBottomNavActiveRoute(route: AppRouteId, alertReturnTo?: P0RouteId, u
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   root: {
     flex: 1,
     backgroundColor: appColors.navy,

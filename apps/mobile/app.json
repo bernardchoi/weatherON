@@ -7,6 +7,18 @@
     "orientation": "portrait",
     "icon": "../../assets/icon/icon-primary-1024.png",
     "userInterfaceStyle": "automatic",
+    "androidStatusBar": {
+      "backgroundColor": "#17365D",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#17365D",
+      "barStyle": "light-content"
+    },
+    "plugins": [
+      "expo-navigation-bar"
+    ],
     "splash": {
       "image": "../../assets/icon/icon-primary-512.png",
       "resizeMode": "contain",
