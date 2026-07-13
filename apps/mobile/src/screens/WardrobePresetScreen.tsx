@@ -12,10 +12,12 @@ import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from ".
 import type { WardrobeItem } from "@weatheron/shared";
 
 const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
+const wardrobeCategories = ["outer", "top", "bottom", "shoes", "accessory"] as const;
 const seasons = ["all", "spring", "summer", "fall", "winter"] as const;
 const purposes = ["all", "commute", "school", "travel", "outdoor", "formal", "daily"] as const;
 
 type CategoryFilter = (typeof categories)[number];
+type WardrobeCategory = (typeof wardrobeCategories)[number];
 type SeasonFilter = (typeof seasons)[number];
 type PurposeFilter = (typeof purposes)[number];
 
@@ -32,19 +34,35 @@ export function WardrobePresetScreen({
   const [seasonFilter, setSeasonFilter] = React.useState<SeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<PurposeFilter>("all");
   const [previewId, setPreviewId] = React.useState(selectedWardrobeItemId || wardrobeItems[0]?.id || "");
+  const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
 
   const ownedCount = wardrobeItems.filter((item) => item.owned).length;
   const normalizedQuery = query.trim().toLowerCase();
 
-  const filteredItems = wardrobeItems.filter((item) => {
-    const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
-    const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
-    const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
-    const queryMatch = normalizedQuery.length === 0 || item.name.toLowerCase().includes(normalizedQuery);
-    return categoryMatch && seasonMatch && purposeMatch && queryMatch;
-  });
+  const filteredItems = React.useMemo(
+    () => wardrobeItems.filter((item) => {
+      const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
+      const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
+      const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
+      const queryMatch = normalizedQuery.length === 0 || item.name.toLowerCase().includes(normalizedQuery);
+      return categoryMatch && seasonMatch && purposeMatch && queryMatch;
+    }),
+    [categoryFilter, normalizedQuery, purposeFilter, seasonFilter, wardrobeItems],
+  );
+  const groupedItems = React.useMemo(
+    () => Object.fromEntries(
+      wardrobeCategories.map((category) => [category, filteredItems.filter((item) => item.category === category)]),
+    ) as Record<WardrobeCategory, WardrobeItem[]>,
+    [filteredItems],
+  );
 
   const previewItem = wardrobeItems.find((item) => item.id === previewId) ?? filteredItems[0];
+
+  React.useEffect(() => {
+    if (categoryFilter !== "all") return;
+    if (expandedCategory === null || groupedItems[expandedCategory].length > 0) return;
+    setExpandedCategory(wardrobeCategories.find((category) => groupedItems[category].length > 0) ?? null);
+  }, [categoryFilter, expandedCategory, groupedItems]);
 
   return (
     <AppScreen
@@ -97,7 +115,7 @@ export function WardrobePresetScreen({
           <View style={[styles.selectedCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
             <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardMuted }]}>
               {outfitImageAssets[previewItem.imageUrl] ? (
-                <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMode="contain" />
+                <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMethod="resize" resizeMode="contain" />
               ) : null}
             </View>
             <View style={styles.copy}>
@@ -115,9 +133,28 @@ export function WardrobePresetScreen({
         </Section>
       ) : null}
 
-      <Section title="프리셋 전체" caption={`${filteredItems.length}개 · 카드를 눌러 미리보고 바로 추가`} accent="gold">
+      <Section
+        title="프리셋 전체"
+        caption={categoryFilter === "all" ? `${filteredItems.length}개 · 카테고리를 열어 확인` : `${filteredItems.length}개 · 카드를 눌러 미리보고 바로 추가`}
+        accent="gold"
+      >
         {filteredItems.length === 0 ? (
           <Text style={[styles.empty, { color: theme.muted }]}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>
+        ) : categoryFilter === "all" ? (
+          <View style={styles.categoryList}>
+            {wardrobeCategories.map((category) => (
+              <PresetCategory
+                key={category}
+                category={category}
+                items={groupedItems[category]}
+                expanded={expandedCategory === category}
+                selectedItemId={previewItem?.id}
+                onToggle={() => setExpandedCategory((current) => current === category ? null : category)}
+                onPreview={setPreviewId}
+                onToggleOwned={onSetWardrobeItemOwned}
+              />
+            ))}
+          </View>
         ) : (
           <View style={styles.presetGrid}>
             {filteredItems.map((item) => (
@@ -143,6 +180,62 @@ export function WardrobePresetScreen({
   );
 }
 
+function PresetCategory({
+  category,
+  items,
+  expanded,
+  selectedItemId,
+  onToggle,
+  onPreview,
+  onToggleOwned,
+}: {
+  category: WardrobeCategory;
+  items: WardrobeItem[];
+  expanded: boolean;
+  selectedItemId?: string;
+  onToggle: () => void;
+  onPreview: (itemId: string) => void;
+  onToggleOwned: (itemId: string, owned: boolean) => void;
+}) {
+  const theme = useAppTheme();
+  const categoryLabel = getWardrobeCategoryLabel(category);
+
+  return (
+    <View style={[styles.categoryCard, { backgroundColor: theme.cardMuted, borderColor: expanded ? theme.gold : theme.border }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${categoryLabel} ${items.length}개 ${expanded ? "접기" : "펼치기"}`}
+        accessibilityState={{ expanded }}
+        onPress={onToggle}
+        style={styles.categoryHeader}
+      >
+        <View style={styles.categoryCopy}>
+          <Text style={[styles.categoryTitle, { color: theme.text }]}>{categoryLabel}</Text>
+          <Text style={[styles.categoryCount, { color: theme.muted }]}>{items.length}개</Text>
+        </View>
+        <Text style={[styles.categoryToggle, { color: theme.gold }]}>{expanded ? "접기" : "펼치기"}</Text>
+      </Pressable>
+      {expanded ? (
+        items.length > 0 ? (
+          <View style={styles.presetGrid}>
+            {items.map((item) => (
+              <PresetCard
+                key={item.id}
+                item={item}
+                selected={item.id === selectedItemId}
+                onPreview={() => onPreview(item.id)}
+                onToggleOwned={() => onToggleOwned(item.id, !item.owned)}
+              />
+            ))}
+          </View>
+        ) : (
+          <Text style={[styles.categoryEmpty, { color: theme.muted }]}>현재 조건에 맞는 아이템 없음</Text>
+        )
+      ) : null}
+    </View>
+  );
+}
+
 function PresetCard({
   item,
   selected,
@@ -165,7 +258,7 @@ function PresetCard({
     >
       <Pressable accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
         <View style={[styles.presetImageWrap, { backgroundColor: theme.cardStrong }]}>
-          {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMode="contain" /> : null}
+          {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
         <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
         <Text style={[styles.presetMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
@@ -234,6 +327,46 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
+  },
+  categoryList: {
+    gap: spacing.sm,
+  },
+  categoryCard: {
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  categoryHeader: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  categoryCopy: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  categoryTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  categoryCount: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  categoryToggle: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  categoryEmpty: {
+    paddingHorizontal: spacing.xs,
+    paddingBottom: spacing.xs,
+    fontSize: 12,
+    fontWeight: "700",
   },
   presetCard: {
     width: "31.5%",

@@ -214,7 +214,6 @@ async function checkOutfitLaunchFlow(page) {
   await assertText(page, "추천 기준");
   await assertText(page, "오늘 입을 세트");
   await assertBottomNav(page);
-  await assertClearOfBottomNav(page, "상세 보기");
 
   await clickText(page, "상세 보기");
   await assertText(page, "착장 구성");
@@ -230,6 +229,13 @@ async function checkOutfitLaunchFlow(page) {
   await assertText(page, "내 옷장");
   await clickText(page, "아이템 추가");
   await assertText(page, "프리셋 전체");
+  await assertAriaIncludes(page, "겉옷 8개 접기");
+  await clickAriaIncludes(page, "겉옷 8개 접기");
+  await assertAriaIncludes(page, "겉옷 8개 펼치기");
+  await clickAriaIncludes(page, "겉옷 8개 펼치기");
+  await assertAriaIncludes(page, "겉옷 8개 접기");
+  await clickAriaIncludes(page, "코디 탭");
+  await assertClearOfBottomNav(page, "상세 보기");
   await clickAriaIncludes(page, "홈 탭");
   await assertText(page, "최고 ");
 }
