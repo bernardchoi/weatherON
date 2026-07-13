@@ -109,13 +109,17 @@ function parseKmaPrecipitation(value: string | number | undefined): number {
   return match ? Number(match[0]) : 0;
 }
 
-function calculateFeelsLikeC(tempC: number, humidityPct: number, windMs: number): number {
+const MIN_HEAT_INDEX_TEMP_C = 27;
+const MIN_HEAT_INDEX_HUMIDITY_PCT = 40;
+const MAX_HEAT_INDEX_DELTA_C = 6;
+
+export function calculateFeelsLikeC(tempC: number, humidityPct: number, windMs: number): number {
   if (tempC <= 10 && windMs >= 1.3) {
     const windKmh = windMs * 3.6;
     const windChillC = 13.12 + 0.6215 * tempC - 11.37 * windKmh ** 0.16 + 0.3965 * tempC * windKmh ** 0.16;
     return Math.round(windChillC * 10) / 10;
   }
-  if (tempC >= 27 && humidityPct > 0) {
+  if (tempC >= MIN_HEAT_INDEX_TEMP_C && humidityPct >= MIN_HEAT_INDEX_HUMIDITY_PCT) {
     const tempF = (tempC * 9) / 5 + 32;
     const heatIndexF =
       -42.379 +
@@ -128,7 +132,9 @@ function calculateFeelsLikeC(tempC: number, humidityPct: number, windMs: number)
       0.00085282 * tempF * humidityPct * humidityPct -
       0.00000199 * tempF * tempF * humidityPct * humidityPct;
     const heatIndexC = ((heatIndexF - 32) * 5) / 9;
-    return Math.round(heatIndexC * 10) / 10;
+    // 열지수는 그늘·무풍 환경의 극한값이라 격자 예보에 그대로 적용하면 과대 표시될 수 있음.
+    const boundedHeatIndexC = Math.min(Math.max(heatIndexC, tempC), tempC + MAX_HEAT_INDEX_DELTA_C);
+    return Math.round(boundedHeatIndexC * 10) / 10;
   }
   return tempC;
 }

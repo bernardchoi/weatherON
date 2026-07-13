@@ -8,6 +8,7 @@ import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
 const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
+  { route: "H7", label: "내일 브리핑", tone: "warm" },
   { route: "H3", label: "알림함", tone: "sky" },
   { route: "H5", label: "강수", tone: "clear" },
   { route: "G2", label: "목적지", tone: "gold" },
@@ -193,7 +194,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="자기 전 체크"
-              body="매일 저녁 9시, 내일 날씨 확인 알림"
+              body="매일 저녁 9시, 내일 날씨·코디 브리핑 알림"
               enabled={alertPreferences.bedtime}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("bedtime")}
@@ -550,6 +551,7 @@ function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteS
 function getRouteLabel(route?: P0RouteId) {
   if (route === "H4") return "우산";
   if (route === "H5") return "강수";
+  if (route === "H7") return "내일 브리핑";
   if (route === "G2") return "목적지";
   if (route === "H3") return "알림";
   if (route === "M1") return "MY";

@@ -66,7 +66,7 @@ export type NotificationRule = {
   triggerWindow: "morning" | "before-departure" | "rain-1h" | "rain-3h" | "destination-change" | "bedtime";
   requiresAccount: boolean;
   requiresPushPermission: boolean;
-  deepLink: "H1" | "H4" | "H5" | "G2" | "M2";
+  deepLink: "H1" | "H4" | "H5" | "H7" | "G2" | "M2";
 };
 
 export type NotificationRuleEvaluation = NotificationRule & {

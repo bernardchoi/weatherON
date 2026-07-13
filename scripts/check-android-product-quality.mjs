@@ -116,7 +116,7 @@ assertSourceIncludes("scripts/check-weather-proxy-cache.mjs", [
 ]);
 assertSourceExcludes("apps/mobile/src/state/useWeatherOnAppState.ts", ["fixtureWeatherProvider"]);
 assertSourceIncludes("apps/mobile/src/navigation/routeLabels.ts", ["getRouteLabel", "계정 연결", "권한 설정", "정책"]);
-assertSourceIncludes("apps/mobile/src/navigation/routes.ts", ['label: "출발"', "isLaunchHiddenRoute", 'id: "H3"', 'id: "S1"']);
+assertSourceIncludes("apps/mobile/src/navigation/routes.ts", ['label: "출발"', "isLaunchHiddenRoute", 'id: "H3"', 'id: "H7"', 'id: "S1"']);
 assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\n  "C3",\n  "C4",', '  "O4",\n  "R3",']);
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
@@ -487,11 +487,12 @@ assertSourceIncludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
   "푸시 확인",
   "목적지 필요",
   'onNavigate(destinationReady ? "G1" : "P1")',
+  'route: "H7"',
+  "내일 브리핑",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
   "목적지·여행",
   'onNavigate("P3")',
-  "날씨·코디",
   "여행 D-1",
   "계정 연결 후 목적지 알림 저장",
   "알림 저장은 계정 연결 후 적용",
@@ -725,8 +726,20 @@ assertSourceIncludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
   "알림 처리 이력 지우기",
   "HistoryRow",
   "route === \"G2\"",
+  "route === \"H7\"",
   "목적지 케어 열기",
   "accessibilityState={{ disabled: read }}",
+]);
+assertSourceIncludes("apps/mobile/src/screens/TomorrowBriefScreen.tsx", [
+  "내일 브리핑",
+  "buildTomorrowWeather",
+  "recommendOutfit",
+  "recommendUmbrella",
+  "최고",
+  "최저",
+  "강수 확률",
+  "내일 코디",
+  "우산 준비",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
   "buildVisibleNotifications",

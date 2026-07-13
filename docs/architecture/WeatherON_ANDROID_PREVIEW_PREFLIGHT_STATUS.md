@@ -62,7 +62,7 @@
 |---|---|---|---|
 | `apps/mobile/android/app/build` | 아니오 | 없음 | 있음 |
 | `apps/mobile/android/.gradle` | 예 | 26 MB | 있음 |
-| `apps/mobile/android/build` | 예 | 148 KB | 있음 |
+| `apps/mobile/android/build` | 아니오 | 없음 | 있음 |
 | `apps/mobile/dist` | 예 | 94 MB | 있음 |
 | `apps/mobile/dist-web` | 예 | 587 KB | 있음 |
 | `node_modules` | 예 | 3.0 GB | 있음 |

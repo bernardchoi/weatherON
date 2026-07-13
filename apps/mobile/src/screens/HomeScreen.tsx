@@ -154,6 +154,7 @@ export function HomeScreen({
         notifications={activeNotifications}
         readNotificationIds={readNotificationIds}
         notificationHistory={notificationHistory}
+        fallbackTimestamp={state.weatherProvider.currentObservedAt}
         smartCareEnabled={smartCareEnabled}
         permissionReady={permissionReady}
         theme={theme}
@@ -691,6 +692,7 @@ function NotificationSidebar({
   notifications,
   readNotificationIds,
   notificationHistory,
+  fallbackTimestamp,
   smartCareEnabled,
   permissionReady,
   onClose,
@@ -705,6 +707,7 @@ function NotificationSidebar({
   notifications: P0ScreenProps["state"]["notifications"];
   readNotificationIds: string[];
   notificationHistory: P0ScreenProps["notificationHistory"];
+  fallbackTimestamp: string;
   smartCareEnabled: boolean;
   permissionReady: boolean;
   onClose: () => void;
@@ -908,6 +911,8 @@ function NotificationSidebar({
                 key={group.title}
                 group={group}
                 readNotificationIds={effectiveReadNotificationIds}
+                notificationHistory={notificationHistory}
+                fallbackTimestamp={fallbackTimestamp}
                 smartCareEnabled={smartCareEnabled}
                 previewOnly={previewOnly}
                 onOpen={onOpen}
@@ -975,6 +980,8 @@ function buildSidebarGroups(notifications: P0ScreenProps["state"]["notifications
 function SidebarNotificationGroup({
   group,
   readNotificationIds,
+  notificationHistory,
+  fallbackTimestamp,
   smartCareEnabled,
   onOpen,
   onDismiss,
@@ -985,6 +992,8 @@ function SidebarNotificationGroup({
 }: {
   group: SidebarGroup;
   readNotificationIds: string[];
+  notificationHistory: P0ScreenProps["notificationHistory"];
+  fallbackTimestamp: string;
   smartCareEnabled: boolean;
   onOpen: (id: string, route: P0RouteId) => void;
   onDismiss: (id: string) => void;
@@ -1003,6 +1012,9 @@ function SidebarNotificationGroup({
         const route = item.deepLink as P0RouteId;
         const read = previewOnly || readNotificationIds.includes(item.id);
         const color = getNotificationTone(theme, index, route);
+        const receivedAt = notificationHistory.find((history) => history.notificationId === item.id && history.action === "received")?.occurredAt;
+        const timestamp = receivedAt ?? item.scheduledAt ?? fallbackTimestamp;
+        const timestampLabel = receivedAt ? "푸시됨" : item.scheduledAt ? "예약됨" : "조건 감지";
         return (
           <SidebarNotificationItem
             key={item.id}
@@ -1012,6 +1024,8 @@ function SidebarNotificationGroup({
             color={color}
             previewOnly={previewOnly}
             smartCareEnabled={smartCareEnabled}
+            timestamp={timestamp}
+            timestampLabel={timestampLabel}
             bulkDismissing={bulkDismissing}
             dismissDelay={dismissBaseDelay + index * 34}
             onOpen={() => onOpen(item.id, route)}
@@ -1031,6 +1045,8 @@ function SidebarNotificationItem({
   color,
   previewOnly,
   smartCareEnabled,
+  timestamp,
+  timestampLabel,
   bulkDismissing,
   dismissDelay,
   onOpen,
@@ -1043,6 +1059,8 @@ function SidebarNotificationItem({
   color: string;
   previewOnly: boolean;
   smartCareEnabled: boolean;
+  timestamp?: string;
+  timestampLabel: string;
   bulkDismissing: boolean;
   dismissDelay: number;
   onOpen: () => void;
@@ -1118,7 +1136,7 @@ function SidebarNotificationItem({
       </View>
       <Animated.View style={{ opacity, transform: [{ translateX }] }} {...itemPanResponder.panHandlers}>
         <Pressable
-          accessibilityLabel={`${item.title} 열기`}
+          accessibilityLabel={`${item.title}, ${timestampLabel} ${formatSidebarNotificationDateTime(timestamp)}, 열기`}
           accessibilityRole="button"
           onPress={onOpen}
           style={[styles.sidebarItem, { backgroundColor: theme.card, borderColor: read ? theme.border : color }]}
@@ -1127,6 +1145,7 @@ function SidebarNotificationItem({
             <View style={[styles.sidebarItemDot, { backgroundColor: read ? theme.border : color }]} />
             <View style={styles.sidebarItemCopy}>
               <Text style={[styles.sidebarItemTitle, { color: theme.text }]}>{item.title}</Text>
+              <Text style={[styles.sidebarItemTimestamp, { color: theme.subtle }]}>{timestampLabel} · {formatSidebarNotificationDateTime(timestamp)}</Text>
               <Text style={[styles.sidebarItemBody, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}</Text>
               <Text style={[styles.sidebarItemTarget, { color }]}>{getNotificationTargetLabel(route)}</Text>
             </View>
@@ -1141,13 +1160,13 @@ function SidebarNotificationItem({
 }
 
 function SidebarHistoryRow({ item, theme }: { item: P0ScreenProps["notificationHistory"][number]; theme: AppTheme }) {
-  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : "읽음";
+  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : item.action === "received" ? "수신" : "읽음";
   return (
     <View style={styles.sidebarHistoryRow}>
       <View style={[styles.sidebarItemDot, { backgroundColor: theme.clear }]} />
       <View style={styles.sidebarItemCopy}>
         <Text style={[styles.sidebarHistoryTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
-        <Text style={[styles.sidebarHistoryMeta, { color: theme.subtle }]}>{label} · {item.statusLabel}</Text>
+        <Text style={[styles.sidebarHistoryMeta, { color: theme.subtle }]}>{label} · {item.statusLabel}{item.occurredAt ? ` · ${formatSidebarNotificationDateTime(item.occurredAt)}` : ""}</Text>
       </View>
     </View>
   );
@@ -1166,6 +1185,7 @@ function BellGlyph({ color }: { color: string }) {
 function getNotificationTargetLabel(route: P0RouteId): string {
   if (route === "H4") return "오늘 준비";
   if (route === "H5") return "강수 타임라인";
+  if (route === "H7") return "내일 브리핑";
   if (route === "G2") return "목적지 케어";
   if (route === "M2") return "알림 설정";
   return "홈";
@@ -1176,6 +1196,19 @@ function getNotificationTone(theme: AppTheme, index: number, route: P0RouteId): 
   if (route === "G2" || route === "H4" || index === 2) return theme.clear;
   if (index === 0) return getInfoAccent(theme);
   return theme.warm;
+}
+
+function formatSidebarNotificationDateTime(value?: string) {
+  const timestamp = value ? Date.parse(value) : Number.NaN;
+  if (!Number.isFinite(timestamp)) return "시각 확인 중";
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(timestamp));
 }
 
 const styles = StyleSheet.create({
@@ -1817,6 +1850,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "700",
+  },
+  sidebarItemTimestamp: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
   },
   sidebarItemTarget: {
     fontSize: 11,

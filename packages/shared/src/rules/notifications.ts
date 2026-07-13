@@ -57,7 +57,7 @@ export const defaultNotificationRules: NotificationRule[] = [
     triggerWindow: "bedtime",
     requiresAccount: false,
     requiresPushPermission: true,
-    deepLink: "H1",
+    deepLink: "H7",
   },
 ];
 
@@ -139,7 +139,7 @@ function getRuleTitle(rule: NotificationRule): string {
     umbrella: "우산 알림",
     shoes: "신발 알림",
     destination: "목적지 알림",
-    bedtime: "자기 전 체크",
+    bedtime: "내일 브리핑",
   };
   return titleByType[rule.type];
 }
@@ -165,7 +165,7 @@ function getRuleReason(
     return "현재 조건에서는 대기";
   }
   if (rule.type === "routine") return "오늘 준비 카드 확인 가능";
-  if (rule.type === "bedtime") return "내일 날씨 미리 확인";
+  if (rule.type === "bedtime") return "내일 날씨·코디·우산 준비 확인";
   if (rule.type === "rain") return "비 시작 전 미리 알림";
   if (rule.type === "shoes") return shoesTitle;
   if (rule.type === "destination") return getDestinationActiveReason(context.destinationCondition, context.destinationSignals, context.destinationShoesTitle);

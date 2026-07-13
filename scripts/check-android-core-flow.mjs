@@ -709,6 +709,13 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await clickAriaIncludes(page, "알림 열기");
     await assertText(page, "알림 센터");
     await assertText(page, "이력·도착 화면 확인");
+    await assertText(page, "내일 브리핑");
+    await clickAriaIncludes(page, "내일 브리핑, 예약됨");
+    await assertText(page, "내일 날씨");
+    await assertText(page, "내일 코디");
+    await assertText(page, "우산 준비");
+    await clickText(page, "오늘 홈으로");
+    await clickAriaIncludes(page, "알림 열기");
     await clickAriaIncludes(page, "알림 센터 열기");
     await assertText(page, "최근 처리");
     await assertText(page, "강수 알림");

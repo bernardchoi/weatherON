@@ -132,6 +132,7 @@ export type NotificationHistoryItem = {
   action: "read" | "open" | "sent" | "received";
   route?: P0RouteId;
   statusLabel: string;
+  occurredAt?: string;
 };
 
 const defaultDestinationAlertCondition: DestinationAlertCondition = {
@@ -370,6 +371,7 @@ export function useWeatherOnAppState() {
           travelStatus: selectedDestinationTravelEstimate.status,
         },
         savedDestinations,
+        notificationNow: nowMinuteTick,
       });
     },
     [
@@ -385,6 +387,7 @@ export function useWeatherOnAppState() {
       userPreferenceProfile,
       wardrobe,
       weatherProviderResult,
+      nowMinuteTick,
     ],
   );
 
@@ -788,6 +791,7 @@ export function useWeatherOnAppState() {
         title: notification?.title ?? "알림",
         action: "read",
         statusLabel: "읽음 처리",
+        occurredAt: new Date().toISOString(),
       }),
     );
   }, [state.notifications]);
@@ -803,6 +807,7 @@ export function useWeatherOnAppState() {
         title: "오늘 알림",
         action: "read",
         statusLabel: `${activeNotificationIds.length}개 전체 읽음 처리`,
+        occurredAt: new Date().toISOString(),
       }),
     );
   }, [state.notifications]);
@@ -857,6 +862,7 @@ export function useWeatherOnAppState() {
         action: "open",
         route,
         statusLabel: getNotificationOpenResultLabel(id, route),
+        occurredAt: new Date().toISOString(),
       }),
     );
     const destinationPlaceId = getNotificationDestinationPlaceId(id);
@@ -893,6 +899,7 @@ export function useWeatherOnAppState() {
         action: "sent",
         route,
         statusLabel: getLocalNotificationResultLabel(result),
+        occurredAt: new Date().toISOString(),
       }),
     );
   }, [permissionReady, selectedDestinationPlace.name]);
@@ -905,16 +912,16 @@ export function useWeatherOnAppState() {
     void addLocalNotificationReceivedListener((payload) => {
       if (!active) return;
       const notificationId = payload.ruleId ?? payload.notificationId ?? "local-notification";
-      if (notificationId !== "local-test") return;
       const routeFromPayload = getP0RouteFromNotificationPayload(payload.route) ?? "M2";
       setNotificationHistory((current) =>
         addNotificationHistoryItem(current, {
-          id: createNotificationHistoryId("local-test", "received"),
-          notificationId: "local-test",
-          title: getTestNotificationTitle(routeFromPayload),
+          id: createNotificationHistoryId(notificationId, "received"),
+          notificationId,
+          title: payload.title ?? getNotificationHistoryTitle(notificationId, getTestNotificationTitle(routeFromPayload)),
           action: "received",
           route: routeFromPayload,
           statusLabel: "수신 확인",
+          occurredAt: new Date().toISOString(),
         }),
       );
     }).then((remove) => {
@@ -1482,6 +1489,7 @@ function getBackRoute(route: AppRouteId): AppRouteId {
     case "H3":
     case "H4":
     case "H5":
+    case "H7":
     case "H2":
       return "H1";
     case "W2":
@@ -1560,6 +1568,7 @@ function getNotificationOpenResultLabel(notificationId: string, route: P0RouteId
 function getTestNotificationTitle(route: P0RouteId): string {
   if (route === "H3") return "WeatherON 알림함 확인";
   if (route === "H5") return "강수 알림";
+  if (route === "H7") return "내일 브리핑";
   if (route === "G2") return "목적지 알림";
   return "WeatherON 확인 알림";
 }
@@ -1567,6 +1576,7 @@ function getTestNotificationTitle(route: P0RouteId): string {
 function getTestNotificationBody(route: P0RouteId): string {
   if (route === "H3") return "알림을 누르면 알림함으로 이동함";
   if (route === "H5") return "알림을 누르면 강수 타임라인으로 이동함";
+  if (route === "H7") return "알림을 누르면 내일 날씨와 코디를 확인함";
   if (route === "G2") return "알림을 누르면 목적지 케어로 이동함";
   return "알림을 누르면 스마트 알림 설정으로 이동함";
 }

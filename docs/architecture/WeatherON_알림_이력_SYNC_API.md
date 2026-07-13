@@ -5,6 +5,8 @@
 ## 현재 구현
 
 - 앱 로컬 상태: `readNotificationIds`, `notificationHistory`.
+- `notificationHistory`는 읽음·열림·발송·수신 액션과 `occurredAt` 시각을 저장한다. 실제 로컬 푸시 수신은 Expo notification listener가 기록한다.
+- 매일 21시 `bedtime-check`는 H7 `내일 브리핑`으로 연결한다. H7은 다음날 날씨·코디·우산 준비 전용 도착 화면이다.
 - Web/IAB 검증용 로컬 영속화: `localStorage` key `weatheron.notificationState.v1`.
 - 저장 범위는 최근 알림 이력 6개, 읽음 id 최대 40개로 제한한다.
 - 저장 실패 또는 비지원 환경에서는 메모리 상태만 유지한다.
@@ -34,6 +36,7 @@
   - `notificationId: string`
   - `title: string`
   - `source: "in-app" | "push"`
+  - `occurredAt: ISO-8601 string`
 - 동작:
   - 사용자별 read set에 upsert.
   - history에 `action="read"` 이벤트 upsert.
@@ -47,6 +50,7 @@
   - `title: string`
   - `route: P0RouteId`
   - `source: "in-app" | "push"`
+  - `occurredAt: ISO-8601 string`
 - 동작:
   - read set에 upsert.
   - history에 `action="open"` 이벤트 upsert.
@@ -60,6 +64,7 @@
   - `notificationId`
   - `title`
   - `action`
+  - `occurredAt`
   - `route`
   - `source`
   - `createdAt`

@@ -35,6 +35,14 @@ export function NotificationCenterScreen({
     : activeNotifications.filter((item) => !effectiveReadNotificationIds.includes(item.id));
   const hasUnread = unreadCount > 0;
   const hasHistory = notificationHistory.length > 0;
+  const receivedAtByNotificationId = useMemo(() => {
+    const records = new Map<string, string>();
+    notificationHistory.forEach((item) => {
+      if (item.action !== "received" || !item.occurredAt || records.has(item.notificationId)) return;
+      records.set(item.notificationId, item.occurredAt);
+    });
+    return records;
+  }, [notificationHistory]);
 
   useEffect(() => {
     Animated.parallel([
@@ -182,6 +190,9 @@ export function NotificationCenterScreen({
             const route = item.deepLink as P0RouteId;
             const meta = getNotificationPresentation(displayIndex, route, item.title);
             const read = previewOnly || effectiveReadNotificationIds.includes(item.id);
+            const receivedAt = receivedAtByNotificationId.get(item.id);
+            const timestamp = receivedAt ?? item.scheduledAt ?? state.weatherProvider.currentObservedAt;
+            const timestampLabel = receivedAt ? "푸시됨" : item.scheduledAt ? "예약됨" : "조건 감지";
             return (
               <NotificationCard
                 key={item.id}
@@ -190,6 +201,8 @@ export function NotificationCenterScreen({
                 previewOnly={previewOnly}
                 reason={smartCareEnabled ? item.reason : "스마트 알림 꺼짐"}
                 targetLabel={getNotificationTargetLabel(route)}
+                timestamp={timestamp}
+                timestampLabel={timestampLabel}
                 onOpen={() => onOpenNotificationDeepLink(item.id, route)}
                 onRead={() => onMarkNotificationRead(item.id)}
                 bulkDismissing={bulkDismissing}
@@ -251,7 +264,6 @@ export function NotificationCenterScreen({
 type NotificationPresentation = {
   icon: keyof typeof uiIconAssets;
   title: string;
-  time: string;
   detail: string;
   highlight: string;
   tone: "clear" | "gold" | "sky" | "warm";
@@ -263,6 +275,8 @@ function NotificationCard({
   previewOnly,
   reason,
   targetLabel,
+  timestamp,
+  timestampLabel,
   onOpen,
   onRead,
   bulkDismissing,
@@ -274,6 +288,8 @@ function NotificationCard({
   previewOnly?: boolean;
   reason: string;
   targetLabel: string;
+  timestamp?: string;
+  timestampLabel: string;
   onOpen: () => void;
   onRead: () => void;
   bulkDismissing: boolean;
@@ -366,7 +382,7 @@ function NotificationCard({
       </View>
       <Animated.View
         {...cardPanResponder.panHandlers}
-        accessibilityLabel={`${meta.title}, ${read ? "읽음" : "읽지 않음"}, ${targetLabel}로 이동 가능`}
+        accessibilityLabel={`${meta.title}, ${timestampLabel} ${formatNotificationDateTime(timestamp)}, ${read ? "읽음" : "읽지 않음"}, ${targetLabel}로 이동 가능`}
         style={[
           styles.notificationCard,
           {
@@ -385,8 +401,8 @@ function NotificationCard({
         <View style={styles.copy}>
           <View style={styles.cardTitleRow}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>{meta.title}</Text>
-            <Text style={[styles.cardTime, { color: theme.subtle }]}>{meta.time}</Text>
           </View>
+          <Text style={[styles.cardTime, { color: theme.subtle }]}>{timestampLabel} · {formatNotificationDateTime(timestamp)}</Text>
           <Text style={[styles.reason, { color: theme.muted }]}>{previewOnly ? "권한을 켜면 실제 푸시로 받음" : meta.detail || reason}</Text>
           <Text style={[styles.highlight, { color: toneColor }]}>{meta.highlight}</Text>
         </View>
@@ -419,15 +435,15 @@ function HistoryRow({
   item: P0ScreenProps["notificationHistory"][number];
   theme: AppTheme;
 }) {
-  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : "읽음";
-  const dotColor = item.action === "open" ? theme.clear : item.action === "sent" ? theme.sky : theme.subtle;
+  const label = item.action === "open" ? "열림" : item.action === "sent" ? "발송" : item.action === "received" ? "수신" : "읽음";
+  const dotColor = item.action === "open" ? theme.clear : item.action === "sent" || item.action === "received" ? theme.sky : theme.subtle;
   return (
     <View style={styles.historyRow}>
       <View style={[styles.historyDot, { backgroundColor: dotColor }]} />
       <View style={styles.historyCopy}>
         <Text style={[styles.historyItemTitle, { color: theme.text }]}>{item.title}</Text>
         <Text style={[styles.historyItemMeta, { color: theme.subtle }]}>
-          {label} · {item.statusLabel}
+          {label} · {item.statusLabel}{item.occurredAt ? ` · ${formatNotificationDateTime(item.occurredAt)}` : ""}
         </Text>
       </View>
     </View>
@@ -437,6 +453,7 @@ function HistoryRow({
 function getNotificationTargetLabel(route: P0RouteId): string {
   if (route === "H4") return "오늘 준비";
   if (route === "H5") return "강수 타임라인";
+  if (route === "H7") return "내일 브리핑";
   if (route === "G2") return "목적지 케어";
   if (route === "M2") return "알림 설정";
   return "홈";
@@ -447,7 +464,6 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     return {
       icon: "depart",
       title: fallbackTitle || "목적지 알림",
-      time: "08:20",
       detail: "출발 전 목적지 날씨 다시 확인",
       highlight: "목적지 케어 열기",
       tone: "clear",
@@ -457,17 +473,24 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     return {
       icon: "rain",
       title: fallbackTitle || "비 예보 사전 알림",
-      time: "14:00",
       detail: "18시 시작 · 시간당 4mm · 21시 완화",
       highlight: "강수 타임라인 보기",
       tone: "sky",
+    };
+  }
+  if (route === "H7") {
+    return {
+      icon: "clock",
+      title: fallbackTitle || "내일 브리핑",
+      detail: "내일 날씨·코디·우산 준비 확인",
+      highlight: "내일 브리핑 열기",
+      tone: "warm",
     };
   }
   if (route === "H4") {
     return {
       icon: "uv",
       title: fallbackTitle || "오늘 준비 알림",
-      time: "07:30",
       detail: "오늘 외출 전 준비 상태 확인",
       highlight: "오늘 준비 열기",
       tone: "sky",
@@ -477,7 +500,6 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     return {
       icon: "uv",
       title: "오늘의 외출 준비",
-      time: "07:30",
       detail: "21° 맑음 · 출발 전 날씨 확인",
       highlight: "준비 상태 정상",
       tone: "clear",
@@ -487,7 +509,6 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     return {
       icon: "rain",
       title: "비 예보 사전 알림",
-      time: "14:00",
       detail: "18시 시작 · 시간당 4mm · 21시 완화",
       highlight: "강수 타임라인 보기",
       tone: "sky",
@@ -497,7 +518,6 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
     return {
       icon: "depart",
       title: "목적지 변화",
-      time: "08:20",
       detail: "출발 10분 전 · 목적지 날씨 다시 확인",
       highlight: "목적지 기준 확인",
       tone: "clear",
@@ -506,11 +526,23 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
   return {
     icon: "clock",
     title: "출발 알림",
-    time: "08:30",
     detail: "지금 출발하면 9:00 도착",
     highlight: "판교 · 40분 소요",
     tone: "warm",
   };
+}
+
+function formatNotificationDateTime(value?: string) {
+  const timestamp = value ? Date.parse(value) : Number.NaN;
+  if (!Number.isFinite(timestamp)) return "시각 확인 중";
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(timestamp));
 }
 
 function getToneColor(theme: AppTheme, tone: NotificationPresentation["tone"]) {

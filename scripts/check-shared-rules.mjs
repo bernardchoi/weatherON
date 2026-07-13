@@ -19,6 +19,7 @@ await writeFile(
   `
     import {
       buildDestinationCare,
+      calculateFeelsLikeC,
       convertWgs84ToKmaGrid,
       defaultPreferenceProfile,
       evaluateNotificationRules,
@@ -88,6 +89,8 @@ await writeFile(
       placeSearchSports: searchFixturePlaces("잠실"),
       seoulGrid: convertWgs84ToKmaGrid({ latitude: 37.5665, longitude: 126.978 }),
       seongsuGrid: convertWgs84ToKmaGrid({ latitude: 37.5446, longitude: 127.0559 }),
+      feelsLikeHotHumid: calculateFeelsLikeC(34, 70, 2.9),
+      feelsLikeDryWarm: calculateFeelsLikeC(28, 20, 1.2),
     };
   `,
 );
@@ -201,7 +204,7 @@ await build({
   jsx: "automatic",
   target: "es2022",
   loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
-  external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-status-bar"],
+  external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-navigation-bar", "expo-status-bar"],
   logLevel: "silent",
 });
 
@@ -237,6 +240,8 @@ assert.equal(results.kma.hourly.length, 3);
 assert.deepEqual(results.seoulGrid, { nx: 60, ny: 127 });
 assert.equal(results.seongsuGrid.nx, 61);
 assert.equal(results.seongsuGrid.ny, 126);
+assert.equal(results.feelsLikeHotHumid, 40);
+assert.equal(results.feelsLikeDryWarm, 28);
 assert.equal(results.openmeteo.source, "openmeteo");
 assert.equal(results.openmeteo.current.condition, "clear");
 assert.equal(results.openmeteo.current.feelsLikeC, 31);

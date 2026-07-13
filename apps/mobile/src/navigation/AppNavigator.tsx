@@ -13,6 +13,7 @@ import { WardrobePresetScreen } from "../screens/WardrobePresetScreen";
 import { UmbrellaScreen } from "../screens/UmbrellaScreen";
 import { RainTimelineScreen } from "../screens/RainTimelineScreen";
 import { WeatherDetailScreen } from "../screens/WeatherDetailScreen";
+import { TomorrowBriefScreen } from "../screens/TomorrowBriefScreen";
 import { NotificationCenterScreen } from "../screens/NotificationCenterScreen";
 import {
   WeatherReportCompleteScreen,
@@ -186,6 +187,7 @@ export function AppNavigator() {
       {route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
       {route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
       {route === "H6" ? <WeatherDetailScreen {...screenProps} /> : null}
+      {route === "H7" ? <TomorrowBriefScreen {...screenProps} /> : null}
       {route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
       {route === "W1" ? <WeatherReportHomeScreen {...screenProps} /> : null}
       {route === "W2" ? <WeatherReportSubmitScreen {...screenProps} /> : null}
@@ -266,6 +268,7 @@ function SystemBars({ theme }: { theme: AppTheme }) {
 }
 
 function getBottomNavActiveRoute(route: AppRouteId, alertReturnTo?: P0RouteId, umbrellaReturnTo?: P0RouteId): P0RouteId {
+  if (route === "H7") return "H1";
   if (route === "M2" && (alertReturnTo === "G1" || alertReturnTo === "G2")) return "G1";
   // 우산(H4)은 홈·코디 양쪽에서 진입 가능해 항상 홈으로 고정하면 코디에서 들어왔을 때 탭 표시가 어긋난다.
   // 뒤로가기가 실제로 돌아갈 라우트(umbrellaReturnTo) 기준으로 탭을 맞춘다.

@@ -17,6 +17,7 @@ export type LocalNotificationResponsePayload = {
   route?: string;
   ruleId?: string;
   notificationId?: string;
+  title?: string;
 };
 
 type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt">;
@@ -259,6 +260,7 @@ function getLocalNotificationPayload(notification: ExpoNotification): LocalNotif
     route: typeof data.route === "string" ? data.route : fallbackRoute,
     ruleId: typeof data.ruleId === "string" ? data.ruleId : fallbackRuleId,
     notificationId: notification.request.identifier,
+    title: typeof notification.request.content.title === "string" ? notification.request.content.title : undefined,
   };
 }
 
