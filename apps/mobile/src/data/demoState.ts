@@ -91,7 +91,7 @@ export function buildDemoStateFromWeatherResult(
   const baseNotificationRules = defaultNotificationRules.filter(
     (rule) => rule.type !== "destination" && rule.type !== "umbrella" && rule.type !== "shoes",
   );
-  const notifications = withBedtimeSchedule(
+  const notifications = withScheduledNotificationTimes(
     evaluateNotificationRules(activeWeather, {
       rules: baseNotificationRules,
     }),
@@ -357,13 +357,18 @@ function getDefaultTimeZone(countryCode: PlaceSearchResult["countryCode"]): stri
 }
 
 const bedtimeReminderHour = 21;
+const weatherAlertDeliveryLeadMs = 5_000;
 
-function withBedtimeSchedule(notifications: NotificationRuleEvaluation[], nowMs: number, timeZone: string): NotificationRuleEvaluation[] {
-  return notifications.map((notification) =>
-    notification.type === "bedtime"
-      ? { ...notification, scheduledAt: getNextBedtimeReminderAt(nowMs, timeZone).toISOString() }
-      : notification,
-  );
+function withScheduledNotificationTimes(notifications: NotificationRuleEvaluation[], nowMs: number, timeZone: string): NotificationRuleEvaluation[] {
+  return notifications.map((notification) => {
+    if (notification.type === "bedtime") {
+      return { ...notification, scheduledAt: getNextBedtimeReminderAt(nowMs, timeZone).toISOString() };
+    }
+    if ((notification.type === "heatwave" || notification.type === "heavy-rain") && notification.active) {
+      return { ...notification, scheduledAt: new Date(nowMs + weatherAlertDeliveryLeadMs).toISOString() };
+    }
+    return notification;
+  });
 }
 
 function getNextBedtimeReminderAt(nowMs: number, timeZone: string): Date {

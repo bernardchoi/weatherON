@@ -91,6 +91,43 @@ await writeFile(
       seongsuGrid: convertWgs84ToKmaGrid({ latitude: 37.5446, longitude: 127.0559 }),
       feelsLikeHotHumid: calculateFeelsLikeC(34, 70, 2.9),
       feelsLikeDryWarm: calculateFeelsLikeC(28, 20, 1.2),
+      heatwaveAlerts: evaluateNotificationRules(normalizeOpenMeteoWeather({
+        ...openMeteoFixture,
+        current: { ...openMeteoFixture.current, temperature_2m: 35, apparent_temperature: 36 },
+        daily: {
+          ...openMeteoFixture.daily,
+          time: ["2026-06-26", "2026-06-27"],
+          temperature_2m_max: [35, 36],
+          temperature_2m_min: [25, 26],
+          precipitation_probability_max: [0, 0],
+          precipitation_sum: [0, 0],
+          weather_code: [0, 0],
+          wind_speed_10m_max: [8, 8],
+        },
+      }, {
+        locationId: "kr-seoul-seongsu",
+        locationName: "서울 성수동",
+        countryCode: "KR",
+      })),
+      heavyRainAlerts: evaluateNotificationRules(normalizeOpenMeteoWeather({
+        ...openMeteoFixture,
+        hourly: {
+          ...openMeteoFixture.hourly,
+          time: ["2026-06-26T10:00", "2026-06-26T11:00", "2026-06-26T12:00", "2026-06-26T13:00"],
+          temperature_2m: [24, 24, 23, 23],
+          apparent_temperature: [24, 24, 23, 23],
+          precipitation_probability: [100, 100, 100, 100],
+          precipitation: [35, 35, 35, 20],
+          weather_code: [63, 63, 63, 63],
+          wind_speed_10m: [10, 10, 10, 10],
+          relative_humidity_2m: [95, 95, 95, 95],
+          uv_index: [0, 0, 0, 0],
+        },
+      }, {
+        locationId: "kr-seoul-seongsu",
+        locationName: "서울 성수동",
+        countryCode: "KR",
+      })),
     };
   `,
 );
@@ -242,6 +279,10 @@ assert.equal(results.seongsuGrid.nx, 61);
 assert.equal(results.seongsuGrid.ny, 126);
 assert.equal(results.feelsLikeHotHumid, 40);
 assert.equal(results.feelsLikeDryWarm, 28);
+assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-warning" && item.active));
+assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-advisory" && !item.active));
+assert.ok(results.heavyRainAlerts.some((item) => item.id === "heavy-rain-warning" && item.active && item.reason.includes("3시간 105mm")));
+assert.ok(results.heavyRainAlerts.some((item) => item.id === "heavy-rain-advisory" && !item.active));
 assert.equal(results.openmeteo.source, "openmeteo");
 assert.equal(results.openmeteo.current.condition, "clear");
 assert.equal(results.openmeteo.current.feelsLikeC, 31);

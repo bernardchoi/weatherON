@@ -7,6 +7,8 @@
 - 앱 로컬 상태: `readNotificationIds`, `notificationHistory`.
 - `notificationHistory`는 읽음·열림·발송·수신 액션과 `occurredAt` 시각을 저장한다. 실제 로컬 푸시 수신은 Expo notification listener가 기록한다.
 - 매일 21시 `bedtime-check`는 H7 `내일 브리핑`으로 연결한다. H7은 다음날 날씨·코디·우산 준비 전용 도착 화면이다.
+- `heatwave-advisory`/`heatwave-warning`, `heavy-rain-advisory`/`heavy-rain-warning`는 H3 알림 센터로 연결한다. 예보가 기상청 특보 기준에 도달할 때만 `기준 도달 예상` 문구로 예약하며, 동일 등급은 event date 기준 하루 1회만 보관한다.
+- 앱이 예보를 갱신할 때 로컬 예약을 생성한다. 앱 미실행 상태의 공식 특보 실시간 푸시는 KMA 특보 API와 서버 push worker 연결 전까지 제공하지 않는다.
 - Web/IAB 검증용 로컬 영속화: `localStorage` key `weatheron.notificationState.v1`.
 - 저장 범위는 최근 알림 이력 6개, 읽음 id 최대 40개로 제한한다.
 - 저장 실패 또는 비지원 환경에서는 메모리 상태만 유지한다.
@@ -82,3 +84,4 @@
 - 네이티브 앱 로컬 저장소: `expo-secure-store` 또는 민감도 낮은 앱 전용 storage 중 선택 필요.
 - 로컬 이력과 서버 이력 merge 정책: 최신 이벤트 우선, 동일 `notificationId + action` dedupe 권장.
 - 푸시 수신 이벤트와 앱 내 H3 이벤트의 source taxonomy 확정 필요.
+- KMA 기상특보 조회서비스 연동 후 `forecast-threshold`와 `official-warning` source를 이력에 구분할지 결정 필요.

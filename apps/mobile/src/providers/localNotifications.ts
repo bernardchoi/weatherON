@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import type { NotificationRuleEvaluation } from "@weatheron/shared";
+import { readAppJson, writeAppJson } from "./appStorage";
 
 type ExpoNotificationsModule = typeof import("expo-notifications");
 
@@ -20,7 +21,7 @@ export type LocalNotificationResponsePayload = {
   title?: string;
 };
 
-type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt">;
+type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt" | "deliveryKey">;
 type ExpoNotification = Parameters<ExpoNotificationsModule["addNotificationReceivedListener"]>[0] extends (notification: infer Notification) => void
   ? Notification
   : never;
@@ -28,6 +29,7 @@ type ExpoNotificationResponse = NonNullable<Awaited<ReturnType<ExpoNotifications
 
 const notificationChannelId = "weatheron-smart-care";
 const smartNotificationIdentifierPrefix = "weatheron:smart:";
+const specialAlertDeliveryStorageKey = "weatheron.specialAlertDelivery.v1";
 let notificationHandlerReady = false;
 
 export async function requestLocalNotificationPermission(): Promise<LocalNotificationPermissionResult> {
@@ -75,12 +77,24 @@ export async function syncLocalWeatherNotifications(options: {
 
   const activeNotifications = options.notifications
     .filter((item) => item.active && item.requiresPushPermission && isFutureScheduledAt(item.scheduledAt));
-  await cancelSmartScheduledNotifications(Notifications);
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+  const deliveredSpecialAlertKeys = await readDeliveredSpecialAlertKeys();
+  const specialAlerts = activeNotifications.filter((item) => item.deliveryKey);
+  const preservedSpecialIdentifiers = new Set(
+    specialAlerts
+      .filter((item) => scheduledNotifications.some((notification) => notification.identifier === getSmartNotificationIdentifier(item)))
+      .map(getSmartNotificationIdentifier),
+  );
+  await cancelSmartScheduledNotifications(Notifications, preservedSpecialIdentifiers);
+  const notificationsToSchedule = activeNotifications.filter((item) => {
+    if (!item.deliveryKey) return true;
+    return !deliveredSpecialAlertKeys[item.deliveryKey] && !preservedSpecialIdentifiers.has(getSmartNotificationIdentifier(item));
+  });
 
   await Promise.all(
-    activeNotifications.map((item) =>
+    notificationsToSchedule.map((item) =>
       Notifications.scheduleNotificationAsync({
-        identifier: `${smartNotificationIdentifierPrefix}${item.id}`,
+        identifier: getSmartNotificationIdentifier(item),
         content: {
           title: item.title,
           body: item.reason,
@@ -97,6 +111,13 @@ export async function syncLocalWeatherNotifications(options: {
       }),
     ),
   );
+  const newlyScheduledSpecialAlertKeys = notificationsToSchedule.flatMap((item) => (item.deliveryKey ? [item.deliveryKey] : []));
+  if (newlyScheduledSpecialAlertKeys.length > 0) {
+    await writeDeliveredSpecialAlertKeys({
+      ...deliveredSpecialAlertKeys,
+      ...Object.fromEntries(newlyScheduledSpecialAlertKeys.map((key) => [key, new Date().toISOString()])),
+    });
+  }
 
   const scheduledCount = await countScheduledNotifications(Notifications, smartNotificationIdentifierPrefix);
   return {
@@ -220,13 +241,42 @@ async function configureNotifications(Notifications: ExpoNotificationsModule) {
   }
 }
 
-async function cancelSmartScheduledNotifications(Notifications: ExpoNotificationsModule) {
+async function cancelSmartScheduledNotifications(Notifications: ExpoNotificationsModule, preservedIdentifiers = new Set<string>()) {
   const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
   await Promise.all(
     scheduledNotifications
-      .filter((notification) => notification.identifier.startsWith(smartNotificationIdentifierPrefix))
+      .filter(
+        (notification) =>
+          notification.identifier.startsWith(smartNotificationIdentifierPrefix) && !preservedIdentifiers.has(notification.identifier),
+      )
       .map((notification) => Notifications.cancelScheduledNotificationAsync(notification.identifier)),
   );
+}
+
+function getSmartNotificationIdentifier(item: LocalNotificationInput): string {
+  return `${smartNotificationIdentifierPrefix}${item.id}`;
+}
+
+async function readDeliveredSpecialAlertKeys(): Promise<Record<string, string>> {
+  const stored = await readAppJson<unknown>(specialAlertDeliveryStorageKey);
+  if (!stored || typeof stored !== "object") return {};
+  const cutoff = Date.now() - 8 * 24 * 60 * 60_000;
+  return Object.entries(stored as Record<string, unknown>).reduce<Record<string, string>>((acc, [key, value]) => {
+    if (typeof value === "string" && Number.isFinite(Date.parse(value)) && Date.parse(value) >= cutoff) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
+
+async function writeDeliveredSpecialAlertKeys(keys: Record<string, string>) {
+  const compactKeys = Object.entries(keys)
+    .slice(-40)
+    .reduce<Record<string, string>>((acc, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {});
+  await writeAppJson(specialAlertDeliveryStorageKey, compactKeys);
 }
 
 async function countScheduledNotifications(Notifications: ExpoNotificationsModule, identifierPrefix: string) {

@@ -41,6 +41,7 @@ export function AlertSettingsScreen({
   const notificationResult = getNotificationPermissionResult(permissionGateResult);
   const advancedEnabledCount = [
     permissionReady && alertPreferences.rainDetail,
+    deliveryReady && alertPreferences.weatherAlerts,
     deliveryReady && alertPreferences.routine,
     deliveryReady && alertPreferences.bedtime,
     deliveryReady && destinationReady && alertPreferences.destination,
@@ -142,7 +143,7 @@ export function AlertSettingsScreen({
           <AlertRow
             icon="rain"
             title="필수 날씨"
-            body={permissionReady ? "강수·기상특보" : "푸시만 대기"}
+            body={permissionReady ? "강수·특보 기준 도달 예상" : "푸시만 대기"}
             status={permissionReady ? "항상" : "권한 필요"}
             tone={permissionReady ? "sky" : "clear"}
             onPress={() => onEditNotificationCondition(state.notifications[0]?.id ?? "rain", state.notifications[0]?.deepLink as P0RouteId)}
@@ -170,7 +171,7 @@ export function AlertSettingsScreen({
 
         <Pressable accessibilityLabel={advancedOpen ? "고급 설정 닫기" : "고급 설정 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { backgroundColor: theme.cardStrong }]}>
           <Text style={[styles.advancedTitle, { color: theme.text }]}>고급 설정</Text>
-          <Text style={[styles.advancedCount, { color: theme.subtle }]}>{advancedEnabledCount}/5 적용</Text>
+          <Text style={[styles.advancedCount, { color: theme.subtle }]}>{advancedEnabledCount}/6 적용</Text>
           <ChevronDown color={theme.subtle} open={advancedOpen} />
         </Pressable>
 
@@ -182,6 +183,14 @@ export function AlertSettingsScreen({
               enabled={alertPreferences.rainDetail}
               disabled={!permissionReady}
               onToggle={() => onToggleAlertPreference("rainDetail")}
+              theme={theme}
+            />
+            <AdvancedToggleRow
+              title="기상특보 기준"
+              body="폭염·호우 주의보와 경보 기준 도달 예상 알림"
+              enabled={alertPreferences.weatherAlerts}
+              disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreference("weatherAlerts")}
               theme={theme}
             />
             <AdvancedToggleRow

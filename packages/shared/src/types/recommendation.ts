@@ -61,12 +61,12 @@ export type DestinationCare = {
 
 export type NotificationRule = {
   id: string;
-  type: "routine" | "rain" | "umbrella" | "shoes" | "destination" | "bedtime";
+  type: "routine" | "rain" | "umbrella" | "shoes" | "destination" | "bedtime" | "heatwave" | "heavy-rain";
   enabled: boolean;
-  triggerWindow: "morning" | "before-departure" | "rain-1h" | "rain-3h" | "destination-change" | "bedtime";
+  triggerWindow: "morning" | "before-departure" | "rain-1h" | "rain-3h" | "destination-change" | "bedtime" | "weather-alert";
   requiresAccount: boolean;
   requiresPushPermission: boolean;
-  deepLink: "H1" | "H4" | "H5" | "H7" | "G2" | "M2";
+  deepLink: "H1" | "H3" | "H4" | "H5" | "H7" | "G2" | "M2";
 };
 
 export type NotificationRuleEvaluation = NotificationRule & {
@@ -75,6 +75,8 @@ export type NotificationRuleEvaluation = NotificationRule & {
   reason: string;
   /** 실제 기기 알림을 발송할 절대 시각. 시간 기준이 없는 안내 알림은 예약하지 않음. */
   scheduledAt?: string;
+  /** 동일 특보 등급을 한 번만 발송하기 위한 영속 dedupe 키. */
+  deliveryKey?: string;
   conditionSummary?: string;
   ruleVersion: string;
 };

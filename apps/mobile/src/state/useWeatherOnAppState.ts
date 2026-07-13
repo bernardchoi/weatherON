@@ -65,7 +65,7 @@ export type SmartCareScenario = "commute" | "outing" | "travel";
 export type PermissionReturnRouteId = P0RouteId | OnboardingRouteId;
 export type AccountGateReturnRouteId = P0RouteId | "A4";
 export type DestinationAddReturnRouteId = P0RouteId | "O6";
-export type AlertPreferenceKey = "rainDetail" | "routine" | "bedtime" | "destination" | "quietHours";
+export type AlertPreferenceKey = "rainDetail" | "weatherAlerts" | "routine" | "bedtime" | "destination" | "quietHours";
 export type AlertPreferences = Record<AlertPreferenceKey, boolean>;
 export type NotificationDeliveryStatus = LocalNotificationSyncResult;
 export type DestinationSchedulePreference = {
@@ -142,6 +142,7 @@ const defaultDestinationAlertCondition: DestinationAlertCondition = {
 };
 const defaultAlertPreferences: AlertPreferences = {
   rainDetail: true,
+  weatherAlerts: true,
   routine: true,
   bedtime: true,
   destination: true,
@@ -1540,6 +1541,7 @@ function getP0RouteFromNotificationPayload(value?: string): P0RouteId | null {
 function shouldScheduleLocalNotification(notification: NotificationRuleEvaluation, preferences: AlertPreferences): boolean {
   if (!notification.active || !notification.requiresPushPermission) return false;
   if (notification.type === "rain") return preferences.rainDetail;
+  if (notification.type === "heatwave" || notification.type === "heavy-rain") return preferences.weatherAlerts;
   if (notification.type === "destination") return preferences.destination;
   if (notification.type === "bedtime") return preferences.bedtime;
   if (notification.type === "routine") return preferences.routine;
@@ -2061,6 +2063,7 @@ function normalizeAlertPreferences(value: unknown): AlertPreferences {
   const record = value as Partial<AlertPreferences>;
   return {
     rainDetail: record.rainDetail !== false,
+    weatherAlerts: record.weatherAlerts !== false,
     routine: record.routine !== false,
     bedtime: record.bedtime !== false,
     destination: record.destination !== false,

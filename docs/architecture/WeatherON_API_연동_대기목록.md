@@ -8,6 +8,7 @@
 | API | 상태 | 사용 위치 | 비고 |
 |---|---|---|---|
 | KMA 단기예보 조회서비스 | 활성 | 서버 weather proxy, live smoke | Decoding 서비스키 사용. 서버 프록시는 TTL 캐시와 이전 성공값 fallback 적용. 현재 upstream 429 발생 가능성이 있어 활용기간/쿼터 확인 필요 |
+| KMA 기상특보 조회서비스 | 연동 대기 | 공식 특보 발효 확인 | 현재 앱은 단기예보 기준으로 폭염·호우 주의보/경보 도달 예상만 로컬 알림 처리. 공식 발효 특보는 `WthrWrnInfoService`와 특보구역 매핑 추가 후 우선 적용 필요 |
 | Kakao Local API | 활성 | `/places/search?countryCode=KR` | 국내 장소 검색 우선 provider. `WEATHERON_PLACE_SMOKE=1` 통과. REST API 키는 서버 환경변수/Secret Manager에만 보관 |
 | Open-Meteo | 활성 | 글로벌/보조 날씨 | 별도 키 없음. 서버 adapter 경유. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과 |
 
@@ -43,4 +44,8 @@
 - Google Maps와 Mapbox 비용 비교 및 재검토 기준은 `docs/architecture/WeatherON_MAP_PROVIDER_COST_COMPARISON.md`를 따른다.
 - KMA 키는 만료 전 연장신청이 필요하므로 운영 캘린더에 만료 30일 전, 7일 전 알림을 둔다.
 - KMA 호출은 서버 프록시 캐시(`WEATHER_CACHE_TTL_MS`)를 통해 중복 호출을 줄이고, upstream 오류 시 이전 성공값이 있으면 우선 반환한다.
+- 폭염·호우 로컬 알림은 공식 특보 발효 알림이 아니라 `기준 도달 예상` 알림이다. 폭염은 일최고 33℃/35℃ 이상 2일 연속, 호우는 3시간 60mm/90mm 또는 12시간 110mm/180mm 예보를 각각 주의보/경보 기준으로 사용한다.
+- 동일 특보 등급은 event date 기준 하루 1회만 예약한다. 주의보가 경보로 높아지면 별도 key로 1회 추가 예약한다.
+- KMA 기상특보 조회서비스와 특보구역 매핑이 적용되면 공식 발효 상태가 예보 기반 알림보다 우선하며, `발효 중` 문구는 그 시점에만 사용한다.
+- 현재 로컬 예약은 앱이 예보를 새로 읽은 시점에 생성된다. 앱 미실행 상태의 실시간 특보는 KMA 특보 API polling과 FCM/APNs 서버 푸시 연결 후 제공한다.
 - Android 출시 준비와 테스트/심사 프로세스는 `docs/architecture/WeatherON_ANDROID_출시_준비_프로세스.md`에서 추적한다.
