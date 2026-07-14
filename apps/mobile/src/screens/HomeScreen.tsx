@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -39,6 +39,8 @@ export function HomeScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const pullRefreshObservedLoadingRef = useRef(false);
   const activeNotifications = state.notifications.filter((item) => item.active);
   const unreadNotificationCount = permissionReady
     ? activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length
@@ -52,6 +54,21 @@ export function HomeScreen({
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
+  const refreshFromPull = useCallback(() => {
+    pullRefreshObservedLoadingRef.current = false;
+    setIsPullRefreshing(true);
+    onRefreshWeather();
+  }, [onRefreshWeather]);
+
+  useEffect(() => {
+    if (!isPullRefreshing) return;
+    if (isWeatherLoading) {
+      pullRefreshObservedLoadingRef.current = true;
+      return;
+    }
+    if (pullRefreshObservedLoadingRef.current) setIsPullRefreshing(false);
+  }, [isPullRefreshing, isWeatherLoading]);
+
   return (
     <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
       <WeatherBackground condition={current.condition} theme={theme} />
@@ -61,8 +78,8 @@ export function HomeScreen({
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isWeatherLoading}
-            onRefresh={onRefreshWeather}
+            refreshing={isPullRefreshing}
+            onRefresh={refreshFromPull}
             tintColor={theme.clear}
             colors={[theme.clear]}
             progressBackgroundColor={theme.cardStrong}

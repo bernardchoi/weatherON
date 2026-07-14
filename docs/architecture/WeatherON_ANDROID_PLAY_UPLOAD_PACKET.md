@@ -1,6 +1,6 @@
 # WeatherON Android Play Upload Packet
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-14
 > 목적: Play Console 내부/폐쇄 테스트 트랙에 업로드할 production AAB와 업로드 전 확인값을 한 장으로 유지한다.
 
 ## 1. AAB 업로드 대상
@@ -12,12 +12,12 @@
 | 앱 버전 | `0.1.0` |
 | Android versionCode | `8` |
 | 소스 기준 버전 | `0.1.0 (8)` |
-| EAS build id | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` |
-| Build 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
-| Build 버전 | `0.1.0 (8)` |
-| 소스 일치 | 일치 |
-| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1 |
-| AAB artifact | builds/weatheron-v0.1.0-versionCode8.aab |
+| EAS build id | `f66ecb78-ad9d-4236-be70-ec3530a051f8` |
+| Build 상태 | FINISHED |
+| Build 버전 | `0.1.0 (9)` |
+| 소스 일치 | 불일치 |
+| Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/f66ecb78-ad9d-4236-be70-ec3530a051f8 |
+| AAB artifact | https://expo.dev/artifacts/eas/WHsqlrOEq36o5UAgK65yExyFMwm9XIqzecRiNFK8Q08.aab |
 | 업로드 후보 여부 | 불가 |
 
 ## 2. 업로드 전 남은 확인
@@ -36,24 +36,25 @@
 2. 테스트 및 출시 > 내부 테스트 또는 폐쇄 테스트 트랙 선택
 3. 새 release 생성
 4. AAB artifact 업로드
-5. release name은 `0.1.0 (8)` 기준으로 입력
+5. release name은 `0.1.0 (9)` 기준으로 입력
 6. 출시 노트 초안 입력
 7. 저장 후 제출 전 blocker 문서 확인
 
 ## 4. 출시 노트 초안
 
 ```text
-WeatherON Android preview build.
-- 날씨 기반 홈/출발 흐름
-- 목적지 날씨 케어와 Kakao Local 검색
-- MY/정책/권한 설정
-- 최초 출시 범위 외 코디/스타일/소셜 레이어 미공개
+WeatherON 비공개 테스트 v0.1.0 (9)
+- 홈 화면에서 당겨서 최신 날씨 새로고침
+- 내일 날씨 브리핑과 강한 날씨 알림 개선
+- 목적지 알림과 출발 시간 계산 안정화
+- 코디·옷장 탐색 편의성과 화면 반응 개선
+- 화면 전환, 완료 안내, 접근성 설정 보완
 ```
 
 ## 5. 확인 명령
 
 ```bash
-npm run check:eas-production-build-status -- 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1
+npm run check:eas-production-build-status -- f66ecb78-ad9d-4236-be70-ec3530a051f8
 npm run check:android-store-submit-ready
 npm run report:android-release-action-board
 ```

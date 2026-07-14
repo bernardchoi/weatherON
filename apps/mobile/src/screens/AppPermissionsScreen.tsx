@@ -13,10 +13,11 @@ export function AppPermissionsScreen({
   permissionGateResult,
   smartCareEnabled,
   onNavigate,
+  onRequestCurrentLocation,
   onRequestPermissionGate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState, permissionGateResult);
+  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState);
   const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled, permissionGateResult);
   const resultCopy = getPermissionResultCopy(permissionGateResult);
 
@@ -46,7 +47,7 @@ export function AppPermissionsScreen({
             secondaryLabel="위치 선택"
             status={locationCopy.status}
             tone={locationCopy.tone}
-            onPrimaryPress={() => (locationCopy.canRequest ? onRequestPermissionGate("location", "M4") : onNavigate("H2"))}
+            onPrimaryPress={() => (locationCopy.canRequest ? onRequestCurrentLocation() : onNavigate("H2"))}
             onSecondaryPress={() => onNavigate("H2")}
             theme={theme}
           />
@@ -123,11 +124,18 @@ function getLocationPermissionCopy(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
   deviceLocationState: P0ScreenProps["deviceLocationState"],
-  permissionGateResult: P0ScreenProps["permissionGateResult"],
 ): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
-  const returnedFromLocationGate = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "location";
-  const skipped = returnedFromLocationGate && permissionGateResult.message.includes("나중에");
-  if (skipped || deviceLocationState.status === "denied") {
+  if (deviceLocationState.status === "requesting") {
+    return {
+      body: "위치 권한과 현재 위치 확인 중",
+      helper: "권한을 허용하면 현재 위치가 홈 날씨에 바로 반영됨",
+      primaryLabel: "확인 중",
+      status: "확인 중",
+      tone: "gold",
+      canRequest: true,
+    };
+  }
+  if (deviceLocationState.status === "denied") {
     return {
       body: "현재 위치 자동화는 대기 중",
       helper: "수동 위치와 목적지 검색은 계속 사용할 수 있음",
@@ -219,13 +227,6 @@ function getPermissionResultCopy(
 ): { title: string; body: string; tone: "clear" | "warm" } | null {
   if (!permissionGateResult || permissionGateResult.returnTo !== "M4") return null;
   const skipped = permissionGateResult.message.includes("나중에");
-  if (permissionGateResult.reason === "location") {
-    return {
-      title: skipped ? "위치 권한 보류" : "위치 권한 확인됨",
-      body: skipped ? "현재 위치 자동화만 대기. 수동 위치와 목적지 검색은 계속 사용할 수 있음" : "홈 날씨가 현재 위치 기준으로 갱신됨",
-      tone: skipped ? "warm" : "clear",
-    };
-  }
   if (permissionGateResult.reason === "notification") {
     return {
       title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",

@@ -42,9 +42,7 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
       };
     }
 
-    const position = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
+    const position = await Location.getCurrentPositionAsync();
     const coordinate = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,

@@ -19,16 +19,14 @@ export function LocationChangeScreen({
   placeSearchResults,
   isPlaceSearchLoading,
   placeSearchStatus,
-  permissionGateResult,
   onNavigate,
   onRequireAccount,
   onRequestCurrentLocation,
-  onRequestPermissionGate,
   onSearchPlaces,
   onSelectWeatherLocation,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const locationCopy = getLocationCopy(locationReady, weatherLocationMode, permissionGateResult);
+  const locationCopy = getLocationCopy(locationReady, weatherLocationMode);
   const hasSavedDestinations = savedDestinations.length > 0;
   const hasSearchQuery = placeSearchQuery.trim().length >= 2;
   const searchMode = hasSearchQuery || isPlaceSearchLoading || placeSearchStatus === "error";
@@ -78,7 +76,7 @@ export function LocationChangeScreen({
       <Pressable
         accessibilityLabel={`현재 위치 사용, ${currentLocationAction}`}
         accessibilityRole="button"
-        onPress={() => (locationReady ? onRequestCurrentLocation() : onRequestPermissionGate("location", "H2"))}
+        onPress={onRequestCurrentLocation}
         style={[
           styles.currentRow,
           { backgroundColor: theme.cardStrong, borderColor: locationReady && weatherLocationMode === "auto" ? theme.clear : theme.border },
@@ -245,17 +243,7 @@ function getLocationEmptyBody(status: P0ScreenProps["placeSearchStatus"], search
 function getLocationCopy(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
-  permissionGateResult: P0ScreenProps["permissionGateResult"],
 ) {
-  const returnedFromLocationGate = permissionGateResult?.returnTo === "H2" && permissionGateResult.reason === "location";
-  if (returnedFromLocationGate) {
-    const skipped = permissionGateResult.message.includes("나중에");
-    return {
-      currentAction: skipped ? "현재 위치 권한은 나중에 설정 · 수동 위치 사용 가능" : "현재 위치 권한 허용 완료 · 자동 위치 사용 가능",
-      statusTitle: skipped ? "수동 위치 가능" : "현재 위치 준비",
-      statusBody: (hasSavedDestinations: boolean, count: number) => (hasSavedDestinations ? `저장 위치 ${count}곳` : skipped ? "검색 결과를 홈 기준으로 적용 가능" : "GPS 또는 검색 위치 적용 가능"),
-    };
-  }
   if (locationReady && weatherLocationMode === "auto") {
     return {
       currentAction: "GPS 자동 감지 가능",

@@ -228,6 +228,7 @@ export function useWeatherOnAppState() {
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
   const localNotificationSyncKeyRef = useRef("");
   const placeSearchRequestSeqRef = useRef(0);
+  const deviceLocationRequestInFlightRef = useRef(false);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const weatherLoadedFromNetworkRef = useRef(false);
   const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
@@ -604,32 +605,43 @@ export function useWeatherOnAppState() {
     setWeatherRefreshTick((value) => value + 1);
   }, []);
 
-  const requestCurrentLocation = useCallback(async () => {
-    if (!locationReady) {
-      setPermissionGate(createPermissionGateState("location", "H1"));
-      setRoute("O3");
-      return;
-    }
+  const applyCurrentLocationWeather = useCallback(async (requestingMessage: string) => {
+    deviceLocationRequestInFlightRef.current = true;
     setWeatherLocationMode("auto");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
-    setDeviceLocationState({ status: "requesting", message: "위치 확인 중" });
-    const result = await requestDeviceWeatherLocation();
-    setDeviceLocationState(result);
-    if (result.status === "granted" && result.location) {
-      setLocationReady(true);
-      setDeviceWeatherLocation(result.location);
-    } else {
-      setLocationReady(false);
-      setDeviceWeatherLocation(null);
-      setWeatherLocationMode("manual");
+    setDeviceLocationState({ status: "requesting", message: requestingMessage });
+    try {
+      const result = await requestDeviceWeatherLocation();
+      setDeviceLocationState(result);
+      if (result.status === "granted" && result.location) {
+        setLocationReady(true);
+        setDeviceWeatherLocation(result.location);
+        // 권한 다이얼로그 대기 중 자동 위치 동기화가 거부로 끝나면 모드가 manual로 되돌아갈 수 있어,
+        // 허용 성공 시 auto를 다시 확정한다.
+        setWeatherLocationMode("auto");
+      } else {
+        setLocationReady(false);
+        setDeviceWeatherLocation(null);
+        setWeatherLocationMode("manual");
+      }
+      setWeatherRefreshTick((value) => value + 1);
+      return result;
+    } finally {
+      deviceLocationRequestInFlightRef.current = false;
     }
-    setWeatherRefreshTick((value) => value + 1);
-  }, [locationReady]);
+  }, []);
+
+  const requestCurrentLocation = useCallback(async () => {
+    if (deviceLocationRequestInFlightRef.current) return;
+    await applyCurrentLocationWeather("위치 권한 및 현재 위치 확인 중");
+  }, [applyCurrentLocationWeather]);
 
   useEffect(() => {
     if (!appStateHydrated || weatherLocationMode !== "auto") return;
     if (deviceWeatherLocation && deviceWeatherLocation.locationName !== "현재 위치") return;
+    // 현재 위치 요청(권한 다이얼로그 포함)이 진행 중이면 동기화 결과가 요청 상태와 모드를 덮어쓰므로 건너뛴다.
+    if (deviceLocationRequestInFlightRef.current) return;
     let active = true;
     setDeviceLocationState({ status: "requesting", message: locationReady ? "현재 위치 재확인 중" : "위치 권한 동기화 중" });
     syncDeviceWeatherLocationPermission().then((result) => {
@@ -1214,26 +1226,16 @@ export function useWeatherOnAppState() {
     let permissionCompleted = true;
     let notificationCompleted = permissionReady;
     if (permissionGate?.reason === "location") {
-      setWeatherLocationMode("auto");
-      setWeatherProviderMode("ready");
-      setUseDestinationWeather(false);
-      setDeviceLocationState({ status: "requesting", message: "현재 위치 확인 중" });
       if (locationReady && deviceWeatherLocation) {
+        setWeatherLocationMode("auto");
+        setWeatherProviderMode("ready");
+        setUseDestinationWeather(false);
         setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation });
+        setWeatherRefreshTick((value) => value + 1);
       } else {
-        const result = await requestDeviceWeatherLocation();
+        const result = await applyCurrentLocationWeather("현재 위치 확인 중");
         permissionCompleted = result.status === "granted";
-        setDeviceLocationState(result);
-        if (permissionCompleted && result.location) {
-          setLocationReady(true);
-          setDeviceWeatherLocation(result.location);
-        } else {
-          setLocationReady(false);
-          setDeviceWeatherLocation(null);
-          setWeatherLocationMode("manual");
-        }
       }
-      setWeatherRefreshTick((value) => value + 1);
     }
     if (permissionGate?.reason !== "location") {
       const result = await requestLocalNotificationPermission();

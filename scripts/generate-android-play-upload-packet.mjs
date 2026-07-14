@@ -24,6 +24,7 @@ const storeInputMissing = normalizeTableValue(tableValue(actionBoard, "local 스
 const qaPending = normalizeTableValue(tableValue(actionBoard, "실기기 QA 미검증")) || "미확인";
 const closedTestPending = normalizeTableValue(tableValue(actionBoard, "폐쇄 테스트 대기 항목")) || "미확인";
 const sourceVersion = `${appConfig.version} (${appConfig.android?.versionCode})`;
+const releaseVersion = buildVersion || sourceVersion;
 const sourceMatchesBuild = buildVersion === sourceVersion;
 const readyForUpload = buildState === "FINISHED" && /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.aab$/.test(artifactUrl) && sourceMatchesBuild;
 
@@ -65,18 +66,19 @@ const report = `# WeatherON Android Play Upload Packet
 2. 테스트 및 출시 > 내부 테스트 또는 폐쇄 테스트 트랙 선택
 3. 새 release 생성
 4. AAB artifact 업로드
-5. release name은 \`${appConfig.version} (${appConfig.android?.versionCode})\` 기준으로 입력
+5. release name은 \`${releaseVersion}\` 기준으로 입력
 6. 출시 노트 초안 입력
 7. 저장 후 제출 전 blocker 문서 확인
 
 ## 4. 출시 노트 초안
 
 \`\`\`text
-WeatherON Android preview build.
-- 날씨 기반 홈/출발 흐름
-- 목적지 날씨 케어와 Kakao Local 검색
-- MY/정책/권한 설정
-- 최초 출시 범위 외 코디/스타일/소셜 레이어 미공개
+WeatherON 비공개 테스트 v${releaseVersion}
+- 홈 화면에서 당겨서 최신 날씨 새로고침
+- 내일 날씨 브리핑과 강한 날씨 알림 개선
+- 목적지 알림과 출발 시간 계산 안정화
+- 코디·옷장 탐색 편의성과 화면 반응 개선
+- 화면 전환, 완료 안내, 접근성 설정 보완
 \`\`\`
 
 ## 5. 확인 명령
