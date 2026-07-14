@@ -18,7 +18,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
   const theme = useAppTheme();
 
   return (
-    <AppScreen title="나가기 전 5초 판단" subtitle="언제 나가고, 비는 언제 그치고, 뭘 챙길지만 먼저 확인" badge="1 / 3">
+    <AppScreen title="나가기 전 5초 판단" subtitle="언제 나가고, 비는 언제 그치고, 뭘 챙길지만 먼저 확인" badge="1 / 4">
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.brandTop}>
           <Image source={brandAssets.iconPrimary} style={styles.brandIcon} resizeMode="contain" />
@@ -33,7 +33,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
           <QuickFact label="완화" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
         <View style={styles.primaryActions}>
-          <AppButton label="계속" accessibilityLabel="스마트 알림 기준 단계로 계속" onPress={() => onNavigate("O5")} />
+          <AppButton label="계속" accessibilityLabel="코디 안내 단계로 계속" onPress={() => onNavigate("O7")} />
           <AppButton label="건너뛰고 홈으로" accessibilityLabel="소개를 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
           <Text style={[styles.helperText, { color: theme.subtle }]}>위치·알림 권한은 MY에서 따로 켤 수 있음</Text>
         </View>

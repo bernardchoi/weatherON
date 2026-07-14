@@ -233,11 +233,26 @@ export function useWeatherOnAppState() {
   const weatherLoadedFromNetworkRef = useRef(false);
   const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
   const currentWeatherSnapshotRef = useRef<WeatherProviderResult["current"] | null>(null);
+  const selectedDestinationPlaceIdRef = useRef(selectedDestinationPlace.id);
   const previousWeatherRequestRef = useRef<{
     currentLocationId: string;
     mode: WeatherProviderMode;
     refreshTick: number;
   } | null>(null);
+  const savedDestinationWeatherKey = savedDestinations
+    .map((destination) => `${destination.place.id}:${destination.place.coordinate.latitude}:${destination.place.coordinate.longitude}`)
+    .join("|");
+  const savedDestinationWeatherLocations = useMemo(
+    () => savedDestinations.map((destination) => createWeatherLocationFromPlace(destination.place)),
+    [savedDestinationWeatherKey],
+  );
+  useEffect(() => {
+    selectedDestinationPlaceIdRef.current = selectedDestinationPlace.id;
+  }, [selectedDestinationPlace.id]);
+  const fallbackDestinationWeatherLocation = useMemo(
+    () => (savedDestinationWeatherLocations.length ? undefined : createWeatherLocationFromPlace(selectedDestinationPlace)),
+    [savedDestinationWeatherLocations.length, savedDestinationWeatherLocations.length ? null : selectedDestinationPlace],
+  );
   const selectedSavedDestination = useMemo(
     () => savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id),
     [savedDestinations, selectedDestinationPlace.id],
@@ -409,8 +424,9 @@ export function useWeatherOnAppState() {
     let active = true;
     setIsWeatherLoading(true);
     const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
-    const destinationLocation = createWeatherLocationFromPlace(selectedDestinationPlace);
-    const savedDestinationLocations = savedDestinations.map((destination) => createWeatherLocationFromPlace(destination.place));
+    // 홈 저장 목적지 전환은 이미 받은 목적지 스냅샷만 바꿔 보여준다.
+    // 선택값을 이 요청의 의존성으로 두면 칩을 누를 때마다 전체 날씨 요청이 다시 발생한다.
+    const destinationLocation = savedDestinationWeatherLocations[0] ?? fallbackDestinationWeatherLocation;
     const previousRequest = previousWeatherRequestRef.current;
     const currentSnapshot = previousRequest?.currentLocationId === currentLocation.locationId
       && previousRequest.mode === weatherProviderMode
@@ -423,7 +439,7 @@ export function useWeatherOnAppState() {
         currentLocation,
         currentSnapshot,
         destinationLocation,
-        destinationLocations: savedDestinationLocations,
+        destinationLocations: savedDestinationWeatherLocations,
       })
       .then((result) => {
         if (active) {
@@ -450,7 +466,7 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [appStateHydrated, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinations, selectedDestinationPlace]);
+  }, [appStateHydrated, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinationWeatherLocations, fallbackDestinationWeatherLocation]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1014,14 +1030,14 @@ export function useWeatherOnAppState() {
   }, [deviceWeatherLocation, manualWeatherLocation, weatherLocationMode]);
 
   const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
+    if (selectedDestinationPlaceIdRef.current === place.id) return;
+    selectedDestinationPlaceIdRef.current = place.id;
     setSelectedDestinationPlace(place);
     setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(place));
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(true);
     setDestinationHubFilterState("all");
     setUseDestinationWeather(false);
-    setWeatherProviderMode("ready");
-    setWeatherRefreshTick((value) => value + 1);
   }, []);
 
   const saveSelectedDestination = useCallback((careEnabled = true) => {
@@ -1504,10 +1520,12 @@ function getBackRoute(route: AppRouteId): AppRouteId {
   switch (route) {
     case "O4":
       return "O2";
+    case "O7":
+      return "O2";
     case "O1":
       return "A1";
     case "O5":
-      return "O2";
+      return "O7";
     case "O6":
       return "O5";
     case "C4":

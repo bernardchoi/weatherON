@@ -43,6 +43,7 @@ import { AccountConnectScreen } from "../screens/AccountConnectScreen";
 import { TermsConsentScreen } from "../screens/TermsConsentScreen";
 import { PermissionGateScreen } from "../screens/PermissionGateScreen";
 import { OnboardingIntroScreen } from "../screens/OnboardingIntroScreen";
+import { OnboardingOutfitScreen } from "../screens/OnboardingOutfitScreen";
 import { StyleProfileScreen } from "../screens/StyleProfileScreen";
 import { SmartCareOnboardingScreen } from "../screens/SmartCareOnboardingScreen";
 import { OnboardingDestinationScreen } from "../screens/OnboardingDestinationScreen";
@@ -212,6 +213,7 @@ export function AppNavigator() {
       {route === "R3" ? <AdConsentScreen {...screenProps} /> : null}
       {route === "R4" ? <AdPlacementScreen {...screenProps} /> : null}
       {route === "O2" ? <OnboardingIntroScreen {...screenProps} /> : null}
+      {route === "O7" ? <OnboardingOutfitScreen {...screenProps} /> : null}
       {route === "O1" ? <OnboardingSplashScreen {...screenProps} /> : null}
       {route === "O4" ? <StyleProfileScreen {...screenProps} /> : null}
       {route === "O5" ? <SmartCareOnboardingScreen {...screenProps} /> : null}

@@ -33,7 +33,7 @@ export type P0RouteId =
   | "S3";
 export type AccountRouteId = "A1" | "A2" | "A3" | "A4";
 export type PermissionRouteId = "O3";
-export type OnboardingRouteId = "O1" | "O2" | "O4" | "O5" | "O6";
+export type OnboardingRouteId = "O1" | "O2" | "O4" | "O5" | "O6" | "O7";
 export type PolicyRouteId = "R1" | "R2" | "R3" | "R4";
 export type AppRouteId = P0RouteId | AccountRouteId | PermissionRouteId | OnboardingRouteId | PolicyRouteId;
 

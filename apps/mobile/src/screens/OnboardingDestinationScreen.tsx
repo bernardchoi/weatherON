@@ -24,7 +24,7 @@ export function OnboardingDestinationScreen({
   const canUseSelection = saved || destinationSelectionReady;
 
   return (
-    <AppScreen title="자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요" subtitle="등록하면 날씨·출발·강수 알림을 이동 상황에 맞춰 받아볼 수 있음" badge="3 / 3">
+    <AppScreen title="자주 가는 곳을 등록하면 목적지에 맞춰 챙겨드려요" subtitle="등록하면 날씨·출발·강수 알림을 이동 상황에 맞춰 받아볼 수 있음" badge="4 / 4">
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>

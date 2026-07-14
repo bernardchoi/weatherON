@@ -26,7 +26,7 @@ export function SmartCareOnboardingScreen({
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
   const permissionFeedback = getPermissionFeedback(permissionGateResult);
   return (
-    <AppScreen title="알림을 간단히 켤까요?" subtitle="상황만 고르면 필요한 날씨만 자동으로 알려줌" badge="2 / 3">
+    <AppScreen title="알림을 간단히 켤까요?" subtitle="상황만 고르면 필요한 날씨만 자동으로 알려줌" badge="3 / 4">
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   progressFill: {
-    width: "66%",
+    width: "75%",
     height: "100%",
   },
   feedbackCard: {

@@ -276,6 +276,7 @@ function DestinationSelectorCard({
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 onPress={() => onSelect(destination.place)}
+                onPressIn={() => onSelect(destination.place)}
                 style={[
                   styles.destinationChip,
                   {
