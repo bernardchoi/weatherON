@@ -71,8 +71,14 @@ export type NotificationRule = {
 
 export type NotificationRuleEvaluation = NotificationRule & {
   active: boolean;
+  /** 알림함에서 기준을 확인할 수 있는 제목. */
   title: string;
+  /** 알림함에서 기준을 확인할 수 있는 상세 문구. */
   reason: string;
+  /** 기기 푸시에 노출할 행동 중심 제목. */
+  pushTitle: string;
+  /** 기기 푸시에 노출할 친화적인 안내 문구. */
+  pushBody: string;
   /** 실제 기기 알림을 발송할 절대 시각. 시간 기준이 없는 안내 알림은 예약하지 않음. */
   scheduledAt?: string;
   /** 동일 특보 등급을 한 번만 발송하기 위한 영속 dedupe 키. */

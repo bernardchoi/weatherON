@@ -41,7 +41,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
   });
 
   return (
-    <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한">
+    <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한" showWordmark={false}>
       <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.actionHeader}>
           <View style={styles.copy}>

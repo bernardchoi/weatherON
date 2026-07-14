@@ -588,7 +588,7 @@ assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "getAllScheduledNotificationsAsync",
   "cancelScheduledNotificationAsync",
   "identifier.startsWith(smartNotificationIdentifierPrefix)",
-  "WeatherON 확인 알림",
+  "WeatherON이 필요한 순간 알려드릴게요",
   "seconds: 5",
   "weatheron-smart-care",
   "Platform.OS === \"web\"",

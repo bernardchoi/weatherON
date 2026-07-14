@@ -232,6 +232,12 @@ export function useWeatherOnAppState() {
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const weatherLoadedFromNetworkRef = useRef(false);
   const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
+  const currentWeatherSnapshotRef = useRef<WeatherProviderResult["current"] | null>(null);
+  const previousWeatherRequestRef = useRef<{
+    currentLocationId: string;
+    mode: WeatherProviderMode;
+    refreshTick: number;
+  } | null>(null);
   const selectedSavedDestination = useMemo(
     () => savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id),
     [savedDestinations, selectedDestinationPlace.id],
@@ -405,13 +411,31 @@ export function useWeatherOnAppState() {
     const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
     const destinationLocation = createWeatherLocationFromPlace(selectedDestinationPlace);
     const savedDestinationLocations = savedDestinations.map((destination) => createWeatherLocationFromPlace(destination.place));
+    const previousRequest = previousWeatherRequestRef.current;
+    const currentSnapshot = previousRequest?.currentLocationId === currentLocation.locationId
+      && previousRequest.mode === weatherProviderMode
+      && previousRequest.refreshTick === weatherRefreshTick
+      && currentWeatherSnapshotRef.current?.locationId === currentLocation.locationId
+      ? currentWeatherSnapshotRef.current
+      : undefined;
     runtimeWeatherProvider
-      .getSnapshots(weatherProviderMode, { currentLocation, destinationLocation, destinationLocations: savedDestinationLocations })
+      .getSnapshots(weatherProviderMode, {
+        currentLocation,
+        currentSnapshot,
+        destinationLocation,
+        destinationLocations: savedDestinationLocations,
+      })
       .then((result) => {
         if (active) {
           const persistedWeatherResult = persistedWeatherProviderResultRef.current;
           const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult) ? persistedWeatherResult : result;
           weatherLoadedFromNetworkRef.current = true;
+          currentWeatherSnapshotRef.current = nextResult.current;
+          previousWeatherRequestRef.current = {
+            currentLocationId: currentLocation.locationId,
+            mode: weatherProviderMode,
+            refreshTick: weatherRefreshTick,
+          };
           setWeatherProviderResult(nextResult);
           if (result.status === "ready" && !result.fallbackUsed) {
             persistedWeatherProviderResultRef.current = normalizePersistedWeatherProviderResult(result);
@@ -842,7 +866,6 @@ export function useWeatherOnAppState() {
     setDestinationHubFilterState("all");
     setUseDestinationWeather(false);
     setWeatherProviderMode("ready");
-    setWeatherRefreshTick((value) => value + 1);
   }, []);
 
   const editDestinationAlertCondition = useCallback((placeId: string) => {
@@ -1560,7 +1583,7 @@ function getLocalNotificationResultLabel(result: NotificationDeliveryStatus): st
 }
 
 function getNotificationHistoryTitle(notificationId: string, fallbackTitle?: string): string {
-  if (notificationId === "local-test") return "WeatherON 확인 알림";
+  if (notificationId === "local-test") return "WeatherON 알림";
   return fallbackTitle ?? "알림";
 }
 
@@ -1570,19 +1593,19 @@ function getNotificationOpenResultLabel(notificationId: string, route: P0RouteId
 }
 
 function getTestNotificationTitle(route: P0RouteId): string {
-  if (route === "H3") return "WeatherON 알림함 확인";
-  if (route === "H5") return "강수 알림";
-  if (route === "H7") return "내일 브리핑";
-  if (route === "G2") return "목적지 알림";
-  return "WeatherON 확인 알림";
+  if (route === "H3") return "새 알림이 도착했어요";
+  if (route === "H5") return "우산 챙길 시간이에요";
+  if (route === "H7") return "내일 아침을 가볍게 준비해요";
+  if (route === "G2") return "목적지 가는 길, 미리 살펴봐요";
+  return "WeatherON이 필요한 순간 알려드릴게요";
 }
 
 function getTestNotificationBody(route: P0RouteId): string {
-  if (route === "H3") return "알림을 누르면 알림함으로 이동함";
-  if (route === "H5") return "알림을 누르면 강수 타임라인으로 이동함";
-  if (route === "H7") return "알림을 누르면 내일 날씨와 코디를 확인함";
-  if (route === "G2") return "알림을 누르면 목적지 케어로 이동함";
-  return "알림을 누르면 스마트 알림 설정으로 이동함";
+  if (route === "H3") return "오늘 필요한 날씨 정보를 확인해봐요";
+  if (route === "H5") return "곧 비가 올 수 있어요. 이동 전 확인해요";
+  if (route === "H7") return "내일 날씨와 코디를 미리 확인해봐요";
+  if (route === "G2") return "가는 길 날씨를 확인하고 편하게 준비해요";
+  return "나에게 맞는 날씨 알림을 확인해봐요";
 }
 
 function getAlertSettingsFocusFromRoute(route: P0RouteId): AlertSettingsFocus {

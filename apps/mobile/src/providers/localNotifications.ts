@@ -21,7 +21,7 @@ export type LocalNotificationResponsePayload = {
   title?: string;
 };
 
-type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "title" | "reason" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt" | "deliveryKey">;
+type LocalNotificationInput = Pick<NotificationRuleEvaluation, "id" | "pushTitle" | "pushBody" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt" | "deliveryKey">;
 type ExpoNotification = Parameters<ExpoNotificationsModule["addNotificationReceivedListener"]>[0] extends (notification: infer Notification) => void
   ? Notification
   : never;
@@ -96,8 +96,8 @@ export async function syncLocalWeatherNotifications(options: {
       Notifications.scheduleNotificationAsync({
         identifier: getSmartNotificationIdentifier(item),
         content: {
-          title: item.title,
-          body: item.reason,
+          title: item.pushTitle,
+          body: item.pushBody,
           data: {
             route: item.deepLink,
             ruleId: item.id,
@@ -157,8 +157,8 @@ export async function scheduleLocalNotificationTest(options: {
   await Notifications.scheduleNotificationAsync({
     identifier,
     content: {
-      title: options.title ?? "WeatherON 확인 알림",
-      body: options.body ?? "알림을 누르면 스마트 알림 설정으로 이동함",
+      title: options.title ?? "WeatherON이 필요한 순간 알려드릴게요",
+      body: options.body ?? "나가기 전 필요한 준비를 한 번 확인해봐요",
       data: {
         route,
         ruleId: "local-test",

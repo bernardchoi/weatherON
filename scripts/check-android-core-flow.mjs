@@ -727,7 +727,7 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await assertText(page, "강수 알림");
     await clickAriaIncludes(page, "강수 알림 열기");
     await assertText(page, "강수 타임라인");
-    await waitForNotificationHistoryOpen(page, "H5", "강수 알림");
+    await waitForNotificationHistoryOpen(page, "H5", "우산 챙길 시간이에요");
   } finally {
     await context.close();
   }

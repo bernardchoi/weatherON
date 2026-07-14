@@ -148,6 +148,11 @@ export function evaluateNotificationRules(
         destinationWeather,
         weatherAlertSignal,
       }),
+      pushTitle: getPushTitle(rule),
+      pushBody: getPushBody(rule, active, {
+        destinationSignals,
+        weatherAlertSignal,
+      }),
       deliveryKey: weatherAlertSignal ? `${rule.id}:${weatherAlertSignal.eventDate}` : undefined,
       conditionSummary:
         rule.type === "destination"
@@ -224,6 +229,42 @@ function getRuleReason(
   if (rule.type === "shoes") return shoesTitle;
   if (rule.type === "destination") return getDestinationActiveReason(context.destinationCondition, context.destinationSignals, context.destinationShoesTitle);
   return umbrellaTitle;
+}
+
+function getPushTitle(rule: NotificationRule): string {
+  const titleByType: Record<NotificationRule["type"], string> = {
+    routine: "오늘 외출, 가볍게 준비해요",
+    rain: "우산 챙길 시간이에요",
+    umbrella: "비 오는 길, 미리 대비해요",
+    shoes: "발끝까지 편안하게 나가요",
+    destination: "목적지 가는 길, 미리 살펴봐요",
+    bedtime: "내일 아침을 가볍게 준비해요",
+    heatwave: "오늘 한낮, 많이 더울 예정이에요",
+    "heavy-rain": "비가 강해질 수 있어요",
+  };
+  return titleByType[rule.type];
+}
+
+function getPushBody(
+  rule: NotificationRule,
+  active: boolean,
+  context: {
+    destinationSignals?: DestinationAlertSignals;
+    weatherAlertSignal?: WeatherAlertSignal;
+  },
+): string {
+  if (!active) return "날씨가 바뀌면 필요한 순간 알려드릴게요";
+  if (rule.type === "routine") return "지금 날씨에 맞춘 외출 준비를 확인해봐요";
+  if (rule.type === "bedtime") return "내일 날씨와 코디를 미리 확인해봐요";
+  if (rule.type === "rain") return "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요";
+  if (rule.type === "umbrella") return "비가 이어질 수 있어요. 우산이나 방수 아우터를 챙겨요";
+  if (rule.type === "shoes") return "오늘은 미끄럽지 않은 편한 신발이 좋아요";
+  if (rule.type === "heatwave") return "야외 일정은 조금 여유 있게 잡고 물을 챙겨요";
+  if (rule.type === "heavy-rain") return "이동 전 우산과 안전한 경로를 확인해요";
+  if (context.destinationSignals?.rainExceeded) return "가는 길에 비가 올 수 있어요. 우산을 챙겨요";
+  if (context.destinationSignals?.windExceeded) return "가는 길 바람이 강할 수 있어요. 가벼운 겉옷을 챙겨요";
+  if (context.destinationSignals?.shoesRecommended) return "가는 길이 젖거나 미끄러울 수 있어요. 편한 신발을 신어요";
+  return context.weatherAlertSignal ? "오늘 날씨 변화에 맞춰 미리 준비해요" : "나가기 전 날씨를 한 번 확인해봐요";
 }
 
 type WeatherAlertLevel = "advisory" | "warning";

@@ -214,6 +214,7 @@ function buildDestinationNotifications(
     return {
       ...notification,
       title: `${destination.place.name} 알림`,
+      pushTitle: `${destination.place.name} 가는 길, 미리 살펴봐요`,
       active: Boolean(timing && notification.active),
       reason: timing && notification.active ? notification.reason : "도착 희망시간 기준 예보 확인 대기",
       scheduledAt: timing && notification.active ? timing.scheduledAt.toISOString() : undefined,

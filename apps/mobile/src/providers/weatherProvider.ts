@@ -31,6 +31,7 @@ export type WeatherProviderResult = {
 
 export type WeatherProviderOptions = {
   currentLocation?: WeatherLocationPreset;
+  currentSnapshot?: WeatherSnapshot;
   destinationLocation?: WeatherLocationPreset;
   destinationLocations?: WeatherLocationPreset[];
 };
@@ -63,7 +64,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           ? [defaultGangneungWeatherLocation]
           : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
         const [current, ...destinationSnapshots] = await Promise.all([
-          fetchWeatherSnapshot(client, currentLocation, stale, createOptions.preferKma),
+          options.currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions.preferKma),
           ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions.preferKma)),
         ]);
         const destination = destinationSnapshots[0] ?? normalizeOpenMeteoWeather(openMeteoFixture, {

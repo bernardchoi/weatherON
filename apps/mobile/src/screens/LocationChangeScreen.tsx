@@ -54,7 +54,7 @@ export function LocationChangeScreen({
   };
 
   return (
-    <AppScreen title="위치 변경" subtitle="현재 날씨 기준 위치를 선택하세요" badge={accountLinked ? "계정 연결됨" : "게스트"}>
+    <AppScreen title="위치 변경" subtitle="현재 날씨 기준 위치를 선택하세요" badge={accountLinked ? "계정 연결됨" : "게스트"} showWordmark={false}>
       <View style={[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <SearchGlyph color={theme.subtle} />
         <TextInput
