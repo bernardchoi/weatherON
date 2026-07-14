@@ -96,6 +96,7 @@ export function WardrobePresetScreen({
       subtitle="프리셋에서 골라 내 옷장에 추가"
       badge={`${ownedCount}/${wardrobeItems.length} 보유`}
       onBack={onGoBack}
+      showWordmark={false}
     >
       <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <TextInput

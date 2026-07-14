@@ -36,6 +36,7 @@ export function OutfitDetailScreen({
       subtitle={state.outfit.decisionText}
       badge={`${state.outfit.matchPct}%`}
       onBack={onGoBack}
+      showWordmark={false}
       footer={
         <View style={styles.footer}>
           <CompletionStatus

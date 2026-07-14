@@ -48,7 +48,7 @@ export function WardrobeScreen({
   });
 
   return (
-    <AppScreen title="내 옷장" subtitle="보유한 옷을 확인하고 정리" badge={`${ownedItems.length}개 보유`} onBack={onGoBack}>
+    <AppScreen title="내 옷장" subtitle="보유한 옷을 확인하고 정리" badge={`${ownedItems.length}개 보유`} onBack={onGoBack} showWordmark={false}>
       <View style={styles.topBar}>
         <FilterRow
           values={categories}
