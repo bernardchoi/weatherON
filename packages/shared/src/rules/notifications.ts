@@ -11,7 +11,7 @@ export const defaultNotificationRules: NotificationRule[] = [
     enabled: true,
     triggerWindow: "morning",
     requiresAccount: false,
-    requiresPushPermission: false,
+    requiresPushPermission: true,
     deepLink: "H1",
   },
   {

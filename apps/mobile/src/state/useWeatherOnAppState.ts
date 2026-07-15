@@ -28,7 +28,7 @@ import {
 } from "../providers/weatherLocations";
 import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
 import { runtimeTravelEstimateClient, type TravelEstimateResult } from "../providers/travelEstimateClient";
-import { readAppJson, writeAppJson } from "../providers/appStorage";
+import { readAppValue, writeAppValue } from "../providers/appStorage";
 import {
   addLocalNotificationReceivedListener,
   addLocalNotificationResponseListener,
@@ -190,8 +190,8 @@ export function useWeatherOnAppState() {
   const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>([]);
   const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false);
   const [placeSearchStatus, setPlaceSearchStatus] = useState<PlaceSearchStatus>("idle");
-  const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => loadNotificationState().readNotificationIds);
-  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>(() => loadNotificationState().notificationHistory);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [alertPreferences, setAlertPreferences] = useState<AlertPreferences>(defaultAlertPreferences);
   const [notificationDeliveryStatus, setNotificationDeliveryStatus] = useState<NotificationDeliveryStatus>(defaultNotificationDeliveryStatus);
   const [alertSettingsRouteState, setAlertSettingsRouteState] = useState<AlertSettingsRouteState | null>(null);
@@ -313,15 +313,20 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([readPersistedWeatherProviderResult(), readPersistedAppState()])
-      .then(([persistedWeatherResult, persistedState]) => {
+    Promise.all([readPersistedWeatherProviderResult(), readPersistedAppState(), readPersistedNotificationState()])
+      .then(([persistedWeatherResult, persistedState, persistedNotificationState]) => {
         if (!active) return;
         if (persistedWeatherResult) {
           persistedWeatherProviderResultRef.current = persistedWeatherResult;
           setWeatherProviderResult(persistedWeatherResult);
         }
-        if (!persistedState) return;
+        if (!persistedState) {
+          setReadNotificationIds(persistedNotificationState.readNotificationIds);
+          setNotificationHistory(persistedNotificationState.notificationHistory);
+          return;
+        }
         setOnboardingCompleted(persistedState.onboardingCompleted);
+        setSmartCareEnabled(persistedState.smartCareEnabled);
         setAccountLinked(persistedState.accountLinked);
         setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
         setLocationReady(persistedState.locationReady);
@@ -505,8 +510,9 @@ export function useWeatherOnAppState() {
   }, [appStateHydrated, weatherLocationMode, manualWeatherLocation, deviceWeatherLocation, selectedDestinationPlace]);
 
   useEffect(() => {
+    if (!appStateHydrated) return;
     saveNotificationState({ readNotificationIds, notificationHistory });
-  }, [notificationHistory, readNotificationIds]);
+  }, [appStateHydrated, notificationHistory, readNotificationIds]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -538,6 +544,7 @@ export function useWeatherOnAppState() {
     void syncLocalWeatherNotifications({
       enabled: permissionReady && smartCareEnabled,
       notifications,
+      reducedInterruptions: alertPreferences.quietHours,
     })
       .then((result) => {
         if (active) setNotificationDeliveryStatus(result);
@@ -554,6 +561,7 @@ export function useWeatherOnAppState() {
     if (!appStateHydrated) return;
     savePersistedAppState({
       onboardingCompleted,
+      smartCareEnabled,
       accountLinked,
       termsRequiredAccepted,
       locationReady,
@@ -607,6 +615,7 @@ export function useWeatherOnAppState() {
     selectedDestinationPlace,
     selectedStyles,
     selectedWardrobeItemId,
+    smartCareEnabled,
     smartCareScenario,
     styleGender,
     styleProfileSaved,
@@ -908,7 +917,7 @@ export function useWeatherOnAppState() {
     const notification = state.notifications.find((item) => item.id === id);
     setNotificationHistory((current) =>
       addNotificationHistoryItem(current, {
-        id: createNotificationHistoryId(id, "open"),
+        id: createNotificationHistoryId(id, "open", route),
         notificationId: id,
         title: getNotificationHistoryTitle(id, notification?.title),
         action: "open",
@@ -945,7 +954,7 @@ export function useWeatherOnAppState() {
     setNotificationDeliveryStatus(result);
     setNotificationHistory((current) =>
       addNotificationHistoryItem(current, {
-        id: createNotificationHistoryId("local-test", "sent"),
+        id: createNotificationHistoryId("local-test", "sent", route),
         notificationId: "local-test",
         title: getTestNotificationTitle(route),
         action: "sent",
@@ -967,7 +976,7 @@ export function useWeatherOnAppState() {
       const routeFromPayload = getP0RouteFromNotificationPayload(payload.route) ?? "M2";
       setNotificationHistory((current) =>
         addNotificationHistoryItem(current, {
-          id: createNotificationHistoryId(notificationId, "received"),
+          id: createNotificationHistoryId(notificationId, "received", routeFromPayload),
           notificationId,
           title: payload.title ?? getNotificationHistoryTitle(notificationId, getTestNotificationTitle(routeFromPayload)),
           action: "received",
@@ -1722,17 +1731,18 @@ function getPermissionResumeLabel(reason: PermissionGateReason): string {
   return "알림 권한";
 }
 
-function createNotificationHistoryId(notificationId: string, action: NotificationHistoryItem["action"]): string {
-  return `${notificationId}:${action}`;
+function createNotificationHistoryId(notificationId: string, action: NotificationHistoryItem["action"], route?: P0RouteId): string {
+  return `${notificationId}:${route ?? "none"}:${action}`;
 }
 
 function addNotificationHistoryItem(items: NotificationHistoryItem[], nextItem: NotificationHistoryItem): NotificationHistoryItem[] {
   const withoutDuplicate = items.filter((item) => item.id !== nextItem.id);
-  return [nextItem, ...withoutDuplicate].slice(0, 6);
+  return [nextItem, ...withoutDuplicate].slice(0, 24);
 }
 
 type PersistedAppState = {
   onboardingCompleted: boolean;
+  smartCareEnabled: boolean;
   accountLinked: boolean;
   termsRequiredAccepted: boolean;
   locationReady: boolean;
@@ -1766,22 +1776,22 @@ type PersistedAppState = {
 };
 
 async function readPersistedAppState(): Promise<PersistedAppState | null> {
-  const value = await readAppJson<unknown>(appStateStorageKey);
+  const value = await readAppValue<unknown>(appStateStorageKey);
   return value ? normalizePersistedAppState(value) : null;
 }
 
 function savePersistedAppState(state: PersistedAppState) {
-  void writeAppJson(appStateStorageKey, normalizePersistedAppState(state));
+  void writeAppValue(appStateStorageKey, normalizePersistedAppState(state));
 }
 
 async function readPersistedWeatherProviderResult(): Promise<WeatherProviderResult | null> {
-  const value = await readAppJson<unknown>(weatherProviderResultStorageKey);
+  const value = await readAppValue<unknown>(weatherProviderResultStorageKey);
   return value ? normalizePersistedWeatherProviderResult(value) : null;
 }
 
 function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
   if (result.status !== "ready" || result.fallbackUsed) return;
-  void writeAppJson(weatherProviderResultStorageKey, result);
+  void writeAppValue(weatherProviderResultStorageKey, result);
 }
 
 function shouldKeepPersistedWeatherResult(result: WeatherProviderResult, persistedResult: WeatherProviderResult | null): persistedResult is WeatherProviderResult {
@@ -1911,6 +1921,8 @@ function normalizePersistedAppState(value: unknown): PersistedAppState {
 
   return {
     onboardingCompleted: record.onboardingCompleted === true,
+    // 이전 설치본에는 값이 없으므로 기존 자동 케어 기본값을 유지한다.
+    smartCareEnabled: record.smartCareEnabled !== false,
     accountLinked: record.accountLinked === true,
     termsRequiredAccepted: record.termsRequiredAccepted === true,
     locationReady: record.locationReady === true,
@@ -2278,24 +2290,13 @@ type PersistedNotificationState = {
   notificationHistory: NotificationHistoryItem[];
 };
 
-function loadNotificationState(): PersistedNotificationState {
-  const storage = getLocalStorage();
-  if (!storage) return emptyPersistedNotificationState();
-  try {
-    return normalizeNotificationState(JSON.parse(storage.getItem(notificationStateStorageKey) ?? "{}"));
-  } catch {
-    return emptyPersistedNotificationState();
-  }
+async function readPersistedNotificationState(): Promise<PersistedNotificationState> {
+  const value = await readAppValue<unknown>(notificationStateStorageKey);
+  return normalizeNotificationState(value);
 }
 
 function saveNotificationState(state: PersistedNotificationState) {
-  const storage = getLocalStorage();
-  if (!storage) return;
-  try {
-    storage.setItem(notificationStateStorageKey, JSON.stringify(normalizeNotificationState(state)));
-  } catch {
-    // Local persistence is best-effort; app state should keep working without it.
-  }
+  void writeAppValue(notificationStateStorageKey, normalizeNotificationState(state));
 }
 
 function normalizeNotificationState(value: unknown): PersistedNotificationState {
@@ -2306,7 +2307,7 @@ function normalizeNotificationState(value: unknown): PersistedNotificationState 
       ? record.readNotificationIds.filter((id): id is string => typeof id === "string").slice(0, 40)
       : [],
     notificationHistory: Array.isArray(record.notificationHistory)
-      ? record.notificationHistory.filter(isNotificationHistoryItem).slice(0, 6)
+      ? record.notificationHistory.filter(isNotificationHistoryItem).slice(0, 24)
       : [],
   };
 }
@@ -2329,14 +2330,6 @@ function emptyPersistedNotificationState(): PersistedNotificationState {
     readNotificationIds: [],
     notificationHistory: [],
   };
-}
-
-function getLocalStorage(): Storage | null {
-  try {
-    return typeof globalThis.localStorage === "undefined" ? null : globalThis.localStorage;
-  } catch {
-    return null;
-  }
 }
 
 function getDestinationFilterMatched(

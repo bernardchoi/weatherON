@@ -1,6 +1,6 @@
 # WeatherON Android Store Safe Defaults Status
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-15
 > 목적: 사용자/법무 확정이 필요 없는 Google Play 입력 기본값만 local JSON에 자동 반영한다.
 
 ## 1. 현재 상태

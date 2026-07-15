@@ -1,6 +1,6 @@
 # WeatherON Android Closed Test Inputs Apply Status
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-15
 > 목적: 폐쇄 테스트 계정 유형, 테스터, 14일 운영 입력값 적용 상태를 추적한다.
 
 ## 1. 현재 상태

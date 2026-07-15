@@ -14,6 +14,7 @@ module.exports = () => {
     weatheronBuildVariant: buildVariant,
     enableNotificationQaTools: isNotificationQaBuild,
   };
+  expo.plugins = [...new Set([...(expo.plugins ?? []), "expo-sqlite"])];
 
   if (isDevelopmentBuild) {
     expo.name = "WeatherON Dev";

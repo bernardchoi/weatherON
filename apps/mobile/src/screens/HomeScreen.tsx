@@ -42,6 +42,7 @@ export function HomeScreen({
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const pullRefreshObservedLoadingRef = useRef(false);
   const activeNotifications = state.notifications.filter((item) => item.active);
+  const activeWeatherAlert = activeNotifications.find((item) => item.type === "heatwave" || item.type === "heavy-rain");
   const unreadNotificationCount = permissionReady
     ? activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length
     : 0;
@@ -87,12 +88,17 @@ export function HomeScreen({
         }
       >
         <View style={styles.topBar}>
-          <View style={[styles.modePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <FeedbackPressable
+            accessibilityLabel={smartCareEnabled ? "스마트 알림 켜짐. 알림 설정 열기" : "스마트 알림 꺼짐. 알림 설정 열기"}
+            accessibilityRole="button"
+            onPress={() => onNavigate("M2")}
+            style={[styles.modePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+          >
             <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
             <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
-              {smartCareEnabled ? "ON · 개인화" : "게스트 · 저장 제한"}
+              {smartCareEnabled ? "스마트 알림 켜짐" : "스마트 알림 꺼짐"}
             </Text>
-          </View>
+          </FeedbackPressable>
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
             smartCareEnabled={smartCareEnabled}
@@ -111,6 +117,13 @@ export function HomeScreen({
             theme={theme}
             onOpenForecast={() => onNavigate("H6")}
           />
+          {activeWeatherAlert ? (
+            <SpecialWeatherAlertCard
+              alert={activeWeatherAlert}
+              theme={theme}
+              onPress={() => onOpenNotificationDeepLink(activeWeatherAlert.id, "H3")}
+            />
+          ) : null}
           {HOME_OUTFIT_CARD_VISIBLE ? (
             <HomeOutfitPreviewCard
               outfit={state.outfit}
@@ -669,6 +682,37 @@ function HomeOutfitPreviewCard({
           <Image source={uiIconAssets.shirt} style={[styles.homeOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
         )}
       </View>
+    </FeedbackPressable>
+  );
+}
+
+function SpecialWeatherAlertCard({
+  alert,
+  theme,
+  onPress,
+}: {
+  alert: P0ScreenProps["state"]["notifications"][number];
+  theme: AppTheme;
+  onPress: () => void;
+}) {
+  const isHeavyRain = alert.type === "heavy-rain";
+  const accent = isHeavyRain ? theme.skyLite : theme.warm;
+  return (
+    <FeedbackPressable
+      accessibilityLabel={`${alert.title}. 특보 기준 상세 보기`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.specialAlertCard, { backgroundColor: `${accent}16`, borderColor: `${accent}70` }]}
+    >
+      <View style={[styles.specialAlertIconFrame, { backgroundColor: accent }]} accessibilityElementsHidden>
+        <Text style={[styles.specialAlertWarningMark, { color: theme.onAccent }]}>!</Text>
+      </View>
+      <View style={styles.specialAlertCopy}>
+        <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>
+        <Text style={[styles.specialAlertTitle, { color: theme.text }]} numberOfLines={1}>{alert.title}</Text>
+        <Text style={[styles.specialAlertBody, { color: theme.muted }]} numberOfLines={2}>{alert.reason}</Text>
+      </View>
+      <Text style={[styles.specialAlertChevron, { color: accent }]}>›</Text>
     </FeedbackPressable>
   );
 }
@@ -1267,7 +1311,7 @@ const styles = StyleSheet.create({
   },
   modePill: {
     minHeight: 34,
-    maxWidth: 112,
+    maxWidth: 144,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
@@ -1610,6 +1654,52 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
+  },
+  specialAlertCard: {
+    minHeight: 80,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+  },
+  specialAlertIconFrame: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  specialAlertWarningMark: {
+    fontSize: 21,
+    lineHeight: 24,
+    fontWeight: "900",
+  },
+  specialAlertCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  specialAlertLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  specialAlertTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  specialAlertBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  specialAlertChevron: {
+    fontSize: 26,
+    lineHeight: 28,
+    fontWeight: "500",
   },
   homeOutfitCopy: {
     flex: 1,

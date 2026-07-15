@@ -20,6 +20,13 @@ export function AppPermissionsScreen({
   const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState);
   const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled, permissionGateResult);
   const resultCopy = getPermissionResultCopy(permissionGateResult);
+  const handleLocationPrimaryPress = () => {
+    if (locationCopy.canRequest) {
+      onRequestPermissionGate("location", "M4", "general");
+      return;
+    }
+    onRequestCurrentLocation();
+  };
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -47,7 +54,7 @@ export function AppPermissionsScreen({
             secondaryLabel="위치 선택"
             status={locationCopy.status}
             tone={locationCopy.tone}
-            onPrimaryPress={() => (locationCopy.canRequest ? onRequestCurrentLocation() : onNavigate("H2"))}
+            onPrimaryPress={handleLocationPrimaryPress}
             onSecondaryPress={() => onNavigate("H2")}
             theme={theme}
           />
@@ -231,6 +238,13 @@ function getPermissionResultCopy(
     return {
       title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",
       body: skipped ? "푸시 수신만 대기. 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "확인 알림으로 실제 수신을 한 번 더 확인해야 함",
+      tone: skipped ? "warm" : "clear",
+    };
+  }
+  if (permissionGateResult.reason === "location") {
+    return {
+      title: skipped ? "위치 권한 보류" : "위치 권한 확인됨",
+      body: skipped ? "현재 위치 자동화만 대기. 수동 위치와 목적지 검색은 계속 사용할 수 있음" : "현재 위치 기준 홈 날씨를 다시 확인함",
       tone: skipped ? "warm" : "clear",
     };
   }

@@ -137,12 +137,13 @@ await writeFile(
   `
     process.env.EXPO_PUBLIC_WEATHER_CLIENT = "fixture";
 
-    const { buildDemoState } = await import("../apps/mobile/src/data/demoState.ts");
+    const { buildDemoState, buildDemoStateFromWeatherResult } = await import("../apps/mobile/src/data/demoState.ts");
+    const { applyLocalNotificationPolicy } = await import("../apps/mobile/src/providers/notificationPolicy.ts");
     const { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
-    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces } = await import("../packages/shared/src/index.ts");
+    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
     const fakeFetch = async (url) => {
@@ -163,6 +164,39 @@ await writeFile(
       fetchImpl: fakeFetch,
     });
     const httpProvider = createWeatherProvider(httpClient, { preferKma: true });
+    const rainDemo = buildDemoStateFromWeatherResult({
+      status: "ready",
+      message: "rain notification fixture",
+      retryable: false,
+      fallbackUsed: false,
+      current: seongsuRainSnapshot,
+      destination: seongsuRainSnapshot,
+      destinationSnapshots: [],
+    }, false, {
+      notificationNow: new Date(seongsuRainSnapshot.observedAt).getTime(),
+    });
+    const policyDate = new Date();
+    policyDate.setDate(policyDate.getDate() + 2);
+    policyDate.setHours(8, 0, 0, 0);
+    const policyItem = (id, type, hourOffset = 0) => ({
+      id,
+      type,
+      active: true,
+      requiresPushPermission: true,
+      scheduledAt: new Date(policyDate.getTime() + hourOffset * 60 * 60_000).toISOString(),
+    });
+    const cappedNotifications = applyLocalNotificationPolicy([
+      policyItem("routine", "routine"),
+      policyItem("rain", "rain", 1),
+      policyItem("destination", "destination", 2),
+      policyItem("heavy-rain", "heavy-rain", 3),
+    ], { reducedInterruptions: true });
+    const quietDate = new Date(policyDate);
+    quietDate.setHours(23, 0, 0, 0);
+    const quietHoursNotifications = applyLocalNotificationPolicy([
+      policyItem("daytime", "routine"),
+      { ...policyItem("quiet", "rain"), scheduledAt: quietDate.toISOString() },
+    ], { reducedInterruptions: true });
     const gangneungPlace = searchFixturePlaces("강릉")[0];
     const jamsilPlace = searchFixturePlaces("잠실")[0];
     const globalPlace = searchFixturePlaces("Central Park")[0];
@@ -177,6 +211,9 @@ await writeFile(
         };
 
     export const demoResults = {
+      rainNotifications: rainDemo.notifications,
+      cappedNotifications,
+      quietHoursNotifications,
       current: await buildDemoState(false),
       destination: await buildDemoState(true),
       multiDestination: await buildDemoState(false, "ready", {
@@ -241,7 +278,7 @@ await build({
   jsx: "automatic",
   target: "es2022",
   loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
-  external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-navigation-bar", "expo-status-bar"],
+  external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-navigation-bar", "expo-sqlite", "expo-status-bar"],
   logLevel: "silent",
 });
 
@@ -252,7 +289,7 @@ await build({
   platform: "node",
   format: "esm",
   target: "node20",
-  external: ["react", "react/jsx-runtime", "react-native"],
+  external: ["react", "react/jsx-runtime", "react-native", "expo-sqlite"],
   logLevel: "silent",
 });
 
@@ -295,6 +332,14 @@ assert.equal(results.openmeteoHourlyHumidity.current.humidityPct, 66);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");
+assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
+assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
+assert.ok(demoResults.rainNotifications.some((item) => item.type === "shoes" && item.active && item.scheduledAt && item.deliveryKey));
+assert.ok(demoResults.rainNotifications.some((item) => item.type === "routine" && item.active && item.scheduledAt));
+assert.equal(demoResults.cappedNotifications.length, 3);
+assert.ok(demoResults.cappedNotifications.some((item) => item.id === "heavy-rain"));
+assert.ok(!demoResults.cappedNotifications.some((item) => item.id === "routine"));
+assert.deepEqual(demoResults.quietHoursNotifications.map((item) => item.id), ["daytime"]);
 assert.equal(demoResults.destination.weather.source, "openmeteo");
 assert.equal(demoResults.current.weatherProvider.currentSource, "openmeteo");
 assert.equal(demoResults.current.weatherProvider.destinationSource, "openmeteo");

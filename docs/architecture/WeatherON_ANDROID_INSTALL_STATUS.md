@@ -1,6 +1,6 @@
 # WeatherON Android Install Status
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-15
 > 목적: 최신 Android preview APK 실기기 설치 상태와 설치 명령을 추적한다.
 
 ## 1. 현재 상태
@@ -8,11 +8,11 @@
 | 항목 | 값 |
 |---|---|
 | 설치 가능 여부 | 가능 |
-| 설치 상태 | 설치 가능 |
+| 설치 상태 | 설치됨 |
 | issue 수 | 0 |
 | EAS build id | `N/A - local Gradle release APK` |
 | Build 상태 | LOCAL BUILD SUCCESS |
-| Version | 0.1.0 (7) |
+| Version | 0.1.0 (9) |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | 선택 기기 | 000841458003652 |
 | adb 경로 | /Users/daehyeonchoi/Library/Android/sdk/platform-tools/adb |
@@ -24,7 +24,7 @@
 
 ## 3. 다음 조치
 
-- 설치 가능 상태다. 실제 설치는 `npm run install:android-preview-apk`로 실행한다.
+- 대상 기기에 기대 버전 설치가 확인됐다.
 
 ## 4. 실행 명령
 

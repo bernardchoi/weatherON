@@ -1,6 +1,6 @@
 # WeatherON Android Privacy Policy Packet
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-15
 > 목적: Google Play 제출 전 개인정보처리방침 placeholder 제거와 공개 HTTPS URL 준비를 별도로 추적한다.
 
 ## 1. 현재 상태
@@ -8,7 +8,7 @@
 | 항목 | 값 |
 |---|---|
 | 개인정보처리방침 파일 | `docs/policy/weatheron_privacy_policy.html` |
-| Play 제출 blocker | 11 |
+| Play 제출 blocker | 9 |
 | 남은 placeholder 수 | 0 |
 | 입력 JSON 파일 | /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/docs/architecture/WeatherON_ANDROID_STORE_INPUTS.local.json |
 

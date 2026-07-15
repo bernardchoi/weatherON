@@ -128,6 +128,7 @@ export function AlertSettingsScreen({
         <NotificationStatusCard
           deliveryCountLabel={deliveryStatus.countLabel}
           deliveryStatusLabel={deliveryStatus.statusLabel}
+          onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
           permissionReady={permissionReady}
           theme={theme}
         />
@@ -155,6 +156,7 @@ export function AlertSettingsScreen({
             icon="route"
             title="목적지 출발"
             body={destinationReady ? `${savedDestinations.length}개 목적지` : "목적지 추가 필요"}
+            onPress={destinationReady ? undefined : () => onNavigate("P1")}
             status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
             tone="clear"
             theme={theme}
@@ -195,7 +197,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="자기 전 체크"
-              body="매일 저녁 9시, 내일 날씨·코디 브리핑 알림"
+              body="매일 저녁 9시 전후, 내일 날씨·코디 브리핑 알림"
               enabled={alertPreferences.bedtime}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("bedtime")}
@@ -244,11 +246,13 @@ export function AlertSettingsScreen({
 function NotificationStatusCard({
   deliveryCountLabel,
   deliveryStatusLabel,
+  onRequestPermission,
   permissionReady,
   theme,
 }: {
   deliveryCountLabel: string;
   deliveryStatusLabel: string;
+  onRequestPermission: () => void;
   permissionReady: boolean;
   theme: AppTheme;
 }) {
@@ -267,6 +271,11 @@ function NotificationStatusCard({
         <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
         <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
       </View>
+      {!permissionReady ? (
+        <Pressable accessibilityLabel="권한 켜기" accessibilityRole="button" onPress={onRequestPermission} style={[styles.deliveryAction, { backgroundColor: `${theme.warm}22` }]}>
+          <Text style={[styles.deliveryActionText, { color: theme.warm }]}>권한 켜기</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -331,6 +340,7 @@ function DeliveryLine({ label, value, tone, theme }: { label: string; value: str
 
 function AlertSummaryRow({
   icon,
+  onPress,
   title,
   body,
   status,
@@ -338,6 +348,7 @@ function AlertSummaryRow({
   theme,
 }: {
   icon: "rain" | "sun" | "route";
+  onPress?: () => void;
   title: string;
   body: string;
   status: string;
@@ -345,8 +356,15 @@ function AlertSummaryRow({
   theme: AppTheme;
 }) {
   const color = getToneColor(theme, tone);
+  const Container = onPress ? Pressable : View;
   return (
-    <View accessible accessibilityLabel={`${title}, ${status}, ${body}`} style={[styles.alertSummaryRow, { borderBottomColor: theme.border }]}>
+    <Container
+      accessible
+      accessibilityLabel={`${title}, ${status}, ${body}`}
+      accessibilityRole={onPress ? "button" : undefined}
+      onPress={onPress}
+      style={[styles.alertSummaryRow, { borderBottomColor: theme.border }]}
+    >
       <View style={[styles.alertSummaryIcon, { backgroundColor: `${color}16` }]}>
         <AlertIcon type={icon} color={color} />
       </View>
@@ -357,7 +375,7 @@ function AlertSummaryRow({
       <View style={[styles.alertSummaryStatus, { backgroundColor: `${color}20` }]}>
         <Text style={[styles.statusPillText, { color }]}>{status}</Text>
       </View>
-    </View>
+    </Container>
   );
 }
 

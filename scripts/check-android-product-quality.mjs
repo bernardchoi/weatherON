@@ -39,8 +39,8 @@ for (const relativePath of listFiles(["apps/mobile/src"])) {
 
 assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'useState<AppRouteId>("O1")',
-  "readAppJson",
-  "writeAppJson",
+  "readAppValue",
+  "writeAppValue",
   "weatherProviderResultStorageKey",
   "readPersistedWeatherProviderResult",
   "savePersistedWeatherProviderResult",
@@ -319,7 +319,10 @@ assertSourceIncludes("apps/mobile/src/screens/AccountConnectScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "verification-failed",
-  "countScheduledNotifications",
+  "finalIdentifiers",
+  "SchedulableTriggerInputTypes.DAILY",
+  "shouldPlaySound: true",
+  "shouldSetBadge: true",
 ]);
 assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
   "getInternationalFallbackTravelMinutes",
@@ -364,7 +367,6 @@ assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [
   "권한 상태",
   "위치 권한",
   "알림 권한",
-  "위치 권한 보류",
   "알림 권한 보류",
   "위치 권한 복구",
   "알림 권한 복구",
@@ -375,7 +377,7 @@ assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [
   "getLocationPermissionCopy",
   "getNotificationPermissionCopy",
   "getPermissionResultCopy",
-  'onRequestPermissionGate("location", "M4")',
+  "onRequestCurrentLocation",
   'onRequestPermissionGate("notification", "M4", "general")',
   'onNavigate("H2")',
   'onNavigate("M2")',
@@ -501,7 +503,7 @@ assertSourceIncludes("apps/mobile/src/screens/LocationChangeScreen.tsx", [
   "hasSavedDestinations",
   "locationSectionTitle",
   "getLocationCopy",
-  "현재 위치 권한은 나중에 설정 · 수동 위치 사용 가능",
+  "권한 확인 필요 · 수동 위치도 선택 가능",
   "수동 위치 적용 중 · GPS 없이도 홈 날씨 기준 유지",
   "currentLocationAction",
   "getDeviceLocationStatusCopy",

@@ -1,6 +1,6 @@
 # WeatherON Android Release Consistency Status
 
-> 생성일: 2026-07-10
+> 생성일: 2026-07-15
 > 목적: Android 출시 상태 문서 간 build id, build 상태, blocker 수, artifact 접근성 값이 일치하는지 검증한다.
 
 ## 1. 현재 상태
@@ -16,9 +16,9 @@
 |---|---|---|
 | preview build id | 통과 | readiness: N/A - local Gradle release APK<br>actionBoard: N/A - local Gradle release APK<br>evidence: N/A - local Gradle release APK<br>previewBuild: N/A - local Gradle release APK |
 | preview build status | 통과 | readiness: LOCAL BUILD SUCCESS<br>actionBoard: LOCAL BUILD SUCCESS<br>evidence: LOCAL BUILD SUCCESS<br>previewBuild: LOCAL BUILD SUCCESS |
-| production build id | 통과 | readiness: 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1<br>actionBoard: 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1<br>evidence: 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1<br>productionBuild: 5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1 |
-| production build status | 통과 | readiness: LOCAL BUILD SUCCESS / EAS IN_QUEUE<br>actionBoard: LOCAL BUILD SUCCESS / EAS IN_QUEUE<br>evidence: LOCAL BUILD SUCCESS / EAS IN_QUEUE<br>productionBuild: LOCAL BUILD SUCCESS / EAS IN_QUEUE<br>blockers: LOCAL BUILD SUCCESS / EAS IN_QUEUE |
-| store blocker count | 통과 | actionBoard: 11<br>evidence: 11<br>blockers: 11 |
+| production build id | 통과 | readiness: f66ecb78-ad9d-4236-be70-ec3530a051f8<br>actionBoard: f66ecb78-ad9d-4236-be70-ec3530a051f8<br>evidence: f66ecb78-ad9d-4236-be70-ec3530a051f8<br>productionBuild: f66ecb78-ad9d-4236-be70-ec3530a051f8 |
+| production build status | 통과 | readiness: FINISHED<br>actionBoard: FINISHED<br>evidence: FINISHED<br>productionBuild: FINISHED<br>blockers: FINISHED |
+| store blocker count | 통과 | actionBoard: 9<br>evidence: 9<br>blockers: 9 |
 | artifact access issue count | 통과 | evidence: 0<br>artifactAccess: 0 |
 | device QA pending count | 통과 | actionBoard: 0<br>evidence: 0 |
 | screenshot issue count | 통과 | actionBoard: 0<br>evidence: 0<br>screenshotStatus: 0 |

@@ -45,7 +45,7 @@
     },
     "android": {
       "package": "com.weatheron.mobile",
-      "versionCode": 8,
+      "versionCode": 9,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",

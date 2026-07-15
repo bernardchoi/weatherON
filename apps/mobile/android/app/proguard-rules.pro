@@ -17,4 +17,15 @@
 -keep class expo.modules.location.records.** { *; }
 -keep class expo.modules.kotlin.records.** { *; }
 
+# expo-notifications persists scheduled requests through Java serialization.
+# R8 must retain the private serialization hooks that convert JSONObject payloads.
+-keepclassmembers class expo.modules.notifications.** implements java.io.Serializable {
+    private static final long serialVersionUID;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    private void readObjectNoData();
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
 # Add any project specific keep options here:

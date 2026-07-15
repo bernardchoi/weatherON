@@ -88,13 +88,12 @@ export function buildDemoStateFromWeatherResult(
   const preferenceProfile = options.preferenceProfile ?? defaultPreferenceProfile;
   const outfit = recommendOutfit(activeWeather, preferenceProfile, wardrobe);
   const umbrella = recommendUmbrella(activeWeather);
-  const baseNotificationRules = defaultNotificationRules.filter(
-    (rule) => rule.type !== "destination" && rule.type !== "umbrella" && rule.type !== "shoes",
-  );
+  const baseNotificationRules = defaultNotificationRules.filter((rule) => rule.type !== "destination");
   const notifications = withScheduledNotificationTimes(
     evaluateNotificationRules(activeWeather, {
       rules: baseNotificationRules,
     }),
+    activeWeather,
     options.notificationNow ?? Date.now(),
     getDefaultTimeZone(weatherProviderResult.current.countryCode),
   );
@@ -358,12 +357,37 @@ function getDefaultTimeZone(countryCode: PlaceSearchResult["countryCode"]): stri
 }
 
 const bedtimeReminderHour = 21;
+const routineReminderHour = 7;
+const routineReminderMinute = 30;
 const weatherAlertDeliveryLeadMs = 5_000;
 
-function withScheduledNotificationTimes(notifications: NotificationRuleEvaluation[], nowMs: number, timeZone: string): NotificationRuleEvaluation[] {
+function withScheduledNotificationTimes(
+  notifications: NotificationRuleEvaluation[],
+  weather: WeatherSnapshot,
+  nowMs: number,
+  timeZone: string,
+): NotificationRuleEvaluation[] {
+  const rainEvent = getRainEvent(weather, nowMs, timeZone);
   return notifications.map((notification) => {
+    if (notification.type === "routine") {
+      return {
+        ...notification,
+        scheduledAt: getNextDailyReminderAt(nowMs, timeZone, routineReminderHour, routineReminderMinute).toISOString(),
+      };
+    }
     if (notification.type === "bedtime") {
-      return { ...notification, scheduledAt: getNextBedtimeReminderAt(nowMs, timeZone).toISOString() };
+      return { ...notification, scheduledAt: getNextDailyReminderAt(nowMs, timeZone, bedtimeReminderHour).toISOString() };
+    }
+    if ((notification.type === "rain" || notification.type === "umbrella" || notification.type === "shoes") && notification.active) {
+      const leadMinutes = notification.type === "rain" ? 60 : notification.type === "umbrella" ? 45 : 10;
+      const desiredAt = rainEvent ? rainEvent.timestamp - leadMinutes * 60_000 : nowMs;
+      const scheduledAt = Math.max(nowMs + weatherAlertDeliveryLeadMs, desiredAt);
+      const eventKey = rainEvent?.key ?? weather.observedAt.slice(0, 10);
+      return {
+        ...notification,
+        scheduledAt: new Date(scheduledAt).toISOString(),
+        deliveryKey: `${notification.id}:${eventKey}`,
+      };
     }
     if ((notification.type === "heatwave" || notification.type === "heavy-rain") && notification.active) {
       return { ...notification, scheduledAt: new Date(nowMs + weatherAlertDeliveryLeadMs).toISOString() };
@@ -372,12 +396,24 @@ function withScheduledNotificationTimes(notifications: NotificationRuleEvaluatio
   });
 }
 
-function getNextBedtimeReminderAt(nowMs: number, timeZone: string): Date {
-  const bedtimeTime = `${String(bedtimeReminderHour).padStart(2, "0")}:00`;
+function getNextDailyReminderAt(nowMs: number, timeZone: string, hour: number, minute = 0): Date {
+  const reminderTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
   const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
-  const todayAt = createDateAtTimeInZone(nowParts, bedtimeTime, timeZone);
+  const todayAt = createDateAtTimeInZone(nowParts, reminderTime, timeZone);
   if (todayAt.getTime() > nowMs) return todayAt;
-  return createDateAtTimeInZone(addZonedCalendarDays(nowParts, 1), bedtimeTime, timeZone);
+  return createDateAtTimeInZone(addZonedCalendarDays(nowParts, 1), reminderTime, timeZone);
+}
+
+function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string): { timestamp: number; key: string } | null {
+  const rainyHours = weather.hourly
+    .filter((hour) => hour.rainProbabilityPct >= 40 || hour.precipitationMm > 0 || hour.condition === "rain" || hour.condition === "snow")
+    .map((hour) => ({
+      timestamp: getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone),
+      key: hour.time,
+    }))
+    .filter((item) => Number.isFinite(item.timestamp))
+    .sort((left, right) => left.timestamp - right.timestamp);
+  return rainyHours.find((item) => item.timestamp >= nowMs - 2 * 60 * 60_000) ?? rainyHours[0] ?? null;
 }
 
 function getDestinationWeatherSnapshot(

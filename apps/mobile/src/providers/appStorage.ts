@@ -1,56 +1,155 @@
-const storageDirectoryName = "weatheron";
+type AppValueRow = { value: string };
 
-export async function readAppJson<T>(key: string): Promise<T | null> {
+const databaseName = "weatheron.db";
+const storageTableName = "app_values";
+const legacyMigrationKey = "weatheron.storage.sqlite-migration.v1";
+const legacyStorageKeys = [
+  "weatheron.appState.v1",
+  "weatheron.weatherProviderResult.v1",
+  "weatheron.specialAlertDelivery.v1",
+  "weatheron.notificationState.v1",
+] as const;
+
+let databasePromise: Promise<import("expo-sqlite").SQLiteDatabase | null> | null = null;
+
+export async function readAppValue<T>(key: string): Promise<T | null> {
   const webStorage = getWebStorage();
-  if (webStorage) {
-    try {
-      const rawValue = webStorage.getItem(key);
-      return rawValue ? (JSON.parse(rawValue) as T) : null;
-    } catch {
-      return null;
-    }
-  }
+  if (webStorage) return readWebValue<T>(webStorage, key);
 
-  const fileSystem = await getFileSystem();
-  if (!fileSystem?.documentDirectory) return null;
+  const database = await getDatabase();
+  if (!database) return null;
 
   try {
-    const uri = getStorageUri(fileSystem.documentDirectory, key);
-    const info = await fileSystem.getInfoAsync(uri);
-    if (!info.exists) return null;
-    return JSON.parse(await fileSystem.readAsStringAsync(uri)) as T;
+    const row = await database.getFirstAsync<AppValueRow>(`SELECT value FROM ${storageTableName} WHERE key = ?`, key);
+    return row ? (JSON.parse(row.value) as T) : null;
   } catch {
     return null;
   }
 }
 
-export async function writeAppJson<T>(key: string, value: T): Promise<void> {
+export async function writeAppValue<T>(key: string, value: T): Promise<void> {
   const normalizedValue = JSON.stringify(value);
   const webStorage = getWebStorage();
   if (webStorage) {
     try {
       webStorage.setItem(key, normalizedValue);
     } catch {
-      // Persistence is best-effort. The app should keep working without local storage.
+      // 웹 저장소를 쓸 수 없어도 앱 실행은 유지한다.
     }
     return;
   }
 
-  const fileSystem = await getFileSystem();
-  if (!fileSystem?.documentDirectory) return;
+  const database = await getDatabase();
+  if (!database) return;
 
   try {
-    const directory = `${fileSystem.documentDirectory}${storageDirectoryName}/`;
-    await fileSystem.makeDirectoryAsync(directory, { intermediates: true });
-    await fileSystem.writeAsStringAsync(getStorageUri(fileSystem.documentDirectory, key), normalizedValue);
+    await database.runAsync(
+      `INSERT INTO ${storageTableName} (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+      key,
+      normalizedValue,
+      Date.now(),
+    );
   } catch {
-    // Persistence is best-effort. The app should keep working without local storage.
+    // SQLite 저장 실패는 화면 상태를 막지 않는다.
   }
 }
 
-function getStorageUri(documentDirectory: string, key: string): string {
+async function getDatabase(): Promise<import("expo-sqlite").SQLiteDatabase | null> {
+  databasePromise ??= openDatabase();
+  return databasePromise;
+}
+
+async function openDatabase(): Promise<import("expo-sqlite").SQLiteDatabase | null> {
+  try {
+    const { openDatabaseAsync } = await import("expo-sqlite");
+    const database = await openDatabaseAsync(databaseName);
+    await database.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS ${storageTableName} (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+    `);
+    await migrateLegacyJsonFiles(database);
+    return database;
+  } catch {
+    return null;
+  }
+}
+
+async function migrateLegacyJsonFiles(database: import("expo-sqlite").SQLiteDatabase) {
+  const migrated = await database.getFirstAsync<AppValueRow>(`SELECT value FROM ${storageTableName} WHERE key = ?`, legacyMigrationKey);
+  if (migrated) return;
+
+  const fileSystem = await getFileSystem();
+  if (!fileSystem?.documentDirectory) {
+    await markLegacyMigrationComplete(database);
+    return;
+  }
+  const documentDirectory = fileSystem.documentDirectory;
+
+  const legacyEntries = await Promise.all(
+    legacyStorageKeys.map(async (key) => {
+      const uri = getLegacyStorageUri(documentDirectory, key);
+      try {
+        const info = await fileSystem.getInfoAsync(uri);
+        if (!info.exists) return null;
+        const value = await fileSystem.readAsStringAsync(uri);
+        JSON.parse(value);
+        return { key, uri, value };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  const entries = legacyEntries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+  await database.withExclusiveTransactionAsync(async (transaction) => {
+    for (const entry of entries) {
+      await transaction.runAsync(
+        `INSERT INTO ${storageTableName} (key, value, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(key) DO NOTHING`,
+        entry.key,
+        entry.value,
+        Date.now(),
+      );
+    }
+    await transaction.runAsync(
+      `INSERT INTO ${storageTableName} (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+      legacyMigrationKey,
+      "true",
+      Date.now(),
+    );
+  });
+
+  await Promise.all(entries.map((entry) => fileSystem.deleteAsync(entry.uri, { idempotent: true })));
+}
+
+async function markLegacyMigrationComplete(database: import("expo-sqlite").SQLiteDatabase) {
+  await database.runAsync(
+    `INSERT INTO ${storageTableName} (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    legacyMigrationKey,
+    "true",
+    Date.now(),
+  );
+}
+
+function readWebValue<T>(storage: Storage, key: string): T | null {
+  try {
+    const rawValue = storage.getItem(key);
+    return rawValue ? (JSON.parse(rawValue) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getLegacyStorageUri(documentDirectory: string, key: string): string {
   const filename = key.replace(/[^a-zA-Z0-9_.-]/g, "_");
-  return `${documentDirectory}${storageDirectoryName}/${filename}.json`;
+  return `${documentDirectory}weatheron/${filename}.json`;
 }
 
 function getWebStorage(): Storage | null {

@@ -486,6 +486,7 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
 
     await clickText(page, "MY");
     await clickText(page, "스마트 알림 설정");
+    await clickText(page, "고급 설정");
     await assertText(page, "5초 뒤 확인 알림 발송");
     await assertText(page, "목적지 출발");
     await assertText(page, "목적지 추가 필요");
@@ -659,6 +660,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await clickText(page, "출발");
     await clickText(page, "홈");
     await clickText(page, "비 완화");
+    await assertText(page, "강수 타임라인");
     await assertText(page, "외출 가이드");
     await assertText(page, "우산 추천");
     await clickAriaIncludes(page, "뒤로");
@@ -724,10 +726,10 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await clickAriaIncludes(page, "알림 열기");
     await clickAriaIncludes(page, "알림 센터 열기");
     await assertText(page, "최근 처리");
-    await assertText(page, "강수 알림");
-    await clickAriaIncludes(page, "강수 알림 열기");
-    await assertText(page, "강수 타임라인");
-    await waitForNotificationHistoryOpen(page, "H5", "우산 챙길 시간이에요");
+    await assertText(page, "오늘의 외출 준비");
+    await clickAriaIncludes(page, "오늘의 외출 준비 열기");
+    await assertText(page, "오늘 코디");
+    await waitForNotificationHistoryOpen(page, "H1");
   } finally {
     await context.close();
   }
@@ -1025,7 +1027,7 @@ async function waitForPersistedDestinationSchedule(page, destinationName, expect
   );
 }
 
-async function waitForNotificationHistoryOpen(page, route, titlePart) {
+async function waitForNotificationHistoryOpen(page, route, titlePart = "") {
   await page.waitForFunction(
     (route, titlePart) => {
       const rawValue = localStorage.getItem("weatheron.notificationState.v1");
@@ -1033,7 +1035,9 @@ async function waitForNotificationHistoryOpen(page, route, titlePart) {
       try {
         const state = JSON.parse(rawValue);
         return Array.isArray(state.notificationHistory) && state.notificationHistory.some((item) =>
-          item?.action === "open" && item?.route === route && String(item?.title ?? "").includes(titlePart),
+          item?.action === "open" &&
+          item?.route === route &&
+          (titlePart.length === 0 || String(item?.title ?? "").includes(titlePart)),
         );
       } catch {
         return false;

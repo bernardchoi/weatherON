@@ -1,6 +1,6 @@
 # WeatherON Android Play Upload Packet
 
-> 생성일: 2026-07-14
+> 생성일: 2026-07-15
 > 목적: Play Console 내부/폐쇄 테스트 트랙에 업로드할 production AAB와 업로드 전 확인값을 한 장으로 유지한다.
 
 ## 1. AAB 업로드 대상
@@ -10,21 +10,21 @@
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
 | 앱 버전 | `0.1.0` |
-| Android versionCode | `8` |
-| 소스 기준 버전 | `0.1.0 (8)` |
+| Android versionCode | `9` |
+| 소스 기준 버전 | `0.1.0 (9)` |
 | EAS build id | `f66ecb78-ad9d-4236-be70-ec3530a051f8` |
 | Build 상태 | FINISHED |
 | Build 버전 | `0.1.0 (9)` |
-| 소스 일치 | 불일치 |
+| 소스 일치 | 일치 |
 | Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/f66ecb78-ad9d-4236-be70-ec3530a051f8 |
 | AAB artifact | https://expo.dev/artifacts/eas/WHsqlrOEq36o5UAgK65yExyFMwm9XIqzecRiNFK8Q08.aab |
-| 업로드 후보 여부 | 불가 |
+| 업로드 후보 여부 | 가능 |
 
 ## 2. 업로드 전 남은 확인
 
 | 항목 | 상태 |
 |---|---|
-| Play 제출 blocker | 11 |
+| Play 제출 blocker | 9 |
 | 실기기 QA 미검증 | 0 |
 | 스토어 스크린샷 issue | 0 |
 | Play 입력값 누락 | 9 |

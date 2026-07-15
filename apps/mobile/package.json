@@ -29,6 +29,7 @@
     "expo-location": "~18.1.6",
     "expo-navigation-bar": "~4.2.8",
     "expo-notifications": "~0.31.5",
+    "expo-sqlite": "~15.2.14",
     "expo-status-bar": "^2.0.0",
     "react": "19.0.0",
     "react-native": "^0.79.0",

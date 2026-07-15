@@ -8,14 +8,12 @@
 | 항목 | 값 |
 |---|---|
 | 제출 가능 여부 | 불가 |
-| blocker 수 | 11 |
-| Production AAB 상태 | LOCAL BUILD SUCCESS / EAS IN_QUEUE |
-| Production AAB artifact | builds/weatheron-v0.1.0-versionCode8.aab |
+| blocker 수 | 9 |
+| Production AAB 상태 | FINISHED |
+| Production AAB artifact | https://expo.dev/artifacts/eas/WHsqlrOEq36o5UAgK65yExyFMwm9XIqzecRiNFK8Q08.aab |
 
 ## 2. Blockers
 
-- Production AAB build 완료 필요
-- Production AAB artifact URL 확인 필요
 - 개발자 이메일 확정 필요
 - 개발자 웹사이트 입력 여부 결정 필요
 - 개인정보처리방침 공개 URL 확정 필요
@@ -39,8 +37,6 @@
 
 | Blocker | 분류 | 해소 방법 |
 |---|---|---|
-| Production AAB build 완료 필요 | 빌드 | Play Console 업로드용 production AAB build 상태를 FINISHED로 갱신 |
-| Production AAB artifact URL 확인 필요 | 빌드 | production AAB artifact URL을 확인하고 상태 문서에 반영 |
 | 개발자 이메일 확정 필요 | 사용자 입력 | Play Console 공개 개발자 연락처 이메일 확정 |
 | 개발자 웹사이트 입력 여부 결정 필요 | 사용자 입력 | 웹사이트를 입력할지, 입력한다면 공개 HTTPS URL 확정 |
 | 개인정보처리방침 공개 URL 확정 필요 | 외부 배포 | HTML 초안을 공개 HTTPS URL로 배포 후 스토어 문서에 반영 |
