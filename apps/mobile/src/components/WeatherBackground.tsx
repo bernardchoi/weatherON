@@ -31,7 +31,7 @@ type Props = {
 // iOS 27 날씨앱처럼 날씨 모션이 화면 전체를 채우도록, 파티클(비·눈·별)을 상단 1/3이 아니라
 // 화면 전체 높이에 걸쳐 떨어뜨린다. 카드가 불투명이라 카드 뒤 파티클은 카드 사이 여백에서만 보이고,
 // 추가로 variant="overlay" 레이어를 카드 위에 얹으면 비가 UI 앞을 가로지르는 것처럼 보인다.
-export function WeatherBackground({ condition, theme, variant = "scene" }: Props) {
+export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, variant = "scene" }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const isNight = useIsNightHour();
   const enabled = useAnimationEnabled();
@@ -68,7 +68,7 @@ export function WeatherBackground({ condition, theme, variant = "scene" }: Props
       </View>
     </View>
   );
-}
+});
 
 function GradientBackdrop({ colors }: { colors: [string, string, string] }) {
   return (
