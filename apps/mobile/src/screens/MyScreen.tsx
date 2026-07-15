@@ -127,7 +127,7 @@ export function MyScreen({
           />
         </AppListGroup>
 
-        <Text style={[styles.appVersion, { color: theme.subtle }]}>WeatherON v0.1.0</Text>
+        <Text style={[styles.appVersion, { color: theme.subtle }]}>WeatherON v1.0.0</Text>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>

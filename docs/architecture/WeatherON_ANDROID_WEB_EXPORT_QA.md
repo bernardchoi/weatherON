@@ -21,7 +21,7 @@
 
 주의:
 - `http://127.0.0.1:8089/`는 `mockups/preview` 정적 서버라 실제 모바일 앱 QA 기준으로 보지 않는다.
-- 실제 Android 상태 영속화는 native 파일 저장소 기준이므로 최종 판정은 APK 실기기 재설치 후 한다.
+- 실제 Android 상태 영속화는 native `weatheron.db` SQLite 기준이므로 최종 판정은 APK 실기기 재설치 후 한다.
 - 하단 메뉴 최종 기준은 `홈 / 코디 / 출발 / MY`이다. `소셜`, `우산`, `강수`가 하단에 보이면 구버전 preview/APK 또는 mockup preview를 보고 있는 상태로 판정한다.
 - `apps/mobile/dist-web`는 예전 web export 산출물이다. 8094 미리보기는 `apps/mobile/dist`를 기준으로 서빙한다.
 - Codex In-app browser가 URL 정책으로 `127.0.0.1` 자동 판독을 거부하는 경우에는 우회하지 않고 코드, 문서, 실기기 APK 기준으로 판정한다.

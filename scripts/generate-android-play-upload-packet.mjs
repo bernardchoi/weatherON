@@ -24,7 +24,7 @@ const storeInputMissing = normalizeTableValue(tableValue(actionBoard, "local 스
 const qaPending = normalizeTableValue(tableValue(actionBoard, "실기기 QA 미검증")) || "미확인";
 const closedTestPending = normalizeTableValue(tableValue(actionBoard, "폐쇄 테스트 대기 항목")) || "미확인";
 const sourceVersion = `${appConfig.version} (${appConfig.android?.versionCode})`;
-const releaseVersion = buildVersion || sourceVersion;
+const releaseVersion = sourceVersion;
 const sourceMatchesBuild = buildVersion === sourceVersion;
 const readyForUpload = buildState === "FINISHED" && /^https:\/\/expo\.dev\/artifacts\/eas\/.+\.aab$/.test(artifactUrl) && sourceMatchesBuild;
 

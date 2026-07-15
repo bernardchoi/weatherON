@@ -3,7 +3,7 @@
     "name": "WeatherON",
     "slug": "weatheron",
     "scheme": "weatheron",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "../../assets/icon/icon-primary-1024.png",
     "userInterfaceStyle": "automatic",
@@ -33,7 +33,7 @@
       "../../assets/ui-icons/*"
     ],
     "ios": {
-      "version": "1.0",
+      "version": "1.0.0",
       "supportsTablet": false,
       "bundleIdentifier": "com.weatheron.mobile",
       "infoPlist": {
@@ -41,11 +41,11 @@
         "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "9"
+      "buildNumber": "7"
     },
     "android": {
       "package": "com.weatheron.mobile",
-      "versionCode": 9,
+      "versionCode": 10,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",

@@ -117,7 +117,7 @@ export function GlobalSettingsScreen({
           accessibilityLabel="표시 설정 버전 정보"
           style={styles.footerLinks}
         >
-          <Text style={[styles.footerText, { color: theme.subtle }]}>WeatherON v0.1.0 · {stateSummary}</Text>
+          <Text style={[styles.footerText, { color: theme.subtle }]}>WeatherON v1.0.0 · {stateSummary}</Text>
         </View>
 
         <View style={styles.bottomSpacer} />

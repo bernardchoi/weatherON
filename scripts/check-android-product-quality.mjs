@@ -359,7 +359,7 @@ assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
   "savedDestinations",
   "관리",
   "정책 및 법적 고지",
-  "WeatherON v0.1.0",
+  "WeatherON v1.0.0",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/MyScreen.tsx", ["개인정보처리방침", "코디·옷장", 'onNavigate("C1")']);
 assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [

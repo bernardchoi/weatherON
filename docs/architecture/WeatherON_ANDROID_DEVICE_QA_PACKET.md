@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Packet
 
-> 생성일: 2026-07-15
+> 생성일: 2026-07-16
 > 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D13 QA를 바로 수행할 수 있게 한 장으로 정리한다.
 
 ## 1. 설치 대상
@@ -10,8 +10,8 @@
 | EAS build id | `N/A - local Gradle release APK` |
 | Build 상태 | LOCAL BUILD SUCCESS |
 | Version | `0.1.0 (9)` |
-| 소스 기준 Version | `0.1.0 (9)` |
-| QA 대상 일치 | 일치 |
+| 소스 기준 Version | `1.0.0 (10)` |
+| QA 대상 일치 | 불일치 · 새 preview build 필요 |
 | Build 링크 | N/A |
 | APK artifact | apps/mobile/android/app/build/outputs/apk/release/app-release.apk |
 | ADB 연결 | 가능 |
@@ -20,6 +20,8 @@
 | 스토어 스크린샷 issue | 0 |
 
 ## 2. 실기기 직접 설치
+
+> 주의: 현재 APK는 최신 소스 기준이 아니다. D1~D13 정식 재검증은 새 preview APK 생성 후 진행한다.
 
 
 1. Android 기기에서 APK artifact 링크를 연다.
@@ -88,8 +90,8 @@ npm run install:android-preview-apk
 
 ## 4. 결과 반영 방법
 
-실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
-`easBuildId`는 `N/A - local Gradle release APK`, `appVersion`은 `0.1.0 (9)`과 일치해야 한다.
+새 preview build 생성 후 실기기 QA가 끝나면 `docs/architecture/WeatherON_ANDROID_DEVICE_QA_RESULTS.local.json`에 결과를 채운 뒤 실행한다.
+`easBuildId`와 `appVersion`은 새 preview build 확인 후 갱신된 `WeatherON_ANDROID_BUILD_STATUS.md` 값과 일치해야 한다.
 
 ```bash
 npm run sync:android-device-qa-env

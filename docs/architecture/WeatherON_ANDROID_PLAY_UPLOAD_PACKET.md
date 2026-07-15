@@ -1,6 +1,6 @@
 # WeatherON Android Play Upload Packet
 
-> 생성일: 2026-07-15
+> 생성일: 2026-07-16
 > 목적: Play Console 내부/폐쇄 테스트 트랙에 업로드할 production AAB와 업로드 전 확인값을 한 장으로 유지한다.
 
 ## 1. AAB 업로드 대상
@@ -9,16 +9,16 @@
 |---|---|
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
-| 앱 버전 | `0.1.0` |
-| Android versionCode | `9` |
-| 소스 기준 버전 | `0.1.0 (9)` |
+| 앱 버전 | `1.0.0` |
+| Android versionCode | `10` |
+| 소스 기준 버전 | `1.0.0 (10)` |
 | EAS build id | `f66ecb78-ad9d-4236-be70-ec3530a051f8` |
 | Build 상태 | FINISHED |
 | Build 버전 | `0.1.0 (9)` |
-| 소스 일치 | 일치 |
+| 소스 일치 | 불일치 |
 | Build 링크 | https://expo.dev/accounts/weatheron/projects/weatheron/builds/f66ecb78-ad9d-4236-be70-ec3530a051f8 |
 | AAB artifact | https://expo.dev/artifacts/eas/WHsqlrOEq36o5UAgK65yExyFMwm9XIqzecRiNFK8Q08.aab |
-| 업로드 후보 여부 | 가능 |
+| 업로드 후보 여부 | 불가 |
 
 ## 2. 업로드 전 남은 확인
 
@@ -36,14 +36,14 @@
 2. 테스트 및 출시 > 내부 테스트 또는 폐쇄 테스트 트랙 선택
 3. 새 release 생성
 4. AAB artifact 업로드
-5. release name은 `0.1.0 (9)` 기준으로 입력
+5. release name은 `1.0.0 (10)` 기준으로 입력
 6. 출시 노트 초안 입력
 7. 저장 후 제출 전 blocker 문서 확인
 
 ## 4. 출시 노트 초안
 
 ```text
-WeatherON 비공개 테스트 v0.1.0 (9)
+WeatherON 비공개 테스트 v1.0.0 (10)
 - 홈 화면에서 당겨서 최신 날씨 새로고침
 - 내일 날씨 브리핑과 강한 날씨 알림 개선
 - 목적지 알림과 출발 시간 계산 안정화
