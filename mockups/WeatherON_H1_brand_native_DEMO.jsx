@@ -9,13 +9,13 @@ import { useState, useEffect } from "react";
    ───────────────────────────────────────────────────────────────────── */
 
 /* ── Brand / Functional Color Tokens (brand/weatheron_ci_bi.html 기준) ── */
-const NAVY      = '#0C1F3F'; // horizon — 브랜드 모먼트 전용
-const NAVY_DARK = '#0A1730'; // 가장 어두운 패널(탭바 등)
-const PANEL     = '#11254A'; // 카드 패널 — 불투명 솔리드, 블러 없음
+const NAVY      = '#1D5A86'; // horizon — 브랜드 모먼트 전용
+const NAVY_DARK = '#276A96'; // 가장 어두운 패널(탭바 등)
+const PANEL     = '#2B719D'; // 카드 패널 — 불투명 솔리드, 블러 없음
 const GOLD      = '#F0A020'; // dawn — 브랜드 모먼트 전용 (CTA, 공유 글리프)
 const SKY       = '#4A8FD4'; // 기능색 — 날씨/카테고리 표시용
 const CLEAR     = '#3ABFA0'; // 기능색 — 맑음/코디 카테고리
-const MIST      = '#6B80A0'; // 기능색 — 보조 정보
+const MIST      = '#E4F2FF'; // 기능색 — 보조 정보
 const CLOUD     = '#E8EDF6';
 
 /* ── SVG Icon Helpers ───────────────────────────────────────────────── */
@@ -173,7 +173,7 @@ export default function WeatherONHomeBrandNative() {
       {/* ── Page label ── */}
       <p style={{
         fontSize:11, fontWeight:500,
-        color:'rgba(168,196,224,0.38)',
+        color:'rgba(228,242,255,0.38)',
         letterSpacing:'1.6px',
         textTransform:'uppercase',
         fontFamily:'system-ui',
@@ -270,7 +270,7 @@ export default function WeatherONHomeBrandNative() {
             22°
           </div>
           <div style={{ fontSize:17, fontWeight:400, color:'#A8C4E0', marginTop:10, fontFamily:"'Noto Sans KR',sans-serif" }}>맑음</div>
-          <div style={{ fontSize:12, color:'rgba(168,196,224,0.58)', marginTop:5, fontFamily:"'DM Mono',monospace" }}>
+          <div style={{ fontSize:12, color:'rgba(228,242,255,0.58)', marginTop:5, fontFamily:"'DM Mono',monospace" }}>
             체감 21° · 최고 26° · 최저 15°
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function WeatherONHomeBrandNative() {
                   height:52,
                   cursor:'pointer',
                   userSelect:'none',
-                  color: active ? GOLD : 'rgba(168,196,224,0.55)',
+                  color: active ? GOLD : 'rgba(228,242,255,0.55)',
                   transition:'color 0.15s ease',
                 }}
               >

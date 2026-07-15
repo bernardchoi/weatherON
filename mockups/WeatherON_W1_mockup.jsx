@@ -11,18 +11,18 @@ import { getWeatherONTheme, ink, mist } from "./WeatherON_theme_tokens.js";
    기준 레이아웃: WeatherON_H1_mockup.jsx(홈 메인)에 CWR 카드·제보 CTA만 추가
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#15294D';
-let NAVY_DARK = '#102140';
-let PANEL     = '#1A3360';
-let PANEL_L1  = '#2A5D8F';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
+let PANEL_L1  = '#3D87B5';
 let GOLD      = '#F0A020';
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let SKY       = '#4A8FD4';
 let CLEAR     = '#3ABFA0';
 let WARM      = '#E8854A';
-let MIST      = '#869EBC';
+let MIST      = '#E4F2FF';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(168,196,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 
 function applyWeatherONTheme(mode) {

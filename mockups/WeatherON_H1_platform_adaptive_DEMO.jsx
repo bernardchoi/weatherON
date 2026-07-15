@@ -156,7 +156,7 @@ export default function WeatherONHomePlatformAdaptive() {
 
   const cardTag  = { fontSize:10.5, fontWeight:500, color:'#A8C4E0', letterSpacing:'0.3px', marginBottom:5 };
   const cardMain = { fontSize:15, fontWeight:700, color:'#fff', lineHeight:1.35, marginBottom:4 };
-  const cardSub  = { fontSize:11.5, color:'rgba(168,196,224,0.72)' };
+  const cardSub  = { fontSize:11.5, color:'rgba(228,242,255,0.72)' };
 
   return (
     <div style={{
@@ -172,7 +172,7 @@ export default function WeatherONHomePlatformAdaptive() {
       {/* ── Page label ── */}
       <p style={{
         fontSize:11, fontWeight:500,
-        color:'rgba(168,196,224,0.38)',
+        color:'rgba(228,242,255,0.38)',
         letterSpacing:'1.8px',
         textTransform:'uppercase',
         fontFamily:'system-ui',
@@ -301,7 +301,7 @@ export default function WeatherONHomePlatformAdaptive() {
             22°
           </div>
           <div style={{ fontSize:17, fontWeight:400, color:'#A8C4E0', marginTop:10 }}>맑음</div>
-          <div style={{ fontSize:12, color:'rgba(168,196,224,0.58)', marginTop:5 }}>
+          <div style={{ fontSize:12, color:'rgba(228,242,255,0.58)', marginTop:5 }}>
             체감 21° · 최고 26° · 최저 15°
           </div>
         </div>
@@ -406,11 +406,11 @@ export default function WeatherONHomePlatformAdaptive() {
             /* ── iOS: 반투명 글래스 캡슐 (Liquid Glass) ── */
             const iosActiveBg = 'rgba(255,255,255,0.16)';
             const iosActiveBorder = '1px solid rgba(255,255,255,0.13)';
-            const iosIconColor = active ? '#fff' : 'rgba(168,196,224,0.55)';
+            const iosIconColor = active ? '#fff' : 'rgba(228,242,255,0.55)';
 
             /* ── Android: M3 Expressive 톤 필 캡슐 (채도 있는 강조색 채움) ── */
             const androidActiveBg = 'rgba(78,203,163,0.92)'; // fresh 토큰, 풀 채움
-            const androidIconColor = active ? '#0B1E3D' : 'rgba(168,196,224,0.55)';
+            const androidIconColor = active ? '#0B1E3D' : 'rgba(228,242,255,0.55)';
 
             return (
               <div
@@ -467,7 +467,7 @@ export default function WeatherONHomePlatformAdaptive() {
 
       </div>{/* /phone */}
 
-      <p style={{ fontSize:11, color:'rgba(168,196,224,0.30)', fontFamily:'system-ui', letterSpacing:'0.5px', maxWidth:340, textAlign:'center', lineHeight:1.6 }}>
+      <p style={{ fontSize:11, color:'rgba(228,242,255,0.30)', fontFamily:'system-ui', letterSpacing:'0.5px', maxWidth:340, textAlign:'center', lineHeight:1.6 }}>
         배경 · 카드 · 블러 · 타이포는 두 플랫폼 동일 — 탭 active 표현과 CTA 버튼 셰이프/깊이만 플랫폼 컨벤션에 맞춰 분기
       </p>
     </div>

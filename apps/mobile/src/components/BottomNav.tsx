@@ -3,6 +3,8 @@ import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "reac
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialActiveIndicator, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
 type BottomNavProps = {
@@ -24,6 +26,8 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           borderColor: theme.navBorder,
           shadowColor: theme.shadow,
         },
+        androidMaterialSurface(theme, "bar"),
+        iosGlassSurface(theme, "bar"),
       ]}
     >
       {bottomNavRoutes.map((route) => {
@@ -35,8 +39,10 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             label={route.label}
             active={active}
             tintColor={theme.cardMuted}
+            ripple={androidMaterialRipple(theme)}
             onPress={() => onNavigate(route.id)}
           >
+            <View pointerEvents="none" style={[styles.androidActiveIndicator, androidMaterialActiveIndicator(theme, active)]} />
             <View style={[styles.activeDot, { backgroundColor: active ? theme.gold : "transparent" }]} />
             <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
             <Text
@@ -61,6 +67,7 @@ function TabButton({
   label,
   active,
   tintColor,
+  ripple,
   onPress,
   children,
 }: {
@@ -68,6 +75,7 @@ function TabButton({
   label: string;
   active: boolean;
   tintColor: string;
+  ripple?: ReturnType<typeof androidMaterialRipple>;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -87,6 +95,7 @@ function TabButton({
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
+      android_ripple={ripple}
       onPress={onPress}
       onPressIn={() => animateTo(0.12)}
       onPressOut={() => animateTo(0)}
@@ -146,6 +155,14 @@ const styles = StyleSheet.create({
   },
   itemTint: {
     borderRadius: 14,
+  },
+  androidActiveIndicator: {
+    position: "absolute",
+    top: 6,
+    left: 10,
+    right: 10,
+    height: 32,
+    borderRadius: 16,
   },
   activeDot: {
     width: 5,

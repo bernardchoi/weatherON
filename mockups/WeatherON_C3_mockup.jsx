@@ -6,17 +6,17 @@ import { getWeatherONTheme } from "./WeatherON_theme_tokens.js";
    직접 사진 등록은 "없는 아이템 추가" 보조 탭으로 유지한다.
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#10243F';
-let NAVY_DARK = '#17365D';
-let PANEL     = '#214A78';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
 let GOLD      = '#F4B63F';
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let CLEAR     = '#2FC6A3';
 const WARM      = '#E8854A';
 let SKY       = '#4AA3DF';
-let MIST      = '#B9CBE0';
+let MIST      = '#E4F2FF';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(185,203,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 function applyWeatherONTheme(mode) {
   const theme = getWeatherONTheme(mode);

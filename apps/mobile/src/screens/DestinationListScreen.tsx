@@ -85,7 +85,7 @@ export function DestinationListScreen({
             <PrepMetric label="비 완화" value={hasDestinations ? "확인" : "대기"} tone="sky" theme={theme} />
           </View>
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
-            {hasDestinations ? "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요" : "자주 가는 곳을 추가하면 출발 시간과 비 완화 알림을 계산해요"}
+            {hasDestinations ? "탭하면 상세 준비 확인" : "추가하면 출발·강수 자동 계산"}
           </Text>
         </View>
 
@@ -136,8 +136,8 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
           <PlaceGlyph type="place" color={theme.gold} />
         </View>
         <View style={styles.emptyCopy}>
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>첫 목적지를 추가해 주세요</Text>
-          <Text style={[styles.emptyBody, { color: theme.subtle }]}>자주 가는 장소를 저장하면 목적지 날씨와 출발 준비를 바로 비교해요</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
+          <Text style={[styles.emptyBody, { color: theme.subtle }]}>날씨·출발 준비 자동 비교</Text>
         </View>
       </View>
       <View style={styles.emptyBenefitGrid}>
@@ -386,14 +386,14 @@ function getDestinationResultBanner(
     const skipped = permissionGateResult.message.includes("나중에");
     return {
       title: skipped ? "목적지 저장 완료" : "목적지 알림 준비 완료",
-      body: skipped ? "알림 권한은 나중에 켜도 목적지 비교는 바로 사용할 수 있어요" : "출발 시간과 강수 알림을 목적지 기준으로 계산해요",
+      body: skipped ? "권한은 나중에 켜도 비교 가능" : "출발·강수 알림 자동 계산",
       tone: skipped ? "warm" : "clear",
     };
   }
   if (accountGateResult?.returnTo === "G1" && accountGateResult.pendingAction === "destination-care" && hasDestinations) {
     return {
       title: "목적지 저장 완료",
-      body: "저장한 목적지를 눌러 날씨 비교와 출발 준비를 확인해요",
+      body: "목적지를 눌러 준비 확인",
       tone: "clear",
     };
   }
@@ -436,12 +436,12 @@ function trimAdministrativeSuffix(value: string) {
 }
 
 function getDestinationActionText(item: DestinationCardModel) {
-  if (item.tone === "warm" && item.warning.includes("강수")) return `다음 행동 · 우산 준비 · ${item.rainPct}`;
-  if (item.tone === "warm" && item.warning.includes("바람")) return "다음 행동 · 바람 대비 외투 확인";
-  if (!item.careEnabled) return "다음 행동 · 알림 켜고 출발 전 다시 확인";
-  if (item.savedAtLabel === "방금 저장") return "다음 행동 · 출발 시간과 강수 기준 확인";
-  if (item.savedAtLabel === "복구됨") return "다음 행동 · 복구된 목적지 알림 확인";
-  return "다음 행동 · 출발 시간 확인";
+  if (item.tone === "warm" && item.warning.includes("강수")) return `우산 준비 · ${item.rainPct}`;
+  if (item.tone === "warm" && item.warning.includes("바람")) return "바람막이 확인";
+  if (!item.careEnabled) return "알림 켜기";
+  if (item.savedAtLabel === "방금 저장") return "출발·강수 기준 확인";
+  if (item.savedAtLabel === "복구됨") return "복구 알림 확인";
+  return "출발 시간 확인";
 }
 
 function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][number], care: P0ScreenProps["state"]["destinationCare"]) {
@@ -588,8 +588,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: "900",
     letterSpacing: 0,
   },
@@ -607,12 +607,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
   },
   resultTitle: {
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "900",
   },
   resultBody: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",
   },
@@ -649,14 +649,14 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   todayLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   todayTitle: {
     marginTop: 2,
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
   },
   alertPill: {
@@ -668,8 +668,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   alertPillText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   prepMetricStrip: {
@@ -687,8 +687,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   prepMetricLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
     letterSpacing: 0,
   },
@@ -698,18 +698,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   prepMetricIcon: {
-    width: 12,
-    height: 12,
+    width: 14,
+    height: 14,
   },
   prepMetricValue: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
     letterSpacing: 0,
   },
   todayHint: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "700",
   },
   destinationList: {
@@ -740,8 +740,8 @@ const styles = StyleSheet.create({
   },
   destinationCard: {
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     borderRadius: radius.md,
     borderLeftWidth: 2,
     borderWidth: 1,
@@ -774,12 +774,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   emptyTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   emptyBody: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",
   },
@@ -797,20 +797,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   emptyBenefitIcon: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
   },
   emptyBenefitCopy: {
     gap: 2,
   },
   emptyBenefitTitle: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   emptyBenefitBody: {
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
   destinationTop: {
@@ -819,8 +819,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   destinationIconFrame: {
-    width: 34,
-    height: 34,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 1,
@@ -853,20 +853,20 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     minWidth: 0,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   destinationArea: {
     flexShrink: 1,
     minWidth: 0,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   readyPill: {
-    minWidth: 50,
-    minHeight: 24,
+    minWidth: 56,
+    minHeight: 28,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xs,
@@ -874,8 +874,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   readyText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
   chevron: {
@@ -914,15 +914,15 @@ const styles = StyleSheet.create({
     height: 13,
   },
   rainPillText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   signalText: {
     flexShrink: 1,
     minWidth: 0,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   weatherLine: {
@@ -942,8 +942,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   diffText: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   destinationBottom: {
@@ -976,22 +976,22 @@ const styles = StyleSheet.create({
   timeText: {
     flex: 1,
     minWidth: 0,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   repeatText: {
     flexShrink: 0,
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
   warningText: {
     flexShrink: 1,
     minWidth: 0,
     maxWidth: "100%",
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   sunGlyph: {
@@ -1020,8 +1020,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   placeGlyph: {
-    width: 17,
-    height: 17,
+    width: 19,
+    height: 19,
     flexShrink: 0,
   },
 });

@@ -131,12 +131,12 @@ function getProviderColor(providerId: ProviderTone) {
   if (providerId === "line") return "#4CC764";
   if (providerId === "google") return "#F8FBFF";
   if (providerId === "apple") return "#111827";
-  return "#2A5D8F";
+  return "#3D87B5";
 }
 
 function getProviderTextColor(providerId: ProviderTone) {
   if (providerId === "apple" || providerId === "email") return "#F8FBFF";
-  return "#10243F";
+  return "#123858";
 }
 
 function getProviderMark(providerId: ProviderTone) {

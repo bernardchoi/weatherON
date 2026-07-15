@@ -6,18 +6,18 @@ import { getWeatherONTheme } from "./WeatherON_theme_tokens.js";
    세부 토글은 "고급 설정" 안에 숨겨 설정 피로를 줄인다.
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = "#10243F";
-let NAVY_DARK = "#17365D";
-let PANEL     = "#214A78";
-let PANEL_L1  = '#2A5D8F';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
+let PANEL_L1  = '#3D87B5';
 let GOLD      = "#F4B63F";
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let SKY       = "#4AA3DF";
 let CLEAR     = "#2FC6A3";
 const WARM = "#E8854A";
 let MIST      = "#B9CBE0";
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(185,203,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 function applyWeatherONTheme(mode) {
   const theme = getWeatherONTheme(mode);

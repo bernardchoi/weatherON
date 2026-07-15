@@ -10,20 +10,20 @@ import { getWeatherONTheme, ink, mist } from "./WeatherON_theme_tokens.js";
    디자인: brand/WeatherON_디자인_정체성_가이드.md 4-1장 하이브리드 크롬 채택안
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#10243F';
-let NAVY_DARK = '#17365D';
-let PANEL     = '#214A78';
-let PANEL_L1  = '#2A5D8F';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
+let PANEL_L1  = '#3D87B5';
 let GOLD      = '#F4B63F';
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let SKY       = '#4AA3DF';
 let CLEAR     = '#2FC6A3';
 let WARM      = '#E8854A';
 const RAIN_RED  = '#E97F77';
 const PREMIUM   = '#AB8EDD';
-let MIST      = '#B9CBE0';
+let MIST      = '#E4F2FF';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(185,203,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 
 function applyWeatherONTheme(mode) {

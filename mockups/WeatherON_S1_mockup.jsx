@@ -10,16 +10,16 @@ import { getWeatherONTheme, ink, mist } from "./WeatherON_theme_tokens.js";
    디자인: brand/WeatherON_디자인_정체성_가이드.md 4-1장 하이브리드 크롬 채택안
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#15294D';
-let NAVY_DARK = '#102140';
-let PANEL     = '#1A3360';
-let PANEL_L1  = '#2A5D8F';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
+let PANEL_L1  = '#3D87B5';
 let GOLD      = '#F0A020';
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let SKY       = '#4A8FD4';
-let MIST      = '#869EBC';
+let MIST      = '#E4F2FF';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(168,196,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 const HERO_ART  = new URL("../brand/ON Square 대표마스코트_기본_투명-v1.png", import.meta.url).href;
 
 const COMPANION_ART = {
@@ -214,7 +214,7 @@ export default function WeatherON_S1({ elementId = "Mist", navigate, routeState 
               height: 142, display: "flex", alignItems: "center", justifyContent: "center", gap:14,
               background: isLight
                 ? `radial-gradient(circle at 42% 34%, rgba(194,65,12,0.12), transparent 46%), linear-gradient(160deg, #FFFFFF 0%, #EAF3FA 100%)`
-                : `radial-gradient(circle at 50% 38%, rgba(240,160,32,0.20), transparent 48%), linear-gradient(160deg, ${PANEL} 0%, #21407A 100%)`,
+                : `radial-gradient(circle at 50% 38%, rgba(240,160,32,0.20), transparent 48%), linear-gradient(160deg, ${PANEL} 0%, #3D87B5 100%)`,
               border: isLight ? "1px solid rgba(31,78,121,0.12)" : "none",
               boxShadow: isLight ? "0 12px 26px rgba(31,78,121,0.12)" : "none",
             }}>

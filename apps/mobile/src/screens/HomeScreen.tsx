@@ -96,7 +96,7 @@ export function HomeScreen({
           >
             <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
             <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
-              {smartCareEnabled ? "스마트 알림 켜짐" : "스마트 알림 꺼짐"}
+              {smartCareEnabled ? "알림 ON" : "알림 OFF"}
             </Text>
           </FeedbackPressable>
           <NotificationBellButton
@@ -246,7 +246,7 @@ function DestinationSelectorCard({
   const hasDestinations = savedDestinations.length > 0;
   const headerCaption = hasDestinations
     ? `저장한 ${savedDestinations.length}곳 · 눌러서 전환`
-    : "목적지를 추가하면 이 카드가 목적지 기준으로 바뀜";
+    : "목적지 기준 전환";
 
   return (
     <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
@@ -276,7 +276,7 @@ function DestinationSelectorCard({
           style={[styles.destinationEmptySelector, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
         >
           <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
-          <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 하단 카드가 목적지 기준으로 바뀜</Text>
+          <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 자동 반영</Text>
         </FeedbackPressable>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
@@ -586,7 +586,7 @@ function FeelsLikeCard({
         <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
       </View>
       <View style={styles.feelsLikeCopy}>
-        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>현재 위치 체감온도</Text>
+        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>체감</Text>
         <Text style={[styles.feelsLikeBody, { color: theme.muted }]} numberOfLines={1}>
           실제 {formatTemperature(current.tempC, temperatureUnit)} · {getFeelsLikeDeltaLabel(delta, temperatureUnit)}
         </Text>
@@ -600,8 +600,8 @@ function FeelsLikeCard({
 
 function getFeelsLikeDeltaLabel(deltaC: number, temperatureUnit: P0ScreenProps["temperatureUnit"]) {
   const roundedDelta = Math.round(deltaC);
-  if (roundedDelta === 0) return "실제 기온과 같음";
-  return `체감 ${formatTemperatureDelta(deltaC, temperatureUnit)}`;
+  if (roundedDelta === 0) return "같음";
+  return formatTemperatureDelta(deltaC, temperatureUnit);
 }
 
 function DecisionMetric({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
@@ -710,7 +710,7 @@ function SpecialWeatherAlertCard({
       <View style={styles.specialAlertCopy}>
         <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>
         <Text style={[styles.specialAlertTitle, { color: theme.text }]} numberOfLines={1}>{alert.title}</Text>
-        <Text style={[styles.specialAlertBody, { color: theme.muted }]} numberOfLines={2}>{alert.reason}</Text>
+        <Text style={[styles.specialAlertBody, { color: theme.muted }]} numberOfLines={1}>{alert.reason}</Text>
       </View>
       <Text style={[styles.specialAlertChevron, { color: accent }]}>›</Text>
     </FeedbackPressable>
@@ -1294,13 +1294,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeContent: {
-    // 홈은 스크롤 없이 한 화면에 들어오는 "한눈 판단" 화면이 목표다. 탭바는 별도 레이아웃이라
-    // 회피 여백이 필요 없고, 카드 높이·간격을 압축해 판단 그리드까지 한 화면에 담는다.
+    // 홈은 한눈 판단이 목표지만, 특보·코디·목적지가 함께 뜰 때 하단 탭바가 마지막 카드를 가리지 않게 한다.
     minHeight: "100%",
     gap: spacing.xs,
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 10,
+    paddingBottom: 116,
   },
   topBar: {
     minHeight: 46,
@@ -1311,7 +1310,7 @@ const styles = StyleSheet.create({
   },
   modePill: {
     minHeight: 34,
-    maxWidth: 144,
+    maxWidth: 116,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
@@ -1327,8 +1326,8 @@ const styles = StyleSheet.create({
   modeText: {
     flex: 1,
     minWidth: 0,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   decisionStack: {
@@ -1336,14 +1335,14 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   decisionHero: {
-    minHeight: 216,
+    minHeight: 224,
     gap: spacing.xs,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 176,
+    minHeight: 180,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -1368,45 +1367,45 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 112,
-    height: 112,
+    width: 116,
+    height: 116,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 76,
-    height: 76,
+    width: 78,
+    height: 78,
   },
   showcaseTemp: {
     marginTop: 4,
-    fontSize: 44,
-    lineHeight: 48,
+    fontSize: 50,
+    lineHeight: 54,
     fontWeight: "900",
     letterSpacing: 0,
     textAlign: "center",
   },
   showcaseCondition: {
     marginTop: -1,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
     textAlign: "center",
   },
   showcaseMeta: {
     marginTop: 4,
     maxWidth: "100%",
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "900",
     textAlign: "center",
   },
   showcaseMetaSub: {
     marginTop: 0,
     maxWidth: "100%",
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
     textAlign: "center",
   },
@@ -1428,8 +1427,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusBadgeText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   decisionMetricRow: {
@@ -1438,7 +1437,7 @@ const styles = StyleSheet.create({
   },
   decisionMetric: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 42,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1447,16 +1446,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   decisionMetricIcon: {
-    width: 14,
-    height: 14,
+    width: 16,
+    height: 16,
   },
   decisionMetricText: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   feelsLikeCard: {
-    minHeight: 52,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -1466,15 +1465,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   feelsLikeIconFrame: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   feelsLikeIcon: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
   },
   feelsLikeCopy: {
     flex: 1,
@@ -1482,20 +1481,20 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   feelsLikeLabel: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   feelsLikeBody: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   feelsLikeValue: {
-    minWidth: 56,
+    minWidth: 60,
     textAlign: "right",
-    fontSize: 21,
-    lineHeight: 26,
+    fontSize: 24,
+    lineHeight: 29,
     fontWeight: "900",
   },
   destinationSection: {
@@ -1531,13 +1530,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   destinationSelectorLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   destinationSelectorMeta: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   destinationSelectorAddButton: {
@@ -1597,13 +1596,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   destinationEmptyTitle: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
   },
   destinationEmptyBody: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   visualDecisionGrid: {
@@ -1612,7 +1611,7 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 84,
+    minHeight: 92,
     alignItems: "center",
     gap: 4,
     justifyContent: "center",
@@ -1621,33 +1620,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   visualIconFrame: {
-    width: 32,
-    height: 32,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   visualDecisionIcon: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
   },
   visualDecisionLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   visualDecisionValue: {
-    fontSize: 19,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: "900",
   },
   visualDecisionHelper: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 102,
+    minHeight: 108,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -1656,7 +1655,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   specialAlertCard: {
-    minHeight: 80,
+    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -1682,18 +1681,18 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   specialAlertLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   specialAlertTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "900",
   },
   specialAlertBody: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "700",
   },
   specialAlertChevron: {
@@ -1707,18 +1706,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   homeOutfitLabel: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   homeOutfitTitle: {
-    fontSize: 19,
-    lineHeight: 24,
+    fontSize: 21,
+    lineHeight: 26,
     fontWeight: "900",
   },
   homeOutfitBody: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   homeOutfitImageFrame: {

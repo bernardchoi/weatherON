@@ -1,6 +1,8 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { radius } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
 
@@ -17,8 +19,9 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      android_ripple={androidMaterialRipple(theme)}
       onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "button"), iosGlassSurface(theme, "button")]}
     >
       <ChevronLeft color={theme.text} />
     </FeedbackPressable>

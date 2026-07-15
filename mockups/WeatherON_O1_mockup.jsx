@@ -9,14 +9,14 @@ import { getWeatherONTheme, ink, mist } from "./WeatherON_theme_tokens.js";
    디자인: brand/WeatherON_디자인_정체성_가이드.md 4-1장 하이브리드 크롬 채택안
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#15294D';
-let NAVY_DARK = '#102140';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
 let LOGO_NAVY = '#0C1F3F';
 let LOGO_CLOUD = '#F4F7FC';
 let GOLD      = '#F0A020';
-let ON_GOLD  = '#10243F';
+let ON_GOLD  = '#123858';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(168,196,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 /* ── 앱 아이콘(G-1) — brand/weatheron_ci_bi.html #icon-primary 심볼을
    그대로 재현(1:1 path 포팅). 네이비 스퀴클 + 크림 토글 트랙 + 골드 노브

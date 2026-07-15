@@ -27,10 +27,10 @@ export function MyScreen({
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? "저장·동기화 사용 가능" : needsTerms ? "필수 약관 동의 후 저장·동기화 가능" : "계정 연결 후 저장·동기화 가능";
+  const profileBody = isAccountReady ? "동기화 가능" : needsTerms ? "약관 후 동기화" : "연결 후 동기화";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
   const savedDestinationCount = savedDestinations.length;
-  const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳 저장` : "목적지 저장 전";
+  const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳` : "목적지 없음";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
   const permissionTone: MenuTone =
@@ -215,7 +215,7 @@ function ReadinessSummary({
     <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.readinessCopy}>
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
-        <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "사용 준비 완료" : tone === "warm" ? "확인 필요한 항목 있음" : "설정하면 더 정확해짐"}</Text>
+        <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
         <Text style={[styles.readinessMeta, { color: theme.subtle }]} numberOfLines={2}>
           {destinationSummary} · {locationSummary} · {alertSummary}
         </Text>
@@ -281,18 +281,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   title: {
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: "900",
     letterSpacing: 0,
   },
   subtitle: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "700",
   },
   profileCard: {
-    minHeight: 78,
+    minHeight: 84,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -308,19 +308,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   profilePillText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   groupLabel: {
     marginBottom: -6,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -352,17 +352,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   profileName: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   profileEmail: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "700",
   },
   readinessCard: {
-    minHeight: 82,
+    minHeight: 90,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -376,18 +376,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   readinessEyebrow: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   readinessTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
   },
   readinessMeta: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "700",
   },
   readinessPill: {
@@ -404,8 +404,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   readinessPillText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   appVersion: {

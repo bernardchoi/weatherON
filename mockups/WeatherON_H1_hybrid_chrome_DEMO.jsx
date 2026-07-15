@@ -20,15 +20,15 @@ import { useState, useEffect } from "react";
    ───────────────────────────────────────────────────────────────────── */
 
 /* ── Brand / Functional Color Tokens ── */
-const NAVY      = '#15294D';
-const NAVY_DARK = '#102140';
-const PANEL     = '#1A3360'; // L0 — 기본 카드 패널
-const PANEL_L1  = '#21407A'; // L1 — 바텀시트 표면 (한 단계 위 톤)
-const PANEL_L2  = '#2A4F90'; // L2 — 시트 내부 중첩 요소 (가장 위 톤)
+const NAVY      = '#1D5A86';
+const NAVY_DARK = '#276A96';
+const PANEL     = '#2B719D'; // L0 — 기본 카드 패널
+const PANEL_L1  = '#3D87B5'; // L1 — 바텀시트 표면 (한 단계 위 톤)
+const PANEL_L2  = '#55A0CA'; // L2 — 시트 내부 중첩 요소 (가장 위 톤)
 const GOLD      = '#F0A020';
 const SKY       = '#4A8FD4';
 const CLEAR     = '#3ABFA0';
-const MIST      = '#6B80A0';
+const MIST      = '#E4F2FF';
 
 /* ── SVG Icon Helpers ───────────────────────────────────────────────── */
 function SunSVG({ size = 68 }) {
@@ -336,7 +336,7 @@ export default function WeatherONHomeHybridChrome() {
     }}>
       <p style={{
         fontSize:11, fontWeight:500,
-        color:'rgba(168,196,224,0.38)',
+        color:'rgba(228,242,255,0.38)',
         letterSpacing:'1.6px',
         textTransform:'uppercase',
         fontFamily:'system-ui',
@@ -424,7 +424,7 @@ export default function WeatherONHomeHybridChrome() {
             22°
           </div>
           <div style={{ fontSize:17, fontWeight:400, color:'#A8C4E0', marginTop:10, fontFamily:"'Noto Sans KR',sans-serif" }}>맑음</div>
-          <div style={{ fontSize:12, color:'rgba(168,196,224,0.58)', marginTop:5, fontFamily:"'DM Mono',monospace" }}>
+          <div style={{ fontSize:12, color:'rgba(228,242,255,0.58)', marginTop:5, fontFamily:"'DM Mono',monospace" }}>
             체감 21° · 최고 26° · 최저 15°
           </div>
         </div>
@@ -525,7 +525,7 @@ function TabItem({ tab, active, onClick }) {
         display:'flex', flexDirection:'column',
         alignItems:'center', justifyContent:'center', gap:4,
         cursor:'pointer', userSelect:'none',
-        color: active ? GOLD : 'rgba(168,196,224,0.55)',
+        color: active ? GOLD : 'rgba(228,242,255,0.55)',
         transition:'color 0.15s ease',
       }}>
       <PressTintOverlay pressed={pressed} tint={GOLD}/>

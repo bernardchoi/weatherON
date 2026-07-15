@@ -12,15 +12,15 @@ import { getWeatherONTheme, ink, mist } from "./WeatherON_theme_tokens.js";
    ※ 라이트/다크 토큰 스펙: docs/planning/WeatherON_planning_v5.html 20장
 ─────────────────────────────────────────────────────────────────────── */
 
-let NAVY      = '#15294D';
-let NAVY_DARK = '#102140';
-let PANEL     = '#1A3360';
-let PANEL_L1  = '#2A5D8F';
+let NAVY      = '#1D5A86';
+let NAVY_DARK = '#276A96';
+let PANEL     = '#2B719D';
+let PANEL_L1  = '#3D87B5';
 let GOLD      = '#F0A020';
-let ON_GOLD  = '#10243F';
-let MIST      = '#869EBC';
+let ON_GOLD  = '#123858';
+let MIST      = '#E4F2FF';
 let INK       = (a) => `rgba(232,237,246,${a})`;
-let MISTLITE  = (a) => `rgba(168,196,224,${a})`;
+let MISTLITE  = (a) => `rgba(228,242,255,${a})`;
 
 
 function applyWeatherONTheme(mode) {

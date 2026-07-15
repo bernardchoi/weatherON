@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialSurface } from "../theme/androidMaterial";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
 // 이 화면들의 안드로이드 실기기는 제스처 내비게이션 바가 하단 화면을 60~80px 정도 가린다.
@@ -65,6 +67,8 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
             styles.panel,
             { maxHeight: windowHeight * 0.82 },
             { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow },
+            androidMaterialSurface(theme, "sheet"),
+            iosGlassSurface(theme, "sheet"),
             { transform: [{ translateY }] },
           ]}
         >

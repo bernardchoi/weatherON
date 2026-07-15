@@ -13,25 +13,25 @@ import { useState } from "react";
 ─────────────────────────────────────────────────────────────────────── */
 
 /* ── Brand / Functional Color Tokens ── */
-export const NAVY      = '#17365D'; // 다크 BG — 기존 #10243F보다 가볍고 선명한 페이지 배경
-export const NAVY_DARK = '#1F4E79'; // 다크 Surface
-export const PANEL     = '#214A78'; // 다크 Elevated — 기본 카드 패널
-export const PANEL_L1  = '#2A5D8F'; // L1 — 바텀시트 표면
-export const PANEL_L2  = '#3470A6'; // L2 — 시트 내부 중첩 요소
+export const NAVY      = '#1D5A86'; // 다크 BG — 기존 네이비보다 맑고 가벼운 페이지 배경
+export const NAVY_DARK = '#276A96'; // 다크 Surface
+export const PANEL     = '#2B719D'; // 다크 Elevated — 기본 카드 패널
+export const PANEL_L1  = '#3D87B5'; // L1 — 바텀시트 표면
+export const PANEL_L2  = '#55A0CA'; // L2 — 시트 내부 중첩 요소
 export const GOLD      = '#F4B63F'; // Warm Sun — 브랜드 대표색보다 햇빛/강조 의미색으로 축소
 export const SKY       = '#4AA3DF';
-export const SKY_LITE  = '#A6CEF2'; // PANEL/PANEL_L2 위 소형 라벨 AA(4.5:1) 통과용 틴트
+export const SKY_LITE  = '#DFF5FF'; // PANEL/PANEL_L2 위 소형 라벨 AA(4.5:1) 통과용 틴트
 export const CLEAR     = '#2FC6A3';
 export const WARM      = '#E8854A';
-export const MIST      = '#B9CBE0';
+export const MIST      = '#E4F2FF';
 
 /* 알파 헬퍼 — INK: 본문/회색 텍스트, MISTL: 푸른 회색 보조 텍스트.
    접근성 메모: PANEL 계열 위 보조 텍스트는 opacity ≥ 0.80 를 기본값으로
    둘 것(소형 텍스트 AA 4.5:1 확보). 0.5~0.65 대는 AA 미달이므로 지양. */
 export const INK   = (a) => `rgba(232,237,246,${a})`;
-export const MISTL = (a) => `rgba(185,203,224,${a})`;
+export const MISTL = (a) => `rgba(228,242,255,${a})`;
 
-export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #2A5D8F 54%, #4AA3DF 120%)`;
+export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #3D87B5 54%, #68B8EA 120%)`;
 export const RADIUS = { card: 20, cardSm: 16, sheet: 28, pill: 16, tab: 24 }; // squircle 근사
 
 /* ── 라이트 모드 토큰 (2026-06-25 보정) ────────────────────────────────

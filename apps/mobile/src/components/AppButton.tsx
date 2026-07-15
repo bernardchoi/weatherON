@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Animated, Easing, Image, type ImageSourcePropType, Pressable, StyleSheet, Text } from "react-native";
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { radius, spacing } from "../theme/tokens";
 
 type AppButtonProps = {
@@ -36,6 +37,7 @@ export function AppButton({ label, onPress, tone = "primary", size = "md", acces
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
+      android_ripple={androidMaterialRipple(theme, tone === "primary" || tone === "warning" ? "primary" : "surface")}
       disabled={disabled}
       onPress={onPress}
       onPressIn={() => animateTo(0.97)}
@@ -45,6 +47,7 @@ export function AppButton({ label, onPress, tone = "primary", size = "md", acces
         style={[
           styles.button,
           size === "sm" ? styles.buttonSm : null,
+          tone === "secondary" ? androidMaterialSurface(theme, "cta") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
         ]}
       >

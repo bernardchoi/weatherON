@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 import type { TemperatureUnit } from "../state/useWeatherOnAppState";
 import { getDisplayLocationName } from "../utils/locationDisplay";
@@ -35,7 +37,7 @@ export function WeatherSummary({
   const theme = useAppTheme();
   const comparison = destinationReady ? getWeatherComparison(originWeather, destinationWeather, temperatureUnit) : getMissingDestinationComparison();
   return (
-    <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }]}>
+    <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }, androidMaterialSurface(theme, "weather"), iosGlassSurface(theme, "weather")]}>
       <View style={styles.header}>
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>{destinationReady ? "현재 위치와 목적지" : "현재 위치 예보"}</Text>
@@ -54,6 +56,7 @@ export function WeatherSummary({
         <Pressable
           accessibilityLabel="날씨 새로고침"
           accessibilityRole="button"
+          android_ripple={androidMaterialRipple(theme)}
           disabled={loading}
           onPress={onRefresh}
           style={[styles.refreshButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }, loading ? styles.disabled : null]}
@@ -82,6 +85,7 @@ function DestinationEmptyMiniCard({ onPress }: { onPress: () => void }) {
     <Pressable
       accessibilityLabel="목적지 추가하기"
       accessibilityRole="button"
+      android_ripple={androidMaterialRipple(theme)}
       onPress={onPress}
       style={[styles.miniCard, styles.emptyMiniCard, { backgroundColor: theme.cardMuted, borderColor: theme.gold }]}
     >
