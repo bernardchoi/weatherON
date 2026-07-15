@@ -1,0 +1,196 @@
+{
+  "name": "Project Wind / Perfora Air Experimental Add-on",
+  "version": "1.1.0-experimental",
+  "status": "experimental-add-on",
+  "date": "2026-07-15",
+  "stableDependency": "../perfora_air_v1_0_package/release-manifest.v1.0.json",
+  "currentWeatherOnUiReplacement": false,
+  "publicNameStatus": "internal-codename-only; external candidates require formal clearance",
+  "promotedFrom": "perfora_air_v0_2_download_fallback/full_package",
+  "entrypoints": {
+    "index": "docs/00_perfora_air_v1_1_experimental_index.md",
+    "dataMap": "data/perfora-air.experimental-data-map.v1.1.json",
+    "dataMapTypes": "data/perfora-air.experimental-data-map.v1.1.ts",
+    "components": "data/perfora-air.experimental-components.v1.1.json",
+    "componentTypes": "data/perfora-air.experimental-component-types.v1.1.ts",
+    "componentCss": "data/perfora-air.experimental-components.v1.1.css",
+    "weatherOnScope": "docs/06_weatheron_adoption_scope.md",
+    "usabilityScorecard": "tests/perfora-air.experimental-usability.scorecard.v1.1.json",
+    "reactStarter": "implementation/react/src/index.ts",
+    "swiftuiStarter": "implementation/swiftui/PerforaAirComponents.swift"
+  },
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "585b40baefd6a905a5921dc1c785d5c7704b8dc6ce443d80cabb2a114ac0db42"
+    },
+    {
+      "path": "QUALITY_GATES.md",
+      "sha256": "5fa0e25cd589b7fb167a80d919f36222bc7f2387a6c8af7c2a6e0c486cda4589"
+    },
+    {
+      "path": "README.md",
+      "sha256": "6974e079663e3716465a6cb2aca6af74d67f6f4936a5ee8d06e07a05b090c29a"
+    },
+    {
+      "path": "data/perfora-air.experimental-brand-candidates.v1.1.json",
+      "sha256": "eeff1945d2d550056682f648138756cb2672eb929cc1e605cb4195543272f696"
+    },
+    {
+      "path": "data/perfora-air.experimental-component-types.v1.1.ts",
+      "sha256": "21fac247bae9a1731a15f7d7fafb5bf4e92cae99989ba2266039b5a18451b29e"
+    },
+    {
+      "path": "data/perfora-air.experimental-components.v1.1.css",
+      "sha256": "2fc9094cbe6934924b5dbbe90ec7ab0a06be9d9febe1fd4dfbcf3d535ada7429"
+    },
+    {
+      "path": "data/perfora-air.experimental-components.v1.1.json",
+      "sha256": "522b00ef1ff3d98c1d7cf948b1e2458650d98ec42f36abb2863f464b0d34b4b0"
+    },
+    {
+      "path": "data/perfora-air.experimental-data-map.v1.1.json",
+      "sha256": "d79dc6c5ac6e4472c1cbfbcf11e949d8228eed2efec523ad4cb63afb47f0ed68"
+    },
+    {
+      "path": "data/perfora-air.experimental-data-map.v1.1.ts",
+      "sha256": "e061ed429088a40e260fec17af8b623252d880c5ff8332401522c94d381e6b74"
+    },
+    {
+      "path": "docs/00_perfora_air_v1_1_experimental_index.md",
+      "sha256": "9984b9e078e5d0d9f133529d4494e22b678ba2be1828671f85fadf4a6b9377be"
+    },
+    {
+      "path": "docs/01_experimental_direction_brief.md",
+      "sha256": "5fb338d480b7758b06a11b9617844ba367453e77459781997a3447c6d8049973"
+    },
+    {
+      "path": "docs/02_experimental_data_to_atmosphere_mapping.md",
+      "sha256": "d979c5b55bdc18297a9b27b75f54156b0e9f1e513195b856d29318871e40f450"
+    },
+    {
+      "path": "docs/03_experimental_components.md",
+      "sha256": "ac5da46043e63e640bb0cbc524eb4af30ce2f2c9467685cfb968b92111b0b323"
+    },
+    {
+      "path": "docs/04_experimental_figma_design_kit.md",
+      "sha256": "6716d918ab0e38f3f4d789fc49a808b03d97d15254a266e30c0792367acd9e13"
+    },
+    {
+      "path": "docs/05_usability_test_plan.md",
+      "sha256": "962814bee39866bbbce81daa7131c057e6be652388df0615c4fc6c93b2c623f6"
+    },
+    {
+      "path": "docs/06_weatheron_adoption_scope.md",
+      "sha256": "af6d10ff700969b461d383a1e738e02c9caf22f2a3ba6391ec398ff6da483bc8"
+    },
+    {
+      "path": "docs/07_implementation_package.md",
+      "sha256": "ddb72a0cc7151244421c21180972e47d70b659f72146373ad2ac4b551ac2641c"
+    },
+    {
+      "path": "docs/08_brand_trademark_reexploration.md",
+      "sha256": "7b088eb14cbe1f8af7503f9a7865c125901b102ff7fedfd1b7bf2c2807dd5c8e"
+    },
+    {
+      "path": "docs/09_static_validation_report.md",
+      "sha256": "593cabf25c7a2542c11c67486dbe26796b004eb42d14de000bddeb3e764d104a"
+    },
+    {
+      "path": "figma/perfora-air.experimental-figma.component-matrix.v1.1.json",
+      "sha256": "108916e038beafc054f45bf3c38a18a6b0b73b0450f34b84e8e5ef2690b575fb"
+    },
+    {
+      "path": "figma/perfora-air.experimental-figma.preview.v1.1.svg",
+      "sha256": "c6cc8a407287567f5f80a46b1aa5e14c05f4e1fef151468d0ba27b69a6180a2c"
+    },
+    {
+      "path": "figma/perfora-air.experimental-figma.variables.v1.1.json",
+      "sha256": "c5600ec7060f82cf0105cd3ea5937219b3af652de8c7eeeb99c0ea22b40fbde2"
+    },
+    {
+      "path": "implementation/react/README.md",
+      "sha256": "2a610c1fbd47c67a4c5af5f483f713a02e3b4f0ddee8eed79b9f7441316f2dd6"
+    },
+    {
+      "path": "implementation/react/package.json",
+      "sha256": "56476aae7556c5fa9b3562ad5d68297357b01429987c0fac5b610fd7088ac084"
+    },
+    {
+      "path": "implementation/react/src/AmbientTimeline.tsx",
+      "sha256": "d9608ec8b38d3402a34672e47b3bdc6f277888796a11e2a61b9f8bd16ee42d67"
+    },
+    {
+      "path": "implementation/react/src/AtmospherePanel.tsx",
+      "sha256": "28a148027c47105b28cf58e4649af7b52c2df3709e6602c54b974b141124801c"
+    },
+    {
+      "path": "implementation/react/src/LumenRing.tsx",
+      "sha256": "6f5b20e11a955bf6571cf64eddcb459bcdf11a15b4d39044501883ceb25eff80"
+    },
+    {
+      "path": "implementation/react/src/SignalCard.tsx",
+      "sha256": "eca136e8bddff8b180937d08a4374c1b21687cbc0d328040b4980f38092df597"
+    },
+    {
+      "path": "implementation/react/src/dataMap.ts",
+      "sha256": "e061ed429088a40e260fec17af8b623252d880c5ff8332401522c94d381e6b74"
+    },
+    {
+      "path": "implementation/react/src/index.ts",
+      "sha256": "4f1ab0ef2c842225f1d80415ea2f56a1ff12a551bd7db6f92e10fa7df4921ec1"
+    },
+    {
+      "path": "implementation/react/src/perfora-air-react.css",
+      "sha256": "b76cda59adb30a65f3ad8391eae9ee25f7d9b242f271545093fac75b382de596"
+    },
+    {
+      "path": "implementation/react/src/types.ts",
+      "sha256": "eb8ebd827d9812a098a5fe1bfa046d849cb1855deaed94c2ee5398979aa62fa9"
+    },
+    {
+      "path": "implementation/react/src/visualSummary.ts",
+      "sha256": "1fd810a4e5e53fb6f45878e2943a5f994d141f1b59da39a979ac2b8770842e93"
+    },
+    {
+      "path": "implementation/swiftui/PerforaAirComponents.swift",
+      "sha256": "1cca82c853a8904d3c889fc13c8807ad3b72f7d9b28a01c4e87b54fb0aa82fb9"
+    },
+    {
+      "path": "implementation/swiftui/README.md",
+      "sha256": "4974a646a8ddb2e585310cafef6bc27d31072832f79d5569355ef5e887fc690d"
+    },
+    {
+      "path": "perfora_air_v1_1_experimental_all_docs.md",
+      "sha256": "86fbe101e3683f1c077f2082ee1504b0c562f035fb366605d44c2e7baf8d6e93"
+    },
+    {
+      "path": "reference_v1_0/QUALITY_GATES.md",
+      "sha256": "12782297845b987296f52c3d9ccbec25e8456b9b9977aa8ecae9319b9098a246"
+    },
+    {
+      "path": "reference_v1_0/README.md",
+      "sha256": "549c72d1cd474899569cd06749cd20e179bae2b1f6ae55c808fb5ee7b9a968d8"
+    },
+    {
+      "path": "reference_v1_0/perfora-air.components.schema.v1.0.json",
+      "sha256": "9fbe68b999861795d854bc3ea9fd8607f0829aa9f6fbdd07bdef436fe4db7033"
+    },
+    {
+      "path": "reference_v1_0/perfora-air.components.v1.0.json",
+      "sha256": "818176e9103b8f35de5a54a8f4184885803db7a99c120109963d619c7fec7007"
+    },
+    {
+      "path": "reference_v1_0/perfora-air.tokens.v1.0.json",
+      "sha256": "1059a0df4b18250b2d3863fc92e300de1349d21b4a2d7ba2f47fa05d70c17f4b"
+    },
+    {
+      "path": "reference_v1_0/release-manifest.v1.0.json",
+      "sha256": "67686cdbe8626e9b8fda7004e4fe3fa88b33a538fff814dd0e869221bcc6065a"
+    },
+    {
+      "path": "tests/perfora-air.experimental-usability.scorecard.v1.1.json",
+      "sha256": "6fbb9cd4f98679fda08a7d3b41bcd3cd41d2a744342cc110b37924560b38327b"
+    }
+  ]
+}

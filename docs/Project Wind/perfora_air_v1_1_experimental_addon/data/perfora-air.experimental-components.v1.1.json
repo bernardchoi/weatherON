@@ -1,0 +1,134 @@
+{
+  "$metadata": {
+    "name": "Perfora Air Experimental Components",
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "status": "experimental-add-on",
+    "dependsOn": [
+      "../perfora_air_v1_0_package/perfora-air.tokens.v1.0.json",
+      "../perfora_air_v1_0_package/perfora-air.components.v1.0.json",
+      "perfora-air.experimental-data-map.v1.1.json"
+    ],
+    "stableDependency": "perfora_air_v1_0_package",
+    "promotedFrom": "perfora-air.components.v0.2.json"
+  },
+  "principles": [
+    "Matte Air",
+    "Soft Density",
+    "Quiet Signal",
+    "Text First",
+    "Data Traceability"
+  ],
+  "components": {
+    "AtmospherePanel": {
+      "priority": 1,
+      "role": "Primary state summary for weather/home/day context",
+      "requiredProps": [
+        "title",
+        "state",
+        "metrics",
+        "recommendation",
+        "accessibleSummary"
+      ],
+      "optionalProps": [
+        "mode",
+        "density",
+        "lumen",
+        "flow",
+        "actions",
+        "trend",
+        "rawData"
+      ],
+      "states": [
+        "calm",
+        "normal",
+        "live",
+        "alert",
+        "critical",
+        "loading",
+        "insufficientData",
+        "offline"
+      ],
+      "a11y": [
+        "role=region",
+        "aria-labelledby",
+        "aria-describedby",
+        "visual summary text",
+        "text-first alert"
+      ]
+    },
+    "SignalCard": {
+      "priority": 2,
+      "role": "Single metric, device, schedule, or alert summary",
+      "requiredProps": [
+        "label",
+        "value",
+        "state"
+      ],
+      "optionalProps": [
+        "unit",
+        "caption",
+        "trend",
+        "action",
+        "meter",
+        "accessibleDescription"
+      ],
+      "states": [
+        "calm",
+        "normal",
+        "live",
+        "alert",
+        "critical",
+        "disabled"
+      ],
+      "a11y": [
+        "state in text",
+        "optional role=meter",
+        "no icon-only alerts"
+      ]
+    },
+    "LumenRing": {
+      "priority": 3,
+      "role": "Directional/progress state visualization",
+      "requiredProps": [
+        "value",
+        "max",
+        "label"
+      ],
+      "optionalProps": [
+        "directionDeg",
+        "state",
+        "description"
+      ],
+      "a11y": [
+        "role=img or meter",
+        "title + description",
+        "raw value exposed"
+      ]
+    },
+    "AmbientTimeline": {
+      "priority": 4,
+      "role": "Temporal density and pressure summary",
+      "requiredProps": [
+        "items",
+        "label"
+      ],
+      "optionalProps": [
+        "peakLabel",
+        "lowLabel",
+        "summary"
+      ],
+      "a11y": [
+        "long trend summary",
+        "individual meters when values matter"
+      ]
+    }
+  },
+  "reviewRules": {
+    "alertRequiresAction": true,
+    "criticalRequiresTextFirst": true,
+    "densityRequiresSourceMetric": true,
+    "motionMaxActiveElementsPerViewport": 2,
+    "minimumTargetSizePx": 44
+  }
+}

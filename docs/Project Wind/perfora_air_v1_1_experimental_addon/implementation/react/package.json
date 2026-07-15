@@ -1,0 +1,12 @@
+{
+  "name": "@perfora-air/experimental-react-starter",
+  "version": "1.1.0-experimental",
+  "private": true,
+  "type": "module",
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

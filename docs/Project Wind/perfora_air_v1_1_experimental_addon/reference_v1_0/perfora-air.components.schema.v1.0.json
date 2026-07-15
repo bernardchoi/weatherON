@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://weatheron.local/project-wind/perfora-air.components.schema.v1.0.json",
+  "title": "Project Wind component contract v1.0",
+  "type": "object",
+  "required": [
+    "$metadata",
+    "shared",
+    "components",
+    "implementationPriority",
+    "qualityGates"
+  ],
+  "properties": {
+    "$metadata": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "status",
+        "tokenDependency"
+      ],
+      "properties": {
+        "version": {
+          "const": "1.0.0"
+        },
+        "status": {
+          "const": "stable"
+        },
+        "tokenDependency": {
+          "const": "perfora-air.tokens.v1.0.json"
+        }
+      },
+      "additionalProperties": true
+    },
+    "components": {
+      "type": "object",
+      "minProperties": 10,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status",
+          "exposure",
+          "layer",
+          "purpose",
+          "a11y"
+        ],
+        "properties": {
+          "status": {
+            "const": "stable"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "shared": {
+      "type": "object"
+    },
+    "implementationPriority": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "string"
+      }
+    },
+    "qualityGates": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

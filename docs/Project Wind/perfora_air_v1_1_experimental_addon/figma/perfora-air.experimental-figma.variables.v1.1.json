@@ -1,0 +1,152 @@
+{
+  "$metadata": {
+    "name": "Perfora Air Figma Design Kit Blueprint",
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "note": "Blueprint for Figma variables/components. This is not a native .fig file; use it to create/import variables and component variants.",
+    "status": "experimental-add-on",
+    "promotedFrom": "perfora-air.figma.variables.v0.1.json"
+  },
+  "collections": [
+    {
+      "name": "PA Color",
+      "modes": [
+        "Day",
+        "Dusk",
+        "Night",
+        "Rainy",
+        "High Contrast"
+      ],
+      "variables": [
+        {
+          "name": "surface/canvas",
+          "type": "color",
+          "day": "#FCFCF9",
+          "dusk": "#FBF4F1",
+          "night": "#121A26",
+          "rainy": "#F2F6F7",
+          "highContrast": "#FFFFFF"
+        },
+        {
+          "name": "surface/panel",
+          "type": "color",
+          "day": "#FFFFFF",
+          "dusk": "#FFF8F3",
+          "night": "#1B2635",
+          "rainy": "#F8FBFB",
+          "highContrast": "#FFFFFF"
+        },
+        {
+          "name": "text/primary",
+          "type": "color",
+          "day": "#162033",
+          "dusk": "#1F2432",
+          "night": "#F4F8FA",
+          "rainy": "#162033",
+          "highContrast": "#000000"
+        },
+        {
+          "name": "signal/notice",
+          "type": "color",
+          "day": "#6D9DE9",
+          "dusk": "#8F7FE8",
+          "night": "#8DB8FF",
+          "rainy": "#618FAF",
+          "highContrast": "#0039A6"
+        },
+        {
+          "name": "signal/alert",
+          "type": "color",
+          "day": "#C26747",
+          "dusk": "#B76960",
+          "night": "#FFB09B",
+          "rainy": "#A6533B",
+          "highContrast": "#B00020"
+        }
+      ]
+    },
+    {
+      "name": "PA Number",
+      "modes": [
+        "Default",
+        "Reduced Motion",
+        "Reduced Transparency",
+        "High Contrast"
+      ],
+      "variables": [
+        {
+          "name": "radius/panel",
+          "type": "number",
+          "default": 28
+        },
+        {
+          "name": "radius/card",
+          "type": "number",
+          "default": 18
+        },
+        {
+          "name": "surface/blur",
+          "type": "number",
+          "default": 8,
+          "reducedTransparency": 0
+        },
+        {
+          "name": "density/opacity",
+          "type": "number",
+          "default": 0.16,
+          "highContrast": 0.08
+        },
+        {
+          "name": "motion/ambientDuration",
+          "type": "number",
+          "default": 7200,
+          "reducedMotion": 0
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "AtmospherePanel",
+      "variants": [
+        "state",
+        "mode",
+        "density",
+        "reducedMotion",
+        "reducedTransparency"
+      ]
+    },
+    {
+      "name": "SignalCard",
+      "variants": [
+        "type",
+        "state",
+        "withAction",
+        "withMeter"
+      ]
+    },
+    {
+      "name": "LumenRing",
+      "variants": [
+        "use",
+        "state",
+        "directional"
+      ]
+    },
+    {
+      "name": "AmbientTimeline",
+      "variants": [
+        "dataType",
+        "density",
+        "withPeakSummary"
+      ]
+    },
+    {
+      "name": "FlowDock",
+      "variants": [
+        "activeTab",
+        "mode"
+      ]
+    }
+  ]
+}

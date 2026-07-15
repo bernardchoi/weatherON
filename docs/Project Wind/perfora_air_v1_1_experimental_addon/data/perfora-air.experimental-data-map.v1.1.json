@@ -1,0 +1,256 @@
+{
+  "$metadata": {
+    "name": "Perfora Air Experimental Data-to-Atmosphere Mapping",
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "status": "experimental-add-on",
+    "purpose": "Translate weather, indoor air, schedule, and notification data into Perfora Air surface, density, lumen, flow, and text states.",
+    "stableDependency": "perfora_air_v1_0_package",
+    "promotedFrom": "perfora-air.data-map.v0.2.json"
+  },
+  "inputs": {
+    "weather": [
+      "temperatureC",
+      "feelsLikeC",
+      "humidityPct",
+      "windSpeedMs",
+      "windDirectionDeg",
+      "precipProbabilityPct",
+      "uvIndex",
+      "aqi",
+      "pm25"
+    ],
+    "homeAir": [
+      "co2ppm",
+      "indoorHumidityPct",
+      "purifierMode",
+      "deviceAlerts",
+      "windowOpen"
+    ],
+    "dayContext": [
+      "eventsNext12h",
+      "focusBlocks",
+      "nextDeadlineHours",
+      "notificationUrgency"
+    ],
+    "userContext": [
+      "reducedMotion",
+      "reducedTransparency",
+      "highContrast",
+      "lowPower"
+    ]
+  },
+  "derivedMetrics": {
+    "airWeight": "humidity + heat + PM2.5 burden; drives veil and recommendation copy",
+    "flowEnergy": "windSpeed and direction clarity; drives flow speed and wind ring emphasis",
+    "airPurityPressure": "AQI/PM2.5/CO2; drives signal urgency",
+    "schedulePressure": "events + deadline proximity + notification urgency; drives timeline density",
+    "actionUrgency": "max of environmental pressure and schedule pressure; drives state"
+  },
+  "thresholds": {
+    "humidityPct": {
+      "calm": [
+        35,
+        60
+      ],
+      "notice": [
+        61,
+        74
+      ],
+      "alert": [
+        75,
+        84
+      ],
+      "critical": [
+        85,
+        100
+      ]
+    },
+    "windSpeedMs": {
+      "still": [
+        0,
+        1.4
+      ],
+      "slow": [
+        1.5,
+        4.9
+      ],
+      "medium": [
+        5,
+        8.9
+      ],
+      "gust": [
+        9,
+        99
+      ]
+    },
+    "aqi": {
+      "calm": [
+        0,
+        30
+      ],
+      "normal": [
+        31,
+        50
+      ],
+      "alert": [
+        51,
+        100
+      ],
+      "critical": [
+        101,
+        999
+      ]
+    },
+    "pm25": {
+      "calm": [
+        0,
+        15
+      ],
+      "normal": [
+        16,
+        35
+      ],
+      "alert": [
+        36,
+        75
+      ],
+      "critical": [
+        76,
+        999
+      ]
+    },
+    "co2ppm": {
+      "calm": [
+        0,
+        799
+      ],
+      "normal": [
+        800,
+        999
+      ],
+      "alert": [
+        1000,
+        1499
+      ],
+      "critical": [
+        1500,
+        9999
+      ]
+    },
+    "eventsNext12h": {
+      "calm": [
+        0,
+        2
+      ],
+      "normal": [
+        3,
+        4
+      ],
+      "alert": [
+        5,
+        7
+      ],
+      "critical": [
+        8,
+        99
+      ]
+    },
+    "nextDeadlineHours": {
+      "calm": [
+        24,
+        999
+      ],
+      "normal": [
+        8,
+        24
+      ],
+      "alert": [
+        2,
+        8
+      ],
+      "critical": [
+        0,
+        2
+      ]
+    }
+  },
+  "stateMapping": {
+    "calm": {
+      "surface": "still",
+      "density": "calm",
+      "lumen": "whisper",
+      "flow": "still",
+      "copyTone": "reassuring"
+    },
+    "normal": {
+      "surface": "air",
+      "density": "normal",
+      "lumen": "soft",
+      "flow": "drift",
+      "copyTone": "informative"
+    },
+    "live": {
+      "surface": "air",
+      "density": "live",
+      "lumen": "notice",
+      "flow": "slow",
+      "copyTone": "observational"
+    },
+    "alert": {
+      "surface": "signal",
+      "density": "alert",
+      "lumen": "alert",
+      "flow": "gust",
+      "copyTone": "actionable",
+      "requiresText": true
+    },
+    "critical": {
+      "surface": "signal",
+      "density": "critical",
+      "lumen": "critical",
+      "flow": "gust",
+      "copyTone": "direct",
+      "requiresText": true,
+      "textFirst": true
+    }
+  },
+  "recommendationPriority": [
+    {
+      "condition": "co2ppm >= 1000",
+      "action": "ventilate",
+      "copy": "10분 환기를 먼저 권장합니다."
+    },
+    {
+      "condition": "indoorHumidityPct >= 75",
+      "action": "dehumidify",
+      "copy": "제습을 먼저 켜는 편이 좋습니다."
+    },
+    {
+      "condition": "pm25 >= 36 or aqi >= 51",
+      "action": "purify",
+      "copy": "공기청정 모드를 높여 주세요."
+    },
+    {
+      "condition": "eventsNext12h >= 5",
+      "action": "focus_plan",
+      "copy": "집중 시간을 먼저 확보하세요."
+    },
+    {
+      "condition": "otherwise",
+      "action": "maintain",
+      "copy": "현재 상태를 유지해도 좋습니다."
+    }
+  ],
+  "accessibility": {
+    "visualOnlyForbidden": true,
+    "summaryOrder": [
+      "state",
+      "key numbers",
+      "trend",
+      "action"
+    ],
+    "patternsAriaHidden": true,
+    "alertTextRequired": true
+  }
+}

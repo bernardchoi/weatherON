@@ -31,6 +31,7 @@
     "build:flowchart": "mmdc -i docs/wireframes/UIUX_플로우차트.mmd -o docs/wireframes/UIUX_플로우차트_개요.svg -b transparent --puppeteerConfigFile scripts/mermaid-puppeteer-config.json",
     "check:shared": "node scripts/check-shared-rules.mjs",
     "check:project-wind-v1": "node scripts/check-project-wind-v1.mjs",
+    "check:project-wind-v1-1-addon": "node scripts/check-project-wind-v1-1-addon.mjs",
     "check:weather-live": "node scripts/check-weather-live.mjs",
     "check:weather-proxy": "node scripts/check-weather-proxy.mjs",
     "check:weather-proxy-cache": "node scripts/check-weather-proxy-cache.mjs",

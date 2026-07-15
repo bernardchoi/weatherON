@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "name": "Perfora Air Usability Test Scorecard",
+    "version": "0.1",
+    "date": "2026-07-13"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "name": "Morning readiness",
+      "successMetric": "Correctly judges whether it is comfortable to go outside within 8 seconds",
+      "targetAccuracy": 0.8
+    },
+    {
+      "id": "T2",
+      "name": "Air decision",
+      "successMetric": "Chooses ventilate/dehumidify/purify as intended",
+      "targetAccuracy": 0.8
+    },
+    {
+      "id": "T3",
+      "name": "Day pressure",
+      "successMetric": "Identifies peak pressure time block",
+      "targetAccuracy": 0.75
+    },
+    {
+      "id": "T4",
+      "name": "Alert comprehension",
+      "successMetric": "Understands alert reason and next action",
+      "targetAccuracy": 0.85
+    },
+    {
+      "id": "T5",
+      "name": "Reduced mode parity",
+      "successMetric": "Makes the same decision in reduced motion/transparency",
+      "targetAccuracy": 0.8
+    },
+    {
+      "id": "T6",
+      "name": "Differentiation",
+      "successMetric": "Describes the system as context/atmosphere/density based, not glassy or generic",
+      "targetAccuracy": 0.65
+    }
+  ],
+  "ratings": [
+    "confidence_1_to_5",
+    "visual_fatigue_1_to_5",
+    "perceived_calm_1_to_5",
+    "perceived_clarity_1_to_5"
+  ],
+  "$metadata": {
+    "name": "Perfora Air Experimental Usability Scorecard",
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "status": "experimental-test-template",
+    "promotedFrom": "perfora-air.usability.scorecard.v0.1.json"
+  }
+}

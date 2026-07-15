@@ -1,0 +1,82 @@
+{
+  "date": "2026-07-13",
+  "candidates": [
+    {
+      "name": "Poravela",
+      "logic": "pore + vela/veil; porous surface with light air",
+      "screening": "No strong software/UI collision surfaced in broad web search snapshot; official DB search still required.",
+      "risk": "Medium-low",
+      "fit": 4.5
+    },
+    {
+      "name": "Aervel",
+      "logic": "air + veil; short, system-like",
+      "screening": "Search snapshot showed noisy historical OCR results, not clear software conflict; official DB search required.",
+      "risk": "Medium-low",
+      "fit": 4.2
+    },
+    {
+      "name": "Luvaira",
+      "logic": "lumen + air; soft and premium",
+      "screening": "Search snapshot showed literary/geographic references rather than software; official DB search required.",
+      "risk": "Medium-low",
+      "fit": 3.9
+    },
+    {
+      "name": "AerVeil",
+      "logic": "air veil; very descriptive of the surface layer",
+      "screening": "Conceptually strong but descriptive; may be weaker as registrable master mark.",
+      "risk": "Medium",
+      "fit": 4
+    },
+    {
+      "name": "Perfora Air",
+      "logic": "perforated surface + air",
+      "screening": "Conceptually strongest but prior Perfora use makes it better as internal system name for now.",
+      "risk": "Medium-high",
+      "fit": 5
+    },
+    {
+      "name": "Poralux",
+      "logic": "pore + lux; light through pores",
+      "screening": "Prior Poralux lighting/industrial references exist; not ideal as final mark without formal clearance.",
+      "risk": "Medium-high",
+      "fit": 4
+    },
+    {
+      "name": "Veyra",
+      "logic": "short invented-sounding name",
+      "screening": "Search found software/services trademark signals; avoid.",
+      "risk": "High",
+      "fit": 2.4
+    },
+    {
+      "name": "Aivora",
+      "logic": "AI/air-like invented name",
+      "screening": "Search found AIVORA TEC software services filing signal; avoid for this project.",
+      "risk": "High",
+      "fit": 2.2
+    },
+    {
+      "name": "Aevora",
+      "logic": "atmospheric invented name",
+      "screening": "Search found existing Aevora entities/trademark-like uses; avoid.",
+      "risk": "High",
+      "fit": 2.4
+    },
+    {
+      "name": "Aerium",
+      "logic": "air/space; elegant",
+      "screening": "Search found Aerium avionics/technology brand; avoid.",
+      "risk": "High",
+      "fit": 2
+    }
+  ],
+  "$metadata": {
+    "name": "Perfora Air Experimental Brand Candidates",
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "status": "preliminary-screen-not-legal-advice",
+    "promotedFrom": "perfora-air.brand-candidates.v0.2.json"
+  }
+}

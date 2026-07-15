@@ -1,0 +1,83 @@
+{
+  "AtmospherePanel": {
+    "variantDimensions": {
+      "state": [
+        "calm",
+        "normal",
+        "live",
+        "alert",
+        "critical",
+        "loading",
+        "insufficientData",
+        "offline"
+      ],
+      "mode": [
+        "day",
+        "dusk",
+        "night",
+        "rainy"
+      ],
+      "textFirst": [
+        false,
+        true
+      ]
+    },
+    "requiredA11y": [
+      "aria/described summary",
+      "raw metrics",
+      "visible action in alert"
+    ]
+  },
+  "SignalCard": {
+    "variantDimensions": {
+      "type": [
+        "metric",
+        "device",
+        "schedule",
+        "alert",
+        "insight"
+      ],
+      "state": [
+        "calm",
+        "normal",
+        "live",
+        "alert",
+        "critical"
+      ],
+      "withAction": [
+        false,
+        true
+      ]
+    },
+    "requiredA11y": [
+      "state text",
+      "optional meter",
+      "no icon-only alert"
+    ]
+  },
+  "LumenRing": {
+    "variantDimensions": {
+      "use": [
+        "wind",
+        "progress",
+        "cycle",
+        "focus"
+      ],
+      "directional": [
+        false,
+        true
+      ]
+    },
+    "requiredA11y": [
+      "title",
+      "description",
+      "raw value"
+    ]
+  },
+  "$metadata": {
+    "version": "1.1.0-experimental",
+    "date": "2026-07-15",
+    "status": "experimental-add-on",
+    "promotedFrom": "perfora-air.figma.component-matrix.v0.1.json"
+  }
+}
