@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
@@ -17,9 +17,17 @@ const benefits = [
   { icon: uiIconAssets.settings, title: "코디 탭에서 내 기준 조정" },
 ];
 
-export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding }: P0ScreenProps) {
+export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onRequestCurrentLocation, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
   const outfitItems = Object.values(state.outfit.items).filter(Boolean);
+  const [locationRequestHandled, setLocationRequestHandled] = useState(false);
+  const locationSetupComplete = locationReady || locationRequestHandled;
+  const locationSkipped = locationRequestHandled && !locationReady;
+
+  const requestCurrentLocation = async () => {
+    await onRequestCurrentLocation();
+    setLocationRequestHandled(true);
+  };
 
   return (
     <AppScreen
@@ -28,12 +36,16 @@ export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding
       badge="2 / 4"
       footer={
         <OnboardingFooter
-          primaryLabel="다음"
-          primaryAccessibilityLabel="알림 안내 단계로 이동"
-          onPrimary={() => onNavigate("O5")}
-          secondaryLabel="건너뛰기"
-          secondaryAccessibilityLabel="온보딩을 건너뛰고 홈으로 이동"
-          onSecondary={() => onCompleteOnboarding("H1")}
+          primaryLabel={locationSetupComplete ? "다음" : "현재 위치 사용"}
+          primaryAccessibilityLabel={locationSetupComplete ? "알림 안내 단계로 이동" : "현재 위치 권한 요청"}
+          onPrimary={() => (locationSetupComplete ? onNavigate("O5") : void requestCurrentLocation())}
+          secondaryLabel={locationSetupComplete ? "건너뛰기" : "나중에"}
+          secondaryAccessibilityLabel={
+            locationSetupComplete
+              ? "온보딩을 건너뛰고 홈으로 이동"
+              : "위치 권한을 나중에 설정하고 알림 안내 단계로 이동"
+          }
+          onSecondary={() => (locationSetupComplete ? onCompleteOnboarding("H1") : onNavigate("O5"))}
         />
       }
     >
@@ -57,6 +69,17 @@ export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 대비" : "강수 없음"} tone="sky" />
           <StatusPill label={`${outfitItems.length}개 아이템`} tone="gold" />
         </View>
+      </View>
+
+      <View style={[styles.locationPrompt, { backgroundColor: theme.cardStrong, borderColor: locationReady ? theme.clear : theme.border }, cardShadow(theme)]}>
+        <View style={[styles.locationIconFrame, { backgroundColor: `${theme.sky}22` }]}>
+          <Image source={uiIconAssets.pin} style={[styles.locationIcon, { tintColor: theme.sky }]} resizeMode="contain" />
+        </View>
+        <View style={styles.copy}>
+          <Text style={[styles.locationTitle, { color: theme.text }]}>{locationReady ? "현재 위치 기준 추천 준비됨" : locationSkipped ? "지역은 나중에 선택 가능" : "현재 위치로 더 정확하게 추천"}</Text>
+          <Text style={[styles.locationBody, { color: theme.muted }]}>{locationReady ? "기온과 강수 변화가 오늘 추천에 반영됨" : locationSkipped ? "홈에서 지역을 직접 선택할 수 있음" : "현재 날씨를 반영해 코디와 준비물을 추천함"}</Text>
+        </View>
+        <StatusPill label={locationReady ? "사용 중" : locationSkipped ? "보류" : "선택"} tone={locationReady ? "clear" : locationSkipped ? "gold" : "sky"} />
       </View>
 
       <Section title="코디 추천" accent="clear">
@@ -92,6 +115,36 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  locationPrompt: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  locationIconFrame: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  locationIcon: {
+    width: 23,
+    height: 23,
+  },
+  locationTitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  locationBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
   },
   previewHeader: {
     flexDirection: "row",

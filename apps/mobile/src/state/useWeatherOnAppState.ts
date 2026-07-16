@@ -687,6 +687,12 @@ export function useWeatherOnAppState() {
     await applyCurrentLocationWeather("위치 권한 및 현재 위치 확인 중");
   }, [applyCurrentLocationWeather]);
 
+  const requestOnboardingNotificationPermission = useCallback(async () => {
+    const result = await requestLocalNotificationPermission();
+    setPermissionReady(result.granted);
+    return result.granted;
+  }, []);
+
   useEffect(() => {
     if (!appStateHydrated || weatherLocationMode !== "auto") return;
     if (deviceWeatherLocation && deviceWeatherLocation.locationName !== "현재 위치") return;
@@ -1493,6 +1499,7 @@ export function useWeatherOnAppState() {
     setWeatherProviderMode: setWeatherMode,
     setWeatherLocationMode: setLocationMode,
     requestCurrentLocation,
+    requestOnboardingNotificationPermission,
     selectWeatherLocation,
     saveDestination,
     returnFromDestinationAdd,

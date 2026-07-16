@@ -63,7 +63,8 @@ function getButtonIcon(label: string): ImageSourcePropType {
   if (/(우산|비|날씨|제보)/u.test(label)) return uiIconAssets.umbrella;
   if (/(코디|옷|아이템)/u.test(label)) return uiIconAssets.shirt;
   if (/(목적지|장소|위치|도시|핀)/u.test(label)) return uiIconAssets.pin;
-  if (/(알림|출발|계속|다음|돌아가기|복귀|홈으로|닫기)/u.test(label)) return uiIconAssets.depart;
+  if (/알림/u.test(label)) return uiIconAssets.myAlerts;
+  if (/(출발|계속|다음|돌아가기|복귀|홈으로|닫기)/u.test(label)) return uiIconAssets.depart;
   if (/(설정|수정|정책|관리|동의)/u.test(label)) return uiIconAssets.settings;
   return uiIconAssets.check;
 }

@@ -144,6 +144,7 @@ export function AppNavigator() {
     onSetWeatherProviderMode: appState.setWeatherProviderMode,
     onSetWeatherLocationMode: appState.setWeatherLocationMode,
     onRequestCurrentLocation: appState.requestCurrentLocation,
+    onRequestNotificationPermission: appState.requestOnboardingNotificationPermission,
     onSelectWeatherLocation: appState.selectWeatherLocation,
     onSaveDestination: appState.saveDestination,
     onReturnFromDestinationAdd: appState.returnFromDestinationAdd,

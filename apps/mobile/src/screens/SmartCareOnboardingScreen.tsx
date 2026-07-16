@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -18,14 +18,22 @@ const scenarios: { value: SmartCareScenario; title: string; body: string; icon: 
 
 export function SmartCareOnboardingScreen({
   smartCareScenario,
-  permissionGateResult,
+  permissionReady,
   onSetSmartCareScenario,
   onCompleteSmartCareOnboarding,
+  onRequestNotificationPermission,
   onCompleteOnboarding,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
-  const permissionFeedback = getPermissionFeedback(permissionGateResult);
+  const [notificationRequestHandled, setNotificationRequestHandled] = useState(false);
+  const notificationSetupComplete = permissionReady || notificationRequestHandled;
+  const notificationSkipped = notificationRequestHandled && !permissionReady;
+
+  const requestNotificationPermission = async () => {
+    await onRequestNotificationPermission();
+    setNotificationRequestHandled(true);
+  };
   return (
     <AppScreen
       title="필요한 알림만 받기"
@@ -33,28 +41,22 @@ export function SmartCareOnboardingScreen({
       badge="3 / 4"
       footer={
         <OnboardingFooter
-          primaryLabel="다음"
-          primaryAccessibilityLabel="목적지 안내 단계로 이동"
-          onPrimary={onCompleteSmartCareOnboarding}
-          secondaryLabel="건너뛰기"
-          secondaryAccessibilityLabel="알림 설정을 건너뛰고 홈으로 이동"
-          onSecondary={() => onCompleteOnboarding("H1")}
+          primaryLabel={notificationSetupComplete ? "다음" : "알림 켜기"}
+          primaryAccessibilityLabel={notificationSetupComplete ? "목적지 안내 단계로 이동" : "알림 권한 요청"}
+          onPrimary={() => (notificationSetupComplete ? onCompleteSmartCareOnboarding() : void requestNotificationPermission())}
+          secondaryLabel={notificationSetupComplete ? "건너뛰기" : "나중에"}
+          secondaryAccessibilityLabel={
+            notificationSetupComplete
+              ? "알림 설정을 건너뛰고 홈으로 이동"
+              : "알림 권한을 나중에 설정하고 목적지 안내 단계로 이동"
+          }
+          onSecondary={() => (notificationSetupComplete ? onCompleteOnboarding("H1") : onCompleteSmartCareOnboarding())}
         />
       }
     >
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
-
-      {permissionFeedback ? (
-        <View style={[styles.feedbackCard, { backgroundColor: theme.cardStrong, borderColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }, cardShadow(theme)]}>
-          <View style={[styles.feedbackDot, { backgroundColor: permissionFeedback.tone === "clear" ? theme.clear : theme.gold }]} />
-          <View style={styles.copy}>
-            <Text style={[styles.feedbackTitle, { color: theme.text }]}>{permissionFeedback.title}</Text>
-            <Text style={[styles.feedbackBody, { color: theme.muted }]}>{permissionFeedback.body}</Text>
-          </View>
-        </View>
-      ) : null}
 
       <Section title="사용 상황" accent="clear">
         <View style={styles.segmentRow}>
@@ -103,26 +105,19 @@ export function SmartCareOnboardingScreen({
         </View>
       </View>
 
+      <View style={[styles.notificationPrompt, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? theme.clear : theme.border }, cardShadow(theme)]}>
+        <View style={[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }]}>
+          <Image source={uiIconAssets.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+        </View>
+        <View style={styles.copy}>
+          <Text style={[styles.notificationTitle, { color: theme.text }]}>{permissionReady ? "선택한 알림을 받을 준비 완료" : notificationSkipped ? "알림은 나중에 켤 수 있음" : "비와 출발 시점을 알려드려요"}</Text>
+          <Text style={[styles.notificationBody, { color: theme.muted }]}>{permissionReady ? "중요한 변화만 한 번씩 안내함" : notificationSkipped ? "알림 설정에서 언제든 변경 가능" : "선택한 상황에 맞춰 필요한 알림만 전달함"}</Text>
+        </View>
+        <Text style={[styles.notificationStatus, { color: permissionReady ? theme.clear : notificationSkipped ? theme.gold : theme.sky }]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
+      </View>
+
     </AppScreen>
   );
-}
-
-function getPermissionFeedback(permissionGateResult: P0ScreenProps["permissionGateResult"]): { title: string; body: string; tone: "clear" | "gold" } | null {
-  if (!permissionGateResult || permissionGateResult.returnTo !== "H1") return null;
-  if (permissionGateResult.reason !== "location") return null;
-  const skipped = permissionGateResult.message.includes("나중에");
-  if (skipped) {
-    return {
-      title: "위치 권한은 나중에 설정",
-      body: "기본 위치 기준으로 홈 판단을 먼저 보여줌",
-      tone: "gold",
-    };
-  }
-  return {
-    title: "현재 위치 기준 홈 반영됨",
-    body: "홈 날씨와 출발 판단이 현재 위치 기준으로 갱신됨",
-    tone: "clear",
-  };
 }
 
 const styles = StyleSheet.create({
@@ -134,30 +129,6 @@ const styles = StyleSheet.create({
   progressFill: {
     width: "75%",
     height: "100%",
-  },
-  feedbackCard: {
-    minHeight: 58,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  feedbackDot: {
-    width: 9,
-    height: 9,
-    borderRadius: radius.pill,
-  },
-  feedbackTitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "900",
-  },
-  feedbackBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "700",
   },
   segmentRow: {
     flexDirection: "row",
@@ -245,6 +216,41 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   autoPillText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  notificationPrompt: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  notificationIconFrame: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  notificationIcon: {
+    width: 23,
+    height: 23,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  notificationBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  notificationStatus: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
