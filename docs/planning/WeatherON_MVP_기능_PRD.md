@@ -200,7 +200,7 @@ G1/G2/P1/P2/P3가 공유한다.
 type DestinationCare = {
   destinationId: string;
   name: string;
-  category: "work" | "school" | "airport" | "hotel" | "sports" | "mountain" | "beach" | "custom";
+  category: "work" | "school" | "airport" | "hotel" | "sports" | "mountain" | "beach" | "residential" | "transit" | "medical" | "culture" | "religious" | "shopping" | "leisure" | "dining" | "custom";
   originWeather: WeatherSnapshot;
   destinationWeather: WeatherSnapshot;
   departureAdvice?: {

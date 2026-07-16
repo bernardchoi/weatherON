@@ -1,17 +1,17 @@
 import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { placeImageAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
+import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatTemperature } from "../utils/units";
 
 export function DestinationGuideScreen({ state, selectedDestinationPlace, destinationCareEnabled, temperatureUnit, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
-  const placeImage = getPlaceImage(selectedDestinationPlace.category);
+  const placeImage = getDestinationImageAsset(selectedDestinationPlace);
   const placeName = selectedDestinationPlace.name;
   const categoryLabel = getCategoryLabel(selectedDestinationPlace.category);
   const guide = getGuideCopy(selectedDestinationPlace.category);
@@ -173,6 +173,15 @@ function getGuideCopy(category: string) {
       recommendation: "래시가드 + 선캡 + 방수 샌들",
     };
   }
+  if (category === "residential") {
+    return {
+      title: "오늘 주거지 준비 가이드 · 목적지 기준",
+      risk: "날씨 리스크 낮음",
+      mode: "생활 이동 준비",
+      condition: "목적지 날씨와 이동 시간을 함께 확인",
+      recommendation: "가벼운 겉옷 + 편한 신발 + 우산",
+    };
+  }
   return {
     title: "오늘 장소 준비 가이드 · 목적지 기준",
     risk: "날씨 리스크 낮음",
@@ -214,15 +223,15 @@ function getCategoryLabel(category: string) {
   if (category === "airport") return "공항";
   if (category === "hotel") return "숙소";
   if (category === "beach") return "해변";
+  if (category === "residential") return "주거지";
+  if (category === "transit") return "교통";
+  if (category === "medical") return "의료";
+  if (category === "culture") return "문화";
+  if (category === "religious") return "종교시설";
+  if (category === "shopping") return "쇼핑";
+  if (category === "leisure") return "여가";
+  if (category === "dining") return "식음";
   return "목적지";
-}
-
-function getPlaceImage(category: string) {
-  if (category === "sports") return placeImageAssets.baseball;
-  if (category === "mountain") return placeImageAssets.mountain;
-  if (category === "airport") return placeImageAssets.airport;
-  if (category === "hotel") return placeImageAssets.hotel;
-  return placeImageAssets.beach;
 }
 
 function CategoryBadge({ color }: { color: string }) {

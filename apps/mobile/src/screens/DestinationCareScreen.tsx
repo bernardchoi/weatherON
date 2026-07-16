@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { destinationFallbackImageAsset, destinationImageAssets, destinationVisualAssets, placeImageAssets, uiIconAssets } from "../assets";
+import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
-import { getDestinationVisualKind, getDestinationVisualRegion, getKnownDestinationAssetId } from "../utils/destination-visual-resolver";
+import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 export function DestinationCareScreen({
@@ -65,7 +65,7 @@ export function DestinationCareScreen({
   const destinationSaved = Boolean(selectedDestinationPlace);
   const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;
   const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode);
-  const destinationImage = getDestinationImage(selectedDestinationPlace);
+  const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
 
   useEffect(() => {
     if (transportMode === "walk" && walkUnavailable) onSetDestinationTransportMode("auto");
@@ -833,23 +833,6 @@ function getCareCtaLabel(permissionReady: boolean, destinationCareEnabled: boole
   if (destinationCareEnabled) return "목적지 케어 끄기";
   if (!permissionReady) return "알림 권한 켜고 케어 시작";
   return "목적지 케어 켜기";
-}
-
-function getDestinationImage(place: P0ScreenProps["selectedDestinationPlace"]) {
-  const exactAsset = destinationImageAssets[place.id];
-  if (exactAsset) return exactAsset;
-  const knownPlaceAssetId = getKnownDestinationAssetId(place);
-  if (knownPlaceAssetId) return destinationImageAssets[knownPlaceAssetId];
-  const visualKind = getDestinationVisualKind(place);
-  const region = getDestinationVisualRegion(place.countryCode);
-  const regionalAsset = destinationVisualAssets[`${region}:${visualKind}`];
-  if (regionalAsset) return regionalAsset;
-  if (place.category === "beach") return placeImageAssets.beach;
-  if (place.category === "sports") return placeImageAssets.baseball;
-  if (place.category === "mountain") return placeImageAssets.mountain;
-  if (place.category === "airport") return placeImageAssets.airport;
-  if (place.category === "hotel") return placeImageAssets.hotel;
-  return destinationFallbackImageAsset;
 }
 
 const styles = StyleSheet.create({

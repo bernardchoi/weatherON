@@ -41,6 +41,7 @@ import {
 import { getRouteLabel } from "../navigation/routeLabels";
 import { getMinutesUntilTimeInZone } from "../utils/zonedDateTime";
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
+import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 
 export type { DestinationTransportMode };
 export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -1039,10 +1040,11 @@ export function useWeatherOnAppState() {
   }, [deviceWeatherLocation, manualWeatherLocation, weatherLocationMode]);
 
   const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
-    if (selectedDestinationPlaceIdRef.current === place.id) return;
-    selectedDestinationPlaceIdRef.current = place.id;
-    setSelectedDestinationPlace(place);
-    setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(place));
+    const normalizedPlace = normalizePlaceSearchResultCategory(place);
+    if (selectedDestinationPlaceIdRef.current === normalizedPlace.id) return;
+    selectedDestinationPlaceIdRef.current = normalizedPlace.id;
+    setSelectedDestinationPlace(normalizedPlace);
+    setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(normalizedPlace));
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(true);
     setDestinationHubFilterState("all");
@@ -1966,7 +1968,7 @@ function normalizeSelectedDestinationPlace(
   fallbackPlace: PlaceSearchResult,
 ): PlaceSearchResult {
   if (!isPlaceSearchResult(value)) return fallbackPlace;
-  if (savedDestinations.length === 0) return value;
+  if (savedDestinations.length === 0) return normalizePlaceSearchResultCategory(value);
   return savedDestinations.find((destination) => destination.place.id === value.id)?.place ?? fallbackPlace;
 }
 
@@ -2140,12 +2142,13 @@ function normalizeSavedDestination(value: unknown): SavedDestination | null {
   if (!value || typeof value !== "object") return null;
   const record = value as Partial<SavedDestination>;
   if (!isPlaceSearchResult(record.place) || typeof record.careEnabled !== "boolean" || !isDestinationAlertCondition(record.alertCondition)) return null;
+  const place = normalizePlaceSearchResultCategory(record.place);
   return {
-    place: record.place,
+    place,
     careEnabled: record.careEnabled,
     alertCondition: normalizeDestinationAlertCondition(record.alertCondition),
-    schedulePreference: normalizeDestinationSchedulePreference(record.schedulePreference, record.place),
-    travelEstimate: normalizeDestinationTravelEstimate(record.travelEstimate, defaultSeoulWeatherLocation, record.place),
+    schedulePreference: normalizeDestinationSchedulePreference(record.schedulePreference, place),
+    travelEstimate: normalizeDestinationTravelEstimate(record.travelEstimate, defaultSeoulWeatherLocation, place),
     savedAtLabel: typeof record.savedAtLabel === "string" ? record.savedAtLabel : "저장됨",
   };
 }
@@ -2257,6 +2260,14 @@ function isDestinationCategory(value: unknown): value is PlaceSearchResult["cate
     value === "sports" ||
     value === "mountain" ||
     value === "beach" ||
+    value === "residential" ||
+    value === "transit" ||
+    value === "medical" ||
+    value === "culture" ||
+    value === "religious" ||
+    value === "shopping" ||
+    value === "leisure" ||
+    value === "dining" ||
     value === "custom"
   );
 }

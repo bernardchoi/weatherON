@@ -5,6 +5,7 @@ import {
   getWeatherRuntimeConfig,
   isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
+import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 
 export type SearchPlacesParams = {
   query: string;
@@ -63,7 +64,7 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
       url.searchParams.set("language", language);
       const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);
       return localizePlaceSearchResults(
-        mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode, language), remoteResults),
+        normalizeDestinationCategories(mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode, language), remoteResults)),
         language,
       );
     },
@@ -90,11 +91,11 @@ export function createOpenMeteoPlaceSearchClient(options: OpenMeteoPlaceSearchCl
       try {
         const payload = await fetchJson<OpenMeteoGeocodingResponse>(url, timeoutMs, options.fetchImpl);
         return localizePlaceSearchResults(
-          mergePlaceSearchResults(curatedResults, normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode)),
+          normalizeDestinationCategories(mergePlaceSearchResults(curatedResults, normalizeOpenMeteoPlaces(payload.results ?? [], params.countryCode))),
           language,
         );
       } catch (error) {
-        if (curatedResults.length > 0) return curatedResults;
+        if (curatedResults.length > 0) return normalizeDestinationCategories(curatedResults);
         throw error;
       }
     },
@@ -224,6 +225,10 @@ function mergePlaceSearchResults(...groups: PlaceSearchResult[][]): PlaceSearchR
     seen.add(key);
     return true;
   });
+}
+
+function normalizeDestinationCategories(places: PlaceSearchResult[]): PlaceSearchResult[] {
+  return places.map(normalizePlaceSearchResultCategory);
 }
 
 function getPlaceIdentityKey(place: PlaceSearchResult): string {

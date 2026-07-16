@@ -92,6 +92,7 @@ export function HomeScreen({
             accessibilityLabel={smartCareEnabled ? "스마트 알림 켜짐. 알림 설정 열기" : "스마트 알림 꺼짐. 알림 설정 열기"}
             accessibilityRole="button"
             onPress={() => onNavigate("M2")}
+            hitSlop={{ top: 7, bottom: 7 }}
             style={styles.modePill}
           >
             <View style={[styles.modePillSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
@@ -341,6 +342,14 @@ function getDestinationCategoryLabel(category: string) {
   if (category === "sports") return "스포츠";
   if (category === "mountain") return "산행";
   if (category === "beach") return "해변";
+  if (category === "residential") return "주거지";
+  if (category === "transit") return "교통";
+  if (category === "medical") return "의료";
+  if (category === "culture") return "문화";
+  if (category === "religious") return "종교시설";
+  if (category === "shopping") return "쇼핑";
+  if (category === "leisure") return "여가";
+  if (category === "dining") return "식음";
   if (category === "airport") return "공항";
   if (category === "hotel") return "숙소";
   return "목적지";
@@ -1332,8 +1341,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   modeText: {
-    flex: 1,
-    minWidth: 0,
+    flexShrink: 1,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",

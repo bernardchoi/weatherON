@@ -413,6 +413,14 @@ function getAreaLabel(place: PlaceSearchResult) {
   if (province && !isAdministrativeNoise(province)) return trimAdministrativeSuffix(province);
   if (place.category === "sports") return "경기장";
   if (place.category === "beach") return "해변";
+  if (place.category === "residential") return "주거지";
+  if (place.category === "transit") return "교통";
+  if (place.category === "medical") return "의료";
+  if (place.category === "culture") return "문화";
+  if (place.category === "religious") return "종교시설";
+  if (place.category === "shopping") return "쇼핑";
+  if (place.category === "leisure") return "여가";
+  if (place.category === "dining") return "식음";
   return "목적지";
 }
 

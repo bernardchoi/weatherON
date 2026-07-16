@@ -40,7 +40,23 @@ export type OutfitRecommendation = {
 export type DestinationCare = {
   destinationId: string;
   name: string;
-  category: "work" | "school" | "airport" | "hotel" | "sports" | "mountain" | "beach" | "custom";
+  category:
+    | "work"
+    | "school"
+    | "airport"
+    | "hotel"
+    | "sports"
+    | "mountain"
+    | "beach"
+    | "residential"
+    | "transit"
+    | "medical"
+    | "culture"
+    | "religious"
+    | "shopping"
+    | "leisure"
+    | "dining"
+    | "custom";
   originWeather: WeatherSnapshot;
   destinationWeather: WeatherSnapshot;
   departureAdvice?: {
