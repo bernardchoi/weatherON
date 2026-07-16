@@ -114,13 +114,13 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   previewLabel: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
   },
   previewTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "900",
   },
   pillRow: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   benefitRow: {
-    minHeight: 62,
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -141,19 +141,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   benefitIconFrame: {
-    width: 36,
-    height: 36,
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
   },
   benefitIcon: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
   },
   benefitTitle: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "900",
   },
 });

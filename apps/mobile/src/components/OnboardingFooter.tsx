@@ -50,13 +50,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   secondaryAction: {
-    minHeight: 40,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },
   secondaryLabel: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "800",
   },
 });

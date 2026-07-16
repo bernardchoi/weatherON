@@ -1,10 +1,11 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
+import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing } from "../theme/tokens";
+import { spacing } from "../theme/tokens";
 
 export function AppEntrySplashScreen({ onCompleteOnboarding, onNavigate }: P0ScreenProps) {
   return (
@@ -47,8 +48,8 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
       <View style={[styles.skyGlow, { backgroundColor: theme.backgroundAlt }]} />
 
       <View style={styles.center}>
-        <View style={[styles.iconHalo, { backgroundColor: theme.cardStrong, shadowColor: theme.shadow }]}>
-          <Image source={brandAssets.iconPrimary} style={styles.icon} resizeMode="contain" />
+        <View style={[styles.iconShadow, { shadowColor: theme.shadow }]}>
+          <AnimatedBrandMark size={102} />
         </View>
         <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
         <Text style={[styles.description, { color: theme.muted }]}>{description}</Text>
@@ -86,31 +87,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
   },
-  iconHalo: {
-    width: 84,
-    height: 84,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
+  iconShadow: {
     shadowOpacity: 0.28,
     shadowRadius: 34,
     shadowOffset: { width: 0, height: 18 },
     elevation: 10,
   },
-  icon: {
-    width: 76,
-    height: 76,
-  },
   wordmark: {
-    width: 150,
-    height: 32,
+    width: 172,
+    height: 38,
     marginTop: spacing.md,
   },
   description: {
-    maxWidth: 250,
+    maxWidth: 290,
     textAlign: "center",
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 28,
     fontWeight: "800",
   },
   bottom: {
@@ -118,8 +110,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     textAlign: "center",
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
 });

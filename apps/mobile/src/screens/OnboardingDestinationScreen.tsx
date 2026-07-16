@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { onboardingAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { Section } from "../components/Section";
@@ -58,6 +59,8 @@ export function OnboardingDestinationScreen({
         <StatusPill label="비 알림" tone="clear" />
       </View>
 
+      <Image source={onboardingAssets.destinationCare} style={styles.destinationVisual} resizeMode="cover" accessibilityLabel="목적지 날씨와 출발 시간 비교 예시" />
+
       <Section title={canUseSelection ? "선택한 목적지" : "목적지 선택"} accent="clear">
         <View style={[styles.destinationCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.copy}>
@@ -88,8 +91,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.xs,
   },
+  destinationVisual: {
+    width: "100%",
+    height: 158,
+    borderRadius: radius.lg,
+  },
   destinationCard: {
-    minHeight: 82,
+    minHeight: 92,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -103,11 +111,12 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "900",
   },
   body: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

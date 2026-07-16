@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { brandAssets, uiIconAssets } from "../assets";
+import { brandAssets, onboardingAssets, uiIconAssets } from "../assets";
+import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { Section } from "../components/Section";
@@ -34,8 +35,11 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
       }
     >
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <Image source={onboardingAssets.ready} style={styles.heroVisual} resizeMode="cover" accessibilityLabel="출발 시간과 날씨 정보를 보여주는 예시 화면" />
         <View style={styles.brandTop}>
-          <Image source={brandAssets.iconPrimary} style={styles.brandIcon} resizeMode="contain" />
+          <View style={styles.brandIconHalo}>
+            <AnimatedBrandMark size={52} />
+          </View>
           <View style={styles.brandCopy}>
             <Image source={brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
             <Text style={[styles.heroCopy, { color: theme.muted }]}>오늘 외출을 한눈에</Text>
@@ -90,21 +94,29 @@ function QuickFact({
 
 const styles = StyleSheet.create({
   brandHero: {
-    minHeight: 212,
     justifyContent: "center",
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  heroVisual: {
+    width: "100%",
+    height: 148,
+    borderRadius: radius.md,
+  },
   brandTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
   },
-  brandIcon: {
+  brandIconHalo: {
     width: 58,
     height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(88,191,255,0.12)",
+    borderRadius: radius.md,
   },
   brandCopy: {
     flex: 1,
@@ -115,8 +127,8 @@ const styles = StyleSheet.create({
     height: 28,
   },
   heroCopy: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "800",
   },
   quickStrip: {
@@ -125,27 +137,27 @@ const styles = StyleSheet.create({
   },
   quickFact: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 58,
     justifyContent: "center",
     gap: 3,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
   },
   quickLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   quickValue: {
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   featureGrid: {
     gap: spacing.sm,
   },
   featureTile: {
-    minHeight: 70,
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -154,27 +166,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   iconBox: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
     borderWidth: 1,
   },
   featureIcon: {
-    width: 22,
-    height: 22,
+    width: 25,
+    height: 25,
   },
   copy: {
     flex: 1,
     gap: 5,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "900",
   },
   body: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

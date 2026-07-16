@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
@@ -9,10 +10,10 @@ import type { SmartCareScenario } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
-const scenarios: { value: SmartCareScenario; title: string; body: string }[] = [
-  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간과 비 알림 중심" },
-  { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심" },
-  { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림 확장" },
+const scenarios: { value: SmartCareScenario; title: string; body: string; icon: number }[] = [
+  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간과 비 알림 중심", icon: uiIconAssets.depart },
+  { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심", icon: uiIconAssets.rain },
+  { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림 확장", icon: uiIconAssets.pin },
 ];
 
 export function SmartCareOnboardingScreen({
@@ -71,11 +72,15 @@ export function SmartCareOnboardingScreen({
                 },
               ]}
             >
+              <Image source={item.icon} style={[styles.segmentIcon, { tintColor: item.value === smartCareScenario ? theme.onAccent : theme.clear }]} resizeMode="contain" />
               <Text style={[styles.segmentText, { color: item.value === smartCareScenario ? theme.onAccent : theme.text }]}>{item.title}</Text>
             </FeedbackPressable>
           ))}
         </View>
         <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
+          <View style={[styles.scenarioIconFrame, { backgroundColor: `${theme.clear}18` }]}>
+            <Image source={selectedScenario.icon} style={[styles.scenarioIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+          </View>
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.text }]}>{selectedScenario.title}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>{selectedScenario.body}</Text>
@@ -145,13 +150,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   feedbackTitle: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "900",
   },
   feedbackBody: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
   segmentRow: {
@@ -160,18 +165,26 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 76,
     alignItems: "center",
     justifyContent: "center",
+    gap: 5,
+    paddingHorizontal: 4,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   segmentText: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "900",
+    textAlign: "center",
+  },
+  segmentIcon: {
+    width: 24,
+    height: 24,
   },
   scenarioRow: {
-    minHeight: 70,
+    minHeight: 88,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -180,9 +193,20 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  scenarioIconFrame: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  scenarioIcon: {
+    width: 26,
+    height: 26,
+  },
   selectedLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "900",
   },
   copy: {
@@ -190,13 +214,13 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   title: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "900",
   },
   body: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
   autoSummary: {
     gap: spacing.sm,
@@ -205,8 +229,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   autoBody: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
   autoPillRow: {
@@ -215,14 +239,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   autoPill: {
-    minHeight: 30,
+    minHeight: 34,
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
   },
   autoPillText: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
   },
 });
