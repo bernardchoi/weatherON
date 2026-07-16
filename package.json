@@ -36,6 +36,7 @@
     "check:weather-proxy": "node scripts/check-weather-proxy.mjs",
     "check:weather-proxy-cache": "node scripts/check-weather-proxy-cache.mjs",
     "check:place-search": "node scripts/check-place-search.mjs",
+    "check:place-search-distance": "node --no-warnings scripts/check-place-search-distance.mjs",
     "check:public-weather-proxy": "node scripts/check-public-weather-proxy.mjs",
     "check:cloudflare-worker-proxy": "node scripts/check-cloudflare-worker-proxy.mjs",
     "sync:cloudflare-worker-secrets": "node scripts/sync-cloudflare-worker-secrets.mjs",

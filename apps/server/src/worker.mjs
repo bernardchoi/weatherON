@@ -119,13 +119,15 @@ async function searchPlaces(params, env) {
   const searchQuery = getPlaceSearchQueryAlias(query);
   const countryCode = normalizeCountryCode(params.get("countryCode")) ?? inferPlaceSearchCountryCode(searchQuery);
   const language = normalizeSearchLanguage(params.get("language") ?? params.get("locale"));
+  const origin = readOptionalSearchOrigin(params);
   if (query.trim().length < 2) return [];
 
-  return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${query.trim().toLowerCase()}`, readTtl(env, "PLACE_CACHE_TTL_MS", DEFAULT_PLACE_CACHE_TTL_MS), async () => {
+  const originKey = origin ? formatCoordinateKey(origin) : "none";
+  return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${originKey}:${query.trim().toLowerCase()}`, readTtl(env, "PLACE_CACHE_TTL_MS", DEFAULT_PLACE_CACHE_TTL_MS), async () => {
     const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
     try {
       if (countryCode === "KR" && readEnv(env, "KAKAO_REST_API_KEY")) {
-        return mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, env));
+        return sortPlacesByDistance(mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, origin, env)), origin);
       }
       if (getGoogleMapsApiKey(env)) {
         const googleResults = localizePlaceSearchResults(await searchGooglePlaces(searchQuery, countryCode, language, env), language);
@@ -212,10 +214,15 @@ const placeSearchQueryAliases = {
   "센트럴 파크": "Central Park",
 };
 
-async function searchKakaoPlaces(query, env) {
+async function searchKakaoPlaces(query, origin, env) {
   const url = new URL(readEnv(env, "KAKAO_LOCAL_KEYWORD_URL") ?? DEFAULT_KAKAO_LOCAL_KEYWORD_URL);
   url.searchParams.set("query", query || "강릉 안목해변");
   url.searchParams.set("size", "8");
+  if (origin) {
+    url.searchParams.set("x", String(origin.longitude));
+    url.searchParams.set("y", String(origin.latitude));
+    url.searchParams.set("sort", "distance");
+  }
   const payload = await fetchJson(url, env, {
     Authorization: `KakaoAK ${readEnv(env, "KAKAO_REST_API_KEY")}`,
   });
@@ -554,6 +561,30 @@ function readCoordinate(params, key) {
   const coordinate = { latitude: Number(latitudeText), longitude: Number(longitudeText) };
   if (!Number.isFinite(coordinate.latitude) || !Number.isFinite(coordinate.longitude)) throw new Error(`${key} coordinate is invalid`);
   return coordinate;
+}
+
+function readOptionalSearchOrigin(params) {
+  const latitudeText = params.get("latitude");
+  const longitudeText = params.get("longitude");
+  if (latitudeText === null || longitudeText === null) return null;
+  const coordinate = { latitude: Number(latitudeText), longitude: Number(longitudeText) };
+  if (
+    !Number.isFinite(coordinate.latitude) ||
+    !Number.isFinite(coordinate.longitude) ||
+    Math.abs(coordinate.latitude) > 90 ||
+    Math.abs(coordinate.longitude) > 180
+  ) {
+    throw new Error("place search origin coordinate is invalid");
+  }
+  return coordinate;
+}
+
+function sortPlacesByDistance(places, origin) {
+  if (!origin) return places;
+  return places
+    .map((place, index) => ({ place, index, distanceMeters: getDistanceMeters(origin, place.coordinate) }))
+    .sort((a, b) => a.distanceMeters - b.distanceMeters || a.index - b.index)
+    .map((item) => item.place);
 }
 
 function formatCoordinateKey(coordinate) {

@@ -27,6 +27,7 @@ import {
   type WeatherLocationPreset,
 } from "../providers/weatherLocations";
 import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
+import { sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { runtimeTravelEstimateClient, type TravelEstimateResult } from "../providers/travelEstimateClient";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
 import {
@@ -288,6 +289,9 @@ export function useWeatherOnAppState() {
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
   const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
+  const placeSearchOrigin = deviceLocationState.location
+    ?? deviceWeatherLocation
+    ?? (weatherLocationMode === "manual" ? manualWeatherLocation : null);
   const reconcileNotificationPermission = useCallback(async () => {
     const result = await checkLocalNotificationPermission();
     if (result.status === "unavailable") return;
@@ -1031,10 +1035,16 @@ export function useWeatherOnAppState() {
     setIsPlaceSearchLoading(true);
     setPlaceSearchStatus("loading");
     try {
-      const results = await runtimePlaceSearchClient.searchPlaces({ query, locale: getDeviceSearchLocale() });
+      const searchOrigin = deviceLocationState.location
+        ?? deviceWeatherLocation
+        ?? (weatherLocationMode === "manual" ? manualWeatherLocation : null);
+      const results = await runtimePlaceSearchClient.searchPlaces({
+        query,
+        locale: getDeviceSearchLocale(),
+        origin: searchOrigin?.coordinate,
+      });
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
-      const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
-      setPlaceSearchResults(sortPlaceSearchResultsByRelevanceAndDistance(results, query, currentLocation));
+      setPlaceSearchResults(sortPlaceSearchResults(results, query, searchOrigin));
       setPlaceSearchStatus(results.length > 0 ? "ready" : "empty");
     } catch {
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
@@ -1043,7 +1053,7 @@ export function useWeatherOnAppState() {
     } finally {
       if (placeSearchRequestSeqRef.current === requestSeq) setIsPlaceSearchLoading(false);
     }
-  }, [deviceWeatherLocation, manualWeatherLocation, weatherLocationMode]);
+  }, [deviceLocationState.location, deviceWeatherLocation, manualWeatherLocation, weatherLocationMode]);
 
   const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
     const normalizedPlace = normalizePlaceSearchResultCategory(place);
@@ -1422,6 +1432,7 @@ export function useWeatherOnAppState() {
     weatherProviderMode,
     weatherLocationMode,
     deviceLocationState,
+    placeSearchOrigin,
     destinationSaved,
     savedDestinations,
     recentlyRemovedDestination,
@@ -2059,67 +2070,6 @@ function getActiveWeatherLocation(
   deviceLocation: KmaWeatherLocationPreset | null,
 ): WeatherLocationPreset {
   return mode === "manual" ? manualLocation : deviceLocation ?? seongsuWeatherLocation;
-}
-
-function sortPlaceSearchResultsByRelevanceAndDistance(
-  places: PlaceSearchResult[],
-  query: string,
-  origin: WeatherLocationPreset,
-): PlaceSearchResult[] {
-  return places
-    .map((place, index) => ({
-      place,
-      index,
-      textRank: getPlaceTextMatchRank(place, query),
-      countryRank: getPlaceCountryRank(place, origin),
-      distanceMeters: getCoordinateDistanceMeters(origin.coordinate, place.coordinate),
-    }))
-    .sort((a, b) =>
-      a.textRank - b.textRank ||
-      a.countryRank - b.countryRank ||
-      a.distanceMeters - b.distanceMeters ||
-      a.index - b.index
-    )
-    .map((item) => item.place);
-}
-
-function getPlaceTextMatchRank(place: PlaceSearchResult, query: string) {
-  const normalizedQuery = normalizePlaceSearchText(query);
-  const normalizedName = normalizePlaceSearchText(place.name);
-  const normalizedAddress = normalizePlaceSearchText(place.address);
-  if (!normalizedQuery) return 0;
-  if (normalizedName === normalizedQuery) return 0;
-  if (normalizedName.startsWith(normalizedQuery)) return 1;
-  if (normalizedName.includes(normalizedQuery)) return 2;
-  if (normalizedAddress.includes(normalizedQuery)) return 3;
-  return 4;
-}
-
-function getPlaceCountryRank(place: PlaceSearchResult, origin: WeatherLocationPreset) {
-  if (place.countryCode === origin.countryCode) return 0;
-  if (place.countryCode === "GLOBAL" || origin.countryCode === "GLOBAL") return 1;
-  return 2;
-}
-
-function getCoordinateDistanceMeters(
-  origin: WeatherLocationPreset["coordinate"],
-  destination: PlaceSearchResult["coordinate"],
-) {
-  const earthRadiusMeters = 6371000;
-  const lat1 = toRadians(origin.latitude);
-  const lat2 = toRadians(destination.latitude);
-  const deltaLat = toRadians(destination.latitude - origin.latitude);
-  const deltaLon = toRadians(destination.longitude - origin.longitude);
-  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function toRadians(value: number) {
-  return (value * Math.PI) / 180;
-}
-
-function normalizePlaceSearchText(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, "");
 }
 
 function normalizeAlertPreferences(value: unknown): AlertPreferences {

@@ -11,6 +11,10 @@ export type SearchPlacesParams = {
   query: string;
   countryCode?: "KR" | "JP" | "GLOBAL";
   locale?: string;
+  origin?: {
+    latitude: number;
+    longitude: number;
+  };
 };
 
 export type PlaceSearchClient = {
@@ -60,6 +64,10 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
       const url = new URL("/places/search", normalizeBaseUrl(options.apiBaseUrl));
       url.searchParams.set("q", params.query);
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
+      if (params.origin) {
+        url.searchParams.set("latitude", String(params.origin.latitude));
+        url.searchParams.set("longitude", String(params.origin.longitude));
+      }
       const language = getSearchLanguage(params.locale);
       url.searchParams.set("language", language);
       const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);

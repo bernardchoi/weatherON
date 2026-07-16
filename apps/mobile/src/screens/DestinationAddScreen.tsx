@@ -6,12 +6,14 @@ import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
+import { getCoordinateDistanceMeters, sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { formatDistance } from "../utils/units";
 
 export function DestinationAddScreen({
   state,
   destinationSaved,
   deviceLocationState,
+  placeSearchOrigin,
   selectedDestinationPlace,
   placeSearchQuery,
   placeSearchResults,
@@ -32,13 +34,13 @@ export function DestinationAddScreen({
   const canUseSavedDestination = destinationSaved && (!hasQuery || selectedFromResults);
   const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
-  const resultSortLabel = getResultSortLabel(deviceLocationState.location, state.weather.countryCode);
+  const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
   const visibleResults = React.useMemo(
-    () => getVisibleSearchResults(placeSearchResults, deviceLocationState.location),
-    [deviceLocationState.location, placeSearchResults],
+    () => sortPlaceSearchResults(placeSearchResults, placeSearchQuery, placeSearchOrigin),
+    [placeSearchOrigin, placeSearchQuery, placeSearchResults],
   );
 
   React.useEffect(() => {
@@ -156,7 +158,7 @@ export function DestinationAddScreen({
                     </View>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
                       {[
-                        getPlaceDistanceLabel(place, deviceLocationState.location, state.weather.countryCode, distanceUnit),
+                        getPlaceDistanceLabel(place, placeSearchOrigin, state.weather.countryCode, distanceUnit),
                         getProviderLabel(place.provider),
                       ].filter(Boolean).join(" · ")}
                     </Text>
@@ -252,18 +254,6 @@ function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
   return counts;
 }
 
-function getVisibleSearchResults(
-  results: P0ScreenProps["placeSearchResults"],
-  origin: P0ScreenProps["deviceLocationState"]["location"],
-) {
-  if (!origin) return results;
-  return [...results].sort(
-    (a, b) =>
-      getCoordinateDistanceMeters(origin.coordinate, a.coordinate) -
-      getCoordinateDistanceMeters(origin.coordinate, b.coordinate),
-  );
-}
-
 function getCategoryLabel(category: string) {
   if (category === "sports") return "야구장";
   if (category === "mountain") return "등산";
@@ -305,16 +295,18 @@ function getCountryLabel(countryCode: string) {
 }
 
 function getResultSortLabel(
-  origin: P0ScreenProps["deviceLocationState"]["location"],
+  deviceOrigin: P0ScreenProps["deviceLocationState"]["location"],
+  origin: P0ScreenProps["placeSearchOrigin"],
   currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
 ) {
-  if (origin) return "가까운 순";
+  if (deviceOrigin) return "현재 위치 가까운 순";
+  if (origin) return "설정 위치 가까운 순";
   return `${getCountryLabel(currentCountryCode)} 기준`;
 }
 
 function getPlaceDistanceLabel(
   place: P0ScreenProps["placeSearchResults"][number],
-  origin: P0ScreenProps["deviceLocationState"]["location"],
+  origin: P0ScreenProps["placeSearchOrigin"],
   currentCountryCode: P0ScreenProps["state"]["weather"]["countryCode"],
   distanceUnit: P0ScreenProps["distanceUnit"],
 ) {
@@ -330,23 +322,6 @@ function getPlaceDistanceLabel(
 function getOverseasDistanceLabel(countryCode: string) {
   const countryLabel = getCountryLabel(countryCode);
   return countryLabel === "해외" ? "해외" : `해외 · ${countryLabel}`;
-}
-
-function getCoordinateDistanceMeters(
-  origin: NonNullable<P0ScreenProps["deviceLocationState"]["location"]>["coordinate"],
-  destination: P0ScreenProps["placeSearchResults"][number]["coordinate"],
-) {
-  const earthRadiusMeters = 6371000;
-  const lat1 = toRadians(origin.latitude);
-  const lat2 = toRadians(destination.latitude);
-  const deltaLat = toRadians(destination.latitude - origin.latitude);
-  const deltaLon = toRadians(destination.longitude - origin.longitude);
-  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function toRadians(value: number) {
-  return (value * Math.PI) / 180;
 }
 
 function getProviderLabel(provider: string) {

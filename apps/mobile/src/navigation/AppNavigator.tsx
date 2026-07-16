@@ -72,6 +72,7 @@ export function AppNavigator() {
     weatherProviderMode: appState.weatherProviderMode,
     weatherLocationMode: appState.weatherLocationMode,
     deviceLocationState: appState.deviceLocationState,
+    placeSearchOrigin: appState.placeSearchOrigin,
     destinationSaved: appState.destinationSaved,
     savedDestinations: appState.savedDestinations,
     recentlyRemovedDestination: appState.recentlyRemovedDestination,

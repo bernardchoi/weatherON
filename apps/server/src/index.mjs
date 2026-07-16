@@ -143,12 +143,14 @@ async function searchPlaces(params) {
   const searchQuery = getPlaceSearchQueryAlias(query);
   const countryCode = normalizeCountryCode(params.get("countryCode")) ?? inferPlaceSearchCountryCode(searchQuery);
   const language = normalizeSearchLanguage(params.get("language") ?? params.get("locale"));
+  const origin = readOptionalSearchOrigin(params);
   if (query.trim().length < 2) return [];
-  return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${query.trim().toLowerCase()}`, placeCacheTtlMs, async () => {
+  const originKey = origin ? formatCoordinateKey(origin) : "none";
+  return fetchCachedJson(placeSearchCache, `places:${countryCode}:${language}:${originKey}:${query.trim().toLowerCase()}`, placeCacheTtlMs, async () => {
     const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
     try {
       if (countryCode === "KR" && process.env.KAKAO_REST_API_KEY) {
-        return mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery));
+        return sortPlacesByDistance(mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, origin)), origin);
       }
       if (getGoogleMapsApiKey()) {
         const googleResults = localizePlaceSearchResults(await searchGooglePlaces(searchQuery, countryCode, language), language);
@@ -235,10 +237,15 @@ const placeSearchQueryAliases = {
   "센트럴 파크": "Central Park",
 };
 
-async function searchKakaoPlaces(query) {
+async function searchKakaoPlaces(query, origin) {
   const url = new URL(process.env.KAKAO_LOCAL_KEYWORD_URL ?? DEFAULT_KAKAO_LOCAL_KEYWORD_URL);
   url.searchParams.set("query", query || "강릉 안목해변");
   url.searchParams.set("size", "8");
+  if (origin) {
+    url.searchParams.set("x", String(origin.longitude));
+    url.searchParams.set("y", String(origin.latitude));
+    url.searchParams.set("sort", "distance");
+  }
   const payload = await fetchJson(url, {
     Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
   });
@@ -415,6 +422,30 @@ function readCoordinate(params, key) {
     throw new Error(`${key} coordinate is invalid`);
   }
   return coordinate;
+}
+
+function readOptionalSearchOrigin(params) {
+  const latitudeText = params.get("latitude");
+  const longitudeText = params.get("longitude");
+  if (latitudeText === null || longitudeText === null) return null;
+  const coordinate = { latitude: Number(latitudeText), longitude: Number(longitudeText) };
+  if (
+    !Number.isFinite(coordinate.latitude) ||
+    !Number.isFinite(coordinate.longitude) ||
+    Math.abs(coordinate.latitude) > 90 ||
+    Math.abs(coordinate.longitude) > 180
+  ) {
+    throw new Error("place search origin coordinate is invalid");
+  }
+  return coordinate;
+}
+
+function sortPlacesByDistance(places, origin) {
+  if (!origin) return places;
+  return places
+    .map((place, index) => ({ place, index, distanceMeters: getDistanceMeters(origin, place.coordinate) }))
+    .sort((a, b) => a.distanceMeters - b.distanceMeters || a.index - b.index)
+    .map((item) => item.place);
 }
 
 function formatCoordinateKey(coordinate) {

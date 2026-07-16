@@ -36,6 +36,7 @@ import type {
 } from "../state/useWeatherOnAppState";
 import type { DeviceLocationState } from "../providers/deviceLocation";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
+import type { WeatherLocationPreset } from "../providers/weatherLocations";
 
 export type P0ScreenProps = {
   state: DemoState;
@@ -45,6 +46,7 @@ export type P0ScreenProps = {
   weatherProviderMode: WeatherProviderMode;
   weatherLocationMode: WeatherLocationMode;
   deviceLocationState: DeviceLocationState;
+  placeSearchOrigin: WeatherLocationPreset | null;
   destinationSaved: boolean;
   savedDestinations: SavedDestination[];
   recentlyRemovedDestination: SavedDestination | null;
