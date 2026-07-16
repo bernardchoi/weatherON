@@ -13,32 +13,32 @@ import { useState } from "react";
 ─────────────────────────────────────────────────────────────────────── */
 
 /* ── Brand / Functional Color Tokens ── */
-export const NAVY      = '#1D5A86'; // 다크 BG — 기존 네이비보다 맑고 가벼운 페이지 배경
-export const NAVY_DARK = '#276A96'; // 다크 Surface
-export const PANEL     = '#2B719D'; // 다크 Elevated — 기본 카드 패널
-export const PANEL_L1  = '#3D87B5'; // L1 — 바텀시트 표면
-export const PANEL_L2  = '#55A0CA'; // L2 — 시트 내부 중첩 요소
-export const GOLD      = '#F4B63F'; // Warm Sun — 브랜드 대표색보다 햇빛/강조 의미색으로 축소
-export const SKY       = '#4AA3DF';
-export const SKY_LITE  = '#DFF5FF'; // PANEL/PANEL_L2 위 소형 라벨 AA(4.5:1) 통과용 틴트
-export const CLEAR     = '#2FC6A3';
-export const WARM      = '#E8854A';
-export const MIST      = '#E4F2FF';
+export const NAVY      = '#071E33'; // 다크 BG — 깊은 클리어 네이비
+export const NAVY_DARK = '#0B2E49'; // 다크 Surface
+export const PANEL     = '#103D5F'; // 다크 Elevated — 기본 카드 패널
+export const PANEL_L1  = '#16557F'; // L1 — 바텀시트 표면
+export const PANEL_L2  = '#2373A4'; // L2 — 시트 내부 중첩 요소
+export const GOLD      = '#FFC758'; // Warm Sun — 어두운 배경에서 맑게 보이는 활성색
+export const SKY       = '#58BFFF';
+export const SKY_LITE  = '#D8F3FF'; // PANEL/PANEL_L2 위 소형 라벨 AA(4.5:1) 통과용 틴트
+export const CLEAR     = '#5DE2C2';
+export const WARM      = '#FF9A66';
+export const MIST      = '#DCF0FF';
 
 /* 알파 헬퍼 — INK: 본문/회색 텍스트, MISTL: 푸른 회색 보조 텍스트.
    접근성 메모: PANEL 계열 위 보조 텍스트는 opacity ≥ 0.80 를 기본값으로
    둘 것(소형 텍스트 AA 4.5:1 확보). 0.5~0.65 대는 AA 미달이므로 지양. */
-export const INK   = (a) => `rgba(232,237,246,${a})`;
-export const MISTL = (a) => `rgba(228,242,255,${a})`;
+export const INK   = (a) => `rgba(246,251,255,${a})`;
+export const MISTL = (a) => `rgba(220,240,255,${a})`;
 
-export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #3D87B5 54%, #68B8EA 120%)`;
+export const GRADIENT = `linear-gradient(175deg, ${NAVY} 0%, #0D3D62 58%, #176B9E 120%)`;
 export const RADIUS = { card: 20, cardSm: 16, sheet: 28, pill: 16, tab: 24 }; // squircle 근사
 
 /* ── 라이트 모드 토큰 (2026-06-25 보정) ────────────────────────────────
    라이트모드는 밝은 배경 위에서 포인트가 탁하거나 촌스럽게 보이지 않도록
    다크모드의 Warm Sun을 그대로 재사용하지 않고 별도 고채도/중명도 토큰을 쓴다.
    CTA와 작은 상태 라벨 모두에서 읽히는 선을 기준으로 잡는다. ── */
-export const RAIN_RED = '#E97F77';
+export const RAIN_RED = '#FF7F78';
 
 export const LIGHT_BG      = '#F5F9FC'; // 라이트 Background
 export const LIGHT_SURFACE = '#FFFFFF';
@@ -62,7 +62,7 @@ export const LIGHT_INK = (a) => `rgba(20,32,51,${a})`;
 export const THEME = {
   dark: {
     bgGradient: GRADIENT, panel: PANEL, panelL1: PANEL_L1, navy다크: NAVY_DARK,
-    ink: INK, border: 'rgba(232,237,246,0.08)', statusBarIcon: '#fff',
+    ink: INK, border: 'rgba(158,215,255,0.16)', statusBarIcon: '#fff',
   },
   light: {
     bgGradient: LIGHT_GRADIENT, panel: LIGHT_PANEL, panelL1: LIGHT_PANEL_L1, navy다크: LIGHT_PANEL_L1,

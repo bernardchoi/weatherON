@@ -192,8 +192,8 @@ try {
     await onboardingPage.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await loadSeededApp(onboardingPage, onboardingState);
     await assertText(onboardingPage, "오늘의 외출, 미리 준비하세요", viewport, "onboarding");
-    await assertText(onboardingPage, "소개 시작하기", viewport, "onboarding");
-    await assertText(onboardingPage, "홈으로", viewport, "onboarding");
+    await assertText(onboardingPage, "다음", viewport, "onboarding");
+    await assertText(onboardingPage, "건너뛰기", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");
     await onboardingPage.close();

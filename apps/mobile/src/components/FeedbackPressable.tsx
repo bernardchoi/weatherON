@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import {
   Animated,
   Easing,
+  Platform,
   Pressable,
   StyleSheet,
   type GestureResponderEvent,
@@ -21,6 +22,7 @@ export function FeedbackPressable({
   children,
   disabled,
   feedbackColor,
+  android_ripple,
   onPressIn,
   onPressOut,
   style,
@@ -28,6 +30,7 @@ export function FeedbackPressable({
 }: FeedbackPressableProps) {
   const theme = useAppTheme();
   const feedback = useRef(new Animated.Value(0)).current;
+  const usesNativeRipple = Platform.OS === "android" && Boolean(android_ripple);
 
   const animateTo = (toValue: number) => {
     feedback.stopAnimation();
@@ -40,18 +43,19 @@ export function FeedbackPressable({
   };
 
   const handlePressIn = (event: GestureResponderEvent) => {
-    if (!disabled) animateTo(0.12);
+    if (!disabled && !usesNativeRipple) animateTo(0.12);
     onPressIn?.(event);
   };
 
   const handlePressOut = (event: GestureResponderEvent) => {
-    animateTo(0);
+    if (!usesNativeRipple) animateTo(0);
     onPressOut?.(event);
   };
 
   return (
     <Pressable
       {...props}
+      android_ripple={android_ripple}
       disabled={disabled}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -77,7 +81,7 @@ export function FeedbackPressable({
                 StyleSheet.absoluteFillObject,
                 styles.feedback,
                 feedbackRadius,
-                { backgroundColor: feedbackColor ?? theme.text, opacity: disabled ? 0 : feedback },
+                { backgroundColor: feedbackColor ?? theme.text, opacity: disabled || usesNativeRipple ? 0 : feedback },
               ]}
             />
           </>

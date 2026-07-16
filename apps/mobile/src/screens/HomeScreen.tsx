@@ -92,12 +92,14 @@ export function HomeScreen({
             accessibilityLabel={smartCareEnabled ? "스마트 알림 켜짐. 알림 설정 열기" : "스마트 알림 꺼짐. 알림 설정 열기"}
             accessibilityRole="button"
             onPress={() => onNavigate("M2")}
-            style={[styles.modePill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+            style={styles.modePill}
           >
-            <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
-            <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
-              {smartCareEnabled ? "알림 ON" : "알림 OFF"}
-            </Text>
+            <View style={[styles.modePillSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+              <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
+              <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
+                {smartCareEnabled ? "알림 ON" : "알림 OFF"}
+              </Text>
+            </View>
           </FeedbackPressable>
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
@@ -1302,19 +1304,25 @@ const styles = StyleSheet.create({
     paddingBottom: 116,
   },
   topBar: {
-    minHeight: 46,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.xs,
   },
   modePill: {
-    minHeight: 34,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  modePillSurface: {
+    minHeight: 30,
     maxWidth: 116,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     borderRadius: radius.pill,
     borderWidth: 1,
   },

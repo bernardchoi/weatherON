@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -26,7 +26,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           borderColor: theme.navBorder,
           shadowColor: theme.shadow,
         },
-        androidMaterialSurface(theme, "bar"),
+        androidMaterialSurface(theme, "navigation"),
         iosGlassSurface(theme, "bar"),
       ]}
     >
@@ -80,6 +80,7 @@ function TabButton({
   children: React.ReactNode;
 }) {
   const tint = useRef(new Animated.Value(0)).current;
+  const usesNativeRipple = Platform.OS === "android" && Boolean(ripple);
 
   const animateTo = (toValue: number) => {
     Animated.timing(tint, {
@@ -97,8 +98,12 @@ function TabButton({
       accessibilityState={{ selected: active }}
       android_ripple={ripple}
       onPress={onPress}
-      onPressIn={() => animateTo(0.12)}
-      onPressOut={() => animateTo(0)}
+      onPressIn={() => {
+        if (!usesNativeRipple) animateTo(0.12);
+      }}
+      onPressOut={() => {
+        if (!usesNativeRipple) animateTo(0);
+      }}
       style={styles.item}
     >
       <Animated.View style={[StyleSheet.absoluteFillObject, styles.itemTint, { backgroundColor: tintColor, opacity: tint }]} />
@@ -159,8 +164,9 @@ const styles = StyleSheet.create({
   androidActiveIndicator: {
     position: "absolute",
     top: 6,
-    left: 10,
-    right: 10,
+    left: "50%",
+    width: 64,
+    marginLeft: -32,
     height: 32,
     borderRadius: 16,
   },

@@ -19,8 +19,10 @@ for (const relativePath of requiredFiles) {
 }
 
 assertSourceIncludes("apps/mobile/src/theme/tokens.ts", [
-  'warm: "#E8854A"',
-  'alert: "#E97F77"',
+  'background: "#071E33"',
+  'card: "#103D5F"',
+  'warm: "#FF9A66"',
+  'alert: "#FF7F78"',
   'warm: "#C84A2F"',
   'alert: "#B42318"',
 ]);
@@ -121,7 +123,11 @@ assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
 assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "C1";', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
+assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ['androidMaterialSurface(theme, "navigation")', 'left: "50%"', "width: 64", "marginLeft: -32", "usesNativeRipple"]);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
+assertSourceIncludes("apps/mobile/src/theme/androidMaterial.ts", ['"navigation" | "iconButton" | "sheet" | "weather" | "cta"', 'role === "iconButton" || role === "cta"', 'role === "navigation"']);
+assertSourceIncludes("apps/mobile/src/components/FeedbackPressable.tsx", ["usesNativeRipple", "disabled || usesNativeRipple ? 0 : feedback"]);
+assertSourceExcludes("apps/mobile/src/components/AppScreen.tsx", ["androidMaterialSurface"]);
 assertSourceIncludes("scripts/check-android-core-flow.mjs", [
   "assertClearOfBottomNav",
   "bottom nav overlap risk",
@@ -204,11 +210,10 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "RemovedDestinationBanner",
   "목적지 삭제됨",
   "목적지 복구",
-  "다음 행동 · 복구된 목적지 알림 확인",
   "getDestinationActionText",
   "getDestinationSchedule",
   "알림 켬",
-  "목적지를 누르면 날씨와 출발 준비를 자세히 볼 수 있어요",
+  "탭하면 상세 준비 확인",
   "onRestoreRemovedDestination",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
@@ -247,11 +252,19 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
 assertSourceIncludes("apps/mobile/src/screens/OnboardingDestinationScreen.tsx", [
   "destinationSelectionReady",
   "canUseSelection",
-  "목적지 선택 필요",
+  "목적지 선택",
   "장소 검색 후 선택",
-  "기본 후보는 저장하지 않음",
-  'canUseSelection ? onSaveDestination("G2") : onNavigate("P1")',
+  'onSaveDestination("H1")',
+  "<OnboardingFooter",
 ]);
+for (const relativePath of [
+  "apps/mobile/src/screens/OnboardingIntroScreen.tsx",
+  "apps/mobile/src/screens/OnboardingOutfitScreen.tsx",
+  "apps/mobile/src/screens/SmartCareOnboardingScreen.tsx",
+]) {
+  assertSourceIncludes(relativePath, ["footer={", "<OnboardingFooter", 'primaryLabel="다음"', 'secondaryLabel="건너뛰기"']);
+}
+assertSourceIncludes("apps/mobile/src/components/OnboardingFooter.tsx", ['tone="warning"', "secondaryAction"]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
   'onRequireAccount("destination-care", "G1")',
   'onRequireAccount("destination-care", "P1")',
@@ -340,13 +353,13 @@ assertSourceIncludes("packages/shared/src/fixtures/placeSearchFixtures.ts", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
   "오늘 준비",
-  "확인 필요한 항목 있음",
+  "확인 필요",
   "ReadinessSummary",
   "readinessCard",
   "needsTerms",
   "약관 동의 필요",
   "약관 동의 이어가기",
-  "필수 약관 동의 후 저장·동기화 가능",
+  "약관 후 동기화",
   "표시 설정",
   "앱 권한 관리",
   'onNavigate("M4")',

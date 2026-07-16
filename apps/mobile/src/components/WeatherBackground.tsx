@@ -10,13 +10,13 @@ import { useIsNightHour } from "../utils/useIsNightHour";
 type MotionState = "clear" | "cloud" | "rain" | "snow" | "storm" | "night";
 
 const DARK_GRADIENTS: Record<Exclude<MotionState, "night">, [string, string, string]> = {
-  clear: ["#1D5A86", "#3D87B5", "#68B8EA"],
-  cloud: ["#245C7E", "#3E7FA8", "#78A9C8"],
-  rain: ["#1E526F", "#347C9D", "#62A8C8"],
-  snow: ["#E8F4F8", "#C8E4F0", "#A8CCDF"],
-  storm: ["#35244F", "#5A3B7A", "#7A55A2"],
+  clear: ["#071E33", "#0D3D62", "#176B9E"],
+  cloud: ["#0B2233", "#183E55", "#2D607D"],
+  rain: ["#071B2A", "#10354B", "#1D5872"],
+  snow: ["#102C43", "#2A5871", "#5B91A9"],
+  storm: ["#160D2E", "#2C1A4A", "#51386F"],
 };
-const NIGHT_GRADIENT: [string, string, string] = ["#163F63", "#1D5A86", "#276A96"];
+const NIGHT_GRADIENT: [string, string, string] = ["#030B18", "#07182B", "#0D2D49"];
 
 const LIGHT_RETINT_RATIO = 0.8;
 

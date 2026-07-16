@@ -4,7 +4,6 @@ import { brandAssets } from "../assets";
 import { BackButton } from "./BackButton";
 import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { spacing } from "../theme/tokens";
 
@@ -30,12 +29,11 @@ type AppScreenProps = {
 export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, showWordmark = true, children }: AppScreenProps) {
   const theme = useAppTheme();
   const barGlass = iosGlassSurface(theme, "bar");
-  const barMaterial = androidMaterialSurface(theme, "bar");
   return (
     <View style={styles.shell}>
       <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-        <View style={[styles.hero, barGlass || barMaterial ? styles.heroPlatformSurface : null, barMaterial, barGlass]}>
+        <View style={[styles.hero, barGlass ? styles.heroPlatformSurface : null, barGlass]}>
           {onBack ? (
             <View style={styles.backButtonSlot}>
               <BackButton onPress={onBack} />
@@ -61,7 +59,7 @@ export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, 
         </View>
         {children}
       </ScrollView>
-      {footer ? <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }, barMaterial, barGlass]}>{footer}</View> : null}
+      {footer ? <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }, barGlass]}>{footer}</View> : null}
     </View>
   );
 }

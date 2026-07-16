@@ -1,8 +1,8 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
-import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OutfitGrid } from "../components/OutfitGrid";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
@@ -12,9 +12,9 @@ import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 
 const benefits = [
-  { icon: uiIconAssets.shirt, title: "날씨 기준 추천", body: "기온·체감 온도·강수에 맞춘 오늘 코디 제안" },
-  { icon: uiIconAssets.umbrella, title: "챙길 것 함께 확인", body: "우산과 신발 등 외출 준비물도 같이 안내" },
-  { icon: uiIconAssets.settings, title: "내 기준으로 조정", body: "스타일과 옷장은 코디 탭에서 나중에 수정 가능" },
+  { icon: uiIconAssets.shirt, title: "기온·강수 기반 추천" },
+  { icon: uiIconAssets.umbrella, title: "우산·신발 함께 확인" },
+  { icon: uiIconAssets.settings, title: "코디 탭에서 내 기준 조정" },
 ];
 
 export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding }: P0ScreenProps) {
@@ -22,7 +22,21 @@ export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding
   const outfitItems = Object.values(state.outfit.items).filter(Boolean);
 
   return (
-    <AppScreen title="날씨에 맞는 코디를 바로 추천해드림" subtitle="외출 전 날씨와 준비물을 한 번에 판단" badge="2 / 4">
+    <AppScreen
+      title="오늘 날씨에 맞는 코디"
+      subtitle="옷과 준비물을 함께 추천"
+      badge="2 / 4"
+      footer={
+        <OnboardingFooter
+          primaryLabel="다음"
+          primaryAccessibilityLabel="알림 안내 단계로 이동"
+          onPrimary={() => onNavigate("O5")}
+          secondaryLabel="건너뛰기"
+          secondaryAccessibilityLabel="온보딩을 건너뛰고 홈으로 이동"
+          onSecondary={() => onCompleteOnboarding("H1")}
+        />
+      }
+    >
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
@@ -45,7 +59,7 @@ export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding
         </View>
       </View>
 
-      <Section title="코디 기능" caption="추천 이유를 보고 내 옷장 기준으로 이어서 관리" accent="clear">
+      <Section title="코디 추천" accent="clear">
         <View style={styles.benefitList}>
           {benefits.map((benefit) => (
             <View key={benefit.title} style={[styles.benefitRow, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
@@ -54,17 +68,11 @@ export function OnboardingOutfitScreen({ state, onNavigate, onCompleteOnboarding
               </View>
               <View style={styles.copy}>
                 <Text style={[styles.benefitTitle, { color: theme.text }]}>{benefit.title}</Text>
-                <Text style={[styles.benefitBody, { color: theme.muted }]}>{benefit.body}</Text>
               </View>
             </View>
           ))}
         </View>
       </Section>
-
-      <View style={styles.actions}>
-        <AppButton label="다음" accessibilityLabel="스마트 알림 기준 단계로 계속" onPress={() => onNavigate("O5")} />
-        <AppButton label="건너뛰고 홈으로" accessibilityLabel="온보딩을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
-      </View>
     </AppScreen>
   );
 }
@@ -147,13 +155,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "900",
-  },
-  benefitBody: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "700",
-  },
-  actions: {
-    gap: spacing.sm,
   },
 });

@@ -1,7 +1,7 @@
 import { Platform, type ViewStyle } from "react-native";
 import type { AppTheme } from "./tokens";
 
-type AndroidMaterialRole = "bar" | "button" | "sheet" | "weather" | "cta";
+type AndroidMaterialRole = "navigation" | "iconButton" | "sheet" | "weather" | "cta";
 
 export function androidMaterialSurface(theme: AppTheme, role: AndroidMaterialRole): ViewStyle | null {
   if (Platform.OS !== "android") return null;
@@ -33,28 +33,30 @@ export function androidMaterialRipple(theme: AppTheme, tone: "primary" | "surfac
 
 function getSurfaceColor(theme: AppTheme, role: AndroidMaterialRole): string {
   if (role === "cta") return theme.cardMuted;
+  if (role === "iconButton") return theme.cardMuted;
   if (theme.name === "light") {
-    if (role === "bar") return "#F8FBFE";
+    if (role === "navigation") return "#F8FBFE";
     if (role === "sheet") return "#FFFFFF";
     if (role === "weather") return "#FFFFFF";
     return "#F9FCFF";
   }
 
-  if (role === "bar") return theme.card;
+  if (role === "navigation") return theme.card;
   if (role === "sheet") return theme.cardSoft;
   if (role === "weather") return theme.card;
   return theme.cardStrong;
 }
 
 function getOutlineColor(theme: AppTheme, role: AndroidMaterialRole): string {
+  if (role === "iconButton") return "transparent";
   if (role === "cta") return theme.border;
   return theme.name === "light" ? "rgba(31,78,121,0.14)" : "rgba(248,251,255,0.14)";
 }
 
 function getElevation(role: AndroidMaterialRole): number {
-  if (role === "button") return 3;
+  if (role === "iconButton" || role === "cta") return 0;
   if (role === "sheet") return 8;
-  if (role === "bar") return 6;
+  if (role === "navigation") return 3;
   if (role === "weather") return 3;
-  return 2;
+  return 0;
 }

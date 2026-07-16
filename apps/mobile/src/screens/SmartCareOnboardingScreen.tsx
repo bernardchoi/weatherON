@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
+import { OnboardingFooter } from "../components/OnboardingFooter";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { SmartCareScenario } from "../state/useWeatherOnAppState";
@@ -26,7 +26,21 @@ export function SmartCareOnboardingScreen({
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
   const permissionFeedback = getPermissionFeedback(permissionGateResult);
   return (
-    <AppScreen title="알림을 간단히 켤까요?" subtitle="상황만 고르면 필요한 날씨만 자동으로 알려줌" badge="3 / 4">
+    <AppScreen
+      title="필요한 알림만 받기"
+      subtitle="사용 상황 하나만 선택"
+      badge="3 / 4"
+      footer={
+        <OnboardingFooter
+          primaryLabel="다음"
+          primaryAccessibilityLabel="목적지 안내 단계로 이동"
+          onPrimary={onCompleteSmartCareOnboarding}
+          secondaryLabel="건너뛰기"
+          secondaryAccessibilityLabel="알림 설정을 건너뛰고 홈으로 이동"
+          onSecondary={() => onCompleteOnboarding("H1")}
+        />
+      }
+    >
       <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
@@ -41,7 +55,7 @@ export function SmartCareOnboardingScreen({
         </View>
       ) : null}
 
-      <Section title="사용 상황" caption="하나만 고르면 기본 알림이 적용됨" accent="clear">
+      <Section title="사용 상황" accent="clear">
         <View style={styles.segmentRow}>
           {scenarios.map((item) => (
             <FeedbackPressable
@@ -71,9 +85,8 @@ export function SmartCareOnboardingScreen({
       </Section>
 
       <View style={[styles.autoSummary, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-        <Text style={[styles.autoTitle, { color: theme.text }]}>자동으로 조정됨</Text>
         <Text style={[styles.autoBody, { color: theme.muted }]}>
-          강수·기상특보는 우선 알림, 출발 준비는 첫 이동 전 1회만 보냄
+          특보는 바로, 출발 준비는 한 번만 알림
         </Text>
         <View style={styles.autoPillRow}>
           <View style={[styles.autoPill, { backgroundColor: `${theme.gold}22` }]}>
@@ -85,14 +98,6 @@ export function SmartCareOnboardingScreen({
         </View>
       </View>
 
-      <Section title="다음 단계" caption="목적지 등록은 선택이며 나중에 해도 자동 케어 유지" accent="gold">
-        <View style={styles.actions}>
-          <AppButton label="목적지 선택으로" accessibilityLabel="목적지 선택 단계로 이동" onPress={onCompleteSmartCareOnboarding} />
-          <AppButton label="나중에 할게요" accessibilityLabel="목적지 선택을 건너뛰고 홈으로 이동" onPress={() => onCompleteOnboarding("H1")} tone="secondary" />
-        </View>
-      </Section>
-
-      <View style={styles.safeBottomPad} />
     </AppScreen>
   );
 }
@@ -199,11 +204,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  autoTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
   autoBody: {
     fontSize: 12,
     lineHeight: 18,
@@ -224,11 +224,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "900",
-  },
-  actions: {
-    gap: spacing.sm,
-  },
-  safeBottomPad: {
-    height: spacing.lg,
   },
 });

@@ -33,7 +33,7 @@ function getBackgroundColor(theme: AppTheme, role: IosGlassRole): string {
     return "rgba(255,255,255,0.78)";
   }
 
-  if (role === "weather") return "rgba(43,113,157,0.68)";
-  if (role === "button") return "rgba(39,106,150,0.58)";
-  return "rgba(39,106,150,0.72)";
+  if (role === "weather") return "rgba(16,61,95,0.74)";
+  if (role === "button") return "rgba(11,46,73,0.66)";
+  return "rgba(11,46,73,0.82)";
 }

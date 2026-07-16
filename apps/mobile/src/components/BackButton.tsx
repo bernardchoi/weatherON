@@ -21,7 +21,7 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
       accessibilityRole="button"
       android_ripple={androidMaterialRipple(theme)}
       onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "button"), iosGlassSurface(theme, "button")]}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), iosGlassSurface(theme, "button")]}
     >
       <ChevronLeft color={theme.text} />
     </FeedbackPressable>

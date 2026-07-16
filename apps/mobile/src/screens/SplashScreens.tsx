@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
+import { OnboardingFooter } from "../components/OnboardingFooter";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
@@ -12,9 +13,8 @@ export function AppEntrySplashScreen({ onCompleteOnboarding, onNavigate }: P0Scr
       primaryLabel="바로 시작하기"
       onPrimary={() => onCompleteOnboarding("H1")}
       footer="계정 없이 먼저 확인할 수 있어요"
-      secondaryLabel="앱 소개 보기"
+      secondaryLabel="앱 소개"
       onSecondary={() => onNavigate("O1")}
-      progressIndex={0}
     />
   );
 }
@@ -23,11 +23,10 @@ export function OnboardingSplashScreen({ onCompleteOnboarding, onNavigate }: P0S
   return (
     <SplashFrame
       description="오늘의 외출, 미리 준비하세요"
-      primaryLabel="소개 시작하기"
+      primaryLabel="다음"
       onPrimary={() => onNavigate("O2")}
-      secondaryLabel="홈으로"
+      secondaryLabel="건너뛰기"
       onSecondary={() => onCompleteOnboarding("H1")}
-      progressIndex={1}
     />
   );
 }
@@ -39,10 +38,9 @@ type SplashFrameProps = {
   secondaryLabel?: string;
   onSecondary?: () => void;
   footer?: string;
-  progressIndex: number;
 };
 
-function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onSecondary, footer, progressIndex }: SplashFrameProps) {
+function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onSecondary, footer }: SplashFrameProps) {
   const theme = useAppTheme();
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -57,21 +55,7 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
       </View>
 
       <View style={styles.bottom}>
-        <View style={styles.actions}>
-          <Pressable accessibilityRole="button" onPress={onPrimary} style={[styles.primaryButton, { backgroundColor: theme.gold }]}>
-            <Text style={[styles.primaryText, { color: theme.onAccent }]}>{primaryLabel}</Text>
-          </Pressable>
-          {secondaryLabel && onSecondary ? (
-            <Pressable accessibilityRole="button" onPress={onSecondary} style={[styles.secondaryButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-              <Text style={[styles.secondaryText, { color: theme.text }]}>{secondaryLabel}</Text>
-            </Pressable>
-          ) : null}
-        </View>
-        <View style={styles.progress}>
-          {[0, 1, 2].map((item) => (
-            <View key={item} style={[styles.dot, { backgroundColor: item === progressIndex ? theme.gold : theme.cardMuted }]} />
-          ))}
-        </View>
+        <OnboardingFooter primaryLabel={primaryLabel} onPrimary={onPrimary} secondaryLabel={secondaryLabel} onSecondary={onSecondary} />
         {footer ? <Text style={[styles.footer, { color: theme.subtle }]}>{footer}</Text> : null}
       </View>
     </View>
@@ -83,7 +67,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     paddingTop: 26,
-    paddingBottom: 42,
+    paddingBottom: spacing.md,
     overflow: "hidden",
   },
   skyGlow: {
@@ -131,45 +115,6 @@ const styles = StyleSheet.create({
   },
   bottom: {
     gap: spacing.md,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  primaryButton: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  secondaryButton: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  primaryText: {
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  secondaryText: {
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  progress: {
-    height: 10,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 5,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   footer: {
     textAlign: "center",

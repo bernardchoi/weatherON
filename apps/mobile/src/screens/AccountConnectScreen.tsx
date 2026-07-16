@@ -114,7 +114,7 @@ function ProviderButton({
 }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.providerButton, { backgroundColor: theme.cardStrong }]}>
-      <View style={[styles.providerIcon, { backgroundColor: getProviderColor(provider.id) }]}>
+      <View style={[styles.providerIcon, { backgroundColor: getProviderColor(provider.id, theme) }]}>
         <Text style={[styles.providerIconText, { color: getProviderTextColor(provider.id) }]}>{getProviderMark(provider.id)}</Text>
       </View>
       <View style={styles.providerCopy}>
@@ -125,13 +125,13 @@ function ProviderButton({
   );
 }
 
-function getProviderColor(providerId: ProviderTone) {
+function getProviderColor(providerId: ProviderTone, theme: AppTheme) {
   if (providerId === "kakao") return "#FEE500";
   if (providerId === "naver") return "#03C75A";
   if (providerId === "line") return "#4CC764";
   if (providerId === "google") return "#F8FBFF";
   if (providerId === "apple") return "#111827";
-  return "#3D87B5";
+  return theme.sky;
 }
 
 function getProviderTextColor(providerId: ProviderTone) {

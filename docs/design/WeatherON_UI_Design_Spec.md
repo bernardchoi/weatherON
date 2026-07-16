@@ -67,6 +67,10 @@ Android 빌드에는 WeatherON 목업 기준을 유지하는 범위에서 Materi
 
 - 적용 대상: 하단 메뉴 내비게이션, 뒤로가기/아이콘 버튼, Sheet/Modal, 날씨 카드 일부, CTA 역할 구분.
 - 표현 방식: surface container, state layer/ripple, active indicator, Android elevation, bottom sheet drag handle 감각을 WeatherON 토큰으로 리틴트한다.
+- 상단 hero/header는 적용 대상에서 제외한다. 보조 레이어가 브랜드 헤더를 별도 부유 카드로 바꾸지 않게 한다.
+- 하단 메뉴 active indicator는 64×32px로 아이콘 뒤에 고정하고 기존 5px Gold active dot을 함께 유지한다.
+- Android 네이티브 ripple을 쓰는 요소에는 커스텀 state layer를 중복 적용하지 않는다.
+- 뒤로가기/아이콘 버튼은 tonal surface와 ripple을 쓰되 기본 상태 elevation은 0으로 둔다.
 - 금지: WeatherON `Clear Navy + Warm Sun` 팔레트, 목업 탭 구조, 아이콘 크기, CTA 위계를 Material 기본값으로 덮어쓰지 않는다.
 - 제한: Material 3 Expressive의 강한 색·큰 형태·과한 모션은 MVP에 직접 적용하지 않고, Android 실기기 QA를 통과한 보조 표현만 채택한다.
 
@@ -102,19 +106,19 @@ WeatherON은 날씨 데이터를 많이 보여주는 앱이 아니라 오늘 준
 
 | 토큰 | 값 | 용도 |
 |---|---|---|
-| `NAVY` | `#1D5A86` | 앱 배경, 브랜드 필드 |
-| `NAVY_DARK` | `#276A96` | 탭바, 강한 surface |
-| `PANEL` | `#2B719D` | 기본 카드 |
-| `PANEL_L1` | `#3D87B5` | 시트, 상위 surface |
-| `PANEL_L2` | `#55A0CA` | 시트 내부 중첩 요소 |
-| `GOLD` | `#F4B63F` | ON, 활성, 1차 CTA |
-| `SKY` | `#4AA3DF` | 비, 흐림, 정보, 알림 |
-| `SKY_LITE` | `#DFF5FF` | 작은 라벨 대비 보강 |
-| `CLEAR` | `#2FC6A3` | 정상, 안전, 완료 |
-| `WARM` | `#E8854A` | 약한 주의, 따뜻한 정보 |
-| `RAIN_RED` | `#E97F77` | blocking 경고, 위험 |
-| `MIST` | `#E4F2FF` | 보조 텍스트, 중성 아이콘 |
-| `TEXT` | `#F8FBFF` | 본문 텍스트 |
+| `NAVY` | `#071E33` | 앱 배경, 브랜드 필드 |
+| `NAVY_DARK` | `#0B2E49` | 탭바, 강한 surface |
+| `PANEL` | `#103D5F` | 기본 카드 |
+| `PANEL_L1` | `#16557F` | 시트, 상위 surface |
+| `PANEL_L2` | `#2373A4` | 시트 내부 중첩 요소 |
+| `GOLD` | `#FFC758` | ON, 활성, 1차 CTA |
+| `SKY` | `#58BFFF` | 비, 흐림, 정보, 알림 |
+| `SKY_LITE` | `#D8F3FF` | 작은 라벨 대비 보강 |
+| `CLEAR` | `#5DE2C2` | 정상, 안전, 완료 |
+| `WARM` | `#FF9A66` | 약한 주의, 따뜻한 정보 |
+| `RAIN_RED` | `#FF7F78` | blocking 경고, 위험 |
+| `MIST` | `#DCF0FF` | 보조 텍스트, 중성 아이콘 |
+| `TEXT` | `#F6FBFF` | 본문 텍스트 |
 
 ### 라이트 모드
 
@@ -442,6 +446,8 @@ MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-16 (2차) | 다크모드 배경을 깊은 클리어 네이비로 낮추고 카드 계층은 청색 채도를 유지. SKY·CLEAR·GOLD 포인트를 선명하게 조정하고 날씨 상태 배경과 플랫폼 보조 surface를 동기화 |
+| 2026-07-16 | Android Material 3 실기기 회귀 수정. 상단 hero surface 오적용 제거, 하단 active indicator 64×32px 고정, 아이콘 버튼 기본 elevation 제거, 네이티브 ripple과 커스텀 state layer 중복 방지 |
 | 2026-07-15 (4차) | 홈/출발/마이 화면의 텍스트 가독성 개선 기준 추가 및 구현 반영. 주요 수치·상태·카드 제목은 확대하고, 설명 문구는 축약하며 아이콘·pill·상태 dot 중심으로 전환. 핵심 카드는 6~12px 확장하되 첫 viewport 판단성을 유지 |
 | 2026-07-15 (3차) | iOS/Android 공통 다크모드 팔레트를 더 맑고 가벼운 sky-navy 톤으로 상향. 다크 배경·탭바·카드·시트 surface, 날씨 배경, 목업 토큰, 플랫폼 보조 레이어 surface를 동기화하고 다크 카드 그림자 opacity를 완화 |
 | 2026-07-15 (2차) | Android 빌드 한정 Material 3 보조 레이어 적용 범위 추가 및 공통 컴포넌트 구현 반영. 하단 메뉴 내비게이션, 뒤로가기/아이콘 버튼, Sheet/Modal, 날씨 카드 일부, CTA 역할 구분에 제한 적용하며 Dynamic Color와 Material 3 Expressive 전면 적용은 제외 |
