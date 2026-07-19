@@ -1,4 +1,4 @@
-# Perfora Air Usability Test Plan v0.1
+# Ambient Surface Usability Test Plan v0.1
 
 **Date:** 2026-07-15
 **Status:** Ready for lightweight moderated test
@@ -6,7 +6,7 @@
 
 ## 0. Objective
 
-Validate the core Perfora Air assumption:
+Validate the core Ambient Surface assumption:
 
 > Users can make faster and more confident decisions when invisible context is translated into surface density, concise text, and clear action.
 

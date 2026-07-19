@@ -1,10 +1,19 @@
 {
-  "name": "Project Wind / Perfora Air",
+  "name": "Project Wind / Ambient Surface",
   "version": "1.0.0",
   "status": "stable-internal",
   "date": "2026-07-10",
   "currentWeatherOnUiReplacement": false,
-  "publicNameStatus": "internal-codename-only",
+  "namingDecisionDate": "2026-07-16",
+  "designSystemName": "Ambient Surface",
+  "visualMaterial": "Matte Air",
+  "principles": [
+    "Soft Density",
+    "Quiet Signal",
+    "Text First"
+  ],
+  "legacyCodename": "Perfora Air",
+  "publicNameStatus": "design-system-name-decided",
   "entrypoints": {
     "tokens": "perfora-air.tokens.v1.0.json",
     "tokenCss": "perfora-air.v1.0.css",
@@ -17,19 +26,19 @@
   "files": [
     {
       "path": "perfora-air.tokens.v1.0.json",
-      "sha256": "1059a0df4b18250b2d3863fc92e300de1349d21b4a2d7ba2f47fa05d70c17f4b"
+      "sha256": "0997032c0bc786878eafdb080a87f7f31ef844aafa819d26f43ff2f8d6cc9ab9"
     },
     {
       "path": "perfora-air.v1.0.css",
-      "sha256": "1a71c87d8e43fbeab59d17d83b1510823153b675151d2ef150fc01592affca62"
+      "sha256": "811aebc55e858d209b47c1f59e18c1d18dc0f7095034a5922f4522ce80e17a12"
     },
     {
       "path": "perfora-air.token-map.v1.0.ts",
-      "sha256": "e1f9f8f1563fe14d76f3694f2f53024663092bbd66adeb6b08556bdc25b3af66"
+      "sha256": "fcb24ded423def98d07fd0c1a443dda00a4adb86e86491f506285d85600a558c"
     },
     {
       "path": "perfora-air.components.v1.0.json",
-      "sha256": "818176e9103b8f35de5a54a8f4184885803db7a99c120109963d619c7fec7007"
+      "sha256": "b1b36a79f9c4996093e63d5007e6ee69cf3ea449f6027c6eb7b4032d180783f6"
     },
     {
       "path": "perfora-air.components.schema.v1.0.json",
@@ -37,27 +46,27 @@
     },
     {
       "path": "perfora-air.component-types.v1.0.ts",
-      "sha256": "9f7fbc8104a5a937f74ece5e98aa8521dea262905fb8c697ec766d55d805fb4e"
+      "sha256": "2b5710fdd1aae39c1dec9ca96557d6e97e50d25ac98135e08cc0ba50c1022b4f"
     },
     {
       "path": "perfora-air.components.v1.0.css",
-      "sha256": "6ff434a74ef8ce4459023f51951a4404153a07ed27e11ee13df02f8536e87262"
+      "sha256": "96759e3c34f55dfa011c3956dbc814ed6386a8f4154f406fc5ad12bd827bf162"
     },
     {
       "path": "reference-dashboard.v1.0.html",
-      "sha256": "7517a8c0226fff25b0a000386180aa854450991fbaf4b5e9affc9f80b57d9ac4"
+      "sha256": "12227722f6d0d25d70e04155de54429f0db3bdb1f162c240c5a3854372ca46cc"
     },
     {
       "path": "README.md",
-      "sha256": "549c72d1cd474899569cd06749cd20e179bae2b1f6ae55c808fb5ee7b9a968d8"
+      "sha256": "fbd8c6fcc0fd04485f1ef7f838ae7bc51336bbab266217e26ce452dd625b372d"
     },
     {
       "path": "MIGRATION.md",
-      "sha256": "08a8c2516cbd74f14d3eb3f573b2075702805f8a4d2d7a322812cbc262f99102"
+      "sha256": "d0cbf683081a09d236042f1aca47ef208c3d85da468a9379793b20826617ffef"
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "b054014c441c694133c0db475776ff8b1b5e1954baa245330d70fae2fbdcb6c8"
+      "sha256": "dcaf2b70993cf796de6af1221b5028fbe00e984239cce4e1d259552606eeba9d"
     },
     {
       "path": "QUALITY_GATES.md",

@@ -1,21 +1,21 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "$metadata": {
-    "name": "Perfora Air Tokens",
+    "name": "Ambient Surface Tokens",
     "version": "1.0.0",
     "status": "stable",
     "date": "2026-07-10",
     "description": "A light, matte, atmospheric token set for translating invisible context into surface density, subtle light, and directional flow.",
     "principles": [
-      "Matte over glossy",
-      "Signal over sparkle",
-      "Density carries meaning",
-      "Light is feedback, not decoration",
-      "Motion is contextual and quiet by default",
-      "Accessibility modes are first-class tokens"
+      "Soft Density",
+      "Quiet Signal",
+      "Text First"
     ],
-    "codename": "Perfora Air",
-    "publicNameStatus": "internal-codename-only",
+    "designSystemName": "Ambient Surface",
+    "visualMaterial": "Matte Air",
+    "legacyCodename": "Perfora Air",
+    "namingDecisionDate": "2026-07-16",
+    "publicNameStatus": "design-system-name-decided",
     "stability": {
       "tokenPaths": "stable-within-1.x",
       "semanticStateModel": "stable-within-1.x",

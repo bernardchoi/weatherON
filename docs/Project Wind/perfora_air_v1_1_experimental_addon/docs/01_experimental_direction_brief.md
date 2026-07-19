@@ -1,12 +1,12 @@
-# Perfora Air v1.1 Experimental Direction Brief
+# Ambient Surface v1.1 Experimental Direction Brief
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on for v1.1 experimental build/review
-**Previous baseline:** Ambient Dashboard MVP v0.1, Perfora Air v1.0 stable tokens, Perfora Air v1.0 stable components, Visual Summary Alt Text v0.1
+**Previous baseline:** Ambient Dashboard MVP v0.1, Ambient Surface v1.0 stable tokens, Ambient Surface v1.0 stable components, Visual Summary Alt Text v0.1
 
 ## 0. Purpose
 
-Perfora Air v1.1 experimental moves the project from **visual concept validation** into **product-usable system validation**.
+Ambient Surface v1.1 experimental moves the project from **visual concept validation** into **product-usable system validation**.
 
 v1.0 stabilized that the Tower of Winds reference can become a coherent UI language: matte surfaces, soft density fields, quiet signal feedback, and text-first accessibility. v1.1 experimental must prove that the language can survive real product constraints: noisy weather data, accessibility modes, component reuse, WeatherON integration, and implementation across React/SwiftUI.
 
@@ -66,7 +66,7 @@ Users can understand the current outdoor/indoor/day state faster when key data i
 |---|---|
 | Density helps prioritization | Users identify the most pressured time block faster than with a plain list |
 | Matte signal feels calmer | Users perceive alerts as useful, not stressful |
-| Text-first does not weaken identity | Reduced visual modes still feel recognizably Perfora Air |
+| Text-first does not weaken identity | Reduced visual modes still feel recognizably Ambient Surface |
 | Data mapping prevents decoration drift | Designers can explain why each pattern, ring, or surface state appears |
 
 ## 5. Target screens for v1.1 experimental
@@ -81,7 +81,7 @@ Users can understand the current outdoor/indoor/day state faster when key data i
 
 ## 6. Visual direction guardrails
 
-Perfora Air v1.1 experimental must sit between two failure modes:
+Ambient Surface v1.1 experimental must sit between two failure modes:
 
 ```txt
 Too strong  → glossy Liquid Glass clone / neon weather dashboard
@@ -119,7 +119,7 @@ Target zone → matte atmospheric dashboard with meaningful density
 | Visual gate | Does the screen avoid gloss, sparkle, and excessive glow? | Specular and lumen caps pass |
 | Accessibility gate | Is equivalent meaning available without motion/transparency? | Visual summary text + raw data pass |
 | Product gate | Does the UI lead to a clear action? | Recommendation or next step is visible |
-| Brand gate | Is Perfora Air distinguishable from Liquid Glass/Material 3? | Difference is visible and explainable |
+| Brand gate | Is Ambient Surface distinguishable from Liquid Glass/Material 3? | Difference is visible and explainable |
 
 ## 9. Recommended v1.1 experimental scope
 
@@ -133,4 +133,4 @@ Do not expand beyond the WeatherON experimental layer until the weather/air use 
 
 ## 10. Decision
 
-Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first. The mapping is the core differentiator. Without it, Perfora Air risks becoming only a visual skin.
+Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first. The mapping is the core differentiator. Without it, Ambient Surface risks becoming only a visual skin.

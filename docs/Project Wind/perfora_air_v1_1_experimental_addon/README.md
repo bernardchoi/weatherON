@@ -1,10 +1,14 @@
-# Project Wind — Perfora Air v1.1 Experimental Add-on
+# Project Wind — Ambient Surface v1.1 Experimental Add-on
 
 **상태:** Experimental add-on for v1.0 stable package
 **버전:** 1.1.0-experimental
 **정리일:** 2026-07-15
 **기준:** `perfora_air_v1_0_package` stable contract
 **출처:** v0.2 productization draft promoted into the v1.x line
+**공식 명칭:** Ambient Surface
+**시각 재료:** Matte Air
+**핵심 원칙:** Soft Density · Quiet Signal · Text First
+**명칭 결정:** 2026-07-16
 
 ## 목적
 
@@ -36,7 +40,7 @@
 - v1.0 stable 패키지가 여전히 Project Wind의 공식 기준점이다.
 - v1.1 add-on은 WeatherON 차기 UI 후보 검증용이며 현행 MVP UI를 자동 대체하지 않는다.
 - React Native production 적용 전 토큰 변환, 목업 승인, 실제 기기 QA, 보조공학 수동 테스트가 필요하다.
-- Perfora Air는 내부 코드명이며 외부 공개명은 별도 상표 검토 후 결정한다.
+- Ambient Surface는 공식 디자인 시스템명이다. Perfora Air와 `perfora-air` 계열은 v1.x 호환용 레거시 식별자로만 유지한다.
 
 ## 추천 실행 순서
 

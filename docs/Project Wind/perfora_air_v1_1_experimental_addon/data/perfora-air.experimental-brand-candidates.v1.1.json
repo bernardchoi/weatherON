@@ -1,5 +1,18 @@
 {
-  "date": "2026-07-13",
+  "date": "2026-07-16",
+  "decision": {
+    "status": "decided",
+    "date": "2026-07-16",
+    "project": "Project Wind",
+    "designSystem": "Ambient Surface",
+    "visualMaterial": "Matte Air",
+    "principles": [
+      "Soft Density",
+      "Quiet Signal",
+      "Text First"
+    ],
+    "legacyCodename": "Perfora Air"
+  },
   "candidates": [
     {
       "name": "Poravela",
@@ -73,10 +86,10 @@
     }
   ],
   "$metadata": {
-    "name": "Perfora Air Experimental Brand Candidates",
+    "name": "Ambient Surface Naming Decision and Historical Brand Candidates",
     "version": "1.1.0-experimental",
     "date": "2026-07-15",
-    "status": "preliminary-screen-not-legal-advice",
+    "status": "superseded-screening-with-final-naming-decision",
     "promotedFrom": "perfora-air.brand-candidates.v0.2.json"
   }
 }

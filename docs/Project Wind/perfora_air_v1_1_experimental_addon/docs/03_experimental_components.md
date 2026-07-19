@@ -1,12 +1,12 @@
-# Perfora Air Experimental Components v1.1
+# Ambient Surface Experimental Components v1.1
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on
-**Depends on:** Perfora Air v1.0 stable package + Experimental Data-to-Atmosphere Mapping v1.1
+**Depends on:** Ambient Surface v1.0 stable package + Experimental Data-to-Atmosphere Mapping v1.1
 
 ## 0. What v1.1 experimental adds
 
-Perfora Air v1.0 stable components defined the visual grammar. Components v1.1 experimental adds product behavior:
+Ambient Surface v1.0 stable components defined the visual grammar. Components v1.1 experimental adds product behavior:
 
 - Data-bound states.
 - Loading / insufficient data / offline states.

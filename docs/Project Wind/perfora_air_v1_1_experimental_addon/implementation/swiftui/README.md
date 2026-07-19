@@ -1,6 +1,6 @@
-# Perfora Air SwiftUI Starter
+# Ambient Surface SwiftUI Starter
 
-Single-file draft SwiftUI implementation for Perfora Air v1.1 experimental.
+Single-file draft SwiftUI implementation for Ambient Surface v1.1 experimental.
 
 ## Includes
 

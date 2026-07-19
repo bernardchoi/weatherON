@@ -12,6 +12,7 @@
     "build:brand": "node scripts/build-brand-assets.js",
     "build:ui-icons": "node scripts/build-ui-icons.mjs",
     "build:project-wind-v1": "node scripts/build-project-wind-v1.mjs",
+    "build:project-wind-v1-1-docs": "node scripts/build-project-wind-v1-1-docs.mjs",
     "build:android-store-assets": "node scripts/build-android-store-assets.mjs",
     "export:android-web": "node scripts/export-android-web.mjs",
     "report:android-release-readiness": "node scripts/generate-android-release-readiness-report.mjs",

@@ -130,7 +130,8 @@ assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
 assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "C1";', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
-assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ['androidMaterialSurface(theme, "navigation")', 'left: "50%"', "width: 64", "marginLeft: -32", "usesNativeRipple"]);
+assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ['androidMaterialSurface(theme, "navigation")', "activeDot", "activeColor", "usesNativeRipple"]);
+assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", ["androidActiveIndicator", "androidMaterialActiveIndicator"]);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
 assertSourceIncludes("apps/mobile/src/theme/androidMaterial.ts", [
   '"surfaceContainerLow"',

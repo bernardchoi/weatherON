@@ -1,4 +1,6 @@
-# Perfora Air v0.1 → v1.0 마이그레이션
+# Ambient Surface v0.1 → v1.0 마이그레이션
+
+> Perfora Air와 perfora-air 계열 경로는 레거시 코드 식별자이며 v1.x에서 유지함.
 
 ## 변경 요약
 

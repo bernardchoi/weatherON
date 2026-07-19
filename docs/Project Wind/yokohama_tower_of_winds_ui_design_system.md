@@ -9,6 +9,10 @@ Project Wind는 WeatherON의 현행 MVP/정식 출시 UI 스펙을 즉시 대체
 **조사 기준일**: 2026-07-09  
 **주의**: 네이밍 조사는 일반 웹 검색 기반의 1차 스크리닝이며, 상표권·도메인·법률 검토를 대체하지 않는다. 실제 출시 전에는 USPTO, WIPO Global Brand Database, KIPRIS 등 공식 상표 DB와 법률 검토가 필요하다.[^uspto][^wipo][^kipris]
 
+**명칭 결정일**: 2026-07-16
+
+**공식 명칭**: 프로젝트 `Project Wind`, 디자인 시스템 `Ambient Surface`, 시각 재료 `Matte Air`, 핵심 원칙 `Soft Density · Quiet Signal · Text First`. 이 결정은 본문에 남아 있는 이전 네이밍 후보 평가보다 우선한다. 기존 `Perfora Air`와 `perfora-air.*` 표기는 레거시 코드명·식별자로만 보존한다.
+
 ---
 
 ## 1. 출발점: 바람의 탑을 UI로 읽는 방식
@@ -881,14 +885,14 @@ function mapAirStateToTokens(state: AirState) {
 3. **Lumen**: 빛은 장식이 아니라 상태 피드백이다.
 4. **Flow**: 모션은 귀여운 애니메이션이 아니라 맥락의 흐름이다.
 
-`Perfora Air`는 이 철학을 구현한 내부 코드명으로 유지한다. 외부 상표는 보충 리포트에서 확인한 충돌 위험 때문에 확정하지 않으며, `Windframe`, `Vento`, `Driftlight` 등 위험 후보는 사용하지 않는다.
+이 철학의 공식 디자인 시스템명은 `Ambient Surface`다. `Matte Air`는 시스템 전체 이름이 아니라 반응형 무광 표면을 설명하는 시각 재료명으로 사용한다. `Soft Density · Quiet Signal · Text First`는 구현과 검증에서 변경하지 않는 핵심 원칙이다. `Perfora Air`와 `perfora-air.*` 계열은 기존 v1.x 코드 호환용 레거시 식별자로만 유지한다.
 
 ---
 
 ## 17. v1.0 완료 상태와 다음 단계
 
 1. **완료**
-   무드보드, v0.1 토큰/컴포넌트/wireframe, Ambient Dashboard, 자동 접근성 패치 결과를 Perfora Air v1.0 stable internal package로 통합했다.
+   무드보드, v0.1 토큰/컴포넌트/wireframe, Ambient Dashboard, 자동 접근성 패치 결과를 Ambient Surface v1.0 stable internal package로 통합했다.
 
 2. **완료**
    357개 token path, 10개 stable component, 237개 CSS variable, 로컬 schema, release manifest, build/check 명령을 고정했다.
@@ -899,8 +903,8 @@ function mapAirStateToTokens(state: AirState) {
 4. **제품 채택 전 필요**
    iOS/Android 실제 기기 성능, reduced mode, VoiceOver/TalkBack, 저시력 사용자 테스트를 진행한다.
 
-5. **외부 공개 전 필요**
-   완전 조어형 외부 명칭을 별도 선정하고 공식 상표 DB와 변리사 검토를 완료한다.
+5. **명칭 결정 완료**
+   공식 디자인 시스템명을 Ambient Surface로 확정했다. 별도 상업 제품이나 SaaS 브랜드를 만들 경우에만 공식 상표 DB와 변리사 검토를 다시 진행한다.
 
 ---
 

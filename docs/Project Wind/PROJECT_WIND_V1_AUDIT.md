@@ -15,7 +15,7 @@ v0.1은 방향성과 핵심 화면은 성립했으나 release contract가 없어
 | 가짜 원격 component schema | 자동 검증 불가 | 로컬 JSON Schema 추가 |
 | 10개 컴포넌트 모두 draft | 구현 호환성 불명확 | stable status와 1.x 호환 계약 고정 |
 | 44px·focus·환경 mode가 문서와 패치에 분산 | 구현 누락 위험 | token, CSS, component quality gate에 중복 고정 |
-| 외부 이름 리스크 | 공개 브랜드 오인 가능 | Perfora Air를 내부 코드명으로 제한 |
+| 외부 이름 리스크 | 공개 브랜드 오인 가능 | Ambient Surface를 공식 디자인 시스템명으로 확정하고 Perfora Air는 레거시 식별자로 제한 |
 
 ## 브라우저 검증
 

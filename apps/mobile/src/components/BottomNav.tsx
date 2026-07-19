@@ -3,7 +3,7 @@ import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, type Co
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialActiveIndicator, androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
@@ -43,7 +43,6 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             ripple={androidMaterialRipple(theme)}
             onPress={() => onNavigate(route.id)}
           >
-            <View pointerEvents="none" style={[styles.androidActiveIndicator, androidMaterialActiveIndicator(theme, active)]} />
             <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
             <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
             <Text
@@ -161,15 +160,6 @@ const styles = StyleSheet.create({
   },
   itemTint: {
     borderRadius: 14,
-  },
-  androidActiveIndicator: {
-    position: "absolute",
-    top: 6,
-    left: "50%",
-    width: 64,
-    marginLeft: -32,
-    height: 32,
-    borderRadius: 16,
   },
   activeDot: {
     width: 5,

@@ -72,16 +72,6 @@ export function androidMaterialSurface(theme: AppTheme, role: AndroidMaterialRol
   };
 }
 
-export function androidMaterialActiveIndicator(theme: AppTheme, active: boolean): ViewStyle | null {
-  if (Platform.OS !== "android" || !active) return null;
-
-  return {
-    backgroundColor: theme.dynamicColorEnabled
-      ? androidMaterialColor(theme, "secondaryContainer")
-      : theme.name === "light" ? `${theme.gold}2E` : `${theme.gold}38`,
-  };
-}
-
 export function androidMaterialRipple(theme: AppTheme, tone: "primary" | "surface" = "surface") {
   if (Platform.OS !== "android") return undefined;
 

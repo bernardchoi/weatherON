@@ -1,10 +1,14 @@
-# Project Wind — Perfora Air v1.1 Experimental Add-on
+# Project Wind — Ambient Surface v1.1 Experimental Add-on
 
 **상태:** Experimental add-on for v1.0 stable package
 **버전:** 1.1.0-experimental
 **정리일:** 2026-07-15
 **기준:** `perfora_air_v1_0_package` stable contract
 **출처:** v0.2 productization draft promoted into the v1.x line
+**공식 명칭:** Ambient Surface
+**시각 재료:** Matte Air
+**핵심 원칙:** Soft Density · Quiet Signal · Text First
+**명칭 결정:** 2026-07-16
 
 ## 목적
 
@@ -36,7 +40,7 @@
 - v1.0 stable 패키지가 여전히 Project Wind의 공식 기준점이다.
 - v1.1 add-on은 WeatherON 차기 UI 후보 검증용이며 현행 MVP UI를 자동 대체하지 않는다.
 - React Native production 적용 전 토큰 변환, 목업 승인, 실제 기기 QA, 보조공학 수동 테스트가 필요하다.
-- Perfora Air는 내부 코드명이며 외부 공개명은 별도 상표 검토 후 결정한다.
+- Ambient Surface는 공식 디자인 시스템명이다. Perfora Air와 `perfora-air` 계열은 v1.x 호환용 레거시 식별자로만 유지한다.
 
 ## 추천 실행 순서
 
@@ -46,13 +50,12 @@
 4. React starter로 내부 prototype 구성
 5. `docs/05_usability_test_plan.md` 기준으로 사용성 테스트 진행
 
-
 ---
 
-# Perfora Air v1.1 Experimental Add-on
+# Ambient Surface v1.1 Experimental Add-on
 
 **Date:** 2026-07-15
-**Purpose:** Experimental add-on package for Perfora Air after the v1.0 stable internal design-system release.
+**Purpose:** Experimental add-on package for Ambient Surface after the v1.0 stable internal design-system release.
 
 ## Package contents
 
@@ -92,7 +95,7 @@
 
 ## Key v1.1 experimental decision
 
-Perfora Air's main differentiator is **not visual polish**. It is this chain:
+Ambient Surface's main differentiator is **not visual polish**. It is this chain:
 
 ```txt
 invisible data → atmosphere score → surface density → quiet signal → text-first decision
@@ -100,18 +103,17 @@ invisible data → atmosphere score → surface density → quiet signal → tex
 
 If a visual element cannot be traced back to that chain, remove it or demote it.
 
-
 ---
 
-# Perfora Air v1.1 Experimental Direction Brief
+# Ambient Surface v1.1 Experimental Direction Brief
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on for v1.1 experimental build/review
-**Previous baseline:** Ambient Dashboard MVP v0.1, Perfora Air v1.0 stable tokens, Perfora Air v1.0 stable components, Visual Summary Alt Text v0.1
+**Previous baseline:** Ambient Dashboard MVP v0.1, Ambient Surface v1.0 stable tokens, Ambient Surface v1.0 stable components, Visual Summary Alt Text v0.1
 
 ## 0. Purpose
 
-Perfora Air v1.1 experimental moves the project from **visual concept validation** into **product-usable system validation**.
+Ambient Surface v1.1 experimental moves the project from **visual concept validation** into **product-usable system validation**.
 
 v1.0 stabilized that the Tower of Winds reference can become a coherent UI language: matte surfaces, soft density fields, quiet signal feedback, and text-first accessibility. v1.1 experimental must prove that the language can survive real product constraints: noisy weather data, accessibility modes, component reuse, WeatherON integration, and implementation across React/SwiftUI.
 
@@ -171,7 +173,7 @@ Users can understand the current outdoor/indoor/day state faster when key data i
 |---|---|
 | Density helps prioritization | Users identify the most pressured time block faster than with a plain list |
 | Matte signal feels calmer | Users perceive alerts as useful, not stressful |
-| Text-first does not weaken identity | Reduced visual modes still feel recognizably Perfora Air |
+| Text-first does not weaken identity | Reduced visual modes still feel recognizably Ambient Surface |
 | Data mapping prevents decoration drift | Designers can explain why each pattern, ring, or surface state appears |
 
 ## 5. Target screens for v1.1 experimental
@@ -186,7 +188,7 @@ Users can understand the current outdoor/indoor/day state faster when key data i
 
 ## 6. Visual direction guardrails
 
-Perfora Air v1.1 experimental must sit between two failure modes:
+Ambient Surface v1.1 experimental must sit between two failure modes:
 
 ```txt
 Too strong  → glossy Liquid Glass clone / neon weather dashboard
@@ -224,7 +226,7 @@ Target zone → matte atmospheric dashboard with meaningful density
 | Visual gate | Does the screen avoid gloss, sparkle, and excessive glow? | Specular and lumen caps pass |
 | Accessibility gate | Is equivalent meaning available without motion/transparency? | Visual summary text + raw data pass |
 | Product gate | Does the UI lead to a clear action? | Recommendation or next step is visible |
-| Brand gate | Is Perfora Air distinguishable from Liquid Glass/Material 3? | Difference is visible and explainable |
+| Brand gate | Is Ambient Surface distinguishable from Liquid Glass/Material 3? | Difference is visible and explainable |
 
 ## 9. Recommended v1.1 experimental scope
 
@@ -238,12 +240,11 @@ Do not expand beyond the WeatherON experimental layer until the weather/air use 
 
 ## 10. Decision
 
-Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first. The mapping is the core differentiator. Without it, Perfora Air risks becoming only a visual skin.
-
+Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first. The mapping is the core differentiator. Without it, Ambient Surface risks becoming only a visual skin.
 
 ---
 
-# Perfora Air Experimental Data-to-Atmosphere Mapping v1.1
+# Ambient Surface Experimental Data-to-Atmosphere Mapping v1.1
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on
@@ -251,9 +252,9 @@ Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first
 
 ## 0. Purpose
 
-This document defines how Perfora Air converts raw product data into UI atmosphere.
+This document defines how Ambient Surface converts raw product data into UI atmosphere.
 
-The goal is to prevent Perfora Air from becoming a decorative layer. Every density field, lumen signal, flow motion, and visual summary sentence must be explainable through data or explicit user context.
+The goal is to prevent Ambient Surface from becoming a decorative layer. Every density field, lumen signal, flow motion, and visual summary sentence must be explainable through data or explicit user context.
 
 ```txt
 raw data
@@ -404,18 +405,17 @@ Visual elements must use the same state model as their text alternatives.
 - `perfora-air.experimental-data-map.v1.1.json` — machine-readable mapping.
 - `perfora-air.experimental-data-map.v1.1.ts` — implementation helper for React/SwiftUI parity.
 
-
 ---
 
-# Perfora Air Experimental Components v1.1
+# Ambient Surface Experimental Components v1.1
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on
-**Depends on:** Perfora Air v1.0 stable package + Experimental Data-to-Atmosphere Mapping v1.1
+**Depends on:** Ambient Surface v1.0 stable package + Experimental Data-to-Atmosphere Mapping v1.1
 
 ## 0. What v1.1 experimental adds
 
-Perfora Air v1.0 stable components defined the visual grammar. Components v1.1 experimental adds product behavior:
+Ambient Surface v1.0 stable components defined the visual grammar. Components v1.1 experimental adds product behavior:
 
 - Data-bound states.
 - Loading / insufficient data / offline states.
@@ -595,10 +595,9 @@ FlowDock is not a showpiece in v1.1 experimental. Keep it simple and accessible:
 - `perfora-air.experimental-component-types.v1.1.ts`
 - `perfora-air.experimental-components.v1.1.css`
 
-
 ---
 
-# Perfora Air Figma Design Kit v0.1
+# Ambient Surface Figma Design Kit v0.1
 
 **Date:** 2026-07-15
 **Status:** Build blueprint
@@ -606,7 +605,7 @@ FlowDock is not a showpiece in v1.1 experimental. Keep it simple and accessible:
 
 ## 0. Purpose
 
-Create a reusable Figma kit that keeps Perfora Air from drifting into either glossy glass UI or generic pale cards.
+Create a reusable Figma kit that keeps Ambient Surface from drifting into either glossy glass UI or generic pale cards.
 
 The kit should make the core system repeatable:
 
@@ -769,10 +768,9 @@ This keeps designers from treating accessibility text as an engineering-only tas
 - `figma/perfora-air.experimental-figma.component-matrix.v1.1.json`
 - `figma/perfora-air.experimental-figma.preview.v1.1.svg`
 
-
 ---
 
-# Perfora Air Usability Test Plan v0.1
+# Ambient Surface Usability Test Plan v0.1
 
 **Date:** 2026-07-15
 **Status:** Ready for lightweight moderated test
@@ -780,7 +778,7 @@ This keeps designers from treating accessibility text as an engineering-only tas
 
 ## 0. Objective
 
-Validate the core Perfora Air assumption:
+Validate the core Ambient Surface assumption:
 
 > Users can make faster and more confident decisions when invisible context is translated into surface density, concise text, and clear action.
 
@@ -949,14 +947,13 @@ Success:
 
 - `tests/perfora-air.experimental-usability.scorecard.v1.1.json`
 
-
 ---
 
 # WeatherON Adoption Scope Decision
 
 **Date:** 2026-07-15
 **Status:** Experimental recommendation
-**Design system:** Perfora Air / Project Wind
+**Design system:** Ambient Surface / Project Wind
 
 ## 0. Decision summary
 
@@ -970,14 +967,14 @@ Data Visualization Kit first
 → Full redesign only after usability validation
 ```
 
-Perfora Air should enter WeatherON as a targeted layer for weather/air comprehension, not as an immediate full product redesign.
+Ambient Surface should enter WeatherON as a targeted layer for weather/air comprehension, not as an immediate full product redesign.
 
 ## 1. Why not full redesign now
 
 | Risk | Explanation |
 |---|---|
 | Launch risk | Full redesign could delay the current WeatherON MVP |
-| Brand risk | Perfora Air is still a draft design language |
+| Brand risk | Ambient Surface is still a draft design language |
 | Data risk | Mapping rules need real weather data validation |
 | Accessibility risk | Visual summaries need screen-reader/manual testing |
 | Performance risk | Ambient visuals may need low-end device optimization |
@@ -1004,7 +1001,7 @@ Add a user-facing or internal feature flag:
 weatheron.features.perforaAir = true
 ```
 
-The user can test a Perfora Air home variant while the stable UI remains intact.
+The user can test a Ambient Surface home variant while the stable UI remains intact.
 
 ### Layer 3 — Full redesign candidate
 
@@ -1020,7 +1017,7 @@ Only consider this after:
 | Phase | Scope | Success metric |
 |---|---|---|
 | Phase 0 | Keep current WeatherON UI | No disruption |
-| Phase 1 | Add Perfora Air `AtmospherePanel` to internal build | Decision accuracy in tests |
+| Phase 1 | Add Ambient Surface `AtmospherePanel` to internal build | Decision accuracy in tests |
 | Phase 2 | Add Air Flow Detail with `LumenRing` | Users understand wind/humidity action |
 | Phase 3 | Add `AmbientTimeline` to hourly forecast | Peak/pressure comprehension improves |
 | Phase 4 | Experimental mode toggle | Retention and satisfaction monitored |
@@ -1028,7 +1025,7 @@ Only consider this after:
 
 ## 4. WeatherON screens and fit
 
-| WeatherON area | Perfora Air fit | Recommendation |
+| WeatherON area | Ambient Surface fit | Recommendation |
 |---|---|---|
 | Home current weather | Very high | Use `AtmospherePanel` |
 | Hourly forecast | High | Use `AmbientTimeline` |
@@ -1082,18 +1079,17 @@ Track events:
 
 ## 8. Final recommendation
 
-Proceed with **WeatherON Perfora Air Experimental Layer**:
+Proceed with **WeatherON Ambient Surface Experimental Layer**:
 
 ```txt
 Home AtmospherePanel + Air Flow Detail + VisualSummaryText
 ```
 
-Do not re-theme the entire app until usability and accessibility tests confirm that Perfora Air improves comprehension rather than only changing the look.
-
+Do not re-theme the entire app until usability and accessibility tests confirm that Ambient Surface improves comprehension rather than only changing the look.
 
 ---
 
-# Perfora Air Implementation Package v1.1 experimental
+# Ambient Surface Implementation Package v1.1 experimental
 
 **Date:** 2026-07-15
 **Status:** Experimental starter implementation
@@ -1188,146 +1184,99 @@ PAAtmospherePanel(result: result)
 - Add VoiceOver/TalkBack manual checks.
 - Measure animation cost on low-end devices.
 
-
 ---
 
-# External Brand / Trademark Candidate Re-exploration v1.1 experimental
+# Ambient Surface Naming Decision and Trademark Record
 
-**Date:** 2026-07-15
-**Status:** Preliminary knockout screening, not legal advice
+**Screening date:** 2026-07-15
 
-## 0. Scope
+**Decision date:** 2026-07-16
 
-This document revisits external naming for the Perfora Air design system. It is a **preliminary knockout screen**, not a legal opinion or clearance memo.
+**Status:** Naming decided; historical screening retained
 
-A proper trademark review should be performed by counsel using official trademark databases and jurisdiction-specific analysis.
+**Source of truth:** `../../NAMING.md`
 
-## 1. Legal screening principles
+## 0. Final naming system
 
-The key issue is not only whether a name is identical. USPTO guidance frames likelihood of confusion around confusing similarity of marks and relatedness of goods/services; similar commercial impression can matter even when goods or classes are not identical. USPTO also notes that related classes should be considered during search, because class numbers alone do not determine safety.
-
-For this project, the likely filing areas remain:
-
-| Nice class | Why relevant |
+| Role | Final name |
 |---|---|
-| Class 9 | Downloadable UI kits, software, mobile apps, design assets |
-| Class 42 | SaaS, non-downloadable software, software design/development services |
-| Class 35 | Possible marketplace, business/productivity platform use if expanded |
-| Class 41 | Possible education/training content if design system is commercialized |
+| Project | Project Wind |
+| Design system | Ambient Surface |
+| Visual material | Matte Air |
+| Core principles | Soft Density · Quiet Signal · Text First |
 
-WIPO's Nice Classification is the international classification system for goods and services used in trademark registration. WIPO's Madrid guidance also emphasizes specifying the function/content/field of software services when classifying Class 42 services.
+`Ambient Surface` is the official design-system name. It was selected because it directly describes an interface layer that responds to environmental context without competing with content.
 
-## 2. Naming strategy update
+`Matte Air` names the visual material inside Ambient Surface: diffused light, low-glare translucency, restrained depth, and soft atmospheric separation.
 
-Previous recommendation:
+`Perfora Air` is no longer a public-name candidate. It remains only as a legacy codename and compatibility namespace in v1.x files, tokens, CSS custom properties, and implementation types.
 
-```txt
-Internal concept: Perfora Air
-External mark: explore more distinctive coined names
-```
+## 1. Naming architecture
 
-This remains the right strategy.
-
-`Perfora Air` is excellent as a design-language codename because it directly explains the concept. But as an external mark, it carries avoidable risk because `Perfora` has existing brand signals in other sectors and the dominant word is not fully unique.
-
-## 3. Candidate screening table
-
-| Candidate | Concept fit | Preliminary risk | Recommendation |
-|---|---:|---|---|
-| **Poravela** | 4.5/5 | Medium-low | Best new external candidate for further official DB search |
-| **Aervel** | 4.2/5 | Medium-low | Good short candidate; verify pronunciation and official DB hits |
-| **Luvaira** | 3.9/5 | Medium-low | Soft premium option; needs meaning/story support |
-| **AerVeil** | 4.0/5 | Medium | Better as product/module name than master mark |
-| **Perfora Air** | 5.0/5 | Medium-high | Keep as internal system/codename until formal clearance |
-| **Poralux** | 4.0/5 | Medium-high | Prior lighting/industrial signals; not top external mark |
-| **Veyra** | 2.4/5 | High | Avoid; software/services trademark signals found |
-| **Aivora** | 2.2/5 | High | Avoid; software services filing signal found |
-| **Aevora** | 2.4/5 | High | Avoid; existing brand/trademark-like uses found |
-| **Aerium** | 2.0/5 | High | Avoid; technology/avionics brand signals found |
-
-## 4. Recommended shortlist
-
-### 4.1 Poravela
-
-**Why it works**
-
-- Sounds coined and ownable.
-- Suggests pores/perforation + veil/air without being too literal.
-- Less tied to “wind” as a common word.
-- Can support a serious design-system identity.
-
-**Positioning line**
+Use the hierarchy as written:
 
 ```txt
-Poravela — ambient interfaces for invisible context.
+Project Wind
+└─ Ambient Surface — design system
+   ├─ Matte Air — visual material
+   └─ Soft Density · Quiet Signal · Text First — core principles
 ```
 
-### 4.2 Aervel
-
-**Why it works**
-
-- Short and system-like.
-- Suggests air and veil.
-- Could work as a product name, design system, or component library.
-
-**Risk**
-
-- Meaning is less immediately obvious.
-- Needs pronunciation guidance: “air-vel” or “ehr-vel”.
-
-### 4.3 Luvaira
-
-**Why it works**
-
-- Softer, premium, more brandable.
-- Good if the product aims beyond weather into wellness/smart home.
-
-**Risk**
-
-- Less directly connected to perforated surfaces.
-- Could skew beauty/lifestyle if visual identity is not precise.
-
-## 5. Names to avoid for now
-
-- `Veyra`: web search surfaced live/pending or registered software-related trademark signals.
-- `Aivora`: web search surfaced software services filing signals.
-- `Aevora`: web search surfaced existing brand/trademark-like usage.
-- `Aerium`: web search surfaced an existing technology/avionics brand.
-- `Windframe`: previously excluded because of direct UI/development tool overlap.
-- `Vento`: previously excluded because of air/wind-related product and software overlap.
-
-## 6. Official search workflow before any filing
-
-1. Search exact mark in USPTO, WIPO Global Brand Database, KIPRIS, EUIPO, UKIPO, J-PlatPat.
-2. Search phonetic variants and spacing variants.
-3. Search related meanings/translations.
-4. Check Nice Classes 9 and 42 first, then 35/41 if product strategy requires.
-5. Review goods/services descriptions, not just class numbers.
-6. Check domains, npm, GitHub, Figma Community, App Store, Google Play.
-7. Ask counsel for a full clearance memo before public launch.
-
-## 7. Recommendation
-
-For now:
+Preferred display form:
 
 ```txt
-Internal name: Perfora Air
-External candidates to clear: Poravela, Aervel, Luvaira
-Module names: Data Veil, Lumen Ring, Ambient Timeline, Signal Card
+Project Wind — Ambient Surface
+Built with Matte Air
+Soft Density · Quiet Signal · Text First
 ```
 
-If the project becomes a public commercial design system, prioritize **Poravela** for formal clearance because it is coined, conceptually connected, and less descriptive than `AerVeil`.
+Do not use `Matte Air` as the design-system name or append `Design System` to every product-facing mention. Use `Ambient Surface Design System` only when the category needs to be explicit.
 
-## 8. Source notes
+## 2. Legacy compatibility
 
-Official/legal reference points used for screening:
+The following identifiers remain frozen through the v1.x line to avoid breaking existing adopters:
+
+- package and file paths containing `perfora_air` or `perfora-air`
+- CSS custom properties beginning with `--pa-`
+- Swift/TypeScript identifiers beginning with `PA` or `PerforaAir`
+- package scopes such as `@perfora-air/*`
+
+New prose, release titles, Figma descriptions, and metadata display names must use `Ambient Surface`. Renaming compatibility identifiers requires a separately versioned migration plan.
+
+## 3. Historical candidate screening
+
+The earlier search was a preliminary knockout screen, not a legal opinion or clearance memo. Its purpose was to reduce obviously crowded candidates before the naming decision.
+
+| Candidate | Historical outcome |
+|---|---|
+| Ambient Surface | Selected as the descriptive design-system name |
+| Matte Air | Selected as the visual-material name |
+| Perfora Air | Retained only as a legacy codename and namespace |
+| Poravela | Not selected |
+| Aervel | Not selected; later exact-name software usage increased collision risk |
+| Luvaira | Not selected; later exact-name commercial usage increased collision risk |
+| AerVeil, Poralux | Not selected |
+| Veyra, Aivora, Aevora, Aerium | Avoided because existing software, service, or technology signals were found |
+
+The previous recommendation to develop a separate coined external mark is superseded by the 2026-07-16 decision. No candidate shortlist remains active.
+
+## 4. Trademark boundary
+
+`Ambient Surface` and `Matte Air` are intentionally intuitive and descriptive. The decision establishes the project's naming system; it does not claim exclusive trademark availability.
+
+Before a public commercial launch or filing:
+
+1. Search exact, phonetic, spacing, and translation variants in official trademark databases.
+2. Review goods and services in relevant Nice classes, especially Classes 9 and 42.
+3. Check domains, package registries, design communities, and app stores.
+4. Obtain jurisdiction-specific legal clearance.
+
+## 5. Official search references
 
 - USPTO Likelihood of Confusion guidance: https://www.uspto.gov/trademarks/search/likelihood-confusion
-- USPTO coordinated classes guidance: https://www.uspto.gov/trademarks/search/using-coordinated-classes-your-federal-trademark-search
 - WIPO Nice Classification: https://www.wipo.int/en/web/classification-nice
 - WIPO Global Brand Database: https://www.wipo.int/en/web/global-brand-database
 - KIPRIS trademark search: https://www.kipris.or.kr/khome/search/searchResult.do?tab=trademark
-
 
 ---
 

@@ -54,6 +54,9 @@ const components = JSON.parse(componentsText);
 
 check(manifest.version === "1.1.0-experimental", "manifest version must be 1.1.0-experimental");
 check(manifest.status === "experimental-add-on", "manifest status must be experimental-add-on");
+check(manifest.designSystemName === "Ambient Surface", "manifest design system name mismatch");
+check(manifest.visualMaterial === "Matte Air", "manifest visual material mismatch");
+check(JSON.stringify(manifest.principles) === JSON.stringify(["Soft Density", "Quiet Signal", "Text First"]), "manifest principles mismatch");
 check(manifest.currentWeatherOnUiReplacement === false, "v1.1 add-on must not replace current WeatherON UI");
 check(manifest.stableDependency === "../perfora_air_v1_0_package/release-manifest.v1.0.json", "manifest stable dependency mismatch");
 check(dataMap.$metadata?.version === "1.1.0-experimental", "data map version mismatch");
@@ -69,6 +72,7 @@ for (const componentName of ["AtmospherePanel", "SignalCard", "LumenRing", "Ambi
 
 for (const [label, content, needle] of [
   ["README", readme, "v1.0 stable 패키지가 여전히 Project Wind의 공식 기준점"],
+  ["README naming", readme, "Ambient Surface는 공식 디자인 시스템명이다."],
   ["QUALITY_GATES", quality, "v1.0 stable token/component 계약"],
   ["WeatherON adoption", adoptionText, "Do **not** replace the current WeatherON MVP/launch UI wholesale."],
   ["React starter", reactIndex, "AtmospherePanel"],

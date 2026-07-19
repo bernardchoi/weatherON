@@ -1,4 +1,4 @@
-# Perfora Air Figma Design Kit v0.1
+# Ambient Surface Figma Design Kit v0.1
 
 **Date:** 2026-07-15
 **Status:** Build blueprint
@@ -6,7 +6,7 @@
 
 ## 0. Purpose
 
-Create a reusable Figma kit that keeps Perfora Air from drifting into either glossy glass UI or generic pale cards.
+Create a reusable Figma kit that keeps Ambient Surface from drifting into either glossy glass UI or generic pale cards.
 
 The kit should make the core system repeatable:
 

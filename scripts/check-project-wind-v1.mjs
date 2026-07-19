@@ -27,10 +27,18 @@ const manifest = JSON.parse(manifestText);
 
 check(tokens.$metadata?.version === "1.0.0", "token version must be 1.0.0");
 check(tokens.$metadata?.status === "stable", "token status must be stable");
+check(tokens.$metadata?.designSystemName === "Ambient Surface", "token design system name mismatch");
+check(tokens.$metadata?.visualMaterial === "Matte Air", "token visual material mismatch");
+check(JSON.stringify(tokens.$metadata?.principles) === JSON.stringify(["Soft Density", "Quiet Signal", "Text First"]), "token principles mismatch");
 check(components.$metadata?.version === "1.0.0", "component version must be 1.0.0");
 check(components.$metadata?.status === "stable", "component status must be stable");
+check(components.$metadata?.designSystemName === "Ambient Surface", "component design system name mismatch");
+check(components.$metadata?.visualMaterial === "Matte Air", "component visual material mismatch");
 check(components.$metadata?.tokenDependency === "perfora-air.tokens.v1.0.json", "component token dependency mismatch");
 check(manifest.version === "1.0.0" && manifest.status === "stable-internal", "release manifest mismatch");
+check(manifest.designSystemName === "Ambient Surface", "manifest design system name mismatch");
+check(manifest.visualMaterial === "Matte Air", "manifest visual material mismatch");
+check(JSON.stringify(manifest.principles) === JSON.stringify(["Soft Density", "Quiet Signal", "Text First"]), "manifest principles mismatch");
 
 const tokenPaths = new Set();
 const aliases = [];

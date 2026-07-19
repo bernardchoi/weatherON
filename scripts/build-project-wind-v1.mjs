@@ -7,6 +7,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const windRoot = path.join(root, "docs", "Project Wind");
 const outputDir = path.join(windRoot, "perfora_air_v1_0_package");
 const releaseDate = "2026-07-10";
+const namingDecisionDate = "2026-07-16";
+const designSystemName = "Ambient Surface";
+const visualMaterial = "Matte Air";
+const principles = ["Soft Density", "Quiet Signal", "Text First"];
+const legacyCodename = "Perfora Air";
 
 const source = {
   tokensJson: path.join(windRoot, "perfora_air_tokens_v0_1_package", "perfora-air.tokens.v0.1.json"),
@@ -60,11 +65,16 @@ const [tokensSource, tokensCssSource, tokenMapSource, componentsSource, componen
 const tokens = JSON.parse(tokensSource);
 tokens.$metadata = {
   ...tokens.$metadata,
+  name: `${designSystemName} Tokens`,
   version: "1.0.0",
   status: "stable",
   date: releaseDate,
-  codename: "Perfora Air",
-  publicNameStatus: "internal-codename-only",
+  designSystemName,
+  visualMaterial,
+  principles,
+  legacyCodename,
+  namingDecisionDate,
+  publicNameStatus: "design-system-name-decided",
   stability: {
     tokenPaths: "stable-within-1.x",
     semanticStateModel: "stable-within-1.x",
@@ -113,12 +123,17 @@ components = mapStrings(components, (value) =>
 components.$schema = "./perfora-air.components.schema.v1.0.json";
 components.$metadata = {
   ...components.$metadata,
+  name: `${designSystemName} Components`,
   version: "1.0.0",
   status: "stable",
   date: releaseDate,
   tokenDependency: "perfora-air.tokens.v1.0.json",
-  codename: "Perfora Air",
-  publicNameStatus: "internal-codename-only",
+  designSystemName,
+  visualMaterial,
+  principles,
+  legacyCodename,
+  namingDecisionDate,
+  publicNameStatus: "design-system-name-decided",
 };
 for (const spec of Object.values(components.components)) spec.status = "stable";
 components.qualityGates = {
@@ -168,6 +183,7 @@ const componentSchema = {
 };
 
 const stableTokenCss = `${tokensCssSource
+  .replaceAll("Perfora Air", designSystemName)
   .replaceAll("Tokens v0.1", "Tokens v1.0")
   .replace("--pa-color-signal-success: #4DA479;", "--pa-color-signal-success: #2F805D;")
   .replace("--pa-text-tertiary: var(--pa-color-graphite-500);", "--pa-text-tertiary: var(--pa-color-graphite-600);")
@@ -209,6 +225,7 @@ const stableTokenCss = `${tokensCssSource
 `;
 
 const stableComponentCss = `${componentsCssSource
+  .replaceAll("Perfora Air", designSystemName)
   .replaceAll("Components v0.1", "Components v1.0")
   .replaceAll("perfora-air.v0.1.css", "perfora-air.v1.0.css")}
 
@@ -242,12 +259,14 @@ const stableComponentCss = `${componentsCssSource
 `;
 
 const stableTokenMap = `${tokenMapSource
+  .replaceAll("Perfora Air", designSystemName)
   .replaceAll("Tokens v0.1", "Tokens v1.0")}
 
 export const PERFORA_AIR_VERSION = '1.0.0' as const;
 `;
 
 const stableComponentTypes = `${componentTypesSource
+  .replaceAll("Perfora Air", designSystemName)
   .replaceAll("v0.1", "v1.0")
   .replace("Draft spec-level TypeScript contracts.", "Stable framework-agnostic TypeScript contracts.")}
 
@@ -262,6 +281,7 @@ export const PERFORA_COMPONENT_CONTRACT_VERSION = '1.0.0' as const;
 `;
 
 const referenceDashboard = dashboardSource
+  .replaceAll("Perfora Air", designSystemName)
   .replaceAll("MVP v0.1", "Reference Dashboard v1.0")
   .replaceAll("MVP V0.1", "REFERENCE DASHBOARD V1.0")
   .replaceAll("Ambient Dashboard Reference Dashboard v1.0", "Design System Reference v1.0")
@@ -361,17 +381,19 @@ const referenceDashboard = dashboardSource
 const markdown = (lines) => `${lines.join("\n")}\n`;
 
 const readme = markdown([
-  "# Project Wind — Perfora Air Design System v1.0",
+  `# Project Wind — ${designSystemName} Design System v1.0`,
   "",
-  "**상태:** Stable internal design-system release  ",
-  "**버전:** 1.0.0  ",
-  `**릴리스:** ${releaseDate}  `,
-  "**적용 위치:** WeatherON 차기 메이저 UI 개편 후보  ",
-  "**네이밍:** Perfora Air는 내부 코드명이며 외부 상표로 확정하지 않음",
+  `- 상태: Stable internal design-system release`,
+  `- 버전: 1.0.0`,
+  `- 릴리스: ${releaseDate}`,
+  `- 적용 위치: WeatherON 차기 메이저 UI 개편 후보`,
+  `- 시각 재료: ${visualMaterial}`,
+  `- 핵심 원칙: ${principles.join(" · ")}`,
+  `- 명칭 결정: ${namingDecisionDate} 확정. ${legacyCodename}는 레거시 식별자로만 유지`,
   "",
   "## 목적",
   "",
-  "Project Wind의 Matte Air / Soft Density / Quiet Signal / Text First를 토큰, 컴포넌트 계약, 접근성 기본값, 참조 화면으로 고정함. 현행 WeatherON MVP UI를 즉시 대체하지 않으며 별도 채택 ADR과 제품 화면 검증 후 적용함.",
+  `${designSystemName}는 ${visualMaterial}를 시각 재료로 사용하고 ${principles.join(" / ")}를 토큰, 컴포넌트 계약, 접근성 기본값, 참조 화면으로 고정함. 현행 WeatherON MVP UI를 즉시 대체하지 않으며 별도 채택 ADR과 제품 화면 검증 후 적용함.`,
   "",
   "## v1.0 엔트리포인트",
   "",
@@ -410,12 +432,12 @@ const readme = markdown([
   "",
   "- 현재 WeatherON v1.0 UI의 source of truth는 docs/design/WeatherON_UI_Design_Spec.md임.",
   "- Project Wind는 차기 메이저 UI의 후보 시스템이며 자동 편입되지 않음.",
-  "- 외부 공개명은 상표 검토 완료 전 별도 결정함.",
+  `- 공식 표시명은 ${designSystemName}이며 ${legacyCodename}와 perfora-air 계열 식별자는 v1.x 코드 호환용으로만 유지함.`,
   "- 실제 제품 채택 전 React Native 토큰 변환, 화면별 목업, iOS/Android 기기 QA, 보조공학 수동 테스트가 필요함.",
 ]);
 
 const migration = markdown([
-  "# Perfora Air v0.1 → v1.0 마이그레이션", "", "## 변경 요약", "",
+  `# ${designSystemName} v0.1 → v1.0 마이그레이션`, "", `> ${legacyCodename}와 perfora-air 계열 경로는 레거시 코드 식별자이며 v1.x에서 유지함.`, "", "## 변경 요약", "",
   "1. 문서 상태를 draft에서 stable internal release로 변경함.",
   "2. 작은 보조 텍스트와 success 색상의 대비를 보강함.",
   "3. Night 모드 secondary/tertiary text를 분리함.",
@@ -440,12 +462,16 @@ const migration = markdown([
 ]);
 
 const changelog = markdown([
-  "# Changelog", "", `## 1.0.0 — ${releaseDate}`, "",
+  "# Changelog", "", `## Naming decision — ${namingDecisionDate}`, "",
+  `- 공식 디자인 시스템 이름을 ${designSystemName}로 확정함.`,
+  `- 시각 재료를 ${visualMaterial}, 핵심 원칙을 ${principles.join(" · ")}로 고정함.`,
+  `- ${legacyCodename}, perfora-air.*, --pa-*, PA*는 v1.x 호환용 레거시 식별자로 유지함.`,
+  "", `## 1.0.0 — ${releaseDate}`, "",
   "- v0.1 토큰·컴포넌트·wireframe·대시보드·접근성 패치를 단일 안정 패키지로 통합함.",
   "- 10개 컴포넌트와 5단계 state 모델을 stable로 고정함.",
   "- 대비, 44px target, focus, reduced motion/transparency, forced colors 기준을 기본값으로 승격함.",
   "- 로컬 schema, release manifest, build/check 명령을 추가함.",
-  "- Perfora Air를 내부 코드명으로 제한하고 현행 WeatherON MVP와의 적용 경계를 명시함.",
+  `- ${legacyCodename}를 당시 내부 코드명으로 제한하고 현행 WeatherON MVP와의 적용 경계를 명시함.`,
 ]);
 
 const quality = markdown([
@@ -471,7 +497,7 @@ const quality = markdown([
 ]);
 
 const audit = markdown([
-  "# Project Wind v1.0 완성도 감사", "", `**감사일:** ${releaseDate}  `,
+  "# Project Wind v1.0 완성도 감사", "", `**감사일:** ${releaseDate}`,
   "**대상:** Project Wind v0.1 토큰, 컴포넌트, wireframe, Ambient Dashboard, 접근성 패치",
   "", "## 판정", "",
   "v0.1은 방향성과 핵심 화면은 성립했으나 release contract가 없어서 디자인 연구 패키지 상태였음. v1.0에서는 아래 차이를 닫아 stable internal design system으로 승격함.",
@@ -482,7 +508,7 @@ const audit = markdown([
   "| 가짜 원격 component schema | 자동 검증 불가 | 로컬 JSON Schema 추가 |",
   "| 10개 컴포넌트 모두 draft | 구현 호환성 불명확 | stable status와 1.x 호환 계약 고정 |",
   "| 44px·focus·환경 mode가 문서와 패치에 분산 | 구현 누락 위험 | token, CSS, component quality gate에 중복 고정 |",
-  "| 외부 이름 리스크 | 공개 브랜드 오인 가능 | Perfora Air를 내부 코드명으로 제한 |",
+  `| 외부 이름 리스크 | 공개 브랜드 오인 가능 | ${designSystemName}를 공식 디자인 시스템명으로 확정하고 ${legacyCodename}는 레거시 식별자로 제한 |`,
   "", "## 브라우저 검증", "",
   "| 항목 | 결과 |",
   "|---|---|",
@@ -520,12 +546,17 @@ const files = Object.entries(output).map(([name, content]) => ({
   sha256: sha256(content.endsWith("\n") ? content : `${content}\n`),
 }));
 const manifest = {
-  name: "Project Wind / Perfora Air",
+  name: `Project Wind / ${designSystemName}`,
   version: "1.0.0",
   status: "stable-internal",
   date: releaseDate,
   currentWeatherOnUiReplacement: false,
-  publicNameStatus: "internal-codename-only",
+  namingDecisionDate,
+  designSystemName,
+  visualMaterial,
+  principles,
+  legacyCodename,
+  publicNameStatus: "design-system-name-decided",
   entrypoints: {
     tokens: "perfora-air.tokens.v1.0.json",
     tokenCss: "perfora-air.v1.0.css",

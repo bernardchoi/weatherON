@@ -1,5 +1,5 @@
 /**
- * Perfora Air Tokens v1.0 — TypeScript helper
+ * Ambient Surface Tokens v1.0 — TypeScript helper
  * Intent: map contextual data into surface, density, lumen, and flow tokens.
  */
 

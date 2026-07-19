@@ -52,8 +52,9 @@
         "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "../../assets/icon/icon-primary-512.png",
-        "backgroundColor": "#10243F"
+        "foregroundImage": "../../assets/icon/android/icon-adaptive-foreground-1024.png",
+        "backgroundImage": "../../assets/icon/android/icon-adaptive-background-1024.png",
+        "backgroundColor": "#0C1F3F"
       }
     },
     "web": {

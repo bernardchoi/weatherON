@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-15
 **Status:** Experimental recommendation
-**Design system:** Perfora Air / Project Wind
+**Design system:** Ambient Surface / Project Wind
 
 ## 0. Decision summary
 
@@ -16,14 +16,14 @@ Data Visualization Kit first
 → Full redesign only after usability validation
 ```
 
-Perfora Air should enter WeatherON as a targeted layer for weather/air comprehension, not as an immediate full product redesign.
+Ambient Surface should enter WeatherON as a targeted layer for weather/air comprehension, not as an immediate full product redesign.
 
 ## 1. Why not full redesign now
 
 | Risk | Explanation |
 |---|---|
 | Launch risk | Full redesign could delay the current WeatherON MVP |
-| Brand risk | Perfora Air is still a draft design language |
+| Brand risk | Ambient Surface is still a draft design language |
 | Data risk | Mapping rules need real weather data validation |
 | Accessibility risk | Visual summaries need screen-reader/manual testing |
 | Performance risk | Ambient visuals may need low-end device optimization |
@@ -50,7 +50,7 @@ Add a user-facing or internal feature flag:
 weatheron.features.perforaAir = true
 ```
 
-The user can test a Perfora Air home variant while the stable UI remains intact.
+The user can test a Ambient Surface home variant while the stable UI remains intact.
 
 ### Layer 3 — Full redesign candidate
 
@@ -66,7 +66,7 @@ Only consider this after:
 | Phase | Scope | Success metric |
 |---|---|---|
 | Phase 0 | Keep current WeatherON UI | No disruption |
-| Phase 1 | Add Perfora Air `AtmospherePanel` to internal build | Decision accuracy in tests |
+| Phase 1 | Add Ambient Surface `AtmospherePanel` to internal build | Decision accuracy in tests |
 | Phase 2 | Add Air Flow Detail with `LumenRing` | Users understand wind/humidity action |
 | Phase 3 | Add `AmbientTimeline` to hourly forecast | Peak/pressure comprehension improves |
 | Phase 4 | Experimental mode toggle | Retention and satisfaction monitored |
@@ -74,7 +74,7 @@ Only consider this after:
 
 ## 4. WeatherON screens and fit
 
-| WeatherON area | Perfora Air fit | Recommendation |
+| WeatherON area | Ambient Surface fit | Recommendation |
 |---|---|---|
 | Home current weather | Very high | Use `AtmospherePanel` |
 | Hourly forecast | High | Use `AmbientTimeline` |
@@ -128,10 +128,10 @@ Track events:
 
 ## 8. Final recommendation
 
-Proceed with **WeatherON Perfora Air Experimental Layer**:
+Proceed with **WeatherON Ambient Surface Experimental Layer**:
 
 ```txt
 Home AtmospherePanel + Air Flow Detail + VisualSummaryText
 ```
 
-Do not re-theme the entire app until usability and accessibility tests confirm that Perfora Air improves comprehension rather than only changing the look.
+Do not re-theme the entire app until usability and accessibility tests confirm that Ambient Surface improves comprehension rather than only changing the look.

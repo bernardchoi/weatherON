@@ -1,5 +1,12 @@
 # Changelog
 
+## Naming decision — 2026-07-16
+
+- 프로젝트명은 Project Wind로 유지함.
+- 디자인 시스템 공식 명칭을 Ambient Surface로 확정함.
+- 시각 재료를 Matte Air로, 핵심 원칙을 Soft Density · Quiet Signal · Text First로 확정함.
+- Perfora Air와 `perfora-air`, `--pa-*`, `PA*`, `PerforaAir*` 식별자는 v1.x 호환을 위해 유지하되 신규 표기에는 사용하지 않음.
+
 ## 1.1.0-experimental — 2026-07-15
 
 - v0.2 productization draft를 v1.1 experimental add-on으로 승격함.

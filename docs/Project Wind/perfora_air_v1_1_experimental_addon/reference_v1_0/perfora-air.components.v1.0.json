@@ -1,19 +1,21 @@
 {
   "$schema": "./perfora-air.components.schema.v1.0.json",
   "$metadata": {
-    "name": "Perfora Air Components",
+    "name": "Ambient Surface Components",
     "version": "1.0.0",
     "status": "stable",
     "date": "2026-07-10",
     "tokenDependency": "perfora-air.tokens.v1.0.json",
     "principles": [
-      "Matte Air",
       "Soft Density",
       "Quiet Signal",
       "Text First"
     ],
-    "codename": "Perfora Air",
-    "publicNameStatus": "internal-codename-only"
+    "designSystemName": "Ambient Surface",
+    "visualMaterial": "Matte Air",
+    "legacyCodename": "Perfora Air",
+    "namingDecisionDate": "2026-07-16",
+    "publicNameStatus": "design-system-name-decided"
   },
   "shared": {
     "states": [

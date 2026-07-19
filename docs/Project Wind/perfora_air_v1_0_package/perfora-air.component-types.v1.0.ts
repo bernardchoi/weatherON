@@ -1,5 +1,5 @@
 /**
- * Perfora Air Component Types v1.0
+ * Ambient Surface Component Types v1.0
  * Stable framework-agnostic TypeScript contracts.
  * These types are framework-agnostic and can be adapted to React, SwiftUI, Compose, or Vue.
  */

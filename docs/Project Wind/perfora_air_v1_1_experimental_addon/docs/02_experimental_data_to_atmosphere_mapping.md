@@ -1,4 +1,4 @@
-# Perfora Air Experimental Data-to-Atmosphere Mapping v1.1
+# Ambient Surface Experimental Data-to-Atmosphere Mapping v1.1
 
 **Date:** 2026-07-15
 **Status:** Experimental add-on
@@ -6,9 +6,9 @@
 
 ## 0. Purpose
 
-This document defines how Perfora Air converts raw product data into UI atmosphere.
+This document defines how Ambient Surface converts raw product data into UI atmosphere.
 
-The goal is to prevent Perfora Air from becoming a decorative layer. Every density field, lumen signal, flow motion, and visual summary sentence must be explainable through data or explicit user context.
+The goal is to prevent Ambient Surface from becoming a decorative layer. Every density field, lumen signal, flow motion, and visual summary sentence must be explainable through data or explicit user context.
 
 ```txt
 raw data

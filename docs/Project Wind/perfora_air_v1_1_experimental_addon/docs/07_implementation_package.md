@@ -1,4 +1,4 @@
-# Perfora Air Implementation Package v1.1 experimental
+# Ambient Surface Implementation Package v1.1 experimental
 
 **Date:** 2026-07-15
 **Status:** Experimental starter implementation

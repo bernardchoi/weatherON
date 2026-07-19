@@ -1,6 +1,6 @@
-# Perfora Air React Starter
+# Ambient Surface React Starter
 
-Draft React implementation for Perfora Air v1.1 experimental components.
+Draft React implementation for Ambient Surface v1.1 experimental components.
 
 ## Components
 

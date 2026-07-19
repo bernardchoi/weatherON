@@ -6,6 +6,8 @@
 
 **WeatherON 적용 위치**: Project Wind는 WeatherON 출시 후 대규모 UI 업데이트를 위한 신규 디자인 시스템 연구 프로젝트다. 이 문서는 실제 앱 반영 전 네이밍/상표 리스크를 선별하기 위한 보충 자료이며, 현재 출시 후보 UI 스펙을 즉시 변경하지 않는다.
 
+> **상태 변경 — 2026-07-16:** 본 문서의 후보 평가는 역사 자료로 보존함. 공식 명칭은 `Project Wind / Ambient Surface / Matte Air / Soft Density · Quiet Signal · Text First`로 확정했으며, 최신 기준은 `NAMING.md`를 따름.
+
 ---
 
 ## 0. 결론 요약

@@ -1,7 +1,7 @@
-# Perfora Air v1.1 Experimental Add-on
+# Ambient Surface v1.1 Experimental Add-on
 
 **Date:** 2026-07-15
-**Purpose:** Experimental add-on package for Perfora Air after the v1.0 stable internal design-system release.
+**Purpose:** Experimental add-on package for Ambient Surface after the v1.0 stable internal design-system release.
 
 ## Package contents
 
@@ -41,7 +41,7 @@
 
 ## Key v1.1 experimental decision
 
-Perfora Air's main differentiator is **not visual polish**. It is this chain:
+Ambient Surface's main differentiator is **not visual polish**. It is this chain:
 
 ```txt
 invisible data → atmosphere score → surface density → quiet signal → text-first decision
