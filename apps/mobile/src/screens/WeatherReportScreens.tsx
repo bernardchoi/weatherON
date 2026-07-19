@@ -106,7 +106,7 @@ export function WeatherReportSubmitScreen({
       <Section title="제보" caption={`${reportLocationReady ? "GPS 제보 준비" : "선택 대기 · 위치 권한 전"} · 익명 제보 가능`} accent="warm">
         <View style={styles.actions}>
           <AppButton label="배지·이력 저장" onPress={() => (accountLinked ? onNavigate("W4") : onRequireAccount("weather-report", "W2"))} tone="secondary" />
-          <AppButton label="닫기" onPress={() => onNavigate("W1")} tone="secondary" />
+          <AppButton label="닫기" onPress={() => onNavigate("W1")} tone="secondary" variant="text" />
         </View>
       </Section>
     </AppScreen>

@@ -1,25 +1,49 @@
 import React, { useRef } from "react";
-import { Animated, Easing, Image, type ImageSourcePropType, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, StyleSheet, Text } from "react-native";
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { radius, spacing } from "../theme/tokens";
 
 type AppButtonProps = {
   label: string;
   onPress: () => void;
   tone?: "primary" | "secondary" | "warning";
+  variant?: "filled" | "tonal" | "outlined" | "text";
   size?: "md" | "sm";
   accessibilityLabel?: string;
   disabled?: boolean;
 };
 
-export function AppButton({ label, onPress, tone = "primary", size = "md", accessibilityLabel, disabled = false }: AppButtonProps) {
+export function AppButton({
+  label,
+  onPress,
+  tone = "primary",
+  variant,
+  size = "md",
+  accessibilityLabel,
+  disabled = false,
+}: AppButtonProps) {
   const theme = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const backgroundColor = tone === "primary" ? theme.clear : tone === "warning" ? theme.gold : theme.cardMuted;
-  const borderColor = tone === "primary" ? theme.clear : theme.border;
-  const color = tone === "primary" || tone === "warning" ? theme.onAccent : theme.text;
+  const resolvedVariant = variant ?? (tone === "secondary" ? "tonal" : "filled");
+  const filledColor = tone === "warning" ? theme.gold : theme.clear;
+  const foregroundColor = tone === "warning" ? theme.gold : tone === "primary" ? theme.clear : theme.text;
+  const backgroundColor = resolvedVariant === "filled"
+    ? filledColor
+    : resolvedVariant === "tonal"
+      ? androidMaterialColor(theme, "secondaryContainer")
+      : "transparent";
+  const borderColor = resolvedVariant === "filled"
+    ? filledColor
+    : resolvedVariant === "outlined"
+      ? androidMaterialColor(theme, "outlineVariant")
+      : "transparent";
+  const color = resolvedVariant === "filled"
+    ? theme.onAccent
+    : resolvedVariant === "tonal"
+      ? androidMaterialColor(theme, "onSecondaryContainer")
+      : foregroundColor;
   const icon = getButtonIcon(label);
 
   const animateTo = (toValue: number) => {
@@ -37,21 +61,26 @@ export function AppButton({ label, onPress, tone = "primary", size = "md", acces
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      android_ripple={androidMaterialRipple(theme, tone === "primary" || tone === "warning" ? "primary" : "surface")}
+      android_ripple={androidMaterialRipple(theme, resolvedVariant === "filled" ? "primary" : "surface")}
       disabled={disabled}
       onPress={onPress}
       onPressIn={() => animateTo(0.97)}
       onPressOut={() => animateTo(1)}
+      style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null]}
     >
       <Animated.View
         style={[
           styles.button,
           size === "sm" ? styles.buttonSm : null,
-          tone === "secondary" ? androidMaterialSurface(theme, "cta") : null,
+          Platform.OS === "android" ? styles.buttonAndroid : null,
+          Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
+          resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
         ]}
       >
-        <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
+        {resolvedVariant !== "text" ? (
+          <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
+        ) : null}
         <Text style={[styles.label, size === "sm" ? styles.labelSm : null, { color }]}>{label}</Text>
       </Animated.View>
     </Pressable>
@@ -70,6 +99,13 @@ function getButtonIcon(label: string): ImageSourcePropType {
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    borderRadius: radius.md,
+  },
+  pressableAndroid: {
+    borderRadius: radius.pill,
+    overflow: "hidden",
+  },
   button: {
     minHeight: 44,
     alignItems: "center",
@@ -79,6 +115,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  buttonAndroid: {
+    minHeight: 48,
+    borderRadius: radius.pill,
   },
   icon: {
     width: 17,
@@ -92,6 +132,10 @@ const styles = StyleSheet.create({
     minHeight: 34,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
+  },
+  buttonSmAndroid: {
+    minHeight: 40,
+    borderRadius: radius.pill,
   },
   label: {
     fontSize: 14,

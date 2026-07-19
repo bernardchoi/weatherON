@@ -149,7 +149,8 @@ function WardrobeItemCard({
         label="삭제"
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
         onPress={onRemove}
-        tone="secondary"
+        tone="warning"
+        variant="outlined"
         size="sm"
       />
     </View>

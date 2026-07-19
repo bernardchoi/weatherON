@@ -55,7 +55,12 @@ import { appColors, resolveAppTheme, type AppTheme } from "../theme/tokens";
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
   const systemTheme = useColorScheme();
-  const theme = resolveAppTheme(appState.themeMode, systemTheme, appState.reducedTransparency);
+  const theme = resolveAppTheme(
+    appState.themeMode,
+    systemTheme,
+    appState.reducedTransparency,
+    appState.dynamicColorEnabled,
+  );
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.umbrellaReturnRoute);
 
@@ -98,6 +103,7 @@ export function AppNavigator() {
     distanceUnit: appState.distanceUnit,
     themeMode: appState.themeMode,
     reducedTransparency: appState.reducedTransparency,
+    dynamicColorEnabled: appState.dynamicColorEnabled,
     styleProfileSaved: appState.styleProfileSaved,
     styleGender: appState.styleGender,
     ageBand: appState.ageBand,
@@ -127,6 +133,7 @@ export function AppNavigator() {
     onSetDistanceUnit: appState.setDistanceUnit,
     onSetThemeMode: appState.setThemeMode,
     onToggleReducedTransparency: appState.toggleReducedTransparency,
+    onToggleDynamicColor: appState.toggleDynamicColor,
     onSetStyleGender: appState.setStyleGender,
     onSetAgeBand: appState.setAgeBand,
     onSetFitPreference: appState.setFitPreference,

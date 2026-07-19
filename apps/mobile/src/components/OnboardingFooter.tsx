@@ -1,6 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useAppTheme } from "../theme/AppThemeContext";
+import { StyleSheet, View } from "react-native";
 import { spacing } from "../theme/tokens";
 import { AppButton } from "./AppButton";
 
@@ -21,8 +20,6 @@ export function OnboardingFooter({
   onSecondary,
   secondaryAccessibilityLabel,
 }: OnboardingFooterProps) {
-  const theme = useAppTheme();
-
   return (
     <View style={styles.actions}>
       <AppButton
@@ -32,14 +29,13 @@ export function OnboardingFooter({
         tone="warning"
       />
       {secondaryLabel && onSecondary ? (
-        <Pressable
+        <AppButton
+          label={secondaryLabel}
           accessibilityLabel={secondaryAccessibilityLabel ?? secondaryLabel}
-          accessibilityRole="button"
           onPress={onSecondary}
-          style={styles.secondaryAction}
-        >
-          <Text style={[styles.secondaryLabel, { color: theme.subtle }]}>{secondaryLabel}</Text>
-        </Pressable>
+          tone="secondary"
+          variant="text"
+        />
       ) : null}
     </View>
   );
@@ -48,15 +44,5 @@ export function OnboardingFooter({
 const styles = StyleSheet.create({
   actions: {
     gap: spacing.xs,
-  },
-  secondaryAction: {
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryLabel: {
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "800",
   },
 });

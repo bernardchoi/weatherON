@@ -456,6 +456,7 @@ async function readPersistedAppState(database: SQLiteExecutor): Promise<Record<s
     distanceUnit: textSetting(settings, "distanceUnit"),
     themeMode: textSetting(settings, "themeMode"),
     reducedTransparency: boolSetting(settings, "reducedTransparency"),
+    dynamicColorEnabled: boolSetting(settings, "dynamicColorEnabled"),
     adConsentMode: textSetting(settings, "adConsentMode"),
     readNotificationIds: notificationState.readNotificationIds,
     notificationHistory: notificationState.notificationHistory,
@@ -486,6 +487,7 @@ async function writePersistedAppState(database: SQLiteExecutor, value: unknown) 
     distanceUnit: textValue(record.distanceUnit),
     themeMode: textValue(record.themeMode),
     reducedTransparency: boolValue(record.reducedTransparency),
+    dynamicColorEnabled: boolValue(record.dynamicColorEnabled),
     adConsentMode: textValue(record.adConsentMode),
   }, now);
   await replaceListValues(database, "selectedStyles", stringArray(record.selectedStyles));

@@ -6,6 +6,7 @@ const rootDir = process.cwd();
 
 const requiredFiles = [
   "apps/mobile/src/providers/appStorage.ts",
+  "apps/mobile/src/components/MaterialSnackbar.tsx",
   "apps/mobile/src/navigation/routeLabels.ts",
   "scripts/check-android-core-flow.mjs",
   "scripts/check-android-usable-mvp.mjs",
@@ -62,6 +63,12 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'setRoute("M1");',
   "styleProfileReturnRoute",
   'if (nextRoute === "O4" && isP0Route(route))',
+  "dynamicColorEnabled",
+  "toggleDynamicColor",
+]);
+assertSourceIncludes("apps/mobile/src/providers/appStorage.ts", [
+  'boolSetting(settings, "dynamicColorEnabled")',
+  'boolValue(record.dynamicColorEnabled)',
 ]);
 
 assertSourceIncludes("apps/mobile/src/utils/locationDisplay.ts", [
@@ -125,7 +132,36 @@ assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "C1";', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
 assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ['androidMaterialSurface(theme, "navigation")', 'left: "50%"', "width: 64", "marginLeft: -32", "usesNativeRipple"]);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
-assertSourceIncludes("apps/mobile/src/theme/androidMaterial.ts", ['"navigation" | "iconButton" | "sheet" | "weather" | "cta"', 'role === "iconButton" || role === "cta"', 'role === "navigation"']);
+assertSourceIncludes("apps/mobile/src/theme/androidMaterial.ts", [
+  '"surfaceContainerLow"',
+  '"surfaceContainer"',
+  '"surfaceContainerHigh"',
+  '"secondaryContainer"',
+  "isAndroidDynamicColorAvailable",
+  'Number(Platform.Version) >= 31',
+  'theme.dynamicColorEnabled && isDynamicAccentRole(role)',
+]);
+assertSourceIncludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
+  "SegmentControl",
+  "MaterialSwitch",
+  "기기 색상 사용",
+  'androidMaterialSurface(theme, "surfaceContainerLow")',
+  'androidMaterialSurface(theme, "secondaryContainer")',
+]);
+assertSourceIncludes("apps/mobile/src/components/AppButton.tsx", [
+  '"filled" | "tonal" | "outlined" | "text"',
+  "buttonAndroid",
+  "buttonSmAndroid",
+  "radius.pill",
+]);
+assertSourceIncludes("apps/mobile/src/components/MaterialSnackbar.tsx", [
+  'accessibilityLiveRegion="polite"',
+  'accessibilityRole="alert"',
+  'androidMaterialColor(theme, "inverseSurface")',
+  'androidMaterialColor(theme, "inversePrimary")',
+  "minHeight: 56",
+  "minHeight: 48",
+]);
 assertSourceIncludes("apps/mobile/src/components/FeedbackPressable.tsx", ["usesNativeRipple", "disabled || usesNativeRipple ? 0 : feedback"]);
 assertSourceExcludes("apps/mobile/src/components/AppScreen.tsx", ["androidMaterialSurface"]);
 assertSourceIncludes("scripts/check-android-core-flow.mjs", [
@@ -207,9 +243,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "permissionGateResult",
   "목적지 저장 완료",
   "recentlyRemovedDestination",
-  "RemovedDestinationBanner",
+  "MaterialSnackbar",
   "목적지 삭제됨",
-  "목적지 복구",
+  'actionLabel="복구"',
   "getDestinationActionText",
   "getDestinationSchedule",
   "알림 켬",
@@ -262,9 +298,12 @@ for (const relativePath of [
   "apps/mobile/src/screens/OnboardingOutfitScreen.tsx",
   "apps/mobile/src/screens/SmartCareOnboardingScreen.tsx",
 ]) {
-  assertSourceIncludes(relativePath, ["footer={", "<OnboardingFooter", 'primaryLabel="다음"', 'secondaryLabel="건너뛰기"']);
+  assertSourceIncludes(relativePath, ["footer={", "<OnboardingFooter", "primaryLabel=", "secondaryLabel="]);
 }
-assertSourceIncludes("apps/mobile/src/components/OnboardingFooter.tsx", ['tone="warning"', "secondaryAction"]);
+assertSourceIncludes("apps/mobile/src/screens/OnboardingIntroScreen.tsx", ['primaryLabel="다음"', 'secondaryLabel="건너뛰기"']);
+assertSourceIncludes("apps/mobile/src/screens/OnboardingOutfitScreen.tsx", ['locationSetupComplete ? "다음" : "현재 위치 사용"', 'locationSetupComplete ? "건너뛰기" : "나중에"']);
+assertSourceIncludes("apps/mobile/src/screens/SmartCareOnboardingScreen.tsx", ['notificationSetupComplete ? "다음" : "알림 켜기"', 'notificationSetupComplete ? "건너뛰기" : "나중에"']);
+assertSourceIncludes("apps/mobile/src/components/OnboardingFooter.tsx", ['tone="warning"', 'tone="secondary"', 'variant="text"']);
 assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
   'onRequireAccount("destination-care", "G1")',
   'onRequireAccount("destination-care", "P1")',

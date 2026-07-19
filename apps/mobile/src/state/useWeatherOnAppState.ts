@@ -204,6 +204,7 @@ export function useWeatherOnAppState() {
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [reducedTransparency, setReducedTransparency] = useState(false);
+  const [dynamicColorEnabled, setDynamicColorEnabled] = useState(false);
   const [styleProfileSaved, setStyleProfileSaved] = useState(false);
   const [styleGender, setStyleGender] = useState<StyleGender>("all");
   const [ageBand, setAgeBand] = useState<AgeBand>("20-30");
@@ -357,6 +358,7 @@ export function useWeatherOnAppState() {
         setDistanceUnit(persistedState.distanceUnit);
         setThemeMode(persistedState.themeMode);
         setReducedTransparency(persistedState.reducedTransparency);
+        setDynamicColorEnabled(persistedState.dynamicColorEnabled);
         setAdConsentMode(persistedState.adConsentMode);
         setReadNotificationIds(persistedState.readNotificationIds);
         setNotificationHistory(persistedState.notificationHistory);
@@ -593,6 +595,7 @@ export function useWeatherOnAppState() {
       distanceUnit,
       themeMode,
       reducedTransparency,
+      dynamicColorEnabled,
       adConsentMode,
       readNotificationIds,
       notificationHistory,
@@ -616,6 +619,7 @@ export function useWeatherOnAppState() {
     previewDestinationTravelEstimate,
     readNotificationIds,
     reducedTransparency,
+    dynamicColorEnabled,
     savedDestinations,
     selectedDestinationPlace,
     selectedStyles,
@@ -1459,6 +1463,7 @@ export function useWeatherOnAppState() {
     distanceUnit,
     themeMode,
     reducedTransparency,
+    dynamicColorEnabled,
     styleProfileSaved,
     styleGender,
     ageBand,
@@ -1492,6 +1497,7 @@ export function useWeatherOnAppState() {
     setDistanceUnit,
     setThemeMode,
     toggleReducedTransparency: () => setReducedTransparency((value) => !value),
+    toggleDynamicColor: () => setDynamicColorEnabled((value) => !value),
     setStyleGender,
     setAgeBand,
     setFitPreference,
@@ -1789,6 +1795,7 @@ type PersistedAppState = {
   distanceUnit: DistanceUnit;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
+  dynamicColorEnabled: boolean;
   adConsentMode: AdConsentMode;
   readNotificationIds: string[];
   notificationHistory: NotificationHistoryItem[];
@@ -1973,6 +1980,7 @@ function normalizePersistedAppState(value: unknown): PersistedAppState {
     distanceUnit: record.distanceUnit === "mile" ? "mile" : "meter",
     themeMode: isThemeMode(record.themeMode) ? record.themeMode : "system",
     reducedTransparency: record.reducedTransparency === true,
+    dynamicColorEnabled: record.dynamicColorEnabled === true,
     adConsentMode: isAdConsentMode(record.adConsentMode) ? record.adConsentMode : "pending",
     readNotificationIds: notificationState.readNotificationIds,
     notificationHistory: notificationState.notificationHistory,

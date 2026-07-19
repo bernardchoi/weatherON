@@ -5,6 +5,8 @@ export type AppTheme = {
   // 표시 설정의 "투명 효과 줄이기" 상태. 화면은 이 값을 직접 분기하지 않고,
   // 아래 토큰의 불투명 변형을 받아 동일한 색상 체계를 유지한다.
   reducedTransparency: boolean;
+  // Android 12+에서 Material 보조 요소에만 시스템 동적 색상을 허용한다.
+  dynamicColorEnabled: boolean;
   background: string;
   backgroundAlt: string;
   nav: string;
@@ -31,6 +33,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
   dark: {
     name: "dark",
     reducedTransparency: false,
+    dynamicColorEnabled: false,
     background: "#071E33",
     backgroundAlt: "#0E4A75",
     nav: "rgba(7,30,51,0.97)",
@@ -55,6 +58,7 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
   light: {
     name: "light",
     reducedTransparency: false,
+    dynamicColorEnabled: false,
     background: "#F5F9FC",
     backgroundAlt: "#D7EAF7",
     nav: "rgba(255,255,255,0.94)",
@@ -100,6 +104,7 @@ export function resolveAppTheme(
   themeMode: "system" | "light" | "dark" | undefined,
   systemMode: "light" | "dark" | null | undefined,
   reducedTransparency = false,
+  dynamicColorEnabled = false,
 ): AppTheme {
   const baseTheme = themeMode === "light"
     ? appThemes.light
@@ -109,13 +114,17 @@ export function resolveAppTheme(
         ? appThemes.light
         : appThemes.dark;
 
-  if (!reducedTransparency) return baseTheme;
+  const configuredTheme = dynamicColorEnabled
+    ? { ...baseTheme, dynamicColorEnabled: true }
+    : baseTheme;
+
+  if (!reducedTransparency) return configuredTheme;
 
   // 반투명 패널·탭 바·보조 텍스트·구분선을 불투명 표면으로 바꾼다.
   // 개별 화면마다 조건을 두지 않아도 테마 토큰을 쓰는 모든 화면에 즉시 적용된다.
-  return baseTheme.name === "dark"
+  return configuredTheme.name === "dark"
     ? {
-        ...baseTheme,
+        ...configuredTheme,
         reducedTransparency: true,
         nav: "#071E33",
         navBorder: "#315C79",
@@ -126,7 +135,7 @@ export function resolveAppTheme(
         shadow: "#020A12",
       }
     : {
-        ...baseTheme,
+        ...configuredTheme,
         reducedTransparency: true,
         nav: "#FFFFFF",
         navBorder: "#C7D8E6",

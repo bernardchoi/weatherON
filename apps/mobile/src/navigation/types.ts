@@ -72,6 +72,7 @@ export type P0ScreenProps = {
   distanceUnit: DistanceUnit;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
+  dynamicColorEnabled: boolean;
   styleProfileSaved: boolean;
   styleGender: StyleGender;
   ageBand: AgeBand;
@@ -101,6 +102,7 @@ export type P0ScreenProps = {
   onSetDistanceUnit: (unit: DistanceUnit) => void;
   onSetThemeMode: (mode: ThemeMode) => void;
   onToggleReducedTransparency: () => void;
+  onToggleDynamicColor: () => void;
   onSetStyleGender: (gender: StyleGender) => void;
   onSetAgeBand: (ageBand: AgeBand) => void;
   onSetFitPreference: (fit: FitPreference) => void;

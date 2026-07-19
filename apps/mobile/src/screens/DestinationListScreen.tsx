@@ -3,6 +3,7 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { PlaceSearchResult } from "@weatheron/shared";
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -60,15 +61,6 @@ export function DestinationListScreen({
           <Text style={[styles.title, { color: theme.text }]}>출발</Text>
         </View>
 
-        {resultBanner ? <ResultBanner title={resultBanner.title} body={resultBanner.body} tone={resultBanner.tone} theme={theme} /> : null}
-        {recentlyRemovedDestination ? (
-          <RemovedDestinationBanner
-            destinationName={recentlyRemovedDestination.place.name}
-            onRestore={onRestoreRemovedDestination}
-            theme={theme}
-          />
-        ) : null}
-
         <View style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.todayTop}>
             <View>
@@ -124,6 +116,22 @@ export function DestinationListScreen({
         ) : null}
 
       </ScrollView>
+      {recentlyRemovedDestination ? (
+        <MaterialSnackbar
+          key={`removed-${recentlyRemovedDestination.place.id}`}
+          message="목적지 삭제됨"
+          supportingText={`${recentlyRemovedDestination.place.name}을 다시 복구할 수 있음`}
+          actionLabel="복구"
+          onAction={onRestoreRemovedDestination}
+          duration={8000}
+        />
+      ) : resultBanner ? (
+        <MaterialSnackbar
+          key={`${resultBanner.title}-${resultBanner.body}`}
+          message={resultBanner.title}
+          supportingText={resultBanner.body}
+        />
+      ) : null}
     </View>
   );
 }
@@ -269,48 +277,6 @@ function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: A
   if (!permissionReady) return theme.warm;
   if (careEnabled) return theme.clear;
   return theme.subtle;
-}
-
-function RemovedDestinationBanner({
-  destinationName,
-  onRestore,
-  theme,
-}: {
-  destinationName: string;
-  onRestore: () => void;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.removedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.warm }]}>
-      <View style={styles.removedCopy}>
-        <Text style={[styles.resultTitle, { color: theme.warm }]}>목적지 삭제됨</Text>
-        <Text style={[styles.resultBody, { color: theme.muted }]}>{destinationName}을 다시 복구할 수 있어요</Text>
-      </View>
-      <FeedbackPressable accessibilityLabel={`${destinationName} 목적지 복구`} accessibilityRole="button" onPress={onRestore} style={[styles.restoreButton, { backgroundColor: theme.gold }]}>
-        <Text style={[styles.restoreButtonText, { color: theme.onAccent }]}>복구</Text>
-      </FeedbackPressable>
-    </View>
-  );
-}
-
-function ResultBanner({
-  title,
-  body,
-  tone,
-  theme,
-}: {
-  title: string;
-  body: string;
-  tone: "clear" | "warm";
-  theme: AppTheme;
-}) {
-  const accent = tone === "clear" ? theme.clear : theme.warm;
-  return (
-    <View style={[styles.resultBanner, { backgroundColor: theme.cardStrong, borderColor: accent }]}>
-      <Text style={[styles.resultTitle, { color: accent }]}>{title}</Text>
-      <Text style={[styles.resultBody, { color: theme.muted }]}>{body}</Text>
-    </View>
-  );
 }
 
 function PrepMetric({ label, value, tone, theme }: { label: string; value: string; tone: "clear" | "gold" | "sky"; theme: AppTheme }) {
@@ -606,50 +572,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
-  },
-  resultBanner: {
-    gap: 4,
-    padding: 14,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderLeftWidth: 2,
-  },
-  resultTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "900",
-  },
-  resultBody: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  removedBanner: {
-    minHeight: 72,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    padding: 14,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderLeftWidth: 2,
-  },
-  removedCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 4,
-  },
-  restoreButton: {
-    minHeight: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-  },
-  restoreButtonText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
   },
   todayTop: {
     flexDirection: "row",

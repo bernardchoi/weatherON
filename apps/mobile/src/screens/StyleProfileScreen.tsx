@@ -54,7 +54,7 @@ export function StyleProfileScreen({
       footer={
         <View style={styles.actions}>
           <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
-          {isEditing ? <AppButton label="취소" onPress={() => onNavigate("C1")} tone="secondary" /> : null}
+          {isEditing ? <AppButton label="취소" onPress={() => onNavigate("C1")} tone="secondary" variant="outlined" /> : null}
         </View>
       }
     >

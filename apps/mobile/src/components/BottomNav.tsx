@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
-import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialActiveIndicator, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialActiveIndicator, androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
@@ -17,6 +17,7 @@ type BottomNavProps = {
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const activeTabRoute = getActiveTabRoute(activeRoute);
+  const activeColor = androidMaterialColor(theme, "primary");
   return (
     <View
       style={[
@@ -43,10 +44,10 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             onPress={() => onNavigate(route.id)}
           >
             <View pointerEvents="none" style={[styles.androidActiveIndicator, androidMaterialActiveIndicator(theme, active)]} />
-            <View style={[styles.activeDot, { backgroundColor: active ? theme.gold : "transparent" }]} />
-            <TabIcon route={route.id} color={active ? theme.gold : theme.subtle} />
+            <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
+            <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
             <Text
-              style={[styles.label, { color: active ? theme.gold : theme.subtle }]}
+              style={[styles.label, { color: active ? activeColor : theme.subtle }]}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.9}
@@ -120,7 +121,7 @@ function getActiveTabRoute(route: P0RouteId): P0RouteId {
   return route;
 }
 
-function TabIcon({ route, color }: { route: P0RouteId; color: string }) {
+function TabIcon({ route, color }: { route: P0RouteId; color: ColorValue }) {
   const source = getTabIconSource(route);
   return <Image source={source} style={[styles.iconImage, { tintColor: color }]} resizeMode="contain" />;
 }

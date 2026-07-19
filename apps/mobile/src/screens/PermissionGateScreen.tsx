@@ -64,6 +64,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
             accessibilityLabel={isDestinationCareGate ? "알림 권한 없이 목적지 저장" : "권한 나중에 설정"}
             onPress={onCancel}
             tone="secondary"
+            variant="text"
           />
         </View>
       </View>

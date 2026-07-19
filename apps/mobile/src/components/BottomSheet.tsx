@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
@@ -51,7 +51,7 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
   return (
     <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
       <View style={styles.layer}>
-        <Animated.View style={[styles.scrim, { opacity: progress }]}>
+        <Animated.View style={[styles.scrim, { backgroundColor: androidMaterialColor(theme, "scrim"), opacity: progress }]}>
           <Pressable
             accessible={false}
             accessibilityElementsHidden
@@ -72,7 +72,7 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
             { transform: [{ translateY }] },
           ]}
         >
-          <View style={[styles.grabber, { backgroundColor: theme.border }]} />
+          <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }]} />
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(6, 12, 24, 0.56)",
   },
   scrimTouchable: {
     flex: 1,

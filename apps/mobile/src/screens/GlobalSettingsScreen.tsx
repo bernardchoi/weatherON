@@ -1,11 +1,17 @@
 import React from "react";
-import { Animated, Easing, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import {
+  androidMaterialColor,
+  androidMaterialRipple,
+  androidMaterialSurface,
+  isAndroidDynamicColorAvailable,
+} from "../theme/androidMaterial";
 import { radius, spacing } from "../theme/tokens";
 
 export function GlobalSettingsScreen({
@@ -13,17 +19,19 @@ export function GlobalSettingsScreen({
   distanceUnit,
   themeMode,
   reducedTransparency,
+  dynamicColorEnabled,
   onNavigate,
   onSetTemperatureUnit,
   onSetDistanceUnit,
   onSetThemeMode,
   onToggleReducedTransparency,
+  onToggleDynamicColor,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
   const distanceLabel = getDistanceUnitLabel(distanceUnit);
   const themeLabel = getThemeModeLabel(themeMode);
-  const stateSummary = `${temperatureLabel} · ${distanceLabel} · 테마 ${themeLabel}`;
+  const stateSummary = `${temperatureLabel} · ${distanceLabel} · 테마 ${themeLabel}${dynamicColorEnabled ? " · 기기 색상" : ""}`;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -35,7 +43,14 @@ export function GlobalSettingsScreen({
           <Text style={[styles.title, { color: theme.text }]}>표시 설정</Text>
         </View>
 
-        <View style={[styles.topSummary, { backgroundColor: theme.card }]}>
+        <View
+          style={[
+            styles.topSummary,
+            Platform.OS === "android" ? styles.materialBorder : null,
+            { backgroundColor: theme.card, borderColor: theme.border },
+            androidMaterialSurface(theme, "surfaceContainerLow"),
+          ]}
+        >
           <Text style={[styles.topSummaryLabel, { color: theme.sky }]}>현재 적용</Text>
           <Text style={[styles.topSummaryValue, { color: theme.text }]}>{temperatureLabel} · {distanceLabel}</Text>
           <Text style={[styles.topSummaryMeta, { color: theme.subtle }]}>{themeLabel} 테마</Text>
@@ -104,13 +119,27 @@ export function GlobalSettingsScreen({
             subtitle={reducedTransparency ? "반투명 패널·탭 바를 단색으로 표시" : "기본 투명 효과 사용"}
             tone="sky"
             right={(
-              <AnimatedEffectSwitch enabled={reducedTransparency} />
+              <MaterialSwitch enabled={reducedTransparency} />
             )}
             accessibilityLabel={`투명 효과 줄이기 ${reducedTransparency ? "켜짐" : "꺼짐"}`}
             accessibilityRole="switch"
             accessibilityState={{ checked: reducedTransparency }}
             onPress={onToggleReducedTransparency}
           />
+          {isAndroidDynamicColorAvailable() ? (
+            <AppListRow
+              icon={uiIconAssets.myDisplay}
+              title="기기 색상 사용"
+              subtitle="탭·선택·스위치에 시스템 강조색 적용"
+              tone="clear"
+              divider
+              right={<MaterialSwitch enabled={dynamicColorEnabled} />}
+              accessibilityLabel={`기기 색상 사용 ${dynamicColorEnabled ? "켜짐" : "꺼짐"}`}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: dynamicColorEnabled }}
+              onPress={onToggleDynamicColor}
+            />
+          ) : null}
         </AppListGroup>
 
         <View
@@ -137,24 +166,44 @@ function SegmentControl({
 }) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.segmentControl, wide ? styles.segmentControlWide : null, { backgroundColor: theme.nav }]}>
+    <View
+      style={[
+        styles.segmentControl,
+        Platform.OS === "android" ? styles.materialBorder : null,
+        wide ? styles.segmentControlWide : null,
+        { backgroundColor: theme.nav, borderColor: theme.border },
+        androidMaterialSurface(theme, "surfaceContainer"),
+      ]}
+    >
       {options.map((option) => (
         <FeedbackPressable
           key={option.label}
           accessibilityLabel={`${label} ${option.label}`}
           accessibilityRole="button"
           accessibilityState={{ selected: option.active }}
+          android_ripple={androidMaterialRipple(theme)}
           onPress={option.onPress}
-          style={[styles.segmentOption, { backgroundColor: option.active ? theme.gold : "transparent" }]}
+          style={[
+            styles.segmentOption,
+            option.active ? androidMaterialSurface(theme, "secondaryContainer") : null,
+            { backgroundColor: option.active ? androidMaterialColor(theme, "secondaryContainer") : "transparent" },
+          ]}
         >
-          <Text style={[styles.segmentText, { color: option.active ? theme.onAccent : theme.subtle }]}>{option.label}</Text>
+          <Text
+            style={[
+              styles.segmentText,
+              { color: option.active ? androidMaterialColor(theme, "onSecondaryContainer") : theme.subtle },
+            ]}
+          >
+            {option.label}
+          </Text>
         </FeedbackPressable>
       ))}
     </View>
   );
 }
 
-function AnimatedEffectSwitch({ enabled }: { enabled: boolean }) {
+function MaterialSwitch({ enabled }: { enabled: boolean }) {
   const theme = useAppTheme();
   const progress = React.useRef(new Animated.Value(enabled ? 1 : 0)).current;
 
@@ -169,13 +218,27 @@ function AnimatedEffectSwitch({ enabled }: { enabled: boolean }) {
     return () => animation.stop();
   }, [enabled, progress]);
 
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, Platform.OS === "android" ? 18 : 20] });
   return (
-    <View style={[styles.effectSwitchTrack, { backgroundColor: enabled ? theme.gold : theme.cardMuted }]}>
+    <View
+      style={[
+        styles.effectSwitchTrack,
+        Platform.OS === "android" ? styles.effectSwitchTrackAndroid : null,
+        {
+          backgroundColor: enabled
+            ? androidMaterialColor(theme, "primary")
+            : androidMaterialColor(theme, "surfaceContainerHigh"),
+          borderColor: enabled ? androidMaterialColor(theme, "primary") : androidMaterialColor(theme, "outlineVariant"),
+        },
+      ]}
+    >
       <Animated.View
         style={[
           styles.effectSwitchKnob,
-          { backgroundColor: enabled ? theme.onAccent : theme.text, transform: [{ translateX }] },
+          {
+            backgroundColor: enabled ? androidMaterialColor(theme, "onPrimary") : theme.subtle,
+            transform: [{ translateX }],
+          },
         ]}
       />
     </View>
@@ -288,6 +351,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 3,
     borderRadius: radius.pill,
+  },
+  effectSwitchTrackAndroid: {
+    width: 52,
+    height: 32,
+    borderWidth: 2,
+  },
+  materialBorder: {
+    borderWidth: 1,
   },
   effectSwitchKnob: {
     width: 24,

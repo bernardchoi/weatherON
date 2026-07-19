@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
+import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
 
@@ -27,7 +28,15 @@ type AppListRowProps = {
 export function AppListGroup({ children }: AppListGroupProps) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.group, { backgroundColor: theme.cardStrong }, cardShadow(theme)]}>
+    <View
+      style={[
+        styles.group,
+        Platform.OS === "android" ? styles.groupAndroid : null,
+        { backgroundColor: theme.cardStrong, borderColor: theme.border },
+        cardShadow(theme),
+        androidMaterialSurface(theme, "surfaceContainer"),
+      ]}
+    >
       {children}
     </View>
   );
@@ -69,6 +78,7 @@ export function AppListRow({
         accessibilityLabel={accessibilityLabel ?? title}
         accessibilityRole={accessibilityRole}
         accessibilityState={accessibilityState}
+        android_ripple={androidMaterialRipple(theme)}
         onPress={onPress}
         style={styles.row}
       >
@@ -100,6 +110,9 @@ const styles = StyleSheet.create({
   group: {
     borderRadius: radius.lg,
     overflow: "hidden",
+  },
+  groupAndroid: {
+    borderWidth: 1,
   },
   row: {
     minHeight: 72,
