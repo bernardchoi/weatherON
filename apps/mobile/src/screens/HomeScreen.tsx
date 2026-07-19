@@ -1305,12 +1305,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeContent: {
-    // 홈은 한눈 판단이 목표지만, 특보·코디·목적지가 함께 뜰 때 하단 탭바가 마지막 카드를 가리지 않게 한다.
-    minHeight: "100%",
+    // BottomNav는 스크롤 영역 밖 형제라 큰 하단 보정 없이도 마지막 카드가 가려지지 않는다.
+    flexGrow: 1,
     gap: spacing.xs,
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 116,
+    paddingBottom: 10,
   },
   topBar: {
     minHeight: 44,
