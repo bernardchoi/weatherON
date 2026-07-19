@@ -1,9 +1,9 @@
-import React, { useRef } from "react";
-import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
+import React from "react";
+import { Image, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
 
@@ -39,8 +39,6 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             routeId={route.id}
             label={route.label}
             active={active}
-            tintColor={theme.cardMuted}
-            ripple={androidMaterialRipple(theme)}
             onPress={() => onNavigate(route.id)}
           >
             <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
@@ -61,52 +59,27 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   );
 }
 
-// UI Design Spec v1.0 §10: 프레스 tint overlay opacity 0.12, 120ms.
 function TabButton({
   routeId,
   label,
   active,
-  tintColor,
-  ripple,
   onPress,
   children,
 }: {
   routeId: P0RouteId;
   label: string;
   active: boolean;
-  tintColor: string;
-  ripple?: ReturnType<typeof androidMaterialRipple>;
   onPress: () => void;
   children: React.ReactNode;
 }) {
-  const tint = useRef(new Animated.Value(0)).current;
-  const usesNativeRipple = Platform.OS === "android" && Boolean(ripple);
-
-  const animateTo = (toValue: number) => {
-    Animated.timing(tint, {
-      toValue,
-      duration: 120,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <Pressable
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      android_ripple={ripple}
       onPress={onPress}
-      onPressIn={() => {
-        if (!usesNativeRipple) animateTo(0.12);
-      }}
-      onPressOut={() => {
-        if (!usesNativeRipple) animateTo(0);
-      }}
       style={styles.item}
     >
-      <Animated.View style={[StyleSheet.absoluteFillObject, styles.itemTint, { backgroundColor: tintColor, opacity: tint }]} />
       {children}
     </Pressable>
   );
@@ -157,9 +130,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginVertical: 4,
     overflow: "hidden",
-  },
-  itemTint: {
-    borderRadius: 14,
   },
   activeDot: {
     width: 5,
