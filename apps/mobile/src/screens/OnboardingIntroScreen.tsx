@@ -1,19 +1,12 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { brandAssets, onboardingAssets, uiIconAssets } from "../assets";
+import { brandAssets, onboardingAssets } from "../assets";
 import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
-import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
-
-const featureCards = [
-  { icon: uiIconAssets.depart, title: "출발 시간", body: "도착 시간에 맞춰 계산" },
-  { icon: uiIconAssets.pin, title: "목적지 날씨", body: "현재 위치와 바로 비교" },
-  { icon: uiIconAssets.rain, title: "비 변화", body: "시작과 그칠 때 확인" },
-];
 
 export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -51,22 +44,6 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
           <QuickFact label="완화" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
         </View>
       </View>
-
-      <Section title="핵심 정보" accent="sky">
-        <View style={styles.featureGrid}>
-          {featureCards.map((item) => (
-            <View key={item.title} style={[styles.featureTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <View style={[styles.iconBox, { backgroundColor: theme.cardSoft, borderColor: theme.border }]}>
-                <Image source={item.icon} style={[styles.featureIcon, { tintColor: theme.sky }]} resizeMode="contain" />
-              </View>
-              <View style={styles.copy}>
-                <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-                <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </Section>
     </AppScreen>
   );
 }
@@ -152,42 +129,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "900",
-  },
-  featureGrid: {
-    gap: spacing.sm,
-  },
-  featureTile: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  featureIcon: {
-    width: 25,
-    height: 25,
-  },
-  copy: {
-    flex: 1,
-    gap: 5,
-  },
-  title: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "900",
-  },
-  body: {
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

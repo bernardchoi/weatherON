@@ -91,20 +91,6 @@ export function SmartCareOnboardingScreen({
         </View>
       </Section>
 
-      <View style={[styles.autoSummary, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-        <Text style={[styles.autoBody, { color: theme.muted }]}>
-          특보는 바로, 출발 준비는 한 번만 알림
-        </Text>
-        <View style={styles.autoPillRow}>
-          <View style={[styles.autoPill, { backgroundColor: `${theme.gold}22` }]}>
-            <Text style={[styles.autoPillText, { color: theme.gold }]}>{selectedScenario.title}</Text>
-          </View>
-          <View style={[styles.autoPill, { backgroundColor: `${theme.sky}22` }]}>
-            <Text style={[styles.autoPillText, { color: theme.sky }]}>필수 날씨</Text>
-          </View>
-        </View>
-      </View>
-
       <View style={[styles.notificationPrompt, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? theme.clear : theme.border }, cardShadow(theme)]}>
         <View style={[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }]}>
           <Image source={uiIconAssets.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
@@ -192,33 +178,6 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 14,
     lineHeight: 20,
-  },
-  autoSummary: {
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  autoBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "700",
-  },
-  autoPillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  autoPill: {
-    minHeight: 34,
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-  },
-  autoPillText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
   },
   notificationPrompt: {
     minHeight: 82,

@@ -137,7 +137,7 @@ export function HomeScreen({
           ) : null}
         </View>
 
-        <View style={styles.destinationSection}>
+        <View style={[styles.homePlanCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <DestinationSelectorCard
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
@@ -252,7 +252,7 @@ function DestinationSelectorCard({
     : "목적지 기준 전환";
 
   return (
-    <View style={[styles.destinationSelectorCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={styles.destinationSelectorCard}>
       <View style={styles.destinationSelectorHeader}>
         <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}14` }]}>
           <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
@@ -646,14 +646,14 @@ function VisualDecisionCard({
       accessibilityLabel={`${label} ${value}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.visualDecisionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+      style={[styles.visualDecisionCard, { backgroundColor: `${accent}10` }]}
     >
       <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
         <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
       </View>
       <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
       <Text style={[styles.visualDecisionValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
-      <Text style={[styles.visualDecisionHelper, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>
+      <Text style={[styles.visualDecisionHelper, { color: theme.subtle }]} numberOfLines={1}>{helper}</Text>
     </FeedbackPressable>
   );
 }
@@ -1513,15 +1513,16 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     fontWeight: "900",
   },
-  destinationSection: {
-    gap: spacing.xs,
+  homePlanCard: {
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.xl,
+    borderWidth: 1,
   },
   destinationSelectorCard: {
     gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   destinationSelectorHeader: {
     minHeight: 36,
@@ -1623,21 +1624,20 @@ const styles = StyleSheet.create({
   },
   visualDecisionGrid: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 92,
+    minHeight: 78,
     alignItems: "center",
     gap: 4,
     justifyContent: "center",
     padding: spacing.xs,
-    borderRadius: radius.xl,
-    borderWidth: 1,
+    borderRadius: radius.lg,
   },
   visualIconFrame: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -1652,8 +1652,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   visualDecisionValue: {
-    fontSize: 22,
-    lineHeight: 27,
+    fontSize: 20,
+    lineHeight: 25,
     fontWeight: "900",
   },
   visualDecisionHelper: {
