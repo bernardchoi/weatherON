@@ -1,0 +1,8 @@
+2026-07-20 follow-up final restoration
+
+POST_NOTIFICATIONS: granted=true
+ACCESS_FINE_LOCATION: granted=true
+ACCESS_COARSE_LOCATION: granted=true
+Night mode: no
+Active default network: 129 WIFI
+Final crash log lines: 0

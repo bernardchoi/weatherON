@@ -5,7 +5,7 @@ import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 import { getCoordinateDistanceMeters, sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { formatDistance } from "../utils/units";
 
@@ -97,7 +97,7 @@ export function DestinationAddScreen({
             styles.stateCard,
             {
               backgroundColor: theme.cardStrong,
-              borderColor: canUseSelectedDestination ? "rgba(244,182,63,0.44)" : theme.border,
+              borderColor: canUseSelectedDestination ? semanticColor(theme, "accentBorder") : theme.border,
             },
           ]}
         >
@@ -134,7 +134,7 @@ export function DestinationAddScreen({
                   style={[
                     styles.resultRow,
                     {
-                      backgroundColor: selected ? "rgba(244,182,63,0.10)" : "transparent",
+                      backgroundColor: selected ? semanticColor(theme, "accentTint") : "transparent",
                       borderTopColor: index === 0 ? "transparent" : theme.border,
                     },
                   ]}

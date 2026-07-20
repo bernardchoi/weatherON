@@ -144,6 +144,14 @@ WeatherON은 날씨 데이터를 많이 보여주는 앱이 아니라 오늘 준
 - Blocking 오류는 Rain Red, 비차단 권장은 Sky, 정상/완료는 Clear로 나눈다.
 - 소형 보조 텍스트는 다크에서 opacity 0.80 이상, 라이트에서 opacity 0.60 이상을 기본값으로 둔다.
 
+### MVP 컬러 운영 축소
+
+- 화면 구현은 `background`, `surface`, `surfaceRaised`, `border`, `text`, `muted`, `accent`, `state` 역할로 우선 매핑한다.
+- 색상 alpha 변형은 화면에서 `rgba(...)` 또는 `#RRGGBBAA`로 직접 만들지 않고 `semanticColor(...)` 또는 `colorWithAlpha(...)` 파생값을 사용한다.
+- 한 화면의 주 accent는 1개를 원칙으로 한다. Gold는 활성/CTA, Sky는 정보/날씨, Clear/Warm/Rain Red는 상태 표현에만 제한한다.
+- iOS Liquid Glass와 Android Material 3 보조 surface는 별도 팔레트를 만들지 않고 기존 surface/outline/accent 토큰에서 파생한다.
+- 브랜드 로고, 소셜 로그인 브랜드색, 날씨 배경 gradient처럼 asset 성격이 강한 색상은 예외로 둔다.
+
 ---
 
 ## 6. 타이포그래피
@@ -456,6 +464,7 @@ MVP에서 기능 노출을 줄이더라도 탭바 스펙은 이 기준을 따른
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-20 | 라이트/다크 페이지 전반의 색상 산만함을 줄이기 위해 MVP 컬러 운영 축소 규칙 추가. 화면별 임의 `rgba`는 semantic helper 파생값으로 통일 |
 | 2026-07-19 (3차) | iOS Liquid Glass 강조 범위 확대. 하단 탭바 active chip, 뒤로가기 버튼, 홈 알림 버튼, 바텀시트 handle/header에 더 선명한 glass tint, 밝은 stroke, 상단 highlight를 적용 |
 | 2026-07-19 (2차) | Android 하단 내비게이션 선택 상태의 상시 tonal 배경 음영 제거. 5px active dot, 아이콘·텍스트 강조색, 터치 순간 ripple만 유지 |
 | 2026-07-19 | Android Material 3 표현 강화. 표시 설정 segmented control/switch, 3단계 surface container, filled/tonal/outlined/text 버튼, 강화 active indicator, inverse Snackbar를 공통화. Android 12+ 선택형 기기 색상은 강조 요소에만 제한 적용하고 SQLite 상태로 유지 |

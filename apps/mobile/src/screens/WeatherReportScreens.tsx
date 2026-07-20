@@ -8,7 +8,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { appColors, radius, spacing } from "../theme/tokens";
+import { appColors, colorWithAlpha, radius, spacing } from "../theme/tokens";
 
 const weatherOptions = [
   { id: "clear", label: "맑음" },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: `${appColors.warm}18`,
+    backgroundColor: colorWithAlpha(appColors.warm, 0.094),
     borderLeftWidth: 3,
     borderLeftColor: appColors.warm,
   },
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colorWithAlpha(appColors.text, 0.08),
   },
   kicker: {
     color: appColors.warm,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   body: {
-    color: "rgba(215,230,245,0.82)",
+    color: colorWithAlpha(appColors.text, 0.82),
     fontSize: 13,
     lineHeight: 20,
     fontWeight: "800",
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 70,
     borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colorWithAlpha(appColors.text, 0.08),
   },
   metricValue: {
     color: appColors.text,
@@ -483,13 +483,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   metricLabel: {
-    color: "rgba(215,230,245,0.64)",
+    color: colorWithAlpha(appColors.text, 0.64),
     fontSize: 11,
     fontWeight: "800",
   },
   historyCard: {
     borderRadius: radius.lg,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colorWithAlpha(appColors.text, 0.08),
     overflow: "hidden",
   },
   historyRow: {
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.08)",
+    borderBottomColor: colorWithAlpha(appColors.text, 0.08),
   },
   historyWeather: {
     width: 34,
@@ -509,20 +509,20 @@ const styles = StyleSheet.create({
   },
   historyPlace: {
     flex: 1,
-    color: "rgba(215,230,245,0.82)",
+    color: colorWithAlpha(appColors.text, 0.82),
     fontSize: 12,
     fontWeight: "800",
   },
   historyTime: {
     width: 72,
-    color: "rgba(215,230,245,0.64)",
+    color: colorWithAlpha(appColors.text, 0.64),
     fontSize: 11,
     fontWeight: "800",
     textAlign: "right",
   },
   historyStatus: {
     width: 34,
-    color: "rgba(215,230,245,0.64)",
+    color: colorWithAlpha(appColors.text, 0.64),
     fontSize: 11,
     fontWeight: "900",
     textAlign: "right",

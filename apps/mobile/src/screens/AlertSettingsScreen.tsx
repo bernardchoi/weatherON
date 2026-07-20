@@ -5,7 +5,7 @@ import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
 const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
@@ -104,7 +104,7 @@ export function AlertSettingsScreen({
           accessibilityRole="switch"
           accessibilityState={{ checked: smartCareEnabled }}
           onPress={onToggleSmartCare}
-          style={[styles.heroCard, { backgroundColor: theme.cardStrong, borderColor: smartCareEnabled ? "rgba(244,182,63,0.40)" : theme.border }, cardShadow(theme)]}
+          style={[styles.heroCard, { backgroundColor: theme.cardStrong, borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border }, cardShadow(theme)]}
         >
           <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
             <BellGlyph color={theme.gold} />

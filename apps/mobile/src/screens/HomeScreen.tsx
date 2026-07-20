@@ -8,7 +8,7 @@ import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
@@ -765,7 +765,7 @@ function NotificationBellButton({
       onPress={onPress}
       style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, glassSurface]}
     >
-      {glassSurface ? <View pointerEvents="none" style={[styles.bellGlassShine, { backgroundColor: theme.name === "light" ? "rgba(255,255,255,0.64)" : "rgba(248,251,255,0.18)" }]} /> : null}
+      {glassSurface ? <View pointerEvents="none" style={[styles.bellGlassShine, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
         <View style={[styles.bellBadge, { backgroundColor: theme.sky }]}>
@@ -928,7 +928,7 @@ function NotificationSidebar({
     <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
       <View style={styles.sidebarLayer}>
         <Animated.View
-          style={[styles.sidebarScrim, { opacity: progress }]}
+          style={[styles.sidebarScrim, { backgroundColor: semanticColor(theme, "scrim"), opacity: progress }]}
         >
           <Pressable
             accessible={false}
@@ -1800,7 +1800,6 @@ const styles = StyleSheet.create({
   },
   sidebarScrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(6, 14, 24, 0.48)",
   },
   sidebarScrimTouchable: {
     ...StyleSheet.absoluteFillObject,

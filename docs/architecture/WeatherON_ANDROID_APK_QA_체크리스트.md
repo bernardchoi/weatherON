@@ -47,7 +47,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | A2 | 첫 실행 | 앱 크래시 없음 | 통과 |
 | A3 | 앱 아이콘 | WeatherON 아이콘 정상 표시 | 실기기 확인 필요 |
 | A4 | 스플래시 | 배경색/아이콘 깨짐 없음 | 미검증 |
-| A5 | 다크/라이트 모드 | 텍스트 대비와 주요 버튼 정상 | 미검증 |
+| A5 | 다크/라이트 모드 | 텍스트 대비와 주요 버튼 정상 | 통과 |
 | A6 | 앱 재시작 | 온보딩/목적지/옷장/권한 상태 유지 | 재빌드 후 검증 필요 |
 
 ---
@@ -73,9 +73,9 @@ npm run check:eas-build-status -- <eas-build-id>
 | 항목 | 체크 기준 | 상태 |
 |---|---|---|
 | 위치 권한 허용 | 현재 위치 날씨 갱신 또는 fallback 메시지 표시 | 실패: `7c857db8-da31-4c95-88d8-0455546c1c4d`에서 권한 허용 후 현재 위치 날씨 미반영 |
-| 위치 권한 거부 | 앱 사용 가능, 수동 목적지 검색 가능 | 미검증 |
+| 위치 권한 거부 | 앱 사용 가능, 수동 목적지 검색 가능 | 통과 |
 | 위치 서비스 꺼짐 | fallback 안내 표시, 크래시 없음 | 미검증 |
-| 네트워크 끊김 | 최근/기본 예보 상태 표시, 빈 화면 없음, `실시간 예보`로 오인 표시 없음 | 미검증 |
+| 네트워크 끊김 | 최근/기본 예보 상태 표시, 빈 화면 없음, `실시간 예보`로 오인 표시 없음 | 통과 |
 | 작은 화면 | 360x800급에서 가로 overflow 없음 | 미검증 |
 | 큰 화면 | 430x932급에서 카드 간격/버튼 정상 | 미검증 |
 | 앱 백그라운드/복귀 | 상태 유지, 중복 알림/중복 저장 없음 | 미검증 |
@@ -90,7 +90,7 @@ npm run check:eas-build-status -- <eas-build-id>
 | 항목 | 기준 | 상태 |
 |---|---|---|
 | KMA proxy | 한국 현재 위치/기본 위치 날씨 정상 | 미검증 |
-| Kakao Local | `잠실`, `잠실 야구장` 국내 검색 결과 provider `kakao` 또는 fallback, 선택/저장 가능 | 미검증 |
+| Kakao Local | `잠실`, `잠실 야구장` 국내 검색 결과 provider `kakao` 또는 fallback, 선택/저장 가능 | 통과 |
 | Open-Meteo | 목적지/해외 fallback 날씨 정상 | 미검증 |
 | Google Maps | `Tokyo Station`, `도쿄 역`, `東京駅`, `센트럴 파크` 해외/현지어 검색 결과 선택 가능. 키 없으면 fixture/fallback 유지 | 미검증 |
 | API 키 노출 | APK 앱 환경에 provider secret 미포함 | 미검증 |
@@ -109,16 +109,16 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 
 | 항목 | 값 |
 |---|---|
-| QA 대상 APK | local Gradle release APK |
-| Version | `0.1.0 (7)` |
+| QA 대상 APK | qa-local Gradle release APK |
+| Version | `1.0.0 (10)` |
 | APK path | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
-| APK SHA256 | `97b96dfc5bb4c8ecc6e83ea258916cd935dba3e23afcc37da732e0f8b0c91235` |
+| APK SHA256 | `c4cd28b1c92565710b3d53233019896fdc0c9ac463a88be839f33792bbe82450` |
 | 테스트 기기 | A142 / adb `000841458003652` |
-| 테스트 일시 | 2026-07-08 17:36-18:11 KST |
-| 실기기 QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-08-1736/report.md` |
-| 통과 범위 | 빌드, 설치, 실행, 홈, 코디 탭, 코디 상세, 코디 저장, 출발, MY, 알림 사이드바, 사이드바 swipe 닫기, crash buffer |
-| 주요 이슈 | 없음. C4 코디 저장 완료 CTA 하단 여백 보정 후 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인 |
-| 보조 확인 | `check:android-release`, `check:android-device-qa-ready`, `check:android-product-quality`, `check:android-web-export`, `check:android-web-preview-server`, TypeScript, `git diff --check` 통과 |
+| 테스트 일시 | 2026-07-20 18:55-20:06 KST |
+| 실기기 QA 리포트 | `docs/audits/android-real-device-qa-2026-07-20/report.md`, `docs/audits/android-real-device-qa-2026-07-20/follow-up/report.md` |
+| 통과 범위 | qa-local 빌드, 설치, 실행, 홈, 코디 탭/상세/저장/목록 복귀, 출발 탭, 목적지 `Jamsil` 검색/`잠실야구장` 저장/삭제 복구, 위치 권한 거부 fallback, 다크모드, 네트워크 차단 fallback, MY, 스마트 알림 설정, 개발용 알림 QA 패널, 테스트 알림 수신, notification shade 노출, 알림 탭 M2 복귀, crash buffer |
+| 주요 이슈 | `uiautomator dump`가 `ERROR: could not get idle state.`로 실패. Android 뒤로가기 표준 케이스는 이번 follow-up 요청 범위 밖이라 별도 확인 필요 |
+| 보조 확인 | `check:platform-versions`, `check:android-release`, TypeScript, `git diff --check`, `check:android-device-qa-ready` 통과 |
 
 ## 8. 이전 기록 양식
 
@@ -148,6 +148,8 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | 날짜 | 내용 |
 |---|---|
 | 2026-07-08 | local Gradle release APK `0.1.0 (7)` 실기기 QA 기록 추가. 코디 탭/상세/저장, 출발, MY, 알림 사이드바, swipe 닫기 통과. C4 저장 완료 CTA 하단 여백 이슈 초기 발견 |
+| 2026-07-20 | qa-local Gradle release APK `1.0.0 (10)` 실기기 QA 기록 추가. 홈/탭/MY/스마트 알림 설정/개발용 알림 QA/OS 알림 수신/알림 탭 복귀 통과 |
+| 2026-07-20 | follow-up 실기기 QA로 코디 상세 전체 플로우, 목적지 검색, 위치 권한 거부, 다크모드, 네트워크 차단 통과. 테스트 목적지/권한/라이트 모드/네트워크 원상복구 |
 | 2026-06-27 | Android preview APK QA 체크리스트 최초 작성 |
 | 2026-06-27 | EAS 로그인 확인 명령을 `check:eas-login-state` 기준으로 변경 |
 | 2026-06-27 | EAS preview APK build id와 실기기 설치/실행 성공 기록 |

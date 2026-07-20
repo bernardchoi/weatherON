@@ -1,0 +1,4 @@
+logs/dumpsys-notification-after-test.txt
+logs/logcat-after-notification-open.txt
+logs/logcat-after-test.txt
+screens/09-notification-shade.png

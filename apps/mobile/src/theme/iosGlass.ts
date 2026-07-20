@@ -1,5 +1,5 @@
 import { Platform, type ViewStyle } from "react-native";
-import type { AppTheme } from "./tokens";
+import { colorWithAlpha, semanticColor, type AppTheme } from "./tokens";
 
 type IosGlassRole = "bar" | "button" | "sheet" | "weather" | "tabItem" | "sheetHeader" | "grabber";
 
@@ -24,37 +24,32 @@ export function iosGlassSurface(theme: AppTheme, role: IosGlassRole): ViewStyle 
 
 function getBackgroundColor(theme: AppTheme, role: IosGlassRole): string {
   if (theme.reducedTransparency) {
-    return theme.name === "light" ? "#FFFFFF" : theme.cardStrong;
+    return theme.name === "light" ? theme.card : theme.cardStrong;
   }
 
   if (theme.name === "light") {
-    if (role === "tabItem") return "rgba(255,255,255,0.48)";
-    if (role === "sheetHeader") return "rgba(255,255,255,0.62)";
-    if (role === "grabber") return "rgba(255,255,255,0.72)";
-    if (role === "weather") return "rgba(255,255,255,0.74)";
-    if (role === "button") return "rgba(255,255,255,0.58)";
-    if (role === "sheet") return "rgba(255,255,255,0.72)";
-    return "rgba(255,255,255,0.64)";
+    if (role === "tabItem") return colorWithAlpha(theme.card, 0.48);
+    if (role === "sheetHeader") return colorWithAlpha(theme.card, 0.62);
+    if (role === "grabber") return colorWithAlpha(theme.card, 0.72);
+    if (role === "weather") return colorWithAlpha(theme.card, 0.74);
+    if (role === "button") return colorWithAlpha(theme.card, 0.58);
+    if (role === "sheet") return colorWithAlpha(theme.card, 0.72);
+    return colorWithAlpha(theme.card, 0.64);
   }
 
-  if (role === "tabItem") return "rgba(223,245,255,0.16)";
-  if (role === "sheetHeader") return "rgba(223,245,255,0.14)";
-  if (role === "grabber") return "rgba(223,245,255,0.58)";
-  if (role === "weather") return "rgba(16,61,95,0.74)";
-  if (role === "button") return "rgba(223,245,255,0.12)";
-  if (role === "sheet") return "rgba(17,64,98,0.74)";
-  return "rgba(17,64,98,0.68)";
+  if (role === "tabItem") return colorWithAlpha(theme.skyLite, 0.16);
+  if (role === "sheetHeader") return colorWithAlpha(theme.skyLite, 0.14);
+  if (role === "grabber") return colorWithAlpha(theme.skyLite, 0.58);
+  if (role === "weather") return colorWithAlpha(theme.card, 0.74);
+  if (role === "button") return colorWithAlpha(theme.skyLite, 0.12);
+  if (role === "sheet") return colorWithAlpha(theme.card, 0.74);
+  return colorWithAlpha(theme.card, 0.68);
 }
 
 function getBorderColor(theme: AppTheme, role: IosGlassRole): string {
-  if (theme.name === "light") {
-    if (role === "tabItem" || role === "button" || role === "sheetHeader") return "rgba(255,255,255,0.58)";
-    return "rgba(31,78,121,0.22)";
-  }
-
-  if (role === "tabItem" || role === "button" || role === "sheetHeader") return "rgba(248,251,255,0.34)";
-  if (role === "grabber") return "rgba(248,251,255,0.44)";
-  return "rgba(248,251,255,0.24)";
+  if (role === "tabItem" || role === "button" || role === "sheetHeader") return semanticColor(theme, "glassBorderStrong");
+  if (role === "grabber") return colorWithAlpha(theme.text, 0.44);
+  return semanticColor(theme, "glassBorder");
 }
 
 function getShadowOpacity(theme: AppTheme, role: IosGlassRole): number {

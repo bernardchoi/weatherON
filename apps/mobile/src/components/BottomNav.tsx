@@ -5,7 +5,7 @@ import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius, spacing } from "../theme/tokens";
+import { radius, semanticColor, spacing } from "../theme/tokens";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
@@ -44,7 +44,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
               activeGlassSurface
                 ? [
                     styles.activeItemGlass,
-                    { borderColor: theme.name === "light" ? "rgba(255,255,255,0.62)" : "rgba(248,251,255,0.34)" },
+                    { borderColor: semanticColor(theme, "glassBorderStrong") },
                     activeGlassSurface,
                   ]
                 : null

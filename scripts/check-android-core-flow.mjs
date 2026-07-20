@@ -522,7 +522,7 @@ async function checkDestinationPersistenceFlow(page) {
   await clickAriaIncludes(page, "출발 탭");
   await assertText(page, "잠실종합운동장");
   await assertText(page, "알림 1/1");
-  await assertNoText(page, "첫 목적지를 추가해 주세요");
+  await assertNoText(page, "첫 목적지 추가");
 }
 
 async function checkDestinationAddUiPersistenceFlow(browser) {
@@ -600,7 +600,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
 
     console.log("core-flow: destination add open");
     await clickText(page, "출발");
-    await assertText(page, "첫 목적지를 추가해 주세요");
+    await assertText(page, "첫 목적지 추가");
     await clickText(page, "목적지 추가");
     await assertText(page, "장소 선택 필요");
     console.log("core-flow: destination add search");
@@ -667,7 +667,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "잠실야구장");
     await clickText(page, "출발");
     await assertText(page, "알림 1/1");
-    await assertNoText(page, "첫 목적지를 추가해 주세요");
+    await assertNoText(page, "첫 목적지 추가");
     await clickAriaIncludes(page, "잠실야구장 목적지 상세 보기");
     await clickAriaIncludes(page, "잠실야구장 목적지 삭제");
     await assertText(page, "목적지 삭제됨");
@@ -743,7 +743,7 @@ async function checkMySettingsFlow(page) {
   await assertText(page, "표시 설정");
   await assertText(page, "정책 및 법적 고지");
   await assertText(page, "오늘 준비");
-  await assertAnyText(page, ["사용 준비 완료", "설정하면 더 정확해짐", "확인 필요한 항목 있음"]);
+  await assertAnyText(page, ["준비 완료", "설정 추천", "확인 필요"]);
   await assertNoText(page, "코디·옷장");
   await assertBottomNav(page);
 

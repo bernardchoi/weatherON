@@ -3,7 +3,7 @@ import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, useWindowDi
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius, spacing } from "../theme/tokens";
+import { radius, semanticColor, spacing } from "../theme/tokens";
 
 // 이 화면들의 안드로이드 실기기는 제스처 내비게이션 바가 하단 화면을 60~80px 정도 가린다.
 // safe-area-context 없이도 시트 콘텐츠(특히 맨 아래 확인 버튼)가 항상 손닿는 범위에 오도록
@@ -80,7 +80,7 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
               pointerEvents="none"
               style={[
                 styles.sheetChrome,
-                { borderColor: theme.name === "light" ? "rgba(255,255,255,0.6)" : "rgba(248,251,255,0.26)" },
+                { borderColor: semanticColor(theme, "glassBorder") },
                 sheetHeaderGlassSurface,
               ]}
             >

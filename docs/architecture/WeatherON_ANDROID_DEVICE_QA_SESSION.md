@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-20 qa-local release APK v10 실기기 QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `1.0.0 (10)` |
+| APK sha256 | `c4cd28b1c92565710b3d53233019896fdc0c9ac463a88be839f33792bbe82450` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-20 18:55-20:06 KST |
+| QA 리포트 | `docs/audits/android-real-device-qa-2026-07-20/report.md`, `docs/audits/android-real-device-qa-2026-07-20/follow-up/report.md` |
+| 주요 결과 | qa-local release APK 빌드, 설치, COLD launch, 홈, 코디 탭/상세/저장/목록 복귀, 목적지 `Jamsil` 검색/`잠실야구장` 선택/저장/상세, 권한 거부 fallback, 다크모드, 네트워크 차단 fallback, MY, 스마트 알림 설정, 개발용 알림 QA 패널, 테스트 알림 수신, notification shade 노출, 알림 탭 후 M2 복귀 확인. `dumpsys notification` 기준 WeatherON 알림 게시 기록 `weatheron:test:M2:*`. crash buffer 0줄 |
+| 남은 개선 | `uiautomator dump`는 `ERROR: could not get idle state.`로 실패해 스크린샷/`dumpsys`/logcat 중심으로 증거 확보. Android 뒤로가기 표준 케이스는 이번 follow-up 요청 범위 밖이라 별도 확인 필요 |
+
 ### 2026-07-15 local release APK v9 실기기 QA
 
 | 항목 | 값 |

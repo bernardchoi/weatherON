@@ -1,0 +1,6 @@
+screens/16-before-destination-search.png
+logs/dumpsys-connectivity-before-network-off.txt
+logs/dumpsys-connectivity-network-off.txt
+logs/dumpsys-connectivity-restored.txt
+logs/dumpsys-package-location-denied.txt
+logs/dumpsys-package-restored.txt

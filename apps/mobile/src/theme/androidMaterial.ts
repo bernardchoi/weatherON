@@ -1,5 +1,5 @@
 import { Platform, PlatformColor, type ColorValue, type ViewStyle } from "react-native";
-import type { AppTheme } from "./tokens";
+import { colorWithAlpha, semanticColor, type AppTheme } from "./tokens";
 
 export type AndroidMaterialColorRole =
   | "primary"
@@ -58,7 +58,7 @@ function getLegacyColor(theme: AppTheme, role: AndroidMaterialColorRole): string
   if (role === "inverseSurface") return theme.name === "light" ? "#26323C" : "#EAF2F8";
   if (role === "inverseOnSurface") return theme.name === "light" ? "#F5FAFF" : "#142033";
   if (role === "inversePrimary") return theme.gold;
-  return "rgba(6,12,24,0.56)";
+  return semanticColor(theme, "scrim");
 }
 
 export function androidMaterialSurface(theme: AppTheme, role: AndroidMaterialRole): ViewStyle | null {
@@ -77,7 +77,7 @@ export function androidMaterialRipple(theme: AppTheme, tone: "primary" | "surfac
 
   const color = tone === "primary" ? theme.onAccent : theme.text;
   return {
-    color: `${color}1F`,
+    color: colorWithAlpha(color, 0.12),
     borderless: false,
   };
 }
@@ -128,14 +128,14 @@ function getFallbackColor(theme: AppTheme, role: AndroidMaterialColorRole): stri
   const light = theme.name === "light";
   if (role === "primary") return theme.gold;
   if (role === "onPrimary") return theme.onAccent;
-  if (role === "secondaryContainer") return light ? "#F9E6D8" : "#4B3B2A";
-  if (role === "onSecondaryContainer") return light ? "#5A210C" : "#FFE1C4";
-  if (role === "surfaceContainerLow") return light ? "#F7FAFD" : "#0B2E49";
-  if (role === "surfaceContainer") return light ? "#EEF4F8" : "#103D5F";
-  if (role === "surfaceContainerHigh") return light ? "#E5EDF3" : "#16557F";
-  if (role === "outlineVariant") return light ? "rgba(31,78,121,0.18)" : "rgba(248,251,255,0.18)";
+  if (role === "secondaryContainer") return semanticColor(theme, "accentTint");
+  if (role === "onSecondaryContainer") return theme.gold;
+  if (role === "surfaceContainerLow") return light ? theme.background : theme.cardStrong;
+  if (role === "surfaceContainer") return theme.card;
+  if (role === "surfaceContainerHigh") return theme.cardSoft;
+  if (role === "outlineVariant") return semanticColor(theme, "outlineStrong");
   if (role === "inverseSurface") return light ? "#26323C" : "#EAF2F8";
   if (role === "inverseOnSurface") return light ? "#F5FAFF" : "#142033";
   if (role === "inversePrimary") return light ? "#FFDCC2" : "#7A2E12";
-  return "rgba(0,0,0,0.56)";
+  return colorWithAlpha(theme.name === "light" ? theme.text : theme.background, 0.56);
 }

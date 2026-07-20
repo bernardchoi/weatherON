@@ -6,7 +6,7 @@ import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 
 export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -30,7 +30,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <Image source={onboardingAssets.ready} style={styles.heroVisual} resizeMode="cover" accessibilityLabel="출발 시간과 날씨 정보를 보여주는 예시 화면" />
         <View style={styles.brandTop}>
-          <View style={styles.brandIconHalo}>
+          <View style={[styles.brandIconHalo, { backgroundColor: semanticColor(theme, "infoTint") }]}>
             <AnimatedBrandMark size={52} />
           </View>
           <View style={styles.brandCopy}>
@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
     height: 58,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(88,191,255,0.12)",
     borderRadius: radius.md,
   },
   brandCopy: {

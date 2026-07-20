@@ -7,7 +7,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AdConsentMode } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 
 const consentOptions: { mode: AdConsentMode; title: string; body: string; badge: string }[] = [
   { mode: "personalized", title: "동의", body: "날씨·위치 맥락을 활용해 더 관련성 높은 광고를 표시", badge: "맞춤" },
@@ -29,7 +29,7 @@ export function AdConsentScreen({ adConsentMode, onSetAdConsentMode, onNavigate 
       </View>
 
       <View style={[styles.consentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-        <View style={styles.handle} />
+        <View style={[styles.handle, { backgroundColor: semanticColor(theme, "outlineStrong") }]} />
         <Text style={[styles.panelTitle, { color: theme.text }]}>광고 개인화 설정</Text>
         <Text style={[styles.panelBody, { color: theme.muted }]}>동의하지 않아도 광고는 계속 표시됩니다.</Text>
         <View style={styles.optionStack}>
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(180,205,230,0.55)",
   },
   panelTitle: {
     textAlign: "center",

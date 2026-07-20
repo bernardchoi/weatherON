@@ -1,0 +1,16 @@
+WeatherON Android QA notification summary - 2026-07-20
+
+Source file was captured locally as raw `dumpsys notification --noredact` evidence and excluded from git because device-wide notification dumps can contain unrelated app data.
+
+Relevant observed fields:
+
+- pkg: `com.weatheron.mobile`
+- tag: `weatheron:test:M2:1784541488472`
+- key: `0|com.weatheron.mobile|0|weatheron:test:M2:1784541488472|10308`
+- title: `WeatherON이 필요한 순간 알려드릴게요`
+- text: `나에게 맞는 날씨 알림을 확인해봐요`
+- payload body: `{"ruleId":"local-test","route":"M2"}`
+- channel id: `weatheron-smart-care`
+- channel name: `WeatherON 스마트 알림`
+- importance: `3`
+- contentIntent: `com.weatheron.mobile startActivity`

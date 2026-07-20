@@ -1,6 +1,6 @@
 # WeatherON Android Preview Preflight Status
 
-> 생성일: 2026-07-16
+> 생성일: 2026-07-20
 > 목적: EAS preview build 재시도 전 native package, version, archive 제외 설정을 로컬에서 점검한다.
 
 ## 1. 요약
@@ -60,14 +60,14 @@
 
 | 경로 | 존재 | 크기 | 제외 규칙 |
 |---|---|---|---|
-| `apps/mobile/android/app/build` | 예 | 3.0 GB | 있음 |
-| `apps/mobile/android/.gradle` | 예 | 26 MB | 있음 |
+| `apps/mobile/android/app/build` | 예 | 3.6 GB | 있음 |
+| `apps/mobile/android/.gradle` | 예 | 27 MB | 있음 |
 | `apps/mobile/android/build` | 예 | 145 KB | 있음 |
-| `apps/mobile/dist` | 예 | 43 MB | 있음 |
+| `apps/mobile/dist` | 예 | 46 MB | 있음 |
 | `apps/mobile/dist-web` | 예 | 587 KB | 있음 |
-| `node_modules` | 예 | 6.0 GB | 있음 |
-| `.git` | 예 | 843 MB | 있음 |
-| `.npm-cache` | 예 | 1.5 GB | 있음 |
+| `node_modules` | 예 | 6.6 GB | 있음 |
+| `.git` | 예 | 846 MB | 있음 |
+| `.npm-cache` | 예 | 1.6 GB | 있음 |
 
 ## 4. 다음 명령
 

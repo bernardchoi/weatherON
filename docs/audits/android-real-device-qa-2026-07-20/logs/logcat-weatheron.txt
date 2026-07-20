@@ -1,0 +1,17 @@
+WeatherON Android QA logcat summary - 2026-07-20
+
+Source files were captured locally as raw ADB evidence and excluded from git because device-wide logcat can contain unrelated app data.
+
+Relevant observed lines:
+
+- 07-20 18:55:36.073 ActivityTaskManager START cmp=com.weatheron.mobile/.MainActivity result code=0
+- 07-20 18:55:36.110 ActivityManager Start proc com.weatheron.mobile for top-activity com.weatheron.mobile.MainActivity
+- 07-20 18:55:36.174 MTK_APPList com.weatheron.mobile.MainActivity state=RESUMED foreground=com.weatheron.mobile
+- 07-20 18:55:36.268 ActivityTaskManager Displayed com.weatheron.mobile/.MainActivity for user 0: +205ms
+- 07-20 18:55:36.374 ReactNativeJS Running "main"
+- 07-20 18:58:13.816 NotificationListener received notification posted event - com.weatheron.mobile#UserHandle{0}
+
+Crash/ANR check:
+
+- `adb logcat -b crash -d` output was empty.
+- No WeatherON `FATAL EXCEPTION`, `AndroidRuntime` crash, or ReactNativeJS exception was observed in the captured app flow.

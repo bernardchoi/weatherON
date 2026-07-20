@@ -1,0 +1,8 @@
+2026-07-20 follow-up D12 network blocked
+
+Before test mobile data setting: 1
+Network disabled by adb svc wifi disable + svc data disable
+During test active default network: none
+Home state: 빈 화면 없음, 최근 예보로 유지 중 / 최근 예보 표시
+Crash log lines: 0
+Restored active default network: 129 WIFI

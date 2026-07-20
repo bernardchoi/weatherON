@@ -5,7 +5,7 @@ import { BackButton } from "../components/BackButton";
 import { CompletionStatus } from "../components/CompletionStatus";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGoBack, onOpenAlertSettings }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -91,7 +91,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                 style={[
                   styles.optionCard,
                   {
-                    backgroundColor: item.recommended ? theme.cardStrong : "rgba(16,36,63,0.34)",
+                    backgroundColor: item.recommended ? theme.cardStrong : semanticColor(theme, "surfacePassive"),
                     borderColor: item.recommended ? theme.sky : theme.border,
                   },
                 ]}

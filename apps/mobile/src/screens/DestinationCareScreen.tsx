@@ -6,7 +6,7 @@ import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 
@@ -109,7 +109,7 @@ export function DestinationCareScreen({
                 {routeTimingReady ? `${targetArrivalTime} 도착 기준으로 이동 시간과 날씨를 함께 봄` : `${targetArrivalTime} 도착 기준 날씨만 먼저 확인`}
               </Text>
             </View>
-            <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? "rgba(47,198,163,0.16)" : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
+            <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? semanticColor(theme, "successTint") : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
               <Text style={[styles.careStateText, { color: destinationCareEnabled ? theme.clear : theme.subtle }]}>
                 {destinationCareEnabled ? "케어 ON" : "케어 OFF"}
               </Text>

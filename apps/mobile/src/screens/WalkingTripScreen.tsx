@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 const courses = [
   {
@@ -109,7 +109,7 @@ export function WalkingTripScreen({ accountLinked, permissionReady, onNavigate, 
               style={[
                 styles.courseRow,
                 {
-                  backgroundColor: selectedCourseIndex === index ? "rgba(248,251,255,0.10)" : "transparent",
+                  backgroundColor: selectedCourseIndex === index ? semanticColor(theme, "surfaceSelected") : "transparent",
                   borderBottomColor: index === courses.length - 1 ? "transparent" : theme.border,
                 },
               ]}
@@ -144,12 +144,12 @@ export function WalkingTripScreen({ accountLinked, permissionReady, onNavigate, 
             ))}
           </View>
 
-          <View style={[styles.scorePill, { backgroundColor: `${theme.clear}18`, borderColor: theme.clear }]}>
+          <View style={[styles.scorePill, { backgroundColor: semanticColor(theme, "successTint"), borderColor: theme.clear }]}>
             <View style={[styles.scoreDot, { backgroundColor: theme.clear }]} />
             <Text style={[styles.scoreText, { color: theme.clear }]}>{selectedCourse.score}</Text>
           </View>
 
-          <View style={[styles.departureBox, { backgroundColor: `${theme.clear}12`, borderColor: theme.clear }]}>
+          <View style={[styles.departureBox, { backgroundColor: semanticColor(theme, "successTint"), borderColor: theme.clear }]}>
             <Text style={[styles.departureText, { color: theme.text }]}>{selectedCourse.departure} 출발 추천</Text>
             <Text style={[styles.departureSub, { color: theme.clear }]}>{selectedCourse.summary}</Text>
           </View>
@@ -167,7 +167,7 @@ export function WalkingTripScreen({ accountLinked, permissionReady, onNavigate, 
 
 function StateChip({ label, active, theme }: { label: string; active?: boolean; theme: AppTheme }) {
   return (
-    <View style={[styles.stateChip, { backgroundColor: active ? theme.cardStrong : "rgba(16,36,63,0.28)", borderColor: active ? "rgba(244,182,63,0.36)" : theme.border }]}>
+    <View style={[styles.stateChip, { backgroundColor: active ? theme.cardStrong : semanticColor(theme, "surfacePassive"), borderColor: active ? semanticColor(theme, "accentBorder") : theme.border }]}>
       <Text style={[styles.stateText, { color: active ? theme.text : theme.subtle }]}>{label}</Text>
     </View>
   );

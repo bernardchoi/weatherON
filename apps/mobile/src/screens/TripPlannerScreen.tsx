@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 const tripDays = [
   { day: "1일차", date: "6/20", weather: "맑음", temp: "27°", plan: "성산일출봉" },
@@ -22,7 +22,7 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
         <View style={styles.header}>
           <BackButton onPress={() => onNavigate("G1")} />
           <Text style={[styles.title, { color: theme.text }]}>여행 플래너</Text>
-          <View style={[styles.premiumTag, { backgroundColor: `${theme.sky}18`, borderColor: theme.sky }]}>
+          <View style={[styles.premiumTag, { backgroundColor: semanticColor(theme, "infoTint"), borderColor: theme.sky }]}>
             <Text style={[styles.premiumText, { color: theme.sky }]}>프리미엄</Text>
           </View>
         </View>
@@ -36,7 +36,7 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
           <View style={[styles.segmentActive, { backgroundColor: theme.gold }]}>
             <Text style={[styles.segmentActiveText, { color: theme.onAccent }]}>무료 상태</Text>
           </View>
-          <View style={[styles.segmentPassive, { borderColor: theme.border, backgroundColor: "rgba(16,36,63,0.26)" }]}>
+          <View style={[styles.segmentPassive, { borderColor: theme.border, backgroundColor: semanticColor(theme, "surfacePassive") }]}>
             <Text style={[styles.segmentPassiveText, { color: theme.subtle }]}>프리미엄 활성</Text>
           </View>
         </View>
@@ -60,7 +60,7 @@ export function TripPlannerScreen({ onNavigate }: P0ScreenProps) {
               style={[
                 styles.dayRow,
                 {
-                  backgroundColor: index === 0 ? "rgba(248,251,255,0.09)" : "transparent",
+                  backgroundColor: index === 0 ? semanticColor(theme, "surfaceSelected") : "transparent",
                   borderBottomColor: index === tripDays.length - 1 ? "transparent" : theme.border,
                 },
               ]}

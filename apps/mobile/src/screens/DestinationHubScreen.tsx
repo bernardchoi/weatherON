@@ -4,7 +4,7 @@ import type { PlaceSearchResult } from "@weatheron/shared";
 import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 
 type FilterId = "all" | "sports" | "outdoor" | "season" | "culture";
 
@@ -162,7 +162,7 @@ export function DestinationHubScreen({
                   cardShadow(theme),
                 ]}
               >
-                <Image source={card.image} style={styles.destinationImage} resizeMode="cover" />
+                <Image source={card.image} style={[styles.destinationImage, { backgroundColor: semanticColor(theme, "imagePlaceholder") }]} resizeMode="cover" />
                 <View style={styles.destinationCopy}>
                   <View style={styles.destinationTitleRow}>
                     <CategoryMiniIcon category={card.place.category} color={card.accent === "warm" ? theme.warm : theme.clear} />
@@ -391,7 +391,6 @@ const styles = StyleSheet.create({
     width: 74,
     height: 58,
     borderRadius: radius.sm,
-    backgroundColor: "rgba(255,255,255,0.08)",
   },
   destinationCopy: {
     flex: 1,

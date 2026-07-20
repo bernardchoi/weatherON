@@ -1,0 +1,8 @@
+2026-07-20 follow-up D8 permission denial
+
+POST_NOTIFICATIONS: granted=true
+ACCESS_FINE_LOCATION: granted=false
+ACCESS_COARSE_LOCATION: granted=false
+Home state: 기본 위치 서울 / 수동 표시, 홈과 목적지 카드 렌더링 유지
+Crash log lines: 0
+Restored after test: ACCESS_FINE_LOCATION=true, ACCESS_COARSE_LOCATION=true

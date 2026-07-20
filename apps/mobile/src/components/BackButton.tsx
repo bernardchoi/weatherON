@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius } from "../theme/tokens";
+import { radius, semanticColor } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
 
 type BackButtonProps = {
@@ -24,7 +24,7 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
       onPress={onPress}
       style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface]}
     >
-      {glassSurface ? <View pointerEvents="none" style={[styles.glassShine, { backgroundColor: theme.name === "light" ? "rgba(255,255,255,0.64)" : "rgba(248,251,255,0.18)" }]} /> : null}
+      {glassSurface ? <View pointerEvents="none" style={[styles.glassShine, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
       <ChevronLeft color={theme.text} />
     </FeedbackPressable>
   );

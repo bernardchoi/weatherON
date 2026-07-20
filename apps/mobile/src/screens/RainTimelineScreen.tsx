@@ -4,7 +4,7 @@ import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -180,14 +180,14 @@ function getRainChartColors(theme: AppTheme) {
       weak: theme.cardSoft,
       medium: theme.sky,
       strong: theme.clear,
-      barBorder: "rgba(20,32,51,0.12)",
+      barBorder: semanticColor(theme, "outlineSoft"),
     };
   }
   return {
-    weak: `${theme.sky}28`,
+    weak: semanticColor(theme, "infoTint"),
     medium: theme.sky,
     strong: theme.clear,
-    barBorder: "rgba(248,251,255,0.12)",
+    barBorder: semanticColor(theme, "outlineSoft"),
   };
 }
 
@@ -201,15 +201,15 @@ function getRainToggleColors(theme: AppTheme, enabled: boolean) {
   if (theme.name === "light") {
     return {
       panel: enabled ? theme.cardSoft : theme.card,
-      border: enabled ? theme.sky : "rgba(31,78,121,0.22)",
+      border: enabled ? theme.sky : semanticColor(theme, "outlineStrong"),
       track: enabled ? theme.sky : theme.backgroundAlt,
-      trackBorder: enabled ? theme.sky : "rgba(31,78,121,0.24)",
+      trackBorder: enabled ? theme.sky : semanticColor(theme, "outlineStrong"),
       knob: enabled ? theme.card : theme.sky,
       accent: theme.sky,
     };
   }
   return {
-    panel: enabled ? "rgba(74,163,223,0.18)" : theme.card,
+    panel: enabled ? semanticColor(theme, "infoTint") : theme.card,
     border: enabled ? theme.sky : theme.border,
     track: enabled ? theme.sky : theme.cardMuted,
     trackBorder: enabled ? theme.sky : theme.border,

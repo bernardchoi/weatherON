@@ -100,6 +100,64 @@ export const appColors = {
   border: appThemes.dark.border,
 };
 
+export type SemanticColorRole =
+  | "surfacePassive"
+  | "surfaceSelected"
+  | "accentTint"
+  | "accentBorder"
+  | "infoTint"
+  | "successTint"
+  | "outlineSoft"
+  | "outlineStrong"
+  | "imagePlaceholder"
+  | "scrim"
+  | "glassHighlight"
+  | "glassBorder"
+  | "glassBorderStrong";
+
+export function colorWithAlpha(color: string, alpha: number): string {
+  const rgb = parseHexColor(color);
+  if (!rgb) return color;
+
+  const normalizedAlpha = Number(alpha.toFixed(3));
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${normalizedAlpha})`;
+}
+
+export function semanticColor(theme: AppTheme, role: SemanticColorRole): string {
+  if (role === "surfacePassive") {
+    return theme.name === "light" ? theme.cardSoft : colorWithAlpha(theme.skyLite, 0.1);
+  }
+  if (role === "surfaceSelected") {
+    return theme.name === "light" ? colorWithAlpha(theme.gold, 0.1) : colorWithAlpha(theme.text, 0.1);
+  }
+  if (role === "accentTint") return colorWithAlpha(theme.gold, theme.name === "light" ? 0.1 : 0.12);
+  if (role === "accentBorder") return colorWithAlpha(theme.gold, theme.name === "light" ? 0.32 : 0.4);
+  if (role === "infoTint") return colorWithAlpha(theme.sky, theme.name === "light" ? 0.1 : 0.14);
+  if (role === "successTint") return colorWithAlpha(theme.clear, theme.name === "light" ? 0.1 : 0.16);
+  if (role === "outlineSoft") return colorWithAlpha(theme.text, theme.name === "light" ? 0.12 : 0.12);
+  if (role === "outlineStrong") return colorWithAlpha(theme.text, theme.name === "light" ? 0.24 : 0.18);
+  if (role === "imagePlaceholder") return colorWithAlpha(theme.text, theme.name === "light" ? 0.06 : 0.08);
+  if (role === "scrim") return theme.name === "light" ? colorWithAlpha(theme.text, 0.32) : colorWithAlpha(theme.background, 0.48);
+  if (role === "glassHighlight") return colorWithAlpha(theme.name === "light" ? theme.card : theme.text, theme.name === "light" ? 0.64 : 0.18);
+  if (role === "glassBorder") return colorWithAlpha(theme.name === "light" ? theme.card : theme.text, theme.name === "light" ? 0.6 : 0.26);
+  return colorWithAlpha(theme.name === "light" ? theme.card : theme.text, theme.name === "light" ? 0.62 : 0.34);
+}
+
+function parseHexColor(color: string) {
+  const normalized = color.trim().replace("#", "");
+  if (!/^[0-9A-Fa-f]{3}$|^[0-9A-Fa-f]{6}$/.test(normalized)) return null;
+
+  const fullHex = normalized.length === 3
+    ? normalized.split("").map((char) => `${char}${char}`).join("")
+    : normalized;
+
+  return {
+    r: Number.parseInt(fullHex.slice(0, 2), 16),
+    g: Number.parseInt(fullHex.slice(2, 4), 16),
+    b: Number.parseInt(fullHex.slice(4, 6), 16),
+  };
+}
+
 export function resolveAppTheme(
   themeMode: "system" | "light" | "dark" | undefined,
   systemMode: "light" | "dark" | null | undefined,
