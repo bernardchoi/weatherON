@@ -14,7 +14,7 @@
 | Version | `1.0.0 (10)` |
 | Build 링크 | N/A |
 | APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
-| APK sha256 | `1f1f941cc7c2c0b4dec55ec247f6fd2158bee89c0e32dddb02d9e641011c98fc` |
+| APK sha256 | `da404203b4e9582eb40aa7ccb6985174a5d97fc450c9fc9082041697b5e96e6e` |
 | APK size | 100M |
 
 ## 2. 확인 명령
@@ -43,3 +43,4 @@ npm run check:android-device-qa-ready
 | 2026-07-20 | qa-local release APK `1.0.0 (10)` 재빌드·실기기 QA 완료. APK sha256 `c4cd28b1c92565710b3d53233019896fdc0c9ac463a88be839f33792bbe82450` 기록 |
 | 2026-07-20 | 같은 APK로 코디 상세 전체 플로우, 목적지 검색, 권한 거부, 다크모드, 네트워크 차단 follow-up 실기기 QA 완료 |
 | 2026-07-20 | qa-local release APK `1.0.0 (10)` r2 재빌드·실기기 QA 완료. APK sha256 `1f1f941cc7c2c0b4dec55ec247f6fd2158bee89c0e32dddb02d9e641011c98fc` 기록 |
+| 2026-07-20 | qa-local release APK `1.0.0 (10)` r3 재빌드·실기기 QA 완료. APK sha256 `da404203b4e9582eb40aa7ccb6985174a5d97fc450c9fc9082041697b5e96e6e` 기록 |
