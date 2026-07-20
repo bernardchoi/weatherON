@@ -7,17 +7,17 @@
 
 | 항목 | 값 |
 |---|---|
-| 상태 | 확인 필요 |
-| issue 수 | 1 |
+| 상태 | 정상 |
+| issue 수 | 0 |
 | warning 수 | 0 |
 | preview URL | `http://127.0.0.1:8094/` |
 | 응답 URL | `http://127.0.0.1:8094/` |
-| 응답 상태 | 응답 없음 |
+| 응답 상태 | 200 OK |
 | dist index | 있음 |
-| index.html 일치 | 미확인 |
-| dist script | `/_expo/static/js/web/index-07177d6de106613809cae7baa93df77b.js` |
-| served script | 없음 |
-| 하단 메뉴 증빙 | 미확인 |
+| index.html 일치 | 일치 |
+| dist script | `/_expo/static/js/web/index-7a6d3c0f7da54597c07ca609403795c2.js` |
+| served script | `/_expo/static/js/web/index-7a6d3c0f7da54597c07ca609403795c2.js` |
+| 하단 메뉴 증빙 | 홈/코디/출발/MY 확인 |
 
 ## 2. 판정 기준
 
@@ -29,7 +29,7 @@
 
 ## 3. Issues
 
-- preview server unreachable: fetch failed
+- 없음
 
 ## 4. Warnings
 

@@ -298,7 +298,7 @@ const { demoResults } = await import(pathToFileURL(providerBundle).href);
 
 assert.equal(results.outfit.variant, "rain");
 assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
-assert.ok(results.outfit.reasons.some((reason) => reason.includes("강수확률")));
+assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
 assert.equal(results.umbrella.level, "required");
 assert.equal(results.shoes.level, "recommended");
 assert.equal(results.destination.careOn, true);

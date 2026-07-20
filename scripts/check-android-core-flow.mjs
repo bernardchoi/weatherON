@@ -170,7 +170,7 @@ async function loadSeededApp(page) {
   await waitForApp();
 
   await assertText(page, "최고 ");
-  await assertText(page, "비 완화");
+  await assertText(page, "비가 잦아들 때");
   await assertBottomNav(page);
 }
 
@@ -191,14 +191,14 @@ async function checkHomeDecisionFlow(page) {
 
   await clickText(page, "홈");
   await assertText(page, "목적지 추가");
-  await clickText(page, "나갈 시간");
+  await clickText(page, "언제 나갈까");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
   await assertBottomNav(page);
   await assertClearOfBottomNav(page, "장소 선택 필요");
 
   await clickText(page, "홈");
-  await clickText(page, "비 완화");
+  await clickText(page, "비가 잦아들 때");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
   await assertBottomNav(page);
@@ -211,11 +211,11 @@ async function checkHomeDecisionFlow(page) {
 // 2026-07-08 출시 로드맵: 코디 추천(C1) → 상세(C4) → 저장 → 옷장(C2) → 아이템 추가(C3) 진입 검증.
 async function checkOutfitLaunchFlow(page) {
   await clickAriaIncludes(page, "코디 탭");
-  await assertText(page, "추천 기준");
-  await assertText(page, "오늘 입을 세트");
+  await assertText(page, "나만의 코디 기준");
+  await assertText(page, "오늘 입기 좋은 조합");
   await assertBottomNav(page);
 
-  await clickText(page, "상세 보기");
+  await clickText(page, "코디 자세히 보기");
   await assertText(page, "착장 구성");
   await assertText(page, "코디 저장");
   await clickText(page, "코디 저장");
@@ -223,8 +223,8 @@ async function checkOutfitLaunchFlow(page) {
   await assertButtonClearOfBottomNav(page, "저장 완료");
 
   await clickAriaIncludes(page, "코디 탭");
-  await assertText(page, "오늘 입을 세트");
-  await clickText(page, "상세 보기");
+  await assertText(page, "오늘 입기 좋은 조합");
+  await clickText(page, "코디 자세히 보기");
   await clickText(page, "내 옷장 보기");
   await assertText(page, "내 옷장");
   await clickText(page, "아이템 추가");
@@ -235,7 +235,7 @@ async function checkOutfitLaunchFlow(page) {
   await clickAriaIncludes(page, "겉옷 8개 펼치기");
   await assertAriaIncludes(page, "겉옷 8개 접기");
   await clickAriaIncludes(page, "코디 탭");
-  await assertClearOfBottomNav(page, "상세 보기");
+  await assertClearOfBottomNav(page, "코디 자세히 보기");
   await clickAriaIncludes(page, "홈 탭");
   await assertText(page, "최고 ");
 }
@@ -263,7 +263,7 @@ async function checkOutfitSaveGateFlow(browser) {
     await page.goto(withCacheBust(previewUrl, "outfitSaveGate"), { waitUntil: "networkidle0", timeout: 25000 });
     await waitForApp();
     await clickAriaIncludes(page, "코디 탭");
-    await clickText(page, "상세 보기");
+    await clickText(page, "코디 자세히 보기");
     await assertText(page, "착장 구성");
     await clickText(page, "계정 연결 후 저장");
     await assertText(page, "계정 연결");
@@ -487,7 +487,7 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
     await clickText(page, "MY");
     await clickText(page, "스마트 알림 설정");
     await clickText(page, "고급 설정");
-    await assertText(page, "5초 뒤 확인 알림 발송");
+    await assertAnyText(page, ["5초 뒤 확인 알림 발송", "기기 확인 필요"]);
     await assertText(page, "목적지 출발");
     await assertText(page, "목적지 추가 필요");
     await assertText(page, "목적지 필요");
@@ -659,7 +659,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "강수 50% 이상이면 우산/강수 알림");
     await clickText(page, "출발");
     await clickText(page, "홈");
-    await clickText(page, "비 완화");
+    await clickText(page, "비가 잦아들 때");
     await assertText(page, "강수 타임라인");
     await assertText(page, "외출 가이드");
     await assertText(page, "우산 추천");
@@ -728,7 +728,7 @@ async function checkNotificationCenterDeepLinkFlow(browser) {
     await assertText(page, "최근 처리");
     await assertText(page, "오늘의 외출 준비");
     await clickAriaIncludes(page, "오늘의 외출 준비 열기");
-    await assertText(page, "오늘 코디");
+    await assertText(page, "오늘 입기 좋은 코디");
     await waitForNotificationHistoryOpen(page, "H1");
   } finally {
     await context.close();

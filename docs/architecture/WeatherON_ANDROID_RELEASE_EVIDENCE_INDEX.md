@@ -1,6 +1,6 @@
 # WeatherON Android Release Evidence Index
 
-> 생성일: 2026-07-15
+> 생성일: 2026-07-20
 > 목적: Android 출시 준비의 빌드, 검증, 문서 증빙 위치를 한 곳에서 추적한다.
 
 ## 1. 현재 증빙 요약
@@ -9,7 +9,7 @@
 |---|---|
 | 앱 이름 | WeatherON |
 | Android package | `com.weatheron.mobile` |
-| Android versionCode | `9` |
+| Android versionCode | `10` |
 | 정적 체크 통과 | 23/23 |
 | preview build | `N/A - local Gradle release APK` / LOCAL BUILD SUCCESS |
 | production build | `f66ecb78-ad9d-4236-be70-ec3530a051f8` / FINISHED |

@@ -1,6 +1,6 @@
 # WeatherON Android Release Action Board
 
-> 생성일: 2026-07-16
+> 생성일: 2026-07-20
 > 목적: Android 출시 준비의 다음 행동, QA 상태, 제출 blocker를 한 화면에서 추적한다.
 
 ## 1. 현재 요약
@@ -9,9 +9,9 @@
 |---|---|
 | 최신 preview build | `N/A - local Gradle release APK` |
 | build 상태 | LOCAL BUILD SUCCESS |
-| preview build version | `0.1.0 (9)` |
+| preview build version | `1.0.0 (10)` |
 | 소스 기준 version | `1.0.0 (10)` |
-| preview build 소스 일치 | 불일치 |
+| preview build 소스 일치 | 일치 |
 | 최신 production build | `f66ecb78-ad9d-4236-be70-ec3530a051f8` |
 | production build 상태 | FINISHED |
 | 정적 체크 통과 | 23/23 |
@@ -41,8 +41,8 @@
 
 | 우선 | 작업 | 완료 기준 | 상태 |
 |---|---|---|---|
-| 1 | 최신 MVP preview APK | 현재 소스 1.0.0 (10) 기준 새 APK 필요. EAS 외부 업로드가 포함되므로 사용자 승인 후 `npm run build:android:preview:no-wait` 실행 | 필요 · 현재 APK 0.1.0 (9) |
-| 2 | 실기기 QA | 새 preview APK 생성 후 D1~D13 판정 | 빌드 LOCAL BUILD SUCCESS |
+| 1 | 최신 MVP preview APK | `npm run build:android:preview:no-wait`는 EAS 외부 업로드가 포함되므로 사용자 승인 후 실행 | 최신 소스 반영됨 |
+| 2 | 실기기 QA | N/A - local Gradle release APK 빌드 완료 후 APK 재설치 | 빌드 LOCAL BUILD SUCCESS |
 | 3 | 스토어 스크린샷 | `assets/store/android-screenshots/`에 5장 저장 | 완료 |
 | 4 | Play 제출 입력값 | `WeatherON_ANDROID_STORE_INPUTS.local.json` 작성 후 `npm run apply:android-store-inputs` 실행 | 9개 issue · 누락 9 |
 | 5 | 폐쇄 테스트 준비 | `WeatherON_ANDROID_CLOSED_TEST_INPUTS.local.json` 작성 후 `npm run apply:android-closed-test-inputs` 실행. 14일 운영 안에 코디 포함 build 검증 | 13개 대기 · 입력 13개 issue |

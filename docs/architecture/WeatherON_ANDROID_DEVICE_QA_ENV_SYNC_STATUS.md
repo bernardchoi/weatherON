@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Env Sync Status
 
-> 생성일: 2026-07-15
+> 생성일: 2026-07-20
 > 목적: ADB로 확인 가능한 실기기 QA 환경값을 local QA JSON에 자동 반영한다.
 
 ## 1. 현재 상태
