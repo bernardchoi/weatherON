@@ -7,6 +7,7 @@ export type WeatherClientMode = "fixture" | "proxy" | "openmeteo";
 export type WeatherRuntimeConfig = {
   clientMode: WeatherClientMode;
   weatherApiBaseUrl?: string;
+  weatherApiToken?: string;
   kmaForecastUrl?: string;
   openMeteoForecastUrl?: string;
   openMeteoGeocodingUrl?: string;
@@ -23,6 +24,7 @@ export function getWeatherRuntimeConfig(): WeatherRuntimeConfig {
   return {
     clientMode: getWeatherClientMode(process.env.EXPO_PUBLIC_WEATHER_CLIENT),
     weatherApiBaseUrl: process.env.EXPO_PUBLIC_WEATHER_API_BASE_URL,
+    weatherApiToken: process.env.EXPO_PUBLIC_WEATHER_API_TOKEN,
     kmaForecastUrl: process.env.EXPO_PUBLIC_KMA_FORECAST_URL,
     openMeteoForecastUrl: process.env.EXPO_PUBLIC_OPEN_METEO_FORECAST_URL,
     openMeteoGeocodingUrl: process.env.EXPO_PUBLIC_OPEN_METEO_GEOCODING_URL,

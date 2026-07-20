@@ -1,4 +1,4 @@
-import { localizePlaceSearchResults, searchFixturePlaces, type PlaceSearchResult } from "@weatheron/shared";
+import { getPlaceSearchQueryAlias, localizePlaceSearchResults, searchFixturePlaces, type PlaceSearchResult } from "@weatheron/shared";
 import {
   DEFAULT_OPEN_METEO_GEOCODING_URL,
   DEFAULT_WEATHER_TIMEOUT_MS,
@@ -6,6 +6,7 @@ import {
   isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
+import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
 
 export type SearchPlacesParams = {
   query: string;
@@ -23,6 +24,7 @@ export type PlaceSearchClient = {
 
 export type ProxyPlaceSearchClientOptions = {
   apiBaseUrl: string;
+  apiToken?: string;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
 };
@@ -70,7 +72,8 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
       }
       const language = getSearchLanguage(params.locale);
       url.searchParams.set("language", language);
-      const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl);
+      const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
+      const remoteResults = await fetchJson<PlaceSearchResult[]>(url, timeoutMs, options.fetchImpl, headers);
       return localizePlaceSearchResults(
         normalizeDestinationCategories(mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode, language), remoteResults)),
         language,
@@ -88,7 +91,7 @@ export function createOpenMeteoPlaceSearchClient(options: OpenMeteoPlaceSearchCl
       if (query.length < 2) return [];
       const language = getSearchLanguage(params.locale);
       const url = new URL(options.geocodingUrl ?? DEFAULT_OPEN_METEO_GEOCODING_URL);
-      url.searchParams.set("name", getSearchQueryAlias(query));
+      url.searchParams.set("name", getPlaceSearchQueryAlias(query));
       url.searchParams.set("count", "8");
       url.searchParams.set("language", language);
       url.searchParams.set("format", "json");
@@ -123,6 +126,7 @@ export function createRuntimePlaceSearchClient(): PlaceSearchClient {
     if (isLocalWeatherProxyUrl(config.weatherApiBaseUrl) && !config.allowLocalProxy) return openMeteoClient;
     return createProxyPlaceSearchClient({
       apiBaseUrl: config.weatherApiBaseUrl,
+      apiToken: config.weatherApiToken,
       timeoutMs: config.timeoutMs,
     });
   }
@@ -131,22 +135,8 @@ export function createRuntimePlaceSearchClient(): PlaceSearchClient {
 
 export const runtimePlaceSearchClient = createRuntimePlaceSearchClient();
 
-async function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl = globalThis.fetch): Promise<T> {
-  if (!fetchImpl) throw new Error("fetch is not available");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetchImpl(url.toString(), { signal: controller.signal });
-    const bodyText = await response.text();
-    if (!response.ok) throw new Error(`Place API request failed: ${response.status} ${bodyText.slice(0, 240)}`);
-    return JSON.parse(bodyText) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl?: typeof fetch, headers?: Record<string, string>): Promise<T> {
+  return fetchJsonWithTimeout<T>(url, { timeoutMs, errorLabel: "Place API", fetchImpl, headers });
 }
 
 export function getDeviceSearchLocale(): string {
@@ -163,55 +153,6 @@ function getSearchLanguage(locale?: string): string {
   if (language === "en") return "en";
   return "ko";
 }
-
-function getSearchQueryAlias(query: string): string {
-  const normalized = query.trim().toLowerCase();
-  return placeSearchQueryAliases[normalized] ?? query;
-}
-
-const placeSearchQueryAliases: Record<string, string> = {
-  "잠실": "잠실야구장",
-  "잠실 야구장": "잠실야구장",
-  "잠실종합운동장": "잠실야구장",
-  "jamsil": "Jamsil Baseball Stadium",
-  "jamsil stadium": "Jamsil Baseball Stadium",
-  "도쿄": "Tokyo",
-  "tokyo station": "Tokyo Station",
-  "tokyostation": "Tokyo Station",
-  "도쿄역": "Tokyo Station",
-  "도쿄 역": "Tokyo Station",
-  "東京駅": "Tokyo Station",
-  "시부야": "Shibuya",
-  "신주쿠": "Shinjuku",
-  "오사카": "Osaka",
-  "신사이바시": "Shinsaibashi Station",
-  "신사이바시역": "Shinsaibashi Station",
-  "shinsaibashi": "Shinsaibashi Station",
-  "shinsaibashi station": "Shinsaibashi Station",
-  "心斎橋": "Shinsaibashi Station",
-  "心斎橋駅": "Shinsaibashi Station",
-  "난바": "Namba Station",
-  "난바역": "Namba Station",
-  "난카이난바": "Namba Station",
-  "난카이난바역": "Namba Station",
-  "namba": "Namba Station",
-  "namba station": "Namba Station",
-  "nankai namba": "Namba Station",
-  "nankai namba station": "Namba Station",
-  "難波": "Namba Station",
-  "難波駅": "Namba Station",
-  "なんば": "Namba Station",
-  "なんば駅": "Namba Station",
-  "교토": "Kyoto",
-  "삿포로": "Sapporo",
-  "후쿠오카": "Fukuoka",
-  "방콕": "Bangkok",
-  "파리": "Paris",
-  "런던": "London",
-  "뉴욕": "New York",
-  "센트럴파크": "Central Park",
-  "센트럴 파크": "Central Park",
-};
 
 function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"], localeOrLanguage?: string): PlaceSearchResult[] {
   return localizePlaceSearchResults(filterPlacesByCountryCode(searchFixturePlaces(query), countryCode), localeOrLanguage);

@@ -3,6 +3,7 @@ import {
   getWeatherRuntimeConfig,
   isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
+import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
 
 export type TravelEstimateProvider = "kakao" | "google" | "fallback";
 export type TravelEstimateStatus = "idle" | "loading" | "ready" | "fallback" | "error";
@@ -36,6 +37,7 @@ export type TravelEstimateClient = {
 
 export type ProxyTravelEstimateClientOptions = {
   apiBaseUrl: string;
+  apiToken?: string;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
 };
@@ -61,7 +63,8 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       if (params.destinationName) url.searchParams.set("destinationName", params.destinationName);
       if (params.originCountryCode) url.searchParams.set("originCountryCode", params.originCountryCode);
       if (params.destinationCountryCode) url.searchParams.set("destinationCountryCode", params.destinationCountryCode);
-      const result = await fetchJson<Omit<TravelEstimateResult, "updatedAt">>(url, timeoutMs, options.fetchImpl);
+      const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
+      const result = await fetchJson<Omit<TravelEstimateResult, "updatedAt">>(url, timeoutMs, options.fetchImpl, headers);
       return {
         ...result,
         updatedAt: new Date().toISOString(),
@@ -76,6 +79,7 @@ export function createRuntimeTravelEstimateClient(): TravelEstimateClient {
     if (isLocalWeatherProxyUrl(config.weatherApiBaseUrl) && !config.allowLocalProxy) return fallbackTravelEstimateClient;
     return createProxyTravelEstimateClient({
       apiBaseUrl: config.weatherApiBaseUrl,
+      apiToken: config.weatherApiToken,
       timeoutMs: config.timeoutMs,
     });
   }
@@ -84,18 +88,8 @@ export function createRuntimeTravelEstimateClient(): TravelEstimateClient {
 
 export const runtimeTravelEstimateClient = createRuntimeTravelEstimateClient();
 
-async function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl = globalThis.fetch): Promise<T> {
-  if (!fetchImpl) throw new Error("fetch is not available");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetchImpl(url.toString(), { signal: controller.signal });
-    const bodyText = await response.text();
-    if (!response.ok) throw new Error(`Route API request failed: ${response.status} ${bodyText.slice(0, 240)}`);
-    return JSON.parse(bodyText) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
+function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl?: typeof fetch, headers?: Record<string, string>): Promise<T> {
+  return fetchJsonWithTimeout<T>(url, { timeoutMs, errorLabel: "Route API", fetchImpl, headers });
 }
 
 function estimateFallbackRoute(params: TravelEstimateParams): Omit<TravelEstimateResult, "updatedAt"> {
@@ -132,10 +126,6 @@ function getDistanceMeters(origin: TravelEstimateCoordinate, destination: Travel
 
 function formatCoordinate(coordinate: TravelEstimateCoordinate): string {
   return `${coordinate.latitude},${coordinate.longitude}`;
-}
-
-function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
 
 function toRadians(value: number): number {

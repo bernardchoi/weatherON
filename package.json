@@ -40,6 +40,8 @@
     "check:place-search-distance": "node --no-warnings scripts/check-place-search-distance.mjs",
     "check:public-weather-proxy": "node scripts/check-public-weather-proxy.mjs",
     "check:cloudflare-worker-proxy": "node scripts/check-cloudflare-worker-proxy.mjs",
+    "prepare:proxy-access-token": "node scripts/prepare-proxy-access-token.mjs",
+    "sync:eas-proxy-token": "node scripts/sync-eas-proxy-token.mjs",
     "sync:cloudflare-worker-secrets": "node scripts/sync-cloudflare-worker-secrets.mjs",
     "deploy:cloudflare-worker": "npx --yes --cache ./.npm-cache wrangler deploy",
     "check:mobile-proxy-reachable": "node scripts/check-mobile-proxy-reachability.mjs",

@@ -152,6 +152,7 @@ const legacyStorageKeys = [
 ] as const;
 
 let databasePromise: Promise<SQLiteDatabase | null> | null = null;
+let writeQueue: Promise<void> = Promise.resolve();
 
 export async function readAppValue<T>(key: string): Promise<T | null> {
   const database = await getDatabase();
@@ -169,8 +170,16 @@ export async function writeAppValue<T>(key: string, value: T): Promise<void> {
   const database = await getDatabase();
   if (!database) return;
 
+  // 저장은 DELETE 후 INSERT 다발로 이루어져, 동시 호출이 서로 끼어들면 키 충돌로 일부 행이
+  // 조용히 유실될 수 있다. 큐로 직렬화하고, 중간 종료 시 부분 저장이 남지 않게 트랜잭션으로 묶는다.
+  const run = writeQueue.then(() =>
+    database.withTransactionAsync(async () => {
+      await writeStructuredValue(database, key, value);
+    }),
+  );
+  writeQueue = run.catch(() => {});
   try {
-    await writeStructuredValue(database, key, value);
+    await run;
   } catch {
     // SQLite 저장 실패는 화면 상태를 막지 않는다.
   }

@@ -6,6 +6,9 @@ const rootDir = process.cwd();
 
 const requiredFiles = [
   "apps/mobile/src/providers/appStorage.ts",
+  "apps/mobile/src/state/appStateHelpers.ts",
+  "apps/mobile/src/state/appStateTypes.ts",
+  "apps/mobile/src/state/persistedAppState.ts",
   "apps/mobile/src/components/MaterialSnackbar.tsx",
   "apps/mobile/src/navigation/routeLabels.ts",
   "scripts/check-android-core-flow.mjs",
@@ -42,29 +45,36 @@ for (const relativePath of listFiles(["apps/mobile/src"])) {
 
 assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   'useState<AppRouteId>("O1")',
-  "readAppValue",
-  "writeAppValue",
-  "weatherProviderResultStorageKey",
   "readPersistedWeatherProviderResult",
   "savePersistedWeatherProviderResult",
   "weatherLoadedFromNetworkRef",
-  "최근 저장 예보 기준 추천",
   "originCountryCode: originLocation.countryCode",
   "setRoute(persistedState.onboardingCompleted ? \"H1\" : \"O1\")",
   "startAccountGate",
   "const result = await requestDeviceWeatherLocation()",
-  "account-connect",
-  'if (reason === "account-connect") return "계정 연결"',
   'setRoute(accountLinked ? "A3" : "A2")',
   'if (permissionGate?.reason === "destination-care")',
   "saveSelectedDestination(false)",
-  'case "G2":',
-  'return "G1";',
   'setRoute("M1");',
   "styleProfileReturnRoute",
   'if (nextRoute === "O4" && isP0Route(route))',
   "dynamicColorEnabled",
   "toggleDynamicColor",
+]);
+assertSourceIncludes("apps/mobile/src/state/persistedAppState.ts", [
+  "readAppValue",
+  "writeAppValue",
+  "weatherProviderResultStorageKey",
+  "readPersistedWeatherProviderResult",
+  "savePersistedWeatherProviderResult",
+  "최근 저장 예보 기준 추천",
+]);
+assertSourceIncludes("apps/mobile/src/state/appStateTypes.ts", ["weatherProviderResultStorageKey", "account-connect"]);
+assertSourceIncludes("apps/mobile/src/state/appStateHelpers.ts", [
+  "account-connect",
+  'if (reason === "account-connect") return "계정 연결"',
+  'case "G2":',
+  'return "G1";',
 ]);
 assertSourceIncludes("apps/mobile/src/providers/appStorage.ts", [
   'boolSetting(settings, "dynamicColorEnabled")',
@@ -109,7 +119,7 @@ assertSourceIncludes("apps/mobile/src/providers/weatherProvider.ts", [
   "client.fetchOpenMeteoForecast",
   "fetchOpenMeteoSnapshot",
 ]);
-assertSourceIncludes("apps/server/src/index.mjs", [
+assertSourceIncludes("apps/server/src/proxyCore.mjs", [
   "DEFAULT_WEATHER_CACHE_TTL_MS",
   "forecastCache",
   "placeSearchCache",
@@ -587,12 +597,14 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "setDeviceWeatherLocation(null)",
   "setWeatherLocationMode(\"manual\")",
   "defaultAlertPreferences",
-  "normalizeAlertPreferences",
   "notificationDeliveryStatus",
   "setNotificationDeliveryStatus",
   "getLocalNotificationResultLabel",
   "toggleAlertPreference",
   "getAlertSettingsFocusFromRoute",
+]);
+assertSourceIncludes("apps/mobile/src/state/persistedAppState.ts", [
+  "normalizeAlertPreferences",
   'record.provider === "openmeteo"',
 ]);
 assertSourceExcludes("apps/mobile/src/providers/deviceLocation.ts", [
@@ -616,15 +628,16 @@ assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
   "estimateFallbackRoute",
   "runtimeTravelEstimateClient",
 ]);
-assertSourceIncludes("apps/server/src/index.mjs", [
+assertSourceIncludes("apps/server/src/proxyCore.mjs", [
   "DEFAULT_KAKAO_LOCAL_KEYWORD_URL",
   "DEFAULT_KAKAO_DIRECTIONS_URL",
   'url.pathname === "/routes/estimate"',
   "searchKakaoPlaces",
   "estimateKakaoRoute",
   "estimateFallbackRoute",
-  'Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`',
+  'Authorization: `KakaoAK ${readEnvValue("KAKAO_REST_API_KEY")}`',
 ]);
+assertSourceIncludes("apps/server/src/index.mjs", ["handleProxyRoute"]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "expo-notifications",
   "checkLocalNotificationPermission",
@@ -657,7 +670,6 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "checkLocalNotificationPermission",
   "getP0RouteFromNotificationPayload",
   "if (!appStateHydrated) return",
-  "isLaunchHiddenRoute(route) ? \"H1\" : route",
   "reconcileNotificationPermission",
   "sendTestNotification",
   "scheduleLocalNotificationTest",
@@ -670,15 +682,16 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "preferences: alertPreferences",
   "saveSelectedDestination(permissionCompleted)",
 ]);
+assertSourceIncludes("apps/mobile/src/state/appStateHelpers.ts", ['isLaunchHiddenRoute(route) ? "H1" : route']);
 assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "DestinationRepeatDay",
   "repeatEnabled",
   "repeatDays",
   "toggleSelectedDestinationRepeat",
   "toggleSelectedDestinationRepeatDay",
-  "normalizeDestinationSchedulePreference",
-  "isDestinationRepeatDay",
 ]);
+assertSourceIncludes("apps/mobile/src/state/persistedAppState.ts", ["normalizeDestinationSchedulePreference", "isDestinationRepeatDay"]);
+assertSourceIncludes("apps/mobile/src/state/appStateHelpers.ts", ["isDestinationRepeatDay"]);
 assertSourceIncludes("apps/mobile/app.json", [
   "POST_NOTIFICATIONS",
 ]);

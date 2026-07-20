@@ -1,4 +1,4 @@
-import { kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
+import { getKmaForecastBaseDateTime, kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
 import type { KmaForecastItem, KmaForecastResponse, OpenMeteoResponse } from "@weatheron/shared";
 import {
   DEFAULT_KMA_FORECAST_URL,
@@ -7,6 +7,7 @@ import {
   getWeatherRuntimeConfig,
   isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
+import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
 
 export type FetchKmaForecastParams = {
   nx: number;
@@ -36,6 +37,7 @@ export type HttpWeatherClientOptions = {
 
 export type ProxyWeatherClientOptions = {
   weatherApiBaseUrl: string;
+  apiToken?: string;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
 };
@@ -147,6 +149,7 @@ export function createOpenMeteoWeatherClient(options: OpenMeteoWeatherClientOpti
 
 export function createProxyWeatherClient(options: ProxyWeatherClientOptions): WeatherClient {
   const timeoutMs = options.timeoutMs ?? DEFAULT_WEATHER_TIMEOUT_MS;
+  const headers = getProxyAuthHeaders(options.apiToken);
 
   return {
     async fetchKmaForecast(params) {
@@ -155,7 +158,7 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       url.searchParams.set("ny", String(params.ny));
       if (params.baseDate) url.searchParams.set("baseDate", params.baseDate);
       if (params.baseTime) url.searchParams.set("baseTime", params.baseTime);
-      const payload = await fetchJson<KmaForecastResponse>(url, timeoutMs, options.fetchImpl);
+      const payload = await fetchJson<KmaForecastResponse>(url, timeoutMs, options.fetchImpl, headers);
       const items = payload.response?.body?.items?.item;
       if (!items?.length) throw new Error("KMA forecast response is empty");
       return payload;
@@ -165,7 +168,7 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       url.searchParams.set("latitude", String(params.latitude));
       url.searchParams.set("longitude", String(params.longitude));
       url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
-      const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl);
+      const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
       return payload;
     },
@@ -187,6 +190,7 @@ export function createRuntimeWeatherClient(): WeatherClient {
     }
     return createProxyWeatherClient({
       weatherApiBaseUrl: config.weatherApiBaseUrl,
+      apiToken: config.weatherApiToken,
       timeoutMs: config.timeoutMs,
     });
   }
@@ -197,21 +201,16 @@ export const runtimeWeatherClient = createRuntimeWeatherClient();
 export const fetchKmaForecast = runtimeWeatherClient.fetchKmaForecast;
 export const fetchOpenMeteoForecast = runtimeWeatherClient.fetchOpenMeteoForecast;
 
-async function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl = globalThis.fetch): Promise<T> {
-  if (!fetchImpl) throw new Error("fetch is not available");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetchImpl(url.toString(), { signal: controller.signal });
-    const bodyText = await response.text();
-    if (!response.ok) {
-      throw new Error(`Weather API request failed: ${response.status} ${bodyText.slice(0, 240)}`);
-    }
-    return JSON.parse(bodyText) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
+function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl?: typeof fetch, headers?: Record<string, string>): Promise<T> {
+  return fetchJsonWithTimeout<T>(url, { timeoutMs, errorLabel: "Weather API", fetchImpl, headers });
 }
+
+function getProxyAuthHeaders(apiToken?: string): Record<string, string> | undefined {
+  return apiToken ? { [PROXY_TOKEN_HEADER]: apiToken } : undefined;
+}
+
+// 기존 사용처(스크립트 포함) 호환을 위해 shared 구현을 그대로 재노출한다.
+export { getKmaForecastBaseDateTime };
 
 function normalizeKmaServiceKey(serviceKey: string): string {
   try {
@@ -219,35 +218,4 @@ function normalizeKmaServiceKey(serviceKey: string): string {
   } catch {
     return serviceKey;
   }
-}
-
-function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-}
-
-export function getKmaForecastBaseDateTime(now = new Date()): { baseDate: string; baseTime: string } {
-  // KMA 발표 시각은 KST 기준이라 기기 시간대와 무관하게 KST 벽시계로 계산한다(KST는 DST 없음).
-  const kstNow = new Date(now.getTime() + (now.getTimezoneOffset() + 9 * 60) * 60_000);
-  const baseTimes = [2, 5, 8, 11, 14, 17, 20, 23];
-  const candidate = new Date(kstNow.getTime());
-  let selectedHour: number | undefined;
-  for (const hour of baseTimes) {
-    if (kstNow.getHours() > hour || (kstNow.getHours() === hour && kstNow.getMinutes() >= 10)) selectedHour = hour;
-  }
-  if (selectedHour == null) {
-    candidate.setDate(candidate.getDate() - 1);
-    selectedHour = 23;
-  }
-  candidate.setHours(selectedHour, 0, 0, 0);
-  return {
-    baseDate: formatKmaDate(candidate),
-    baseTime: `${String(selectedHour).padStart(2, "0")}00`,
-  };
-}
-
-function formatKmaDate(now: Date): string {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
 }

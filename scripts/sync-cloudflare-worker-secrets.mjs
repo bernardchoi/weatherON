@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const secretNames = ["KAKAO_REST_API_KEY", "GOOGLE_MAPS_API_KEY", "KMA_SERVICE_KEY"];
+// 옵트인 프록시 인증 토큰: 로컬 env에 있을 때만 동기화한다.
+const optionalSecretNames = ["PROXY_ACCESS_TOKEN"];
 
 loadEnvFile(join(process.cwd(), "apps/server/.env.local"));
 loadEnvFile(join(process.cwd(), "apps/server/.env"));
@@ -13,6 +15,11 @@ for (const name of secretNames) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is missing from local env files`);
   await putSecret(name, value);
+}
+
+for (const name of optionalSecretNames) {
+  const value = process.env[name];
+  if (value) await putSecret(name, value);
 }
 
 console.log("cloudflare worker secrets synced");

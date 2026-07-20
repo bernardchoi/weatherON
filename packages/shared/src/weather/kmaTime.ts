@@ -1,10 +1,17 @@
-// 모바일/공용 패키지의 packages/shared/src/weather/kmaTime.ts와 동일 로직.
-// 서버는 배포 경계(Docker가 apps/server만 복사)상 TS를 임포트할 수 없어 사본을 유지한다. 수정 시 함께 갱신할 것.
+// KMA 단기예보 발표 시각 계산. 발표는 KST 기준 02·05·08·11·14·17·20·23시이고,
+// 각 발표분 조회는 10분 이후부터 안정적이라 10분 미만이면 이전 발표분을 쓴다.
+// 서버(Node/Worker)는 배포 경계상 이 TS를 임포트할 수 없어 동일 로직을
+// apps/server/src/kmaTime.mjs에 유지한다. 수정 시 함께 갱신할 것.
 const KMA_BASE_HOURS = [2, 5, 8, 11, 14, 17, 20, 23];
 
-export function getKmaForecastBaseDateTime(now = new Date()) {
+export type KmaForecastBaseDateTime = {
+  baseDate: string;
+  baseTime: string;
+};
+
+export function getKmaForecastBaseDateTime(now: Date = new Date()): KmaForecastBaseDateTime {
   const parts = getSeoulDateTimeParts(now);
-  let selectedHour;
+  let selectedHour: number | undefined;
   for (const hour of KMA_BASE_HOURS) {
     if (parts.hour > hour || (parts.hour === hour && parts.minute >= 10)) selectedHour = hour;
   }
@@ -25,7 +32,15 @@ export function getKmaForecastBaseDateTime(now = new Date()) {
   };
 }
 
-function getSeoulDateTimeParts(date) {
+type SeoulDateTimeParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
+function getSeoulDateTimeParts(date: Date): SeoulDateTimeParts {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Seoul",
     year: "numeric",
@@ -35,7 +50,7 @@ function getSeoulDateTimeParts(date) {
     minute: "2-digit",
     hourCycle: "h23",
   });
-  const entries = formatter.formatToParts(date).map((part) => [part.type, part.value]);
+  const entries = formatter.formatToParts(date).map((part) => [part.type, part.value] as const);
   const parts = Object.fromEntries(entries);
   return {
     year: Number(parts.year),
@@ -46,6 +61,6 @@ function getSeoulDateTimeParts(date) {
   };
 }
 
-function formatKmaDate(parts) {
+function formatKmaDate(parts: Pick<SeoulDateTimeParts, "year" | "month" | "day">): string {
   return `${parts.year}${String(parts.month).padStart(2, "0")}${String(parts.day).padStart(2, "0")}`;
 }

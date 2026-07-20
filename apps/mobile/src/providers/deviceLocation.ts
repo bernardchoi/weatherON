@@ -47,11 +47,22 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
     };
-    const locationName = await resolveDeviceLocationName(coordinate);
+    const address = await resolveDeviceAddress(coordinate);
+    const locationName = formatDeviceLocationName(address) ?? "내 위치 주변";
+    const kmaLocation = createKmaWeatherLocationFromCoordinate(coordinate, locationName);
     return {
       status: "granted",
       message: "현재 위치 반영",
-      location: createKmaWeatherLocationFromCoordinate(coordinate, locationName),
+      // 한국 밖에서는 KMA 격자·서울 시간대가 맞지 않으므로 역지오코딩 국가 기준으로 보정한다.
+      // 국가를 확인하지 못하면 기존과 동일하게 KR로 둔다.
+      location:
+        address?.isoCountryCode && address.isoCountryCode !== "KR"
+          ? {
+              ...kmaLocation,
+              countryCode: address.isoCountryCode === "JP" ? "JP" : "GLOBAL",
+              timezone: getDeviceTimezone(),
+            }
+          : kmaLocation,
     };
   } catch {
     return {
@@ -61,16 +72,24 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
   }
 }
 
-async function resolveDeviceLocationName(coordinate: { latitude: number; longitude: number }) {
+async function resolveDeviceAddress(coordinate: { latitude: number; longitude: number }) {
   try {
     const [address] = await Location.reverseGeocodeAsync(coordinate);
-    return formatDeviceLocationName(address) ?? "내 위치 주변";
+    return address ?? null;
   } catch {
-    return "내 위치 주변";
+    return null;
   }
 }
 
-function formatDeviceLocationName(address?: Location.LocationGeocodedAddress) {
+function getDeviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
+  } catch {
+    return "Asia/Seoul";
+  }
+}
+
+function formatDeviceLocationName(address?: Location.LocationGeocodedAddress | null) {
   if (!address) return null;
   const majorArea = address.city ?? address.region;
   const middleArea = address.district ?? address.subregion;
