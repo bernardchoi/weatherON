@@ -23,7 +23,7 @@ export function AppEntrySplashScreen({ onCompleteOnboarding, onNavigate }: P0Scr
 export function OnboardingSplashScreen({ onCompleteOnboarding, onNavigate }: P0ScreenProps) {
   return (
     <SplashFrame
-      description="오늘의 외출, 미리 준비하세요"
+      description="오늘 나갈 준비, WeatherON이 가볍게 챙겨드려요"
       primaryLabel="다음"
       onPrimary={() => onNavigate("O2")}
       secondaryLabel="건너뛰기"

@@ -12,9 +12,9 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const scenarios: { value: SmartCareScenario; title: string; body: string; icon: number }[] = [
-  { value: "commute", title: "출근·등교", body: "아침 외출 전 출발시간과 비 알림 중심", icon: uiIconAssets.depart },
-  { value: "outing", title: "일상 외출", body: "강수 변화와 체감 온도 중심", icon: uiIconAssets.rain },
-  { value: "travel", title: "여행·출장", body: "목적지 등록 시 급변 알림 확장", icon: uiIconAssets.pin },
+  { value: "commute", title: "출근·등교", body: "아침에 나설 시간과 비 소식부터 챙겨드림", icon: uiIconAssets.depart },
+  { value: "outing", title: "일상 외출", body: "체감온도와 비 변화를 알맞게 알려드림", icon: uiIconAssets.rain },
+  { value: "travel", title: "여행·출장", body: "가는 곳 날씨가 달라지면 먼저 알려드림", icon: uiIconAssets.pin },
 ];
 
 export function SmartCareOnboardingScreen({
@@ -37,8 +37,8 @@ export function SmartCareOnboardingScreen({
   };
   return (
     <AppScreen
-      title="상황에 맞는 알림만"
-      subtitle="외출 유형 하나로 시간과 강도를 자동 조절"
+      title="필요한 순간에만 알려드릴게요"
+      subtitle="외출 스타일에 맞춰 알림을 가볍게 맞춰드림"
       badge="3 / 4"
       showWordmark={false}
       footer={
@@ -106,8 +106,8 @@ export function SmartCareOnboardingScreen({
           <Image source={uiIconAssets.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.notificationTitle, { color: theme.text }]}>{permissionReady ? "선택한 알림을 받을 준비 완료" : notificationSkipped ? "알림은 나중에 켤 수 있음" : "비와 출발 시점을 알려드려요"}</Text>
-          <Text style={[styles.notificationBody, { color: theme.muted }]}>{permissionReady ? "중요한 변화만 한 번씩 안내함" : notificationSkipped ? "알림 설정에서 언제든 변경 가능" : "선택한 상황에 맞춰 필요한 알림만 전달함"}</Text>
+          <Text style={[styles.notificationTitle, { color: theme.text }]}>{permissionReady ? "필요한 알림을 받을 준비 끝" : notificationSkipped ? "알림은 원할 때 켤 수 있어요" : "비 오기 전, 나서기 전에 알려드릴게요"}</Text>
+          <Text style={[styles.notificationBody, { color: theme.muted }]}>{permissionReady ? "중요한 변화만 한 번씩 가볍게 알려드려요" : notificationSkipped ? "알림 설정에서 언제든 바꿀 수 있어요" : "선택한 상황에 맞춰 꼭 필요한 소식만 전해드려요"}</Text>
         </View>
         <Text style={[styles.notificationStatus, { color: permissionReady ? theme.clear : notificationSkipped ? theme.gold : theme.sky }]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
       </View>

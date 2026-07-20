@@ -25,8 +25,8 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
 
   return (
     <AppScreen
-      title="오늘 날씨 맞춤 코디"
-      subtitle="체감온도와 비를 옷·신발·준비물로"
+      title="오늘, 뭐 입을지 고민 끝"
+      subtitle="체감온도와 비에 맞춰 차림을 골라드림"
       badge="2 / 4"
       showWordmark={false}
       footer={
@@ -62,7 +62,7 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             <Image source={uiIconAssets.shirt} style={[styles.heroIcon, { tintColor: theme.clear }]} resizeMode="contain" />
           </View>
           <View style={styles.copy}>
-            <Text style={[styles.previewLabel, { color: theme.clear }]}>오늘의 추천</Text>
+            <Text style={[styles.previewLabel, { color: theme.clear }]}>오늘 입기 좋은 조합</Text>
             <Text style={[styles.previewTitle, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           </View>
         </View>
@@ -78,8 +78,8 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
           <Image source={uiIconAssets.pin} style={[styles.locationIcon, { tintColor: theme.sky }]} resizeMode="contain" />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.locationTitle, { color: theme.text }]}>{locationReady ? "현재 위치 기준 추천 준비됨" : locationSkipped ? "지역은 나중에 선택 가능" : "현재 위치로 더 정확하게 추천"}</Text>
-          <Text style={[styles.locationBody, { color: theme.muted }]}>{locationReady ? "기온과 강수 변화가 오늘 추천에 반영됨" : locationSkipped ? "홈에서 지역을 직접 선택할 수 있음" : "현재 날씨를 반영해 코디와 준비물을 추천함"}</Text>
+          <Text style={[styles.locationTitle, { color: theme.text }]}>{locationReady ? "지금 있는 곳에 맞춰 준비했어요" : locationSkipped ? "지역은 나중에 골라도 괜찮아요" : "지금 있는 곳을 알면 더 잘 챙겨드려요"}</Text>
+          <Text style={[styles.locationBody, { color: theme.muted }]}>{locationReady ? "기온과 비 변화까지 오늘 추천에 담았어요" : locationSkipped ? "홈에서 원하는 지역을 직접 고를 수 있어요" : "현재 날씨를 반영해 코디와 준비물을 골라드려요"}</Text>
         </View>
         <StatusPill label={locationReady ? "사용 중" : locationSkipped ? "보류" : "선택"} tone={locationReady ? "clear" : locationSkipped ? "gold" : "sky"} />
       </View>

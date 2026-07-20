@@ -38,30 +38,30 @@ function shouldUseOuter(signals: ReturnType<typeof getWeatherSignals>): boolean 
 }
 
 function buildDecisionText(signals: ReturnType<typeof getWeatherSignals>): string {
-  if (signals.isHeavyRain) return "비가 강해 방수 중심으로 준비 필요";
-  if (signals.isRainy) return "비 신호가 있어 우산과 방수 신발 우선";
-  if (signals.isHot) return "체감 더위가 높아 통기성 있는 코디 추천";
-  if (signals.isCold) return "체감 추위가 커 보온 중심 추천";
-  if (signals.tempSwingC >= 8) return "일교차가 커 가벼운 레이어링 추천";
-  return "오늘 준비는 가볍게, 기본 외출 코디 추천";
+  if (signals.isHeavyRain) return "비가 세요. 방수 차림으로 편하게 나가요";
+  if (signals.isRainy) return "비 소식 있어요. 우산과 방수 신발 챙겨요";
+  if (signals.isHot) return "더운 날이에요. 바람 잘 통하는 차림이 좋아요";
+  if (signals.isCold) return "쌀쌀해요. 따뜻한 한 겹 더 챙겨요";
+  if (signals.tempSwingC >= 8) return "하루 기온차 커요. 가벼운 겹옷이 좋아요";
+  return "오늘은 가볍게, 편한 차림으로 나가요";
 }
 
 function buildReasons(weather: WeatherSnapshot, signals: ReturnType<typeof getWeatherSignals>, hasOuter: boolean, hasAccessory: boolean): string[] {
   const reasons: string[] = [];
-  if (signals.isRainy) reasons.push(`오늘 최대 강수확률 ${signals.maxRainProbabilityPct}% 기준으로 비 대응 아이템 우선`);
-  if (signals.isWindy) reasons.push(`오늘 최대 바람 ${signals.maxWindMs.toFixed(1)}m/s라 안정적인 겉옷 추천`);
-  if (signals.isHot) reasons.push(`체감 ${weather.current.feelsLikeC}도라 통기성 소재 우선`);
-  if (signals.isCold) reasons.push(`체감 ${weather.current.feelsLikeC}도라 보온 아이템 우선`);
-  if (signals.tempSwingC >= 8) reasons.push(`일교차 ${signals.tempSwingC}도라 아침 레이어링 필요`);
-  if (hasOuter) reasons.push("겉옷을 포함해 이동 중 변화에 대응");
-  if (hasAccessory) reasons.push("우산을 함께 챙기도록 액세서리 반영");
-  if (reasons.length === 0) reasons.push("현재 날씨 기준 기본 프리셋으로 빠르게 추천");
+  if (signals.isRainy) reasons.push(`비 올 가능성 ${signals.maxRainProbabilityPct}%라 우산 챙겨두면 좋아요`);
+  if (signals.isWindy) reasons.push(`바람이 ${signals.maxWindMs.toFixed(1)}m/s라 겉옷 하나 더 있으면 좋아요`);
+  if (signals.isHot) reasons.push(`체감 ${weather.current.feelsLikeC}도라 바람 잘 통하는 소재가 좋아요`);
+  if (signals.isCold) reasons.push(`체감 ${weather.current.feelsLikeC}도라 따뜻한 한 겹 더 챙겨요`);
+  if (signals.tempSwingC >= 8) reasons.push(`일교차 ${signals.tempSwingC}도라 아침에 걸칠 옷이 있으면 좋아요`);
+  if (hasOuter) reasons.push("날씨가 바뀌어도 편하도록 겉옷을 함께 골랐어요");
+  if (hasAccessory) reasons.push("우산도 함께 챙길 수 있게 담았어요");
+  if (reasons.length === 0) reasons.push("지금 날씨에 맞는 기본 코디로 빠르게 골랐어요");
   return reasons.slice(0, 4);
 }
 
 function buildTimeAdvice(weather: WeatherSnapshot): OutfitRecommendation["timeAdvice"] {
   return weather.hourly.slice(0, 3).map((hour) => ({
     time: hour.time,
-    text: hour.rainProbabilityPct >= 60 ? "비 대응 유지" : hour.tempC >= 30 ? "더위 대비" : "기본 코디 유지",
+    text: hour.rainProbabilityPct >= 60 ? "비 오는 시간대엔 우산 함께" : hour.tempC >= 30 ? "더운 시간대엔 가볍게" : "지금 차림 그대로 좋아요",
   }));
 }

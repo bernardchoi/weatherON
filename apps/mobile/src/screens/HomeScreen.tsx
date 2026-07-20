@@ -11,7 +11,6 @@ import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
-import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 
 // 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
@@ -90,7 +89,7 @@ export function HomeScreen({
       >
         <View style={styles.topBar}>
           <FeedbackPressable
-            accessibilityLabel={smartCareEnabled ? "스마트 알림 켜짐. 알림 설정 열기" : "스마트 알림 꺼짐. 알림 설정 열기"}
+            accessibilityLabel={smartCareEnabled ? "오늘 알림 켜짐. 알림 설정 열기" : "알림 잠시 쉬는 중. 알림 설정 열기"}
             accessibilityRole="button"
             onPress={() => onNavigate("M2")}
             hitSlop={{ top: 7, bottom: 7 }}
@@ -99,7 +98,7 @@ export function HomeScreen({
             <View style={[styles.modePillSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
               <View style={[styles.modeDot, { backgroundColor: smartCareEnabled ? theme.clear : theme.gold }]} />
               <Text style={[styles.modeText, { color: theme.muted }]} numberOfLines={1}>
-                {smartCareEnabled ? "알림 ON" : "알림 OFF"}
+                {smartCareEnabled ? "오늘 알림" : "알림 쉬는 중"}
               </Text>
             </View>
           </FeedbackPressable>
@@ -148,16 +147,16 @@ export function HomeScreen({
           />
           <View style={styles.visualDecisionGrid}>
             <VisualDecisionCard
-              label="나갈 시간"
+              label="언제 나갈까"
               value={homeDecision.departureTime}
-              helper={destinationReady ? "도착 시간 기준" : "목적지 추가"}
+              helper={destinationReady ? "도착 시간에 맞춰" : "목적지 고르면 안내"}
               accent={theme.gold}
               icon={uiIconAssets.depart}
               theme={theme}
               onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
             />
             <VisualDecisionCard
-              label="비 완화"
+              label="비가 잦아들 때"
               value={homeDecision.rainCompactTitle}
               helper={homeDecision.rainCompactBody}
               accent={getInfoAccent(theme)}
@@ -166,7 +165,7 @@ export function HomeScreen({
               onPress={() => onNavigate(destinationReady ? "H5" : "P1")}
             />
             <VisualDecisionCard
-              label="챙길 것"
+              label="오늘 챙길 것"
               value={homeDecision.packTitle}
               helper={homeDecision.packBody}
               accent={getPackAccent(homeDecision.packTone, theme)}
@@ -229,9 +228,9 @@ function getHomeLocationStatus(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
 ): { value: string; tone: "clear" | "sky" | "warm" } {
-  if (locationReady && weatherLocationMode === "auto") return { value: "현재 위치", tone: "clear" };
-  if (weatherLocationMode === "manual") return { value: "수동", tone: "sky" };
-  return { value: "확인 필요", tone: "warm" };
+  if (locationReady && weatherLocationMode === "auto") return { value: "내 위치로 보는 중", tone: "clear" };
+  if (weatherLocationMode === "manual") return { value: "직접 고른 지역", tone: "sky" };
+  return { value: "위치 확인 필요", tone: "warm" };
 }
 
 function DestinationSelectorCard({
@@ -249,8 +248,8 @@ function DestinationSelectorCard({
 }) {
   const hasDestinations = savedDestinations.length > 0;
   const headerCaption = hasDestinations
-    ? `저장한 ${savedDestinations.length}곳 · 눌러서 전환`
-    : "목적지 기준 전환";
+    ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
+    : "자주 가는 곳을 골라보세요";
 
   return (
     <View style={styles.destinationSelectorCard}>
@@ -259,28 +258,28 @@ function DestinationSelectorCard({
           <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
         <View style={styles.destinationSelectorCopy}>
-          <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>목적지 기준</Text>
+          <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>오늘의 목적지</Text>
           <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>
         </View>
         <FeedbackPressable
-          accessibilityLabel="목적지 추가"
+          accessibilityLabel="새 목적지 추가"
           accessibilityRole="button"
           onPress={onAdd}
           style={[styles.destinationSelectorAddButton, { backgroundColor: "transparent", borderColor: theme.border }]}
         >
-          <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
+          <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>새로 추가</Text>
         </FeedbackPressable>
       </View>
 
       {!hasDestinations ? (
         <FeedbackPressable
-          accessibilityLabel="목적지 추가하기"
+          accessibilityLabel="자주 가는 곳 추가"
           accessibilityRole="button"
           onPress={onAdd}
           style={[styles.destinationEmptySelector, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
         >
-          <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
-          <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>저장 후 자동 반영</Text>
+          <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>자주 가는 곳 추가</Text>
+          <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>날씨와 출발 시간을 맞춰드림</Text>
         </FeedbackPressable>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
@@ -367,19 +366,19 @@ function buildHomeDecision(
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
   const departureTime = routeTimingReady
     ? care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes)
-    : "확인 전";
+    : "계산 중";
   const routeStatusLabel = getRouteStatusLabel(care.departureAdvice?.travelStatus);
   const destinationDiff = destinationReady
     ? buildDestinationDiff(care, temperatureUnit)
     : {
-        title: "목적지 없음",
-        body: "목적지 추가하면 출발시간까지 계산",
+        title: "아직 고른 곳 없음",
+        body: "목적지를 고르면 출발 시간까지 챙겨드림",
       };
   const rainWindow = destinationReady
     ? buildRainWindow(care)
     : {
-        title: "목적지 추가 후 계산",
-        body: "저장한 목적지 기준으로 강수 시작과 완화 시점을 계산",
+        title: "목적지 고르면 안내 시작",
+        body: "가는 곳 기준으로 비 시작과 잦아드는 때를 알려드림",
         compactTitle: "대기",
         compactBody: "목적지 추가",
       };
@@ -390,7 +389,7 @@ function buildHomeDecision(
       ? routeTimingReady
         ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 · ${routeStatusLabel}`
         : `${targetArrivalTime} 도착 · 해외 경로 확인 전`
-      : "현재 위치 예보 연결됨 · 목적지 추가하면 출발시간까지 계산",
+      : "현재 위치 날씨를 보고 있음 · 목적지를 고르면 출발 시간까지 챙겨드림",
     destinationTitle: destinationDiff.title,
     destinationBody: destinationDiff.body,
     rainTitle: rainWindow.title,
@@ -402,9 +401,9 @@ function buildHomeDecision(
 }
 
 function getRouteStatusLabel(status?: NonNullable<P0ScreenProps["state"]["destinationCare"]["departureAdvice"]>["travelStatus"]) {
-  if (status === "ready") return "경로 확인";
-  if (status === "error") return "경로 갱신 실패";
-  return "경로 확인 전";
+  if (status === "ready") return "길 안내 준비됨";
+  if (status === "error") return "길 안내 다시 확인 필요";
+  return "길 찾는 중";
 }
 
 function buildDestinationDiff(
@@ -426,7 +425,7 @@ function buildDestinationDiff(
   ];
   return {
     title: titleParts.join(" · "),
-    body: `${getDisplayLocationName(care.originWeather.locationName)} 대비 ${diffParts.join(" · ")} · 목적지 기준 준비`,
+    body: `${getDisplayLocationName(care.originWeather.locationName)}과 비교 · ${diffParts.join(" · ")} · 가는 곳 기준으로 준비`,
   };
 }
 
@@ -436,9 +435,9 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
   if (rainyHours.length === 0) {
     const maxRain = Math.max(care.destinationWeather.current.rainProbabilityPct, ...care.destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
     return {
-      title: `최대 강수 ${Math.round(maxRain)}%`,
-      body: `${care.name} 기준 ${threshold}% 미만 · 강수 알림은 조용히 대기`,
-      compactTitle: "대기",
+      title: `비 올 가능성 최대 ${Math.round(maxRain)}%`,
+      body: `${care.name} 기준 ${threshold}% 미만 · 우산 알림은 잠시 쉬어감`,
+      compactTitle: "비 소식 없음",
       compactBody: `최대 ${Math.round(maxRain)}%`,
     };
   }
@@ -446,7 +445,7 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
   const lastRain = rainyHours[rainyHours.length - 1];
   return {
     title: `비 시작 ${formatHour(firstRain.time)} · 완화 ${formatHour(lastRain.time)}`,
-    body: `${care.name} 강수 ${threshold}% 기준 · 타임라인에서 완화 알림 조정 가능`,
+    body: `${care.name}에 비 올 가능성 ${threshold}% 기준 · 알림 시간은 타임라인에서 바꿀 수 있음`,
     compactTitle: formatHour(lastRain.time),
     compactBody: `${formatHour(firstRain.time)} 시작`,
   };
@@ -454,15 +453,15 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
 
 function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]) {
   if (weather.rainProbabilityPct >= 50 || weather.precipitationMm > 0) {
-    return { packTitle: "우산", packBody: "비 대비", packIcon: uiIconAssets.umbrella, packTone: "sky" as const, packFocus: "umbrella" as const };
+    return { packTitle: "우산", packBody: "비 오기 전 챙기기", packIcon: uiIconAssets.umbrella, packTone: "sky" as const, packFocus: "umbrella" as const };
   }
   if (weather.windMs >= 7) {
-    return { packTitle: "바람막이", packBody: "바람 대비", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
+    return { packTitle: "바람막이", packBody: "바람 막아줄 한 겹", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
   if (weather.feelsLikeC <= 5) {
-    return { packTitle: "겉옷", packBody: "체감 추위", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
+    return { packTitle: "겉옷", packBody: "쌀쌀함 막아줄 한 겹", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
-  return { packTitle: "가볍게", packBody: "기본 준비", packIcon: uiIconAssets.check, packTone: "clear" as const, packFocus: "outfit" as const };
+  return { packTitle: "가볍게", packBody: "가벼운 차림이면 충분", packIcon: uiIconAssets.check, packTone: "clear" as const, packFocus: "outfit" as const };
 }
 
 function getInfoAccent(theme: AppTheme): string {
@@ -587,9 +586,10 @@ function FeelsLikeCard({
   onPress: () => void;
 }) {
   const delta = current.feelsLikeC - current.tempC;
+  const feelsLikeMessage = getFeelsLikeMessage(delta, temperatureUnit);
   return (
     <FeedbackPressable
-      accessibilityLabel={`현재 위치 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
+      accessibilityLabel={`현재 위치 ${feelsLikeMessage}. 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
       accessibilityRole="button"
       onPress={onPress}
       style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
@@ -598,9 +598,9 @@ function FeelsLikeCard({
         <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
       </View>
       <View style={styles.feelsLikeCopy}>
-        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>체감</Text>
-        <Text style={[styles.feelsLikeBody, { color: theme.muted }]} numberOfLines={1}>
-          실제 {formatTemperature(current.tempC, temperatureUnit)} · {getFeelsLikeDeltaLabel(delta, temperatureUnit)}
+        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>체감 기온</Text>
+        <Text style={[styles.feelsLikeBody, { color: theme.muted }]} numberOfLines={2}>
+          {feelsLikeMessage}
         </Text>
       </View>
       <Text style={[styles.feelsLikeValue, { color: theme.text }]} numberOfLines={1}>
@@ -610,10 +610,12 @@ function FeelsLikeCard({
   );
 }
 
-function getFeelsLikeDeltaLabel(deltaC: number, temperatureUnit: P0ScreenProps["temperatureUnit"]) {
-  const roundedDelta = Math.round(deltaC);
-  if (roundedDelta === 0) return "같음";
-  return formatTemperatureDelta(deltaC, temperatureUnit);
+function getFeelsLikeMessage(deltaC: number, temperatureUnit: P0ScreenProps["temperatureUnit"]) {
+  const roundedDelta = temperatureUnit === "fahrenheit" ? Math.round((deltaC * 9) / 5) : Math.round(deltaC);
+  const deltaLabel = formatTemperatureDelta(deltaC, temperatureUnit);
+  if (roundedDelta > 0) return `체감 기온은 더 따뜻해요! (${deltaLabel})`;
+  if (roundedDelta < 0) return `체감 기온은 더 서늘해요. (${deltaLabel})`;
+  return `체감 기온은 실제 기온과 비슷해요. (${deltaLabel})`;
 }
 
 function DecisionMetric({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
@@ -671,20 +673,22 @@ function HomeOutfitPreviewCard({
   onPress: () => void;
 }) {
   const imageSource = getHomeOutfitPreviewImage(outfit);
+  const compactCopy = getHomeOutfitCopy(outfit.decisionText, packTitle);
+  const title = getHomeOutfitTitle(outfit.decisionText || compactCopy.title);
   return (
     <FeedbackPressable
-      accessibilityLabel={`오늘 코디 ${outfit.decisionText}`}
+      accessibilityLabel={`오늘 입기 좋은 코디 ${outfit.decisionText}`}
       accessibilityRole="button"
       onPress={onPress}
       style={[styles.homeOutfitCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
     >
       <View style={styles.homeOutfitCopy}>
-        <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 코디</Text>
+        <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 입기 좋은 코디</Text>
         <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={2}>
-          {outfit.decisionText || packTitle}
+          {title}
         </Text>
         <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
-          {getOutfitVariantLabel(outfit.variant)} · 매칭 {outfit.matchPct}%
+          {compactCopy.body}
         </Text>
       </View>
       <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.cardMuted }]}>
@@ -696,6 +700,20 @@ function HomeOutfitPreviewCard({
       </View>
     </FeedbackPressable>
   );
+}
+
+function getHomeOutfitCopy(decisionText: string, fallback: string) {
+  if (decisionText.includes("비가 세요")) return { title: "비가 세요 · 방수 차림", body: "우산도 함께 챙겨요" };
+  if (decisionText.includes("비 소식")) return { title: "비 소식 있어요 · 우산", body: "방수 신발이면 더 좋아요" };
+  if (decisionText.includes("더운 날")) return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
+  if (decisionText.includes("쌀쌀해요")) return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
+  if (decisionText.includes("기온차")) return { title: "일교차 커요 · 겹옷", body: "아침저녁에 걸칠 옷이 좋아요" };
+  return { title: fallback === "가볍게" ? "오늘은 가볍게 나가요" : fallback, body: "편한 차림이면 충분해요" };
+}
+
+function getHomeOutfitTitle(copy: string) {
+  const sentenceEnd = copy.indexOf(". ");
+  return sentenceEnd >= 0 ? `${copy.slice(0, sentenceEnd + 1)}\n${copy.slice(sentenceEnd + 2)}` : copy;
 }
 
 function SpecialWeatherAlertCard({
@@ -1474,7 +1492,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   feelsLikeCard: {
-    minHeight: 56,
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -1665,11 +1683,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 108,
+    minHeight: 118,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -1730,8 +1749,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   homeOutfitTitle: {
-    fontSize: 21,
-    lineHeight: 26,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "900",
   },
   homeOutfitBody: {
@@ -1740,15 +1759,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitImageFrame: {
-    width: 76,
-    height: 76,
+    width: 68,
+    height: 68,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   homeOutfitImage: {
-    width: 70,
-    height: 70,
+    width: 62,
+    height: 62,
   },
   homeOutfitIcon: {
     width: 34,

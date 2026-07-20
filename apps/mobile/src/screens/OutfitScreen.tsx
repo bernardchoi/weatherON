@@ -25,8 +25,8 @@ export function OutfitScreen({
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
   const wardrobeCaption =
     ownedItemCount > 0
-      ? `내 옷장 ${ownedItemCount}개 반영 · 추천 세트 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
-      : "프리셋 기준 추천 · 옷장을 추가하면 내 보유 옷을 우선 반영";
+      ? `내 옷장 ${ownedItemCount}개 반영 · 오늘 추천 중 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
+      : "기본 옷장으로 먼저 골랐어요 · 내 옷을 더하면 추천이 더 나다워져요";
   return (
     <AppScreen
       title="코디"
@@ -37,8 +37,8 @@ export function OutfitScreen({
       <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.criteriaHeader}>
           <View>
-            <Text style={[styles.criteriaLabel, { color: theme.gold }]}>추천 기준</Text>
-            <Text style={[styles.criteriaTitle, { color: theme.text }]}>기본 날씨 기준 추천</Text>
+            <Text style={[styles.criteriaLabel, { color: theme.gold }]}>나만의 코디 기준</Text>
+            <Text style={[styles.criteriaTitle, { color: theme.text }]}>오늘 날씨에 맞춰 골랐어요</Text>
           </View>
           <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="warning" />
         </View>
@@ -46,7 +46,7 @@ export function OutfitScreen({
         <View style={styles.criteriaStats}>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Image source={uiIconAssets.shirt} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 매칭</Text>
+            <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 반영</Text>
           </View>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.gold }]} resizeMode="contain" />
@@ -59,12 +59,12 @@ export function OutfitScreen({
         </View>
       </View>
 
-      <Section title="오늘 입을 세트" caption={state.outfit.decisionText} accent="clear">
+      <Section title="오늘 입기 좋은 조합" caption={state.outfit.decisionText} accent="clear">
         <OutfitGrid outfit={state.outfit} maxItems={4} compact />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="sky" />
-          <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
+          <StatusPill label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"} tone={outfitSaved ? "clear" : "sky"} />
         </View>
         {state.outfit.reasons.slice(0, 1).map((reason) => (
           <View key={reason} style={styles.reasonRow}>
@@ -81,8 +81,8 @@ export function OutfitScreen({
           ))}
         </View>
         <View style={styles.actions}>
-          <AppButton label="상세 보기" onPress={() => onNavigate("C4")} />
-          <AppButton label="우산 확인" onPress={() => onNavigate("H4")} tone="secondary" />
+          <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} />
+          <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" />
         </View>
       </Section>
     </AppScreen>
@@ -91,7 +91,7 @@ export function OutfitScreen({
 
 function getWeatherLine(feelsLikeC: number, condition: string) {
   const conditionLabel = condition === "clear" ? "맑음" : condition === "rain" ? "비" : condition === "storm" ? "강한 비" : "날씨";
-  return `${Math.round(feelsLikeC)}도 · ${conditionLabel} · 일교차 기준 추천`;
+  return `${Math.round(feelsLikeC)}도 · ${conditionLabel} · 오늘 몸이 느낄 날씨 기준`;
 }
 
 function formatAdviceTime(value: string) {

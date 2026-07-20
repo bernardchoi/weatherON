@@ -35,8 +35,8 @@ export function OnboardingDestinationScreen({
 
   return (
     <AppScreen
-      title="목적지까지 미리 준비"
-      subtitle="출발지와 도착지 날씨를 한 번에 비교"
+      title="가는 곳까지 미리 챙겨요"
+      subtitle="출발지와 목적지 날씨를 한눈에 비교해드림"
       badge="4 / 4"
       showWordmark={false}
       footer={
@@ -58,9 +58,9 @@ export function OnboardingDestinationScreen({
 
       <OnboardingVisualStrip
         items={[
-          { label: "날씨", value: "양쪽 비교", icon: uiIconAssets.rain, tone: "sky" },
-          { label: "출발", value: "시간 계산", icon: uiIconAssets.depart, tone: "gold" },
-          { label: "준비물", value: "미리 안내", icon: uiIconAssets.umbrella, tone: "clear" },
+          { label: "날씨", value: "양쪽을 한눈에", icon: uiIconAssets.rain, tone: "sky" },
+          { label: "출발", value: "나설 시간 안내", icon: uiIconAssets.depart, tone: "gold" },
+          { label: "준비물", value: "미리 챙기기", icon: uiIconAssets.umbrella, tone: "clear" },
         ]}
       />
 
@@ -71,7 +71,7 @@ export function OnboardingDestinationScreen({
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>{canUseSelection ? selectedDestinationPlace.name : "장소 검색 후 선택"}</Text>
           <Text style={[styles.body, { color: theme.muted }]} numberOfLines={1}>
-            {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만"}
+            {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만 골라보세요"}
           </Text>
         </View>
         <StatusPill label={saved ? "저장됨" : canUseSelection ? "선택" : "대기"} tone={saved ? "clear" : canUseSelection ? "gold" : "sky"} />

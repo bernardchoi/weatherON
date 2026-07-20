@@ -13,8 +13,8 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
 
   return (
     <AppScreen
-      title="날씨 보고, 바로 준비"
-      subtitle="오늘 필요한 세 가지를 한 화면에서"
+      title="날씨 보고, 가볍게 나가요"
+      subtitle="오늘 챙길 것만 한눈에 보여드림"
       badge="1 / 4"
       showWordmark={false}
       footer={
@@ -37,8 +37,8 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
 
       <OnboardingVisualStrip
         items={[
-          { label: "코디", value: "날씨 맞춤", icon: uiIconAssets.shirt, tone: "clear" },
-          { label: "비 준비", value: "우산·신발", icon: uiIconAssets.umbrella, tone: "sky" },
+          { label: "코디", value: "날씨에 딱 맞게", icon: uiIconAssets.shirt, tone: "clear" },
+          { label: "비 준비", value: "우산·신발까지", icon: uiIconAssets.umbrella, tone: "sky" },
           { label: "출발", value: "08:10", icon: uiIconAssets.depart, tone: "gold" },
         ]}
       />
