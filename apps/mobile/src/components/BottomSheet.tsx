@@ -47,6 +47,9 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
   if (!mounted) return null;
 
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [360, 0] });
+  const sheetGlassSurface = iosGlassSurface(theme, "sheet");
+  const sheetHeaderGlassSurface = iosGlassSurface(theme, "sheetHeader");
+  const grabberGlassSurface = iosGlassSurface(theme, "grabber");
 
   return (
     <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
@@ -68,11 +71,24 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
             { maxHeight: windowHeight * 0.82 },
             { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow },
             androidMaterialSurface(theme, "sheet"),
-            iosGlassSurface(theme, "sheet"),
+            sheetGlassSurface,
             { transform: [{ translateY }] },
           ]}
         >
-          <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }]} />
+          {sheetHeaderGlassSurface ? (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.sheetChrome,
+                { borderColor: theme.name === "light" ? "rgba(255,255,255,0.6)" : "rgba(248,251,255,0.26)" },
+                sheetHeaderGlassSurface,
+              ]}
+            >
+              <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }, grabberGlassSurface]} />
+            </View>
+          ) : (
+            <View style={[styles.grabber, styles.grabberDefault, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }]} />
+          )}
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
@@ -98,18 +114,30 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.sheet,
     borderWidth: 1,
     borderBottomWidth: 0,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
     paddingHorizontal: spacing.lg,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.24,
     shadowRadius: 20,
     elevation: 12,
   },
+  sheetChrome: {
+    alignSelf: "center",
+    minWidth: 96,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
   grabber: {
     alignSelf: "center",
     width: 40,
     height: 4,
     borderRadius: 2,
+  },
+  grabberDefault: {
     marginBottom: spacing.xs,
   },
   scrollContent: {

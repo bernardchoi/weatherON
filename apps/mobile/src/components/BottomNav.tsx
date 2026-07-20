@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, type ColorValue, type StyleProp, type ViewStyle, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -33,12 +33,22 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
     >
       {bottomNavRoutes.map((route) => {
         const active = route.id === activeTabRoute;
+        const activeGlassSurface = active ? iosGlassSurface(theme, "tabItem") : null;
         return (
           <TabButton
             key={route.id}
             routeId={route.id}
             label={route.label}
             active={active}
+            activeSurfaceStyle={
+              activeGlassSurface
+                ? [
+                    styles.activeItemGlass,
+                    { borderColor: theme.name === "light" ? "rgba(255,255,255,0.62)" : "rgba(248,251,255,0.34)" },
+                    activeGlassSurface,
+                  ]
+                : null
+            }
             onPress={() => onNavigate(route.id)}
           >
             <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
@@ -63,12 +73,14 @@ function TabButton({
   routeId,
   label,
   active,
+  activeSurfaceStyle,
   onPress,
   children,
 }: {
   routeId: P0RouteId;
   label: string;
   active: boolean;
+  activeSurfaceStyle?: StyleProp<ViewStyle>;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -80,6 +92,7 @@ function TabButton({
       onPress={onPress}
       style={styles.item}
     >
+      {activeSurfaceStyle ? <View pointerEvents="none" style={activeSurfaceStyle} /> : null}
       {children}
     </Pressable>
   );
@@ -130,6 +143,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginVertical: 4,
     overflow: "hidden",
+  },
+  activeItemGlass: {
+    position: "absolute",
+    left: 4,
+    right: 4,
+    top: 2,
+    bottom: 2,
+    borderRadius: 18,
+    borderWidth: 1,
   },
   activeDot: {
     width: 5,

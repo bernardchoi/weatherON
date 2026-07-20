@@ -7,6 +7,7 @@ import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
@@ -756,13 +757,15 @@ function NotificationBellButton({
   theme: AppTheme;
 }) {
   const label = smartCareEnabled ? `알림 열기, 읽지 않음 ${unreadCount}개` : "알림 열기, 스마트 케어 꺼짐";
+  const glassSurface = iosGlassSurface(theme, "button");
   return (
     <FeedbackPressable
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, glassSurface]}
     >
+      {glassSurface ? <View pointerEvents="none" style={[styles.bellGlassShine, { backgroundColor: theme.name === "light" ? "rgba(255,255,255,0.64)" : "rgba(248,251,255,0.18)" }]} /> : null}
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
         <View style={[styles.bellBadge, { backgroundColor: theme.sky }]}>
@@ -1762,6 +1765,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  bellGlassShine: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    top: 7,
+    height: 1,
+    borderRadius: 1,
   },
   bellBadge: {
     position: "absolute",

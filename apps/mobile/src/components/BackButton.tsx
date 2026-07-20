@@ -15,14 +15,16 @@ type BackButtonProps = {
 // 제각각이라 화면을 넘나들 때마다 버튼 모양이 바뀌었다. 이 컴포넌트 하나로 통일한다.
 export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButtonProps) {
   const theme = useAppTheme();
+  const glassSurface = iosGlassSurface(theme, "button");
   return (
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       android_ripple={androidMaterialRipple(theme)}
       onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), iosGlassSurface(theme, "button")]}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface]}
     >
+      {glassSurface ? <View pointerEvents="none" style={[styles.glassShine, { backgroundColor: theme.name === "light" ? "rgba(255,255,255,0.64)" : "rgba(248,251,255,0.18)" }]} /> : null}
       <ChevronLeft color={theme.text} />
     </FeedbackPressable>
   );
@@ -45,6 +47,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.sm,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  glassShine: {
+    position: "absolute",
+    left: 8,
+    right: 8,
+    top: 6,
+    height: 1,
+    borderRadius: 1,
   },
   chevronLeft: {
     width: 16,
