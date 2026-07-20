@@ -3,6 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
+import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import { OutfitGrid } from "../components/OutfitGrid";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
@@ -24,9 +25,10 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
 
   return (
     <AppScreen
-      title="오늘 날씨에 맞는 코디"
-      subtitle="옷과 준비물을 함께 추천"
+      title="오늘 날씨 맞춤 코디"
+      subtitle="체감온도와 비를 옷·신발·준비물로"
       badge="2 / 4"
+      showWordmark={false}
       footer={
         <OnboardingFooter
           primaryLabel={locationSetupComplete ? "다음" : "현재 위치 사용"}
@@ -46,6 +48,14 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
 
+      <OnboardingVisualStrip
+        items={[
+          { label: "체감", value: `${Math.round(state.weather.current.feelsLikeC)}°`, icon: uiIconAssets.clearNight, tone: "clear" },
+          { label: "강수", value: `${state.weather.current.rainProbabilityPct}%`, icon: uiIconAssets.rain, tone: "sky" },
+          { label: "추천", value: `${outfitItems.length}개`, icon: uiIconAssets.shirt, tone: "gold" },
+        ]}
+      />
+
       <View style={[styles.outfitPreview, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.previewHeader}>
           <View style={[styles.iconFrame, { backgroundColor: `${theme.clear}18` }]}>
@@ -60,7 +70,6 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 대비" : "강수 없음"} tone="sky" />
-          <StatusPill label={`${outfitItems.length}개 아이템`} tone="gold" />
         </View>
       </View>
 

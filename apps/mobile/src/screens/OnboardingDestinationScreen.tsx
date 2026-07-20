@@ -1,8 +1,9 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { onboardingAssets } from "../assets";
+import { onboardingAssets, uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
+import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -34,9 +35,10 @@ export function OnboardingDestinationScreen({
 
   return (
     <AppScreen
-      title="자주 가는 곳 추가"
-      subtitle="목적지 날씨와 출발 시간을 함께 확인"
+      title="목적지까지 미리 준비"
+      subtitle="출발지와 도착지 날씨를 한 번에 비교"
       badge="4 / 4"
+      showWordmark={false}
       footer={
         <OnboardingFooter
           primaryLabel={primaryLabel}
@@ -53,6 +55,14 @@ export function OnboardingDestinationScreen({
       </View>
 
       <Image source={onboardingAssets.destinationCare} style={styles.destinationVisual} resizeMode="cover" accessibilityLabel="목적지 날씨와 출발 시간 비교 예시" />
+
+      <OnboardingVisualStrip
+        items={[
+          { label: "날씨", value: "양쪽 비교", icon: uiIconAssets.rain, tone: "sky" },
+          { label: "출발", value: "시간 계산", icon: uiIconAssets.depart, tone: "gold" },
+          { label: "준비물", value: "미리 안내", icon: uiIconAssets.umbrella, tone: "clear" },
+        ]}
+      />
 
       <View
         accessibilityLabel={canUseSelection ? "선택한 목적지" : "목적지 선택"}
@@ -82,7 +92,7 @@ const styles = StyleSheet.create({
   },
   destinationVisual: {
     width: "100%",
-    height: 158,
+    height: 198,
     borderRadius: radius.lg,
   },
   destinationCard: {

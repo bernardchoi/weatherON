@@ -4,6 +4,7 @@ import { uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
+import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { SmartCareScenario } from "../state/useWeatherOnAppState";
@@ -36,9 +37,10 @@ export function SmartCareOnboardingScreen({
   };
   return (
     <AppScreen
-      title="필요한 알림만 받기"
-      subtitle="사용 상황 하나만 선택"
+      title="상황에 맞는 알림만"
+      subtitle="외출 유형 하나로 시간과 강도를 자동 조절"
       badge="3 / 4"
+      showWordmark={false}
       footer={
         <OnboardingFooter
           primaryLabel={notificationSetupComplete ? "다음" : "알림 켜기"}
@@ -90,6 +92,14 @@ export function SmartCareOnboardingScreen({
           <Text style={[styles.selectedLabel, { color: theme.clear }]}>선택됨</Text>
         </View>
       </Section>
+
+      <OnboardingVisualStrip
+        items={[
+          { label: "비 변화", value: "시작 전", icon: uiIconAssets.rain, tone: "sky" },
+          { label: "출발", value: "맞춤 시각", icon: uiIconAssets.depart, tone: "gold" },
+          { label: "목적지", value: "급변만", icon: uiIconAssets.pin, tone: "clear" },
+        ]}
+      />
 
       <View style={[styles.notificationPrompt, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? theme.clear : theme.border }, cardShadow(theme)]}>
         <View style={[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }]}>

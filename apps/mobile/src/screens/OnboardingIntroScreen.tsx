@@ -1,21 +1,22 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { brandAssets, onboardingAssets } from "../assets";
-import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
+import { onboardingAssets, uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
+import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
 
   return (
     <AppScreen
-      title="나가기 전 필요한 것만"
-      subtitle="출발·비·준비를 한 화면에서 확인"
+      title="날씨 보고, 바로 준비"
+      subtitle="오늘 필요한 세 가지를 한 화면에서"
       badge="1 / 4"
+      showWordmark={false}
       footer={
         <OnboardingFooter
           primaryLabel="다음"
@@ -28,44 +29,20 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
       }
     >
       <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-        <Image source={onboardingAssets.ready} style={styles.heroVisual} resizeMode="cover" accessibilityLabel="출발 시간과 날씨 정보를 보여주는 예시 화면" />
         <View style={styles.brandTop}>
-          <View style={[styles.brandIconHalo, { backgroundColor: semanticColor(theme, "infoTint") }]}>
-            <AnimatedBrandMark size={52} />
-          </View>
-          <View style={styles.brandCopy}>
-            <Image source={brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
-            <Text style={[styles.heroCopy, { color: theme.muted }]}>오늘 외출을 한눈에</Text>
-          </View>
+          <Text style={[styles.heroCopy, { color: theme.muted }]}>5초 외출 브리핑</Text>
         </View>
-        <View style={styles.quickStrip}>
-          <QuickFact label="출발" value="08:10" color={theme.gold} textColor={theme.text} surface={theme.cardMuted} />
-          <QuickFact label="목적지" value="비 30%" color={theme.sky} textColor={theme.text} surface={theme.cardMuted} />
-          <QuickFact label="완화" value="21:00" color={theme.clear} textColor={theme.text} surface={theme.cardMuted} />
-        </View>
+        <Image source={onboardingAssets.ready} style={styles.heroVisual} resizeMode="cover" accessibilityLabel="날씨에 맞춘 코디, 우산, 출발 알림을 보여주는 일러스트" />
       </View>
-    </AppScreen>
-  );
-}
 
-function QuickFact({
-  label,
-  value,
-  color,
-  textColor,
-  surface,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  textColor: string;
-  surface: string;
-}) {
-  return (
-    <View style={[styles.quickFact, { backgroundColor: surface }]}>
-      <Text style={[styles.quickLabel, { color }]}>{label}</Text>
-      <Text style={[styles.quickValue, { color: textColor }]}>{value}</Text>
-    </View>
+      <OnboardingVisualStrip
+        items={[
+          { label: "코디", value: "날씨 맞춤", icon: uiIconAssets.shirt, tone: "clear" },
+          { label: "비 준비", value: "우산·신발", icon: uiIconAssets.umbrella, tone: "sky" },
+          { label: "출발", value: "08:10", icon: uiIconAssets.depart, tone: "gold" },
+        ]}
+      />
+    </AppScreen>
   );
 }
 
@@ -73,60 +50,25 @@ const styles = StyleSheet.create({
   brandHero: {
     justifyContent: "center",
     gap: spacing.sm,
-    padding: spacing.md,
+    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   heroVisual: {
     width: "100%",
-    height: 148,
+    height: 214,
     borderRadius: radius.md,
   },
   brandTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-  },
-  brandIconHalo: {
-    width: 58,
-    height: 58,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  brandCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  wordmark: {
-    width: 122,
-    height: 28,
+    justifyContent: "flex-start",
+    gap: spacing.sm,
+    paddingHorizontal: 4,
   },
   heroCopy: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "800",
-  },
-  quickStrip: {
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-  quickFact: {
-    flex: 1,
-    minHeight: 58,
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
-  },
-  quickLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  quickValue: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "900",
   },
 });

@@ -1,11 +1,12 @@
 const previewUrl = process.env.WEATHERON_WEB_PREVIEW_URL ?? "http://127.0.0.1:8094/";
 const optionalServer = process.env.WEATHERON_SMALL_SCREEN_OPTIONAL === "1";
 const captureScreenshots = process.env.WEATHERON_SMALL_SCREEN_SCREENSHOT === "1";
+const viewportFilter = process.env.WEATHERON_SMALL_SCREEN_VIEWPORT;
 
 const viewports = [
   { name: "compact", width: 360, height: 800 },
   { name: "large-phone", width: 430, height: 932 },
-];
+].filter((viewport) => !viewportFilter || viewport.name === viewportFilter);
 
 const basePlace = {
   id: "kr-jamsil-stadium",
@@ -94,7 +95,10 @@ const appState = {
 const onboardingState = {
   ...appState,
   onboardingCompleted: false,
+  locationReady: false,
+  permissionReady: false,
   savedDestinations: [],
+  themeMode: "light",
 };
 
 const issues = [];
@@ -180,7 +184,7 @@ try {
     console.log(`small-screen: ${viewport.name}/alert-settings`);
     await clickText(page, "알림 설정으로 이동");
     await assertText(page, "스마트 알림 설정", viewport, "alert-settings");
-    await assertText(page, "확인 알림", viewport, "alert-settings");
+    await assertAnyText(page, ["필수 날씨", "확인 알림"], viewport, "alert-settings");
     await assertText(page, "목적지 출발", viewport, "alert-settings");
     await checkLayout(page, viewport, "alert-settings");
     await screenshot(page, viewport, "alert-settings");
@@ -196,6 +200,35 @@ try {
     await assertText(onboardingPage, "건너뛰기", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");
+
+    await clickText(onboardingPage, "다음");
+    await assertText(onboardingPage, "날씨 보고, 바로 준비", viewport, "onboarding-intro");
+    await assertText(onboardingPage, "날씨 맞춤", viewport, "onboarding-intro");
+    await assertText(onboardingPage, "우산·신발", viewport, "onboarding-intro");
+    await checkLayout(onboardingPage, viewport, "onboarding-intro");
+    await checkOnboardingBadge(onboardingPage, viewport, "onboarding-intro", "1 / 4");
+    await screenshot(onboardingPage, viewport, "onboarding-intro");
+
+    await clickAriaIncludes(onboardingPage, "코디 안내 단계로 이동");
+    await assertText(onboardingPage, "오늘 날씨 맞춤 코디", viewport, "onboarding-outfit");
+    await assertText(onboardingPage, "현재 위치 사용", viewport, "onboarding-outfit");
+    await checkLayout(onboardingPage, viewport, "onboarding-outfit");
+    await checkOnboardingBadge(onboardingPage, viewport, "onboarding-outfit", "2 / 4");
+    await screenshot(onboardingPage, viewport, "onboarding-outfit");
+
+    await clickAriaIncludes(onboardingPage, "위치 권한을 나중에 설정");
+    await assertText(onboardingPage, "상황에 맞는 알림만", viewport, "onboarding-smart-care");
+    await assertText(onboardingPage, "알림 켜기", viewport, "onboarding-smart-care");
+    await checkLayout(onboardingPage, viewport, "onboarding-smart-care");
+    await checkOnboardingBadge(onboardingPage, viewport, "onboarding-smart-care", "3 / 4");
+    await screenshot(onboardingPage, viewport, "onboarding-smart-care");
+
+    await clickAriaIncludes(onboardingPage, "알림 권한을 나중에 설정");
+    await assertText(onboardingPage, "목적지까지 미리 준비", viewport, "onboarding-destination");
+    await assertText(onboardingPage, "장소 찾기", viewport, "onboarding-destination");
+    await checkLayout(onboardingPage, viewport, "onboarding-destination");
+    await checkOnboardingBadge(onboardingPage, viewport, "onboarding-destination", "4 / 4");
+    await screenshot(onboardingPage, viewport, "onboarding-destination");
     await onboardingPage.close();
   }
 } catch (error) {
@@ -316,6 +349,25 @@ async function assertAnyText(page, texts, viewport, screen) {
 async function assertNoText(page, text, viewport, screen) {
   const found = await page.evaluate((target) => document.body.innerText.includes(target), text);
   if (found) issues.push(`${viewport.name}/${screen}: unexpected text "${text}"`);
+}
+
+async function checkOnboardingBadge(page, viewport, screen, label) {
+  const result = await page.evaluate((target) => {
+    const normalize = (value) => (value || "").replace(/\s+/g, " ").trim();
+    const element = [...document.querySelectorAll("*")].find((candidate) =>
+      candidate.childElementCount === 0 && normalize(candidate.textContent) === target,
+    );
+    if (!element) return null;
+    const rect = element.parentElement?.getBoundingClientRect() ?? element.getBoundingClientRect();
+    return { left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(window.innerWidth) };
+  }, label);
+  if (!result) {
+    issues.push(`${viewport.name}/${screen}: missing onboarding badge "${label}"`);
+    return;
+  }
+  if (result.left < -1 || result.right > result.width + 1) {
+    issues.push(`${viewport.name}/${screen}: onboarding badge overflow ${JSON.stringify(result)}`);
+  }
 }
 
 async function clickText(page, text) {

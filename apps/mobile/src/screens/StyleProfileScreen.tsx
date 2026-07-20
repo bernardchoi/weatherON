@@ -50,7 +50,7 @@ export function StyleProfileScreen({
       subtitle={isEditing ? "저장하면 코디 추천에 바로 반영" : "스타일은 복수 선택 가능 · 성별과 연령대는 추천 보정에만 사용"}
       badge={isEditing ? undefined : "1 / 3"}
       onBack={isEditing ? onGoBack : undefined}
-      showWordmark={!isEditing}
+      showWordmark={false}
       footer={
         <View style={styles.actions}>
           <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
