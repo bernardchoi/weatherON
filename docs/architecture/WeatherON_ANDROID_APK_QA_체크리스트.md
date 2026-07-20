@@ -112,12 +112,12 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | QA 대상 APK | qa-local Gradle release APK |
 | Version | `1.0.0 (10)` |
 | APK path | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
-| APK SHA256 | `c4cd28b1c92565710b3d53233019896fdc0c9ac463a88be839f33792bbe82450` |
+| APK SHA256 | `1f1f941cc7c2c0b4dec55ec247f6fd2158bee89c0e32dddb02d9e641011c98fc` |
 | 테스트 기기 | A142 / adb `000841458003652` |
-| 테스트 일시 | 2026-07-20 18:55-20:06 KST |
-| 실기기 QA 리포트 | `docs/audits/android-real-device-qa-2026-07-20/report.md`, `docs/audits/android-real-device-qa-2026-07-20/follow-up/report.md` |
-| 통과 범위 | qa-local 빌드, 설치, 실행, 홈, 코디 탭/상세/저장/목록 복귀, 출발 탭, 목적지 `Jamsil` 검색/`잠실야구장` 저장/삭제 복구, 위치 권한 거부 fallback, 다크모드, 네트워크 차단 fallback, MY, 스마트 알림 설정, 개발용 알림 QA 패널, 테스트 알림 수신, notification shade 노출, 알림 탭 M2 복귀, crash buffer |
-| 주요 이슈 | `uiautomator dump`가 `ERROR: could not get idle state.`로 실패. Android 뒤로가기 표준 케이스는 이번 follow-up 요청 범위 밖이라 별도 확인 필요 |
+| 테스트 일시 | 2026-07-20 20:27-20:31 KST |
+| 실기기 QA 리포트 | `docs/audits/android-qa-build-device-test-2026-07-20-r2/report.md` |
+| 통과 범위 | qa-local 빌드, 설치, 실행, 홈, 코디 탭/상세/저장, 출발 탭, 목적지 `Jamsil` 검색/`잠실야구장` 저장/삭제 복구, 위치 권한 거부 fallback, 다크모드, 네트워크 차단 fallback, MY, crash buffer |
+| 주요 이슈 | Android 뒤로가기 표준 케이스와 OS 알림 수신 딥링크는 이번 r2 요청 범위에서 별도 반복하지 않음 |
 | 보조 확인 | `check:platform-versions`, `check:android-release`, TypeScript, `git diff --check`, `check:android-device-qa-ready` 통과 |
 
 ## 8. 이전 기록 양식
@@ -150,6 +150,7 @@ WEATHERON_LIVE_SMOKE=1 npm run check:weather-live
 | 2026-07-08 | local Gradle release APK `0.1.0 (7)` 실기기 QA 기록 추가. 코디 탭/상세/저장, 출발, MY, 알림 사이드바, swipe 닫기 통과. C4 저장 완료 CTA 하단 여백 이슈 초기 발견 |
 | 2026-07-20 | qa-local Gradle release APK `1.0.0 (10)` 실기기 QA 기록 추가. 홈/탭/MY/스마트 알림 설정/개발용 알림 QA/OS 알림 수신/알림 탭 복귀 통과 |
 | 2026-07-20 | follow-up 실기기 QA로 코디 상세 전체 플로우, 목적지 검색, 위치 권한 거부, 다크모드, 네트워크 차단 통과. 테스트 목적지/권한/라이트 모드/네트워크 원상복구 |
+| 2026-07-20 | qa-local Gradle release APK r2 재빌드 후 홈/탭/코디 상세/목적지 검색/권한 거부/다크모드/네트워크 차단 실기기 재확인 |
 | 2026-06-27 | Android preview APK QA 체크리스트 최초 작성 |
 | 2026-06-27 | EAS 로그인 확인 명령을 `check:eas-login-state` 기준으로 변경 |
 | 2026-06-27 | EAS preview APK build id와 실기기 설치/실행 성공 기록 |

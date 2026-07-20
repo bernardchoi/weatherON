@@ -60,13 +60,13 @@
 
 | 경로 | 존재 | 크기 | 제외 규칙 |
 |---|---|---|---|
-| `apps/mobile/android/app/build` | 예 | 3.6 GB | 있음 |
+| `apps/mobile/android/app/build` | 예 | 3.2 GB | 있음 |
 | `apps/mobile/android/.gradle` | 예 | 27 MB | 있음 |
 | `apps/mobile/android/build` | 예 | 145 KB | 있음 |
 | `apps/mobile/dist` | 예 | 46 MB | 있음 |
 | `apps/mobile/dist-web` | 예 | 587 KB | 있음 |
-| `node_modules` | 예 | 6.6 GB | 있음 |
-| `.git` | 예 | 846 MB | 있음 |
+| `node_modules` | 예 | 6.3 GB | 있음 |
+| `.git` | 예 | 854 MB | 있음 |
 | `.npm-cache` | 예 | 1.6 GB | 있음 |
 
 ## 4. 다음 명령

@@ -1,0 +1,7 @@
+Starting: Intent { cmp=com.weatheron.mobile/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.weatheron.mobile/.MainActivity
+TotalTime: 286
+WaitTime: 289
+Complete

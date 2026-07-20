@@ -7,6 +7,22 @@
 
 ## 1. QA 대상
 
+### 2026-07-20 qa-local release APK v10 r2 실기기 QA
+
+| 항목 | 값 |
+|---|---|
+| EAS build id | `N/A - local Gradle release APK` |
+| Build 상태 | `LOCAL BUILD SUCCESS` |
+| Build 링크 | N/A |
+| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| App version | `1.0.0 (10)` |
+| APK sha256 | `1f1f941cc7c2c0b4dec55ec247f6fd2158bee89c0e32dddb02d9e641011c98fc` |
+| 테스트 기기 | A142 / adb 000841458003652 |
+| 테스트 일시 | 2026-07-20 20:27-20:31 KST |
+| QA 리포트 | `docs/audits/android-qa-build-device-test-2026-07-20-r2/report.md` |
+| 주요 결과 | qa-local release APK 재빌드, 설치, COLD launch, 홈, 코디 탭/상세/저장, 출발 탭, MY, 목적지 `Jamsil` 검색/`잠실야구장` 선택/저장/상세/삭제 복구, 권한 거부 fallback, 다크모드, 네트워크 차단 fallback 확인. crash buffer 0줄 |
+| 남은 개선 | Android 뒤로가기 표준 케이스와 OS 알림 수신 딥링크는 이번 r2 요청 범위에서 별도 반복하지 않음 |
+
 ### 2026-07-20 qa-local release APK v10 실기기 QA
 
 | 항목 | 값 |
