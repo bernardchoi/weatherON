@@ -133,6 +133,7 @@ export type P0ScreenProps = {
   onToggleDestinationRepeatDay: (day: DestinationRepeatDay) => void;
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
+  onDismissRemovedDestination: () => void;
   onSetDestinationHubFilter: (filter: DestinationHubFilter) => void;
   onSearchPlaces: (query: string) => void;
   onSelectDestinationPlace: (place: PlaceSearchResult) => void;

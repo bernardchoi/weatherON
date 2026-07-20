@@ -226,6 +226,7 @@ export function useWeatherOnAppState() {
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
   const localNotificationSyncKeyRef = useRef("");
   const placeSearchRequestSeqRef = useRef(0);
+  const recentlyRemovedDestinationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deviceLocationRequestInFlightRef = useRef(false);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const weatherLoadedFromNetworkRef = useRef(false);
@@ -729,11 +730,24 @@ export function useWeatherOnAppState() {
     setPlaceSearchStatus("idle");
   }, []);
 
+  const dismissRemovedDestination = useCallback(() => {
+    if (recentlyRemovedDestinationTimerRef.current) {
+      clearTimeout(recentlyRemovedDestinationTimerRef.current);
+      recentlyRemovedDestinationTimerRef.current = null;
+    }
+    setRecentlyRemovedDestination(null);
+  }, []);
+
+  useEffect(() => () => {
+    if (recentlyRemovedDestinationTimerRef.current) clearTimeout(recentlyRemovedDestinationTimerRef.current);
+  }, []);
+
   useEffect(() => {
     const previousRoute = previousRouteRef.current;
     previousRouteRef.current = route;
     if (previousRoute && previousRoute !== "P1" && route === "P1") resetPlaceSearch();
-  }, [resetPlaceSearch, route]);
+    if (previousRoute === "G1" && route !== "G1") dismissRemovedDestination();
+  }, [dismissRemovedDestination, resetPlaceSearch, route]);
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
     setAlertSettingsRouteState(null);
@@ -1194,7 +1208,12 @@ export function useWeatherOnAppState() {
     if (!removedDestination) return;
     const nextDestinations = savedDestinations.filter((destination) => destination.place.id !== placeId);
     setSavedDestinations(nextDestinations);
+    if (recentlyRemovedDestinationTimerRef.current) clearTimeout(recentlyRemovedDestinationTimerRef.current);
     setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제" });
+    recentlyRemovedDestinationTimerRef.current = setTimeout(() => {
+      recentlyRemovedDestinationTimerRef.current = null;
+      setRecentlyRemovedDestination(null);
+    }, 4000);
     if (selectedDestinationPlace.id === placeId) {
       const nextSelectedPlace = nextDestinations[0]?.place ?? getDefaultDestinationPlace();
       setSelectedDestinationPlace(nextSelectedPlace);
@@ -1219,11 +1238,11 @@ export function useWeatherOnAppState() {
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(restoredDestination.careEnabled);
     setPreviewDestinationAlertCondition(restoredDestination.alertCondition);
-    setRecentlyRemovedDestination(null);
+    dismissRemovedDestination();
     setDestinationHubFilterState("all");
     setWeatherProviderMode("ready");
     setWeatherRefreshTick((value) => value + 1);
-  }, [recentlyRemovedDestination]);
+  }, [dismissRemovedDestination, recentlyRemovedDestination]);
 
   const setDestinationHubFilter = useCallback((filter: DestinationHubFilter) => {
     setDestinationHubFilterState(filter);
@@ -1523,6 +1542,7 @@ export function useWeatherOnAppState() {
     toggleSelectedDestinationRepeatDay,
     removeSavedDestination,
     restoreRemovedDestination,
+    dismissRemovedDestination,
     setDestinationHubFilter,
     searchPlaces,
     selectDestinationPlace,

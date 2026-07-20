@@ -1,5 +1,5 @@
 import React from "react";
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -41,6 +41,10 @@ export function DestinationAddScreen({
   const visibleResults = React.useMemo(
     () => sortPlaceSearchResults(placeSearchResults, placeSearchQuery, placeSearchOrigin),
     [placeSearchOrigin, placeSearchQuery, placeSearchResults],
+  );
+  const searchSuggestions = React.useMemo(
+    () => getSearchSuggestions(placeSearchQuery, visibleResults),
+    [placeSearchQuery, visibleResults],
   );
 
   React.useEffect(() => {
@@ -85,12 +89,32 @@ export function DestinationAddScreen({
           <TextInput
             accessibilityLabel="목적지 검색어"
             onChangeText={onSearchPlaces}
+            onSubmitEditing={() => onSearchPlaces(placeSearchQuery)}
             placeholder="장소명 또는 주소 검색"
             placeholderTextColor={theme.subtle}
+            returnKeyType="search"
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
           />
         </View>
+
+        {searchSuggestions.length > 0 ? (
+          <View style={[styles.suggestionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <Text style={[styles.suggestionPanelTitle, { color: theme.muted }]}>연관 검색</Text>
+            {searchSuggestions.map((suggestion, index) => (
+              <FeedbackPressable
+                accessibilityLabel={`${suggestion} 검색`}
+                accessibilityRole="button"
+                key={suggestion}
+                onPress={() => onSearchPlaces(suggestion)}
+                style={[styles.suggestionRow, { borderTopColor: index === 0 ? "transparent" : theme.border }]}
+              >
+                <SearchGlyph color={theme.subtle} />
+                <QueryMatchedText value={suggestion} query={placeSearchQuery} style={[styles.suggestionText, { color: theme.text }]} matchColor={theme.sky} />
+              </FeedbackPressable>
+            ))}
+          </View>
+        ) : null}
 
         <View
           style={[
@@ -144,7 +168,7 @@ export function DestinationAddScreen({
                   </View>
                   <View style={styles.resultHead}>
                     <View style={styles.resultTitleRow}>
-                      <Text style={[styles.resultName, { color: theme.text }]} numberOfLines={1}>{place.name}</Text>
+                      <QueryMatchedText value={place.name} query={placeSearchQuery} style={[styles.resultName, { color: theme.text }]} matchColor={theme.sky} />
                       {duplicate ? (
                         <View style={[styles.smallPill, { borderColor: theme.border }]}>
                           <Text style={[styles.smallPillText, { color: theme.gold }]}>동명이름</Text>
@@ -156,13 +180,14 @@ export function DestinationAddScreen({
                         </View>
                       ) : null}
                     </View>
+                    <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</Text>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
                       {[
                         getPlaceDistanceLabel(place, placeSearchOrigin, state.weather.countryCode, distanceUnit),
+                        getCategoryDetail(place.category),
                         getProviderLabel(place.provider),
                       ].filter(Boolean).join(" · ")}
                     </Text>
-                    <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={2}>{place.address || getCountryLabel(place.countryCode)}</Text>
                   </View>
                 </FeedbackPressable>
               );
@@ -252,6 +277,47 @@ function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
     counts.set(place.name, (counts.get(place.name) ?? 0) + 1);
   }
   return counts;
+}
+
+function getSearchSuggestions(query: string, results: P0ScreenProps["placeSearchResults"]) {
+  const trimmedQuery = query.trim();
+  const normalizedQuery = trimmedQuery.toLocaleLowerCase();
+  if (normalizedQuery.length < 2) return [];
+
+  const suggestions: string[] = [];
+  for (const place of results) {
+    const candidate = place.name.trim();
+    const normalizedCandidate = candidate.toLocaleLowerCase();
+    if (!normalizedCandidate.includes(normalizedQuery) || normalizedCandidate === normalizedQuery || suggestions.includes(candidate)) continue;
+    suggestions.push(candidate);
+    if (suggestions.length === 3) break;
+  }
+  return suggestions;
+}
+
+function QueryMatchedText({
+  value,
+  query,
+  style,
+  matchColor,
+}: {
+  value: string;
+  query: string;
+  style: StyleProp<TextStyle>;
+  matchColor: string;
+}) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const start = normalizedQuery ? value.toLocaleLowerCase().indexOf(normalizedQuery) : -1;
+  if (start < 0) return <Text style={style} numberOfLines={1}>{value}</Text>;
+
+  const end = start + normalizedQuery.length;
+  return (
+    <Text style={style} numberOfLines={1}>
+      {value.slice(0, start)}
+      <Text style={{ color: matchColor }}>{value.slice(start, end)}</Text>
+      {value.slice(end)}
+    </Text>
+  );
 }
 
 function getCategoryLabel(category: string) {
@@ -431,6 +497,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
+  },
+  suggestionPanel: {
+    overflow: "hidden",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  suggestionPanelTitle: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 6,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+  suggestionRow: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    borderTopWidth: 1,
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
   },
   stateCard: {
     minHeight: 78,

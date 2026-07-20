@@ -42,6 +42,7 @@ export function DestinationListScreen({
   onNavigate,
   onSelectDestinationPlace,
   onRestoreRemovedDestination,
+  onDismissRemovedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const care = state.destinationCare;
@@ -123,7 +124,8 @@ export function DestinationListScreen({
           supportingText={`${recentlyRemovedDestination.place.name}을 다시 복구할 수 있음`}
           actionLabel="복구"
           onAction={onRestoreRemovedDestination}
-          duration={8000}
+          onDismiss={onDismissRemovedDestination}
+          duration={3800}
         />
       ) : resultBanner ? (
         <MaterialSnackbar

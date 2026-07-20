@@ -257,6 +257,8 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "MaterialSnackbar",
   "목적지 삭제됨",
   'actionLabel="복구"',
+  "onDismiss={onDismissRemovedDestination}",
+  "duration={3800}",
   "getDestinationActionText",
   "getDestinationSchedule",
   "알림 켬",
@@ -295,6 +297,9 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
   "동명이름",
   "getProviderLabel",
   "getDuplicateNameCounts",
+  "getSearchSuggestions",
+  "연관 검색",
+  "QueryMatchedText",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/OnboardingDestinationScreen.tsx", [
   "destinationSelectionReady",
