@@ -51,6 +51,15 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "production-ios-1-0-0-10": {
+      "autoIncrement": false,
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "production"
+      },
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-26.0"
+      }
     }
   },
   "submit": {

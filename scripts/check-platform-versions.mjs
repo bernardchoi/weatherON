@@ -11,7 +11,7 @@ const androidGradle = readFileSync(join(rootDir, "apps/mobile/android/app/build.
 assert.equal(appConfig.version, "1.0.0", "Android user-facing version must match the 1.0.0 release baseline");
 assert.equal(appConfig.android.versionCode, 10, "Android versionCode must advance past the 0.1.0 (9) private-test baseline");
 assert.equal(appConfig.ios.version, "1.0.0", "iOS user-facing version must match the 1.0.0 release baseline");
-assert.equal(appConfig.ios.buildNumber, "8", "iOS buildNumber must match the completed 1.0.0 (8) EAS build");
+assert.equal(appConfig.ios.buildNumber, "10", "iOS buildNumber must match the 1.0.0 (10) release target");
 assert.ok(iosInfo.includes("<string>$(MARKETING_VERSION)</string>"), "Info.plist must use MARKETING_VERSION");
 assert.ok(iosInfo.includes("<string>$(CURRENT_PROJECT_VERSION)</string>"), "Info.plist must use CURRENT_PROJECT_VERSION");
 
@@ -20,7 +20,7 @@ assertXcodeSetting("CURRENT_PROJECT_VERSION", appConfig.ios.buildNumber);
 assert.match(androidGradle, /versionCode\s+10/);
 assert.match(androidGradle, /versionName\s+"1\.0\.0"/);
 
-console.log("platform version check passed: Android 1.0.0 (10), iOS 1.0.0 (8)");
+console.log("platform version check passed: Android 1.0.0 (10), iOS 1.0.0 (10)");
 
 function assertXcodeSetting(key, expected) {
   const values = [...xcodeProject.matchAll(new RegExp(`${key} = ([^;]+);`, "g"))].map((match) => match[1]);
