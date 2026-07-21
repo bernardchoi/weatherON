@@ -21,14 +21,6 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
 
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-#endif
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -56,13 +48,22 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
   // Extension point for config-plugins
 
   override func sourceURL(for bridge: RCTBridge) -> URL? {
-    // needed to return the correct URL for expo-dev-client.
+#if DEBUG && targetEnvironment(simulator)
+    // Keep Metro-based development on the simulator.
     bridge.bundleURL ?? bundleURL()
+#else
+    // Wired device builds use the embedded bundle and do not depend on Metro.
+    bundleURL()
+#endif
   }
 
   override func bundleURL() -> URL? {
 #if DEBUG
+#if targetEnvironment(simulator)
     return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: ".expo/.virtual-metro-entry")
+#else
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+#endif
 #else
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif

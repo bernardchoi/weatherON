@@ -60,5 +60,57 @@ target 'WeatherON' do
         end
       end
     end
+
+    # React Native 0.79 invokes tar through a shell string when switching Hermes
+    # configurations. That breaks when the checkout path contains spaces.
+    hermes_replace_script = File.expand_path(
+      '../../../node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js',
+      __dir__
+    )
+    if File.exist?(hermes_replace_script)
+      contents = File.read(hermes_replace_script)
+      patched_contents = contents
+        .sub("const {execSync} = require('child_process');", "const {execFileSync} = require('child_process');")
+        .sub(
+          'execSync(`tar -xf ${tarballURLPath} -C ${finalLocation}`);',
+          "execFileSync('tar', ['-xf', tarballURLPath, '-C', finalLocation]);"
+        )
+      File.write(hermes_replace_script, patched_contents) if patched_contents != contents
+    end
+
+    # fmt 11.0.2 consteval fails with the Apple Clang bundled in Xcode 27 beta.
+    # Limit this Pod to C++17; the rest of the React Native dependencies remain C++20.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+
+          xcconfig_path = config.base_configuration_reference.real_path
+          File.write(
+            xcconfig_path,
+            File.read(xcconfig_path).sub(
+              'CLANG_CXX_LANGUAGE_STANDARD = c++20',
+              'CLANG_CXX_LANGUAGE_STANDARD = c++17'
+            )
+          )
+        end
+      end
+
+      target.shell_script_build_phases.each do |phase|
+        if target.name == 'ReactCodegen' && phase.name == '[CP-User] Generate Specs'
+          phase.shell_script = phase.shell_script.sub(
+            '/bin/sh -c "$WITH_ENVIRONMENT $SCRIPT_PHASES_SCRIPT"',
+            '/bin/bash -c \'source "$1"; "$2"\' -- "$WITH_ENVIRONMENT" "$SCRIPT_PHASES_SCRIPT"'
+          )
+        end
+
+        if target.name == 'EXConstants' && phase.name == '[CP-User] Generate app.config for prebuilt Constants.manifest'
+          phase.shell_script = phase.shell_script.sub(
+            'bash -l -c "$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh"',
+            'bash -l "$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh"'
+          )
+        end
+      end
+    end
   end
 end
