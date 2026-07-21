@@ -16,7 +16,6 @@ export async function handleWeatherProxyRequest(request, env = {}) {
 
   try {
     if (request.method !== "GET") return jsonResponse({ error: "method_not_allowed" }, 405);
-    await logProxyAuthDiagnostic(request, url, env);
     const result = await handleProxyRoute(
       url,
       (key) => readEnv(env, key),
@@ -30,43 +29,6 @@ export async function handleWeatherProxyRequest(request, env = {}) {
       502,
     );
   }
-}
-
-async function logProxyAuthDiagnostic(request, url, env) {
-  const expectedTokenDigest = readEnv(env, "PROXY_DIAGNOSTIC_TOKEN_SHA256");
-  if (!expectedTokenDigest || !isProxyDiagnosticPath(url.pathname)) return;
-  const providedToken = request.headers.get(PROXY_TOKEN_HEADER);
-  console.log(JSON.stringify({
-    event: "proxy_auth_diagnostic",
-    method: request.method,
-    path: url.pathname,
-    routeGroup: url.pathname.startsWith("/weather/") ? "/weather" : url.pathname,
-    tokenPresent: Boolean(providedToken),
-    tokenMatched: providedToken ? await secureTokenMatchesDigest(providedToken, expectedTokenDigest) : false,
-  }));
-}
-
-function isProxyDiagnosticPath(pathname) {
-  return pathname.startsWith("/weather/") || pathname === "/places/search" || pathname === "/routes/estimate";
-}
-
-async function secureTokenMatchesDigest(providedToken, expectedDigestHex) {
-  const encoder = new TextEncoder();
-  const providedBytes = encoder.encode(providedToken);
-  const providedHash = await crypto.subtle.digest("SHA-256", providedBytes);
-  const providedDigest = new Uint8Array(providedHash);
-  const expectedDigest = hexToBytes(expectedDigestHex);
-  if (!expectedDigest || expectedDigest.length !== providedDigest.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < providedDigest.length; index += 1) {
-    mismatch |= providedDigest[index] ^ expectedDigest[index];
-  }
-  return mismatch === 0;
-}
-
-function hexToBytes(value) {
-  if (!/^[a-f0-9]{64}$/i.test(value)) return null;
-  return new Uint8Array(value.match(/.{2}/g).map((byte) => Number.parseInt(byte, 16)));
 }
 
 function readEnv(env, key) {

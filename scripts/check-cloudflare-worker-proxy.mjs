@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import worker from "../apps/server/src/worker.mjs";
@@ -25,7 +24,6 @@ assert.equal(health.ok, true);
 assert.equal(health.runtime, "cloudflare-worker");
 
 await checkProxyAuthentication();
-await checkProxyAuthenticationDiagnostic();
 await checkProviderFallbackIsNotCached();
 
 if (process.env.WEATHERON_WORKER_SMOKE === "1") {
@@ -73,43 +71,6 @@ async function checkProxyAuthentication() {
     /x-weatheron-proxy-token/i,
     "CORS preflight should allow the proxy token header",
   );
-}
-
-async function checkProxyAuthenticationDiagnostic() {
-  const diagnosticToken = "test-diagnostic-token";
-  const diagnosticTokenDigest = createHash("sha256").update(diagnosticToken).digest("hex");
-  const logs = [];
-  const originalLog = console.log;
-  console.log = (message) => logs.push(String(message));
-  try {
-    await fetchWorkerJson("/places/search?q=%EC%9E%A0%EC%8B%A4", {
-      ...env,
-      PROXY_DIAGNOSTIC_TOKEN_SHA256: diagnosticTokenDigest,
-      KAKAO_REST_API_KEY: "",
-      GOOGLE_MAPS_API_KEY: "",
-    }, { "x-weatheron-proxy-token": diagnosticToken });
-    await fetchWorkerJson("/routes/estimate?origin=37.5,127.0&destination=37.6,127.1", {
-      ...env,
-      PROXY_DIAGNOSTIC_TOKEN_SHA256: diagnosticTokenDigest,
-      KAKAO_REST_API_KEY: "",
-      GOOGLE_MAPS_API_KEY: "",
-    }, { "x-weatheron-proxy-token": "wrong-token" });
-  } finally {
-    console.log = originalLog;
-  }
-
-  assert.equal(logs.length, 2, "diagnostic logging should cover only proxy API requests");
-  const matched = JSON.parse(logs[0]);
-  const mismatched = JSON.parse(logs[1]);
-  assert.deepEqual(
-    { event: matched.event, path: matched.path, tokenPresent: matched.tokenPresent, tokenMatched: matched.tokenMatched },
-    { event: "proxy_auth_diagnostic", path: "/places/search", tokenPresent: true, tokenMatched: true },
-  );
-  assert.deepEqual(
-    { event: mismatched.event, path: mismatched.path, tokenPresent: mismatched.tokenPresent, tokenMatched: mismatched.tokenMatched },
-    { event: "proxy_auth_diagnostic", path: "/routes/estimate", tokenPresent: true, tokenMatched: false },
-  );
-  assert.ok(logs.every((line) => !line.includes(diagnosticToken) && !line.includes("wrong-token")), "token values must not be logged");
 }
 
 async function checkProviderFallbackIsNotCached() {

@@ -43,6 +43,7 @@
     "prepare:proxy-access-token": "node scripts/prepare-proxy-access-token.mjs",
     "sync:eas-proxy-token": "node scripts/sync-eas-proxy-token.mjs",
     "sync:cloudflare-worker-secrets": "node scripts/sync-cloudflare-worker-secrets.mjs",
+    "activate:cloudflare-proxy-auth": "node scripts/sync-cloudflare-worker-secrets.mjs --proxy-only",
     "deploy:cloudflare-worker": "npx --yes --cache ./.npm-cache wrangler deploy",
     "check:mobile-proxy-reachable": "node scripts/check-mobile-proxy-reachability.mjs",
     "check:android-release": "node scripts/check-android-release-config.mjs",
