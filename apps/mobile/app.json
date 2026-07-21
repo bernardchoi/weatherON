@@ -41,7 +41,7 @@
         "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "8"
+      "buildNumber": "9"
     },
     "android": {
       "package": "com.weatheron.mobile",
