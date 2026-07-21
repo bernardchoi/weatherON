@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 96,
+    paddingBottom: spacing.xl,
     minHeight: "100%",
   },
   atmosphere: {

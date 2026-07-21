@@ -3,6 +3,7 @@ import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -36,8 +37,8 @@ export function DestinationAddScreen({
   const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
-  const searchGlassSurface = iosGlassSurface(theme, "input");
-  const searchControlGlass = iosGlassSurface(theme, "control");
+  const searchGlassSurface = iosGlassSurface(theme, "input", { nativeBackdrop: true });
+  const searchControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
@@ -94,7 +95,7 @@ export function DestinationAddScreen({
             searchGlassSurface,
           ]}
         >
-          {searchGlassSurface ? <View pointerEvents="none" style={[styles.searchGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+          {searchGlassSurface ? <IosGlassBackdrop theme={theme} role="input" style={styles.searchGlassBackdrop} /> : null}
           <SearchGlyph color={theme.subtle} />
           <TextInput
             accessibilityLabel="목적지 검색어"
@@ -113,6 +114,7 @@ export function DestinationAddScreen({
               onPress={() => onSearchPlaces("")}
               style={[styles.searchClearButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }, searchControlGlass]}
             >
+              <IosGlassBackdrop theme={theme} role="control" style={styles.searchClearBackdrop} />
               <ClearGlyph color={theme.text} />
             </FeedbackPressable>
           ) : null}
@@ -498,13 +500,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  searchGlassHighlight: {
-    position: "absolute",
-    top: 2,
-    left: 18,
-    right: 18,
-    height: 1,
-    borderRadius: 1,
+  searchGlassBackdrop: {
+    borderRadius: radius.md,
   },
   searchGlyph: {
     width: 18,
@@ -543,6 +540,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  searchClearBackdrop: {
+    borderRadius: radius.pill,
   },
   clearGlyph: {
     width: 12,

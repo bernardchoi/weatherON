@@ -3,56 +3,34 @@ import { Image, Pressable, StyleSheet, Text, type ColorValue, type StyleProp, ty
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius, semanticColor, spacing } from "../theme/tokens";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
   onNavigate: (route: P0RouteId) => void;
 };
 
-// UI Design Spec v1.0 §10: floating tab bar — bottom 18, left/right 16, height 64,
-// radius 24, active 5px dot + Gold icon/text, inactive Mist, icon 21px, press tint 0.12.
+// UI Design Spec v1.0 §10: 앱 표면 위에 직접 떠 있는 탭. 활성 탭만 작은 유리 표면을 사용한다.
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeColor = androidMaterialColor(theme, "primary");
-  const dockGlassSurface = iosGlassSurface(theme, "dock");
   return (
-    <View
-      style={[
-        styles.wrap,
-        dockGlassSurface ? styles.iosDock : null,
-        {
-          backgroundColor: theme.name === "light" ? theme.card : theme.cardStrong,
-          borderColor: theme.navBorder,
-          shadowColor: theme.shadow,
-        },
-        androidMaterialSurface(theme, "navigation"),
-        dockGlassSurface,
-      ]}
-    >
-      {dockGlassSurface ? <View pointerEvents="none" style={[styles.dockHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+    <View style={styles.wrap}>
       {bottomNavRoutes.map((route) => {
         const active = route.id === activeTabRoute;
-        const activeGlassSurface = active ? iosGlassSurface(theme, "tabItem") : null;
+        const activeGlassSurface = active ? iosGlassSurface(theme, "tabItem", { nativeBackdrop: true }) : null;
         return (
           <TabButton
             key={route.id}
             routeId={route.id}
             label={route.label}
             active={active}
-            glassEnabled={Boolean(dockGlassSurface)}
-            activeSurfaceStyle={
-              activeGlassSurface
-                ? [
-                    styles.activeItemGlass,
-                    { borderColor: semanticColor(theme, "glassBorderStrong") },
-                    activeGlassSurface,
-                  ]
-                : null
-            }
+            glassEnabled={Boolean(activeGlassSurface)}
+            activeSurfaceStyle={activeGlassSurface ? [styles.activeItemGlass, activeGlassSurface] : null}
+            activeBackdrop={activeGlassSurface ? <IosGlassBackdrop theme={theme} role="tabItem" style={styles.activeItemBackdrop} /> : null}
             onPress={() => onNavigate(route.id)}
           >
             <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
@@ -79,6 +57,7 @@ function TabButton({
   active,
   glassEnabled,
   activeSurfaceStyle,
+  activeBackdrop,
   onPress,
   children,
 }: {
@@ -87,6 +66,7 @@ function TabButton({
   active: boolean;
   glassEnabled: boolean;
   activeSurfaceStyle?: StyleProp<ViewStyle>;
+  activeBackdrop?: React.ReactNode;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -98,12 +78,7 @@ function TabButton({
       onPress={onPress}
       style={[styles.item, glassEnabled ? styles.itemGlass : null]}
     >
-      {activeSurfaceStyle ? (
-        <>
-          <View pointerEvents="none" style={activeSurfaceStyle} />
-          <View pointerEvents="none" style={styles.activeItemHighlight} />
-        </>
-      ) : null}
+      {activeSurfaceStyle ? <View pointerEvents="none" style={activeSurfaceStyle}>{activeBackdrop}</View> : null}
       {children}
     </Pressable>
   );
@@ -132,23 +107,12 @@ function getTabIconSource(route: P0RouteId) {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginHorizontal: 16,
+    marginHorizontal: 20,
     marginBottom: 18,
     marginTop: 6,
-    height: 64,
+    height: 58,
     flexDirection: "row",
     alignItems: "stretch",
-    paddingHorizontal: 4,
-    borderRadius: radius.tab,
-    borderWidth: 1,
-    shadowOpacity: 0.16,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
-  },
-  iosDock: {
-    height: 70,
-    paddingHorizontal: 5,
   },
   item: {
     flex: 1,
@@ -156,12 +120,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 3,
     borderRadius: 14,
-    marginVertical: 4,
+    marginVertical: 2,
     overflow: "hidden",
   },
   itemGlass: {
     borderRadius: 18,
-    marginVertical: 5,
+    marginVertical: 1,
   },
   activeItemGlass: {
     position: "absolute",
@@ -171,23 +135,10 @@ const styles = StyleSheet.create({
     bottom: 1,
     borderRadius: 18,
     borderWidth: 1,
+    overflow: "hidden",
   },
-  dockHighlight: {
-    position: "absolute",
-    left: 18,
-    right: 18,
-    top: 1,
-    height: 1,
-    borderRadius: 1,
-  },
-  activeItemHighlight: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    top: 5,
-    height: 1,
-    borderRadius: 1,
-    backgroundColor: "rgba(255,255,255,0.42)",
+  activeItemBackdrop: {
+    borderRadius: 18,
   },
   activeDot: {
     width: 5,

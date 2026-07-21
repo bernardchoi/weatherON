@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     minHeight: "100%",
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 112,
+    paddingBottom: spacing.xl,
   },
   atmosphere: {
     position: "absolute",

@@ -4,6 +4,7 @@ import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -346,7 +347,7 @@ function SummaryChip({
   accessibilityLabel: string;
   onPress: () => void;
 }) {
-  const glassSurface = iosGlassSurface(theme, "chip");
+  const glassSurface = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   return (
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
@@ -354,7 +355,7 @@ function SummaryChip({
       onPress={onPress}
       style={[styles.summaryChip, glassSurface ? [styles.summaryChipGlass, glassSurface] : null]}
     >
-      {glassSurface ? <View pointerEvents="none" style={[styles.summaryChipHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+      {glassSurface ? <IosGlassBackdrop theme={theme} role="chip" style={styles.summaryChipBackdrop} /> : null}
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
@@ -1040,13 +1041,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  summaryChipHighlight: {
-    position: "absolute",
-    top: 3,
-    left: 9,
-    right: 9,
-    height: 1,
-    borderRadius: 1,
+  summaryChipBackdrop: {
+    borderRadius: radius.sm,
   },
   summaryIconFrame: {
     width: 24,

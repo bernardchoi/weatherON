@@ -5,6 +5,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import type { TemperatureUnit } from "../state/useWeatherOnAppState";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -36,8 +37,10 @@ export function WeatherSummary({
 }: WeatherSummaryProps) {
   const theme = useAppTheme();
   const comparison = destinationReady ? getWeatherComparison(originWeather, destinationWeather, temperatureUnit) : getMissingDestinationComparison();
+  const weatherGlass = iosGlassSurface(theme, "weather", { nativeBackdrop: true });
   return (
-    <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }, androidMaterialSurface(theme, "weather"), iosGlassSurface(theme, "weather")]}>
+    <View style={[styles.weatherCard, { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow }, androidMaterialSurface(theme, "weather"), weatherGlass]}>
+      {weatherGlass ? <IosGlassBackdrop theme={theme} role="weather" style={styles.weatherBackdrop} /> : null}
       <View style={styles.header}>
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>{destinationReady ? "출발지와 가는 곳 날씨" : "지금 있는 곳 날씨"}</Text>
@@ -203,6 +206,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 12 },
+  },
+  weatherBackdrop: {
+    borderRadius: radius.xl,
   },
   header: {
     flexDirection: "row",

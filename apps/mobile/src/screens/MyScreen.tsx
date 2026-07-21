@@ -129,7 +129,6 @@ export function MyScreen({
 
         <Text style={[styles.appVersion, { color: theme.subtle }]}>WeatherON v1.0.0</Text>
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
@@ -265,7 +264,7 @@ const styles = StyleSheet.create({
     minHeight: "100%",
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 116,
+    paddingBottom: spacing.xl,
   },
   atmosphere: {
     position: "absolute",
@@ -435,8 +434,5 @@ const styles = StyleSheet.create({
     height: 1.6,
     borderRadius: 2,
     transform: [{ rotate: "-45deg" }],
-  },
-  bottomSpacer: {
-    height: 18,
   },
 });

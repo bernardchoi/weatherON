@@ -3,8 +3,9 @@ import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius, semanticColor } from "../theme/tokens";
+import { radius } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 
 type BackButtonProps = {
   onPress: () => void;
@@ -15,7 +16,7 @@ type BackButtonProps = {
 // 제각각이라 화면을 넘나들 때마다 버튼 모양이 바뀌었다. 이 컴포넌트 하나로 통일한다.
 export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButtonProps) {
   const theme = useAppTheme();
-  const glassSurface = iosGlassSurface(theme, "control");
+  const glassSurface = iosGlassSurface(theme, "control", { nativeBackdrop: true });
   return (
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
@@ -24,7 +25,7 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
       onPress={onPress}
       style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface]}
     >
-      {glassSurface ? <View pointerEvents="none" style={[styles.glassShine, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+      {glassSurface ? <IosGlassBackdrop theme={theme} role="control" style={styles.glassBackdrop} /> : null}
       <ChevronLeft color={theme.text} />
     </FeedbackPressable>
   );
@@ -49,13 +50,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  glassShine: {
-    position: "absolute",
-    left: 8,
-    right: 8,
-    top: 6,
-    height: 1,
-    borderRadius: 1,
+  glassBackdrop: {
+    borderRadius: radius.sm,
   },
   chevronLeft: {
     width: 16,

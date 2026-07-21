@@ -3,7 +3,8 @@ import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, useWindowDi
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { radius, semanticColor, spacing } from "../theme/tokens";
+import { radius, spacing } from "../theme/tokens";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 
 // 이 화면들의 안드로이드 실기기는 제스처 내비게이션 바가 하단 화면을 60~80px 정도 가린다.
 // safe-area-context 없이도 시트 콘텐츠(특히 맨 아래 확인 버튼)가 항상 손닿는 범위에 오도록
@@ -47,8 +48,8 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
   if (!mounted) return null;
 
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [360, 0] });
-  const sheetGlassSurface = iosGlassSurface(theme, "sheet");
-  const sheetHeaderGlassSurface = iosGlassSurface(theme, "sheetHeader");
+  const sheetGlassSurface = iosGlassSurface(theme, "sheet", { nativeBackdrop: true });
+  const sheetHeaderGlassSurface = iosGlassSurface(theme, "sheetHeader", { nativeBackdrop: true });
   const grabberGlassSurface = iosGlassSurface(theme, "grabber");
   const chromeTranslateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] });
   const chromeScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
@@ -77,16 +78,16 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
             { transform: [{ translateY }] },
           ]}
         >
+          {sheetGlassSurface ? <IosGlassBackdrop theme={theme} role="sheet" style={styles.sheetBackdrop} /> : null}
           {sheetHeaderGlassSurface ? (
             <Animated.View pointerEvents="none" style={[styles.sheetChromeMotion, { opacity: progress, transform: [{ translateY: chromeTranslateY }, { scale: chromeScale }] }]}>
               <View
                 style={[
                   styles.sheetChrome,
-                  { borderColor: semanticColor(theme, "glassBorder") },
                   sheetHeaderGlassSurface,
                 ]}
               >
-                <View style={[styles.sheetChromeHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} />
+                <IosGlassBackdrop theme={theme} role="sheetHeader" style={styles.sheetChromeBackdrop} />
                 <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }, grabberGlassSurface]} />
               </View>
             </Animated.View>
@@ -125,6 +126,10 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 12,
   },
+  sheetBackdrop: {
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
+  },
   sheetChrome: {
     alignSelf: "center",
     minWidth: 96,
@@ -140,13 +145,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: spacing.xs,
   },
-  sheetChromeHighlight: {
-    position: "absolute",
-    top: 2,
-    left: 16,
-    right: 16,
-    height: 1,
-    borderRadius: 1,
+  sheetChromeBackdrop: {
+    borderRadius: radius.pill,
   },
   grabber: {
     alignSelf: "center",

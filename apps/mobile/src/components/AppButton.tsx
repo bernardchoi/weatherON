@@ -3,7 +3,9 @@ import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable,
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
-import { radius, spacing } from "../theme/tokens";
+import { iosGlassSurface, type IosGlassRole } from "../theme/iosGlass";
+import { colorWithAlpha, radius, spacing } from "../theme/tokens";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 
 type AppButtonProps = {
   label: string;
@@ -45,6 +47,12 @@ export function AppButton({
       ? androidMaterialColor(theme, "onSecondaryContainer")
       : foregroundColor;
   const icon = getButtonIcon(label);
+  const glassRole: IosGlassRole = resolvedVariant === "filled" ? "buttonPrimary" : "buttonSecondary";
+  const usesIosGlass = Platform.OS === "ios" && resolvedVariant !== "text" && !theme.reducedTransparency;
+  const glassSurface = usesIosGlass ? iosGlassSurface(theme, glassRole, { nativeBackdrop: true }) : null;
+  const glassOverlayColor = resolvedVariant === "filled"
+    ? colorWithAlpha(filledColor, tone === "warning" ? 0.3 : 0.24)
+    : colorWithAlpha(theme.card, theme.name === "light" ? 0.12 : 0.08);
 
   const animateTo = (toValue: number) => {
     Animated.timing(scale, {
@@ -76,8 +84,17 @@ export function AppButton({
           Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
           resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
+          glassSurface,
         ]}
       >
+        {glassSurface ? (
+          <IosGlassBackdrop
+            theme={theme}
+            role={glassRole}
+            overlayColor={glassOverlayColor}
+            style={size === "sm" ? styles.glassBackdropSm : styles.glassBackdrop}
+          />
+        ) : null}
         {resolvedVariant !== "text" ? (
           <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
         ) : null}
@@ -115,6 +132,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: "hidden",
   },
   buttonAndroid: {
     minHeight: 48,
@@ -136,6 +154,12 @@ const styles = StyleSheet.create({
   buttonSmAndroid: {
     minHeight: 40,
     borderRadius: radius.pill,
+  },
+  glassBackdrop: {
+    borderRadius: radius.md,
+  },
+  glassBackdropSm: {
+    borderRadius: radius.sm,
   },
   label: {
     fontSize: 14,

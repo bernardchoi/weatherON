@@ -2,6 +2,7 @@ import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
 import { BackButton } from "./BackButton";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -28,12 +29,13 @@ type AppScreenProps = {
 
 export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, showWordmark = true, children }: AppScreenProps) {
   const theme = useAppTheme();
-  const barGlass = iosGlassSurface(theme, "bar");
+  const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
   return (
     <View style={styles.shell}>
       <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
         <View style={[styles.hero, barGlass ? styles.heroPlatformSurface : null, barGlass]}>
+          {barGlass ? <IosGlassBackdrop theme={theme} role="bar" style={styles.heroGlassBackdrop} /> : null}
           {onBack ? (
             <View style={styles.backButtonSlot}>
               <BackButton onPress={onBack} />
@@ -59,7 +61,12 @@ export function AppScreen({ title, subtitle, badge, heroAction, onBack, footer, 
         </View>
         {children}
       </ScrollView>
-      {footer ? <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }, barGlass]}>{footer}</View> : null}
+      {footer ? (
+        <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }, barGlass]}>
+          {barGlass ? <IosGlassBackdrop theme={theme} role="bar" /> : null}
+          {footer}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -76,6 +83,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
+    overflow: "hidden",
   },
   content: {
     gap: spacing.md,
@@ -106,6 +114,10 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     borderColor: "transparent",
+    overflow: "hidden",
+  },
+  heroGlassBackdrop: {
+    borderRadius: 22,
   },
   backButtonSlot: {
     alignSelf: "flex-start",

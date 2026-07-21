@@ -32,6 +32,14 @@
         "buildType": "apk"
       }
     },
+    "android-test-aab": {
+      "env": {
+        "WEATHERON_BUILD_VARIANT": "android-test-aab"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {

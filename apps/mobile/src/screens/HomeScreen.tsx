@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import { WeatherBackground } from "../components/WeatherBackground";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
@@ -247,8 +248,8 @@ function DestinationSelectorCard({
   onAdd: () => void;
 }) {
   const hasDestinations = savedDestinations.length > 0;
-  const addControlGlass = iosGlassSurface(theme, "control");
-  const destinationChipGlass = iosGlassSurface(theme, "chip");
+  const addControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
+  const destinationChipGlass = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   const headerCaption = hasDestinations
     ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
     : "자주 가는 곳을 골라보세요";
@@ -273,7 +274,7 @@ function DestinationSelectorCard({
             addControlGlass,
           ]}
         >
-          {addControlGlass ? <View pointerEvents="none" style={[styles.destinationGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+          {addControlGlass ? <IosGlassBackdrop theme={theme} role="control" style={styles.destinationAddBackdrop} /> : null}
           <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
         </FeedbackPressable>
       </View>
@@ -309,7 +310,7 @@ function DestinationSelectorCard({
                   destinationChipGlass,
                 ]}
               >
-                {destinationChipGlass ? <View pointerEvents="none" style={[styles.destinationGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+                {destinationChipGlass ? <IosGlassBackdrop theme={theme} role="chip" style={styles.destinationChipBackdrop} /> : null}
                 <View style={styles.destinationChipTitleRow}>
                   {selected ? <View style={[styles.destinationChipDot, { backgroundColor: theme.gold }]} /> : null}
                   <Text style={[styles.destinationChipTitle, { color: selected ? theme.gold : theme.text }]} numberOfLines={1}>
@@ -783,7 +784,7 @@ function NotificationBellButton({
   theme: AppTheme;
 }) {
   const label = smartCareEnabled ? `알림 열기, 읽지 않음 ${unreadCount}개` : "알림 열기, 스마트 케어 꺼짐";
-  const glassSurface = iosGlassSurface(theme, "control");
+  const glassSurface = iosGlassSurface(theme, "control", { nativeBackdrop: true });
   return (
     <FeedbackPressable
       accessibilityLabel={label}
@@ -791,7 +792,7 @@ function NotificationBellButton({
       onPress={onPress}
       style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, glassSurface]}
     >
-      {glassSurface ? <View pointerEvents="none" style={[styles.bellGlassShine, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
+      {glassSurface ? <IosGlassBackdrop theme={theme} role="control" style={styles.bellGlassBackdrop} /> : null}
       <BellGlyph color={theme.text} />
       {unreadCount > 0 ? (
         <View style={[styles.bellBadge, { backgroundColor: theme.sky }]}>
@@ -1614,13 +1615,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  destinationGlassHighlight: {
-    position: "absolute",
-    left: 10,
-    right: 10,
-    top: 3,
-    height: 1,
-    borderRadius: 1,
+  destinationAddBackdrop: {
+    borderRadius: radius.md,
+  },
+  destinationChipBackdrop: {
+    borderRadius: radius.md,
   },
   destinationChipTitleRow: {
     flexDirection: "row",
@@ -1804,13 +1803,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  bellGlassShine: {
-    position: "absolute",
-    left: 10,
-    right: 10,
-    top: 7,
-    height: 1,
-    borderRadius: 1,
+  bellGlassBackdrop: {
+    borderRadius: radius.pill,
   },
   bellBadge: {
     position: "absolute",
@@ -1848,7 +1842,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: 30,
-    paddingBottom: 118,
+    paddingBottom: spacing.xl,
     borderLeftWidth: 1,
     shadowOffset: { width: -10, height: 0 },
     shadowOpacity: 0.18,

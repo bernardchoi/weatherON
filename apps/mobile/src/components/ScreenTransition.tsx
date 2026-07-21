@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "react-native";
 
-const EDGE_ACTIVATION_WIDTH = 24;
+const EDGE_ACTIVATION_WIDTH = 20;
 const SWIPE_COMPLETE_DISTANCE_RATIO = 0.3;
 const SWIPE_COMPLETE_VELOCITY = 0.5;
 
@@ -20,6 +20,7 @@ export function ScreenTransition({
 }) {
   const progress = useRef(new Animated.Value(0)).current;
   const swipeX = useRef(new Animated.Value(0)).current;
+  const edgeSwipeActiveRef = useRef(false);
   const { width } = useWindowDimensions();
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
 
@@ -47,18 +48,24 @@ export function ScreenTransition({
   }, [progress, reduceMotionEnabled, variant]);
 
   // iOS 표준 동작인 좌측 가장자리 스와이프로 뒤로가기를 재현한다.
+  // release 시점에도 시작 지점을 확인해 중앙 스와이프 오작동을 막는다.
   const panResponder = useMemo(
     () => PanResponder.create({
-      onMoveShouldSetPanResponderCapture: (_, gesture) =>
-        Platform.OS === "ios" &&
-        canGoBack &&
-        gesture.x0 <= EDGE_ACTIVATION_WIDTH &&
-        gesture.dx > 8 &&
-        Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+      onMoveShouldSetPanResponder: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
+      onMoveShouldSetPanResponderCapture: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
+      onPanResponderGrant: (_, gesture) => {
+        edgeSwipeActiveRef.current = isEdgeSwipeStart(gesture.x0);
+      },
       onPanResponderMove: (_, gesture) => {
-        if (gesture.dx > 0) swipeX.setValue(gesture.dx);
+        if (edgeSwipeActiveRef.current && gesture.dx > 0) swipeX.setValue(gesture.dx);
       },
       onPanResponderRelease: (_, gesture) => {
+        if (!edgeSwipeActiveRef.current || !isEdgeSwipeStart(gesture.x0)) {
+          edgeSwipeActiveRef.current = false;
+          swipeX.setValue(0);
+          return;
+        }
+        edgeSwipeActiveRef.current = false;
         const shouldComplete =
           gesture.dx > width * SWIPE_COMPLETE_DISTANCE_RATIO || gesture.vx > SWIPE_COMPLETE_VELOCITY;
         if (shouldComplete) {
@@ -75,6 +82,7 @@ export function ScreenTransition({
         }
       },
       onPanResponderTerminate: () => {
+        edgeSwipeActiveRef.current = false;
         if (reduceMotionEnabled) swipeX.setValue(0);
         else Animated.spring(swipeX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
       },
@@ -93,6 +101,20 @@ export function ScreenTransition({
       {children}
     </Animated.View>
   );
+}
+
+function shouldActivateEdgeBackSwipe(canGoBack: boolean, gesture: { x0: number; dx: number; dy: number }) {
+  return (
+    Platform.OS === "ios" &&
+    canGoBack &&
+    isEdgeSwipeStart(gesture.x0) &&
+    gesture.dx > 8 &&
+    Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5
+  );
+}
+
+function isEdgeSwipeStart(x: number) {
+  return x >= 0 && x <= EDGE_ACTIVATION_WIDTH;
 }
 
 const styles = StyleSheet.create({
