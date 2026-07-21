@@ -50,6 +50,8 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
   const sheetGlassSurface = iosGlassSurface(theme, "sheet");
   const sheetHeaderGlassSurface = iosGlassSurface(theme, "sheetHeader");
   const grabberGlassSurface = iosGlassSurface(theme, "grabber");
+  const chromeTranslateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] });
+  const chromeScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
 
   return (
     <Modal animationType="none" transparent visible={mounted} onRequestClose={onClose}>
@@ -76,16 +78,18 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children }: 
           ]}
         >
           {sheetHeaderGlassSurface ? (
-            <View
-              pointerEvents="none"
-              style={[
-                styles.sheetChrome,
-                { borderColor: semanticColor(theme, "glassBorder") },
-                sheetHeaderGlassSurface,
-              ]}
-            >
-              <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }, grabberGlassSurface]} />
-            </View>
+            <Animated.View pointerEvents="none" style={[styles.sheetChromeMotion, { opacity: progress, transform: [{ translateY: chromeTranslateY }, { scale: chromeScale }] }]}>
+              <View
+                style={[
+                  styles.sheetChrome,
+                  { borderColor: semanticColor(theme, "glassBorder") },
+                  sheetHeaderGlassSurface,
+                ]}
+              >
+                <View style={[styles.sheetChromeHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} />
+                <View style={[styles.grabber, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }, grabberGlassSurface]} />
+              </View>
+            </Animated.View>
           ) : (
             <View style={[styles.grabber, styles.grabberDefault, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }]} />
           )}
@@ -130,6 +134,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     borderRadius: radius.pill,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  sheetChromeMotion: {
+    alignSelf: "center",
+    marginBottom: spacing.xs,
+  },
+  sheetChromeHighlight: {
+    position: "absolute",
+    top: 2,
+    left: 16,
+    right: 16,
+    height: 1,
+    borderRadius: 1,
   },
   grabber: {
     alignSelf: "center",

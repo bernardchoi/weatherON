@@ -6,6 +6,7 @@ import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -345,8 +346,15 @@ function SummaryChip({
   accessibilityLabel: string;
   onPress: () => void;
 }) {
+  const glassSurface = iosGlassSurface(theme, "chip");
   return (
-    <FeedbackPressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" onPress={onPress} style={styles.summaryChip}>
+    <FeedbackPressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.summaryChip, glassSurface ? [styles.summaryChipGlass, glassSurface] : null]}
+    >
+      {glassSurface ? <View pointerEvents="none" style={[styles.summaryChipHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
@@ -1027,6 +1035,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     borderRadius: radius.sm,
     borderWidth: 0,
+  },
+  summaryChipGlass: {
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  summaryChipHighlight: {
+    position: "absolute",
+    top: 3,
+    left: 9,
+    right: 9,
+    height: 1,
+    borderRadius: 1,
   },
   summaryIconFrame: {
     width: 24,

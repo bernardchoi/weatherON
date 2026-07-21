@@ -15,7 +15,7 @@ type BackButtonProps = {
 // 제각각이라 화면을 넘나들 때마다 버튼 모양이 바뀌었다. 이 컴포넌트 하나로 통일한다.
 export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButtonProps) {
   const theme = useAppTheme();
-  const glassSurface = iosGlassSurface(theme, "button");
+  const glassSurface = iosGlassSurface(theme, "control");
   return (
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}

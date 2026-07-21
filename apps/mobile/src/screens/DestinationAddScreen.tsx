@@ -5,6 +5,7 @@ import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 import { getCoordinateDistanceMeters, sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { formatDistance } from "../utils/units";
@@ -35,6 +36,8 @@ export function DestinationAddScreen({
   const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
+  const searchGlassSurface = iosGlassSurface(theme, "input");
+  const searchControlGlass = iosGlassSurface(theme, "control");
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
@@ -84,7 +87,14 @@ export function DestinationAddScreen({
           </View>
         </View>
 
-        <View style={[styles.searchField, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.searchField,
+            { backgroundColor: theme.cardStrong, borderColor: theme.border },
+            searchGlassSurface,
+          ]}
+        >
+          {searchGlassSurface ? <View pointerEvents="none" style={[styles.searchGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
           <SearchGlyph color={theme.subtle} />
           <TextInput
             accessibilityLabel="목적지 검색어"
@@ -96,6 +106,16 @@ export function DestinationAddScreen({
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
           />
+          {searchControlGlass && placeSearchQuery.length > 0 ? (
+            <FeedbackPressable
+              accessibilityLabel="목적지 검색어 지우기"
+              accessibilityRole="button"
+              onPress={() => onSearchPlaces("")}
+              style={[styles.searchClearButton, { backgroundColor: theme.cardMuted, borderColor: theme.border }, searchControlGlass]}
+            >
+              <ClearGlyph color={theme.text} />
+            </FeedbackPressable>
+          ) : null}
         </View>
 
         {searchSuggestions.length > 0 ? (
@@ -231,6 +251,15 @@ function SearchRecoveryButton({ label, accessibilityLabel, onPress }: { label: s
     >
       <Text style={[styles.retryButtonText, { color: theme.text }]}>{label}</Text>
     </FeedbackPressable>
+  );
+}
+
+function ClearGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.clearGlyph} accessibilityElementsHidden>
+      <View style={[styles.clearGlyphLine, { backgroundColor: color, transform: [{ rotate: "45deg" }] }]} />
+      <View style={[styles.clearGlyphLine, { backgroundColor: color, transform: [{ rotate: "-45deg" }] }]} />
+    </View>
   );
 }
 
@@ -467,6 +496,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  searchGlassHighlight: {
+    position: "absolute",
+    top: 2,
+    left: 18,
+    right: 18,
+    height: 1,
+    borderRadius: 1,
   },
   searchGlyph: {
     width: 18,
@@ -497,6 +535,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
+  },
+  searchClearButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  clearGlyph: {
+    width: 12,
+    height: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clearGlyphLine: {
+    position: "absolute",
+    width: 12,
+    height: 1.6,
+    borderRadius: 2,
   },
   suggestionPanel: {
     overflow: "hidden",

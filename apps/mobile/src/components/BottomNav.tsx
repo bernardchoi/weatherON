@@ -18,19 +18,22 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeColor = androidMaterialColor(theme, "primary");
+  const dockGlassSurface = iosGlassSurface(theme, "dock");
   return (
     <View
       style={[
         styles.wrap,
+        dockGlassSurface ? styles.iosDock : null,
         {
           backgroundColor: theme.name === "light" ? theme.card : theme.cardStrong,
           borderColor: theme.navBorder,
           shadowColor: theme.shadow,
         },
         androidMaterialSurface(theme, "navigation"),
-        iosGlassSurface(theme, "bar"),
+        dockGlassSurface,
       ]}
     >
+      {dockGlassSurface ? <View pointerEvents="none" style={[styles.dockHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
       {bottomNavRoutes.map((route) => {
         const active = route.id === activeTabRoute;
         const activeGlassSurface = active ? iosGlassSurface(theme, "tabItem") : null;
@@ -40,6 +43,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             routeId={route.id}
             label={route.label}
             active={active}
+            glassEnabled={Boolean(dockGlassSurface)}
             activeSurfaceStyle={
               activeGlassSurface
                 ? [
@@ -73,6 +77,7 @@ function TabButton({
   routeId,
   label,
   active,
+  glassEnabled,
   activeSurfaceStyle,
   onPress,
   children,
@@ -80,6 +85,7 @@ function TabButton({
   routeId: P0RouteId;
   label: string;
   active: boolean;
+  glassEnabled: boolean;
   activeSurfaceStyle?: StyleProp<ViewStyle>;
   onPress: () => void;
   children: React.ReactNode;
@@ -90,9 +96,14 @@ function TabButton({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={styles.item}
+      style={[styles.item, glassEnabled ? styles.itemGlass : null]}
     >
-      {activeSurfaceStyle ? <View pointerEvents="none" style={activeSurfaceStyle} /> : null}
+      {activeSurfaceStyle ? (
+        <>
+          <View pointerEvents="none" style={activeSurfaceStyle} />
+          <View pointerEvents="none" style={styles.activeItemHighlight} />
+        </>
+      ) : null}
       {children}
     </Pressable>
   );
@@ -135,6 +146,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 6,
   },
+  iosDock: {
+    height: 70,
+    paddingHorizontal: 5,
+  },
   item: {
     flex: 1,
     alignItems: "center",
@@ -144,14 +159,35 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     overflow: "hidden",
   },
+  itemGlass: {
+    borderRadius: 18,
+    marginVertical: 5,
+  },
   activeItemGlass: {
     position: "absolute",
-    left: 4,
-    right: 4,
-    top: 2,
-    bottom: 2,
+    left: 3,
+    right: 3,
+    top: 1,
+    bottom: 1,
     borderRadius: 18,
     borderWidth: 1,
+  },
+  dockHighlight: {
+    position: "absolute",
+    left: 18,
+    right: 18,
+    top: 1,
+    height: 1,
+    borderRadius: 1,
+  },
+  activeItemHighlight: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    top: 5,
+    height: 1,
+    borderRadius: 1,
+    backgroundColor: "rgba(255,255,255,0.42)",
   },
   activeDot: {
     width: 5,

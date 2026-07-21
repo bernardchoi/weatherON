@@ -247,6 +247,8 @@ function DestinationSelectorCard({
   onAdd: () => void;
 }) {
   const hasDestinations = savedDestinations.length > 0;
+  const addControlGlass = iosGlassSurface(theme, "control");
+  const destinationChipGlass = iosGlassSurface(theme, "chip");
   const headerCaption = hasDestinations
     ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
     : "자주 가는 곳을 골라보세요";
@@ -265,8 +267,13 @@ function DestinationSelectorCard({
           accessibilityLabel="새 목적지 추가"
           accessibilityRole="button"
           onPress={onAdd}
-          style={[styles.destinationSelectorAddButton, { backgroundColor: "transparent", borderColor: theme.border }]}
+          style={[
+            styles.destinationSelectorAddButton,
+            { backgroundColor: addControlGlass ? theme.cardStrong : "transparent", borderColor: theme.border },
+            addControlGlass,
+          ]}
         >
+          {addControlGlass ? <View pointerEvents="none" style={[styles.destinationGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
           <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>새로 추가</Text>
         </FeedbackPressable>
       </View>
@@ -299,8 +306,10 @@ function DestinationSelectorCard({
                     backgroundColor: selected ? `${theme.gold}1F` : theme.cardStrong,
                     borderColor: selected ? theme.gold : theme.border,
                   },
+                  destinationChipGlass,
                 ]}
               >
+                {destinationChipGlass ? <View pointerEvents="none" style={[styles.destinationGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
                 <View style={styles.destinationChipTitleRow}>
                   {selected ? <View style={[styles.destinationChipDot, { backgroundColor: theme.gold }]} /> : null}
                   <Text style={[styles.destinationChipTitle, { color: selected ? theme.gold : theme.text }]} numberOfLines={1}>
@@ -775,7 +784,7 @@ function NotificationBellButton({
   theme: AppTheme;
 }) {
   const label = smartCareEnabled ? `알림 열기, 읽지 않음 ${unreadCount}개` : "알림 열기, 스마트 케어 꺼짐";
-  const glassSurface = iosGlassSurface(theme, "button");
+  const glassSurface = iosGlassSurface(theme, "control");
   return (
     <FeedbackPressable
       accessibilityLabel={label}
@@ -1585,6 +1594,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: "hidden",
   },
   destinationSelectorAddText: {
     fontSize: 12,
@@ -1603,6 +1613,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  destinationGlassHighlight: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    top: 3,
+    height: 1,
+    borderRadius: 1,
   },
   destinationChipTitleRow: {
     flexDirection: "row",
