@@ -37,24 +37,24 @@ export function OutfitScreen({
       <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.criteriaHeader}>
           <View>
-            <Text style={[styles.criteriaLabel, { color: theme.gold }]}>나만의 코디 기준</Text>
+            <Text style={[styles.criteriaLabel, { color: theme.subtle }]}>나만의 코디 기준</Text>
             <Text style={[styles.criteriaTitle, { color: theme.text }]}>오늘 날씨에 맞춰 골랐어요</Text>
           </View>
-          <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="warning" />
+          <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="secondary" variant="outlined" />
         </View>
         <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
             <Image source={uiIconAssets.shirt} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, { color: theme.clear }]}>{ownedItemCount}개 반영</Text>
+            <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{ownedItemCount}개 반영</Text>
           </View>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
-            <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, { color: theme.gold }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
+            <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
           </View>
           <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
-            <Image source={uiIconAssets.check} style={[styles.criteriaStatIcon, { tintColor: outfitSaved ? theme.clear : theme.sky }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, { color: outfitSaved ? theme.clear : theme.sky }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
+            <Image source={uiIconAssets.check} style={[styles.criteriaStatIcon, { tintColor: outfitSaved ? theme.clear : theme.subtle }]} resizeMode="contain" />
+            <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
           </View>
         </View>
       </View>
@@ -63,8 +63,8 @@ export function OutfitScreen({
         <OutfitGrid outfit={state.outfit} maxItems={4} compact />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
-          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="sky" />
-          <StatusPill label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"} tone={outfitSaved ? "clear" : "sky"} />
+          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="clear" />
+          <StatusPill label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"} tone="clear" />
         </View>
         {state.outfit.reasons.slice(0, 1).map((reason) => (
           <View key={reason} style={styles.reasonRow}>
@@ -75,7 +75,7 @@ export function OutfitScreen({
         <View style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}>
           {state.outfit.timeAdvice.slice(0, 2).map((item) => (
             <View key={item.time} style={styles.advicePreviewRow}>
-              <Text style={[styles.advicePreviewTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+              <Text style={[styles.advicePreviewTime, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
               <Text style={[styles.advicePreviewText, { color: theme.text }]} numberOfLines={1}>{item.text}</Text>
             </View>
           ))}

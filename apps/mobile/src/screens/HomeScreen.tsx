@@ -274,7 +274,7 @@ function DestinationSelectorCard({
           ]}
         >
           {addControlGlass ? <View pointerEvents="none" style={[styles.destinationGlassHighlight, { backgroundColor: semanticColor(theme, "glassHighlight") }]} /> : null}
-          <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>새로 추가</Text>
+          <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
         </FeedbackPressable>
       </View>
 
@@ -683,7 +683,7 @@ function HomeOutfitPreviewCard({
 }) {
   const imageSource = getHomeOutfitPreviewImage(outfit);
   const compactCopy = getHomeOutfitCopy(outfit.decisionText, packTitle);
-  const title = getHomeOutfitTitle(outfit.decisionText || compactCopy.title);
+  const title = getHomeOutfitTitle(compactCopy.title);
   return (
     <FeedbackPressable
       accessibilityLabel={`오늘 입기 좋은 코디 ${outfit.decisionText}`}
@@ -693,7 +693,7 @@ function HomeOutfitPreviewCard({
     >
       <View style={styles.homeOutfitCopy}>
         <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 입기 좋은 코디</Text>
-        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={2}>
+        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={1}>
           {title}
         </Text>
         <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
@@ -721,8 +721,7 @@ function getHomeOutfitCopy(decisionText: string, fallback: string) {
 }
 
 function getHomeOutfitTitle(copy: string) {
-  const sentenceEnd = copy.indexOf(". ");
-  return sentenceEnd >= 0 ? `${copy.slice(0, sentenceEnd + 1)}\n${copy.slice(sentenceEnd + 2)}` : copy;
+  return copy.replace(/\s+/gu, " ").trim();
 }
 
 function SpecialWeatherAlertCard({

@@ -65,17 +65,17 @@ export function DestinationListScreen({
         <View style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.todayTop}>
             <View>
-              <Text style={[styles.todayLabel, { color: theme.clear }]}>오늘 준비</Text>
+              <Text style={[styles.todayLabel, { color: theme.subtle }]}>오늘 준비</Text>
               <Text style={[styles.todayTitle, { color: theme.text }]}>{hasDestinations ? "알아서 챙기는 중" : "목적지 추가 대기"}</Text>
             </View>
             <View style={[styles.alertPill, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.alertPillText, { color: theme.gold }]}>{alertLabel}</Text>
+              <Text style={[styles.alertPillText, { color: theme.clear }]}>{alertLabel}</Text>
             </View>
           </View>
           <View style={[styles.prepMetricStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <PrepMetric label="날씨 비교" value={hasDestinations ? `${destinationCards.length}곳` : "대기"} tone="clear" theme={theme} />
-            <PrepMetric label="출발" value={hasDestinations ? recommendedDepartureTime : "필요"} tone="gold" theme={theme} />
-            <PrepMetric label="비 완화" value={hasDestinations ? "확인" : "대기"} tone="sky" theme={theme} />
+            <PrepMetric label="날씨 비교" value={hasDestinations ? `${destinationCards.length}곳` : "대기"} icon={uiIconAssets.check} theme={theme} />
+            <PrepMetric label="출발" value={hasDestinations ? recommendedDepartureTime : "필요"} icon={uiIconAssets.clock} theme={theme} />
+            <PrepMetric label="비 완화" value={hasDestinations ? "확인" : "대기"} icon={uiIconAssets.rain} theme={theme} />
           </View>
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
             {hasDestinations ? "탭하면 상세 준비 확인" : "추가하면 출발·강수 자동 계산"}
@@ -110,8 +110,8 @@ export function DestinationListScreen({
               onPress={() => onNavigate("P1")}
               style={[styles.addDestinationRail, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
             >
-              <Text style={[styles.addDestinationIcon, { color: theme.gold }]}>+</Text>
-              <Text style={[styles.addDestinationText, { color: theme.text }]}>목적지 추가</Text>
+              <Text style={[styles.addDestinationIcon, { color: theme.clear }]}>+</Text>
+              <Text style={[styles.addDestinationText, { color: theme.clear }]}>목적지 추가</Text>
             </FeedbackPressable>
           </View>
         ) : null}
@@ -140,10 +140,10 @@ export function DestinationListScreen({
 
 function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () => void }) {
   return (
-    <View style={[styles.emptyCard, { backgroundColor: theme.card, borderLeftColor: theme.gold, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={[styles.emptyCard, { backgroundColor: theme.card, borderLeftColor: theme.clear, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.emptyHeader}>
         <View style={[styles.emptyIconBox, { backgroundColor: theme.cardStrong }]}>
-          <PlaceGlyph type="place" color={theme.gold} />
+          <PlaceGlyph type="place" color={theme.clear} />
         </View>
         <View style={styles.emptyCopy}>
           <Text style={[styles.emptyTitle, { color: theme.text }]}>첫 목적지 추가</Text>
@@ -151,10 +151,10 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
         </View>
       </View>
       <View style={styles.emptyBenefitGrid}>
-        <EmptyBenefit icon={uiIconAssets.clock} title="출발 시간" body="도착 시간 기준 계산" color={theme.sky} theme={theme} />
+        <EmptyBenefit icon={uiIconAssets.clock} title="출발 시간" body="도착 시간 기준 계산" color={theme.clear} theme={theme} />
         <EmptyBenefit icon={uiIconAssets.rain} title="비 완화" body="강수 변화 먼저 확인" color={theme.clear} theme={theme} />
       </View>
-      <AppButton label="목적지 추가" accessibilityLabel="첫 목적지 추가하기" onPress={onAdd} tone="warning" />
+      <AppButton label="목적지 추가" accessibilityLabel="첫 목적지 추가하기" onPress={onAdd} />
     </View>
   );
 }
@@ -196,7 +196,7 @@ function DestinationCard({
   selected: boolean;
   onOpen: () => void;
 }) {
-  const accent = theme.gold;
+  const accent = theme.clear;
   const selectedAccent = theme.clear;
   const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
   const warningColor = item.tone === "warm" ? theme.warm : theme.subtle;
@@ -205,7 +205,7 @@ function DestinationCard({
       style={[
         styles.destinationCard,
         {
-          backgroundColor: selected ? theme.card : theme.card,
+          backgroundColor: theme.card,
           borderLeftColor: accent,
           borderColor: selected ? selectedAccent : "transparent",
         },
@@ -238,7 +238,7 @@ function DestinationCard({
 
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
-            <SunGlyph color={theme.gold} />
+            <SunGlyph color={theme.clear} />
             <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
               {item.originTemp} → {item.destinationTemp}
             </Text>
@@ -252,7 +252,7 @@ function DestinationCard({
 
         <View style={styles.destinationBottom}>
           <View style={styles.timeLine}>
-            <Image source={uiIconAssets.clock} style={[styles.timeIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+            <Image source={uiIconAssets.clock} style={[styles.timeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
               {item.departureTime} → {item.arrivalTime}
             </Text>
@@ -281,9 +281,8 @@ function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: A
   return theme.subtle;
 }
 
-function PrepMetric({ label, value, tone, theme }: { label: string; value: string; tone: "clear" | "gold" | "sky"; theme: AppTheme }) {
-  const color = tone === "clear" ? theme.clear : tone === "sky" ? theme.sky : theme.gold;
-  const icon = tone === "clear" ? uiIconAssets.check : tone === "sky" ? uiIconAssets.rain : uiIconAssets.clock;
+function PrepMetric({ label, value, icon, theme }: { label: string; value: string; icon: number; theme: AppTheme }) {
+  const color = theme.clear;
   return (
     <View style={styles.prepMetric}>
       <View style={styles.prepMetricLabelRow}>
@@ -408,7 +407,7 @@ function isAdministrativeNoise(value: string) {
 }
 
 function trimAdministrativeSuffix(value: string) {
-  return value.replace(/(특별자치시|특별자치도|광역시|특별시|시|군|구)$/u, "");
+  return value.replace(/(특별자치시|특별자치도|광역시|특별시|시|군)$/u, "");
 }
 
 function getDestinationActionText(item: DestinationCardModel) {
