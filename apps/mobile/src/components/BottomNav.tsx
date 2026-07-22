@@ -5,6 +5,7 @@ import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
+import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
 type BottomNavProps = {
@@ -16,8 +17,9 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
-  const activeColor = isIos ? theme.clear : androidMaterialColor(theme, "primary");
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
+  const iosColors = getIosTabColors(theme);
+  const activeColor = isIos ? iosColors.activeIcon : androidMaterialColor(theme, "primary");
   const materialNavigationSurface = androidMaterialSurface(theme, "navigation") ?? {
     backgroundColor: theme.cardStrong,
     borderColor: theme.border,
@@ -36,6 +38,8 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} theme={theme} /> : null}
         {bottomNavRoutes.map((route) => {
           const active = route.id === activeTabRoute;
+          const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
+          const labelColor = isIos ? (active ? iosColors.activeLabel : iosColors.inactiveLabel) : active ? activeColor : theme.subtle;
           return (
             <TabButton
               key={route.id}
@@ -44,7 +48,19 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
               onPress={() => onNavigate(route.id)}
               ripple={isIos ? undefined : androidMaterialRipple(theme)}
             >
-              {isIos ? <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} /> : null}
+              {isIos && active ? (
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.iosActivePill,
+                    {
+                      backgroundColor: iosColors.activeBackground,
+                      borderColor: iosColors.activeBorder,
+                    },
+                  ]}
+                />
+              ) : null}
+              {isIos ? <View style={[styles.activeDot, { backgroundColor: active ? iosColors.activeDot : "transparent" }]} /> : null}
               <View
                 style={[
                   styles.iconContainer,
@@ -52,9 +68,9 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                   !isIos && active ? { backgroundColor: androidMaterialColor(theme, "secondaryContainer") } : null,
                 ]}
               >
-                <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
+                <TabIcon route={route.id} color={iconColor} />
               </View>
-              <Text style={[styles.label, !isIos ? styles.androidLabel : null, { color: active ? activeColor : theme.subtle }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9} allowFontScaling={false}>
+              <Text style={[styles.label, !isIos ? styles.androidLabel : null, { color: labelColor }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9} allowFontScaling={false}>
                 {route.label}
               </Text>
             </TabButton>
@@ -98,6 +114,30 @@ function getActiveTabRoute(route: P0RouteId): P0RouteId {
   if (route === "G2" || route === "G3" || route === "G4" || route === "G5" || route === "G6" || route === "P1" || route === "P2" || route === "P3") return "G1";
   if (route === "M2" || route === "M3" || route === "M4") return "M1";
   return route;
+}
+
+function getIosTabColors(theme: AppTheme) {
+  if (theme.name === "dark") {
+    return {
+      activeIcon: theme.text,
+      activeLabel: theme.text,
+      activeDot: theme.clear,
+      inactiveIcon: colorWithAlpha(theme.text, 0.78),
+      inactiveLabel: colorWithAlpha(theme.text, 0.74),
+      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.2 : 0.16),
+      activeBorder: colorWithAlpha(theme.clear, 0.36),
+    };
+  }
+
+  return {
+    activeIcon: theme.clear,
+    activeLabel: theme.text,
+    activeDot: theme.clear,
+    inactiveIcon: colorWithAlpha(theme.text, 0.62),
+    inactiveLabel: colorWithAlpha(theme.text, 0.58),
+    activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.14 : 0.1),
+    activeBorder: colorWithAlpha(theme.clear, 0.24),
+  };
 }
 
 function TabIcon({ route, color }: { route: P0RouteId; color: ColorValue }) {
@@ -150,6 +190,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 2,
     minHeight: 58,
+    position: "relative",
   },
   iconContainer: {
     alignItems: "center",
@@ -165,6 +206,15 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
     marginBottom: 1,
+  },
+  iosActivePill: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    bottom: 5,
+    left: 5,
+    borderWidth: 1,
+    borderRadius: 28,
   },
   label: {
     minWidth: 42,

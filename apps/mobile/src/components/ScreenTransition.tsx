@@ -53,18 +53,22 @@ export function ScreenTransition({
     () => PanResponder.create({
       // ScrollView보다 먼저 시작 지점을 소유해야 iOS 실제 기기에서 가장자리 스와이프가
       // 하위 스크롤에 빼앗기지 않는다. 중앙 영역은 절대 responder를 갖지 않는다.
-      onStartShouldSetPanResponderCapture: (_, gesture) => canGoBack && Platform.OS === "ios" && isEdgeSwipeStart(gesture.x0),
+      // onStart 시점의 gesture.x0은 iOS에서 아직 0으로 초기화된 상태일 수 있다.
+      // 실제 터치 좌표를 사용하지 않으면 화면 전체 탭을 좌측 가장자리 제스처로 오인해
+      // 하위 Pressable의 onPress를 가로채게 된다.
+      onStartShouldSetPanResponderCapture: (event) =>
+        canGoBack && Platform.OS === "ios" && isEdgeSwipeStart(event.nativeEvent.pageX),
       onMoveShouldSetPanResponder: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
       onMoveShouldSetPanResponderCapture: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
       onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (_, gesture) => {
-        edgeSwipeActiveRef.current = isEdgeSwipeStart(gesture.x0);
+      onPanResponderGrant: (event) => {
+        edgeSwipeActiveRef.current = isEdgeSwipeStart(event.nativeEvent.pageX);
       },
       onPanResponderMove: (_, gesture) => {
         if (edgeSwipeActiveRef.current && gesture.dx > 0) swipeX.setValue(gesture.dx);
       },
       onPanResponderRelease: (_, gesture) => {
-        if (!edgeSwipeActiveRef.current || !isEdgeSwipeStart(gesture.x0)) {
+        if (!edgeSwipeActiveRef.current) {
           edgeSwipeActiveRef.current = false;
           swipeX.setValue(0);
           return;
