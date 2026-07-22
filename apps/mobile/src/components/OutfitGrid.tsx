@@ -2,6 +2,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
 import { outfitImageAssets } from "../assets";
+import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 
@@ -10,6 +11,7 @@ type OutfitGridProps = {
   maxItems?: number;
   compact?: boolean;
   dense?: boolean;
+  onItemPress?: (slot: string) => void;
 };
 
 const slotLabel: Record<string, string> = {
@@ -20,7 +22,7 @@ const slotLabel: Record<string, string> = {
   accessory: "소품",
 };
 
-export function OutfitGrid({ outfit, maxItems, compact = false, dense = false }: OutfitGridProps) {
+export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, onItemPress }: OutfitGridProps) {
   const theme = useAppTheme();
   const entries = Object.entries(outfit.items)
     .filter(([, item]) => Boolean(item))
@@ -29,7 +31,14 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false }:
     <View style={styles.outfitGrid}>
       {entries.map(([slot, item]) =>
         item ? (
-          <View key={slot} style={[styles.itemCell, compact ? styles.itemCellCompact : null, dense ? styles.itemCellDense : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <FeedbackPressable
+            key={slot}
+            accessibilityLabel={`${slotLabel[slot] ?? "아이템"} ${item.name}${onItemPress ? " 상세 보기" : ""}`}
+            accessibilityRole={onItemPress ? "button" : undefined}
+            disabled={!onItemPress}
+            onPress={onItemPress ? () => onItemPress(slot) : undefined}
+            style={[styles.itemCell, compact ? styles.itemCellCompact : null, dense ? styles.itemCellDense : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+          >
             <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, dense ? styles.imageWellDense : null, { backgroundColor: theme.cardMuted }]}>
               {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
                 <Image source={outfitImageAssets[item.imageUrl]} style={[styles.itemImage, compact ? styles.itemImageCompact : null, dense ? styles.itemImageDense : null]} resizeMode="contain" />
@@ -37,7 +46,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false }:
             </View>
             <Text style={[styles.itemSlot, { color: theme.clear }]}>{slotLabel[slot] ?? "아이템"}</Text>
             <Text style={[styles.itemName, dense ? styles.itemNameDense : null, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
-          </View>
+          </FeedbackPressable>
         ) : null,
       )}
     </View>

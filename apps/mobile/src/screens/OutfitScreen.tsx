@@ -3,6 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { OutfitGrid } from "../components/OutfitGrid";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
@@ -44,23 +45,38 @@ export function OutfitScreen({
         </View>
         <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
+          <FeedbackPressable
+            accessibilityLabel={`내 옷장 ${ownedItemCount}개 반영, 내 옷장 보기`}
+            accessibilityRole="button"
+            onPress={() => onNavigate("C2")}
+            style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}
+          >
             <Image source={uiIconAssets.shirt} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{ownedItemCount}개 반영</Text>
-          </View>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
+          </FeedbackPressable>
+          <FeedbackPressable
+            accessibilityLabel={`스타일 기준 ${styleProfileSaved ? "수정" : "설정"}`}
+            accessibilityRole="button"
+            onPress={() => onNavigate("O4")}
+            style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}
+          >
             <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
-          </View>
-          <View style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}>
+          </FeedbackPressable>
+          <FeedbackPressable
+            accessibilityLabel={outfitSaved ? "저장한 코디 상세 보기" : "코디 상세에서 저장하기"}
+            accessibilityRole="button"
+            onPress={() => onNavigate("C4")}
+            style={[styles.criteriaStat, { backgroundColor: theme.cardMuted }]}
+          >
             <Image source={uiIconAssets.check} style={[styles.criteriaStatIcon, { tintColor: outfitSaved ? theme.clear : theme.subtle }]} resizeMode="contain" />
             <Text style={[styles.criteriaStatValue, { color: theme.text }]}>{outfitSaved ? "완료" : "계정 필요"}</Text>
-          </View>
+          </FeedbackPressable>
         </View>
       </View>
 
       <Section title="오늘 입기 좋은 조합" caption={state.outfit.decisionText} accent="clear">
-        <OutfitGrid outfit={state.outfit} maxItems={4} dense />
+        <OutfitGrid outfit={state.outfit} maxItems={4} dense onItemPress={() => onNavigate("C4")} />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="clear" />
@@ -72,14 +88,19 @@ export function OutfitScreen({
             <Text style={[styles.reason, { color: theme.muted }]} numberOfLines={1}>{reason}</Text>
           </View>
         ))}
-        <View style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}>
+        <FeedbackPressable
+          accessibilityLabel="시간별 코디 조언 상세 보기"
+          accessibilityRole="button"
+          onPress={() => onNavigate("C4")}
+          style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}
+        >
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
             <View key={item.time} style={styles.advicePreviewRow}>
               <Text style={[styles.advicePreviewTime, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
               <Text style={[styles.advicePreviewText, { color: theme.text }]} numberOfLines={1}>{item.text}</Text>
             </View>
           ))}
-        </View>
+        </FeedbackPressable>
         <View style={styles.actions}>
           <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} />
           <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" />

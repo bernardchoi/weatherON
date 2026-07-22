@@ -62,7 +62,19 @@ export function DestinationListScreen({
           <Text style={[styles.title, { color: theme.text }]}>출발</Text>
         </View>
 
-        <View style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}>
+        <FeedbackPressable
+          accessibilityLabel={hasDestinations ? "오늘 출발 준비 상세 보기" : "첫 목적지 추가"}
+          accessibilityRole="button"
+          onPress={() => {
+            if (hasDestinations) {
+              onSelectDestinationPlace(destinationCards[0].place);
+              onNavigate("G2");
+              return;
+            }
+            onNavigate("P1");
+          }}
+          style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}
+        >
           <View style={styles.todayTop}>
             <View>
               <Text style={[styles.todayLabel, { color: theme.subtle }]}>오늘 준비</Text>
@@ -80,7 +92,7 @@ export function DestinationListScreen({
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
             {hasDestinations ? "탭하면 상세 준비 확인" : "추가하면 출발·강수 자동 계산"}
           </Text>
-        </View>
+        </FeedbackPressable>
 
         <View style={styles.destinationList}>
           {hasDestinations ? (

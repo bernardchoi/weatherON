@@ -81,6 +81,17 @@ export function MyScreen({
           locationSummary={locationState.summary}
           theme={theme}
           tone={readinessTone}
+          onPress={() => {
+            if (locationState.tone === "warm") {
+              onNavigate("M4");
+              return;
+            }
+            if (alertState.tone !== "clear") {
+              onNavigate("M2");
+              return;
+            }
+            onNavigate(savedDestinationCount > 0 ? "M2" : "G1");
+          }}
         />
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text>
@@ -199,19 +210,26 @@ function ReadinessSummary({
   alertSummary,
   destinationSummary,
   locationSummary,
+  onPress,
   theme,
   tone,
 }: {
   alertSummary: string;
   destinationSummary: string;
   locationSummary: string;
+  onPress: () => void;
   theme: AppTheme;
   tone: MenuTone;
 }) {
   const color = getToneColor(theme, tone);
   const status = tone === "clear" ? "정상" : tone === "warm" ? "확인" : "설정";
   return (
-    <View style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+    <FeedbackPressable
+      accessibilityLabel={`${status} 오늘 준비 상세 보기`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+    >
       <View style={styles.readinessCopy}>
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
         <Text style={[styles.readinessTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
@@ -223,7 +241,7 @@ function ReadinessSummary({
         <View style={[styles.readinessDot, { backgroundColor: color }]} />
         <Text style={[styles.readinessPillText, { color }]}>{status}</Text>
       </View>
-    </View>
+    </FeedbackPressable>
   );
 }
 

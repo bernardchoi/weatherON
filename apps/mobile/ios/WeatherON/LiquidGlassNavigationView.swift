@@ -20,7 +20,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
     }
   }
 
-  private var glassHost: UIHostingController<NavigationGlassSurface>?
+  private var glassHost: UIHostingController<AnyView>?
   private var fallbackEffect: UIVisualEffectView?
 
   override init(frame: CGRect) {
@@ -45,7 +45,9 @@ final class LiquidGlassNavigationSurfaceView: UIView {
 
   private func installSurface() {
     if #available(iOS 26.0, *) {
-      let host = UIHostingController(rootView: NavigationGlassSurface(activeIndex: activeIndex.intValue))
+      let host = UIHostingController(
+        rootView: AnyView(NavigationGlassSurface(activeIndex: activeIndex.intValue))
+      )
       host.view.backgroundColor = .clear
       host.view.isUserInteractionEnabled = false
       addSubview(host.view)
@@ -64,7 +66,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
 
   private func updateActiveIndex() {
     if #available(iOS 26.0, *) {
-      glassHost?.rootView = NavigationGlassSurface(activeIndex: activeIndex.intValue)
+      glassHost?.rootView = AnyView(NavigationGlassSurface(activeIndex: activeIndex.intValue))
     }
   }
 }

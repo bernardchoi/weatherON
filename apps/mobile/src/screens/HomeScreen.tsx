@@ -555,25 +555,19 @@ function HomeDecisionHero({
           onPress={onOpenForecast}
           style={styles.weatherPrimaryColumn}
         >
-          <View style={styles.weatherSummaryRow}>
-            <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
-              <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
-            </View>
-            <View style={styles.weatherCopy}>
-              <View style={styles.weatherTemperatureRow}>
-                <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
-                <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-              </View>
-              {todayMinMax ? (
-                <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-                  {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
-                </Text>
-              ) : null}
-              <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
-                {currentLocationName}
-              </Text>
-            </View>
+          <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
+            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
           </View>
+          <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+          <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+          {todayMinMax ? (
+            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+              {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+            </Text>
+          ) : null}
+          <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
+            {currentLocationName}
+          </Text>
         </FeedbackPressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
@@ -700,7 +694,7 @@ function HomeOutfitPreviewCard({
     >
       <View style={styles.homeOutfitCopy}>
         <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 입기 좋은 코디</Text>
-        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={1}>
+        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={2}>
           {title}
         </Text>
         <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
@@ -720,7 +714,7 @@ function HomeOutfitPreviewCard({
 
 function getHomeOutfitCopy(decisionText: string, fallback: string) {
   if (decisionText.includes("비가 세요")) return { title: "비가 세요 · 방수 차림", body: "우산도 함께 챙겨요" };
-  if (decisionText.includes("비 소식")) return { title: "비 소식 있어요 · 우산", body: "방수 신발이면 더 좋아요" };
+  if (decisionText.includes("비 소식")) return { title: "비 소식 있어요.\n우산과 방수 신발 챙겨요", body: "방수 신발이면 더 좋아요" };
   if (decisionText.includes("더운 날")) return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
   if (decisionText.includes("쌀쌀해요")) return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
   if (decisionText.includes("기온차")) return { title: "일교차 커요 · 겹옷", body: "아침저녁에 걸칠 옷이 좋아요" };
@@ -1345,7 +1339,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: 8,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 4,
     paddingBottom: 10,
   },
   topBar: {
@@ -1387,86 +1381,79 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   decisionHero: {
-    gap: 6,
+    minHeight: 224,
+    gap: spacing.xs,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 82,
+    minHeight: 168,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    paddingTop: 0,
+    paddingTop: 2,
   },
   weatherHalo: {
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -66,
-    width: 132,
-    height: 132,
-    borderRadius: 66,
+    marginLeft: -80,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
     width: "100%",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.sm,
+    gap: 2,
+    paddingHorizontal: spacing.md,
     zIndex: 1,
   },
-  weatherSummaryRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingRight: 72,
-  },
   weatherOrb: {
-    width: 58,
-    height: 58,
+    width: 106,
+    height: 106,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 36,
-    height: 36,
-  },
-  weatherCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
-  },
-  weatherTemperatureRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
+    width: 70,
+    height: 70,
   },
   showcaseTemp: {
-    fontSize: 38,
-    lineHeight: 43,
+    marginTop: 4,
+    fontSize: 48,
+    lineHeight: 51,
     fontWeight: "900",
     letterSpacing: 0,
+    textAlign: "center",
   },
   showcaseCondition: {
-    fontSize: 15,
-    lineHeight: 20,
+    marginTop: -1,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
+    textAlign: "center",
   },
   showcaseMeta: {
+    marginTop: 4,
     maxWidth: "100%",
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "900",
+    textAlign: "center",
   },
   showcaseMetaSub: {
+    marginTop: 0,
     maxWidth: "100%",
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
+    textAlign: "center",
   },
   showcaseStatus: {
     position: "absolute",
@@ -1496,43 +1483,43 @@ const styles = StyleSheet.create({
   },
   decisionMetric: {
     flex: 1,
-    minHeight: 34,
+    minHeight: 38,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     borderRadius: radius.md,
   },
   decisionMetricIcon: {
-    width: 14,
-    height: 14,
+    width: 16,
+    height: 16,
   },
   decisionMetricText: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   feelsLikeCard: {
-    minHeight: 46,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   feelsLikeIconFrame: {
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   feelsLikeIcon: {
-    width: 17,
-    height: 17,
+    width: 20,
+    height: 20,
   },
   feelsLikeCopy: {
     flex: 1,
@@ -1540,24 +1527,24 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   feelsLikeLabel: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   feelsLikeBody: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   feelsLikeValue: {
-    minWidth: 50,
+    minWidth: 60,
     textAlign: "right",
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 24,
+    lineHeight: 29,
     fontWeight: "900",
   },
   homePlanCard: {
-    gap: 6,
+    gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -1679,46 +1666,46 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 70,
     alignItems: "center",
-    gap: 2,
+    gap: 4,
     justifyContent: "center",
     padding: spacing.xs,
     borderRadius: radius.lg,
   },
   visualIconFrame: {
-    width: 28,
-    height: 28,
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   visualDecisionIcon: {
-    width: 18,
-    height: 18,
+    width: 22,
+    height: 22,
   },
   visualDecisionLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   visualDecisionValue: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 20,
+    lineHeight: 25,
     fontWeight: "900",
   },
   visualDecisionHelper: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 86,
+    minHeight: 106,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -1754,13 +1741,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   specialAlertTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "900",
   },
   specialAlertBody: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "700",
   },
   specialAlertChevron: {
@@ -1789,15 +1776,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitImageFrame: {
-    width: 54,
-    height: 54,
+    width: 62,
+    height: 62,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   homeOutfitImage: {
-    width: 50,
-    height: 50,
+    width: 56,
+    height: 56,
   },
   homeOutfitIcon: {
     width: 34,
