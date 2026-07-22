@@ -175,7 +175,7 @@ function isWeatherSnapshot(value: unknown): value is WeatherProviderResult["curr
     Array.isArray(record.hourly) &&
     record.hourly.every(isHourlyWeather) &&
     (record.daily === undefined || (Array.isArray(record.daily) && record.daily.every(isDailyWeather))) &&
-    (record.source === "kma" || record.source === "openmeteo" || record.source === "cache" || record.source === "fallback") &&
+    (record.source === "kma" || record.source === "openmeteo" || record.source === "weatherkit" || record.source === "cache" || record.source === "fallback") &&
     typeof record.stale === "boolean"
   );
 }

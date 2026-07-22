@@ -5,6 +5,12 @@ import { join } from "node:path";
 const secretNames = ["KAKAO_REST_API_KEY", "GOOGLE_MAPS_API_KEY", "KMA_SERVICE_KEY"];
 // 옵트인 프록시 인증 토큰: 로컬 env에 있을 때만 동기화한다.
 const optionalSecretNames = ["PROXY_ACCESS_TOKEN"];
+const weatherKitSecretNames = [
+  "WEATHERKIT_TEAM_ID",
+  "WEATHERKIT_SERVICE_ID",
+  "WEATHERKIT_KEY_ID",
+  "WEATHERKIT_PRIVATE_KEY",
+];
 const proxyOnly = process.argv.includes("--proxy-only");
 
 loadEnvFile(join(process.cwd(), "apps/server/.env.local"));
@@ -24,6 +30,14 @@ for (const name of optionalSecretNames) {
   const value = process.env[name];
   if (proxyOnly && !value) throw new Error(`${name} is missing from local env files`);
   if (value) await putSecret(name, value);
+}
+
+if (!proxyOnly && weatherKitSecretNames.some((name) => process.env[name])) {
+  for (const name of weatherKitSecretNames) {
+    const value = process.env[name];
+    if (!value) throw new Error(`${name} is missing from local env files`);
+    await putSecret(name, value);
+  }
 }
 
 console.log(proxyOnly ? "cloudflare proxy access token synced" : "cloudflare worker secrets synced");

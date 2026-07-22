@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { generateKeyPairSync } from "node:crypto";
 import { createServer } from "node:http";
-import { kmaForecastFixture, openMeteoFixture } from "../packages/shared/src/fixtures/weatherApiFixtures.ts";
+import { kmaForecastFixture, openMeteoFixture, weatherKitFixture } from "../packages/shared/src/fixtures/weatherApiFixtures.ts";
 
 const upstreamHost = "127.0.0.1";
 const upstreamPort = 19092;
 const proxyHost = "127.0.0.1";
 const proxyPort = 19091;
 let kmaRequestCount = 0;
+let weatherKitRequestCount = 0;
+const { privateKey: weatherKitPrivateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+const weatherKitPrivateKeyPem = weatherKitPrivateKey.export({ type: "pkcs8", format: "pem" });
 
 const upstream = createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? `${upstreamHost}:${upstreamPort}`}`);
@@ -24,6 +28,13 @@ const upstream = createServer((request, response) => {
     sendJson(response, 200, openMeteoFixture);
     return;
   }
+  if (url.pathname.startsWith("/weatherkit/")) {
+    weatherKitRequestCount += 1;
+    assert.ok(request.headers.authorization?.startsWith("Bearer "));
+    assert.equal(url.searchParams.get("dataSets"), "currentWeather,forecastHourly,forecastDaily");
+    sendJson(response, 200, weatherKitFixture);
+    return;
+  }
   sendJson(response, 404, { error: "not_found" });
 });
 
@@ -35,11 +46,17 @@ const proxy = spawn(process.execPath, ["apps/server/src/index.mjs"], {
     ...process.env,
     WEATHER_SERVER_HOST: proxyHost,
     WEATHER_SERVER_PORT: String(proxyPort),
+    PROXY_ACCESS_TOKEN: "",
     WEATHER_TIMEOUT_MS: "3000",
     WEATHER_CACHE_TTL_MS: "1",
     KMA_SERVICE_KEY: "decoded-test-key",
     KMA_FORECAST_URL: `http://${upstreamHost}:${upstreamPort}/kma`,
     OPEN_METEO_FORECAST_URL: `http://${upstreamHost}:${upstreamPort}/openmeteo`,
+    WEATHERKIT_WEATHER_URL: `http://${upstreamHost}:${upstreamPort}/weatherkit`,
+    WEATHERKIT_TEAM_ID: "TEAM123456",
+    WEATHERKIT_SERVICE_ID: "com.weatheron.test.weatherkit",
+    WEATHERKIT_KEY_ID: "KEY1234567",
+    WEATHERKIT_PRIVATE_KEY: weatherKitPrivateKeyPem,
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -56,6 +73,9 @@ try {
 
   const openMeteo = await fetchJson(`http://${proxyHost}:${proxyPort}/weather/openmeteo?latitude=37.7715&longitude=128.9483`);
   assert.ok(openMeteo.current);
+  const weatherKit = await fetchJson(`http://${proxyHost}:${proxyPort}/weather/weatherkit?latitude=37.7715&longitude=128.9483&timezone=Asia%2FSeoul&countryCode=KR`);
+  assert.ok(weatherKit.currentWeather);
+  assert.equal(weatherKitRequestCount, 1);
   console.log("weather proxy cache check passed");
 } finally {
   proxy.kill("SIGTERM");

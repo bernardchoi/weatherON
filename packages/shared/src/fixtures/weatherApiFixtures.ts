@@ -1,4 +1,4 @@
-import type { KmaForecastItem, OpenMeteoResponse } from "../weather/types";
+import type { KmaForecastItem, OpenMeteoResponse, WeatherKitResponse } from "../weather/types";
 
 export const kmaForecastFixture: KmaForecastItem[] = [
   { baseDate: "20260626", baseTime: "0500", fcstDate: "20260626", fcstTime: "0800", category: "TMP", fcstValue: "23" },
@@ -52,5 +52,62 @@ export const openMeteoFixture: OpenMeteoResponse = {
     precipitation_sum: [0, 0.4, 3.1, 1.2, 0, 0, 0.3],
     weather_code: [1, 3, 61, 80, 2, 0, 3],
     wind_speed_10m_max: [18.7, 16.2, 20.4, 14.8, 12.1, 11.7, 15.2],
+  },
+};
+
+export const weatherKitFixture: WeatherKitResponse = {
+  currentWeather: {
+    metadata: {
+      readTime: "2026-06-26T08:00:00Z",
+      reportedTime: "2026-06-26T08:00:00Z",
+    },
+    asOf: "2026-06-26T08:00:00Z",
+    conditionCode: "MostlyCloudy",
+    humidity: 0.7,
+    precipitationIntensity: 0,
+    temperature: 27,
+    temperatureApparent: 30,
+    uvIndex: 7,
+    windSpeed: 10.8,
+  },
+  forecastHourly: {
+    hours: [
+      {
+        forecastStart: "2026-06-26T09:00:00Z",
+        conditionCode: "MostlyCloudy",
+        humidity: 0.72,
+        precipitationAmount: 0,
+        precipitationChance: 0.2,
+        temperature: 28,
+        temperatureApparent: 31,
+        uvIndex: 7,
+        windSpeed: 11.5,
+      },
+      {
+        forecastStart: "2026-06-26T10:00:00Z",
+        conditionCode: "Rain",
+        humidity: 0.78,
+        precipitationAmount: 1.2,
+        precipitationChance: 0.65,
+        temperature: 27,
+        temperatureApparent: 30,
+        uvIndex: 5,
+        windSpeed: 14.4,
+      },
+    ],
+  },
+  forecastDaily: {
+    days: [
+      {
+        forecastStart: "2026-06-26T00:00:00Z",
+        conditionCode: "Rain",
+        precipitationAmount: 2.8,
+        precipitationChance: 0.65,
+        temperatureMax: 30,
+        temperatureMin: 23,
+        maxUvIndex: 7,
+        windSpeedAvg: 12.6,
+      },
+    ],
   },
 };

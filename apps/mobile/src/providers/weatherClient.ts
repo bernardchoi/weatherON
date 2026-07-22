@@ -1,5 +1,5 @@
 import { getKmaForecastBaseDateTime, kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
-import type { KmaForecastItem, KmaForecastResponse, OpenMeteoResponse } from "@weatheron/shared";
+import type { KmaForecastItem, KmaForecastResponse, OpenMeteoResponse, WeatherKitResponse } from "@weatheron/shared";
 import {
   DEFAULT_KMA_FORECAST_URL,
   DEFAULT_OPEN_METEO_FORECAST_URL,
@@ -22,9 +22,15 @@ export type FetchOpenMeteoForecastParams = {
   timezone?: string;
 };
 
+export type FetchWeatherKitForecastParams = FetchOpenMeteoForecastParams & {
+  countryCode?: string;
+  language?: string;
+};
+
 export type WeatherClient = {
   fetchKmaForecast: (params: FetchKmaForecastParams) => Promise<KmaForecastResponse | KmaForecastItem[]>;
   fetchOpenMeteoForecast: (params: FetchOpenMeteoForecastParams) => Promise<OpenMeteoResponse>;
+  fetchWeatherKitForecast?: (params: FetchWeatherKitForecastParams) => Promise<WeatherKitResponse>;
 };
 
 export type HttpWeatherClientOptions = {
@@ -170,6 +176,17 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
       const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
+      return payload;
+    },
+    async fetchWeatherKitForecast(params) {
+      const url = new URL("/weather/weatherkit", normalizeBaseUrl(options.weatherApiBaseUrl));
+      url.searchParams.set("latitude", String(params.latitude));
+      url.searchParams.set("longitude", String(params.longitude));
+      url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
+      url.searchParams.set("language", params.language ?? "ko");
+      if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
+      const payload = await fetchJson<WeatherKitResponse>(url, timeoutMs, options.fetchImpl, headers);
+      if (!payload.currentWeather) throw new Error("WeatherKit forecast response is empty");
       return payload;
     },
   };

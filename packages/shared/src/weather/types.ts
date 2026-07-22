@@ -67,4 +67,53 @@ export type OpenMeteoResponse = {
   };
 };
 
+export type WeatherKitResponse = {
+  currentWeather?: WeatherKitCurrentWeather;
+  forecastHourly?: {
+    hours?: WeatherKitHourWeather[];
+  };
+  forecastDaily?: {
+    days?: WeatherKitDayWeather[];
+  };
+};
+
+export type WeatherKitCurrentWeather = {
+  metadata?: {
+    readTime?: string;
+    reportedTime?: string;
+  };
+  asOf?: string;
+  conditionCode?: string;
+  humidity?: number;
+  precipitationIntensity?: number;
+  temperature?: number;
+  temperatureApparent?: number;
+  uvIndex?: number;
+  windSpeed?: number;
+};
+
+export type WeatherKitHourWeather = {
+  forecastStart?: string;
+  conditionCode?: string;
+  humidity?: number;
+  precipitationAmount?: number;
+  precipitationChance?: number;
+  temperature?: number;
+  temperatureApparent?: number;
+  uvIndex?: number;
+  windSpeed?: number;
+};
+
+export type WeatherKitDayWeather = {
+  forecastStart?: string;
+  conditionCode?: string;
+  precipitationAmount?: number;
+  precipitationChance?: number;
+  temperatureMax?: number;
+  temperatureMin?: number;
+  maxUvIndex?: number;
+  windSpeedAvg?: number;
+  windSpeed?: number;
+};
+
 export type WeatherAdapterResult = WeatherSnapshot;

@@ -21,3 +21,14 @@ export function conditionFromOpenMeteo(code?: number): WeatherCondition {
   if (code === 45 || code === 48) return "cloud";
   return "clear";
 }
+
+export function conditionFromWeatherKit(code?: string): WeatherCondition {
+  const normalized = String(code ?? "").toLowerCase();
+  if (!normalized) return "clear";
+  if (normalized.includes("thunder") || normalized.includes("hurricane") || normalized.includes("tropicalstorm")) return "storm";
+  if (normalized.includes("snow") || normalized.includes("sleet") || normalized.includes("flurr")) return "snow";
+  if (normalized.includes("rain") || normalized.includes("drizzle") || normalized.includes("shower")) return "rain";
+  if (normalized.includes("dust") || normalized.includes("haze") || normalized.includes("smok")) return "dust";
+  if (normalized.includes("cloud") || normalized.includes("fog")) return "cloud";
+  return "clear";
+}

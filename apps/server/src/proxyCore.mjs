@@ -4,6 +4,7 @@ import { getKmaForecastBaseDateTime } from "./kmaTime.mjs";
 
 const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
 const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
+const DEFAULT_WEATHERKIT_WEATHER_URL = "https://weatherkit.apple.com/api/v1/weather";
 const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 const DEFAULT_KAKAO_DIRECTIONS_URL = "https://apis-navi.kakaomobility.com/v1/directions";
 const DEFAULT_GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
@@ -55,6 +56,9 @@ export async function handleProxyRoute(url, readEnvValue, getRequestHeader, opti
   }
   if (url.pathname === "/weather/openmeteo") {
     return { status: 200, payload: await fetchOpenMeteoForecast(url.searchParams, readEnvValue) };
+  }
+  if (url.pathname === "/weather/weatherkit") {
+    return { status: 200, payload: await fetchWeatherKitForecast(url.searchParams, readEnvValue) };
   }
   if (url.pathname === "/places/search") {
     return { status: 200, payload: await searchPlaces(url.searchParams, readEnvValue) };
@@ -139,6 +143,30 @@ async function fetchOpenMeteoForecast(params, readEnvValue) {
     getUrlCacheKey("openmeteo", url),
     readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
     () => fetchJson(url, readEnvValue),
+  );
+}
+
+async function fetchWeatherKitForecast(params, readEnvValue) {
+  const latitude = getRequiredParam(params, "latitude");
+  const longitude = getRequiredParam(params, "longitude");
+  const language = normalizeWeatherKitLanguage(params.get("language") ?? params.get("locale"));
+  const url = new URL(`${trimTrailingSlash(readEnvValue("WEATHERKIT_WEATHER_URL") ?? DEFAULT_WEATHERKIT_WEATHER_URL)}/${language}/${latitude}/${longitude}`);
+  url.searchParams.set("timezone", params.get("timezone") ?? "Asia/Seoul");
+  url.searchParams.set("dataSets", params.get("dataSets") ?? "currentWeather,forecastHourly,forecastDaily");
+  const countryCode = normalizeWeatherKitCountryCode(params.get("countryCode"));
+  if (countryCode) url.searchParams.set("countryCode", countryCode);
+  if (params.get("hourlyStart")) url.searchParams.set("hourlyStart", params.get("hourlyStart"));
+  if (params.get("hourlyEnd")) url.searchParams.set("hourlyEnd", params.get("hourlyEnd"));
+  if (params.get("dailyStart")) url.searchParams.set("dailyStart", params.get("dailyStart"));
+  if (params.get("dailyEnd")) url.searchParams.set("dailyEnd", params.get("dailyEnd"));
+
+  return fetchCachedJson(
+    forecastCache,
+    getUrlCacheKey("weatherkit", url),
+    readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
+    async () => fetchJson(url, readEnvValue, {
+      Authorization: `Bearer ${await createWeatherKitDeveloperToken(readEnvValue)}`,
+    }),
   );
 }
 
@@ -388,6 +416,19 @@ function normalizeSearchLanguage(value) {
   if (language === "ja") return "ja";
   if (language === "en") return "en";
   return "ko";
+}
+
+function normalizeWeatherKitLanguage(value) {
+  const language = String(value || "ko").split("-")[0].toLowerCase();
+  if (language === "ja") return "ja";
+  if (language === "en") return "en";
+  return "ko";
+}
+
+function normalizeWeatherKitCountryCode(value) {
+  if (!value || value === "GLOBAL") return null;
+  const countryCode = String(value).trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(countryCode) ? countryCode : null;
 }
 
 function getPlaceSearchQueryAlias(query) {
@@ -708,6 +749,112 @@ function getUrlCacheKey(prefix, url, omitParams = []) {
   for (const param of omitParams) normalized.searchParams.delete(param);
   normalized.searchParams.sort();
   return `${prefix}:${normalized.pathname}?${normalized.searchParams.toString()}`;
+}
+
+async function createWeatherKitDeveloperToken(readEnvValue) {
+  const teamId = getRequiredEnv(readEnvValue, "WEATHERKIT_TEAM_ID");
+  const serviceId = getRequiredEnv(readEnvValue, "WEATHERKIT_SERVICE_ID");
+  const keyId = getRequiredEnv(readEnvValue, "WEATHERKIT_KEY_ID");
+  const privateKey = getRequiredEnv(readEnvValue, "WEATHERKIT_PRIVATE_KEY");
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + readNumberEnv(readEnvValue, "WEATHERKIT_TOKEN_TTL_SECONDS", 1800);
+  const header = {
+    alg: "ES256",
+    kid: keyId,
+    id: `${teamId}.${serviceId}`,
+  };
+  const claims = {
+    iss: teamId,
+    iat: now,
+    exp: expiresAt,
+    sub: serviceId,
+  };
+  const signingInput = `${base64UrlJson(header)}.${base64UrlJson(claims)}`;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToArrayBuffer(privateKey),
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    new TextEncoder().encode(signingInput),
+  );
+  return `${signingInput}.${base64UrlBytes(ecdsaSignatureToJose(signature, 64))}`;
+}
+
+function getRequiredEnv(readEnvValue, key) {
+  const value = readEnvValue(key);
+  if (!value) throw new Error(`${key} is not configured`);
+  return value;
+}
+
+function base64UrlJson(value) {
+  return base64UrlBytes(new TextEncoder().encode(JSON.stringify(value)));
+}
+
+function base64UrlBytes(bytes) {
+  const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = "";
+  for (let index = 0; index < view.length; index += 0x8000) {
+    binary += String.fromCharCode(...view.subarray(index, index + 0x8000));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function pemToArrayBuffer(pem) {
+  const normalized = pem.replace(/\\n/g, "\n");
+  const base64 = normalized
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\s+/g, "");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
+
+function ecdsaSignatureToJose(signature, size) {
+  const bytes = new Uint8Array(signature);
+  if (bytes.length === size) return bytes;
+  if (bytes[0] !== 0x30) throw new Error("WeatherKit token signature is invalid");
+  const { integer: r, offset } = readDerInteger(bytes, 2);
+  const { integer: s } = readDerInteger(bytes, offset);
+  return concatFixedIntegers(r, s, size / 2);
+}
+
+function readDerInteger(bytes, offset) {
+  if (bytes[offset] !== 0x02) throw new Error("WeatherKit token signature is invalid");
+  const length = bytes[offset + 1];
+  const start = offset + 2;
+  return {
+    integer: bytes.slice(start, start + length),
+    offset: start + length,
+  };
+}
+
+function concatFixedIntegers(left, right, size) {
+  const output = new Uint8Array(size * 2);
+  output.set(trimDerInteger(left, size), 0);
+  output.set(trimDerInteger(right, size), size);
+  return output;
+}
+
+function trimDerInteger(integer, size) {
+  let value = integer;
+  while (value.length > size && value[0] === 0) value = value.slice(1);
+  if (value.length > size) throw new Error("WeatherKit token signature is invalid");
+  const output = new Uint8Array(size);
+  output.set(value, size - value.length);
+  return output;
+}
+
+function trimTrailingSlash(value) {
+  return String(value).replace(/\/+$/, "");
 }
 
 function getRequiredParam(params, key) {

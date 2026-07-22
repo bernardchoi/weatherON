@@ -3,6 +3,7 @@ declare const process: {
 };
 
 export type WeatherClientMode = "fixture" | "proxy" | "openmeteo";
+export type IosWeatherProvider = "default" | "weatherkit";
 
 export type WeatherRuntimeConfig = {
   clientMode: WeatherClientMode;
@@ -13,6 +14,7 @@ export type WeatherRuntimeConfig = {
   openMeteoGeocodingUrl?: string;
   timeoutMs: number;
   allowLocalProxy: boolean;
+  iosWeatherProvider: IosWeatherProvider;
 };
 
 export const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
@@ -30,6 +32,7 @@ export function getWeatherRuntimeConfig(): WeatherRuntimeConfig {
     openMeteoGeocodingUrl: process.env.EXPO_PUBLIC_OPEN_METEO_GEOCODING_URL,
     timeoutMs: Number(process.env.EXPO_PUBLIC_WEATHER_TIMEOUT_MS) || DEFAULT_WEATHER_TIMEOUT_MS,
     allowLocalProxy: process.env.EXPO_PUBLIC_WEATHER_ALLOW_LOCAL_PROXY === "1",
+    iosWeatherProvider: getIosWeatherProvider(process.env.EXPO_PUBLIC_IOS_WEATHER_PROVIDER),
   };
 }
 
@@ -58,4 +61,8 @@ function getWeatherClientMode(value?: string): WeatherClientMode {
   if (value === "proxy") return "proxy";
   if (value === "fixture") return "fixture";
   return "openmeteo";
+}
+
+function getIosWeatherProvider(value?: string): IosWeatherProvider {
+  return value === "weatherkit" ? "weatherkit" : "default";
 }

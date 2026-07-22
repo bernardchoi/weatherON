@@ -27,6 +27,7 @@ await writeFile(
       kmaForecastFixture,
       normalizeKmaWeather,
       normalizeOpenMeteoWeather,
+      normalizeWeatherKitWeather,
       openMeteoFixture,
       presetWardrobe,
       recommendOutfit,
@@ -34,6 +35,7 @@ await writeFile(
       recommendUmbrella,
       searchFixturePlaces,
       seongsuRainSnapshot,
+      weatherKitFixture,
     } from "../packages/shared/src/index.ts";
 
     export const results = {
@@ -71,6 +73,11 @@ await writeFile(
       openmeteo: normalizeOpenMeteoWeather(openMeteoFixture, {
         locationId: "kr-gangneung-beach",
         locationName: "강릉 안목해변",
+        countryCode: "KR",
+      }),
+      weatherkit: normalizeWeatherKitWeather(weatherKitFixture, {
+        locationId: "kr-seoul-seongsu",
+        locationName: "서울 성수동",
         countryCode: "KR",
       }),
       openmeteoHourlyHumidity: normalizeOpenMeteoWeather({
@@ -329,6 +336,11 @@ assert.equal(results.openmeteo.current.condition, "clear");
 assert.equal(results.openmeteo.current.feelsLikeC, 31);
 assert.equal(results.openmeteo.hourly[1].windMs, 4.81);
 assert.equal(results.openmeteoHourlyHumidity.current.humidityPct, 66);
+assert.equal(results.weatherkit.source, "weatherkit");
+assert.equal(results.weatherkit.current.condition, "cloud");
+assert.equal(results.weatherkit.current.humidityPct, 70);
+assert.equal(results.weatherkit.hourly[1].condition, "rain");
+assert.equal(results.weatherkit.daily[0].rainProbabilityPct, 65);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");

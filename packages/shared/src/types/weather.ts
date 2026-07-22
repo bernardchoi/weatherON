@@ -2,7 +2,7 @@ export type CountryCode = "KR" | "JP" | "GLOBAL";
 
 export type WeatherCondition = "clear" | "cloud" | "rain" | "snow" | "storm" | "dust";
 
-export type WeatherSource = "kma" | "openmeteo" | "cache" | "fallback";
+export type WeatherSource = "kma" | "openmeteo" | "weatherkit" | "cache" | "fallback";
 
 export type HourlyWeather = {
   time: string;

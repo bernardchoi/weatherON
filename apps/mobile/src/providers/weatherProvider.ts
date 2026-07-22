@@ -1,9 +1,11 @@
 import {
   normalizeKmaWeather,
   normalizeOpenMeteoWeather,
+  normalizeWeatherKitWeather,
   openMeteoFixture,
   type WeatherSnapshot,
 } from "@weatheron/shared";
+import { Platform } from "react-native";
 import { getWeatherRuntimeConfig } from "../config/weatherEnv";
 import { fixtureWeatherClient, runtimeWeatherClient, type WeatherClient } from "./weatherClient";
 import {
@@ -129,6 +131,25 @@ async function fetchWeatherSnapshot(
   stale: boolean,
   preferKma?: boolean,
 ): Promise<WeatherSnapshot> {
+  if (shouldUseWeatherKitForecast(client, location)) {
+    try {
+      const payload = await client.fetchWeatherKitForecast({
+        latitude: location.coordinate.latitude,
+        longitude: location.coordinate.longitude,
+        timezone: location.timezone,
+        countryCode: location.countryCode === "GLOBAL" ? undefined : location.countryCode,
+        language: "ko",
+      });
+      return normalizeWeatherKitWeather(payload, {
+        locationId: location.locationId,
+        locationName: location.locationName,
+        countryCode: location.countryCode,
+        stale,
+      });
+    } catch {
+      // WeatherKit은 iOS 전용 우선 provider로만 사용하고, 장애 시 기존 provider로 후퇴한다.
+    }
+  }
   if (shouldUseKmaForecast(location, preferKma)) {
     try {
       const payload = await client.fetchKmaForecast({
@@ -147,6 +168,16 @@ async function fetchWeatherSnapshot(
     }
   }
   return fetchOpenMeteoSnapshot(client, location, stale);
+}
+
+function shouldUseWeatherKitForecast(client: WeatherClient, location: WeatherLocationPreset): client is WeatherClient & Required<Pick<WeatherClient, "fetchWeatherKitForecast">> {
+  return (
+    Platform.OS === "ios" &&
+    getWeatherRuntimeConfig().iosWeatherProvider === "weatherkit" &&
+    typeof client.fetchWeatherKitForecast === "function" &&
+    Number.isFinite(location.coordinate.latitude) &&
+    Number.isFinite(location.coordinate.longitude)
+  );
 }
 
 async function fetchOpenMeteoSnapshot(
