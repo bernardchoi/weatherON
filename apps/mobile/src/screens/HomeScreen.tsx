@@ -555,19 +555,25 @@ function HomeDecisionHero({
           onPress={onOpenForecast}
           style={styles.weatherPrimaryColumn}
         >
-          <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
-            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
+          <View style={styles.weatherSummaryRow}>
+            <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
+              <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
+            </View>
+            <View style={styles.weatherCopy}>
+              <View style={styles.weatherTemperatureRow}>
+                <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+                <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+              </View>
+              {todayMinMax ? (
+                <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+                  {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+                </Text>
+              ) : null}
+              <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
+                {currentLocationName}
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
-          <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-          {todayMinMax ? (
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-              {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
-            </Text>
-          ) : null}
-          <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
-            {currentLocationName}
-          </Text>
         </FeedbackPressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
@@ -1337,7 +1343,7 @@ const styles = StyleSheet.create({
   homeContent: {
     // BottomNav는 스크롤 영역 밖 형제라 큰 하단 보정 없이도 마지막 카드가 가려지지 않는다.
     flexGrow: 1,
-    gap: spacing.xs,
+    gap: 8,
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 10,
@@ -1381,79 +1387,86 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   decisionHero: {
-    minHeight: 224,
-    gap: spacing.xs,
+    gap: 6,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 180,
+    minHeight: 82,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    paddingTop: 2,
+    paddingTop: 0,
   },
   weatherHalo: {
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -88,
-    width: 176,
-    height: 176,
-    borderRadius: 88,
+    marginLeft: -66,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
     width: "100%",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "center",
-    gap: 2,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     zIndex: 1,
   },
+  weatherSummaryRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingRight: 72,
+  },
   weatherOrb: {
-    width: 116,
-    height: 116,
+    width: 58,
+    height: 58,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 78,
-    height: 78,
+    width: 36,
+    height: 36,
+  },
+  weatherCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  weatherTemperatureRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
   },
   showcaseTemp: {
-    marginTop: 4,
-    fontSize: 50,
-    lineHeight: 54,
+    fontSize: 38,
+    lineHeight: 43,
     fontWeight: "900",
     letterSpacing: 0,
-    textAlign: "center",
   },
   showcaseCondition: {
-    marginTop: -1,
-    fontSize: 18,
-    lineHeight: 23,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
-    textAlign: "center",
   },
   showcaseMeta: {
-    marginTop: 4,
     maxWidth: "100%",
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
-    textAlign: "center",
   },
   showcaseMetaSub: {
-    marginTop: 0,
     maxWidth: "100%",
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
-    textAlign: "center",
   },
   showcaseStatus: {
     position: "absolute",
@@ -1483,43 +1496,43 @@ const styles = StyleSheet.create({
   },
   decisionMetric: {
     flex: 1,
-    minHeight: 42,
+    minHeight: 34,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     borderRadius: radius.md,
   },
   decisionMetricIcon: {
-    width: 16,
-    height: 16,
+    width: 14,
+    height: 14,
   },
   decisionMetricText: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "900",
   },
   feelsLikeCard: {
-    minHeight: 64,
+    minHeight: 46,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 4,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   feelsLikeIconFrame: {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   feelsLikeIcon: {
-    width: 20,
-    height: 20,
+    width: 17,
+    height: 17,
   },
   feelsLikeCopy: {
     flex: 1,
@@ -1527,24 +1540,24 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   feelsLikeLabel: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   feelsLikeBody: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "800",
   },
   feelsLikeValue: {
-    minWidth: 60,
+    minWidth: 50,
     textAlign: "right",
-    fontSize: 24,
-    lineHeight: 29,
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "900",
   },
   homePlanCard: {
-    gap: spacing.sm,
+    gap: 6,
     padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -1666,46 +1679,46 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 78,
+    minHeight: 62,
     alignItems: "center",
-    gap: 4,
+    gap: 2,
     justifyContent: "center",
     padding: spacing.xs,
     borderRadius: radius.lg,
   },
   visualIconFrame: {
-    width: 34,
-    height: 34,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   visualDecisionIcon: {
-    width: 22,
-    height: 22,
+    width: 18,
+    height: 18,
   },
   visualDecisionLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
   },
   visualDecisionValue: {
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "900",
   },
   visualDecisionHelper: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 118,
+    minHeight: 86,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -1741,13 +1754,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   specialAlertTitle: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   specialAlertBody: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
   },
   specialAlertChevron: {
@@ -1776,15 +1789,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   homeOutfitImageFrame: {
-    width: 68,
-    height: 68,
+    width: 54,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   homeOutfitImage: {
-    width: 62,
-    height: 62,
+    width: 50,
+    height: 50,
   },
   homeOutfitIcon: {
     width: 34,

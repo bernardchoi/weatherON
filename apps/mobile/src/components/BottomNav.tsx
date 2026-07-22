@@ -1,72 +1,58 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, type ColorValue, type StyleProp, type ViewStyle, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor } from "../theme/androidMaterial";
-import { iosGlassSurface } from "../theme/iosGlass";
-import { IosGlassBackdrop } from "./IosGlassBackdrop";
+import { LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
   onNavigate: (route: P0RouteId) => void;
 };
 
-// UI Design Spec v1.0 §10: 앱 표면 위에 직접 떠 있는 탭. 활성 탭만 작은 유리 표면을 사용한다.
+// 앱 표면 위에 떠 있는 단일 glass capsule. Instagram/Meta처럼 활성 탭만 내부에서
+// 은은하게 구분하고 개별 버튼에 blur를 겹치지 않아 아이콘과 라벨이 선명하게 유지된다.
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeColor = androidMaterialColor(theme, "primary");
+  const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
   return (
-    <View style={styles.wrap}>
-      {bottomNavRoutes.map((route) => {
-        const active = route.id === activeTabRoute;
-        const activeGlassSurface = active ? iosGlassSurface(theme, "tabItem", { nativeBackdrop: true }) : null;
-        return (
-          <TabButton
-            key={route.id}
-            routeId={route.id}
-            label={route.label}
-            active={active}
-            glassEnabled={Boolean(activeGlassSurface)}
-            activeSurfaceStyle={activeGlassSurface ? [styles.activeItemGlass, activeGlassSurface] : null}
-            activeBackdrop={activeGlassSurface ? <IosGlassBackdrop theme={theme} role="tabItem" style={styles.activeItemBackdrop} /> : null}
-            onPress={() => onNavigate(route.id)}
-          >
-            <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
-            <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
-            <Text
-              style={[styles.label, { color: active ? activeColor : theme.subtle }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.9}
-              allowFontScaling={false}
-            >
-              {route.label}
-            </Text>
-          </TabButton>
-        );
-      })}
+    <View style={styles.dockWrap}>
+      <View style={[styles.dock, { borderColor: theme.name === "light" ? "rgba(20,32,51,0.10)" : "rgba(246,251,255,0.22)" }]}>
+        <LiquidGlassNavigationSurface activeIndex={activeIndex} theme={theme} />
+        {bottomNavRoutes.map((route) => {
+          const active = route.id === activeTabRoute;
+          return (
+            <TabButton key={route.id} label={route.label} active={active} onPress={() => onNavigate(route.id)}>
+              <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
+              <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
+              <Text
+                style={[styles.label, { color: active ? activeColor : theme.subtle }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.9}
+                allowFontScaling={false}
+              >
+                {route.label}
+              </Text>
+            </TabButton>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 function TabButton({
-  routeId,
   label,
   active,
-  glassEnabled,
-  activeSurfaceStyle,
-  activeBackdrop,
   onPress,
   children,
 }: {
-  routeId: P0RouteId;
   label: string;
   active: boolean;
-  glassEnabled: boolean;
-  activeSurfaceStyle?: StyleProp<ViewStyle>;
-  activeBackdrop?: React.ReactNode;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -76,9 +62,8 @@ function TabButton({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={[styles.item, glassEnabled ? styles.itemGlass : null]}
+      style={styles.item}
     >
-      {activeSurfaceStyle ? <View pointerEvents="none" style={activeSurfaceStyle}>{activeBackdrop}</View> : null}
       {children}
     </Pressable>
   );
@@ -106,39 +91,26 @@ function getTabIconSource(route: P0RouteId) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  dockWrap: {
     marginHorizontal: 20,
-    marginBottom: 18,
-    marginTop: 6,
-    height: 58,
+    marginBottom: 12,
+    marginTop: 8,
+    height: 64,
+  },
+  dock: {
+    flex: 1,
     flexDirection: "row",
-    alignItems: "stretch",
+    alignItems: "center",
+    borderRadius: 32,
+    borderWidth: 1,
+    overflow: "hidden",
   },
   item: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
-    borderRadius: 14,
-    marginVertical: 2,
-    overflow: "hidden",
-  },
-  itemGlass: {
-    borderRadius: 18,
-    marginVertical: 1,
-  },
-  activeItemGlass: {
-    position: "absolute",
-    left: 3,
-    right: 3,
-    top: 1,
-    bottom: 1,
-    borderRadius: 18,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  activeItemBackdrop: {
-    borderRadius: 18,
+    gap: 2,
+    minHeight: 58,
   },
   activeDot: {
     width: 5,

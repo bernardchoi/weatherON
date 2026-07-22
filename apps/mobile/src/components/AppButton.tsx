@@ -3,9 +3,7 @@ import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable,
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
-import { iosGlassSurface, type IosGlassRole } from "../theme/iosGlass";
-import { colorWithAlpha, radius, spacing } from "../theme/tokens";
-import { IosGlassBackdrop } from "./IosGlassBackdrop";
+import { radius, spacing } from "../theme/tokens";
 
 type AppButtonProps = {
   label: string;
@@ -47,12 +45,8 @@ export function AppButton({
       ? androidMaterialColor(theme, "onSecondaryContainer")
       : foregroundColor;
   const icon = getButtonIcon(label);
-  const glassRole: IosGlassRole = resolvedVariant === "filled" ? "buttonPrimary" : "buttonSecondary";
-  const usesIosGlass = Platform.OS === "ios" && resolvedVariant !== "text" && !theme.reducedTransparency;
-  const glassSurface = usesIosGlass ? iosGlassSurface(theme, glassRole, { nativeBackdrop: true }) : null;
-  const glassOverlayColor = resolvedVariant === "filled"
-    ? colorWithAlpha(filledColor, tone === "warning" ? 0.3 : 0.24)
-    : colorWithAlpha(theme.card, theme.name === "light" ? 0.12 : 0.08);
+  // CTA는 글래스 장식보다 명확한 대비가 우선. Liquid Glass는 하단 내비게이션처럼
+  // 그룹화된 보조 chrome에만 쓰고 버튼은 불투명 색상을 유지한다.
 
   const animateTo = (toValue: number) => {
     Animated.timing(scale, {
@@ -84,17 +78,8 @@ export function AppButton({
           Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
           resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
-          glassSurface,
         ]}
       >
-        {glassSurface ? (
-          <IosGlassBackdrop
-            theme={theme}
-            role={glassRole}
-            overlayColor={glassOverlayColor}
-            style={size === "sm" ? styles.glassBackdropSm : styles.glassBackdrop}
-          />
-        ) : null}
         {resolvedVariant !== "text" ? (
           <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
         ) : null}
@@ -154,12 +139,6 @@ const styles = StyleSheet.create({
   buttonSmAndroid: {
     minHeight: 40,
     borderRadius: radius.pill,
-  },
-  glassBackdrop: {
-    borderRadius: radius.md,
-  },
-  glassBackdropSm: {
-    borderRadius: radius.sm,
   },
   label: {
     fontSize: 14,

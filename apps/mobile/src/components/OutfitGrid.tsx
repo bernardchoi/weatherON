@@ -9,6 +9,7 @@ type OutfitGridProps = {
   outfit: OutfitRecommendation;
   maxItems?: number;
   compact?: boolean;
+  dense?: boolean;
 };
 
 const slotLabel: Record<string, string> = {
@@ -19,7 +20,7 @@ const slotLabel: Record<string, string> = {
   accessory: "소품",
 };
 
-export function OutfitGrid({ outfit, maxItems, compact = false }: OutfitGridProps) {
+export function OutfitGrid({ outfit, maxItems, compact = false, dense = false }: OutfitGridProps) {
   const theme = useAppTheme();
   const entries = Object.entries(outfit.items)
     .filter(([, item]) => Boolean(item))
@@ -28,14 +29,14 @@ export function OutfitGrid({ outfit, maxItems, compact = false }: OutfitGridProp
     <View style={styles.outfitGrid}>
       {entries.map(([slot, item]) =>
         item ? (
-          <View key={slot} style={[styles.itemCell, compact ? styles.itemCellCompact : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, { backgroundColor: theme.cardMuted }]}>
+          <View key={slot} style={[styles.itemCell, compact ? styles.itemCellCompact : null, dense ? styles.itemCellDense : null, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+            <View style={[styles.imageWell, compact ? styles.imageWellCompact : null, dense ? styles.imageWellDense : null, { backgroundColor: theme.cardMuted }]}>
               {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
-                <Image source={outfitImageAssets[item.imageUrl]} style={[styles.itemImage, compact ? styles.itemImageCompact : null]} resizeMode="contain" />
+                <Image source={outfitImageAssets[item.imageUrl]} style={[styles.itemImage, compact ? styles.itemImageCompact : null, dense ? styles.itemImageDense : null]} resizeMode="contain" />
               ) : null}
             </View>
             <Text style={[styles.itemSlot, { color: theme.clear }]}>{slotLabel[slot] ?? "아이템"}</Text>
-            <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
+            <Text style={[styles.itemName, dense ? styles.itemNameDense : null, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
           </View>
         ) : null,
       )}
@@ -60,6 +61,11 @@ const styles = StyleSheet.create({
   itemCellCompact: {
     minHeight: 118,
   },
+  itemCellDense: {
+    minHeight: 82,
+    gap: 3,
+    padding: 7,
+  },
   imageWell: {
     height: 70,
     alignItems: "center",
@@ -69,12 +75,18 @@ const styles = StyleSheet.create({
   imageWellCompact: {
     height: 56,
   },
+  imageWellDense: {
+    height: 36,
+  },
   itemImage: {
     width: "92%",
     height: 64,
   },
   itemImageCompact: {
     height: 52,
+  },
+  itemImageDense: {
+    height: 34,
   },
   itemSlot: {
     fontSize: 10,
@@ -84,5 +96,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "800",
+  },
+  itemNameDense: {
+    fontSize: 12,
+    lineHeight: 15,
   },
 });

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "react-native";
 
-const EDGE_ACTIVATION_WIDTH = 20;
+const EDGE_ACTIVATION_WIDTH = 28;
 const SWIPE_COMPLETE_DISTANCE_RATIO = 0.3;
 const SWIPE_COMPLETE_VELOCITY = 0.5;
 
@@ -51,8 +51,12 @@ export function ScreenTransition({
   // release 시점에도 시작 지점을 확인해 중앙 스와이프 오작동을 막는다.
   const panResponder = useMemo(
     () => PanResponder.create({
+      // ScrollView보다 먼저 시작 지점을 소유해야 iOS 실제 기기에서 가장자리 스와이프가
+      // 하위 스크롤에 빼앗기지 않는다. 중앙 영역은 절대 responder를 갖지 않는다.
+      onStartShouldSetPanResponderCapture: (_, gesture) => canGoBack && Platform.OS === "ios" && isEdgeSwipeStart(gesture.x0),
       onMoveShouldSetPanResponder: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
       onMoveShouldSetPanResponderCapture: (_, gesture) => shouldActivateEdgeBackSwipe(canGoBack, gesture),
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (_, gesture) => {
         edgeSwipeActiveRef.current = isEdgeSwipeStart(gesture.x0);
       },

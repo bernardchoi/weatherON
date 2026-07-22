@@ -60,7 +60,7 @@ export function OutfitScreen({
       </View>
 
       <Section title="오늘 입기 좋은 조합" caption={state.outfit.decisionText} accent="clear">
-        <OutfitGrid outfit={state.outfit} maxItems={4} compact />
+        <OutfitGrid outfit={state.outfit} maxItems={4} dense />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="clear" />
@@ -73,7 +73,7 @@ export function OutfitScreen({
           </View>
         ))}
         <View style={[styles.advicePreview, { backgroundColor: theme.cardMuted }]}>
-          {state.outfit.timeAdvice.slice(0, 2).map((item) => (
+          {state.outfit.timeAdvice.slice(0, 1).map((item) => (
             <View key={item.time} style={styles.advicePreviewRow}>
               <Text style={[styles.advicePreviewTime, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
               <Text style={[styles.advicePreviewText, { color: theme.text }]} numberOfLines={1}>{item.text}</Text>
@@ -105,8 +105,8 @@ function formatAdviceTime(value: string) {
 
 const styles = StyleSheet.create({
   criteriaCard: {
-    gap: spacing.md,
-    padding: spacing.md,
+    gap: spacing.sm,
+    padding: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -123,13 +123,13 @@ const styles = StyleSheet.create({
   },
   criteriaTitle: {
     marginTop: 2,
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 15,
+    lineHeight: 19,
     fontWeight: "900",
   },
   criteriaBody: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
   },
   criteriaStats: {
@@ -138,10 +138,10 @@ const styles = StyleSheet.create({
   },
   criteriaStat: {
     flex: 1,
-    minHeight: 50,
+    minHeight: 42,
     justifyContent: "center",
     gap: 3,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 8,
     borderRadius: radius.md,
   },
   criteriaStatIcon: {
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
     height: 15,
   },
   advicePreview: {
-    gap: spacing.xs,
+    gap: 2,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 5,
     borderRadius: radius.md,
   },
   advicePreviewRow: {
@@ -197,7 +197,6 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: spacing.sm,
-    flexWrap: "wrap",
+    gap: spacing.xs,
   },
 });

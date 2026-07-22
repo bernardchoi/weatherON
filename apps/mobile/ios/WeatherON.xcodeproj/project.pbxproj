@@ -15,6 +15,8 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F11748462D0307B40044C1D9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748452D0307B40044C1D9 /* SceneDelegate.swift */; };
+		A11C26010000000000000001 /* LiquidGlassNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000011 /* LiquidGlassNavigationView.swift */; };
+		A11C26010000000000000002 /* LiquidGlassNavigationView.m in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000012 /* LiquidGlassNavigationView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,8 @@
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WeatherON/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748452D0307B40044C1D9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = WeatherON/SceneDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* WeatherON-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WeatherON-Bridging-Header.h"; path = "WeatherON/WeatherON-Bridging-Header.h"; sourceTree = "<group>"; };
+		A11C26010000000000000011 /* LiquidGlassNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiquidGlassNavigationView.swift; path = WeatherON/LiquidGlassNavigationView.swift; sourceTree = "<group>"; };
+		A11C26010000000000000012 /* LiquidGlassNavigationView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiquidGlassNavigationView.m; path = WeatherON/LiquidGlassNavigationView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +56,8 @@
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748452D0307B40044C1D9 /* SceneDelegate.swift */,
 				F11748442D0722820044C1D9 /* WeatherON-Bridging-Header.h */,
+				A11C26010000000000000011 /* LiquidGlassNavigationView.swift */,
+				A11C26010000000000000012 /* LiquidGlassNavigationView.m */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -324,6 +330,8 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				F11748462D0307B40044C1D9 /* SceneDelegate.swift in Sources */,
+				A11C26010000000000000001 /* LiquidGlassNavigationView.swift in Sources */,
+				A11C26010000000000000002 /* LiquidGlassNavigationView.m in Sources */,
 				5AF939C3A402EBCD9D1032E8 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
