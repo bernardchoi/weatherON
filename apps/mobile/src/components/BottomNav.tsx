@@ -1,9 +1,10 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
 type BottomNavProps = {
@@ -11,30 +12,49 @@ type BottomNavProps = {
   onNavigate: (route: P0RouteId) => void;
 };
 
-// 앱 표면 위에 떠 있는 단일 glass capsule. Instagram/Meta처럼 활성 탭만 내부에서
-// 은은하게 구분하고 개별 버튼에 blur를 겹치지 않아 아이콘과 라벨이 선명하게 유지된다.
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
+  const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
-  const activeColor = androidMaterialColor(theme, "primary");
+  const activeColor = isIos ? theme.clear : androidMaterialColor(theme, "primary");
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
+  const materialNavigationSurface = androidMaterialSurface(theme, "navigation") ?? {
+    backgroundColor: theme.cardStrong,
+    borderColor: theme.border,
+  };
   return (
-    <View style={styles.dockWrap}>
-      <View style={[styles.dock, { borderColor: theme.name === "light" ? "rgba(20,32,51,0.10)" : "rgba(246,251,255,0.22)" }]}>
-        <LiquidGlassNavigationSurface activeIndex={activeIndex} theme={theme} />
+    <View style={[styles.dockWrap, isIos ? styles.iosDockWrap : styles.androidDockWrap]}>
+      <View
+        style={[
+          styles.dock,
+          isIos ? styles.iosDock : styles.androidDock,
+          isIos
+            ? iosGlassSurface(theme, "dock", { nativeBackdrop: true })
+            : materialNavigationSurface,
+        ]}
+      >
+        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} theme={theme} /> : null}
         {bottomNavRoutes.map((route) => {
           const active = route.id === activeTabRoute;
           return (
-            <TabButton key={route.id} label={route.label} active={active} onPress={() => onNavigate(route.id)}>
-              <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} />
-              <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
-              <Text
-                style={[styles.label, { color: active ? activeColor : theme.subtle }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.9}
-                allowFontScaling={false}
+            <TabButton
+              key={route.id}
+              label={route.label}
+              active={active}
+              onPress={() => onNavigate(route.id)}
+              ripple={isIos ? undefined : androidMaterialRipple(theme)}
+            >
+              {isIos ? <View style={[styles.activeDot, { backgroundColor: active ? activeColor : "transparent" }]} /> : null}
+              <View
+                style={[
+                  styles.iconContainer,
+                  !isIos ? styles.androidIconContainer : null,
+                  !isIos && active ? { backgroundColor: androidMaterialColor(theme, "secondaryContainer") } : null,
+                ]}
               >
+                <TabIcon route={route.id} color={active ? activeColor : theme.subtle} />
+              </View>
+              <Text style={[styles.label, !isIos ? styles.androidLabel : null, { color: active ? activeColor : theme.subtle }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9} allowFontScaling={false}>
                 {route.label}
               </Text>
             </TabButton>
@@ -49,11 +69,13 @@ function TabButton({
   label,
   active,
   onPress,
+  ripple,
   children,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  ripple?: ReturnType<typeof androidMaterialRipple>;
   children: React.ReactNode;
 }) {
   return (
@@ -61,6 +83,7 @@ function TabButton({
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
+      android_ripple={ripple}
       onPress={onPress}
       style={styles.item}
     >
@@ -92,10 +115,16 @@ function getTabIconSource(route: P0RouteId) {
 
 const styles = StyleSheet.create({
   dockWrap: {
+    marginTop: 8,
+  },
+  iosDockWrap: {
+    height: 64,
     marginHorizontal: 20,
     marginBottom: 12,
-    marginTop: 8,
-    height: 64,
+  },
+  androidDockWrap: {
+    height: 72,
+    marginBottom: 0,
   },
   dock: {
     flex: 1,
@@ -105,12 +134,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
+  iosDock: {
+    borderRadius: 32,
+  },
+  androidDock: {
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottomWidth: 0,
+  },
   item: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
     minHeight: 58,
+  },
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  androidIconContainer: {
+    width: 64,
+    height: 32,
+    borderRadius: 16,
   },
   activeDot: {
     width: 5,
@@ -126,6 +174,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     includeFontPadding: false,
+  },
+  androidLabel: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "700",
   },
   iconImage: {
     width: 21,

@@ -140,8 +140,16 @@ assertSourceExcludes("apps/mobile/src/navigation/routes.ts", ['  "C1",\n  "C2",\
 assertBottomNavRoutes("apps/mobile/src/navigation/routes.ts");
 
 assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ["getActiveTabRoute", 'route === "C1" || route === "C2" || route === "C3" || route === "C4"', 'return "C1";', 'return "H1";', 'route === "H3" || route === "H4" || route === "H5"', 'route === "G2"']);
-assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", ['androidMaterialSurface(theme, "navigation")', "activeDot", "activeColor"]);
-assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", ["androidActiveIndicator", "androidMaterialActiveIndicator", "android_ripple", "itemTint"]);
+assertSourceIncludes("apps/mobile/src/components/BottomNav.tsx", [
+  'Platform.OS === "ios"',
+  "LiquidGlassNavigationSurface",
+  'androidMaterialSurface(theme, "navigation")',
+  "androidMaterialRipple(theme)",
+  "androidIconContainer",
+  "activeColor",
+]);
+assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", ["androidMaterialActiveIndicator", "itemTint"]);
+assertSourceIncludes("apps/mobile/src/components/LiquidGlassNavigationSurface.tsx", ['if (Platform.OS !== "ios") return null;']);
 assertSourceExcludes("apps/mobile/src/components/BottomNav.tsx", [">{route.id}</Text>", "route.id}</Text>"]);
 assertSourceIncludes("apps/mobile/src/theme/androidMaterial.ts", [
   '"surfaceContainerLow"',
@@ -808,11 +816,11 @@ assertSourceIncludes("apps/mobile/src/screens/TomorrowBriefScreen.tsx", [
   "buildTomorrowWeather",
   "recommendOutfit",
   "recommendUmbrella",
-  "최고",
-  "최저",
-  "강수 확률",
+  "비 올 확률",
+  "예상 강수",
+  "최대 바람",
   "내일 코디",
-  "우산 준비",
+  "getUmbrellaActionShort",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
   "buildVisibleNotifications",
