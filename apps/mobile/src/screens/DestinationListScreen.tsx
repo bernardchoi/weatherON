@@ -163,8 +163,24 @@ function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () =>
         </View>
       </View>
       <View style={styles.emptyBenefitGrid}>
-        <EmptyBenefit icon={uiIconAssets.clock} title="출발 시간" body="도착 시간 기준 계산" color={theme.clear} theme={theme} />
-        <EmptyBenefit icon={uiIconAssets.rain} title="비 완화" body="강수 변화 먼저 확인" color={theme.clear} theme={theme} />
+        <EmptyBenefit
+          icon={uiIconAssets.clock}
+          title="출발 시간"
+          body="도착 시간 기준 계산"
+          color={theme.clear}
+          theme={theme}
+          accessibilityLabel="목적지 추가하고 출발 시간 계산"
+          onPress={onAdd}
+        />
+        <EmptyBenefit
+          icon={uiIconAssets.rain}
+          title="비 완화"
+          body="강수 변화 먼저 확인"
+          color={theme.clear}
+          theme={theme}
+          accessibilityLabel="목적지 추가하고 강수 변화 확인"
+          onPress={onAdd}
+        />
       </View>
       <AppButton label="목적지 추가" accessibilityLabel="첫 목적지 추가하기" onPress={onAdd} />
     </View>
@@ -177,21 +193,30 @@ function EmptyBenefit({
   body,
   color,
   theme,
+  onPress,
+  accessibilityLabel,
 }: {
   icon: number;
   title: string;
   body: string;
   color: string;
   theme: AppTheme;
+  onPress: () => void;
+  accessibilityLabel: string;
 }) {
   return (
-    <View style={[styles.emptyBenefit, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+    <FeedbackPressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.emptyBenefit, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
       <Image source={icon} style={[styles.emptyBenefitIcon, { tintColor: color }]} resizeMode="contain" />
       <View style={styles.emptyBenefitCopy}>
         <Text style={[styles.emptyBenefitTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
         <Text style={[styles.emptyBenefitBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
       </View>
-    </View>
+    </FeedbackPressable>
   );
 }
 

@@ -78,9 +78,24 @@ export function OutfitScreen({
       <Section title="오늘 입기 좋은 조합" caption={state.outfit.decisionText} accent="clear">
         <OutfitGrid outfit={state.outfit} maxItems={4} dense onItemPress={() => onNavigate("C4")} />
         <View style={styles.pillRow}>
-          <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
-          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="clear" />
-          <StatusPill label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"} tone="clear" />
+          <StatusPill
+            label={getOutfitVariantLabel(state.outfit.variant)}
+            tone="clear"
+            accessibilityLabel="코디 스타일 기준 수정"
+            onPress={() => onNavigate("O4")}
+          />
+          <StatusPill
+            label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"}
+            tone="clear"
+            accessibilityLabel="강수 타임라인 보기"
+            onPress={() => onNavigate("H5")}
+          />
+          <StatusPill
+            label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"}
+            tone="clear"
+            accessibilityLabel={outfitSaved ? "저장한 코디 상세 보기" : "코디 저장으로 이동"}
+            onPress={() => onNavigate("C4")}
+          />
         </View>
         {state.outfit.reasons.slice(0, 1).map((reason) => (
           <View key={reason} style={styles.reasonRow}>

@@ -224,6 +224,10 @@ async function checkOutfitLaunchFlow(page) {
 
   await clickAriaIncludes(page, "코디 탭");
   await assertText(page, "오늘 입기 좋은 조합");
+  await clickText(page, "우산도 확인");
+  await assertText(page, "우산 추천");
+  await clickAriaIncludes(page, "뒤로");
+  await assertText(page, "오늘 입기 좋은 조합");
   await clickText(page, "코디 자세히 보기");
   await clickText(page, "내 옷장 보기");
   await assertText(page, "내 옷장");
@@ -523,6 +527,11 @@ async function checkDestinationPersistenceFlow(page) {
   await assertText(page, "잠실종합운동장");
   await assertText(page, "알림 1/1");
   await assertNoText(page, "첫 목적지 추가");
+  await clickAriaIncludes(page, "잠실종합운동장 목적지 상세 보기");
+  await assertText(page, "목적지 기준 알림 미리보기");
+  await assertText(page, "자동 알림 기준");
+  await clickAriaIncludes(page, "뒤로");
+  await assertText(page, "잠실종합운동장");
 }
 
 async function checkDestinationAddUiPersistenceFlow(browser) {

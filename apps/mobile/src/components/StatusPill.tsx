@@ -1,22 +1,40 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type StatusPillProps = {
   label: string;
   tone?: "clear" | "gold" | "sky" | "warm";
+  onPress?: () => void;
+  accessibilityLabel?: string;
 };
 
-export function StatusPill({ label, tone = "clear" }: StatusPillProps) {
+export function StatusPill({ label, tone = "clear", onPress, accessibilityLabel }: StatusPillProps) {
   const theme = useAppTheme();
   const color = getToneColor(theme, tone);
-  return (
+  const content = (
     <View style={[styles.pill, { borderColor: `${color}55`, backgroundColor: theme.cardMuted }]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.label, { color }]}>{label}</Text>
     </View>
   );
+
+  if (onPress) {
+    return (
+      <FeedbackPressable
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityRole="button"
+        onPress={onPress}
+        style={styles.pressable}
+      >
+        {content}
+      </FeedbackPressable>
+    );
+  }
+
+  return content;
 }
 
 function getToneColor(theme: AppTheme, tone: NonNullable<StatusPillProps["tone"]>) {
@@ -27,6 +45,10 @@ function getToneColor(theme: AppTheme, tone: NonNullable<StatusPillProps["tone"]
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    alignSelf: "flex-start",
+    borderRadius: radius.pill,
+  },
   pill: {
     minHeight: 32,
     alignSelf: "flex-start",
