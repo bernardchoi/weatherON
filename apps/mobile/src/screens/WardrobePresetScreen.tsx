@@ -372,24 +372,25 @@ const styles = StyleSheet.create({
   presetGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
+    justifyContent: "space-between",
+    rowGap: 10,
   },
   categoryList: {
     gap: spacing.sm,
   },
   categoryCard: {
-    gap: spacing.sm,
-    padding: spacing.sm,
+    gap: 12,
+    padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   categoryHeader: {
-    minHeight: 44,
+    minHeight: 42,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 2,
   },
   categoryCopy: {
     flexDirection: "row",
@@ -397,15 +398,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   categoryTitle: {
-    fontSize: 15,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
   },
   categoryCount: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
   categoryToggle: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   categoryEmpty: {
@@ -416,17 +420,18 @@ const styles = StyleSheet.create({
   },
   presetCard: {
     width: "31.5%",
-    minHeight: 150,
-    gap: spacing.sm,
-    padding: spacing.sm,
+    minHeight: 162,
+    justifyContent: "space-between",
+    gap: 8,
+    padding: 8,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   presetMain: {
-    gap: spacing.xs,
+    gap: 6,
   },
   presetImageWrap: {
-    height: 66,
+    height: 68,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
@@ -436,12 +441,14 @@ const styles = StyleSheet.create({
     height: "92%",
   },
   presetName: {
+    minHeight: 32,
     fontSize: 11,
-    lineHeight: 15,
+    lineHeight: 16,
     fontWeight: "900",
   },
   presetMeta: {
     fontSize: 10,
+    lineHeight: 14,
     fontWeight: "800",
   },
   actions: {

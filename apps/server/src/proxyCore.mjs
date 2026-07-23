@@ -7,6 +7,7 @@ const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 const DEFAULT_WEATHERKIT_WEATHER_URL = "https://weatherkit.apple.com/api/v1/weather";
 const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 const DEFAULT_KAKAO_DIRECTIONS_URL = "https://apis-navi.kakaomobility.com/v1/directions";
+const DEFAULT_KAKAO_PUBLIC_TRANSIT_URL = "https://dapi.kakao.com/v2/routing/publictraffic";
 const DEFAULT_GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -216,7 +217,9 @@ async function estimateRoute(params, readEnvValue) {
   const originCountryCode = normalizeCountryCode(params.get("originCountryCode")) ?? "KR";
   const destinationCountryCode =
     normalizeCountryCode(params.get("destinationCountryCode")) ?? inferPlaceSearchCountryCode(destinationName);
-  const cacheKey = `route:${originCountryCode}:${destinationCountryCode}:${formatCoordinateKey(origin)}:${formatCoordinateKey(destination)}`;
+  const transportMode = normalizeTransportMode(params.get("transportMode"));
+  const arrivalTime = normalizeRouteTime(params.get("arrivalTime"));
+  const cacheKey = `route:${originCountryCode}:${destinationCountryCode}:${transportMode}:${arrivalTime ?? "none"}:${formatCoordinateKey(origin)}:${formatCoordinateKey(destination)}`;
 
   return fetchCachedJson(
     routeEstimateCache,
@@ -224,11 +227,14 @@ async function estimateRoute(params, readEnvValue) {
     readNumberEnv(readEnvValue, "ROUTE_CACHE_TTL_MS", DEFAULT_ROUTE_CACHE_TTL_MS),
     async () => {
       try {
+        if (transportMode === "transit" && shouldUseKakaoRoute(originCountryCode, destinationCountryCode) && readEnvValue("KAKAO_REST_API_KEY")) {
+          return await estimateKakaoTransitRoute(origin, destination, originName, destinationName, readEnvValue);
+        }
         if (shouldUseKakaoRoute(originCountryCode, destinationCountryCode) && readEnvValue("KAKAO_REST_API_KEY")) {
           return await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue);
         }
         if (shouldUseGoogleRoute(originCountryCode, destinationCountryCode) && getGoogleMapsApiKey(readEnvValue)) {
-          return await estimateGoogleRoute(origin, destination, destinationCountryCode, readEnvValue);
+          return await estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, readEnvValue);
         }
       } catch (error) {
         console.warn(`route provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
@@ -341,31 +347,75 @@ async function estimateKakaoRoute(origin, destination, originName, destinationNa
   };
 }
 
-async function estimateGoogleRoute(origin, destination, destinationCountryCode, readEnvValue) {
+async function estimateKakaoTransitRoute(origin, destination, originName, destinationName, readEnvValue) {
+  const url = new URL(readEnvValue("KAKAO_PUBLIC_TRANSIT_URL") ?? DEFAULT_KAKAO_PUBLIC_TRANSIT_URL);
+  url.searchParams.set("start_x", String(origin.longitude));
+  url.searchParams.set("start_y", String(origin.latitude));
+  url.searchParams.set("s_name", originName);
+  url.searchParams.set("end_x", String(destination.longitude));
+  url.searchParams.set("end_y", String(destination.latitude));
+  url.searchParams.set("e_name", destinationName);
+  const payload = await fetchJson(url, readEnvValue, {
+    Authorization: `KakaoAK ${readEnvValue("KAKAO_REST_API_KEY")}`,
+  });
+  if (payload.status && payload.status !== "OK") {
+    throw new Error(`kakao transit failed: ${payload.status}`);
+  }
+  const route = getFastestKakaoTransitRoute(payload);
+  const durationSeconds = Number(route?.properties?.totalTime);
+  const distanceMeters = Number(route?.properties?.totalDistance);
+  if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceMeters)) {
+    throw new Error("kakao transit response is empty");
+  }
+  return {
+    provider: "kakao-transit",
+    status: "ready",
+    travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
+    distanceMeters: Math.max(0, Math.round(distanceMeters)),
+    message: "Kakao 대중교통 기준",
+  };
+}
+
+function getFastestKakaoTransitRoute(payload) {
+  const routes = Array.isArray(payload.routes) ? payload.routes : [];
+  return routes
+    .filter((route) => Number.isFinite(Number(route?.properties?.totalTime)))
+    .sort((a, b) => Number(a.properties.totalTime) - Number(b.properties.totalTime))[0];
+}
+
+async function estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, readEnvValue) {
   const url = new URL(readEnvValue("GOOGLE_DISTANCE_MATRIX_URL") ?? DEFAULT_GOOGLE_DISTANCE_MATRIX_URL);
   url.searchParams.set("origins", `${origin.latitude},${origin.longitude}`);
   url.searchParams.set("destinations", `${destination.latitude},${destination.longitude}`);
-  url.searchParams.set("mode", "driving");
+  const googleMode = transportMode === "transit" ? "transit" : "driving";
+  url.searchParams.set("mode", googleMode);
   url.searchParams.set("language", getGoogleRouteLanguage(destinationCountryCode));
   url.searchParams.set("key", getGoogleMapsApiKey(readEnvValue));
   if (destinationCountryCode === "JP") url.searchParams.set("region", "jp");
+  if (googleMode === "transit") {
+    const arrivalSeconds = getUnixSeconds(arrivalTime);
+    if (arrivalSeconds) url.searchParams.set("arrival_time", String(arrivalSeconds));
+    else url.searchParams.set("departure_time", "now");
+  } else {
+    url.searchParams.set("departure_time", "now");
+  }
   const payload = await fetchJson(url, readEnvValue);
   if (payload.status !== "OK") throw new Error(`google route failed: ${payload.status ?? "unknown_status"}`);
   const element = payload.rows?.[0]?.elements?.[0];
   if (!element || element.status !== "OK") {
     throw new Error(`google route element failed: ${element?.status ?? "empty"}`);
   }
-  const durationSeconds = Number(element.duration?.value);
+  const durationSeconds = Number(element.duration_in_traffic?.value ?? element.duration?.value);
   const distanceMeters = Number(element.distance?.value);
   if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceMeters)) {
     throw new Error("google route response is empty");
   }
   return {
-    provider: "google",
+    provider: googleMode === "transit" ? "google-transit" : "google",
     status: "ready",
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
-    message: "Google Distance Matrix 기준",
+    message: googleMode === "transit" ? "Google 대중교통 기준" : "Google Distance Matrix 기준",
   };
 }
 
@@ -398,6 +448,25 @@ function getInternationalFallbackTravelMinutes(countryCode) {
 function normalizeCountryCode(value) {
   if (value === "KR" || value === "JP" || value === "GLOBAL") return value;
   return null;
+}
+
+function normalizeTransportMode(value) {
+  if (value === "walk" || value === "drive" || value === "transit") return value;
+  return "auto";
+}
+
+function normalizeRouteTime(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  return date.toISOString();
+}
+
+function getUnixSeconds(value) {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time) || time <= Date.now()) return null;
+  return Math.floor(time / 1000);
 }
 
 function inferPlaceSearchCountryCode(query) {

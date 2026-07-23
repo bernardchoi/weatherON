@@ -5,6 +5,7 @@ export const maxWalkableDestinationDistanceKm = 25;
 export type TravelEstimateInput = {
   travelMinutes: number;
   distanceMeters: number;
+  provider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
   status: "idle" | "loading" | "ready" | "fallback" | "error";
 };
 
@@ -33,7 +34,12 @@ export function getTravelMinutesForTransport(
     if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
     return Math.max(15, Math.ceil(baseMinutes * 1.8));
   }
+  if (transportMode === "transit" && isLiveTransitEstimate(estimate)) return baseMinutes;
   if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
   if (transportMode === "drive") return baseMinutes;
   return baseMinutes;
+}
+
+export function isLiveTransitEstimate(estimate: Pick<TravelEstimateInput, "provider" | "status">): boolean {
+  return estimate.status === "ready" && (estimate.provider === "kakao-transit" || estimate.provider === "google-transit");
 }

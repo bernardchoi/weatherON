@@ -759,11 +759,15 @@ function getTravelEstimateCopy(
 ) {
   const source = provider === "kakao" && status === "ready"
     ? "Kakao Directions"
+    : provider === "kakao-transit" && status === "ready"
+      ? "Kakao 대중교통"
     : provider === "google" && status === "ready"
       ? "Google Distance Matrix"
-      : status === "error"
-        ? "갱신 실패"
-        : "경로 확인 전";
+      : provider === "google-transit" && status === "ready"
+        ? "Google 대중교통"
+        : status === "error"
+          ? "갱신 실패"
+          : "경로 확인 전";
   const distanceText = formatDistance(distanceMeters, distanceUnit);
   if (!distanceText) return source;
   return `${source} · ${distanceText}`;

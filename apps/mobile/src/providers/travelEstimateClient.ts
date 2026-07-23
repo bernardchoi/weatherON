@@ -1,3 +1,4 @@
+import type { DestinationTransportMode } from "@weatheron/shared";
 import {
   DEFAULT_WEATHER_TIMEOUT_MS,
   getWeatherRuntimeConfig,
@@ -5,7 +6,7 @@ import {
 } from "../config/weatherEnv";
 import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
 
-export type TravelEstimateProvider = "kakao" | "google" | "fallback";
+export type TravelEstimateProvider = "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
 export type TravelEstimateStatus = "idle" | "loading" | "ready" | "fallback" | "error";
 
 export type TravelEstimateCoordinate = {
@@ -20,6 +21,8 @@ export type TravelEstimateParams = {
   destinationName?: string;
   originCountryCode?: "KR" | "JP" | "GLOBAL";
   destinationCountryCode?: "KR" | "JP" | "GLOBAL";
+  transportMode?: DestinationTransportMode;
+  arrivalTime?: string;
 };
 
 export type TravelEstimateResult = {
@@ -63,6 +66,8 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       if (params.destinationName) url.searchParams.set("destinationName", params.destinationName);
       if (params.originCountryCode) url.searchParams.set("originCountryCode", params.originCountryCode);
       if (params.destinationCountryCode) url.searchParams.set("destinationCountryCode", params.destinationCountryCode);
+      if (params.transportMode) url.searchParams.set("transportMode", params.transportMode);
+      if (params.arrivalTime) url.searchParams.set("arrivalTime", params.arrivalTime);
       const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
       const result = await fetchJson<Omit<TravelEstimateResult, "updatedAt">>(url, timeoutMs, options.fetchImpl, headers);
       return {

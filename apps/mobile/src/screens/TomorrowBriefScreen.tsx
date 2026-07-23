@@ -40,17 +40,19 @@ export function TomorrowBriefScreen({
       <View style={styles.header}>
         <BackButton onPress={onGoBack} />
         <View style={styles.headerCopy}>
-          <View style={styles.headerTitleRow}>
-            <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
+          <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
+          <View style={styles.headerHeadlineRow}>
+            <View style={styles.headerTextBlock}>
+              <Text style={[styles.headerTitle, { color: theme.text }]}>내일 브리핑</Text>
+              <Text style={[styles.headerMeta, { color: theme.muted }]} numberOfLines={1}>
+                {tomorrow.dateLabel} · {getDisplayLocationName(tomorrow.weather.locationName)}
+              </Text>
+            </View>
             <View style={[styles.schedulePill, { backgroundColor: `${theme.gold}18`, borderColor: `${theme.gold}48` }]}>
               <View style={[styles.scheduleDot, { backgroundColor: theme.gold }]} />
               <Text style={[styles.scheduleText, { color: theme.gold }]}>21:00</Text>
             </View>
           </View>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>내일 브리핑</Text>
-          <Text style={[styles.headerMeta, { color: theme.muted }]} numberOfLines={1}>
-            {tomorrow.dateLabel} · {getDisplayLocationName(tomorrow.weather.locationName)}
-          </Text>
         </View>
       </View>
 
@@ -273,13 +275,13 @@ function toTomorrowCopy(value: string) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    gap: 8,
+    gap: 12,
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 10,
   },
   header: {
-    minHeight: 58,
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -287,24 +289,30 @@ const styles = StyleSheet.create({
   headerCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 1,
+    gap: 2,
   },
-  headerTitleRow: {
+  headerHeadlineRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     gap: spacing.sm,
   },
+  headerTextBlock: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
   wordmark: {
-    width: 78,
-    height: 16,
+    width: 98,
+    height: 20,
   },
   schedulePill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    marginTop: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderWidth: 1,
     borderRadius: radius.pill,
   },
@@ -314,24 +322,24 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   scheduleText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
   headerTitle: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: "900",
   },
   headerMeta: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
   weatherCard: {
-    gap: 8,
-    padding: 10,
+    gap: 12,
+    padding: 14,
     borderWidth: 1,
     borderRadius: radius.lg,
   },
@@ -341,15 +349,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   weatherIconFrame: {
-    width: 50,
-    height: 50,
+    width: 64,
+    height: 64,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   weatherIcon: {
-    width: 30,
-    height: 30,
+    width: 38,
+    height: 38,
   },
   weatherCopy: {
     flex: 1,
@@ -357,80 +365,80 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   weatherEyebrow: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   weatherCondition: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
   },
   weatherRange: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
   },
   rainSummary: {
     alignItems: "flex-end",
   },
   rainPct: {
-    fontSize: 22,
-    lineHeight: 26,
+    fontSize: 28,
+    lineHeight: 32,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
   rainLabel: {
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
   },
   factRow: {
     flexDirection: "row",
-    gap: 6,
+    gap: 8,
   },
   fact: {
     flex: 1,
     minWidth: 0,
-    minHeight: 36,
+    minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
-    paddingHorizontal: 4,
+    gap: 7,
+    paddingHorizontal: 6,
     borderRadius: radius.sm,
   },
   factIcon: {
-    width: 14,
-    height: 14,
+    width: 17,
+    height: 17,
   },
   factValue: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
   outfitCard: {
-    gap: 7,
-    padding: 10,
+    gap: 12,
+    padding: 14,
     borderWidth: 1,
     borderRadius: radius.lg,
   },
   outfitTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 9,
   },
   outfitTitleIcon: {
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   outfitTitleIconImage: {
-    width: 16,
-    height: 16,
+    width: 19,
+    height: 19,
   },
   outfitTitleCopy: {
     flex: 1,
@@ -438,44 +446,45 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   outfitEyebrow: {
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   outfitTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 17,
+    lineHeight: 21,
     fontWeight: "900",
   },
   matchPct: {
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
   outfitHero: {
+    minHeight: 92,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    padding: 7,
+    gap: 12,
+    padding: 12,
     borderWidth: 1,
     borderRadius: radius.md,
   },
   outfitImageFrame: {
-    width: 54,
-    height: 54,
+    width: 76,
+    height: 76,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
     overflow: "hidden",
   },
   outfitImage: {
-    width: 50,
-    height: 50,
+    width: 70,
+    height: 70,
   },
   outfitFallbackIcon: {
-    width: 26,
-    height: 26,
+    width: 34,
+    height: 34,
   },
   outfitCopy: {
     flex: 1,
@@ -483,65 +492,65 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   outfitDecision: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "900",
   },
   outfitReason: {
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
   outfitItems: {
     flexDirection: "row",
-    gap: 6,
+    gap: 8,
   },
   outfitItem: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
-    minHeight: 42,
-    paddingVertical: 3,
+    gap: 4,
+    minHeight: 66,
+    paddingVertical: 7,
     borderRadius: radius.sm,
   },
   outfitMiniImageFrame: {
-    width: 24,
-    height: 24,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
   },
   outfitMiniImage: {
-    width: 22,
-    height: 22,
+    width: 34,
+    height: 34,
   },
   outfitSlot: {
     maxWidth: "100%",
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
   },
   readyStrip: {
-    minHeight: 48,
+    minHeight: 62,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderWidth: 1,
     borderRadius: radius.md,
   },
   umbrellaIconFrame: {
-    width: 32,
-    height: 32,
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
   },
   umbrellaIcon: {
-    width: 18,
-    height: 18,
+    width: 23,
+    height: 23,
   },
   umbrellaCopy: {
     flex: 1,
@@ -549,13 +558,13 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   umbrellaTitle: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 15,
+    lineHeight: 19,
     fontWeight: "900",
   },
   umbrellaBody: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
 });

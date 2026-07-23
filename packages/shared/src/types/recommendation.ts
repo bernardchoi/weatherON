@@ -65,7 +65,7 @@ export type DestinationCare = {
     travelMinutes?: number;
     bufferMinutes?: number;
     transportMode?: DestinationTransportMode;
-    travelProvider?: "kakao" | "google" | "fallback";
+    travelProvider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
     travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
   };
   umbrellaAdvice: RecommendationState;

@@ -50,7 +50,7 @@ export type DestinationScheduleInput = {
   transportMode?: DestinationTransportMode;
   repeatEnabled?: boolean;
   repeatDays?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
-  travelProvider?: "kakao" | "google" | "fallback";
+  travelProvider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
   travelStatus?: "idle" | "loading" | "ready" | "fallback" | "error";
 };
 

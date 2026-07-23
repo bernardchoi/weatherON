@@ -37,11 +37,19 @@ export function OutfitScreen({
     >
       <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.criteriaHeader}>
-          <View>
+          <View style={styles.criteriaCopy}>
             <Text style={[styles.criteriaLabel, { color: theme.subtle }]}>나만의 코디 기준</Text>
             <Text style={[styles.criteriaTitle, { color: theme.text }]}>오늘 날씨에 맞춰 골랐어요</Text>
           </View>
-          <AppButton label="기준 수정" onPress={() => onNavigate("O4")} tone="secondary" variant="outlined" />
+          <FeedbackPressable
+            accessibilityLabel="코디 스타일 기준 수정"
+            accessibilityRole="button"
+            onPress={() => onNavigate("O4")}
+            style={[styles.criteriaEditButton, { backgroundColor: `${theme.gold}14`, borderColor: `${theme.gold}36` }]}
+          >
+            <Image source={uiIconAssets.settings} style={[styles.criteriaEditIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+            <Text style={[styles.criteriaEditText, { color: theme.gold }]}>기준 수정</Text>
+          </FeedbackPressable>
         </View>
         <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
         <View style={styles.criteriaStats}>
@@ -141,8 +149,8 @@ function formatAdviceTime(value: string) {
 
 const styles = StyleSheet.create({
   criteriaCard: {
-    gap: spacing.sm,
-    padding: spacing.sm,
+    gap: 12,
+    padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -150,7 +158,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.md,
+    gap: spacing.sm,
+  },
+  criteriaCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   criteriaLabel: {
     fontSize: 11,
@@ -159,8 +171,8 @@ const styles = StyleSheet.create({
   },
   criteriaTitle: {
     marginTop: 2,
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "900",
   },
   criteriaBody: {
@@ -170,14 +182,14 @@ const styles = StyleSheet.create({
   },
   criteriaStats: {
     flexDirection: "row",
-    gap: spacing.xs,
+    gap: 7,
   },
   criteriaStat: {
     flex: 1,
-    minHeight: 42,
+    minHeight: 48,
     justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: 8,
+    gap: 4,
+    paddingHorizontal: 10,
     borderRadius: radius.md,
   },
   criteriaStatIcon: {
@@ -185,7 +197,26 @@ const styles = StyleSheet.create({
     height: 16,
   },
   criteriaStatValue: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  criteriaEditButton: {
+    minHeight: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  criteriaEditIcon: {
+    width: 16,
+    height: 16,
+  },
+  criteriaEditText: {
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   pillRow: {

@@ -349,7 +349,7 @@ export function normalizeDestinationTravelEstimate(value: unknown, origin: Weath
   return {
     originPlaceId: typeof record.originPlaceId === "string" ? record.originPlaceId : origin.locationId,
     destinationPlaceId: typeof record.destinationPlaceId === "string" ? record.destinationPlaceId : place.id,
-    provider: record.provider === "kakao" || record.provider === "google" ? record.provider : "fallback",
+    provider: isTravelEstimateProvider(record.provider) ? record.provider : "fallback",
     status: isTravelEstimateStatus(record.status) ? record.status : "fallback",
     travelMinutes: typeof record.travelMinutes === "number" ? record.travelMinutes : getDefaultTravelMinutes(place),
     distanceMeters: typeof record.distanceMeters === "number" ? record.distanceMeters : 0,
@@ -360,6 +360,10 @@ export function normalizeDestinationTravelEstimate(value: unknown, origin: Weath
 
 function isTravelEstimateStatus(value: unknown): value is DestinationTravelEstimate["status"] {
   return value === "idle" || value === "loading" || value === "ready" || value === "fallback" || value === "error";
+}
+
+function isTravelEstimateProvider(value: unknown): value is DestinationTravelEstimate["provider"] {
+  return value === "kakao" || value === "kakao-transit" || value === "google" || value === "google-transit" || value === "fallback";
 }
 
 function isPlaceSearchResult(value: unknown): value is PlaceSearchResult {

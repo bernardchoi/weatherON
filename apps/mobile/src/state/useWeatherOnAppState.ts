@@ -31,6 +31,7 @@ import {
 } from "../providers/localNotifications";
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
+import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts } from "../utils/zonedDateTime";
 import {
   defaultAlertPreferences,
   defaultDestinationAlertCondition,
@@ -489,6 +490,12 @@ export function useWeatherOnAppState() {
         destinationName: destinationPlace.name,
         originCountryCode: originLocation.countryCode,
         destinationCountryCode: destinationPlace.countryCode,
+        transportMode: selectedDestinationSchedulePreference.transportMode,
+        arrivalTime: getRouteArrivalTimeIso(
+          selectedDestinationSchedulePreference.targetArrivalTime,
+          destinationPlace.timezone,
+          nowMinuteTick,
+        ),
       })
       .then((result) => {
         if (!active) return;
@@ -510,7 +517,16 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [appStateHydrated, weatherLocationMode, manualWeatherLocation, deviceWeatherLocation, selectedDestinationPlace]);
+  }, [
+    appStateHydrated,
+    weatherLocationMode,
+    manualWeatherLocation,
+    deviceWeatherLocation,
+    selectedDestinationPlace,
+    selectedDestinationSchedulePreference.transportMode,
+    selectedDestinationSchedulePreference.targetArrivalTime,
+    nowMinuteTick,
+  ]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1564,4 +1580,15 @@ export function useWeatherOnAppState() {
     completePermissionGate,
     skipPermissionGate,
   };
+}
+
+function getRouteArrivalTimeIso(targetArrivalTime: string, timeZone: string, nowMs: number): string | undefined {
+  if (!isValidTimeText(targetArrivalTime)) return undefined;
+  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
+  for (let offset = 0; offset <= 1; offset += 1) {
+    const arrivalDate = addZonedCalendarDays(nowParts, offset);
+    const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
+    if (arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
+  }
+  return createDateAtTimeInZone(addZonedCalendarDays(nowParts, 1), targetArrivalTime, timeZone).toISOString();
 }

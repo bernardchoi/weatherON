@@ -9,6 +9,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
+import { isLiveTransitEstimate } from "../utils/travelEstimate";
 
 type DestinationCardModel = {
   id: string;
@@ -509,6 +510,7 @@ function getTravelMinutesForTransport(
     if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
     return Math.max(15, Math.ceil(baseMinutes * 1.8));
   }
+  if (transportMode === "transit" && isLiveTransitEstimate(estimate)) return baseMinutes;
   if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
   return baseMinutes;
 }

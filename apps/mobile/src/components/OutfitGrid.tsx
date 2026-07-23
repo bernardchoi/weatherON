@@ -57,10 +57,13 @@ const styles = StyleSheet.create({
   outfitGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
+    columnGap: spacing.sm,
+    rowGap: spacing.sm,
   },
   itemCell: {
-    minWidth: "47%",
+    flexBasis: "48%",
+    flexGrow: 1,
+    maxWidth: "49%",
     minHeight: 142,
     gap: 7,
     padding: spacing.sm,
@@ -71,9 +74,9 @@ const styles = StyleSheet.create({
     minHeight: 118,
   },
   itemCellDense: {
-    minHeight: 82,
-    gap: 3,
-    padding: 7,
+    minHeight: 112,
+    gap: 5,
+    padding: spacing.sm,
   },
   imageWell: {
     height: 70,
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     height: 56,
   },
   imageWellDense: {
-    height: 36,
+    height: 58,
   },
   itemImage: {
     width: "92%",
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
     height: 52,
   },
   itemImageDense: {
-    height: 34,
+    height: 54,
   },
   itemSlot: {
     fontSize: 10,
@@ -107,7 +110,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   itemNameDense: {
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
   },
 });
