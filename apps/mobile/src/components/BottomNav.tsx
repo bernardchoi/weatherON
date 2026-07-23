@@ -1,12 +1,12 @@
-import React from "react";
-import { Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
-import { LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
+import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
@@ -48,7 +48,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
               onPress={() => onNavigate(route.id)}
               ripple={isIos ? undefined : androidMaterialRipple(theme)}
             >
-              {isIos && active ? (
+              {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
                 <View
                   pointerEvents="none"
                   style={[
@@ -61,23 +61,88 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                 />
               ) : null}
               {isIos ? <View style={[styles.activeDot, { backgroundColor: active ? iosColors.activeDot : "transparent" }]} /> : null}
-              <View
-                style={[
-                  styles.iconContainer,
-                  !isIos ? styles.androidIconContainer : null,
-                  !isIos && active ? { backgroundColor: androidMaterialColor(theme, "secondaryContainer") } : null,
-                ]}
-              >
-                <TabIcon route={route.id} color={iconColor} />
-              </View>
-              <Text style={[styles.label, !isIos ? styles.androidLabel : null, { color: labelColor }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9} allowFontScaling={false}>
-                {route.label}
-              </Text>
+              <TabContent
+                route={route.id}
+                active={active}
+                isIos={isIos}
+                iconColor={iconColor}
+                labelColor={labelColor}
+                theme={theme}
+              />
             </TabButton>
           );
         })}
       </View>
     </View>
+  );
+}
+
+function TabContent({
+  route,
+  active,
+  isIos,
+  iconColor,
+  labelColor,
+  theme,
+}: {
+  route: P0RouteId;
+  active: boolean;
+  isIos: boolean;
+  iconColor: ColorValue;
+  labelColor: ColorValue;
+  theme: AppTheme;
+}) {
+  const transition = useRef(new Animated.Value(active ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (!isIos) {
+      transition.setValue(active ? 1 : 0);
+      return;
+    }
+
+    Animated.spring(transition, {
+      toValue: active ? 1 : 0,
+      stiffness: 280,
+      damping: 22,
+      mass: 0.72,
+      useNativeDriver: true,
+    }).start();
+  }, [active, isIos, transition]);
+
+  const iconMotion = {
+    opacity: transition.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] }),
+    transform: [
+      { translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [1, -1] }) },
+      { scale: transition.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.08] }) },
+    ],
+  };
+  const labelMotion = {
+    opacity: transition.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1] }),
+    transform: [{ translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }],
+  };
+
+  return (
+    <>
+      <Animated.View
+        style={[
+          styles.iconContainer,
+          !isIos ? styles.androidIconContainer : null,
+          !isIos && active ? { backgroundColor: androidMaterialColor(theme, "secondaryContainer") } : null,
+          iconMotion,
+        ]}
+      >
+        <TabIcon route={route} color={iconColor} />
+      </Animated.View>
+      <Animated.Text
+        style={[styles.label, !isIos ? styles.androidLabel : null, { color: labelColor }, labelMotion]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.9}
+        allowFontScaling={false}
+      >
+        {bottomNavRoutes.find((item) => item.id === route)?.label}
+      </Animated.Text>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import React
 import SwiftUI
 import UIKit
+import Combine
 
 @objc(LiquidGlassNavigationView)
 final class LiquidGlassNavigationView: RCTViewManager {
@@ -22,6 +23,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
 
   private var glassHost: UIHostingController<AnyView>?
   private var fallbackEffect: UIVisualEffectView?
+  private let navigationState = NavigationGlassState()
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -46,7 +48,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
   private func installSurface() {
     if #available(iOS 26.0, *) {
       let host = UIHostingController(
-        rootView: AnyView(NavigationGlassSurface(activeIndex: activeIndex.intValue))
+        rootView: AnyView(NavigationGlassSurface(state: navigationState))
       )
       host.view.backgroundColor = .clear
       host.view.isUserInteractionEnabled = false
@@ -66,14 +68,23 @@ final class LiquidGlassNavigationSurfaceView: UIView {
 
   private func updateActiveIndex() {
     if #available(iOS 26.0, *) {
-      glassHost?.rootView = AnyView(NavigationGlassSurface(activeIndex: activeIndex.intValue))
+      // 호스트를 교체하면 SwiftUI가 기존 글라스 형태를 잃어 morph 전환이 끊긴다.
+      withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+        navigationState.activeIndex = activeIndex.intValue
+      }
     }
   }
 }
 
+// iOS 15 지원을 유지하려고 Observation 대신 ObservableObject 사용함.
+private final class NavigationGlassState: ObservableObject {
+  @Published var activeIndex = 0
+}
+
 @available(iOS 26.0, *)
 private struct NavigationGlassSurface: View {
-  let activeIndex: Int
+  @ObservedObject var state: NavigationGlassState
+  @Namespace private var activeTabNamespace
 
   var body: some View {
     GeometryReader { proxy in
@@ -86,9 +97,10 @@ private struct NavigationGlassSurface: View {
           HStack(spacing: 4) {
             ForEach(0..<4, id: \.self) { index in
               Group {
-                if index == activeIndex {
+                if index == state.activeIndex {
                   Color.white.opacity(0.001)
-                    .glassEffect(.regular.tint(.white.opacity(0.14)), in: Capsule())
+                    .glassEffect(.regular.tint(.white.opacity(0.14)).interactive(), in: Capsule())
+                    .glassEffectID("active-tab", in: activeTabNamespace)
                 } else {
                   Color.clear
                 }
@@ -100,5 +112,6 @@ private struct NavigationGlassSurface: View {
         }
       }
     }
+    .animation(.spring(response: 0.42, dampingFraction: 0.82), value: state.activeIndex)
   }
 }

@@ -13,6 +13,8 @@ const NativeLiquidGlassSurface =
     ? requireNativeComponent<NativeSurfaceProps>(nativeComponentName)
     : null;
 
+export const hasNativeLiquidGlassNavigationSurface = NativeLiquidGlassSurface !== null;
+
 type LiquidGlassNavigationSurfaceProps = {
   activeIndex: number;
   theme: AppTheme;
