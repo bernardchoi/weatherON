@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
-import { CompletionStatus } from "../components/CompletionStatus";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
@@ -12,10 +11,10 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
   const umbrella = state.umbrella;
   const rainBars = buildRainBars(state.weather);
   const peakWindow = getPeakRainWindow(rainBars);
-  const peakAmount = getPeakRainAmount(state.weather);
   const peakRainProbability = getPeakRainProbability(state.weather);
   const windSpeed = state.weather.current.windMs;
   const umbrellaOptions = getUmbrellaOptions(umbrella.title, umbrella.level);
+  const recommendedOption = umbrellaOptions.find((item) => item.recommended) ?? umbrellaOptions[0];
 
   useEffect(() => {
     if (!umbrellaReviewed) onReviewUmbrella();
@@ -31,29 +30,40 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
           <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }, cardShadow(theme)]}>
-          <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: theme.text }]} resizeMode="contain" />
-          <Text style={[styles.heroTitle, { color: theme.text }]}>{umbrella.title}</Text>
-          <View style={styles.chipRow}>
-            <InfoChip label={getUmbrellaLevelLabel(umbrella.level)} theme={theme} />
-            <InfoChip label={getRainIntensityLabel(peakAmount)} theme={theme} />
-            <InfoChip label={getWindLabel(windSpeed)} theme={theme} />
+        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: getUmbrellaTone(umbrella.level, theme) }, cardShadow(theme)]}>
+          <View style={[styles.heroIconFrame, { backgroundColor: `${getUmbrellaTone(umbrella.level, theme)}18` }]}>
+            <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaTone(umbrella.level, theme) }]} resizeMode="contain" />
+          </View>
+          <View style={styles.heroCopy}>
+            <View style={styles.heroTopRow}>
+              <Text style={[styles.heroKicker, { color: getUmbrellaTone(umbrella.level, theme) }]}>{getUmbrellaLevelLabel(umbrella.level)}</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => onOpenAlertSettings("H4", "umbrella")}
+                style={({ pressed }) => [
+                  styles.alertLink,
+                  {
+                    backgroundColor: semanticColor(theme, "surfacePassive"),
+                    borderColor: theme.border,
+                    opacity: pressed ? 0.74 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.alertLinkText, { color: theme.muted }]}>알림 기준</Text>
+              </Pressable>
+            </View>
+            <Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={2}>{umbrella.title}</Text>
+            <Text style={[styles.heroMeta, { color: theme.muted }]} numberOfLines={1}>{peakWindow} · {recommendedOption.title}</Text>
           </View>
         </View>
 
-        <CompletionStatus
-          visible={umbrellaReviewed}
-          title="우산 준비 완료"
-          message={`${peakWindow} 출발 전 알림 시간을 설정하면 놓치지 않아요`}
-        />
+        <View style={styles.metricRow}>
+          <MetricTile icon="clock" label="피크" value={peakWindow} theme={theme} tone={theme.sky} />
+          <MetricTile icon="drop" label="확률" value={`${peakRainProbability}%`} theme={theme} tone={theme.sky} />
+          <MetricTile icon="wind" label="바람" value={`초속 ${windSpeed.toFixed(0)}m`} theme={theme} tone={getWindTone(windSpeed, theme)} />
+        </View>
 
-        <Panel title="추천 이유" theme={theme}>
-          <ReasonRow icon="clock" text={`${peakWindow} 강수 가능성 최대 ${peakRainProbability}%`} theme={theme} />
-          <ReasonRow icon="drop" text={`시간당 최대 ${peakAmount}mm · ${getRainIntensityLabel(peakAmount)}`} theme={theme} />
-          <ReasonRow icon="wind" text={`풍속 초속 ${windSpeed.toFixed(0)}m · ${umbrella.reason}`} theme={theme} />
-        </Panel>
-
-        <Panel title="시간대별 강수확률" theme={theme}>
+        <Panel title="비 신호" theme={theme}>
           <View style={styles.chart}>
             <View style={styles.chartBars}>
               {rainBars.map((hour) => {
@@ -71,7 +81,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                         ]}
                       />
                     </View>
-                    <Text style={[styles.barValue, { color: theme.subtle }]}>{hour.rainProbabilityPct}%</Text>
+                    <Text style={[styles.barValue, { color: hour.rainProbabilityPct >= 70 ? theme.sky : theme.subtle }]}>{hour.rainProbabilityPct}%</Text>
                   </View>
                 );
               })}
@@ -106,32 +116,15 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                 <View style={styles.optionCopy}>
                   <View style={styles.optionTitleRow}>
                     <Text style={[styles.optionTitle, { color: theme.text }]}>{item.title}</Text>
-                    {item.recommended ? <Text style={[styles.recommendMark, { color: theme.sky }]}>추천</Text> : null}
                   </View>
-                  <Text style={[styles.optionMeta, { color: item.recommended ? theme.sky : theme.subtle }]}>{item.meta}</Text>
+                  <View style={[styles.optionSignal, { backgroundColor: item.recommended ? theme.sky : theme.border }]} />
                 </View>
               </View>
             ))}
           </View>
         </Panel>
 
-        <View style={[styles.statePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-          <Text style={[styles.stateLabel, { color: theme.gold }]}>UMBRELLA</Text>
-          <Text style={[styles.stateText, { color: theme.muted }]}>{umbrella.title} · {peakWindow} · {umbrella.reason}</Text>
-        </View>
-
-        <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      <View style={styles.ctaWrap} pointerEvents="box-none">
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => onOpenAlertSettings("H4", "umbrella")}
-          style={({ pressed }) => [styles.cta, { backgroundColor: theme.gold, opacity: pressed ? 0.86 : 1 }]}
-        >
-          <Text style={[styles.ctaText, { color: theme.onAccent }]}>우산 알림 시간 설정</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -145,21 +138,12 @@ function Panel({ title, theme, children }: { title: string; theme: AppTheme; chi
   );
 }
 
-function InfoChip({ label, theme }: { label: string; theme: AppTheme }) {
+function MetricTile({ icon, label, value, theme, tone }: { icon: "clock" | "drop" | "wind"; label: string; value: string; theme: AppTheme; tone: string }) {
   return (
-    <View style={[styles.chip, { backgroundColor: theme.cardStrong }]}>
-      <Text style={[styles.chipText, { color: theme.text }]}>{label}</Text>
-    </View>
-  );
-}
-
-function ReasonRow({ icon, text, theme }: { icon: "clock" | "drop" | "wind"; text: string; theme: AppTheme }) {
-  return (
-    <View style={styles.reasonRow}>
-      <View style={styles.reasonIconBox}>
-        <ReasonGlyph type={icon} color={theme.sky} />
-      </View>
-      <Text style={[styles.reasonText, { color: theme.text }]}>{text}</Text>
+    <View style={[styles.metricTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <ReasonGlyph type={icon} color={tone} />
+      <Text style={[styles.metricLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text style={[styles.metricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -188,19 +172,6 @@ function ReasonGlyph({ type, color }: { type: "clock" | "drop" | "wind"; color: 
       <View style={[styles.windLine, styles.windLineC, { backgroundColor: color }]} />
     </View>
   );
-}
-
-function getRainIntensityLabel(peakAmount: string) {
-  const amount = Number(peakAmount);
-  if (amount >= 10) return "강수량 강함";
-  if (amount >= 1) return "강수량 보통";
-  return "강수량 약함";
-}
-
-function getWindLabel(windSpeed: number) {
-  if (windSpeed >= 8) return "바람 강함";
-  if (windSpeed >= 4) return "바람 보통";
-  return "바람 약함";
 }
 
 function getUmbrellaLevelLabel(level: P0ScreenProps["state"]["umbrella"]["level"]) {
@@ -237,8 +208,21 @@ function getRecommendedOptionTitle(title: string, level: P0ScreenProps["state"][
   return level === "required" ? "장우산" : "소형 우산";
 }
 
+function getUmbrellaTone(level: P0ScreenProps["state"]["umbrella"]["level"], theme: AppTheme) {
+  if (level === "required") return theme.gold;
+  if (level === "recommended") return theme.sky;
+  if (level === "notice") return theme.clear;
+  return theme.subtle;
+}
+
+function getWindTone(windSpeed: number, theme: AppTheme) {
+  if (windSpeed >= 8) return theme.gold;
+  if (windSpeed >= 4) return theme.sky;
+  return theme.clear;
+}
+
 function buildRainBars(weather: P0ScreenProps["state"]["weather"]) {
-  if (weather.hourly.length > 0) return weather.hourly.slice(0, 7);
+  if (weather.hourly.length > 0) return weather.hourly.slice(0, 6);
   return [
     {
       time: weather.observedAt,
@@ -258,10 +242,6 @@ function getPeakRainWindow(items: P0ScreenProps["state"]["weather"]["hourly"]) {
   const end = items[Math.min(items.length - 1, peakIndex + 1)]?.time ?? start;
   if (!start || start === end) return formatHour(start);
   return `${formatHour(start)}~${formatHour(end)}`;
-}
-
-function getPeakRainAmount(weather: P0ScreenProps["state"]["weather"]) {
-  return Math.max(weather.current.precipitationMm, ...weather.hourly.map((item) => item.precipitationMm)).toFixed(1).replace(/\.0$/, "");
 }
 
 function getPeakRainProbability(weather: P0ScreenProps["state"]["weather"]) {
@@ -286,10 +266,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: 9,
+    gap: 10,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 74,
+    paddingTop: 16,
+    paddingBottom: 16,
     minHeight: "100%",
   },
   atmosphere: {
@@ -315,46 +295,98 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroCard: {
-    minHeight: 128,
+    minHeight: 104,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderLeftWidth: 3,
+  },
+  heroIconFrame: {
+    width: 58,
+    height: 58,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
     borderRadius: radius.lg,
-    borderLeftWidth: 2,
   },
   umbrellaIcon: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
   },
-  heroTitle: {
-    fontSize: 23,
-    lineHeight: 29,
+  heroCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
+  },
+  heroKicker: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
     letterSpacing: 0,
   },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  alertLink: {
+    minHeight: 26,
+    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
-  },
-  chip: {
-    minHeight: 28,
-    justifyContent: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
     borderRadius: radius.pill,
   },
-  chipText: {
+  alertLinkText: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
     letterSpacing: 0,
   },
+  heroTitle: {
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  heroMeta: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
+    letterSpacing: 0,
+  },
+  metricRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  metricTile: {
+    flex: 1,
+    minHeight: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderRadius: radius.md,
+  },
+  metricLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
+  metricValue: {
+    maxWidth: "100%",
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+    letterSpacing: 0,
+  },
   panel: {
     gap: 8,
-    padding: 14,
+    padding: 12,
     borderRadius: radius.lg,
   },
   panelTitle: {
@@ -362,17 +394,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
     letterSpacing: 0,
-  },
-  reasonRow: {
-    minHeight: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  reasonIconBox: {
-    width: 16,
-    alignItems: "center",
-    justifyContent: "center",
   },
   clockGlyph: {
     width: 16,
@@ -439,18 +460,11 @@ const styles = StyleSheet.create({
     width: 11,
     top: 11,
   },
-  reasonText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "800",
-    letterSpacing: 0,
-  },
   chart: {
     gap: spacing.xs,
   },
   chartBars: {
-    height: 66,
+    height: 58,
     flexDirection: "row",
     alignItems: "flex-end",
     gap: spacing.xs,
@@ -462,7 +476,7 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     width: "100%",
-    height: 50,
+    height: 42,
     justifyContent: "flex-end",
     overflow: "hidden",
     borderRadius: radius.xs,
@@ -489,90 +503,49 @@ const styles = StyleSheet.create({
   optionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
+    justifyContent: "space-between",
+    rowGap: 8,
   },
   optionCard: {
-    width: "48%",
-    minHeight: 50,
-    flexDirection: "row",
+    width: "31.5%",
+    minHeight: 74,
     alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
+    justifyContent: "center",
+    gap: 5,
+    padding: 7,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   optionIcon: {
-    width: 22,
+    width: 26,
+    height: 22,
     alignItems: "center",
+    justifyContent: "center",
   },
   optionCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
+    alignItems: "center",
+    gap: 5,
   },
   optionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
   },
   optionTitle: {
-    flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  recommendMark: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-  },
-  optionMeta: {
+    textAlign: "center",
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: "800",
+    fontWeight: "900",
     letterSpacing: 0,
+  },
+  optionSignal: {
+    width: 24,
+    height: 4,
+    borderRadius: radius.pill,
   },
   smallUmbrellaIcon: {
-    width: 20,
-    height: 20,
-  },
-  statePanel: {
-    gap: 2,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-  },
-  stateLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  stateText: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  bottomSpacer: {
-    height: 64,
-  },
-  ctaWrap: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 10,
-  },
-  cta: {
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  ctaText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
+    width: 21,
+    height: 21,
   },
 });

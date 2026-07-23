@@ -189,7 +189,7 @@ function isRuleActive(
 
 function getRuleTitle(rule: NotificationRule): string {
   const titleByType: Record<NotificationRule["type"], string> = {
-    routine: "외출 준비",
+    routine: "아침 준비",
     rain: "강수 알림",
     umbrella: "우산 알림",
     shoes: "신발 알림",
@@ -233,7 +233,7 @@ function getRuleReason(
 
 function getPushTitle(rule: NotificationRule): string {
   const titleByType: Record<NotificationRule["type"], string> = {
-    routine: "오늘 외출, 가볍게 준비해요",
+    routine: "오늘 아침, 가볍게 준비해요",
     rain: "우산 챙길 시간이에요",
     umbrella: "비 오는 길, 미리 대비해요",
     shoes: "발끝까지 편안하게 나가요",
@@ -254,7 +254,7 @@ function getPushBody(
   },
 ): string {
   if (!active) return "날씨가 바뀌면 필요한 순간 알려드릴게요";
-  if (rule.type === "routine") return "지금 날씨에 맞춘 외출 준비를 확인해봐요";
+  if (rule.type === "routine") return "지금 날씨에 맞춘 아침 준비를 확인해봐요";
   if (rule.type === "bedtime") return "내일 날씨와 코디를 미리 확인해봐요";
   if (rule.type === "rain") return "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요";
   if (rule.type === "umbrella") return "비가 이어질 수 있어요. 우산이나 방수 아우터를 챙겨요";

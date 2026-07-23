@@ -49,34 +49,28 @@ export function WardrobeScreen({
 
   return (
     <AppScreen title="내 옷장" subtitle="보유한 옷을 확인하고 정리" badge={`${ownedItems.length}개 보유`} onBack={onGoBack} showWordmark={false}>
-      <View style={styles.topBar}>
-        <FilterRow
-          values={categories}
-          activeValue={categoryFilter}
-          onSelect={(value) => setCategoryFilter(value as WardrobeCategoryFilter)}
-          renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
-        />
-      </View>
-
       {removedItem ? (
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
       ) : null}
 
-      <Section title="옷장" caption={accountLinked ? "저장 상태 계정 연결됨" : "저장 시 계정 연결 필요"} accent="gold">
-        <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.gold }]}>내 옷장 {ownedItems.length}개 보유 중</Text>
-            <Text style={[styles.itemMeta, { color: theme.muted }]}>추천으로 복귀하거나 프리셋을 내 옷장에 추가 가능</Text>
-          </View>
-          <AppButton label="추천으로 복귀" onPress={() => onNavigate("C1")} tone="secondary" />
-        </View>
-        <View style={styles.heroActions}>
-          <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
-        </View>
-      </Section>
-
       <Section title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
+        <View style={[styles.infoCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text>
+            <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>
+              {accountLinked ? "계정 연결됨 · 코디 추천에 반영" : "계정 연결 전 · 프리셋 추가 가능"}
+            </Text>
+          </View>
+          <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />
+        </View>
+
         <View style={styles.filterStack}>
+          <FilterRow
+            values={categories}
+            activeValue={categoryFilter}
+            onSelect={(value) => setCategoryFilter(value as WardrobeCategoryFilter)}
+            renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
+          />
           <FilterRow
             values={seasons}
             activeValue={seasonFilter}
@@ -115,12 +109,6 @@ export function WardrobeScreen({
         )}
       </Section>
 
-      <Section title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
-        <View style={styles.actions}>
-          <AppButton label="코디 보기" onPress={() => onNavigate("C1")} />
-          <AppButton label="코디 상세" onPress={() => onNavigate("C4")} tone="secondary" />
-        </View>
-      </Section>
     </AppScreen>
   );
 }
@@ -185,17 +173,14 @@ function RemovedItemBanner({
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    gap: spacing.sm,
-  },
   infoCard: {
-    minHeight: 88,
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.lg,
+    padding: spacing.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
   copy: {
@@ -205,10 +190,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: "900",
-  },
-  heroActions: {
-    flexDirection: "row",
-    gap: spacing.sm,
   },
   filterStack: {
     gap: spacing.sm,
@@ -263,11 +244,6 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 34,
     fontWeight: "700",
-  },
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
   },
   emptyState: {
     gap: spacing.sm,

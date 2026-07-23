@@ -5,11 +5,11 @@ import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
-import { outfitImageAssets } from "../assets";
+import { outfitImageAssets, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
-import { formatOutfitTags, getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
+import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
 
 const AI_RECOMPOSE_VISIBLE = false;
 
@@ -18,7 +18,6 @@ export function OutfitDetailScreen({
   accountLinked,
   termsRequiredAccepted,
   outfitSaved,
-  accountGateResult,
   wardrobeItems,
   onNavigate,
   onRequireAccount,
@@ -26,6 +25,8 @@ export function OutfitDetailScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
+  const signalMetrics = buildSignalMetrics(state, theme);
+  const rainSignalPct = getRainSignalPct(state);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
@@ -50,32 +51,32 @@ export function OutfitDetailScreen({
               label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
               onPress={() => onRequireAccount("save-outfit", "C4")}
               tone={outfitSaved ? "secondary" : "warning"}
+              size="sm"
               disabled={outfitSaved}
             />
-            <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" />
+            <AppButton label="코디로 돌아가기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />
           </View>
         </View>
       }
     >
-      <Section title="오늘 입을 세트" caption="착장 구성과 추천 근거를 함께 확인" accent="clear">
-        <View style={styles.itemList}>
+      <Section title="오늘 입을 세트" caption="이미지로 확인" accent="clear">
+        <View style={styles.outfitRail}>
           {items.map(([slot, item]) =>
             item ? (
-              <View key={slot} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
-                <View style={[styles.thumb, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+              <View
+                key={slot}
+                accessible
+                accessibilityLabel={`${getOutfitSlotLabel(slot)} ${item.name}`}
+                style={[styles.outfitMiniTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+              >
+                <View style={[styles.outfitImageFrame, { backgroundColor: theme.card }]}>
                   {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
-                    <Image source={outfitImageAssets[item.imageUrl]} style={styles.thumbImage} resizeMode="contain" />
+                    <Image source={outfitImageAssets[item.imageUrl]} style={styles.outfitImage} resizeMode="contain" />
                   ) : (
-                    <Text style={[styles.thumbText, { color: theme.clear }]}>{getOutfitSlotLabel(slot)}</Text>
+                    <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
                 </View>
-                <View style={styles.itemCopy}>
-                  <Text style={[styles.itemSlot, { color: theme.clear }]}>{getOutfitSlotLabel(slot)}</Text>
-                  <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
-                  <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>
-                    {formatOutfitTags(item.purposes)} · {formatOutfitTags(item.weatherTags)}
-                  </Text>
-                </View>
+                <Text style={[styles.itemSlot, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
               </View>
             ) : null,
           )}
@@ -84,14 +85,15 @@ export function OutfitDetailScreen({
           {state.outfit.timeAdvice.slice(0, 3).map((item) => (
             <View key={item.time} style={[styles.timeChip, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.timeChipTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
-              <Text numberOfLines={1} style={[styles.timeChipText, { color: theme.text }]}>{item.text}</Text>
+              <View style={[styles.timeSignal, { backgroundColor: theme.clear }]} />
+              <Text numberOfLines={1} style={[styles.timeChipText, { color: theme.text }]}>{getTimeAdviceLabel(item.text)}</Text>
             </View>
           ))}
         </View>
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={formatTempLabel(state.weather.current.tempC, state.weather.current.feelsLikeC)} tone="sky" />
-          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"} tone="gold" />
+          <StatusPill label={rainSignalPct > 0 ? "비 신호" : "비 없음"} tone="gold" />
         </View>
       </Section>
 
@@ -104,30 +106,22 @@ export function OutfitDetailScreen({
         </Section>
       ) : null}
 
-      <Section title="추천 근거" caption={`매칭률 ${state.outfit.matchPct}%`} accent="gold">
-        {state.outfit.reasons.map((reason) => (
-          <Text key={reason} style={[styles.reason, { color: theme.muted }]}>· {reason}</Text>
-        ))}
+      <Section title="추천 근거" caption="신호 압축" accent="gold">
+        <View style={styles.signalGrid}>
+          {signalMetrics.map((metric) => (
+            <View key={metric.label} style={[styles.signalTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+              <Image source={metric.icon} style={[styles.signalIcon, { tintColor: metric.color }]} resizeMode="contain" />
+              <Text style={[styles.signalLabel, { color: theme.subtle }]}>{metric.label}</Text>
+              <Text style={[styles.signalValue, { color: theme.text }]} numberOfLines={1}>{metric.value}</Text>
+            </View>
+          ))}
+        </View>
       </Section>
 
       <Section title="내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear">
         <View style={styles.actions}>
           <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" />
           <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
-        </View>
-      </Section>
-
-      <Section title="저장 흐름" caption={outfitSaved ? "코디가 저장됐어요. 코디 탭에서 계속 확인할 수 있어요" : "저장하려면 계정 연결이 필요해요"} accent="warm">
-        {accountGateResult?.returnTo === "C4" && accountGateResult.pendingAction === "save-outfit" ? (
-          <View style={[styles.resultBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <Text style={[styles.resultTitle, { color: theme.clear }]}>{accountGateResult.message}</Text>
-            <Text style={[styles.resultCopy, { color: theme.muted }]}>계정 연결과 약관 동의를 확인했어요</Text>
-          </View>
-        ) : null}
-        <View style={styles.pillRow}>
-          <StatusPill label={accountLinked ? "계정 연결됨" : "계정 필요"} tone={accountLinked ? "clear" : "gold"} />
-          <StatusPill label={termsRequiredAccepted ? "약관 완료" : "약관 필요"} tone={termsRequiredAccepted ? "clear" : "warm"} />
-          <StatusPill label={outfitSaved ? "저장 완료" : "저장 가능"} tone={outfitSaved ? "clear" : "sky"} />
         </View>
       </Section>
     </AppScreen>
@@ -141,7 +135,7 @@ const styles = StyleSheet.create({
   },
   timeChip: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 46,
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
@@ -154,57 +148,48 @@ const styles = StyleSheet.create({
   },
   timeChipText: {
     maxWidth: "100%",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "900",
   },
-  itemList: {
-    gap: spacing.xs,
+  timeSignal: {
+    width: 22,
+    height: 4,
+    borderRadius: radius.pill,
   },
-  itemRow: {
+  outfitRail: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    justifyContent: "space-between",
   },
-  thumb: {
-    width: 64,
-    height: 58,
+  outfitMiniTile: {
+    width: "18.5%",
+    minHeight: 86,
     alignItems: "center",
     justifyContent: "center",
+    gap: 6,
+    padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  outfitImageFrame: {
+    width: "100%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
     overflow: "hidden",
   },
-  thumbImage: {
-    width: "88%",
-    height: 52,
+  outfitImage: {
+    width: "92%",
+    height: 46,
   },
-  thumbText: {
-    fontSize: 11,
-    fontWeight: "900",
-  },
-  itemCopy: {
-    flex: 1,
+  outfitFallbackIcon: {
+    width: 24,
+    height: 24,
   },
   itemSlot: {
-    fontSize: 11,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
-  },
-  itemName: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-  itemMeta: {
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 3,
-  },
-  reason: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "700",
   },
   pillRow: {
     flexDirection: "row",
@@ -234,9 +219,79 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   saveActions: {
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  signalGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  signalTile: {
+    width: "23.5%",
+    minHeight: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  signalIcon: {
+    width: 18,
+    height: 18,
+  },
+  signalLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+  },
+  signalValue: {
+    maxWidth: "100%",
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "900",
   },
 });
+
+function buildSignalMetrics(state: P0ScreenProps["state"], theme: ReturnType<typeof useAppTheme>) {
+  const rainProbability = getRainSignalPct(state);
+  const windSpeed = state.weather.current.windMs;
+  const feelsLikeDelta = Math.round(state.weather.current.feelsLikeC - state.weather.current.tempC);
+  return [
+    {
+      label: "매칭",
+      value: `${state.outfit.matchPct}%`,
+      icon: uiIconAssets.check,
+      color: theme.clear,
+    },
+    {
+      label: "체감",
+      value: feelsLikeDelta === 0 ? "비슷" : feelsLikeDelta > 0 ? `+${feelsLikeDelta}도` : `${feelsLikeDelta}도`,
+      icon: uiIconAssets.uv,
+      color: theme.gold,
+    },
+    {
+      label: "강수",
+      value: rainProbability > 0 ? `${Math.round(rainProbability)}%` : "없음",
+      icon: uiIconAssets.rain,
+      color: rainProbability >= 50 ? theme.sky : theme.clear,
+    },
+    {
+      label: "바람",
+      value: windSpeed >= 8 ? "강함" : windSpeed >= 4 ? "보통" : "약함",
+      icon: uiIconAssets.wind,
+      color: windSpeed >= 8 ? theme.gold : theme.sky,
+    },
+  ];
+}
+
+function getRainSignalPct(state: P0ScreenProps["state"]) {
+  return Math.round(
+    Math.max(
+      state.weather.current.rainProbabilityPct,
+      ...state.weather.hourly.map((item) => item.rainProbabilityPct),
+    ),
+  );
+}
 
 function formatAdviceTime(value: string) {
   const parsed = new Date(value);
@@ -245,6 +300,13 @@ function formatAdviceTime(value: string) {
   }
   const match = value.match(/T(\d{2})/);
   return match ? `${match[1]}:00` : value;
+}
+
+function getTimeAdviceLabel(value: string) {
+  if (value.includes("우산") || value.includes("비")) return "비 대비";
+  if (value.includes("겉옷") || value.includes("쌀쌀")) return "겉옷";
+  if (value.includes("그대로") || value.includes("좋아요")) return "유지";
+  return "확인";
 }
 
 function formatTempLabel(tempC: number, feelsLikeC: number) {

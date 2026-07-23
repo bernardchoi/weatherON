@@ -499,8 +499,8 @@ function getNotificationPresentation(index: number, route: P0RouteId, fallbackTi
   if (index === 0) {
     return {
       icon: "uv",
-      title: "오늘의 외출 준비",
-      detail: "21° 맑음 · 출발 전 날씨 확인",
+      title: "오늘의 아침 준비",
+      detail: "21° 맑음 · 날씨 확인",
       highlight: "준비 상태 정상",
       tone: "clear",
     };

@@ -313,6 +313,7 @@ assert.equal(results.destination.umbrellaAdvice.level, "none");
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.active));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushTitle === "우산 챙길 시간이에요"));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushBody === "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요"));
+assert.ok(results.notifications.some((item) => item.id === "routine-morning" && item.pushTitle === "오늘 아침, 가볍게 준비해요"));
 assert.ok(results.notifications.some((item) => item.ruleVersion === results.outfit.ruleVersion));
 assert.ok(results.destinationNotificationsStrict.some((item) => item.id === "destination-change" && !item.active && item.reason.includes("강수 70%")));
 assert.ok(results.destinationNotificationsWind.some((item) => item.id === "destination-change" && item.active && item.reason.includes("출발 30분 전")));

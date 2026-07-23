@@ -188,8 +188,8 @@ export function AlertSettingsScreen({
               theme={theme}
             />
             <AdvancedToggleRow
-              title="출발 준비"
-              body="날씨·우산·신발 확인 알림"
+              title="아침 준비"
+              body="매일 오전 날씨·우산·신발 확인"
               enabled={alertPreferences.routine}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("routine")}

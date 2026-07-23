@@ -269,8 +269,10 @@ function getNextArrivalAt(
     const arrivalDate = addZonedCalendarDays(nowParts, offset);
     const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
     if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(arrivalDate))) continue;
-    const latestAllowedTime = nowMs + (travelMinutes + leadTimeMinutes) * 60_000;
-    if (arrivalAt.getTime() > latestAllowedTime) return arrivalAt;
+    const bufferMinutes = getAutoBufferMinutes(arrivalAt.getTime() - nowMs, travelMinutes);
+    const departureAt = arrivalAt.getTime() - (travelMinutes + bufferMinutes) * 60_000;
+    const scheduledAt = departureAt - leadTimeMinutes * 60_000;
+    if (scheduledAt > nowMs) return arrivalAt;
   }
   return null;
 }
@@ -278,7 +280,7 @@ function getNextArrivalAt(
 function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date, timeZone: string): WeatherSnapshot | null {
   const departureMs = departureAt.getTime();
   const closestHour = weather.hourly.reduce<{ hour: WeatherSnapshot["hourly"][number]; distance: number } | null>((closest, hour) => {
-    const hourMs = getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone);
+    const hourMs = getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone, departureAt);
     if (!Number.isFinite(hourMs)) return closest;
     const candidate = { hour, distance: Math.abs(hourMs - departureMs) };
     return !closest || candidate.distance < closest.distance ? candidate : closest;
@@ -297,11 +299,10 @@ function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date, time
   };
 }
 
-function getWeatherHourTimestamp(hourTime: string, observedAt: string, timeZone: string): number {
+function getWeatherHourTimestamp(hourTime: string, observedAt: string, timeZone: string, baseDate = parseDateTimeInZone(observedAt, timeZone)): number {
   if (isValidTimeText(hourTime)) {
     const [hourText, minuteText] = hourTime.split(":");
-    const observed = parseDateTimeInZone(observedAt, timeZone);
-    const observedParts = getZonedDateTimeParts(observed, timeZone);
+    const observedParts = getZonedDateTimeParts(baseDate, timeZone);
     return createDateAtTimeInZone(observedParts, `${hourText}:${minuteText}`, timeZone).getTime();
   }
   return parseDateTimeInZone(hourTime, timeZone).getTime();
