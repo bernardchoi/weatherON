@@ -9,6 +9,7 @@ import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import type { TemperatureUnit } from "../state/useWeatherOnAppState";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
+import { getConditionLabel } from "../utils/weatherPresentation";
 
 type WeatherSummaryProps = {
   originWeather: WeatherSnapshot;
@@ -143,16 +144,6 @@ function WeatherMiniCard({
       </Text>
     </View>
   );
-}
-
-function getConditionLabel(condition: WeatherSnapshot["current"]["condition"]): string {
-  if (condition === "clear") return "맑음";
-  if (condition === "cloud") return "흐림";
-  if (condition === "rain") return "비";
-  if (condition === "snow") return "눈";
-  if (condition === "storm") return "강한 비";
-  if (condition === "dust") return "먼지";
-  return "날씨";
 }
 
 function getWeatherComparison(origin: WeatherSnapshot, destination: WeatherSnapshot, temperatureUnit: TemperatureUnit) {

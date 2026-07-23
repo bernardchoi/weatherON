@@ -10,9 +10,8 @@ export type { DestinationAlertCondition, DestinationTransportMode };
 
 export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-export type GateReason = "account-connect" | "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report";
+export type GateReason = "account-connect" | "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report" | "add-destination";
 export type WeatherLocationMode = "auto" | "manual";
-export type DestinationHubFilter = "all" | "saved" | "care" | "category";
 export type PlaceSearchStatus = "idle" | "loading" | "ready" | "empty" | "error";
 export type AlertSettingsFocus = "general" | "umbrella" | "rain" | "destination";
 export type AccountPendingAction = GateReason;
@@ -20,7 +19,6 @@ export type PermissionGateReason = "notification" | "destination-care" | "locati
 export type PolicyDocumentType = "privacy" | "terms" | "location" | "open-source";
 export type AdConsentMode = "pending" | "personalized" | "non-personalized";
 export type TemperatureUnit = "celsius" | "fahrenheit";
-export type WeightUnit = "kilogram" | "pound";
 export type DistanceUnit = "meter" | "mile";
 export type ThemeMode = "system" | "light" | "dark";
 export type StyleGender = "all" | "women" | "men";
@@ -77,6 +75,9 @@ export type PermissionGateResultState = {
   returnTo: PermissionReturnRouteId;
   reason: PermissionGateReason;
   message: string;
+  // 사용자가 "나중에"를 직접 선택했는지, 허용을 시도했지만 OS가 거부했는지 구분한다.
+  // message 문자열만으로는 두 경우가 똑같아 화면들이 거부를 스킵으로 오인했다.
+  denied: boolean;
 };
 
 export type SavedDestination = {

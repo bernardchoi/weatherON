@@ -1,6 +1,6 @@
 # WeatherON Android Manual Action Packet
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: 자동 빌드/검증 이후 사람이 직접 처리해야 하는 Android 출시 액션을 한 장으로 유지한다.
 
 ## 1. 현재 출시 상태

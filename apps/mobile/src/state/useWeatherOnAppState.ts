@@ -50,7 +50,6 @@ import type {
   AlertSettingsRouteState,
   DestinationAddReturnRouteId,
   DestinationAlertCondition,
-  DestinationHubFilter,
   DestinationRepeatDay,
   DestinationSchedulePreference,
   DestinationTransportMode,
@@ -72,7 +71,6 @@ import type {
   TemperatureUnit,
   ThemeMode,
   WeatherLocationMode,
-  WeightUnit,
 } from "./appStateTypes";
 import {
   addNotificationHistoryItem,
@@ -93,7 +91,6 @@ import {
   getBackRoute,
   getDefaultDestinationPlace,
   getDefaultDestinationSchedulePreference,
-  getDestinationFilterMatched,
   getLocalNotificationResultLabel,
   getNotificationDestinationPlaceId,
   getNotificationHistoryTitle,
@@ -130,7 +127,6 @@ export type {
   AlertSettingsRouteState,
   DestinationAddReturnRouteId,
   DestinationAlertCondition,
-  DestinationHubFilter,
   DestinationRepeatDay,
   DestinationSchedulePreference,
   DestinationTransportMode,
@@ -152,8 +148,13 @@ export type {
   TemperatureUnit,
   ThemeMode,
   WeatherLocationMode,
-  WeightUnit,
 };
+
+const OVERLAY_RETURN_ROUTE_IDS = ["H4", "H3", "C2", "C3"] as const;
+type OverlayReturnRouteId = (typeof OVERLAY_RETURN_ROUTE_IDS)[number];
+function isOverlayReturnRouteId(value: AppRouteId): value is OverlayReturnRouteId {
+  return (OVERLAY_RETURN_ROUTE_IDS as readonly string[]).includes(value);
+}
 
 export function useWeatherOnAppState() {
   const [route, setRoute] = useState<AppRouteId>("O1");
@@ -161,10 +162,15 @@ export function useWeatherOnAppState() {
   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
-  const [umbrellaReturnRoute, setUmbrellaReturnRoute] = useState<P0RouteId>("H1");
-  const [notificationCenterReturnRoute, setNotificationCenterReturnRoute] = useState<P0RouteId>("H1");
-  const [wardrobeReturnRoute, setWardrobeReturnRoute] = useState<P0RouteId>("C1");
-  const [wardrobePresetReturnRoute, setWardrobePresetReturnRoute] = useState<P0RouteId>("C1");
+  // 오버레이 화면(H4/H3/C2/C3)은 코디 메인(C1)·코디 상세(C4) 등 여러 진입점에서 열릴 수 있어,
+  // 뒤로가기가 항상 고정된 화면으로 가면 실제 진입 경로와 다른 곳으로 튄다. 진입 시점의
+  // 실제 이전 화면을 오버레이별로 하나의 맵에 기억해두고 뒤로가기에서 그대로 되돌린다.
+  const [overlayReturnRoutes, setOverlayReturnRoutes] = useState<Record<OverlayReturnRouteId, P0RouteId>>({
+    H4: "H1",
+    H3: "H1",
+    C2: "C1",
+    C3: "C1",
+  });
   const [smartCareEnabled, setSmartCareEnabled] = useState(true);
   const [weatherProviderMode, setWeatherProviderMode] = useState<WeatherProviderMode>("ready");
   const [weatherLocationMode, setWeatherLocationMode] = useState<WeatherLocationMode>("auto");
@@ -183,7 +189,6 @@ export function useWeatherOnAppState() {
     createDefaultTravelEstimate(seongsuWeatherLocation, getDefaultDestinationPlace()),
   );
   const [destinationSelectionReady, setDestinationSelectionReady] = useState(false);
-  const [destinationHubFilter, setDestinationHubFilterState] = useState<DestinationHubFilter>("all");
   const [placeSearchQuery, setPlaceSearchQuery] = useState("");
   const [placeSearchResults, setPlaceSearchResults] = useState<PlaceSearchResult[]>([]);
   const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false);
@@ -196,7 +201,6 @@ export function useWeatherOnAppState() {
   const [selectedPolicyDocument, setSelectedPolicyDocument] = useState<PolicyDocumentType>("privacy");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("celsius");
-  const [weightUnit, setWeightUnit] = useState<WeightUnit>("kilogram");
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [reducedTransparency, setReducedTransparency] = useState(false);
@@ -298,6 +302,9 @@ export function useWeatherOnAppState() {
 
   const reconcileDeviceLocationPermission = useCallback(async () => {
     if (!locationReady && weatherLocationMode !== "auto") return;
+    // 사용자가 직접 요청한 권한 다이얼로그(applyCurrentLocationWeather)가 떠 있는 동안
+    // 앱 포그라운드 전환으로 이 동기화가 겹쳐 뛰면, 방금 받은 허용 결과를 되돌릴 수 있다.
+    if (deviceLocationRequestInFlightRef.current) return;
     const result = await syncDeviceWeatherLocationPermission();
     setDeviceLocationState(result);
     if (result.status === "granted" && result.location) {
@@ -305,6 +312,10 @@ export function useWeatherOnAppState() {
       setDeviceWeatherLocation(result.location);
       return;
     }
+    // "error"/"unavailable"은 GPS 타임아웃 등 일시적 실패일 뿐 권한 철회가 아니다.
+    // 이를 denied와 동일하게 처리해 auto를 manual로 영구 전환하면, 실제로는 권한이
+    // 살아있는데도 기본 위치(성수동)로 조용히 되돌아가 버린다.
+    if (result.status !== "denied") return;
     setLocationReady(false);
     setDeviceWeatherLocation(null);
     if (weatherLocationMode === "auto") {
@@ -351,7 +362,6 @@ export function useWeatherOnAppState() {
         setPreviewDestinationTravelEstimate(persistedState.previewDestinationTravelEstimate);
         setWeatherLocationMode(persistedState.weatherLocationMode);
         setTemperatureUnit(persistedState.temperatureUnit);
-        setWeightUnit(persistedState.weightUnit);
         setDistanceUnit(persistedState.distanceUnit);
         setThemeMode(persistedState.themeMode);
         setReducedTransparency(persistedState.reducedTransparency);
@@ -477,6 +487,19 @@ export function useWeatherOnAppState() {
     };
   }, [appStateHydrated, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinationWeatherLocations, fallbackDestinationWeatherLocation]);
 
+  // "다음 도착 목표 시각"의 ISO 값은 목표 시각을 지난 시점(보통 하루 한 번)에만 바뀐다.
+  // nowMinuteTick을 이 계산에만 쓰고, 아래 요청 effect는 계산된 문자열에만 의존시켜야
+  // 분마다 바뀌는 nowMinuteTick 때문에 경로 재요청이 매분 발생하지 않는다.
+  const destinationArrivalTimeIso = useMemo(
+    () =>
+      getRouteArrivalTimeIso(
+        selectedDestinationSchedulePreference.targetArrivalTime,
+        selectedDestinationPlace.timezone,
+        nowMinuteTick,
+      ),
+    [selectedDestinationSchedulePreference.targetArrivalTime, selectedDestinationPlace.timezone, nowMinuteTick],
+  );
+
   useEffect(() => {
     if (!appStateHydrated) return;
     let active = true;
@@ -491,11 +514,7 @@ export function useWeatherOnAppState() {
         originCountryCode: originLocation.countryCode,
         destinationCountryCode: destinationPlace.countryCode,
         transportMode: selectedDestinationSchedulePreference.transportMode,
-        arrivalTime: getRouteArrivalTimeIso(
-          selectedDestinationSchedulePreference.targetArrivalTime,
-          destinationPlace.timezone,
-          nowMinuteTick,
-        ),
+        arrivalTime: destinationArrivalTimeIso,
       })
       .then((result) => {
         if (!active) return;
@@ -524,8 +543,7 @@ export function useWeatherOnAppState() {
     deviceWeatherLocation,
     selectedDestinationPlace,
     selectedDestinationSchedulePreference.transportMode,
-    selectedDestinationSchedulePreference.targetArrivalTime,
-    nowMinuteTick,
+    destinationArrivalTimeIso,
   ]);
 
   useEffect(() => {
@@ -603,7 +621,6 @@ export function useWeatherOnAppState() {
       weatherLocationMode,
       manualWeatherLocation,
       temperatureUnit,
-      weightUnit,
       distanceUnit,
       themeMode,
       reducedTransparency,
@@ -641,7 +658,6 @@ export function useWeatherOnAppState() {
     styleGender,
     styleProfileSaved,
     temperatureUnit,
-    weightUnit,
     distanceUnit,
     termsRequiredAccepted,
     themeMode,
@@ -769,12 +785,11 @@ export function useWeatherOnAppState() {
     setAlertSettingsRouteState(null);
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
-    if (nextRoute === "H4" && isP0Route(route) && route !== "H4") setUmbrellaReturnRoute(route);
-    if (nextRoute === "H3" && isP0Route(route) && route !== "H3") setNotificationCenterReturnRoute(route);
-    // 옷장(C2)·프리셋(C3)은 코디 메인(C1)과 코디 상세(C4) 양쪽에서 진입 가능해, 뒤로가기가
-    // 항상 C1로 고정되면 코디 상세에서 들어왔을 때 엉뚱한 화면으로 돌아간다. 실제 진입 경로를 기억한다.
-    if (nextRoute === "C2" && isP0Route(route) && route !== "C2") setWardrobeReturnRoute(route);
-    if (nextRoute === "C3" && isP0Route(route) && route !== "C3") setWardrobePresetReturnRoute(route);
+    // 오버레이 화면들(우산 H4, 알림센터 H3, 옷장 C2, 프리셋 C3)은 여러 진입점에서 열릴 수 있어,
+    // 뒤로가기가 항상 고정된 화면으로 가면 실제 진입 경로와 다른 곳으로 튄다. 실제 진입 경로를 기억한다.
+    if (isOverlayReturnRouteId(nextRoute) && isP0Route(route) && route !== nextRoute) {
+      setOverlayReturnRoutes((current) => ({ ...current, [nextRoute]: route }));
+    }
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
   }, [route]);
 
@@ -928,7 +943,6 @@ export function useWeatherOnAppState() {
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(destination.careEnabled);
     setPreviewDestinationAlertCondition(destination.alertCondition);
-    setDestinationHubFilterState("all");
     setUseDestinationWeather(false);
     setWeatherProviderMode("ready");
   }, []);
@@ -975,7 +989,7 @@ export function useWeatherOnAppState() {
       setAlertSettingsRouteState({ returnTo: "H1", focus: "general" });
     }
     if (route === "H3") {
-      setNotificationCenterReturnRoute("H1");
+      setOverlayReturnRoutes((current) => ({ ...current, H3: "H1" }));
     }
     setRoute(route);
   }, [focusSavedDestination, savedDestinations, state.notifications]);
@@ -1092,7 +1106,6 @@ export function useWeatherOnAppState() {
     setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(normalizedPlace));
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(true);
-    setDestinationHubFilterState("all");
     setUseDestinationWeather(false);
   }, []);
 
@@ -1255,23 +1268,9 @@ export function useWeatherOnAppState() {
     setPreviewDestinationCareEnabled(restoredDestination.careEnabled);
     setPreviewDestinationAlertCondition(restoredDestination.alertCondition);
     dismissRemovedDestination();
-    setDestinationHubFilterState("all");
     setWeatherProviderMode("ready");
     setWeatherRefreshTick((value) => value + 1);
   }, [dismissRemovedDestination, recentlyRemovedDestination]);
-
-  const setDestinationHubFilter = useCallback((filter: DestinationHubFilter) => {
-    setDestinationHubFilterState(filter);
-    const matchingDestination = savedDestinations.find((destination) =>
-      getDestinationFilterMatched(filter, destination.careEnabled, destination.place.category, selectedDestinationPlace.category),
-    );
-    if (matchingDestination && matchingDestination.place.id !== selectedDestinationPlace.id) {
-      setSelectedDestinationPlace(matchingDestination.place);
-      setDestinationSelectionReady(true);
-      setWeatherProviderMode("ready");
-      setWeatherRefreshTick((value) => value + 1);
-    }
-  }, [savedDestinations, selectedDestinationPlace.category, selectedDestinationPlace.id]);
 
   const requestAccountGate = (reason: GateReason, returnTo: AccountGateReturnRouteId) => {
     if (accountLinked && termsRequiredAccepted) {
@@ -1359,7 +1358,7 @@ export function useWeatherOnAppState() {
       setPermissionGateResult(
         permissionCompleted
           ? createPermissionGateResult(permissionGate.reason, permissionGate.returnTo)
-          : createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo),
+          : createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo, true),
       );
     }
     if (permissionGate?.returnTo === "M2") setAlertSettingsRouteState(null);
@@ -1422,20 +1421,8 @@ export function useWeatherOnAppState() {
       setRoute(destinationAddReturnRoute);
       return true;
     }
-    if (route === "H4") {
-      setRoute(umbrellaReturnRoute);
-      return true;
-    }
-    if (route === "H3") {
-      setRoute(notificationCenterReturnRoute);
-      return true;
-    }
-    if (route === "C2") {
-      setRoute(wardrobeReturnRoute);
-      return true;
-    }
-    if (route === "C3") {
-      setRoute(wardrobePresetReturnRoute);
+    if (isOverlayReturnRouteId(route)) {
+      setRoute(overlayReturnRoutes[route]);
       return true;
     }
     const backRoute = getBackRoute(route);
@@ -1444,13 +1431,10 @@ export function useWeatherOnAppState() {
   }, [
     destinationAddReturnRoute,
     gate?.returnTo,
-    notificationCenterReturnRoute,
+    overlayReturnRoutes,
     permissionGate?.returnTo,
     route,
     styleProfileReturnRoute,
-    umbrellaReturnRoute,
-    wardrobePresetReturnRoute,
-    wardrobeReturnRoute,
   ]);
 
   const canGoBack = route !== "A1" && route !== "H1" && route !== "O1" && route !== "O2";
@@ -1458,7 +1442,7 @@ export function useWeatherOnAppState() {
   return {
     route,
     styleProfileReturnRoute,
-    umbrellaReturnRoute,
+    overlayReturnRoutes,
     state,
     useDestinationWeather,
     umbrellaReviewed,
@@ -1476,7 +1460,6 @@ export function useWeatherOnAppState() {
     selectedDestinationTravelEstimate,
     selectedDestinationPlace,
     destinationSelectionReady,
-    destinationHubFilter,
     placeSearchQuery,
     placeSearchResults,
     isPlaceSearchLoading,
@@ -1489,7 +1472,6 @@ export function useWeatherOnAppState() {
     selectedPolicyDocument,
     adConsentMode,
     temperatureUnit,
-    weightUnit,
     distanceUnit,
     themeMode,
     reducedTransparency,
@@ -1523,7 +1505,6 @@ export function useWeatherOnAppState() {
     returnFromPolicyDocument,
     setAdConsentMode,
     setTemperatureUnit,
-    setWeightUnit,
     setDistanceUnit,
     setThemeMode,
     toggleReducedTransparency: () => setReducedTransparency((value) => !value),
@@ -1559,7 +1540,6 @@ export function useWeatherOnAppState() {
     removeSavedDestination,
     restoreRemovedDestination,
     dismissRemovedDestination,
-    setDestinationHubFilter,
     searchPlaces,
     selectDestinationPlace,
     markNotificationRead,

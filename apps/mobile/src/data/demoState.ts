@@ -62,6 +62,7 @@ export type DestinationNotificationInput = {
   // 저장된 목적지는 실제 TravelEstimateResult(provider/status 필드명)를, 미저장 임시 목적지는
   // DestinationScheduleInput(travelProvider/travelStatus 필드명)을 그대로 재사용해 넘기므로 두 필드명을 모두 허용한다.
   travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
+    provider?: DestinationScheduleInput["travelProvider"];
     status?: DestinationScheduleInput["travelStatus"];
   };
 };
@@ -95,7 +96,9 @@ export function buildDemoStateFromWeatherResult(
     }),
     activeWeather,
     options.notificationNow ?? Date.now(),
-    getDefaultTimeZone(weatherProviderResult.current.countryCode),
+    // activeWeather가 목적지 날씨일 때(useDestinationWeather)도 그 지역 시간대를 써야
+    // 알림 예약 시각이 홈 지역 시간대로 잘못 계산되지 않는다.
+    getDefaultTimeZone(activeWeather.countryCode),
   );
   const destinationNotifications = hasDestination
     ? buildDestinationNotifications(activeWeather, weatherProviderResult.destination, {
@@ -319,6 +322,7 @@ function getTravelMinutes(
     {
       travelMinutes: baseTravelMinutes,
       distanceMeters: travelEstimate?.distanceMeters ?? 0,
+      provider: travelEstimate?.provider ?? travelEstimate?.travelProvider,
       status: travelEstimate?.status ?? travelEstimate?.travelStatus ?? "fallback",
     },
     mode ?? "auto",

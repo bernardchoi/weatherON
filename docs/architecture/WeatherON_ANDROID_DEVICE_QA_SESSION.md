@@ -18,7 +18,7 @@
 | App version | `1.0.0 (10)` |
 | APK sha256 | `da404203b4e9582eb40aa7ccb6985174a5d97fc450c9fc9082041697b5e96e6e` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-20 21:48-21:56 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/android-qa-build-device-test-2026-07-20-r3/report.md` |
 | 주요 결과 | qa-local release APK 재빌드, 설치, COLD launch, 온보딩 skip 후 홈, 코디 탭/상세/계정 게이트, 출발 탭, MY, 목적지 `Jamsil` 검색/`잠실야구장` 선택/저장/상세/삭제 복구, 권한 거부 fallback, 다크모드, 네트워크 차단 fallback 확인. crash buffer 0줄 |
 | 남은 개선 | Android 뒤로가기 표준 케이스와 OS 알림 수신 딥링크는 이번 r3 요청 범위에서 별도 반복하지 않음 |
@@ -34,7 +34,7 @@
 | App version | `1.0.0 (10)` |
 | APK sha256 | `1f1f941cc7c2c0b4dec55ec247f6fd2158bee89c0e32dddb02d9e641011c98fc` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-20 20:27-20:31 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/android-qa-build-device-test-2026-07-20-r2/report.md` |
 | 주요 결과 | qa-local release APK 재빌드, 설치, COLD launch, 홈, 코디 탭/상세/저장, 출발 탭, MY, 목적지 `Jamsil` 검색/`잠실야구장` 선택/저장/상세/삭제 복구, 권한 거부 fallback, 다크모드, 네트워크 차단 fallback 확인. crash buffer 0줄 |
 | 남은 개선 | Android 뒤로가기 표준 케이스와 OS 알림 수신 딥링크는 이번 r2 요청 범위에서 별도 반복하지 않음 |
@@ -50,7 +50,7 @@
 | App version | `1.0.0 (10)` |
 | APK sha256 | `c4cd28b1c92565710b3d53233019896fdc0c9ac463a88be839f33792bbe82450` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-20 18:55-20:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/android-real-device-qa-2026-07-20/report.md`, `docs/audits/android-real-device-qa-2026-07-20/follow-up/report.md` |
 | 주요 결과 | qa-local release APK 빌드, 설치, COLD launch, 홈, 코디 탭/상세/저장/목록 복귀, 목적지 `Jamsil` 검색/`잠실야구장` 선택/저장/상세, 권한 거부 fallback, 다크모드, 네트워크 차단 fallback, MY, 스마트 알림 설정, 개발용 알림 QA 패널, 테스트 알림 수신, notification shade 노출, 알림 탭 후 M2 복귀 확인. `dumpsys notification` 기준 WeatherON 알림 게시 기록 `weatheron:test:M2:*`. crash buffer 0줄 |
 | 남은 개선 | `uiautomator dump`는 `ERROR: could not get idle state.`로 실패해 스크린샷/`dumpsys`/logcat 중심으로 증거 확보. Android 뒤로가기 표준 케이스는 이번 follow-up 요청 범위 밖이라 별도 확인 필요 |
@@ -66,7 +66,7 @@
 | App version | `0.1.0 (9)` |
 | APK sha256 | `512dd18f4c32de3f83f20c041b32bfcf77d5e7f9d96e924412b903b9bdefc47b` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/android-real-device-qa-2026-07-15/report.md` |
 | 주요 결과 | release APK 빌드, 설치, 실행, 홈, 코디, 출발, 목적지 상세, 이동수단 선택, MY, 권한 관리, 스마트 알림 설정, 앱 내부 알림 패널 확인. `dumpsys notification` 기준 WeatherON 알림 게시 기록 `numPostedByApp=10`. app pid logcat fatal/exception/anr 패턴 없음, crash buffer 0줄 |
 | 남은 개선 | OS 알림창 첫 화면에서 WeatherON 알림 직접 노출은 확인되지 않아 `dumpsys notification`으로 게시 기록 확인. `uiautomator dump`는 `ERROR: could not get idle state.`로 실패해 이번 회차는 스크린샷/로그 중심으로 증거 확보 |
@@ -82,7 +82,7 @@
 | App version | `0.1.0 (8)` |
 | APK sha256 | `b659ebbdb843be6cffbbc6a6578055d6cb4493e53b7a1ef34a1a077c8ea81fcd` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/android-real-device-v8-2026-07-10-r2/report.md` |
 | 주요 결과 | `c98a58ad5` 아이콘 어포던스 폴리시 커밋 반영 후 재빌드/재설치. 이전 v8 리포트에서 no-op으로 보고된 코디 `상세 보기` → C4 이동을 픽셀 좌표 기준으로 재확인한 결과 정상 동작 확인. 코디 상세 back, 출발, MY, 알림 사이드바, Android 뒤로가기 모두 정상. crash/ANR/FATAL 패턴 없음 |
 | 남은 개선 | 코디 `상세 보기` no-op 재현 실패 — 이전 세션의 일시적 탭 미스 또는 이번 아이콘 폴리시로 인한 터치 영역 확대가 원인일 가능성. 코드 변경 없이 종결. O 시리즈 온보딩/D9 목적지 검색/D13 알림 발송/권한 거부 상태는 이번 세션에서 미검증 |
@@ -98,7 +98,7 @@
 | App version | `0.1.0 (7)` |
 | APK sha256 | `648b3a8343cc3becdfe266e1bcaabe63ee9dafbef2cbc9af3ee478fd105f6ba1` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-09-1122/report.md` |
 | 주요 결과 | `ExpoLinearGradient` native ViewManager 미등록 릴리즈 크래시를 RN View 배경 레이어로 대체해 해결. 재빌드/재설치 후 홈, 코디, 출발, MY, 알림 사이드바 스와이프 닫힘 확인. crash log 비어 있음. |
 | 남은 개선 | 코디 탭 첫 화면 하단에서 다음 카드 일부가 탭바 뒤로 이어져 보이는 컷 기준 재검토 필요. |
@@ -114,7 +114,7 @@
 | App version | `0.1.0 (7)` |
 | APK sha256 | `97b96dfc5bb4c8ecc6e83ea258916cd935dba3e23afcc37da732e0f8b0c91235` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-08-1736/report.md` |
 | 주요 결과 | crash/ANR 없음. 홈/코디/출발/MY 4탭, 코디 추천, 코디 상세, 코디 저장 완료 상태, 출발, MY, 알림 사이드바 스와이프 닫힘 확인. C4 저장 완료 CTA 하단 여백 보정 후 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인. |
 | 남은 개선 | 없음. C4 저장 완료 CTA 하단 여백 이슈 해결 확인. |
@@ -129,7 +129,7 @@
 | APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
 | App version | `0.1.0 (7)` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-08-0011/report.md` |
 | 주요 결과 | crash/ANR 없음. 홈, 출발 목록, 신사이바시 상세, 도착 편집기, 이동수단 드롭다운, MY, 권한, 스마트 알림 설정 확인. 해외 목적지에서 비현실 도보 시간과 전날 출발 시간 미노출 확인. |
 | 해결 확인 | 도착 시간 편집기와 이동수단 드롭다운 동시 표시 시 탭바 겹침 없음. 장거리 도보 옵션은 `장거리 목적지는 도보 제외`로 비활성 표시. |
@@ -145,7 +145,7 @@
 | APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
 | App version | `0.1.0 (7)` |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 | QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
 | 주요 결과 | crash/ANR 없음. 홈, 출발 목록, 신사이바시 상세, 도착 편집기, 이동수단 드롭다운, MY, 권한, 스마트 알림 설정 확인. |
 | 남은 개선 | 홈 목적지 칩 말줄임, 홈 핵심 행동 카드 하단 밀림, 스마트 알림 설정 `실제 수신` 라벨 줄바꿈 |
@@ -163,7 +163,7 @@
 | 사전 체크 | `npm run check:android-adb-ready`, `./gradlew :app:assembleRelease --console=plain`, `npm run install:android-preview-apk` 통과 |
 | 설치 방식 | ADB install release APK |
 | 테스트 기기 | A142 / adb 000841458003652 |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 
 ### 이전 QA 기준
 
@@ -191,7 +191,7 @@
 | 화면 크기 | 1084x2412 |
 | 네트워크 | Wi-Fi |
 | 설치 방식 | ADB install release APK |
-| 테스트 일시 | 2026-07-15 17:06 KST |
+| 테스트 일시 | 2026-07-20 18:55-19:00 KST |
 
 ---
 
@@ -199,22 +199,22 @@
 
 | ID | 항목 | 기대 결과 | 결과 | 메모 |
 |---|---|---|---|---|
-| D1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 통과 | 기존 서명 불일치 앱 삭제 후 ADB install 완료, 패키지 com.mvp.weatheron 설치 확인 |
-| D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | pm clear 후 MainActivity 실행, O1 온보딩 진입, crash log buffer 비어 있음 |
-| D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 보류 | H1/Guest/READY/OUTER 등 내부 route/dev label은 미노출. Android 권한 팝업 앱명 WeatherON Dev 노출은 출시 label 확정 필요 |
-| D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 위치 없이 계속 후 홈 진입, 홈 카드/목적지 필요/날씨 연결됨/하단탭 표시 정상 |
+| D1 | APK 설치 | 설치 성공, 경고 후 계속 설치 가능 | 통과 | qa-local APK 1.0.0 (10) ADB install -r -d 완료, 패키지 com.weatheron.mobile 설치 확인 |
+| D2 | 첫 실행 | 크래시 없이 온보딩 진입 | 통과 | COLD launch TotalTime=205ms, MainActivity foreground, crash log buffer 비어 있음 |
+| D3 | 내부 문구 노출 | `H1`, `Guest`, `READY`, `OUTER` 같은 개발 문구 미노출 | 통과 | 홈/코디/출발/MY/스마트 알림 설정 캡처 기준 H1/Guest/READY/OUTER 같은 route/dev label 미노출 |
+| D4 | 홈 진입 | 홈 카드, 코디, 우산, 알림, 하단탭 표시 | 통과 | 홈 카드, 현재 날씨, 목적지 기준 카드, 하단탭 표시 정상 |
 | D4-1 | 하단 탭 IA | 출시 후보 기준 `홈/코디/출발/MY` 표시, `소셜/우산/강수` 직접 탭 없음 | 통과 | 하단 탭 홈/출발/MY 구성 확인, MY 탭과 알림 설정 진입 확인 |
-| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 보류 | 온보딩-홈-MY-알림 설정 핵심 연결은 확인. 목적지/코디/소셜 전체 핵심 클릭 플로우는 이번 실기기 세션 미실행 |
+| D4-2 | 핵심 클릭 흐름 | `npm run check:android-core-flow` 기준 홈 CTA, 코디 탭 추천/상세/저장/옷장 진입, 하단 탭 가림 없음 | 보류 | 2026-07-20 회차는 탭 순회와 알림 QA 중심. 코디 상세/목적지 검색 전체 플로우 미수행 |
 | D4-3 | 홈 목적지 카드 | 상단 현재 위치 날씨, 하단 목적지 선택 카드, 목적지 기준 `나갈 시간/비 그침/챙길 것` 카드 표시 | 통과 | local release APK 재빌드/재설치 후 실기기 홈에서 현재 위치 날씨, 목적지 선택 카드, 목적지 정보 3개 카드 확인. 캡처 `/tmp/weatheron-qa-home.png`, UI tree `/tmp/weatheron-ui-home.xml` |
-| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | local release APK 0.1.0 (9) 재실행 후 홈, 저장 목적지, 현재 지역명, 하단 탭 상태 유지 확인 |
-| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 통과 | 출발 탭에서 Android Back 입력 후 홈 탭으로 복귀, crash buffer 비어 있음 |
-| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | local release APK 0.1.0 (9)에서 위치 권한 허용 후 홈 상단 실제 지역명 `고양시 덕양구 지축동`, 위치 상태 `현재 위치`, 날씨 카드 표시 확인. crash buffer 비어 있음 |
-| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 통과 | ACCESS_FINE_LOCATION/COARSE_LOCATION revoke 후 홈이 `기본 위치 서울`, 위치 상태 `수동`으로 전환되고 목적지 비교/출발 판단 흐름 유지. crash buffer 비어 있음 |
-| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 통과 | local release APK 0.1.0 (9)에서 잠실/Tokyo Station 검색·선택·저장 확인. 해외 보조 fixture는 중화권 제외 기준에 맞춰 센트럴 파크로 소스 갱신 |
-| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 통과 | 실기기 wm size 720x1600 override에서 홈 주요 카드, 하단 탭, 스크롤 접근성 확인. 가로 overflow/CTA 가림 없음. 이후 1084x2412로 원복 |
-| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 통과 | cmd uimode night yes/no로 다크/라이트 각각 확인. 텍스트 대비, 버튼, 하단 탭 표시 정상. screenshot /tmp/weatheron-d11-dark.png, /tmp/weatheron-d11-light.png 확인. crash buffer 비어 있음 |
-| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 통과 | Wi-Fi/데이터 off 후 Active default network none 상태에서 홈 빈 화면 없음. `최근 예보로 유지 중`, `최근 예보`, `연결 전까지 마지막 예보로 판단 유지` 표시. 네트워크 원복 확인 |
-| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | POST_NOTIFICATIONS granted. M2 테스트 알림 발송 후 5초 내 `weatheron:test:1783049994330` 시스템 게시, 제목 `WeatherON 테스트 알림`, route M2 payload 확인. 알림 탭 후 M2 복귀, 테스트 알림 잔존 없음, 재실행 후 `테스트 알림 수신·탭 확인됨`/예약 상태 유지 |
+| D5 | 상태 저장 | 앱 완전 종료/재실행 후 온보딩/설정 상태 유지 | 통과 | qa-local APK 1.0.0 (10) 재설치 후 기존 목적지/권한/MY 버전 상태 유지 |
+| D6 | Android 뒤로가기 | 주요 화면에서 예상 경로로 복귀 | 보류 | 2026-07-20 회차에서 별도 back flow 미수행 |
+| D7 | 위치 권한 허용 | 현재 위치 또는 fallback 메시지 표시, 크래시 없음 | 통과 | POST_NOTIFICATIONS, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION granted 확인. 앱 크래시 없음 |
+| D8 | 위치 권한 거부 | 앱 사용 가능, 수동 위치/목적지 흐름 유지 | 보류 | 사용자 기기 권한 상태 보존 위해 revoke 미수행 |
+| D9 | 목적지 검색 | 1순위 국내 장소(Kakao Local 또는 fallback) 검색·저장 확인 후 2순위 해외 장소(Google 또는 fallback) 보조 확인 | 보류 | 2026-07-20 회차에서 장소 검색 미수행 |
+| D10 | 화면 밀도 | 작은 화면에서 가로 overflow/버튼 잘림/하단 탭 CTA 가림 없음 | 통과 | 1084x2412 실기기 화면에서 홈/코디/출발/MY/알림 설정 주요 카드와 하단 탭 가림 없음 |
+| D11 | 다크/라이트 | 텍스트 대비와 버튼 상태 정상 | 보류 | 2026-07-20 회차에서 system night mode 전환 미수행 |
+| D12 | 네트워크 끊김 | 빈 화면 없이 최근/기본 예보 안내 표시 | 보류 | 사용자 기기 네트워크 상태 보존 위해 차단 미수행 |
+| D13 | 알림 신뢰성 | 알림 권한 허용 후 테스트 알림 예약, 5초 내 수신, 알림 탭 딥링크, 앱 재실행 후 예약 상태 확인 | 통과 | qa-local APK에서 개발용 알림 QA 패널 노출. 테스트 알림 5초 내 weatheron:test:M2:* 게시, shade 노출, 알림 탭 후 M2 복귀와 탭 확인됨 반영 |
 | D14 | 이동수단 드롭다운 | G2에서 이동수단 드롭다운 표시, 수단 선택 즉시 리스트 닫힘, 선택값/계산식 반영 | 통과 | 실기기에서 `자동/도보/자차/대중교통` 옵션과 `대중교통은 배차/환승 변동 가능` 문구 확인. `도보` 선택 후 버튼이 `이동수단 도보, 선택 목록 열기`로 돌아오고 옵션 노드 잔존 없음. 캡처 `/tmp/weatheron-qa-g2-transport-open.png`, `/tmp/weatheron-qa-g2-transport-after.png` |
 
 ---
@@ -340,4 +340,4 @@ npm run report:android-release-action-board
 | 2026-07-04 | 실기기 `000841458003652`에서 G1 목적지 요약 카드 축소 UI, G2 도착 희망 시/분 스크롤 선택, 이동수단 드롭다운 자동 닫힘, G2 다크/라이트 색상 대비, crash log fatal/ANR 패턴 없음 확인 |
 | 2026-07-08 | local release APK `0.1.0 (7)` 재빌드/재설치 후 홈/출발/신사이바시 상세/MY/권한/스마트 알림 설정 재확인. G2 도착 편집기+이동수단 드롭다운 탭바 겹침 없음, 해외 장거리 도보 시간 미노출, crash/fatal/ANR 패턴 없음 확인 |
 | 2026-07-08 | local release APK `0.1.0 (7)` 재빌드/재설치 후 코디 탭 복원 QA. 홈/코디/출발/MY 4탭, C1 추천, C4 상세, 저장 완료 상태, 알림 사이드바 스와이프 닫힘 확인. C4 저장 완료 CTA 하단 여백 이슈 초기 발견 |
-| 2026-07-08 | C4 저장 완료 CTA 하단 여백 보정 후 local release APK 재빌드/재설치. 저장 완료 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인. D4-2 통과로 갱신 || 2026-07-15 | 실기기 QA 결과 JSON 반영 |
+| 2026-07-08 | C4 저장 완료 CTA 하단 여백 보정 후 local release APK 재빌드/재설치. 저장 완료 버튼 bottom 1745, 탭바 top 2164로 약 419px 여유 확인. D4-2 통과로 갱신 || 2026-07-15 | 실기기 QA 결과 JSON 반영 || 2026-07-23 | 실기기 QA 결과 JSON 반영 |

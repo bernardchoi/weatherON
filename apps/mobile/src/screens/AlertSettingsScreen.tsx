@@ -5,7 +5,7 @@ import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, getToneColor, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
 const testRouteTargets: Array<{ route: P0RouteId; label: string; tone: AlertTone }> = [
@@ -472,16 +472,9 @@ function ChevronDown({ color, open }: { color: string; open: boolean }) {
   );
 }
 
-function getToneColor(theme: AppTheme, tone: AlertTone) {
-  if (tone === "gold") return theme.gold;
-  if (tone === "sky") return theme.sky;
-  if (tone === "warm") return theme.warm;
-  return theme.clear;
-}
-
 function getNotificationPermissionResult(permissionGateResult: P0ScreenProps["permissionGateResult"]) {
   if (permissionGateResult?.returnTo !== "M2" || permissionGateResult.reason !== "notification") return "none";
-  return permissionGateResult.message.includes("나중에") ? "skipped" : "allowed";
+  return permissionGateResult.denied || permissionGateResult.message.includes("나중에") ? "skipped" : "allowed";
 }
 
 function getNotificationDeliveryCopy(

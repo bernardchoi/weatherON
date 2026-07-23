@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { kstDate, normalizeTableValue, tableValue as extractTableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const reportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_READINESS_REPORT.md");
@@ -186,17 +187,6 @@ function hasStoreAsset(id, width, height) {
   return existsSync(join(rootDir, asset.path));
 }
 
-function extractTableValue(text, label) {
-  if (!text) return "";
-  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escapedLabel}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
-}
-
-function normalizeTableValue(value) {
-  return value.replace(/^`|`$/g, "").trim();
-}
-
 function currentRuntimeBlocker() {
   const adbReady = normalizeTableValue(extractTableValue(adbStatusDoc, "준비 상태"));
   const installState = normalizeTableValue(extractTableValue(installStatusDoc, "설치 상태"));
@@ -205,13 +195,4 @@ function currentRuntimeBlocker() {
   if (adbReady && adbReady !== "가능") return "ADB 기기 연결 필요";
   if (installState && installState !== "설치됨") return "최신 APK 실기기 설치 필요";
   return "Play Console/스토어 제출 항목 미완료";
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }

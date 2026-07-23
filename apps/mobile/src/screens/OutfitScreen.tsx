@@ -11,6 +11,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
+import { getConditionLabel } from "../utils/weatherPresentation";
 
 export function OutfitScreen({
   state,
@@ -134,8 +135,7 @@ export function OutfitScreen({
 }
 
 function getWeatherLine(feelsLikeC: number, condition: string) {
-  const conditionLabel = condition === "clear" ? "맑음" : condition === "rain" ? "비" : condition === "storm" ? "강한 비" : "날씨";
-  return `${Math.round(feelsLikeC)}도 · ${conditionLabel} · 오늘 몸이 느낄 날씨 기준`;
+  return `${Math.round(feelsLikeC)}도 · ${getConditionLabel(condition)} · 오늘 몸이 느낄 날씨 기준`;
 }
 
 function formatAdviceTime(value: string) {

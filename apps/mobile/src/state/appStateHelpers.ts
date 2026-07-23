@@ -16,7 +16,6 @@ import type {
   AccountPendingAction,
   AlertPreferences,
   AlertSettingsFocus,
-  DestinationHubFilter,
   DestinationRepeatDay,
   DestinationSchedulePreference,
   DestinationTravelEstimate,
@@ -195,6 +194,7 @@ export function getAccountResumeLabel(reason: GateReason): string {
   if (reason === "destination-care") return "목적지 케어 저장";
   if (reason === "social-note") return "ON Square 체크인";
   if (reason === "weather-report") return "날씨 제보 저장";
+  if (reason === "add-destination") return "새 위치 저장";
   return "알림 확장";
 }
 
@@ -220,14 +220,23 @@ export function createPermissionGateResult(reason: PermissionGateReason, returnT
     reason,
     returnTo,
     message: `${getPermissionResumeLabel(reason)} 허용 완료`,
+    denied: false,
   };
 }
 
-export function createPermissionGateSkipResult(reason: PermissionGateReason, returnTo: PermissionReturnRouteId): PermissionGateResultState {
+// denied=true는 사용자가 허용을 시도했지만 OS가 거부한 경우, denied=false는
+// 사용자가 "나중에" 버튼을 직접 눌러 건너뛴 경우다. 화면에서 이 둘을 구분해
+// 거부 상태를 "나중에 해도 됨"처럼 오안내하지 않도록 한다.
+export function createPermissionGateSkipResult(
+  reason: PermissionGateReason,
+  returnTo: PermissionReturnRouteId,
+  denied = false,
+): PermissionGateResultState {
   return {
     reason,
     returnTo,
-    message: `${getPermissionResumeLabel(reason)} 나중에 설정`,
+    message: denied ? `${getPermissionResumeLabel(reason)} 거부됨` : `${getPermissionResumeLabel(reason)} 나중에 설정`,
+    denied,
   };
 }
 
@@ -342,15 +351,4 @@ export function getTodayRepeatDay(): DestinationRepeatDay {
 
 export function isDestinationRepeatDay(value: unknown): value is DestinationRepeatDay {
   return value === "mon" || value === "tue" || value === "wed" || value === "thu" || value === "fri" || value === "sat" || value === "sun";
-}
-
-export function getDestinationFilterMatched(
-  filter: DestinationHubFilter,
-  careEnabled: boolean,
-  category: PlaceSearchResult["category"],
-  selectedCategory: PlaceSearchResult["category"],
-): boolean {
-  if (filter === "care") return careEnabled;
-  if (filter === "category") return category === selectedCategory;
-  return true;
 }

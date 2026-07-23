@@ -143,6 +143,15 @@ export function semanticColor(theme: AppTheme, role: SemanticColorRole): string 
   return colorWithAlpha(theme.name === "light" ? theme.card : theme.text, theme.name === "light" ? 0.62 : 0.34);
 }
 
+export type ToneColor = "clear" | "gold" | "sky" | "warm";
+
+export function getToneColor(theme: AppTheme, tone: ToneColor): string {
+  if (tone === "gold") return theme.gold;
+  if (tone === "sky") return theme.sky;
+  if (tone === "warm") return theme.warm;
+  return theme.clear;
+}
+
 function parseHexColor(color: string) {
   const normalized = color.trim().replace("#", "");
   if (!/^[0-9A-Fa-f]{3}$|^[0-9A-Fa-f]{6}$/.test(normalized)) return null;

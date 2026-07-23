@@ -152,7 +152,7 @@ export function LocationChangeScreen({
       <Pressable
         accessibilityLabel={addLocationLabel}
         accessibilityRole="button"
-        onPress={() => (accountLinked ? onNavigate("P1") : onRequireAccount("destination-care", "H2"))}
+        onPress={() => (accountLinked ? onNavigate("P1") : onRequireAccount("add-destination", "P1"))}
         style={[styles.addRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
       >
         <Text style={[styles.addPlus, { color: theme.subtle }]}>＋</Text>

@@ -11,6 +11,7 @@ import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
+import { getConditionLabel } from "../utils/weatherPresentation";
 
 export function DestinationCareScreen({
   permissionReady,
@@ -830,16 +831,6 @@ function subtractMinutes(time: string, minutes: number) {
   const nextHour = Math.floor(total / 60);
   const nextMinute = total % 60;
   return `${String(nextHour).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`;
-}
-
-function getConditionLabel(condition: string) {
-  if (condition === "clear") return "맑음";
-  if (condition === "cloud") return "흐림";
-  if (condition === "rain") return "비";
-  if (condition === "snow") return "눈";
-  if (condition === "storm") return "폭풍";
-  if (condition === "dust") return "먼지";
-  return condition;
 }
 
 function getCareCtaLabel(permissionReady: boolean, destinationCareEnabled: boolean) {

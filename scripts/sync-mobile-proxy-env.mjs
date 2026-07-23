@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { networkInterfaces } from "node:os";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const mobileEnvPath = join(rootDir, "apps/mobile/.env.local");
@@ -155,15 +156,6 @@ npm run sync:mobile-proxy-env -- openmeteo
 
   mkdirSync(dirname(statusPath), { recursive: true });
   writeFileSync(statusPath, report, "utf8");
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 function maskUrl(value) {

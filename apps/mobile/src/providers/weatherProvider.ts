@@ -144,6 +144,7 @@ async function fetchWeatherSnapshot(
         locationId: location.locationId,
         locationName: location.locationName,
         countryCode: location.countryCode,
+        timezone: location.timezone,
         stale,
       });
     } catch {
@@ -213,8 +214,10 @@ function getProviderMessage(status: WeatherProviderStatus, fallbackUsed = false)
 function markProviderResultStale(result: WeatherProviderResult, status: WeatherProviderStatus, options: WeatherProviderOptions = {}): WeatherProviderResult {
   const requestedDestinationLocations = getRequestedDestinationLocations(options);
   const existingDestinationSnapshots = result.destinationSnapshots.length ? result.destinationSnapshots : [result.destination];
+  // 위치별로 id를 맞춰 캐시를 재사용해야 한다. 인덱스로만 짝지으면 목적지 목록이
+  // 바뀌었을 때 다른 지역의 날씨 데이터가 새 지역 이름표를 달고 나온다.
   const destinationSnapshots = requestedDestinationLocations
-    ? requestedDestinationLocations.map((location, index) => markSnapshotStale(existingDestinationSnapshots[index] ?? result.destination, location))
+    ? requestedDestinationLocations.map((location) => markSnapshotStale(findSnapshotForLocation(existingDestinationSnapshots, location), location))
     : existingDestinationSnapshots.map((snapshot) => markSnapshotStale(snapshot));
 
   return {
@@ -227,6 +230,10 @@ function markProviderResultStale(result: WeatherProviderResult, status: WeatherP
     retryable: true,
     fallbackUsed: result.fallbackUsed,
   };
+}
+
+function findSnapshotForLocation(snapshots: WeatherSnapshot[], location: WeatherLocationPreset): WeatherSnapshot | undefined {
+  return snapshots.find((snapshot) => snapshot.locationId === location.locationId);
 }
 
 function getUniqueDestinationLocations(
@@ -247,14 +254,24 @@ function getRequestedDestinationLocations(options: WeatherProviderOptions): Weat
   return getUniqueDestinationLocations(options.destinationLocation ?? options.destinationLocations?.[0] ?? gangneungWeatherLocation, options.destinationLocations);
 }
 
-function markSnapshotStale(snapshot: WeatherSnapshot, location?: WeatherLocationPreset): WeatherSnapshot {
+function markSnapshotStale(snapshot: WeatherSnapshot | undefined, location?: WeatherLocationPreset): WeatherSnapshot {
+  // 캐시가 없거나(snapshot undefined) 캐시된 지역과 요청 지역이 다르면, 다른 지역의
+  // 실측 데이터를 새 지역 이름표로 relabel하지 말고 픽스처 기반 폴백을 만들어야 한다.
+  if (!snapshot) return buildFallbackSnapshotForLocation(location ?? defaultSeoulWeatherLocation);
+  if (location && location.locationId !== snapshot.locationId) return buildFallbackSnapshotForLocation(location);
   return {
     ...snapshot,
-    locationId: location?.locationId ?? snapshot.locationId,
-    locationName: location?.locationName ?? snapshot.locationName,
-    countryCode: location?.countryCode ?? snapshot.countryCode,
     stale: true,
     current: { ...snapshot.current },
     hourly: snapshot.hourly.map((item) => ({ ...item })),
   };
+}
+
+function buildFallbackSnapshotForLocation(location: WeatherLocationPreset): WeatherSnapshot {
+  return normalizeOpenMeteoWeather(openMeteoFixture, {
+    locationId: location.locationId,
+    locationName: location.locationName,
+    countryCode: location.countryCode,
+    stale: true,
+  });
 }

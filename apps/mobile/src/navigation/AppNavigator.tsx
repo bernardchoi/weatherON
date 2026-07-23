@@ -62,7 +62,7 @@ export function AppNavigator() {
     appState.dynamicColorEnabled,
   );
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
-  const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.umbrellaReturnRoute);
+  const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
@@ -87,7 +87,6 @@ export function AppNavigator() {
     selectedDestinationTravelEstimate: appState.selectedDestinationTravelEstimate,
     selectedDestinationPlace: appState.selectedDestinationPlace,
     destinationSelectionReady: appState.destinationSelectionReady,
-    destinationHubFilter: appState.destinationHubFilter,
     placeSearchQuery: appState.placeSearchQuery,
     placeSearchResults: appState.placeSearchResults,
     isPlaceSearchLoading: appState.isPlaceSearchLoading,
@@ -165,7 +164,6 @@ export function AppNavigator() {
     onRemoveSavedDestination: appState.removeSavedDestination,
     onRestoreRemovedDestination: appState.restoreRemovedDestination,
     onDismissRemovedDestination: appState.dismissRemovedDestination,
-    onSetDestinationHubFilter: appState.setDestinationHubFilter,
     onSearchPlaces: appState.searchPlaces,
     onSelectDestinationPlace: appState.selectDestinationPlace,
     onMarkNotificationRead: appState.markNotificationRead,

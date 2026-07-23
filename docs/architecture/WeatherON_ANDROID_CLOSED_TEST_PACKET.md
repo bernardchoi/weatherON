@@ -1,6 +1,6 @@
 # WeatherON Android Closed Test Packet
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: Google Play 폐쇄 테스트가 필요한 경우 계정 유형 확인부터 14일 운영 기록까지 한 장으로 진행한다.
 
 ## 1. 현재 상태

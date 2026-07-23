@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { kstDate, tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const feedbackDir = join(rootDir, "docs/architecture/mvp1-feedback");
@@ -201,12 +202,6 @@ function scoreCount(items, key) {
   return items.filter((item) => Number.isFinite(item.scores[key])).length;
 }
 
-function tableValue(text, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
-}
-
 function sectionText(text, startMarker, endMarker) {
   const start = text.indexOf(startMarker);
   if (start === -1) return "";
@@ -226,11 +221,3 @@ function formatPercent(value) {
   return value === null ? "미확인" : `${value.toFixed(1)}%`;
 }
 
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}

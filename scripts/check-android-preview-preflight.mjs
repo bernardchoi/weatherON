@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const appJsonPath = join(rootDir, "apps/mobile/app.json");
@@ -204,15 +205,6 @@ npm run build:android:preview:no-wait
 
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, report, "utf8");
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 function readEnvFile(path) {

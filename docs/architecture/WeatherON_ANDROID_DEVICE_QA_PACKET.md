@@ -1,6 +1,6 @@
 # WeatherON Android Device QA Packet
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: 최신 Android preview APK를 실기기에 직접 설치하고 D1~D13 QA를 바로 수행할 수 있게 한 장으로 정리한다.
 
 ## 1. 설치 대상

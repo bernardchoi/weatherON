@@ -1,6 +1,6 @@
 # WeatherON Android Privacy Policy Packet
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: Google Play 제출 전 개인정보처리방침 placeholder 제거와 공개 HTTPS URL 준비를 별도로 추적한다.
 
 ## 1. 현재 상태

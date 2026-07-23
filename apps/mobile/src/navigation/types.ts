@@ -22,7 +22,6 @@ import type {
   SmartCareScenario,
   PermissionReturnRouteId,
   AccountGateReturnRouteId,
-  DestinationHubFilter,
   DestinationSchedulePreference,
   DestinationTransportMode,
   DestinationRepeatDay,
@@ -56,7 +55,6 @@ export type P0ScreenProps = {
   selectedDestinationTravelEstimate: DestinationTravelEstimate;
   selectedDestinationPlace: PlaceSearchResult;
   destinationSelectionReady: boolean;
-  destinationHubFilter: DestinationHubFilter;
   placeSearchQuery: string;
   placeSearchResults: PlaceSearchResult[];
   isPlaceSearchLoading: boolean;
@@ -134,7 +132,6 @@ export type P0ScreenProps = {
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
   onDismissRemovedDestination: () => void;
-  onSetDestinationHubFilter: (filter: DestinationHubFilter) => void;
   onSearchPlaces: (query: string) => void;
   onSelectDestinationPlace: (place: PlaceSearchResult) => void;
   onMarkNotificationRead: (id: string) => void;

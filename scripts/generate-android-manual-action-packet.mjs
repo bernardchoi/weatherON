@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate, normalizeTableValue, tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const actionBoardPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md");
@@ -133,26 +134,7 @@ function sectionBetween(text, startMarker, endMarker) {
   return end === -1 ? text.slice(start) : text.slice(start, end);
 }
 
-function tableValue(text, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
-}
-
-function normalizeTableValue(value) {
-  return value.replace(/^`|`$/g, "").trim();
-}
-
 function separatorForRow(row) {
   const columnCount = row.split("|").slice(1, -1).length;
   return `|${Array.from({ length: columnCount }, () => "---").join("|")}|`;
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }

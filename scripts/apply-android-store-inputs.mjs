@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const inputPath = process.argv[2] || process.env.WEATHERON_STORE_INPUTS_FILE || join(
@@ -289,13 +290,4 @@ function isEmail(value) {
 
 function isPhoneLike(value) {
   return /^[0-9+()\-\s]{7,}$/.test(value);
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }

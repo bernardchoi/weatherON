@@ -1,6 +1,6 @@
 # WeatherON Android Local Proxy QA Status
 
-> 생성일: 2026-07-01
+> 생성일: 2026-07-23
 > 목적: Android 실기기에서 로컬 WeatherON 프록시를 접근할 수 있도록 mobile env를 전환한다.
 
 ## 1. 요약
@@ -8,9 +8,9 @@
 | 항목 | 값 |
 |---|---|
 | 상태 | 전환 가능 |
-| mode | `public` |
-| proxy URL | `https://weatheron-api.weatheron.workers.dev` |
-| detected host | `없음` |
+| mode | `device` |
+| proxy URL | `http://192.168.45.191:8091` |
+| detected host | `192.168.45.191` |
 | port | `8091` |
 | mobile env | `apps/mobile/.env.local` |
 

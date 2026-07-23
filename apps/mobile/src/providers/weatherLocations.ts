@@ -57,7 +57,9 @@ export const defaultGangneungWeatherLocation: WeatherLocationPreset = {
 export function createKmaWeatherLocationFromCoordinate(
   coordinate: GeoCoordinate,
   locationName = "내 위치 주변",
-  locationId = "kr-device-current",
+  // 좌표를 반영한 id를 기본값으로 써야, 기기 위치가 실제로 이동했을 때
+  // 날씨 조회 캐시(useWeatherOnAppState)가 이를 다른 위치로 인식해 재요청한다.
+  locationId = `kr-device-${coordinate.latitude.toFixed(2)}-${coordinate.longitude.toFixed(2)}`,
 ): KmaWeatherLocationPreset {
   return withKmaGrid({
     locationId,

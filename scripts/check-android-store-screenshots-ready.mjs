@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate, tableValue as sharedTableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const planPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_SCREENSHOT_PLAN.md");
@@ -195,19 +196,10 @@ WEATHERON_SCREENSHOT_REPORT_ONLY=1 npm run check:android-store-screenshots-ready
   writeFileSync(reportPath, report, "utf8");
 }
 
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
-
+// 이 파일의 tableValue 호출부는 모두 백틱이 제거된 값을 기대하므로, 공용 파서를
+// stripBackticks 옵션으로 감싼 동일 이름 함수를 유지해 호출부를 하나도 바꾸지 않는다.
 function tableValue(markdown, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return (match?.[1] ?? "").replace(/^`|`$/g, "").trim();
+  return sharedTableValue(markdown, label, { stripBackticks: true });
 }
 
 function readContentReview() {

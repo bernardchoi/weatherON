@@ -1,6 +1,6 @@
 # WeatherON Android Store Inputs Packet
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: Google Play 제출과 개인정보처리방침 공개에 필요한 외부 입력값을 한 장에서 회신하고 JSON으로 반영한다.
 
 ## 1. 현재 상태

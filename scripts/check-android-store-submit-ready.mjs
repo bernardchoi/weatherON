@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { normalizeTableValue, tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const storeDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_등록자료.md");
@@ -99,17 +100,6 @@ function checkFileExists(path, label) {
 
 function addIfIncludes(text, needle, message) {
   if (text.includes(needle) && !blockers.includes(message)) blockers.push(message);
-}
-
-function tableValue(text, label) {
-  if (!text) return "";
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1] ?? "";
-}
-
-function normalizeTableValue(value) {
-  return value.replace(/^`|`$/g, "").trim();
 }
 
 async function writeReport() {

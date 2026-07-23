@@ -5,7 +5,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function NotificationCenterScreen({
   state,
@@ -543,13 +543,6 @@ function formatNotificationDateTime(value?: string) {
     minute: "2-digit",
     hourCycle: "h23",
   }).format(new Date(timestamp));
-}
-
-function getToneColor(theme: AppTheme, tone: NotificationPresentation["tone"]) {
-  if (tone === "gold") return theme.gold;
-  if (tone === "sky") return theme.sky;
-  if (tone === "warm") return theme.warm;
-  return theme.clear;
 }
 
 const styles = StyleSheet.create({

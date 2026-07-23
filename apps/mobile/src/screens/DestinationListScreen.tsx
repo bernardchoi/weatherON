@@ -388,7 +388,7 @@ function getDestinationResultBanner(
   hasDestinations: boolean,
 ): { title: string; body: string; tone: "clear" | "warm" } | null {
   if (permissionGateResult?.returnTo === "G1" && permissionGateResult.reason === "destination-care") {
-    const skipped = permissionGateResult.message.includes("나중에");
+    const skipped = permissionGateResult.denied || permissionGateResult.message.includes("나중에");
     return {
       title: skipped ? "목적지 저장 완료" : "목적지 알림 준비 완료",
       body: skipped ? "권한은 나중에 켜도 비교 가능" : "출발·강수 알림 자동 계산",

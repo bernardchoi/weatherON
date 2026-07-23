@@ -8,6 +8,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
+import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils/weatherPresentation";
 
 export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -168,28 +169,6 @@ function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeath
 function selectCondition(items: HourlyWeather[]) {
   const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
   return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
-}
-
-function getConditionIcon(condition: string) {
-  if (condition === "rain" || condition === "storm" || condition === "snow") return uiIconAssets.rain;
-  if (condition === "dust") return uiIconAssets.wind;
-  return uiIconAssets.uv;
-}
-
-function getConditionColor(condition: string, theme: AppTheme) {
-  if (condition === "rain" || condition === "storm" || condition === "snow") return theme.sky;
-  if (condition === "dust" || condition === "cloud") return theme.clear;
-  return theme.gold;
-}
-
-function getConditionLabel(condition: string) {
-  if (condition === "clear") return "맑음";
-  if (condition === "cloud") return "흐림";
-  if (condition === "rain") return "비";
-  if (condition === "snow") return "눈";
-  if (condition === "storm") return "강한 비";
-  if (condition === "dust") return "먼지";
-  return "날씨";
 }
 
 function formatTimeLabel(value: string) {

@@ -5,7 +5,7 @@ import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type MenuTone = "clear" | "gold" | "sky" | "warm";
 
@@ -152,7 +152,7 @@ function getAlertState(
 ): { summary: string; meta: string; status: string; tone: MenuTone } {
   const skippedPermission =
     permissionGateResult?.reason === "notification" &&
-    permissionGateResult.message.includes("나중에");
+    (permissionGateResult.denied || permissionGateResult.message.includes("나중에"));
   if (!smartCareEnabled) {
     return {
       summary: "알림 일시 중지",
@@ -261,13 +261,6 @@ function Chevron({ color }: { color: string }) {
       <View style={[styles.chevronBottom, { backgroundColor: color }]} />
     </View>
   );
-}
-
-function getToneColor(theme: AppTheme, tone: MenuTone) {
-  if (tone === "gold") return theme.gold;
-  if (tone === "sky") return theme.sky;
-  if (tone === "warm") return theme.warm;
-  return theme.clear;
 }
 
 const styles = StyleSheet.create({

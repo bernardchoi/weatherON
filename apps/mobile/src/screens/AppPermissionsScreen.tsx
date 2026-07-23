@@ -188,7 +188,7 @@ function getNotificationPermissionCopy(
   permissionGateResult: P0ScreenProps["permissionGateResult"],
 ): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
   const returnedFromNotificationGate = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "notification";
-  const skipped = returnedFromNotificationGate && permissionGateResult.message.includes("나중에");
+  const skipped = returnedFromNotificationGate && (permissionGateResult.denied || permissionGateResult.message.includes("나중에"));
   if (skipped) {
     return {
       body: "푸시 알림은 대기 중",
@@ -233,7 +233,7 @@ function getPermissionResultCopy(
   permissionGateResult: P0ScreenProps["permissionGateResult"],
 ): { title: string; body: string; tone: "clear" | "warm" } | null {
   if (!permissionGateResult || permissionGateResult.returnTo !== "M4") return null;
-  const skipped = permissionGateResult.message.includes("나중에");
+  const skipped = permissionGateResult.denied || permissionGateResult.message.includes("나중에");
   if (permissionGateResult.reason === "notification") {
     return {
       title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",

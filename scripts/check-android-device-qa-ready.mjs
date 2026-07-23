@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { tableValue as sharedTableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const apkQaPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_APK_QA_체크리스트.md");
@@ -71,8 +72,5 @@ for (const snippet of [
 console.log("android device QA ready check passed");
 
 function tableValue(markdown, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  assert.ok(match, `missing table row: ${label}`);
-  return match[1].trim();
+  return sharedTableValue(markdown, label, { required: true });
 }

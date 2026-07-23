@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const inputPath = process.env.WEATHERON_DEVICE_QA_RESULTS_FILE || join(
@@ -193,15 +194,6 @@ npm run apply:android-device-qa-results
 
   mkdirSync(dirname(statusPath), { recursive: true });
   writeFileSync(statusPath, report, "utf8");
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 function kstDateTime() {

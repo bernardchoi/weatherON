@@ -3,6 +3,7 @@ import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync }
 import { get as httpsGet } from "node:https";
 import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
+import { kstDate, normalizeTableValue, tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const buildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD_STATUS.md");
@@ -117,17 +118,6 @@ function resolveAdbCommand() {
   return candidates.find((candidate) => candidate !== "adb" && existsSync(candidate)) || "adb";
 }
 
-function tableValue(text, label) {
-  if (!text) return "";
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
-}
-
-function normalizeTableValue(value) {
-  return value.replace(/^`|`$/g, "").trim();
-}
-
 function resolveLocalArtifactPath(value) {
   if (!value) return "";
   return isAbsolute(value) ? value : join(rootDir, value);
@@ -144,15 +134,6 @@ function isExpectedPackageInstalled(deviceId, expectedVersion) {
   });
   if (result.status !== 0) return false;
   return result.stdout.includes(`versionName=${versionName}`) && result.stdout.includes(`versionCode=${versionCode}`);
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 function writeReport() {

@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const reportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_ADB_STATUS.md");
@@ -102,14 +103,6 @@ function normalizeShellValue(stdout, prefix) {
   return line ? line.slice(prefix.length).trim() : "미확인";
 }
 
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
 
 function writeReport() {
   const report = `# WeatherON Android ADB Status

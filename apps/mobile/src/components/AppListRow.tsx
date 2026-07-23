@@ -2,7 +2,7 @@ import React from "react";
 import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
 
 export type AppListTone = "clear" | "gold" | "sky" | "warm";
@@ -88,13 +88,6 @@ export function AppListRow({
   }
 
   return <View style={styles.row}>{content}</View>;
-}
-
-function getToneColor(theme: AppTheme, tone: AppListTone) {
-  if (tone === "clear") return theme.clear;
-  if (tone === "gold") return theme.gold;
-  if (tone === "warm") return theme.warm;
-  return theme.sky;
 }
 
 function Chevron({ color }: { color: string }) {

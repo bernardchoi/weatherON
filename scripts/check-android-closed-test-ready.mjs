@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const closedTestDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_폐쇄테스트_운영기록.md");
@@ -89,12 +90,6 @@ function sectionBetween(text, startMarker, endMarker) {
   if (start === -1) return "";
   const end = text.indexOf(endMarker, start + startMarker.length);
   return end === -1 ? text.slice(start) : text.slice(start, end);
-}
-
-function tableValue(markdown, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
 }
 
 function shouldRequireClosedTestOperation(value) {

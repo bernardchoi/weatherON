@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const reportPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_RELEASE_CONSISTENCY_STATUS.md");
@@ -210,13 +211,4 @@ WEATHERON_RELEASE_CONSISTENCY_REPORT_ONLY=1 npm run check:android-release-consis
 
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, report, "utf8");
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }

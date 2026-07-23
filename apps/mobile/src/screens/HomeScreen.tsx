@@ -13,6 +13,7 @@ import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../th
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
+import { getConditionLabel } from "../utils/weatherPresentation";
 
 // 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
 const HOME_OUTFIT_CARD_VISIBLE = true;
@@ -760,16 +761,6 @@ function getHomeOutfitPreviewImage(outfit: P0ScreenProps["state"]["outfit"]) {
   const previewItem = Object.values(outfit.items).find((item) => item?.imageUrl && outfitImageAssets[item.imageUrl]);
   if (previewItem?.imageUrl && outfitImageAssets[previewItem.imageUrl]) return outfitImageAssets[previewItem.imageUrl];
   return outfitImageAssets[HOME_OUTFIT_FALLBACK_IMAGE];
-}
-
-function getConditionLabel(condition: string) {
-  if (condition === "clear") return "맑음";
-  if (condition === "cloud") return "흐림";
-  if (condition === "rain") return "비";
-  if (condition === "snow") return "눈";
-  if (condition === "storm") return "강한 비";
-  if (condition === "dust") return "먼지";
-  return "날씨";
 }
 
 function NotificationBellButton({

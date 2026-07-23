@@ -9,6 +9,7 @@ import { radius, spacing } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
 import { getOutfitSlotLabel } from "../utils/outfitLabels";
+import { getConditionColor, getConditionIcon } from "../utils/weatherPresentation";
 
 export function TomorrowBriefScreen({
   state,
@@ -227,18 +228,6 @@ function formatHour(value: string) {
 function toCondition(value: string): WeatherSnapshot["current"]["condition"] {
   if (value === "clear" || value === "cloud" || value === "rain" || value === "snow" || value === "storm" || value === "dust") return value;
   return "cloud";
-}
-
-function getConditionIcon(condition: string) {
-  if (condition === "rain" || condition === "storm" || condition === "snow") return uiIconAssets.rain;
-  if (condition === "dust") return uiIconAssets.wind;
-  return uiIconAssets.uv;
-}
-
-function getConditionColor(condition: string, theme: ReturnType<typeof useAppTheme>) {
-  if (condition === "rain" || condition === "storm" || condition === "snow") return theme.sky;
-  if (condition === "dust" || condition === "cloud") return theme.clear;
-  return theme.gold;
 }
 
 function getRainTone(rainProbabilityPct: number, theme: ReturnType<typeof useAppTheme>) {

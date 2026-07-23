@@ -36,7 +36,6 @@ import {
   type TemperatureUnit,
   type ThemeMode,
   type WeatherLocationMode,
-  type WeightUnit,
 } from "./appStateTypes";
 
 export type PersistedAppState = {
@@ -64,7 +63,6 @@ export type PersistedAppState = {
   weatherLocationMode: WeatherLocationMode;
   manualWeatherLocation: WeatherLocationPreset;
   temperatureUnit: TemperatureUnit;
-  weightUnit: WeightUnit;
   distanceUnit: DistanceUnit;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
@@ -263,7 +261,6 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     weatherLocationMode: record.weatherLocationMode === "manual" ? "manual" : "auto",
     manualWeatherLocation: isWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
     temperatureUnit: record.temperatureUnit === "fahrenheit" ? "fahrenheit" : "celsius",
-    weightUnit: record.weightUnit === "pound" ? "pound" : "kilogram",
     distanceUnit: record.distanceUnit === "mile" ? "mile" : "meter",
     themeMode: isThemeMode(record.themeMode) ? record.themeMode : "system",
     reducedTransparency: record.reducedTransparency === true,

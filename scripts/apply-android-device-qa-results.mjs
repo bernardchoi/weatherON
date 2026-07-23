@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate, tableValue as sharedTableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const inputPath = process.argv[2] || process.env.WEATHERON_DEVICE_QA_RESULTS_FILE || join(
@@ -176,17 +177,8 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// 이 파일의 tableValue 호출부는 모두 백틱이 제거된 값을 기대하므로, 공용 파서를
+// stripBackticks 옵션으로 감싼 동일 이름 함수를 유지해 호출부를 하나도 바꾸지 않는다.
 function tableValue(markdown, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return (match?.[1] ?? "").replace(/^`|`$/g, "").trim();
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  return sharedTableValue(markdown, label, { stripBackticks: true });
 }

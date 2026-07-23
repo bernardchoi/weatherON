@@ -1,6 +1,7 @@
 import https from "node:https";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { kstDate, normalizeTableValue, tableValue } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const previewBuildStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_BUILD_STATUS.md");
@@ -130,16 +131,6 @@ WEATHERON_ARTIFACT_ACCESS_REPORT_ONLY=1 npm run check:android-artifact-access
   writeFileSync(reportPath, report, "utf8");
 }
 
-function tableValue(text, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|`));
-  return match?.[1]?.trim() ?? "";
-}
-
-function normalizeTableValue(value) {
-  return value.replace(/^`|`$/g, "").trim();
-}
-
 function redactSignedUrl(url) {
   try {
     const parsed = new URL(url);
@@ -147,13 +138,4 @@ function redactSignedUrl(url) {
   } catch {
     return url;
   }
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }

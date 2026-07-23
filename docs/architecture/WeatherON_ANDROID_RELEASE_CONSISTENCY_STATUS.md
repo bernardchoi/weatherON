@@ -1,6 +1,6 @@
 # WeatherON Android Release Consistency Status
 
-> 생성일: 2026-07-20
+> 생성일: 2026-07-23
 > 목적: Android 출시 상태 문서 간 build id, build 상태, blocker 수, artifact 접근성 값이 일치하는지 검증한다.
 
 ## 1. 현재 상태

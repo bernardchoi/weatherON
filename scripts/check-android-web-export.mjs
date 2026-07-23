@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
+import { kstDate } from "./lib/markdownDoc.mjs";
 
 const rootDir = process.cwd();
 const distDir = join(rootDir, "apps/mobile/dist");
@@ -170,13 +171,4 @@ WEATHERON_WEB_EXPORT_REPORT_ONLY=1 npm run check:android-web-export
 
 function relative(path) {
   return path.startsWith(rootDir) ? path.slice(rootDir.length + 1) : path;
-}
-
-function kstDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
