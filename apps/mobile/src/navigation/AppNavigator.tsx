@@ -50,7 +50,7 @@ import { OnboardingDestinationScreen } from "../screens/OnboardingDestinationScr
 import { AppEntrySplashScreen, OnboardingSplashScreen } from "../screens/SplashScreens";
 import { useWeatherOnAppState } from "../state/useWeatherOnAppState";
 import { AppThemeProvider } from "../theme/AppThemeContext";
-import { appColors, resolveAppTheme, type AppTheme } from "../theme/tokens";
+import { appColors, resolveAppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
@@ -63,6 +63,7 @@ export function AppNavigator() {
   );
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4);
+  const appBackgroundColor = theme.background;
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
@@ -182,9 +183,9 @@ export function AppNavigator() {
 
   return (
     <AppThemeProvider theme={theme}>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        <SystemBars theme={theme} />
-        <View style={[styles.root, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}>
+        <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
+        <View style={[styles.root, { backgroundColor: appBackgroundColor }]}>
         <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
@@ -257,24 +258,22 @@ function isPrimaryTabRoute(route: AppRouteId) {
   return route === "H1" || route === "C1" || route === "G1" || route === "M1";
 }
 
-function SystemBars({ theme }: { theme: AppTheme }) {
-  const isDarkTheme = theme.name === "dark";
-
+function SystemBars({ backgroundColor, isDarkTheme }: { backgroundColor: string; isDarkTheme: boolean }) {
   useEffect(() => {
     if (Platform.OS !== "android") return;
 
     void Promise.all([
-      NavigationBar.setBackgroundColorAsync(theme.background),
-      NavigationBar.setBorderColorAsync(theme.background),
+      NavigationBar.setBackgroundColorAsync(backgroundColor),
+      NavigationBar.setBorderColorAsync(backgroundColor),
       NavigationBar.setButtonStyleAsync(isDarkTheme ? "light" : "dark"),
     ]).catch(() => {
       // Android 제조사별 시스템 UI 제약으로 설정이 거부돼도 앱 렌더링은 유지한다.
     });
-  }, [isDarkTheme, theme.background]);
+  }, [backgroundColor, isDarkTheme]);
 
   return (
     <StatusBar
-      backgroundColor={theme.background}
+      backgroundColor={backgroundColor}
       barStyle={isDarkTheme ? "light-content" : "dark-content"}
       translucent={false}
     />

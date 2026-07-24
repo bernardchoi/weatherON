@@ -22,7 +22,6 @@ final class LiquidGlassNavigationSurfaceView: UIView {
   }
 
   private var glassHost: UIHostingController<AnyView>?
-  private var fallbackEffect: UIVisualEffectView?
   private let navigationState = NavigationGlassState()
 
   override init(frame: CGRect) {
@@ -42,7 +41,6 @@ final class LiquidGlassNavigationSurfaceView: UIView {
   override func layoutSubviews() {
     super.layoutSubviews()
     glassHost?.view.frame = bounds
-    fallbackEffect?.frame = bounds
   }
 
   private func installSurface() {
@@ -54,16 +52,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
       host.view.isUserInteractionEnabled = false
       addSubview(host.view)
       glassHost = host
-      return
     }
-
-    let effect = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
-    effect.isUserInteractionEnabled = false
-    effect.layer.cornerRadius = 32
-    effect.layer.cornerCurve = .continuous
-    effect.clipsToBounds = true
-    addSubview(effect)
-    fallbackEffect = effect
   }
 
   private func updateActiveIndex() {
@@ -87,28 +76,20 @@ private struct NavigationGlassSurface: View {
   @Namespace private var activeTabNamespace
 
   var body: some View {
-    GeometryReader { proxy in
-      GlassEffectContainer(spacing: 8) {
-        ZStack {
-          Color.white.opacity(0.001)
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .glassEffect(.regular, in: Capsule())
-
-          HStack(spacing: 4) {
-            ForEach(0..<4, id: \.self) { index in
-              Group {
-                if index == state.activeIndex {
-                  Color.white.opacity(0.001)
-                    .glassEffect(.regular.tint(.white.opacity(0.14)).interactive(), in: Capsule())
-                    .glassEffectID("active-tab", in: activeTabNamespace)
-                } else {
-                  Color.clear
-                }
-              }
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-              .padding(4)
+    GlassEffectContainer(spacing: 8) {
+      HStack(spacing: 4) {
+        ForEach(0..<4, id: \.self) { index in
+          Group {
+            if index == state.activeIndex {
+              Color.white.opacity(0.001)
+                .glassEffect(.regular.tint(.white.opacity(0.14)).interactive(), in: Capsule())
+                .glassEffectID("active-tab", in: activeTabNamespace)
+            } else {
+              Color.clear
             }
           }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .padding(4)
         }
       }
     }

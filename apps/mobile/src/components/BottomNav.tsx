@@ -1,10 +1,20 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Image, Platform, Pressable, StyleSheet, Text, type ColorValue, View } from "react-native";
+import React, { useEffect, useMemo, useRef } from "react";
+import {
+  Animated,
+  Image,
+  PanResponder,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  type ColorValue,
+  type LayoutChangeEvent,
+  View,
+} from "react-native";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
-import { iosGlassSurface } from "../theme/iosGlass";
+import { androidMaterialColor, androidMaterialRipple } from "../theme/androidMaterial";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
@@ -18,24 +28,88 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
+  const dockRef = useRef<View>(null);
+  const dockMetricsRef = useRef({ windowX: 0, width: 0, measuredInWindow: false });
+  const activeIndexRef = useRef(activeIndex);
+  const navigateRef = useRef(onNavigate);
+  const draggedIndexRef = useRef(activeIndex);
+  const didSwitchTabRef = useRef(false);
   const iosColors = getIosTabColors(theme);
   const activeColor = isIos ? iosColors.activeIcon : androidMaterialColor(theme, "primary");
-  const materialNavigationSurface = androidMaterialSurface(theme, "navigation") ?? {
-    backgroundColor: theme.cardStrong,
-    borderColor: theme.border,
+  const navigationBackground = { backgroundColor: theme.background, borderColor: "transparent" };
+
+  activeIndexRef.current = activeIndex;
+  navigateRef.current = onNavigate;
+
+  const dragResponder = useMemo(() => {
+    const getEventTabIndex = (pageX: number, locationX: number) =>
+      getTabIndexAtPosition(pageX, locationX, dockMetricsRef.current);
+
+    const navigateToIndex = (nextIndex: number) => {
+      if (nextIndex === draggedIndexRef.current) return;
+      const nextRoute = bottomNavRoutes[nextIndex];
+      if (!nextRoute) return;
+
+      draggedIndexRef.current = nextIndex;
+      didSwitchTabRef.current = true;
+      navigateRef.current(nextRoute.id);
+    };
+
+    return PanResponder.create({
+      onStartShouldSetPanResponderCapture: (event) => {
+        const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
+        return touchedIndex === activeIndexRef.current;
+      },
+      onStartShouldSetPanResponder: (event) => {
+        const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
+        return touchedIndex === activeIndexRef.current;
+      },
+      onPanResponderGrant: (event) => {
+        const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
+        draggedIndexRef.current = touchedIndex ?? activeIndexRef.current;
+        didSwitchTabRef.current = false;
+      },
+      onPanResponderMove: (event) => {
+        const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
+        if (touchedIndex !== null) navigateToIndex(touchedIndex);
+      },
+      onPanResponderRelease: () => {
+        if (!didSwitchTabRef.current) {
+          const selectedRoute = bottomNavRoutes[draggedIndexRef.current];
+          if (selectedRoute) navigateRef.current(selectedRoute.id);
+        }
+        didSwitchTabRef.current = false;
+      },
+      onPanResponderTerminate: () => {
+        didSwitchTabRef.current = false;
+      },
+      onPanResponderTerminationRequest: () => false,
+    });
+  }, []);
+
+  const handleDockLayout = (event: LayoutChangeEvent) => {
+    dockMetricsRef.current = {
+      ...dockMetricsRef.current,
+      width: event.nativeEvent.layout.width,
+    };
+    dockRef.current?.measureInWindow((windowX, _windowY, width) => {
+      dockMetricsRef.current = { windowX, width, measuredInWindow: true };
+    });
   };
+
   return (
-    <View style={[styles.dockWrap, isIos ? styles.iosDockWrap : styles.androidDockWrap]}>
+    <View style={[styles.dockWrap, isIos ? styles.iosDockWrap : styles.androidDockWrap, { backgroundColor: theme.background }]}>
       <View
+        ref={dockRef}
+        onLayout={handleDockLayout}
+        {...dragResponder.panHandlers}
         style={[
           styles.dock,
           isIos ? styles.iosDock : styles.androidDock,
-          isIos
-            ? iosGlassSurface(theme, "dock", { nativeBackdrop: true })
-            : materialNavigationSurface,
+          navigationBackground,
         ]}
       >
-        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} theme={theme} /> : null}
+        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} /> : null}
         {bottomNavRoutes.map((route) => {
           const active = route.id === activeTabRoute;
           const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
@@ -75,6 +149,18 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
       </View>
     </View>
   );
+}
+
+function getTabIndexAtPosition(
+  pageX: number,
+  locationX: number,
+  metrics: { windowX: number; width: number; measuredInWindow: boolean },
+) {
+  if (metrics.width <= 0) return null;
+
+  const relativeX = metrics.measuredInWindow ? pageX - metrics.windowX : locationX;
+  const normalizedX = Math.max(0, Math.min(relativeX, metrics.width - 1));
+  return Math.floor((normalizedX / metrics.width) * bottomNavRoutes.length);
 }
 
 function TabContent({

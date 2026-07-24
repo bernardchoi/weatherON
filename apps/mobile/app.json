@@ -8,12 +8,12 @@
     "icon": "../../assets/icon/icon-primary-1024.png",
     "userInterfaceStyle": "automatic",
     "androidStatusBar": {
-      "backgroundColor": "#17365D",
+      "backgroundColor": "#071E33",
       "barStyle": "light-content",
       "translucent": false
     },
     "androidNavigationBar": {
-      "backgroundColor": "#17365D",
+      "backgroundColor": "#071E33",
       "barStyle": "light-content"
     },
     "plugins": [
@@ -22,7 +22,7 @@
     "splash": {
       "image": "../../assets/icon/icon-primary-512.png",
       "resizeMode": "contain",
-      "backgroundColor": "#10243F"
+      "backgroundColor": "#071E33"
     },
     "assetBundlePatterns": [
       "../../assets/icon/*",
