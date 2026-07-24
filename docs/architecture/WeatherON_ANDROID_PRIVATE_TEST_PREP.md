@@ -2,6 +2,7 @@
 
 > 생성일: 2026-07-07
 > 목적: Google Play 비공개 테스트 시작 전 필요한 자료, 콘솔 입력, 로컬 검증 상태를 한 장으로 유지한다.
+> 보관 상태: versionCode 8 시점 기록. 로컬 AAB는 저장소에서 제거했으며 현재 업로드 후보는 `WeatherON_ANDROID_RELEASE_EVIDENCE_INDEX.md`를 따른다.
 
 ## 1. 결론
 
@@ -41,8 +42,8 @@
 | production AAB build | `5d7ddb0e-334d-4663-bfa9-5a90d50eb8f1` |
 | production AAB version | `0.1.0 (8)` |
 | 소스 기준 버전 | `0.1.0 (8)` |
-| AAB artifact | `builds/weatheron-v0.1.0-versionCode8.aab` |
-| 업로드 판정 | 현재 소스와 일치. 비공개 테스트 업로드 후보 |
+| AAB artifact | Git 이력 `abd62e7`에 보관 · 로컬 추적 파일 제거 |
+| 업로드 판정 | 과거 versionCode 8 기준 기록 · 현재 업로드 후보 아님 |
 | 실기기 QA 리포트 | `docs/audits/ui-ux-real-device-qa-2026-07-07-2100/report.md` |
 
 ## 4. 콘솔 입력 필요값
