@@ -25,6 +25,7 @@ export function OutfitDetailScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
+  const usesWrappedItemGrid = items.length > 3;
   const signalMetrics = buildSignalMetrics(state, theme);
   const rainSignalPct = getRainSignalPct(state);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
@@ -68,7 +69,11 @@ export function OutfitDetailScreen({
                 key={slot}
                 accessible
                 accessibilityLabel={`${getOutfitSlotLabel(slot)} ${item.name}`}
-                style={[styles.outfitMiniTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+                style={[
+                  styles.outfitMiniTile,
+                  usesWrappedItemGrid ? styles.outfitMiniTileGrid : styles.outfitMiniTileFlexible,
+                  { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                ]}
               >
                 <View style={[styles.outfitImageFrame, { backgroundColor: theme.card }]}>
                   {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
@@ -159,10 +164,11 @@ const styles = StyleSheet.create({
   },
   outfitRail: {
     flexDirection: "row",
-    gap: spacing.sm,
+    flexWrap: "wrap",
+    columnGap: spacing.sm,
+    rowGap: spacing.sm,
   },
   outfitMiniTile: {
-    flex: 1,
     minWidth: 0,
     minHeight: 86,
     alignItems: "center",
@@ -171,6 +177,12 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  outfitMiniTileFlexible: {
+    flex: 1,
+  },
+  outfitMiniTileGrid: {
+    width: "31.4%",
   },
   outfitImageFrame: {
     width: "100%",

@@ -10,6 +10,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
+import { getFeelsLikeMessage } from "../utils/feelsLikeMessage";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -596,8 +597,12 @@ function FeelsLikeCard({
   theme: AppTheme;
   onPress: () => void;
 }) {
-  const delta = current.feelsLikeC - current.tempC;
-  const feelsLikeMessage = getFeelsLikeMessage(delta, temperatureUnit);
+  const feelsLikeMessage = getFeelsLikeMessage({
+    feelsLikeC: current.feelsLikeC,
+    tempC: current.tempC,
+    humidityPct: current.humidityPct,
+    temperatureUnit,
+  });
   return (
     <FeedbackPressable
       accessibilityLabel={`현재 위치 ${feelsLikeMessage}. 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
@@ -619,14 +624,6 @@ function FeelsLikeCard({
       </Text>
     </FeedbackPressable>
   );
-}
-
-function getFeelsLikeMessage(deltaC: number, temperatureUnit: P0ScreenProps["temperatureUnit"]) {
-  const roundedDelta = temperatureUnit === "fahrenheit" ? Math.round((deltaC * 9) / 5) : Math.round(deltaC);
-  const deltaLabel = formatTemperatureDelta(deltaC, temperatureUnit);
-  if (roundedDelta > 0) return `체감 기온은 더 따뜻해요! (${deltaLabel})`;
-  if (roundedDelta < 0) return `체감 기온은 더 서늘해요. (${deltaLabel})`;
-  return `체감 기온은 실제 기온과 비슷해요. (${deltaLabel})`;
 }
 
 function DecisionMetric({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
