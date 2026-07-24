@@ -3,6 +3,7 @@ import { Platform, UIManager, requireNativeComponent, type ViewProps } from "rea
 
 type NativeSurfaceProps = ViewProps & {
   activeIndex: number;
+  isDarkTheme: boolean;
 };
 
 const nativeComponentName = "LiquidGlassNavigationView";
@@ -16,15 +17,23 @@ export const hasNativeLiquidGlassNavigationSurface = NativeLiquidGlassSurface !=
 
 type LiquidGlassNavigationSurfaceProps = {
   activeIndex: number;
+  isDarkTheme: boolean;
 };
 
 // iOS 26에서는 활성 탭에만 SwiftUI glassEffect/GlassEffectContainer를 쓴다.
 // 이전 iOS와 이미 배포된 바이너리에서는 BottomNav의 JS 활성 탭 캡슐을 사용한다.
-export function LiquidGlassNavigationSurface({ activeIndex }: LiquidGlassNavigationSurfaceProps) {
+export function LiquidGlassNavigationSurface({ activeIndex, isDarkTheme }: LiquidGlassNavigationSurfaceProps) {
   if (Platform.OS !== "ios") return null;
 
   if (NativeLiquidGlassSurface) {
-    return <NativeLiquidGlassSurface activeIndex={activeIndex} pointerEvents="none" style={styles.fill} />;
+    return (
+      <NativeLiquidGlassSurface
+        activeIndex={activeIndex}
+        isDarkTheme={isDarkTheme}
+        pointerEvents="none"
+        style={styles.fill}
+      />
+    );
   }
 
   return null;

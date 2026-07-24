@@ -21,6 +21,12 @@ final class LiquidGlassNavigationSurfaceView: UIView {
     }
   }
 
+  @objc var isDarkTheme: Bool = false {
+    didSet {
+      updateTheme()
+    }
+  }
+
   private var glassHost: UIHostingController<AnyView>?
   private let navigationState = NavigationGlassState()
 
@@ -63,11 +69,20 @@ final class LiquidGlassNavigationSurfaceView: UIView {
       }
     }
   }
+
+  private func updateTheme() {
+    if #available(iOS 26.0, *) {
+      withAnimation(.easeOut(duration: 0.18)) {
+        navigationState.isDarkTheme = isDarkTheme
+      }
+    }
+  }
 }
 
 // iOS 15 지원을 유지하려고 Observation 대신 ObservableObject 사용함.
 private final class NavigationGlassState: ObservableObject {
   @Published var activeIndex = 0
+  @Published var isDarkTheme = false
 }
 
 @available(iOS 26.0, *)
@@ -82,7 +97,12 @@ private struct NavigationGlassSurface: View {
           Group {
             if index == state.activeIndex {
               Color.white.opacity(0.001)
-                .glassEffect(.regular.tint(.white.opacity(0.14)).interactive(), in: Capsule())
+                .glassEffect(
+                  .regular
+                    .tint(.white.opacity(state.isDarkTheme ? 0.22 : 0.14))
+                    .interactive(),
+                  in: Capsule()
+                )
                 .glassEffectID("active-tab", in: activeTabNamespace)
             } else {
               Color.clear

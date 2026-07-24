@@ -109,7 +109,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           navigationBackground,
         ]}
       >
-        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} /> : null}
+        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"} /> : null}
         {bottomNavRoutes.map((route) => {
           const active = route.id === activeTabRoute;
           const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
@@ -134,7 +134,15 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                   ]}
                 />
               ) : null}
-              {isIos ? <View style={[styles.activeDot, { backgroundColor: active ? iosColors.activeDot : "transparent" }]} /> : null}
+              {isIos ? (
+                <View
+                  style={[
+                    styles.activeDot,
+                    theme.name === "dark" ? styles.iosDarkActiveDot : null,
+                    { backgroundColor: active ? iosColors.activeDot : "transparent" },
+                  ]}
+                />
+              ) : null}
               <TabContent
                 route={route.id}
                 active={active}
@@ -195,15 +203,22 @@ function TabContent({
     }).start();
   }, [active, isIos, transition]);
 
+  const useHighContrastIosMotion = isIos && theme.name === "dark";
   const iconMotion = {
-    opacity: transition.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] }),
+    opacity: transition.interpolate({
+      inputRange: [0, 1],
+      outputRange: [useHighContrastIosMotion ? 0.94 : 0.72, 1],
+    }),
     transform: [
-      { translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [1, -1] }) },
-      { scale: transition.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.08] }) },
+      { translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [useHighContrastIosMotion ? 0 : 1, -1] }) },
+      { scale: transition.interpolate({ inputRange: [0, 1], outputRange: [useHighContrastIosMotion ? 0.96 : 0.9, 1.08] }) },
     ],
   };
   const labelMotion = {
-    opacity: transition.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1] }),
+    opacity: transition.interpolate({
+      inputRange: [0, 1],
+      outputRange: [useHighContrastIosMotion ? 0.92 : 0.78, 1],
+    }),
     transform: [{ translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }],
   };
 
@@ -217,10 +232,17 @@ function TabContent({
           iconMotion,
         ]}
       >
-        <TabIcon route={route} color={iconColor} />
+        <TabIcon route={route} color={iconColor} useHighContrastSize={useHighContrastIosMotion} />
       </Animated.View>
       <Animated.Text
-        style={[styles.label, !isIos ? styles.androidLabel : null, { color: labelColor }, labelMotion]}
+        style={[
+          styles.label,
+          !isIos ? styles.androidLabel : null,
+          useHighContrastIosMotion ? styles.iosDarkLabel : null,
+          useHighContrastIosMotion && active ? styles.iosDarkActiveLabel : null,
+          { color: labelColor },
+          labelMotion,
+        ]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.9}
@@ -273,10 +295,10 @@ function getIosTabColors(theme: AppTheme) {
       activeIcon: theme.text,
       activeLabel: theme.text,
       activeDot: theme.clear,
-      inactiveIcon: colorWithAlpha(theme.text, 0.78),
-      inactiveLabel: colorWithAlpha(theme.text, 0.74),
-      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.2 : 0.16),
-      activeBorder: colorWithAlpha(theme.clear, 0.36),
+      inactiveIcon: colorWithAlpha(theme.skyLite, 0.92),
+      inactiveLabel: colorWithAlpha(theme.text, 0.86),
+      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.3 : 0.24),
+      activeBorder: colorWithAlpha(theme.clear, 0.58),
     };
   }
 
@@ -291,9 +313,23 @@ function getIosTabColors(theme: AppTheme) {
   };
 }
 
-function TabIcon({ route, color }: { route: P0RouteId; color: ColorValue }) {
+function TabIcon({
+  route,
+  color,
+  useHighContrastSize,
+}: {
+  route: P0RouteId;
+  color: ColorValue;
+  useHighContrastSize: boolean;
+}) {
   const source = getTabIconSource(route);
-  return <Image source={source} style={[styles.iconImage, { tintColor: color }]} resizeMode="contain" />;
+  return (
+    <Image
+      source={source}
+      style={[styles.iconImage, useHighContrastSize ? styles.iosDarkIconImage : null, { tintColor: color }]}
+      resizeMode="contain"
+    />
+  );
 }
 
 function getTabIconSource(route: P0RouteId) {
@@ -358,6 +394,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginBottom: 1,
   },
+  iosDarkActiveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginBottom: 2,
+  },
   iosActivePill: {
     position: "absolute",
     top: 5,
@@ -376,6 +418,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
   },
+  iosDarkLabel: {
+    fontSize: 12,
+    lineHeight: 14,
+    fontWeight: "600",
+  },
+  iosDarkActiveLabel: {
+    fontWeight: "800",
+  },
   androidLabel: {
     marginTop: 2,
     fontSize: 12,
@@ -384,5 +434,9 @@ const styles = StyleSheet.create({
   iconImage: {
     width: 21,
     height: 21,
+  },
+  iosDarkIconImage: {
+    width: 22,
+    height: 22,
   },
 });
