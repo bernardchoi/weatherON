@@ -87,9 +87,12 @@ export function savePersistedAppState(state: PersistedAppState) {
   void writeAppValue(appStateStorageKey, normalizePersistedAppState(state));
 }
 
-export async function readPersistedWeatherProviderResult(): Promise<WeatherProviderResult | null> {
+export async function readPersistedWeatherProviderResult(
+  requiredSource?: WeatherProviderResult["current"]["source"],
+): Promise<WeatherProviderResult | null> {
   const value = await readAppValue<unknown>(weatherProviderResultStorageKey);
-  return value ? normalizePersistedWeatherProviderResult(value) : null;
+  const result = value ? normalizePersistedWeatherProviderResult(value) : null;
+  return result && (!requiredSource || hasOnlyWeatherSource(result, requiredSource)) ? result : null;
 }
 
 export function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
@@ -112,6 +115,17 @@ export function shouldKeepPersistedWeatherResult(result: WeatherProviderResult, 
   if (!isSameWeatherSnapshotLocation(result.destination, persistedResult.destination)) return false;
   if (!hasSameWeatherSnapshotLocations(result.destinationSnapshots, persistedResult.destinationSnapshots)) return false;
   return result.status === "error" || result.status === "fallback" || result.fallbackUsed;
+}
+
+export function hasOnlyWeatherSource(
+  result: WeatherProviderResult,
+  source: WeatherProviderResult["current"]["source"],
+): boolean {
+  return (
+    result.current.source === source &&
+    result.destination.source === source &&
+    result.destinationSnapshots.every((snapshot) => snapshot.source === source)
+  );
 }
 
 function isSameWeatherSnapshotLocation(left: WeatherProviderResult["current"], right: WeatherProviderResult["current"]) {

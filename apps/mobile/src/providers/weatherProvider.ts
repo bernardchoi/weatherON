@@ -44,6 +44,7 @@ export type WeatherProvider = {
 
 export type WeatherProviderCreateOptions = {
   preferKma?: boolean;
+  platform?: typeof Platform.OS;
 };
 
 export function createWeatherProvider(client: WeatherClient = runtimeWeatherClient, createOptions: WeatherProviderCreateOptions = {}): WeatherProvider {
@@ -65,9 +66,13 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         const destinationLocations = fallback
           ? [defaultGangneungWeatherLocation]
           : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
+        const currentSnapshot =
+          (createOptions.platform ?? Platform.OS) === "ios" && options.currentSnapshot?.source !== "weatherkit"
+            ? undefined
+            : options.currentSnapshot;
         const [current, ...destinationSnapshots] = await Promise.all([
-          options.currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions.preferKma),
-          ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions.preferKma)),
+          currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions),
+          ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions)),
         ]);
         const destination = destinationSnapshots[0] ?? normalizeOpenMeteoWeather(openMeteoFixture, {
           locationId: destinationLocation.locationId,
@@ -101,18 +106,18 @@ export const runtimeWeatherProvider = createWeatherProvider();
 export const fixtureWeatherProvider = createWeatherProvider(fixtureWeatherClient, { preferKma: true });
 
 export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback"): WeatherProviderResult {
-  const current = normalizeOpenMeteoWeather(openMeteoFixture, {
+  const current = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: defaultSeoulWeatherLocation.locationId,
     locationName: defaultSeoulWeatherLocation.locationName,
     countryCode: "KR",
     stale: true,
-  });
-  const destination = normalizeOpenMeteoWeather(openMeteoFixture, {
+  }));
+  const destination = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: "kr-gangneung-beach",
     locationName: "강릉 안목해변",
     countryCode: "KR",
     stale: true,
-  });
+  }));
 
   return {
     current,
@@ -129,29 +134,28 @@ async function fetchWeatherSnapshot(
   client: WeatherClient,
   location: WeatherLocationPreset,
   stale: boolean,
-  preferKma?: boolean,
+  options: WeatherProviderCreateOptions,
 ): Promise<WeatherSnapshot> {
-  if (shouldUseWeatherKitForecast(client, location)) {
-    try {
-      const payload = await client.fetchWeatherKitForecast({
-        latitude: location.coordinate.latitude,
-        longitude: location.coordinate.longitude,
-        timezone: location.timezone,
-        countryCode: location.countryCode === "GLOBAL" ? undefined : location.countryCode,
-        language: "ko",
-      });
-      return normalizeWeatherKitWeather(payload, {
-        locationId: location.locationId,
-        locationName: location.locationName,
-        countryCode: location.countryCode,
-        timezone: location.timezone,
-        stale,
-      });
-    } catch {
-      // WeatherKit은 iOS 전용 우선 provider로만 사용하고, 장애 시 기존 provider로 후퇴한다.
+  if ((options.platform ?? Platform.OS) === "ios") {
+    if (typeof client.fetchWeatherKitForecast !== "function") {
+      throw new Error("WeatherKit client is not configured for iOS");
     }
+    const payload = await client.fetchWeatherKitForecast({
+      latitude: location.coordinate.latitude,
+      longitude: location.coordinate.longitude,
+      timezone: location.timezone,
+      countryCode: location.countryCode === "GLOBAL" ? undefined : location.countryCode,
+      language: "ko",
+    });
+    return normalizeWeatherKitWeather(payload, {
+      locationId: location.locationId,
+      locationName: location.locationName,
+      countryCode: location.countryCode,
+      timezone: location.timezone,
+      stale,
+    });
   }
-  if (shouldUseKmaForecast(location, preferKma)) {
+  if (shouldUseKmaForecast(location, options.preferKma)) {
     try {
       const payload = await client.fetchKmaForecast({
         nx: location.grid.nx,
@@ -169,16 +173,6 @@ async function fetchWeatherSnapshot(
     }
   }
   return fetchOpenMeteoSnapshot(client, location, stale);
-}
-
-function shouldUseWeatherKitForecast(client: WeatherClient, location: WeatherLocationPreset): client is WeatherClient & Required<Pick<WeatherClient, "fetchWeatherKitForecast">> {
-  return (
-    Platform.OS === "ios" &&
-    getWeatherRuntimeConfig().iosWeatherProvider === "weatherkit" &&
-    typeof client.fetchWeatherKitForecast === "function" &&
-    Number.isFinite(location.coordinate.latitude) &&
-    Number.isFinite(location.coordinate.longitude)
-  );
 }
 
 async function fetchOpenMeteoSnapshot(
@@ -268,10 +262,17 @@ function markSnapshotStale(snapshot: WeatherSnapshot | undefined, location?: Wea
 }
 
 function buildFallbackSnapshotForLocation(location: WeatherLocationPreset): WeatherSnapshot {
-  return normalizeOpenMeteoWeather(openMeteoFixture, {
+  return markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: location.locationId,
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale: true,
-  });
+  }));
+}
+
+function markSnapshotFallback(snapshot: WeatherSnapshot): WeatherSnapshot {
+  return {
+    ...snapshot,
+    source: "fallback",
+  };
 }

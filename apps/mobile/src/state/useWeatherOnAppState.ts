@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import type { PlaceSearchResult } from "@weatheron/shared";
 import { presetWardrobe, type UserPreferenceProfile } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
@@ -327,7 +327,11 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([readPersistedWeatherProviderResult(), readPersistedAppState(), readPersistedNotificationState()])
+    Promise.all([
+      readPersistedWeatherProviderResult(Platform.OS === "ios" ? "weatherkit" : undefined),
+      readPersistedAppState(),
+      readPersistedNotificationState(),
+    ])
       .then(([persistedWeatherResult, persistedState, persistedNotificationState]) => {
         if (!active) return;
         if (persistedWeatherResult) {

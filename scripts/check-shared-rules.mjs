@@ -10,6 +10,19 @@ const bundled = join(outDir, "shared-check-bundle.mjs");
 const mobileBundle = join(outDir, "mobile-app-bundle.mjs");
 const providerEntry = join(outDir, "mobile-provider-check-entry.ts");
 const providerBundle = join(outDir, "mobile-provider-check-bundle.mjs");
+const reactNativePlatformStub = {
+  name: "react-native-platform-stub",
+  setup(buildContext) {
+    buildContext.onResolve({ filter: /^react-native$/ }, () => ({
+      path: "react-native",
+      namespace: "weatheron-check",
+    }));
+    buildContext.onLoad({ filter: /.*/, namespace: "weatheron-check" }, () => ({
+      contents: 'export const Platform = { OS: "android" };',
+      loader: "js",
+    }));
+  },
+};
 
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
@@ -150,7 +163,7 @@ await writeFile(
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
-    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot } = await import("../packages/shared/src/index.ts");
+    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
     const fakeFetch = async (url) => {
@@ -171,6 +184,38 @@ await writeFile(
       fetchImpl: fakeFetch,
     });
     const httpProvider = createWeatherProvider(httpClient, { preferKma: true });
+    const iosWeatherKitCalls = { weatherkit: 0, kma: 0, openmeteo: 0 };
+    const iosWeatherKitClient = {
+      async fetchWeatherKitForecast() {
+        iosWeatherKitCalls.weatherkit += 1;
+        return weatherKitFixture;
+      },
+      async fetchKmaForecast() {
+        iosWeatherKitCalls.kma += 1;
+        return kmaForecastFixture;
+      },
+      async fetchOpenMeteoForecast() {
+        iosWeatherKitCalls.openmeteo += 1;
+        return openMeteoFixture;
+      },
+    };
+    const iosWeatherKitProvider = createWeatherProvider(iosWeatherKitClient, { platform: "ios" });
+    const iosWeatherKitFailureCalls = { weatherkit: 0, kma: 0, openmeteo: 0 };
+    const iosWeatherKitFailureClient = {
+      async fetchWeatherKitForecast() {
+        iosWeatherKitFailureCalls.weatherkit += 1;
+        throw new Error("WeatherKit unavailable");
+      },
+      async fetchKmaForecast() {
+        iosWeatherKitFailureCalls.kma += 1;
+        return kmaForecastFixture;
+      },
+      async fetchOpenMeteoForecast() {
+        iosWeatherKitFailureCalls.openmeteo += 1;
+        return openMeteoFixture;
+      },
+    };
+    const iosWeatherKitFailureProvider = createWeatherProvider(iosWeatherKitFailureClient, { platform: "ios" });
     const rainDemo = buildDemoStateFromWeatherResult({
       status: "ready",
       message: "rain notification fixture",
@@ -249,6 +294,12 @@ await writeFile(
       openMeteoPayload: await fixtureWeatherClient.fetchOpenMeteoForecast({ latitude: 37.77, longitude: 128.94 }),
       readyProvider: await fixtureWeatherProvider.getSnapshots("ready"),
       httpProvider: await httpProvider.getSnapshots("ready"),
+      iosWeatherKitProvider: await iosWeatherKitProvider.getSnapshots("ready", {
+        currentSnapshot: seongsuRainSnapshot,
+      }),
+      iosWeatherKitCalls,
+      iosWeatherKitFailureProvider: await iosWeatherKitFailureProvider.getSnapshots("ready"),
+      iosWeatherKitFailureCalls,
       parallelProvider: await httpProvider.getSnapshots("ready", {
         destinationLocation: toWeatherLocation(gangneungPlace),
         destinationLocations: [toWeatherLocation(gangneungPlace), toWeatherLocation(jamsilPlace)],
@@ -285,7 +336,7 @@ await build({
   jsx: "automatic",
   target: "es2022",
   loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
-  external: ["react", "react/jsx-runtime", "react-native", "expo-location", "expo-navigation-bar", "expo-sqlite", "expo-status-bar"],
+  external: ["react", "react/jsx-runtime", "react-native", "expo-blur", "expo-location", "expo-navigation-bar", "expo-sqlite", "expo-status-bar"],
   logLevel: "silent",
 });
 
@@ -296,7 +347,8 @@ await build({
   platform: "node",
   format: "esm",
   target: "node20",
-  external: ["react", "react/jsx-runtime", "react-native", "expo-sqlite"],
+  external: ["react", "react/jsx-runtime", "expo-sqlite"],
+  plugins: [reactNativePlatformStub],
   logLevel: "silent",
 });
 
@@ -378,6 +430,14 @@ assert.equal(demoResults.readyProvider.status, "ready");
 assert.equal(demoResults.readyProvider.current.source, "kma");
 assert.equal(demoResults.httpProvider.status, "ready");
 assert.equal(demoResults.httpProvider.destination.source, "kma");
+assert.equal(demoResults.iosWeatherKitProvider.status, "ready");
+assert.equal(demoResults.iosWeatherKitProvider.current.source, "weatherkit");
+assert.equal(demoResults.iosWeatherKitProvider.destination.source, "weatherkit");
+assert.deepEqual(demoResults.iosWeatherKitCalls, { weatherkit: 2, kma: 0, openmeteo: 0 });
+assert.equal(demoResults.iosWeatherKitFailureProvider.status, "error");
+assert.equal(demoResults.iosWeatherKitFailureProvider.current.source, "fallback");
+assert.equal(demoResults.iosWeatherKitFailureProvider.destination.source, "fallback");
+assert.deepEqual(demoResults.iosWeatherKitFailureCalls, { weatherkit: 2, kma: 0, openmeteo: 0 });
 assert.equal(demoResults.openMeteoProvider.destination.source, "openmeteo");
 assert.equal(demoResults.parallelProvider.destinationSnapshots.length, 2);
 assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "kr-gangneung-anmok-beach");
