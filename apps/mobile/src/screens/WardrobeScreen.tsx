@@ -48,7 +48,14 @@ export function WardrobeScreen({
   });
 
   return (
-    <AppScreen title="내 옷장" subtitle="보유한 옷을 확인하고 정리" badge={`${ownedItems.length}개 보유`} onBack={onGoBack} showWordmark={false}>
+    <AppScreen
+      title="내 옷장"
+      subtitle="보유한 옷을 확인하고 정리"
+      badge={`${ownedItems.length}개 보유`}
+      onBack={onGoBack}
+      showWordmark={false}
+      compactHeader
+    >
       {removedItem ? (
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
       ) : null}

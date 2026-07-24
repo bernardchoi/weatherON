@@ -38,6 +38,7 @@ export function OutfitDetailScreen({
       badge={`${state.outfit.matchPct}%`}
       onBack={onGoBack}
       showWordmark={false}
+      compactHeader
       footer={
         <View style={styles.footer}>
           <CompletionStatus
@@ -158,10 +159,11 @@ const styles = StyleSheet.create({
   },
   outfitRail: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: spacing.sm,
   },
   outfitMiniTile: {
-    width: "18.5%",
+    flex: 1,
+    minWidth: 0,
     minHeight: 86,
     alignItems: "center",
     justifyContent: "center",

@@ -97,6 +97,7 @@ export function WardrobePresetScreen({
       badge={`${ownedCount}/${wardrobeItems.length} 보유`}
       onBack={onGoBack}
       showWordmark={false}
+      compactHeader
     >
       <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <TextInput
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
   presetGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    columnGap: 8,
     rowGap: 10,
   },
   categoryList: {
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   presetCard: {
-    width: "31.5%",
+    width: "31.4%",
     minHeight: 162,
     justifyContent: "space-between",
     gap: 8,
