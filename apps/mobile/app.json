@@ -5,7 +5,7 @@
     "scheme": "weatheron",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "../../assets/icon/icon-primary-1024.png",
+    "icon": "../../assets/icon/icon-light-v2-1024.png",
     "userInterfaceStyle": "automatic",
     "androidStatusBar": {
       "backgroundColor": "#071E33",
@@ -17,7 +17,8 @@
       "barStyle": "light-content"
     },
     "plugins": [
-      "expo-navigation-bar"
+      "expo-navigation-bar",
+      "./plugins/withWeatheronAndroidDarkIcon"
     ],
     "splash": {
       "image": "../../assets/icon/icon-primary-512.png",
@@ -36,6 +37,10 @@
       "version": "1.0.0",
       "supportsTablet": false,
       "bundleIdentifier": "com.weatheron.mobile",
+      "icon": {
+        "light": "../../assets/icon/icon-light-v2-1024.png",
+        "dark": "../../assets/icon/icon-dark-1024.png"
+      },
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ko",
         "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.",
@@ -46,15 +51,17 @@
     "android": {
       "package": "com.weatheron.mobile",
       "versionCode": 10,
+      "icon": "../../assets/icon/icon-light-v2-1024.png",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "../../assets/icon/android/icon-adaptive-foreground-1024.png",
-        "backgroundImage": "../../assets/icon/android/icon-adaptive-background-1024.png",
-        "backgroundColor": "#0C1F3F"
+        "foregroundImage": "../../assets/icon/android/icon-adaptive-foreground-light-1024.png",
+        "backgroundImage": "../../assets/icon/android/icon-adaptive-background-light-1024.png",
+        "monochromeImage": "../../assets/icon/icon-mono-1024.png",
+        "backgroundColor": "#F8FBFF"
       }
     },
     "web": {
