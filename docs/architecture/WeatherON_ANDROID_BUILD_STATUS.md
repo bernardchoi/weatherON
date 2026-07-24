@@ -1,6 +1,7 @@
 # WeatherON Android Build Status
 
 > 생성일: 2026-07-20
+> 실행 환경 이전: 2026-07-25
 > 목적: 최신 Android QA 대상 빌드 상태와 artifact 생성 여부를 추적한다.
 
 ## 1. 현재 상태
@@ -8,12 +9,12 @@
 | 항목 | 값 |
 |---|---|
 | EAS build id | `N/A - local Gradle release APK` |
-| Build 상태 | LOCAL BUILD SUCCESS |
+| Build 상태 | HISTORICAL LOCAL BUILD SUCCESS / Windows 재빌드 대기 |
 | Platform | ANDROID |
 | Profile | qa-local |
 | Version | `1.0.0 (10)` |
 | Build 링크 | N/A |
-| APK artifact | `apps/mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| APK artifact | Mac 로컬 산출물 정리 완료. Windows에서 재생성 필요 |
 | APK sha256 | `da404203b4e9582eb40aa7ccb6985174a5d97fc450c9fc9082041697b5e96e6e` |
 | APK size | 100M |
 
@@ -25,6 +26,8 @@ npm run check:android-device-qa-ready
 
 ## 3. 다음 액션
 
+- `WeatherON_ANDROID_WINDOWS_HANDOFF.md`에 따라 Windows 클린 체크아웃과 release 빌드 수행
+- Windows 실제 기기 설치 확인 후 새 APK 경로와 SHA-256 기록
 - Play 제출 blocker 중 스토어 입력값, 폐쇄 테스트 운영값, 정책/제출 외부 입력을 확정
 - 비공개 테스트·실기기 QA 기준은 qa-local release APK `1.0.0 (10)`으로 통일
 
@@ -32,6 +35,7 @@ npm run check:android-device-qa-ready
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-07-25 | Android 개발·빌드 실행 환경을 Windows로 이전. Mac 로컬 APK와 Gradle/CMake/build 캐시 제거, 기존 SHA-256은 이력으로 보존 |
 | 2026-07-01 | build `802540a2-77a2-40cb-9b3b-15d9b3984ae2` 상태 FINISHED 확인 |
 | 2026-07-03 | local release APK `0.1.0 (6)` QA 대상으로 갱신 |
 | 2026-07-03 | local release APK 재빌드/재설치 후 D7/D8/D10/D11/D12/D13 실기기 재판정 완료 |

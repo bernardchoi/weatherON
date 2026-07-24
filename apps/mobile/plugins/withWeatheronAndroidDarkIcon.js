@@ -1,6 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const { withDangerousMod } = require("@expo/config-plugins");
+const {
+  AndroidConfig,
+  withAndroidColorsNight,
+  withDangerousMod,
+} = require("@expo/config-plugins");
 const { setIconAsync, dpiValues } = require("@expo/prebuild-config/build/plugins/icons/withAndroidIcons");
 
 const RES_PATH = "android/app/src/main/res";
@@ -64,6 +68,17 @@ async function copyDarkLauncherResources(projectRoot) {
 }
 
 module.exports = function withWeatheronAndroidDarkIcon(config) {
+  config = withAndroidColorsNight(config, (modConfig) => {
+    modConfig.modResults = AndroidConfig.Colors.setColorItem(
+      AndroidConfig.Resources.buildResourceItem({
+        name: "iconBackground",
+        value: DARK_BACKGROUND,
+      }),
+      modConfig.modResults,
+    );
+    return modConfig;
+  });
+
   return withDangerousMod(config, ["android", async (modConfig) => {
     await copyDarkLauncherResources(modConfig.modRequest.projectRoot);
     return modConfig;

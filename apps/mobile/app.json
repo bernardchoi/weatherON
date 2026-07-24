@@ -18,7 +18,8 @@
     },
     "plugins": [
       "expo-navigation-bar",
-      "./plugins/withWeatheronAndroidDarkIcon"
+      "./plugins/withWeatheronAndroidDarkIcon",
+      "./plugins/withWeatheronAndroidReleaseConfig"
     ],
     "splash": {
       "image": "../../assets/icon/icon-primary-512.png",
