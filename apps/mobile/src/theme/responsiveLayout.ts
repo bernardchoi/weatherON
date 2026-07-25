@@ -42,6 +42,15 @@ export type ResponsiveLayout = {
   wardrobePresetImageHeight: number;
   outfitDetailCardMinHeight: number;
   outfitDetailImageHeight: number;
+  accountContentGap: number;
+  accountPanelPadding: number;
+  accountHeaderMinHeight: number;
+  accountHeroMinHeight: number;
+  accountProfileMinHeight: number;
+  accountProviderMinHeight: number;
+  accountConsentRowMinHeight: number;
+  accountPolicyRowMinHeight: number;
+  accountPolicyPointPadding: number;
   bottomNavHorizontalPadding: number;
   bottomNavMaxWidth: number;
   onboardingHeroVisualHeight: number;
@@ -119,6 +128,15 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     wardrobePresetImageHeight: isShort ? 64 : isTablet ? 82 : isRegular ? 74 : 68,
     outfitDetailCardMinHeight: isShort ? 82 : isTablet ? 104 : isRegular ? 92 : 86,
     outfitDetailImageHeight: isShort ? 44 : isTablet ? 62 : isRegular ? 54 : 50,
+    accountContentGap: isShort ? 8 : isTablet ? 16 : isRegular ? 14 : 12,
+    accountPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,
+    accountHeaderMinHeight: isShort ? 58 : isTablet ? 88 : isRegular ? 82 : 72,
+    accountHeroMinHeight: isShort ? 126 : isTablet ? 184 : isRegular ? 168 : 150,
+    accountProfileMinHeight: isShort ? 74 : isTablet ? 100 : isRegular ? 92 : 82,
+    accountProviderMinHeight: isShort ? 46 : isTablet ? 58 : isRegular ? 54 : 50,
+    accountConsentRowMinHeight: isShort ? 52 : isTablet ? 68 : isRegular ? 62 : 56,
+    accountPolicyRowMinHeight: isShort ? 60 : isTablet ? 82 : isRegular ? 74 : 68,
+    accountPolicyPointPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,
     bottomNavHorizontalPadding: isTablet ? 32 : isRegular ? 28 : isShort ? 16 : 20,
     bottomNavMaxWidth: isTablet ? 680 : 640,
     onboardingHeroVisualHeight: isShort ? 160 : isTablet ? 280 : isRegular ? 232 : 214,

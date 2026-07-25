@@ -5,6 +5,7 @@ import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyRows: { type: PolicyDocumentType; icon: number; title: string; body: string }[] = [
@@ -16,14 +17,28 @@ const policyRows: { type: PolicyDocumentType; icon: number; title: string; body:
 
 export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.accountContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
           <BackButton accessibilityLabel="MY로 돌아가기" onPress={() => onNavigate("M1")} />
-          <Text style={[styles.screenTitle, { color: theme.text }]}>정책</Text>
+          <Text style={[styles.screenTitle, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>정책</Text>
         </View>
 
         <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
@@ -33,7 +48,11 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenPr
               accessibilityRole="button"
               key={item.type}
               onPress={() => onOpenPolicyDocument(item.type)}
-              style={[styles.documentRow, index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
+              style={[
+                styles.documentRow,
+                { minHeight: layout.accountPolicyRowMinHeight, padding: layout.accountPanelPadding },
+                index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
+              ]}
             >
               <View style={[styles.iconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                 <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
@@ -59,11 +78,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -75,7 +92,6 @@ const styles = StyleSheet.create({
     borderRadius: 78,
   },
   header: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -92,11 +108,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   documentRow: {
-    minHeight: 68,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    padding: spacing.md,
   },
   iconBox: {
     width: 38,

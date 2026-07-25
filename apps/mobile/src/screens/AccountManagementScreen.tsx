@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
@@ -13,6 +14,7 @@ export function AccountManagementScreen({
   onSignOutAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [dangerConfirm, setDangerConfirm] = useState<"none" | "signout" | "delete">("none");
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
@@ -33,21 +35,34 @@ export function AccountManagementScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.accountContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
           <BackButton onPress={() => onNavigate("M1")} />
-          <Text style={[styles.title, { color: theme.text }]}>계정 관리</Text>
+          <Text style={[styles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>계정 관리</Text>
         </View>
 
-        <View style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-          <View style={[styles.avatar, { borderColor: accountReady ? theme.clear : theme.gold }]}>
+        <View style={[styles.profileCard, { minHeight: layout.accountProfileMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.avatar, layout.isShort ? styles.avatarShort : null, { borderColor: accountReady ? theme.clear : theme.gold }]}>
             <PersonGlyph color={accountReady ? theme.clear : theme.gold} />
           </View>
           <View style={styles.copy}>
-            <Text style={[styles.profileTitle, { color: theme.text }]}>{profileTitle}</Text>
-            <Text style={[styles.profileMeta, { color: theme.subtle }]}>{profileMeta}</Text>
+            <Text style={[styles.profileTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
+            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
           </View>
         </View>
 
@@ -65,7 +80,7 @@ export function AccountManagementScreen({
         </Pressable>
 
         {accountLinked ? (
-          <View style={[styles.dangerPanel, { backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }, cardShadow(theme)]}>
+          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }, cardShadow(theme)]}>
             <Text style={[styles.dangerTitle, { color: dangerConfirm === "none" ? theme.text : theme.warm }]}>
               {dangerConfirm === "none" ? "로그아웃 및 탈퇴" : dangerConfirm === "signout" ? "로그아웃 확인" : "회원 탈퇴 확인"}
             </Text>
@@ -151,11 +166,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -167,7 +180,6 @@ const styles = StyleSheet.create({
     borderRadius: 78,
   },
   header: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -179,11 +191,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   profileCard: {
-    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -194,6 +204,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 2,
+  },
+  avatarShort: {
+    width: 44,
+    height: 44,
   },
   copy: {
     flex: 1,
@@ -230,7 +244,6 @@ const styles = StyleSheet.create({
   },
   dangerPanel: {
     gap: spacing.sm,
-    padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -250,7 +263,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   smallButton: {
-    minHeight: 34,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: 12,
     borderRadius: radius.sm,

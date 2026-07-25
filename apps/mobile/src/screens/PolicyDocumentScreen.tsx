@@ -6,6 +6,7 @@ import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyDocuments: Record<PolicyDocumentType, { title: string; updated: string; summary: string; points: string[]; notice: string }> = {
@@ -63,19 +64,41 @@ const policyDocuments: Record<PolicyDocumentType, { title: string; updated: stri
 
 export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolicyDocument, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const document = policyDocuments[selectedPolicyDocument];
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.accountContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
           <BackButton accessibilityLabel="상단 정책 목록으로 돌아가기" onPress={onReturnFromPolicyDocument} />
-          <Text style={[styles.screenTitle, { color: theme.text }]} numberOfLines={1}>{document.title}</Text>
+          <Text
+            style={[
+              styles.screenTitle,
+              { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight },
+            ]}
+            numberOfLines={1}
+          >
+            {document.title}
+          </Text>
         </View>
 
-        <View style={[styles.heroDoc, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <View style={[styles.heroDoc, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.text }]}>{document.title}</Text>
             <Text style={[styles.body, { color: theme.muted }]}>{document.summary}</Text>
@@ -84,14 +107,14 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, onReturnFromPolic
 
         <View style={styles.pointList}>
           {document.points.map((point, index) => (
-            <View key={point} style={[styles.pointRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+            <View key={point} style={[styles.pointRow, { padding: layout.accountPolicyPointPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
               <Text style={[styles.stepNumber, { color: theme.gold }]}>{index + 1}.</Text>
               <Text style={[styles.pointText, { color: theme.text }]}>{point}</Text>
             </View>
           ))}
         </View>
 
-        <View style={[styles.noticeBox, { backgroundColor: theme.cardMuted }]}>
+        <View style={[styles.noticeBox, { padding: layout.accountPanelPadding, backgroundColor: theme.cardMuted }]}>
           <Text style={[styles.body, { color: theme.muted }]}>{document.notice}</Text>
         </View>
 
@@ -114,11 +137,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -130,7 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 78,
   },
   header: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -148,7 +168,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -173,7 +192,6 @@ const styles = StyleSheet.create({
     minHeight: 56,
     flexDirection: "row",
     gap: spacing.sm,
-    padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },
@@ -190,7 +208,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   noticeBox: {
-    padding: spacing.md,
     borderRadius: radius.md,
   },
   actions: {
