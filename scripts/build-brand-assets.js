@@ -130,10 +130,10 @@ async function renderAdaptiveForegroundPng(sourcePath, targetPath, width, height
   const viewBoxMatch = source.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
   const sourceWidth = viewBoxMatch ? Number.parseFloat(viewBoxMatch[1]) : 120;
   const sourceHeight = viewBoxMatch ? Number.parseFloat(viewBoxMatch[2]) : 120;
-  const foregroundScale = 0.764;
+  const foregroundScale = 0.62;
   const scale = Math.min(width / sourceWidth, height / sourceHeight) * foregroundScale;
   const translateX = (width - sourceWidth * scale) / 2;
-  const translateY = (height - sourceHeight * scale) / 2;
+  const translateY = (height - sourceHeight * scale) / 2 + height * 0.075;
   const symbolOnly = source
     .replace(/<svg\b[^>]*>/, `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`)
     .replace(/\s*<rect width="120" height="120"[^>]*\/>\s*/, `\n<g transform="translate(${round(translateX)} ${round(translateY)}) scale(${round(scale)})">\n`)
