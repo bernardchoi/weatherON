@@ -78,7 +78,7 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             <Text style={[styles.previewTitle, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           </View>
         </View>
-        <OutfitGrid outfit={state.outfit} maxItems={2} compact dense={layout.isShort} />
+        <OutfitGrid outfit={state.outfit} maxItems={2} compact dense={layout.isShort || layout.isNarrow} />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 대비" : "강수 없음"} tone="sky" />
@@ -92,7 +92,7 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             backgroundColor: theme.cardStrong,
             borderColor: locationReady ? theme.clear : theme.border,
             minHeight: layout.onboardingCompactRowMinHeight,
-            padding: layout.isShort ? spacing.xs : spacing.sm,
+            padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
           cardShadow(theme),
         ]}

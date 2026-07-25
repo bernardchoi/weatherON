@@ -65,8 +65,8 @@ export function OutfitScreen({
             <Text style={[styles.criteriaEditText, { color: theme.gold }]}>기준 수정</Text>
           </FeedbackPressable>
         </View>
-        <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={layout.isShort ? 2 : 1}>{wardrobeCaption}</Text>
-        <View style={[styles.criteriaStats, { gap: layout.isShort ? 5 : 7 }]}>
+        <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={layout.isShort || layout.isNarrow ? 2 : 1}>{wardrobeCaption}</Text>
+        <View style={[styles.criteriaStats, { gap: layout.isShort || layout.isNarrow ? 5 : 7 }]}>
           <FeedbackPressable
             accessibilityLabel={`내 옷장 ${ownedItemCount}개 반영, 내 옷장 보기`}
             accessibilityRole="button"
@@ -138,7 +138,7 @@ export function OutfitScreen({
             </View>
           ))}
         </FeedbackPressable>
-        <View style={[styles.actions, layout.isShort ? styles.actionsShort : null]}>
+        <View style={[styles.actions, layout.isShort || layout.isNarrow ? styles.actionsShort : null]}>
           <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} />
           <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" />
         </View>
@@ -253,6 +253,8 @@ const styles = StyleSheet.create({
     height: 15,
   },
   advicePreview: {
+    minHeight: 44,
+    justifyContent: "center",
     gap: 2,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,

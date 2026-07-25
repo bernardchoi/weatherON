@@ -36,7 +36,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
           {
             backgroundColor: theme.cardStrong,
             borderColor: theme.border,
-            padding: layout.isShort ? spacing.xs : spacing.sm,
+            padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
           cardShadow(theme),
         ]}

@@ -57,7 +57,7 @@ export function AccountManagementScreen({
         </View>
 
         <View style={[styles.profileCard, { minHeight: layout.accountProfileMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-          <View style={[styles.avatar, layout.isShort ? styles.avatarShort : null, { borderColor: accountReady ? theme.clear : theme.gold }]}>
+          <View style={[styles.avatar, layout.isShort || layout.isNarrow ? styles.avatarShort : null, { borderColor: accountReady ? theme.clear : theme.gold }]}>
             <PersonGlyph color={accountReady ? theme.clear : theme.gold} />
           </View>
           <View style={styles.copy}>

@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   segmentControl: {
     width: 128,
-    minHeight: 42,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     padding: 4,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   segmentOption: {
     flex: 1,
-    minHeight: 34,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
