@@ -5,6 +5,7 @@ import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, getToneColor, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 type AlertTone = "clear" | "gold" | "sky" | "warm";
@@ -33,6 +34,7 @@ export function AlertSettingsScreen({
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const focusMeta = getAlertFocusMeta(alertSettingsRouteState?.focus ?? "general", alertSettingsRouteState?.returnTo);
   const destinationReady = savedDestinations.length > 0;
@@ -70,13 +72,38 @@ export function AlertSettingsScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.settingsContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
           <BackButton onPress={goBack} />
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, { color: theme.text }]}>스마트 알림 설정</Text>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.text,
+                  fontSize: layout.screenTitleFontSize,
+                  lineHeight: layout.screenTitleLineHeight,
+                },
+              ]}
+              numberOfLines={1}
+            >
+              스마트 알림 설정
+            </Text>
             <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>기본은 자동, 필요한 경우만 세부 조정</Text>
           </View>
         </View>
@@ -104,7 +131,16 @@ export function AlertSettingsScreen({
           accessibilityRole="switch"
           accessibilityState={{ checked: smartCareEnabled }}
           onPress={onToggleSmartCare}
-          style={[styles.heroCard, { backgroundColor: theme.cardStrong, borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border }, cardShadow(theme)]}
+          style={[
+            styles.heroCard,
+            {
+              minHeight: layout.alertSettingsHeroMinHeight,
+              padding: layout.settingsPanelPadding,
+              backgroundColor: theme.cardStrong,
+              borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border,
+            },
+            cardShadow(theme),
+          ]}
         >
           <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
             <BellGlyph color={theme.gold} />
@@ -130,6 +166,7 @@ export function AlertSettingsScreen({
           deliveryStatusLabel={deliveryStatus.statusLabel}
           onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
           permissionReady={permissionReady}
+          panelPadding={layout.settingsPanelPadding}
           theme={theme}
         />
 
@@ -248,16 +285,18 @@ function NotificationStatusCard({
   deliveryStatusLabel,
   onRequestPermission,
   permissionReady,
+  panelPadding,
   theme,
 }: {
   deliveryCountLabel: string;
   deliveryStatusLabel: string;
   onRequestPermission: () => void;
   permissionReady: boolean;
+  panelPadding: number;
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.deliveryCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={[styles.deliveryCard, { padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
       <View style={styles.deliveryHeader}>
         <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${theme.sky}55` }]}>
           <AlertIcon type="bell" color={theme.sky} />
@@ -595,11 +634,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -655,12 +692,10 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   heroCard: {
-    minHeight: 138,
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
     gap: spacing.sm,
-    padding: 14,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -742,7 +777,6 @@ const styles = StyleSheet.create({
   },
   deliveryCard: {
     gap: spacing.sm,
-    padding: 12,
     borderRadius: radius.lg,
     borderWidth: 1,
   },

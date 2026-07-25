@@ -42,6 +42,23 @@ export type ResponsiveLayout = {
   wardrobePresetImageHeight: number;
   outfitDetailCardMinHeight: number;
   outfitDetailImageHeight: number;
+  destinationContentGap: number;
+  destinationPanelPadding: number;
+  destinationCardPaddingHorizontal: number;
+  destinationCardPaddingVertical: number;
+  destinationCareImageHeight: number;
+  destinationCareSummaryMinHeight: number;
+  destinationRepeatDaySize: number;
+  destinationAddScrollBottomPadding: number;
+  destinationResultRowMinHeight: number;
+  settingsContentGap: number;
+  settingsPanelPadding: number;
+  settingsHeaderMinHeight: number;
+  myProfileMinHeight: number;
+  myReadinessMinHeight: number;
+  alertSettingsHeroMinHeight: number;
+  settingsTopSummaryMinHeight: number;
+  settingsActionGap: number;
   bottomNavHorizontalPadding: number;
   bottomNavMaxWidth: number;
   onboardingHeroVisualHeight: number;
@@ -119,6 +136,23 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     wardrobePresetImageHeight: isShort ? 64 : isTablet ? 82 : isRegular ? 74 : 68,
     outfitDetailCardMinHeight: isShort ? 82 : isTablet ? 104 : isRegular ? 92 : 86,
     outfitDetailImageHeight: isShort ? 44 : isTablet ? 62 : isRegular ? 54 : 50,
+    destinationContentGap: isShort ? 8 : isTablet ? 16 : isRegular ? 14 : 12,
+    destinationPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,
+    destinationCardPaddingHorizontal: isShort ? 12 : isTablet ? 18 : isRegular ? 16 : 14,
+    destinationCardPaddingVertical: isShort ? 11 : isTablet ? 16 : isRegular ? 14 : 13,
+    destinationCareImageHeight: isShort ? 104 : isTablet ? 176 : isRegular ? 148 : 126,
+    destinationCareSummaryMinHeight: isShort ? 64 : isTablet ? 82 : isRegular ? 72 : 66,
+    destinationRepeatDaySize: isShort ? 36 : isTablet ? 44 : isRegular ? 42 : 38,
+    destinationAddScrollBottomPadding: isShort ? 96 : isTablet ? 124 : isRegular ? 116 : 108,
+    destinationResultRowMinHeight: isShort ? 70 : isTablet ? 88 : isRegular ? 82 : 78,
+    settingsContentGap: isShort ? 8 : isTablet ? 16 : isRegular ? 14 : 12,
+    settingsPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,
+    settingsHeaderMinHeight: isShort ? 58 : isTablet ? 88 : isRegular ? 82 : 72,
+    myProfileMinHeight: isShort ? 74 : isTablet ? 100 : isRegular ? 92 : 84,
+    myReadinessMinHeight: isShort ? 82 : isTablet ? 108 : isRegular ? 98 : 90,
+    alertSettingsHeroMinHeight: isShort ? 118 : isTablet ? 164 : isRegular ? 150 : 138,
+    settingsTopSummaryMinHeight: isShort ? 102 : isTablet ? 148 : isRegular ? 134 : 124,
+    settingsActionGap: isShort ? 8 : isTablet ? 12 : 10,
     bottomNavHorizontalPadding: isTablet ? 32 : isRegular ? 28 : isShort ? 16 : 20,
     bottomNavMaxWidth: isTablet ? 680 : 640,
     onboardingHeroVisualHeight: isShort ? 160 : isTablet ? 280 : isRegular ? 232 : 214,

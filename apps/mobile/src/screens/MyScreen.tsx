@@ -5,6 +5,7 @@ import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type MenuTone = "clear" | "gold" | "sky" | "warm";
@@ -24,6 +25,7 @@ export function MyScreen({
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
@@ -49,25 +51,65 @@ export function MyScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.settingsContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>마이</Text>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.text,
+                fontSize: layout.screenTitleFontSize,
+                lineHeight: layout.screenTitleLineHeight,
+              },
+            ]}
+          >
+            마이
+          </Text>
         </View>
 
         <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
-          style={[styles.profileCard, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.border }, cardShadow(theme)]}
+          style={[
+            styles.profileCard,
+            {
+              minHeight: layout.myProfileMinHeight,
+              gap: layout.isShort ? spacing.sm : spacing.md,
+              padding: layout.settingsPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: isAccountReady ? theme.clear : theme.border,
+            },
+            cardShadow(theme),
+          ]}
         >
-          <View style={[styles.avatar, { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky }]}>
+          <View
+            style={[
+              styles.avatar,
+              layout.isShort ? styles.avatarShort : null,
+              { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky },
+            ]}
+          >
             <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />
           </View>
           <View style={styles.profileCopy}>
-            <Text style={[styles.profileName, { color: theme.text }]}>{profileTitle}</Text>
-            <Text style={[styles.profileEmail, { color: theme.subtle }]}>{profileBody}</Text>
+            <Text style={[styles.profileName, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
+            <Text style={[styles.profileEmail, { color: theme.subtle }]} numberOfLines={1}>{profileBody}</Text>
           </View>
           <View style={[styles.profilePill, { backgroundColor: "transparent", borderColor: theme.border }]}>
             <Text style={[styles.profilePillText, { color: theme.text }]}>{profileAction}</Text>
@@ -81,6 +123,8 @@ export function MyScreen({
           locationSummary={locationState.summary}
           theme={theme}
           tone={readinessTone}
+          minHeight={layout.myReadinessMinHeight}
+          panelPadding={layout.settingsPanelPadding}
           onPress={() => {
             if (locationState.tone === "warm") {
               onNavigate("M4");
@@ -213,6 +257,8 @@ function ReadinessSummary({
   onPress,
   theme,
   tone,
+  minHeight,
+  panelPadding,
 }: {
   alertSummary: string;
   destinationSummary: string;
@@ -220,6 +266,8 @@ function ReadinessSummary({
   onPress: () => void;
   theme: AppTheme;
   tone: MenuTone;
+  minHeight: number;
+  panelPadding: number;
 }) {
   const color = getToneColor(theme, tone);
   const status = tone === "clear" ? "정상" : tone === "warm" ? "확인" : "설정";
@@ -228,7 +276,11 @@ function ReadinessSummary({
       accessibilityLabel={`${status} 오늘 준비 상세 보기`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.readinessCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+      style={[
+        styles.readinessCard,
+        { minHeight, padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border },
+        cardShadow(theme),
+      ]}
     >
       <View style={styles.readinessCopy}>
         <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text>
@@ -271,11 +323,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.md,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -302,11 +352,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   profileCard: {
-    minHeight: 84,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    padding: 12,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -335,6 +382,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 2,
+  },
+  avatarShort: {
+    width: 44,
+    height: 44,
   },
   personGlyph: {
     width: 26,
@@ -372,12 +423,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   readinessCard: {
-    minHeight: 90,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: 14,
     borderRadius: radius.lg,
     borderWidth: 1,
   },

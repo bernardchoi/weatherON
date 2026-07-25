@@ -12,6 +12,7 @@ import {
   androidMaterialSurface,
   isAndroidDynamicColorAvailable,
 } from "../theme/androidMaterial";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 
 export function GlobalSettingsScreen({
@@ -28,6 +29,7 @@ export function GlobalSettingsScreen({
   onToggleDynamicColor,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
   const distanceLabel = getDistanceUnitLabel(distanceUnit);
   const themeLabel = getThemeModeLabel(themeMode);
@@ -35,19 +37,48 @@ export function GlobalSettingsScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.settingsContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, opacity: theme.reducedTransparency ? 0 : 0.34 }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
           <BackButton onPress={() => onNavigate("M1")} />
-          <Text style={[styles.title, { color: theme.text }]}>표시 설정</Text>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.text,
+                fontSize: layout.screenTitleFontSize,
+                lineHeight: layout.screenTitleLineHeight,
+              },
+            ]}
+          >
+            표시 설정
+          </Text>
         </View>
 
         <View
           style={[
             styles.topSummary,
             Platform.OS === "android" ? styles.materialBorder : null,
-            { backgroundColor: theme.card, borderColor: theme.border },
+            {
+              minHeight: layout.settingsTopSummaryMinHeight,
+              paddingHorizontal: layout.settingsPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
             androidMaterialSurface(theme, "surfaceContainerLow"),
           ]}
         >
@@ -165,12 +196,14 @@ function SegmentControl({
   wide?: boolean;
 }) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   return (
     <View
       style={[
         styles.segmentControl,
         Platform.OS === "android" ? styles.materialBorder : null,
         wide ? styles.segmentControlWide : null,
+        layout.isShort ? (wide ? styles.segmentControlWideShort : styles.segmentControlShort) : null,
         { backgroundColor: theme.nav, borderColor: theme.border },
         androidMaterialSurface(theme, "surfaceContainer"),
       ]}
@@ -263,11 +296,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -279,7 +310,6 @@ const styles = StyleSheet.create({
     borderRadius: 78,
   },
   header: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -297,9 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   topSummary: {
-    minHeight: 124,
     justifyContent: "center",
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
   },
@@ -331,6 +359,12 @@ const styles = StyleSheet.create({
   },
   segmentControlWide: {
     width: 154,
+  },
+  segmentControlShort: {
+    width: 116,
+  },
+  segmentControlWideShort: {
+    width: 142,
   },
   segmentOption: {
     flex: 1,

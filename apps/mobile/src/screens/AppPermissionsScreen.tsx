@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function AppPermissionsScreen({
@@ -17,6 +18,7 @@ export function AppPermissionsScreen({
   onRequestPermissionGate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState);
   const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled, permissionGateResult);
   const resultCopy = getPermissionResultCopy(permissionGateResult);
@@ -30,15 +32,45 @@ export function AppPermissionsScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.settingsContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
           <BackButton onPress={() => onNavigate("M1")} />
-          <Text style={[styles.title, { color: theme.text }]}>앱 권한 관리</Text>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.text,
+                fontSize: layout.screenTitleFontSize,
+                lineHeight: layout.screenTitleLineHeight,
+              },
+            ]}
+          >
+            앱 권한 관리
+          </Text>
         </View>
 
-        <View style={[styles.permissionCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.permissionCard,
+            { padding: layout.settingsPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border },
+            cardShadow(theme),
+          ]}
+        >
           <Text style={[styles.sectionLabel, { color: theme.muted }]}>권한 상태</Text>
           {resultCopy ? (
             <View style={[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>
@@ -56,6 +88,8 @@ export function AppPermissionsScreen({
             tone={locationCopy.tone}
             onPrimaryPress={handleLocationPrimaryPress}
             onSecondaryPress={() => onNavigate("H2")}
+            actionGap={layout.settingsActionGap}
+            panelPadding={layout.settingsPanelPadding}
             theme={theme}
           />
           <PermissionCard
@@ -68,6 +102,8 @@ export function AppPermissionsScreen({
             tone={notificationCopy.tone}
             onPrimaryPress={() => (notificationCopy.canRequest ? onRequestPermissionGate("notification", "M4", "general") : onNavigate("M2"))}
             onSecondaryPress={() => onNavigate("M2")}
+            actionGap={layout.settingsActionGap}
+            panelPadding={layout.settingsPanelPadding}
             theme={theme}
           />
         </View>
@@ -88,6 +124,8 @@ function PermissionCard({
   tone,
   onPrimaryPress,
   onSecondaryPress,
+  actionGap,
+  panelPadding,
   theme,
 }: {
   label: string;
@@ -99,11 +137,13 @@ function PermissionCard({
   tone: "clear" | "gold" | "warm";
   onPrimaryPress: () => void;
   onSecondaryPress: () => void;
+  actionGap: number;
+  panelPadding: number;
   theme: AppTheme;
 }) {
   const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
   return (
-    <View style={[styles.permissionPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[styles.permissionPanel, { padding: panelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={styles.permissionHeader}>
         <View style={[styles.permissionDot, { backgroundColor: color }]} />
         <View style={styles.permissionCopy}>
@@ -115,7 +155,7 @@ function PermissionCard({
         </View>
       </View>
       <Text style={[styles.permissionHelper, { color: theme.muted }]}>{helper}</Text>
-      <View style={styles.permissionActions}>
+      <View style={[styles.permissionActions, { gap: actionGap }]}>
         <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22` }]}>
           <Text style={[styles.primaryActionText, { color }]}>{primaryLabel}</Text>
         </Pressable>
@@ -259,11 +299,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -275,7 +313,6 @@ const styles = StyleSheet.create({
     borderRadius: 78,
   },
   header: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -288,13 +325,11 @@ const styles = StyleSheet.create({
   },
   permissionCard: {
     gap: spacing.sm,
-    padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   permissionPanel: {
     gap: spacing.sm,
-    padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
   },
@@ -358,7 +393,6 @@ const styles = StyleSheet.create({
   },
   permissionActions: {
     flexDirection: "row",
-    gap: spacing.sm,
   },
   primaryAction: {
     flex: 1,

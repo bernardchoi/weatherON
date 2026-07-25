@@ -7,6 +7,7 @@ import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 import { getCoordinateDistanceMeters, sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { formatDistance } from "../utils/units";
@@ -29,6 +30,7 @@ export function DestinationAddScreen({
   onSelectDestinationPlace,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [keyboardVisible, setKeyboardVisible] = React.useState(false);
   const selectedCategory = getCategoryLabel(selectedDestinationPlace.category);
   const hasQuery = placeSearchQuery.trim().length >= 2;
@@ -73,7 +75,17 @@ export function DestinationAddScreen({
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.destinationContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+            paddingBottom: layout.destinationAddScrollBottomPadding,
+          },
+        ]}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -180,6 +192,8 @@ export function DestinationAddScreen({
                   style={[
                     styles.resultRow,
                     {
+                      minHeight: layout.destinationResultRowMinHeight,
+                      paddingVertical: layout.isShort ? 9 : 12,
                       backgroundColor: selected ? semanticColor(theme, "accentTint") : "transparent",
                       borderTopColor: index === 0 ? "transparent" : theme.border,
                     },
@@ -234,8 +248,20 @@ export function DestinationAddScreen({
       </ScrollView>
 
       {keyboardVisible ? null : (
-        <View style={[styles.footer, { backgroundColor: theme.background }]}>
-          <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
+        <View
+          style={[
+            styles.footer,
+            {
+              paddingHorizontal: layout.screenHorizontalPadding,
+              paddingTop: layout.footerPaddingTop,
+              paddingBottom: layout.footerPaddingBottom,
+              backgroundColor: theme.background,
+            },
+          ]}
+        >
+          <View style={[styles.footerInner, { maxWidth: layout.contentMaxWidth }]}>
+            <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
+          </View>
         </View>
       )}
     </View>
@@ -454,11 +480,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 178,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -672,12 +695,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   resultRow: {
-    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: 14,
-    paddingVertical: 12,
     borderTopWidth: 1,
   },
   resultGlyph: {
@@ -750,7 +771,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   retryButton: {
-    minHeight: 38,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "flex-start",
@@ -768,9 +789,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 20,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
+    alignItems: "center",
+  },
+  footerInner: {
+    width: "100%",
   },
   bottomSpacer: {
     height: 18,
