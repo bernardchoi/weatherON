@@ -27,6 +27,8 @@ export type ResponsiveLayout = {
   weatherPanelPadding: number;
   weatherAtmosphereHeight: number;
   weatherChartHeight: number;
+  homeContentGap: number;
+  homePanelPadding: number;
   homeHeroMinHeight: number;
   homeWeatherShowcaseMinHeight: number;
   homeWeatherHaloSize: number;
@@ -116,11 +118,13 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     weatherPanelPadding: isShort ? 12 : isTablet ? 18 : isRegular ? 16 : isNarrow ? 13 : 14,
     weatherAtmosphereHeight: isShort ? 220 : isTablet ? 340 : isRegular ? 300 : isNarrow ? 260 : 280,
     weatherChartHeight: isShort ? 78 : isTablet ? 108 : isRegular ? 100 : isNarrow ? 88 : 94,
-    homeHeroMinHeight: isShort ? 196 : isTablet ? 252 : isRegular ? 236 : isNarrow ? 214 : 224,
-    homeWeatherShowcaseMinHeight: isShort ? 144 : isTablet ? 188 : isRegular ? 176 : isNarrow ? 160 : 168,
-    homeWeatherHaloSize: isShort ? 136 : isTablet ? 184 : isRegular ? 172 : isNarrow ? 152 : 160,
-    homeWeatherOrbSize: isShort ? 88 : isTablet ? 120 : isRegular ? 112 : isNarrow ? 100 : 106,
-    homeWeatherIconSize: isShort ? 58 : isTablet ? 78 : isRegular ? 74 : isNarrow ? 66 : 70,
+    homeContentGap: isShort ? 5 : isTablet ? 10 : isRegular ? 8 : isNarrow ? 6 : 7,
+    homePanelPadding: isShort ? 9 : isTablet ? 16 : isRegular ? 13 : isNarrow ? 10 : 11,
+    homeHeroMinHeight: isShort ? 138 : isTablet ? 188 : isRegular ? 160 : isNarrow ? 146 : 152,
+    homeWeatherShowcaseMinHeight: isShort ? 60 : isTablet ? 84 : isRegular ? 72 : isNarrow ? 64 : 68,
+    homeWeatherHaloSize: isShort ? 72 : isTablet ? 98 : isRegular ? 86 : isNarrow ? 76 : 80,
+    homeWeatherOrbSize: isShort ? 58 : isTablet ? 78 : isRegular ? 70 : isNarrow ? 62 : 66,
+    homeWeatherIconSize: isShort ? 38 : isTablet ? 52 : isRegular ? 46 : isNarrow ? 41 : 43,
     homeSidebarMaxWidth: isShort ? 320 : isTablet ? 420 : isRegular ? 380 : isNarrow ? 320 : 340,
     notificationTopPadding: isShort ? 24 : isTablet ? 64 : isRegular ? 52 : 44,
     outfitPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : isNarrow ? 14 : 16,

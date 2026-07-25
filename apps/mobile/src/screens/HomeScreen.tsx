@@ -12,7 +12,6 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
-import { getFeelsLikeMessage } from "../utils/feelsLikeMessage";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { useIsNightHour } from "../utils/useIsNightHour";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -37,7 +36,6 @@ export function HomeScreen({
   onNavigate,
   onSetWeatherProviderMode,
   onRefreshWeather,
-  onSelectDestinationPlace,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onOpenNotificationDeepLink,
@@ -85,9 +83,9 @@ export function HomeScreen({
           styles.homeContent,
           {
             maxWidth: layout.contentMaxWidth,
-            gap: layout.weatherContentGap,
+            gap: layout.homeContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
-            paddingTop: layout.isShort ? 2 : 4,
+            paddingTop: layout.isShort ? 0 : 2,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -134,28 +132,30 @@ export function HomeScreen({
             theme={theme}
             onOpenForecast={() => onNavigate("H6")}
           />
-          {activeWeatherAlert ? (
-            <SpecialWeatherAlertCard
-              alert={activeWeatherAlert}
-              theme={theme}
-              onPress={() => onOpenNotificationDeepLink(activeWeatherAlert.id, "H3")}
-            />
-          ) : null}
-          {HOME_OUTFIT_CARD_VISIBLE ? (
-            <HomeOutfitPreviewCard
-              outfit={state.outfit}
-              packTitle={homeDecision.packTitle}
-              theme={theme}
-              onPress={() => onNavigate("C1")}
-            />
-          ) : null}
+          <View style={styles.homeHighlightRow}>
+            {activeWeatherAlert ? (
+              <SpecialWeatherAlertCard
+                alert={activeWeatherAlert}
+                theme={theme}
+                onPress={() => onOpenNotificationDeepLink(activeWeatherAlert.id, "H3")}
+              />
+            ) : null}
+            {HOME_OUTFIT_CARD_VISIBLE ? (
+              <HomeOutfitPreviewCard
+                outfit={state.outfit}
+                packTitle={homeDecision.packTitle}
+                theme={theme}
+                onPress={() => onNavigate("C1")}
+              />
+            ) : null}
+          </View>
         </View>
 
         <View
           style={[
             styles.homePlanCard,
             {
-              padding: layout.weatherPanelPadding,
+              padding: layout.homePanelPadding,
               backgroundColor: theme.card,
               borderColor: theme.border,
             },
@@ -166,7 +166,7 @@ export function HomeScreen({
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
             theme={theme}
-            onSelect={(place) => onSelectDestinationPlace(place)}
+            onOpenList={() => onNavigate("G1")}
             onAdd={() => onNavigate("P1")}
           />
           <View style={styles.visualDecisionGrid}>
@@ -261,20 +261,20 @@ function DestinationSelectorCard({
   savedDestinations,
   selectedDestinationId,
   theme,
-  onSelect,
+  onOpenList,
   onAdd,
 }: {
   savedDestinations: P0ScreenProps["savedDestinations"];
   selectedDestinationId?: string;
   theme: AppTheme;
-  onSelect: (place: P0ScreenProps["selectedDestinationPlace"]) => void;
+  onOpenList: () => void;
   onAdd: () => void;
 }) {
   const hasDestinations = savedDestinations.length > 0;
   const addControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
-  const destinationChipGlass = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
-  const headerCaption = hasDestinations
-    ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
+  const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationId) ?? savedDestinations[0];
+  const headerCaption = selectedDestination
+    ? `${selectedDestination.place.name} · ${getDestinationSelectorMeta(selectedDestination.place)}`
     : "자주 가는 곳을 골라보세요";
 
   return (
@@ -283,10 +283,15 @@ function DestinationSelectorCard({
         <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}14` }]}>
           <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
-        <View style={styles.destinationSelectorCopy}>
+        <FeedbackPressable
+          accessibilityLabel={selectedDestination ? `${selectedDestination.place.name} 목적지 목록 열기` : "목적지 목록 열기"}
+          accessibilityRole="button"
+          onPress={onOpenList}
+          style={styles.destinationSelectorCopy}
+        >
           <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>오늘의 목적지</Text>
           <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>
-        </View>
+        </FeedbackPressable>
         <FeedbackPressable
           accessibilityLabel="새 목적지 추가"
           accessibilityRole="button"
@@ -312,42 +317,7 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationEmptyTitle, { color: theme.text }]}>자주 가는 곳 추가</Text>
           <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>날씨와 출발 시간을 맞춰드림</Text>
         </FeedbackPressable>
-      ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
-          {savedDestinations.map((destination) => {
-            const selected = destination.place.id === selectedDestinationId;
-            return (
-              <FeedbackPressable
-                key={destination.place.id}
-                accessibilityLabel={`${destination.place.name} 목적지${selected ? " 선택됨" : "로 전환"}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => onSelect(destination.place)}
-                onPressIn={() => onSelect(destination.place)}
-                style={[
-                  styles.destinationChip,
-                  {
-                    backgroundColor: selected ? `${theme.gold}1F` : theme.cardStrong,
-                    borderColor: selected ? theme.gold : theme.border,
-                  },
-                  destinationChipGlass,
-                ]}
-              >
-                {destinationChipGlass ? <IosGlassBackdrop theme={theme} role="chip" style={styles.destinationChipBackdrop} /> : null}
-                <View style={styles.destinationChipTitleRow}>
-                  {selected ? <View style={[styles.destinationChipDot, { backgroundColor: theme.gold }]} /> : null}
-                  <Text style={[styles.destinationChipTitle, { color: selected ? theme.gold : theme.text }]} numberOfLines={1}>
-                    {destination.place.name}
-                  </Text>
-                </View>
-                <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>
-                  {getDestinationSelectorMeta(destination.place)}
-                </Text>
-              </FeedbackPressable>
-            );
-          })}
-        </ScrollView>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -573,7 +543,7 @@ function HomeDecisionHero({
         styles.decisionHero,
         {
           minHeight: layout.homeHeroMinHeight,
-          padding: layout.weatherPanelPadding,
+          padding: layout.homePanelPadding,
           backgroundColor: theme.card,
           borderColor: theme.border,
         },
@@ -585,7 +555,7 @@ function HomeDecisionHero({
           style={[
             styles.weatherHalo,
             {
-              marginLeft: -(layout.homeWeatherHaloSize / 2),
+              marginTop: -(layout.homeWeatherHaloSize / 2),
               width: layout.homeWeatherHaloSize,
               height: layout.homeWeatherHaloSize,
               borderRadius: layout.homeWeatherHaloSize / 2,
@@ -597,7 +567,7 @@ function HomeDecisionHero({
           accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
           accessibilityRole="button"
           onPress={onOpenForecast}
-          style={styles.weatherPrimaryColumn}
+          style={styles.weatherPrimaryRow}
         >
           <View
             style={[
@@ -623,27 +593,31 @@ function HomeDecisionHero({
               resizeMode="contain"
             />
           </View>
-          <Text
-            style={[
-              styles.showcaseTemp,
-              {
-                color: theme.text,
-                fontSize: layout.isShort ? 42 : layout.isRegular ? 50 : 48,
-                lineHeight: layout.isShort ? 45 : layout.isRegular ? 53 : 51,
-              },
-            ]}
-          >
-            {formatTemperature(current.tempC, temperatureUnit)}
-          </Text>
-          <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-          {todayMinMax ? (
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-              {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+          <View style={styles.weatherSummaryCopy}>
+            <View style={styles.weatherTempRow}>
+              <Text
+                style={[
+                  styles.showcaseTemp,
+                  {
+                    color: theme.text,
+                    fontSize: layout.isShort ? 36 : layout.isRegular ? 42 : 39,
+                    lineHeight: layout.isShort ? 40 : layout.isRegular ? 46 : 43,
+                  },
+                ]}
+              >
+                {formatTemperature(current.tempC, temperatureUnit)}
+              </Text>
+              <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+            </View>
+            {todayMinMax ? (
+              <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+                {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+              </Text>
+            ) : null}
+            <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
+              {currentLocationName}
             </Text>
-          ) : null}
-          <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
-            {currentLocationName}
-          </Text>
+          </View>
         </FeedbackPressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
@@ -651,52 +625,12 @@ function HomeDecisionHero({
         </View>
       </View>
       <View style={styles.decisionMetricRow}>
-        <DecisionMetric icon={uiIconAssets.drop} label={`강수 ${current.rainProbabilityPct}%`} theme={theme} />
+        <DecisionMetric icon={uiIconAssets.shirt} label={`체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`} theme={theme} />
+        <DecisionMetric icon={uiIconAssets.drop} label={`비 ${current.rainProbabilityPct}%`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.wind} label={`${current.windMs.toFixed(1)}m/s`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
       </View>
-      <FeelsLikeCard current={current} temperatureUnit={temperatureUnit} theme={theme} onPress={onOpenForecast} />
     </View>
-  );
-}
-
-function FeelsLikeCard({
-  current,
-  temperatureUnit,
-  theme,
-  onPress,
-}: {
-  current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
-  temperatureUnit: P0ScreenProps["temperatureUnit"];
-  theme: AppTheme;
-  onPress: () => void;
-}) {
-  const feelsLikeMessage = getFeelsLikeMessage({
-    feelsLikeC: current.feelsLikeC,
-    tempC: current.tempC,
-    humidityPct: current.humidityPct,
-    temperatureUnit,
-  });
-  return (
-    <FeedbackPressable
-      accessibilityLabel={`현재 위치 ${feelsLikeMessage}. 체감온도 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.feelsLikeCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-    >
-      <View style={[styles.feelsLikeIconFrame, { backgroundColor: `${theme.clear}16` }]}>
-        <Image source={uiIconAssets.shirt} style={[styles.feelsLikeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-      </View>
-      <View style={styles.feelsLikeCopy}>
-        <Text style={[styles.feelsLikeLabel, { color: theme.clear }]} numberOfLines={1}>체감 기온</Text>
-        <Text style={[styles.feelsLikeBody, { color: theme.muted }]} numberOfLines={2}>
-          {feelsLikeMessage}
-        </Text>
-      </View>
-      <Text style={[styles.feelsLikeValue, { color: theme.text }]} numberOfLines={1}>
-        {formatTemperature(current.feelsLikeC, temperatureUnit)}
-      </Text>
-    </FeedbackPressable>
   );
 }
 
@@ -733,10 +667,12 @@ function VisualDecisionCard({
       onPress={onPress}
       style={[styles.visualDecisionCard, { backgroundColor: `${accent}10` }]}
     >
-      <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
-        <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
+      <View style={styles.visualDecisionHeader}>
+        <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
+          <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
+        </View>
+        <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
       </View>
-      <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
       <Text style={[styles.visualDecisionValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
       <Text style={[styles.visualDecisionHelper, { color: theme.subtle }]} numberOfLines={1}>{helper}</Text>
     </FeedbackPressable>
@@ -820,7 +756,7 @@ function SpecialWeatherAlertCard({
       </View>
       <View style={styles.specialAlertCopy}>
         <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>
-        <Text style={[styles.specialAlertTitle, { color: theme.text }]} numberOfLines={1}>{alert.title}</Text>
+        <Text style={[styles.specialAlertTitle, { color: theme.text }]} numberOfLines={2}>{alert.title}</Text>
         <Text style={[styles.specialAlertBody, { color: theme.muted }]} numberOfLines={1}>{alert.reason}</Text>
       </View>
       <Text style={[styles.specialAlertChevron, { color: accent }]}>›</Text>
@@ -1409,7 +1345,7 @@ const styles = StyleSheet.create({
   homeContent: {
     // BottomNav는 스크롤 영역 밖 형제라 큰 하단 보정 없이도 마지막 카드가 가려지지 않는다.
     flexGrow: 1,
-    paddingBottom: 10,
+    paddingBottom: 4,
     width: "100%",
     alignSelf: "center",
   },
@@ -1453,27 +1389,29 @@ const styles = StyleSheet.create({
   },
   decisionHero: {
     gap: spacing.xs,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   weatherShowcase: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
     position: "relative",
-    paddingTop: 2,
   },
   weatherHalo: {
     position: "absolute",
-    top: 0,
-    left: "50%",
+    top: "50%",
+    left: 0,
     opacity: 0.5,
   },
-  weatherPrimaryColumn: {
-    width: "100%",
+  weatherPrimaryRow: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 60,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
     zIndex: 1,
   },
   weatherOrb: {
@@ -1484,48 +1422,47 @@ const styles = StyleSheet.create({
   },
   weatherOrbIcon: {
   },
+  weatherSummaryCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  weatherTempRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
   showcaseTemp: {
-    marginTop: 4,
     fontSize: 48,
     lineHeight: 51,
     fontWeight: "900",
     letterSpacing: 0,
-    textAlign: "center",
   },
   showcaseCondition: {
-    marginTop: -1,
-    fontSize: 18,
-    lineHeight: 23,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
-    textAlign: "center",
   },
   showcaseMeta: {
-    marginTop: 4,
     maxWidth: "100%",
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
-    textAlign: "center",
   },
   showcaseMetaSub: {
-    marginTop: 0,
     maxWidth: "100%",
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
-    textAlign: "center",
   },
   showcaseStatus: {
-    position: "absolute",
-    top: 8,
-    right: 4,
-    minHeight: 32,
+    maxWidth: 96,
+    minHeight: 30,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 7,
     borderRadius: radius.pill,
-    zIndex: 2,
   },
   statusDot: {
     width: 6,
@@ -1539,73 +1476,36 @@ const styles = StyleSheet.create({
   },
   decisionMetricRow: {
     flexDirection: "row",
-    gap: spacing.xs,
+    gap: 4,
   },
   decisionMetric: {
     flex: 1,
-    minHeight: 38,
+    minWidth: 0,
+    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    paddingHorizontal: 8,
+    gap: 3,
+    paddingHorizontal: 4,
     borderRadius: radius.md,
   },
   decisionMetricIcon: {
-    width: 16,
-    height: 16,
+    width: 15,
+    height: 15,
   },
   decisionMetricText: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
-  feelsLikeCard: {
-    minHeight: 56,
+  homeHighlightRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  feelsLikeIconFrame: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-  },
-  feelsLikeIcon: {
-    width: 20,
-    height: 20,
-  },
-  feelsLikeCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  feelsLikeLabel: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  feelsLikeBody: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  feelsLikeValue: {
-    minWidth: 60,
-    textAlign: "right",
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "900",
+    alignItems: "stretch",
+    gap: spacing.xs,
   },
   homePlanCard: {
-    gap: spacing.sm,
-    borderRadius: radius.xl,
+    gap: 8,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   destinationSelectorCard: {
@@ -1633,6 +1533,8 @@ const styles = StyleSheet.create({
   destinationSelectorCopy: {
     flex: 1,
     minWidth: 0,
+    minHeight: 44,
+    justifyContent: "center",
     gap: 2,
   },
   destinationSelectorLabel: {
@@ -1725,68 +1627,82 @@ const styles = StyleSheet.create({
   },
   visualDecisionCard: {
     flex: 1,
-    minHeight: 70,
+    minWidth: 0,
+    minHeight: 76,
     alignItems: "center",
-    gap: 4,
+    gap: 2,
     justifyContent: "center",
-    padding: spacing.xs,
-    borderRadius: radius.lg,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  visualDecisionHeader: {
+    maxWidth: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
   },
   visualIconFrame: {
-    width: 34,
-    height: 34,
+    width: 20,
+    height: 20,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   visualDecisionIcon: {
-    width: 22,
-    height: 22,
+    width: 14,
+    height: 14,
   },
   visualDecisionLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    flexShrink: 1,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   visualDecisionValue: {
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: "900",
   },
   visualDecisionHelper: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "800",
   },
   homeOutfitCard: {
-    minHeight: 106,
+    flex: 1,
+    minWidth: 0,
+    minHeight: 94,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.xl,
+    gap: spacing.xs,
+    padding: 9,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   specialAlertCard: {
-    minHeight: 82,
+    flex: 1,
+    minWidth: 0,
+    minHeight: 94,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.xl,
+    gap: spacing.xs,
+    padding: 9,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   specialAlertIconFrame: {
-    width: 38,
-    height: 38,
+    width: 32,
+    height: 32,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
   },
   specialAlertWarningMark: {
-    fontSize: 21,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 20,
     fontWeight: "900",
   },
   specialAlertCopy: {
@@ -1795,55 +1711,56 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   specialAlertLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   specialAlertTitle: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   specialAlertBody: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
   },
   specialAlertChevron: {
-    fontSize: 26,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 22,
     fontWeight: "500",
   },
   homeOutfitCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 4,
+    gap: 2,
   },
   homeOutfitLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
   homeOutfitTitle: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
   },
   homeOutfitBody: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
   homeOutfitImageFrame: {
-    width: 62,
-    height: 62,
+    width: 50,
+    height: 50,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.lg,
   },
   homeOutfitImage: {
-    width: 56,
-    height: 56,
+    width: 46,
+    height: 46,
   },
   homeOutfitIcon: {
     width: 34,
