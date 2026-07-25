@@ -7,6 +7,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AgeBand, FitPreference, StyleGender } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const genderOptions: { value: StyleGender; label: string }[] = [
@@ -39,6 +40,7 @@ export function StyleProfileScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const topTags = selectedStyles.slice(0, 2);
   const isEditing = onboardingCompleted;
   const primarySaveLabel = isEditing ? "저장하고 코디로" : "다음";
@@ -52,7 +54,7 @@ export function StyleProfileScreen({
       onBack={isEditing ? onGoBack : undefined}
       showWordmark={false}
       footer={
-        <View style={styles.actions}>
+        <View style={{ gap: layout.isShort ? spacing.xs : spacing.sm }}>
           <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
           {isEditing ? <AppButton label="취소" onPress={() => onNavigate("C1")} tone="secondary" variant="outlined" /> : null}
         </View>
@@ -73,7 +75,7 @@ export function StyleProfileScreen({
       </Section>
 
       <Section title="추천 기준" caption="추천 보정에 쓰는 성별·연령대·핏 기준">
-        <View style={styles.criteriaStack}>
+        <View style={{ gap: layout.isShort ? spacing.sm : spacing.md }}>
           <CriterionGroup label="성별 기준">
             {genderOptions.map((item) => (
               <ChoiceButton key={item.value} label={item.label} selected={item.value === styleGender} onPress={() => onSetStyleGender(item.value)} />
@@ -93,7 +95,17 @@ export function StyleProfileScreen({
       </Section>
 
       <Section title="현재 선택 기준" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
-        <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              padding: layout.onboardingPanelPadding,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={styles.summaryHeader}>
             <Text style={[styles.title, { color: theme.text }]}>
               {topTags.length ? topTags.join(" · ") : "스타일 미선택"}
@@ -174,9 +186,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  criteriaStack: {
-    gap: spacing.md,
-  },
   criterionGroup: {
     gap: spacing.xs,
   },
@@ -186,7 +195,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   choice: {
-    minHeight: 42,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,
@@ -198,7 +207,6 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     gap: spacing.sm,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -212,8 +220,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
-  },
-  actions: {
-    gap: spacing.sm,
   },
 });

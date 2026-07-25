@@ -5,6 +5,7 @@ import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { spacing } from "../theme/tokens";
 
 export function AppEntrySplashScreen({ onCompleteOnboarding, onNavigate }: P0ScreenProps) {
@@ -43,19 +44,59 @@ type SplashFrameProps = {
 
 function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onSecondary, footer }: SplashFrameProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <View style={[styles.skyGlow, { backgroundColor: theme.backgroundAlt }]} />
+    <View
+      style={[
+        styles.root,
+        {
+          backgroundColor: theme.background,
+          paddingHorizontal: layout.screenHorizontalPadding,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.skyGlow,
+          {
+            backgroundColor: theme.backgroundAlt,
+            bottom: layout.splashGlowBottom,
+            height: layout.splashGlowHeight,
+            borderTopLeftRadius: layout.splashGlowRadius,
+            borderTopRightRadius: layout.splashGlowRadius,
+          },
+        ]}
+      />
 
-      <View style={styles.center}>
+      <View style={[styles.center, { maxWidth: layout.splashContentMaxWidth, gap: layout.isShort ? spacing.sm : spacing.md }]}>
         <View style={[styles.iconShadow, { shadowColor: theme.shadow }]}>
-          <AnimatedBrandMark size={102} />
+          <AnimatedBrandMark size={layout.splashIconSize} />
         </View>
-        <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
-        <Text style={[styles.description, { color: theme.muted }]}>{description}</Text>
+        <Image
+          source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
+          style={{
+            width: layout.splashWordmarkWidth,
+            height: layout.splashWordmarkHeight,
+            marginTop: layout.isShort ? spacing.sm : spacing.md,
+          }}
+          resizeMode="contain"
+        />
+        <Text
+          style={[
+            styles.description,
+            {
+              color: theme.muted,
+              maxWidth: layout.splashDescriptionMaxWidth,
+              fontSize: layout.splashDescriptionFontSize,
+              lineHeight: layout.splashDescriptionLineHeight,
+            },
+          ]}
+        >
+          {description}
+        </Text>
       </View>
 
-      <View style={styles.bottom}>
+      <View style={[styles.bottom, { maxWidth: layout.splashContentMaxWidth }]}>
         <OnboardingFooter primaryLabel={primaryLabel} onPrimary={onPrimary} secondaryLabel={secondaryLabel} onSecondary={onSecondary} />
         {footer ? <Text style={[styles.footer, { color: theme.subtle }]}>{footer}</Text> : null}
       </View>
@@ -66,7 +107,6 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: 28,
     paddingTop: 26,
     paddingBottom: spacing.md,
     overflow: "hidden",
@@ -75,17 +115,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: -80,
     right: -80,
-    bottom: -120,
-    height: 520,
-    borderTopLeftRadius: 260,
-    borderTopRightRadius: 260,
     opacity: 0.92,
   },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
+    width: "100%",
+    alignSelf: "center",
   },
   iconShadow: {
     shadowOpacity: 0.28,
@@ -93,20 +130,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 18 },
     elevation: 10,
   },
-  wordmark: {
-    width: 172,
-    height: 38,
-    marginTop: spacing.md,
-  },
   description: {
-    maxWidth: 290,
     textAlign: "center",
-    fontSize: 18,
-    lineHeight: 28,
     fontWeight: "800",
   },
   bottom: {
     gap: spacing.md,
+    width: "100%",
+    alignSelf: "center",
   },
   footer: {
     textAlign: "center",

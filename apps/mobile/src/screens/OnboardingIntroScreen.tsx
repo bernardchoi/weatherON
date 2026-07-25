@@ -6,10 +6,12 @@ import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
 
   return (
     <AppScreen
@@ -28,11 +30,26 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
         />
       }
     >
-      <View style={[styles.brandHero, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+      <View
+        style={[
+          styles.brandHero,
+          {
+            backgroundColor: theme.cardStrong,
+            borderColor: theme.border,
+            padding: layout.isShort ? spacing.xs : spacing.sm,
+          },
+          cardShadow(theme),
+        ]}
+      >
         <View style={styles.brandTop}>
           <Text style={[styles.heroCopy, { color: theme.muted }]}>5초 외출 브리핑</Text>
         </View>
-        <Image source={onboardingAssets.ready} style={styles.heroVisual} resizeMode="cover" accessibilityLabel="날씨에 맞춘 코디, 우산, 출발 알림을 보여주는 일러스트" />
+        <Image
+          source={onboardingAssets.ready}
+          style={[styles.heroVisual, { height: layout.onboardingHeroVisualHeight }]}
+          resizeMode="cover"
+          accessibilityLabel="날씨에 맞춘 코디, 우산, 출발 알림을 보여주는 일러스트"
+        />
       </View>
 
       <OnboardingVisualStrip
@@ -50,13 +67,11 @@ const styles = StyleSheet.create({
   brandHero: {
     justifyContent: "center",
     gap: spacing.sm,
-    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   heroVisual: {
     width: "100%",
-    height: 214,
     borderRadius: radius.md,
   },
   brandTop: {

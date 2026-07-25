@@ -9,6 +9,7 @@ import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import type { SmartCareScenario } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const scenarios: { value: SmartCareScenario; title: string; body: string; icon: number }[] = [
@@ -26,6 +27,7 @@ export function SmartCareOnboardingScreen({
   onCompleteOnboarding,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
   const [notificationRequestHandled, setNotificationRequestHandled] = useState(false);
   const notificationSetupComplete = permissionReady || notificationRequestHandled;
@@ -73,6 +75,7 @@ export function SmartCareOnboardingScreen({
                 {
                   backgroundColor: item.value === smartCareScenario ? theme.gold : theme.cardMuted,
                   borderColor: item.value === smartCareScenario ? theme.gold : theme.border,
+                  minHeight: layout.onboardingSegmentMinHeight,
                 },
               ]}
             >
@@ -81,7 +84,18 @@ export function SmartCareOnboardingScreen({
             </FeedbackPressable>
           ))}
         </View>
-        <View style={[styles.scenarioRow, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.scenarioRow,
+            {
+              backgroundColor: theme.cardStrong,
+              borderColor: theme.clear,
+              minHeight: layout.onboardingCompactRowMinHeight,
+              padding: layout.onboardingPanelPadding,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={[styles.scenarioIconFrame, { backgroundColor: `${theme.clear}18` }]}>
             <Image source={selectedScenario.icon} style={[styles.scenarioIcon, { tintColor: theme.clear }]} resizeMode="contain" />
           </View>
@@ -101,7 +115,18 @@ export function SmartCareOnboardingScreen({
         ]}
       />
 
-      <View style={[styles.notificationPrompt, { backgroundColor: theme.cardStrong, borderColor: permissionReady ? theme.clear : theme.border }, cardShadow(theme)]}>
+      <View
+        style={[
+          styles.notificationPrompt,
+          {
+            backgroundColor: theme.cardStrong,
+            borderColor: permissionReady ? theme.clear : theme.border,
+            minHeight: layout.onboardingCompactRowMinHeight,
+            padding: layout.isShort ? spacing.xs : spacing.sm,
+          },
+          cardShadow(theme),
+        ]}
+      >
         <View style={[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }]}>
           <Image source={uiIconAssets.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
@@ -132,7 +157,6 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    minHeight: 76,
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
@@ -151,12 +175,10 @@ const styles = StyleSheet.create({
     height: 24,
   },
   scenarioRow: {
-    minHeight: 88,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },
@@ -190,11 +212,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   notificationPrompt: {
-    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },

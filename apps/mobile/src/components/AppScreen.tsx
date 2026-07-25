@@ -6,6 +6,7 @@ import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { StatusPill } from "./StatusPill";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { spacing } from "../theme/tokens";
 
 // AppNavigator에서 BottomNav는 스크롤 영역과 겹치지 않는 별도 레이아웃(flex:1 형제)이라
@@ -40,13 +41,34 @@ export function AppScreen({
   children,
 }: AppScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
   const heroGlass = compactHeader ? undefined : barGlass;
   return (
     <View style={styles.shell}>
-      <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={[styles.scroll, { backgroundColor: theme.background }]}
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: layout.contentMaxWidth,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            gap: layout.screenContentGap,
+          },
+        ]}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-        <View style={[styles.hero, compactHeader ? styles.compactHero : null, heroGlass ? styles.heroPlatformSurface : null, heroGlass]}>
+        <View
+          style={[
+            styles.hero,
+            compactHeader ? styles.compactHero : null,
+            heroGlass ? styles.heroPlatformSurface : null,
+            heroGlass,
+            {
+              gap: compactHeader ? spacing.sm : layout.screenHeaderGap,
+            },
+          ]}
+        >
           {heroGlass ? <IosGlassBackdrop theme={theme} role="bar" style={styles.heroGlassBackdrop} /> : null}
           {onBack ? (
             <View style={compactHeader ? styles.compactBackButtonSlot : styles.backButtonSlot}>
@@ -61,7 +83,18 @@ export function AppScreen({
                 resizeMode="contain"
               />
             ) : null}
-            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.text,
+                  fontSize: layout.screenTitleFontSize,
+                  lineHeight: layout.screenTitleLineHeight,
+                },
+              ]}
+            >
+              {title}
+            </Text>
             {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
           </View>
           {badge || heroAction ? (
@@ -74,9 +107,30 @@ export function AppScreen({
         {children}
       </ScrollView>
       {footer ? (
-        <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }, barGlass]}>
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: theme.background,
+              borderTopColor: theme.border,
+              paddingTop: layout.footerPaddingTop,
+              paddingBottom: layout.footerPaddingBottom,
+            },
+            barGlass,
+          ]}
+        >
           {barGlass ? <IosGlassBackdrop theme={theme} role="bar" /> : null}
-          {footer}
+          <View
+            style={[
+              styles.footerContent,
+              {
+                maxWidth: layout.contentMaxWidth,
+                paddingHorizontal: layout.screenHorizontalPadding,
+              },
+            ]}
+          >
+            {footer}
+          </View>
         </View>
       ) : null}
     </View>
@@ -91,18 +145,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    paddingHorizontal: 20,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
     borderTopWidth: 1,
     overflow: "hidden",
   },
+  footerContent: {
+    width: "100%",
+    alignSelf: "center",
+  },
   content: {
-    gap: spacing.md,
-    paddingHorizontal: 20,
     paddingTop: spacing.sm,
     paddingBottom: navClearancePadding,
     flexGrow: 1,
+    width: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -117,7 +172,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-    gap: spacing.lg,
     paddingTop: spacing.md,
   },
   compactHero: {
@@ -160,8 +214,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   title: {
-    fontSize: 23,
-    lineHeight: 28,
     fontWeight: "900",
   },
   subtitle: {

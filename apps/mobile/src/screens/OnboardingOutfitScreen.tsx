@@ -8,11 +8,13 @@ import { OutfitGrid } from "../components/OutfitGrid";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 
 export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onRequestCurrentLocation, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const outfitItems = Object.values(state.outfit.items).filter(Boolean);
   const [locationRequestHandled, setLocationRequestHandled] = useState(false);
   const locationSetupComplete = locationReady || locationRequestHandled;
@@ -56,7 +58,17 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
         ]}
       />
 
-      <View style={[styles.outfitPreview, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+      <View
+        style={[
+          styles.outfitPreview,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+            padding: layout.onboardingPanelPadding,
+          },
+          cardShadow(theme),
+        ]}
+      >
         <View style={styles.previewHeader}>
           <View style={[styles.iconFrame, { backgroundColor: `${theme.clear}18` }]}>
             <Image source={uiIconAssets.shirt} style={[styles.heroIcon, { tintColor: theme.clear }]} resizeMode="contain" />
@@ -66,14 +78,25 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             <Text style={[styles.previewTitle, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           </View>
         </View>
-        <OutfitGrid outfit={state.outfit} maxItems={2} compact />
+        <OutfitGrid outfit={state.outfit} maxItems={2} compact dense={layout.isShort} />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
           <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 대비" : "강수 없음"} tone="sky" />
         </View>
       </View>
 
-      <View style={[styles.locationPrompt, { backgroundColor: theme.cardStrong, borderColor: locationReady ? theme.clear : theme.border }, cardShadow(theme)]}>
+      <View
+        style={[
+          styles.locationPrompt,
+          {
+            backgroundColor: theme.cardStrong,
+            borderColor: locationReady ? theme.clear : theme.border,
+            minHeight: layout.onboardingCompactRowMinHeight,
+            padding: layout.isShort ? spacing.xs : spacing.sm,
+          },
+          cardShadow(theme),
+        ]}
+      >
         <View style={[styles.locationIconFrame, { backgroundColor: `${theme.sky}22` }]}>
           <Image source={uiIconAssets.pin} style={[styles.locationIcon, { tintColor: theme.sky }]} resizeMode="contain" />
         </View>
@@ -99,16 +122,13 @@ const styles = StyleSheet.create({
   },
   outfitPreview: {
     gap: spacing.sm,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   locationPrompt: {
-    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
   },

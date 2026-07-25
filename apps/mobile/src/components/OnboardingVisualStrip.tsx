@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, semanticColor, spacing } from "../theme/tokens";
 
 type VisualTone = "clear" | "gold" | "sky";
@@ -18,6 +19,7 @@ type OnboardingVisualStripProps = {
 
 export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
 
   return (
     <View style={styles.row}>
@@ -28,10 +30,36 @@ export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
             key={`${item.label}-${item.value}`}
             accessible
             accessibilityLabel={`${item.label} ${item.value}`}
-            style={[styles.item, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.cardStrong,
+                borderColor: theme.border,
+                minHeight: layout.onboardingVisualItemMinHeight,
+                paddingVertical: layout.isShort ? 6 : spacing.sm,
+              },
+            ]}
           >
-            <View style={[styles.iconFrame, { backgroundColor: semanticColor(theme, item.tone === "clear" ? "successTint" : item.tone === "gold" ? "accentTint" : "infoTint") }]}>
-              <Image source={item.icon} style={[styles.icon, { tintColor: accent }]} resizeMode="contain" accessible={false} />
+            <View
+              style={[
+                styles.iconFrame,
+                {
+                  backgroundColor: semanticColor(theme, item.tone === "clear" ? "successTint" : item.tone === "gold" ? "accentTint" : "infoTint"),
+                  width: layout.onboardingVisualIconFrameSize,
+                  height: layout.onboardingVisualIconFrameSize,
+                },
+              ]}
+            >
+              <Image
+                source={item.icon}
+                style={{
+                  tintColor: accent,
+                  width: layout.onboardingVisualIconSize,
+                  height: layout.onboardingVisualIconSize,
+                }}
+                resizeMode="contain"
+                accessible={false}
+              />
             </View>
             <Text style={[styles.value, { color: theme.text }]} numberOfLines={1}>{item.value}</Text>
             <Text style={[styles.label, { color: accent }]} numberOfLines={1}>{item.label}</Text>
@@ -50,25 +78,17 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     minWidth: 0,
-    minHeight: 94,
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingVertical: spacing.sm,
     paddingHorizontal: 4,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   iconFrame: {
-    width: 34,
-    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
-  },
-  icon: {
-    width: 19,
-    height: 19,
   },
   value: {
     fontSize: 15,

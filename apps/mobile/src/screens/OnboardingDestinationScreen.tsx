@@ -7,6 +7,7 @@ import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function OnboardingDestinationScreen({
@@ -18,6 +19,7 @@ export function OnboardingDestinationScreen({
   onCompleteOnboarding,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const saved = savedDestinations.some((item) => item.place.id === selectedDestinationPlace.id);
   const canUseSelection = saved || destinationSelectionReady;
   const primaryLabel = saved ? "홈으로 시작" : canUseSelection ? "등록하고 시작" : "장소 찾기";
@@ -54,7 +56,12 @@ export function OnboardingDestinationScreen({
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
 
-      <Image source={onboardingAssets.destinationCare} style={styles.destinationVisual} resizeMode="cover" accessibilityLabel="목적지 날씨와 출발 시간 비교 예시" />
+      <Image
+        source={onboardingAssets.destinationCare}
+        style={[styles.destinationVisual, { height: layout.onboardingDestinationVisualHeight }]}
+        resizeMode="cover"
+        accessibilityLabel="목적지 날씨와 출발 시간 비교 예시"
+      />
 
       <OnboardingVisualStrip
         items={[
@@ -66,7 +73,16 @@ export function OnboardingDestinationScreen({
 
       <View
         accessibilityLabel={canUseSelection ? "선택한 목적지" : "목적지 선택"}
-        style={[styles.destinationCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}
+        style={[
+          styles.destinationCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+            minHeight: layout.onboardingCompactRowMinHeight,
+            padding: layout.onboardingPanelPadding,
+          },
+          cardShadow(theme),
+        ]}
       >
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>{canUseSelection ? selectedDestinationPlace.name : "장소 검색 후 선택"}</Text>
@@ -92,16 +108,13 @@ const styles = StyleSheet.create({
   },
   destinationVisual: {
     width: "100%",
-    height: 198,
     borderRadius: radius.lg,
   },
   destinationCard: {
-    minHeight: 92,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
   },

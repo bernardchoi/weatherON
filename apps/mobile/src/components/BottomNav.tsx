@@ -15,6 +15,7 @@ import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple } from "../theme/androidMaterial";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
@@ -25,6 +26,7 @@ type BottomNavProps = {
 
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
@@ -98,62 +100,75 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   };
 
   return (
-    <View style={[styles.dockWrap, isIos ? styles.iosDockWrap : styles.androidDockWrap, { backgroundColor: theme.background }]}>
+    <View style={[styles.dockWrap, { backgroundColor: theme.background }]}>
       <View
-        ref={dockRef}
-        onLayout={handleDockLayout}
-        {...dragResponder.panHandlers}
         style={[
-          styles.dock,
-          isIos ? styles.iosDock : styles.androidDock,
-          navigationBackground,
+          styles.dockFrame,
+          isIos ? styles.iosDockFrame : styles.androidDockFrame,
+          isIos
+            ? {
+                maxWidth: layout.bottomNavMaxWidth,
+                paddingHorizontal: layout.bottomNavHorizontalPadding,
+              }
+            : null,
         ]}
       >
-        {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"} /> : null}
-        {bottomNavRoutes.map((route) => {
-          const active = route.id === activeTabRoute;
-          const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
-          const labelColor = isIos ? (active ? iosColors.activeLabel : iosColors.inactiveLabel) : active ? activeColor : theme.subtle;
-          return (
-            <TabButton
-              key={route.id}
-              label={route.label}
-              active={active}
-              onPress={() => onNavigate(route.id)}
-              ripple={isIos ? undefined : androidMaterialRipple(theme)}
-            >
-              {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
-                <View
-                  pointerEvents="none"
-                  style={[
-                    styles.iosActivePill,
-                    {
-                      backgroundColor: iosColors.activeBackground,
-                      borderColor: iosColors.activeBorder,
-                    },
-                  ]}
-                />
-              ) : null}
-              {isIos ? (
-                <View
-                  style={[
-                    styles.activeDot,
-                    theme.name === "dark" ? styles.iosDarkActiveDot : null,
-                    { backgroundColor: active ? iosColors.activeDot : "transparent" },
-                  ]}
-                />
-              ) : null}
-              <TabContent
-                route={route.id}
+        <View
+          ref={dockRef}
+          onLayout={handleDockLayout}
+          {...dragResponder.panHandlers}
+          style={[
+            styles.dock,
+            isIos ? styles.iosDock : styles.androidDock,
+            navigationBackground,
+          ]}
+        >
+          {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"} /> : null}
+          {bottomNavRoutes.map((route) => {
+            const active = route.id === activeTabRoute;
+            const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
+            const labelColor = isIos ? (active ? iosColors.activeLabel : iosColors.inactiveLabel) : active ? activeColor : theme.subtle;
+            return (
+              <TabButton
+                key={route.id}
+                label={route.label}
                 active={active}
-                isIos={isIos}
-                iconColor={iconColor}
-                labelColor={labelColor}
-                theme={theme}
-              />
-            </TabButton>
-          );
-        })}
+                onPress={() => onNavigate(route.id)}
+                ripple={isIos ? undefined : androidMaterialRipple(theme)}
+              >
+                {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.iosActivePill,
+                      {
+                        backgroundColor: iosColors.activeBackground,
+                        borderColor: iosColors.activeBorder,
+                      },
+                    ]}
+                  />
+                ) : null}
+                {isIos ? (
+                  <View
+                    style={[
+                      styles.activeDot,
+                      theme.name === "dark" ? styles.iosDarkActiveDot : null,
+                      { backgroundColor: active ? iosColors.activeDot : "transparent" },
+                    ]}
+                  />
+                ) : null}
+                <TabContent
+                  route={route.id}
+                  active={active}
+                  isIos={isIos}
+                  iconColor={iconColor}
+                  labelColor={labelColor}
+                  theme={theme}
+                />
+              </TabButton>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -344,12 +359,15 @@ const styles = StyleSheet.create({
   dockWrap: {
     marginTop: 8,
   },
-  iosDockWrap: {
+  dockFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
+  iosDockFrame: {
     height: 64,
-    marginHorizontal: 20,
     marginBottom: 12,
   },
-  androidDockWrap: {
+  androidDockFrame: {
     height: 72,
     marginBottom: 0,
   },
