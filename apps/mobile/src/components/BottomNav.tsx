@@ -14,7 +14,7 @@ import {
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
@@ -107,12 +107,10 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         style={[
           styles.dockFrame,
           isIos ? styles.iosDockFrame : styles.androidDockFrame,
-          isIos
-            ? {
-                maxWidth: layout.bottomNavMaxWidth,
-                paddingHorizontal: layout.bottomNavHorizontalPadding,
-              }
-            : null,
+          {
+            maxWidth: layout.bottomNavMaxWidth,
+            paddingHorizontal: layout.bottomNavHorizontalPadding,
+          },
         ]}
       >
         <View
@@ -136,7 +134,6 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                 label={route.label}
                 active={active}
                 onPress={() => onNavigate(route.id)}
-                ripple={isIos ? undefined : androidMaterialRipple(theme)}
               >
                 {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
                   <View
@@ -275,13 +272,11 @@ function TabButton({
   label,
   active,
   onPress,
-  ripple,
   children,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
-  ripple?: ReturnType<typeof androidMaterialRipple>;
   children: React.ReactNode;
 }) {
   return (
@@ -289,7 +284,6 @@ function TabButton({
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      android_ripple={ripple}
       onPress={onPress}
       style={styles.item}
     >
@@ -370,8 +364,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   androidDockFrame: {
-    height: 72,
-    marginBottom: 0,
+    height: 78,
+    marginBottom: 8,
   },
   dock: {
     flex: 1,
@@ -385,11 +379,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   androidDock: {
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderBottomWidth: 0,
+    borderRadius: 32,
   },
   item: {
     flex: 1,
