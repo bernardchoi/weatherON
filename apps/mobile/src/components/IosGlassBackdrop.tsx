@@ -42,7 +42,7 @@ function getOverlayColor(theme: AppTheme, role: IosGlassRole): string {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
   },
 });

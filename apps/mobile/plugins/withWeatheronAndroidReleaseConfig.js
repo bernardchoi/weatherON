@@ -15,9 +15,12 @@ const FIREBASE_PROVIDER = "com.google.firebase.provider.FirebaseInitProvider";
 const releaseProperties = [
   ["android.compileSdkVersion", "36"],
   ["android.targetSdkVersion", "36"],
-  ["android.enableProguardInReleaseBuilds", "true"],
+  ["android.enableMinifyInReleaseBuilds", "true"],
   ["android.enableShrinkResourcesInReleaseBuilds", "true"],
 ];
+const legacyReleasePropertyKeys = new Set([
+  "android.enableProguardInReleaseBuilds",
+]);
 
 const signingDefinitions = `${SIGNING_DEFINITIONS_MARKER}
 def uploadKeystorePath = System.getenv("WEATHERON_UPLOAD_KEYSTORE_PATH")
@@ -65,9 +68,9 @@ function configureAppBuildGradle(contents) {
 
   if (!next.includes(SIGNING_DEFINITIONS_MARKER)) {
     const definitionAnchor =
-      /def enableProguardInReleaseBuilds = \(findProperty\('android\.enableProguardInReleaseBuilds'\) \?: false\)\.toBoolean\(\)\n/;
+      /def enableMinifyInReleaseBuilds = \(findProperty\('android\.enableMinifyInReleaseBuilds'\) \?: false\)\.toBoolean\(\)\n/;
     if (!definitionAnchor.test(next)) {
-      throw new Error("WeatherON Android release config: Proguard definition anchor not found");
+      throw new Error("WeatherON Android release config: minify definition anchor not found");
     }
     next = next.replace(definitionAnchor, (match) => `${match}${signingDefinitions}`);
   }
@@ -101,7 +104,10 @@ function withWeatheronAppBuildGradle(config) {
 
 function withWeatheronGradleProperties(config) {
   return withGradleProperties(config, (modConfig) => {
-    const managedKeys = new Set(releaseProperties.map(([key]) => key));
+    const managedKeys = new Set([
+      ...releaseProperties.map(([key]) => key),
+      ...legacyReleasePropertyKeys,
+    ]);
     modConfig.modResults = modConfig.modResults.filter(
       (entry) => entry.type !== "property" || !managedKeys.has(entry.key),
     );

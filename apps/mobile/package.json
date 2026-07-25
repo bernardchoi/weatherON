@@ -21,23 +21,25 @@
     "build:android:production:no-wait": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production --no-wait"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~5.0.5",
+    "@expo/metro-runtime": "~57.0.7",
     "@weatheron/shared": "file:../../packages/shared",
-    "expo": "^53.0.0",
-    "expo-blur": "~14.1.5",
-    "expo-file-system": "~18.1.11",
-    "expo-font": "~13.3.1",
-    "expo-location": "~18.1.6",
-    "expo-navigation-bar": "~4.2.8",
-    "expo-notifications": "~0.31.5",
-    "expo-sqlite": "~15.2.14",
-    "expo-status-bar": "^2.0.0",
-    "react": "19.0.0",
-    "react-native": "^0.79.0",
-    "react-native-web": "^0.20.0"
+    "expo": "^57.0.8",
+    "expo-blur": "~57.0.2",
+    "expo-file-system": "~57.0.1",
+    "expo-font": "~57.0.1",
+    "expo-location": "~57.0.6",
+    "expo-navigation-bar": "~57.0.2",
+    "expo-notifications": "^57.0.7",
+    "expo-splash-screen": "~57.0.5",
+    "expo-sqlite": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "~6.0.3"
   }
 }

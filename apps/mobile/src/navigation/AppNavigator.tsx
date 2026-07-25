@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import * as NavigationBar from "expo-navigation-bar";
-import { BackHandler, Platform, SafeAreaView, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
+import { BackHandler, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
 import { ScreenTransition } from "../components/ScreenTransition";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
@@ -57,7 +58,7 @@ export function AppNavigator() {
   const systemTheme = useColorScheme();
   const theme = resolveAppTheme(
     appState.themeMode,
-    systemTheme,
+    systemTheme === "unspecified" ? null : systemTheme,
     appState.reducedTransparency,
     appState.dynamicColorEnabled,
   );
@@ -183,7 +184,10 @@ export function AppNavigator() {
 
   return (
     <AppThemeProvider theme={theme}>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}>
+      <SafeAreaView
+        edges={["top", "right", "bottom", "left"]}
+        style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}
+      >
         <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
         <View style={[styles.root, { backgroundColor: appBackgroundColor }]}>
         <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}>
@@ -262,22 +266,19 @@ function SystemBars({ backgroundColor, isDarkTheme }: { backgroundColor: string;
   useEffect(() => {
     if (Platform.OS !== "android") return;
 
-    void Promise.all([
-      NavigationBar.setBackgroundColorAsync(backgroundColor),
-      NavigationBar.setBorderColorAsync(backgroundColor),
-      NavigationBar.setButtonStyleAsync(isDarkTheme ? "light" : "dark"),
-    ]).catch(() => {
+    StatusBar.setBarStyle(isDarkTheme ? "light-content" : "dark-content");
+    try {
+      NavigationBar.setStyle(isDarkTheme ? "dark" : "light");
+    } catch {
       // Android 제조사별 시스템 UI 제약으로 설정이 거부돼도 앱 렌더링은 유지한다.
-    });
-  }, [backgroundColor, isDarkTheme]);
+    }
+  }, [isDarkTheme]);
 
-  return (
-    <StatusBar
-      backgroundColor={backgroundColor}
-      barStyle={isDarkTheme ? "light-content" : "dark-content"}
-      translucent={false}
-    />
-  );
+  if (Platform.OS === "android") {
+    return null;
+  }
+
+  return <StatusBar backgroundColor={backgroundColor} barStyle={isDarkTheme ? "light-content" : "dark-content"} translucent={false} />;
 }
 
 function getBottomNavActiveRoute(route: AppRouteId, alertReturnTo?: P0RouteId, umbrellaReturnTo?: P0RouteId): P0RouteId {

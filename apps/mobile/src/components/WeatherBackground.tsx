@@ -493,7 +493,7 @@ function LightningFlashLayer({ enabled }: { enabled: boolean }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
   },
   gradientTop: {

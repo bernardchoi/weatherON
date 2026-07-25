@@ -94,7 +94,7 @@ export function WardrobeScreen({
         {ownedItems.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>
-            <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
+            <AppButton label="내 옷장에 추가" onPress={() => onNavigate("C3")} tone="warning" />
           </View>
         ) : filteredItems.length === 0 ? (
           <Text style={[styles.emptyText, { color: theme.muted }]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
@@ -108,7 +108,12 @@ export function WardrobeScreen({
                 onRemove={() => onRemoveWardrobeItem(item.id)}
               />
             ))}
-            <Pressable accessibilityRole="button" onPress={() => onNavigate("C3")} style={[styles.addTile, { borderColor: theme.border }]}>
+            <Pressable
+              accessibilityLabel="내 옷장에 추가"
+              accessibilityRole="button"
+              onPress={() => onNavigate("C3")}
+              style={[styles.addTile, { borderColor: theme.border }]}
+            >
               <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
               <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
             </Pressable>

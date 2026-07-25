@@ -1105,7 +1105,7 @@ function getLegacyStorageUri(documentDirectory: string, key: string): string {
 
 async function getFileSystem() {
   try {
-    return await import("expo-file-system");
+    return await import("expo-file-system/legacy");
   } catch {
     return null;
   }

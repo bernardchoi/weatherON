@@ -1,0 +1,8 @@
+--------- beginning of system
+07-25 14:57:51.271  3112  3199 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+--------- beginning of main
+07-25 15:05:51.658  3112  3226 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+07-25 15:05:51.786  3112  3226 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+07-25 15:06:00.187  3112  3226 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+07-25 15:06:51.674  3112  3226 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+07-25 15:06:51.820  3112  3226 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.

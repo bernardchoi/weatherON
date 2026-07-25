@@ -349,7 +349,7 @@ function getLocalNotificationResponsePayload(response: ExpoNotificationResponse)
 }
 
 function getLocalNotificationPayload(notification: ExpoNotification): LocalNotificationResponsePayload {
-  const data = notification.request.content.data;
+  const data = notification.request.content.data ?? {};
   const fallbackRuleId = notification.request.identifier.startsWith("weatheron:test:") ? "local-test" : undefined;
   const fallbackRoute = fallbackRuleId ? getTestNotificationRouteFromIdentifier(notification.request.identifier) : undefined;
   return {

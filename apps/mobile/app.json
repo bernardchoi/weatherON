@@ -12,20 +12,27 @@
       "barStyle": "light-content",
       "translucent": false
     },
-    "androidNavigationBar": {
-      "backgroundColor": "#071E33",
-      "barStyle": "light-content"
-    },
     "plugins": [
-      "expo-navigation-bar",
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false,
+          "hidden": false,
+          "style": "light"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#071E33",
+          "image": "../../assets/icon/icon-primary-512.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
       "./plugins/withWeatheronAndroidDarkIcon",
       "./plugins/withWeatheronAndroidReleaseConfig"
     ],
-    "splash": {
-      "image": "../../assets/icon/icon-primary-512.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#071E33"
-    },
     "assetBundlePatterns": [
       "../../assets/icon/*",
       "../../assets/outfits/*",

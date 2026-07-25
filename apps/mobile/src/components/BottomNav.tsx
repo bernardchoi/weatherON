@@ -14,7 +14,7 @@ import {
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialRipple } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
@@ -38,7 +38,9 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const didSwitchTabRef = useRef(false);
   const iosColors = getIosTabColors(theme);
   const activeColor = isIos ? iosColors.activeIcon : androidMaterialColor(theme, "primary");
-  const navigationBackground = { backgroundColor: theme.background, borderColor: "transparent" };
+  const navigationBackground = isIos
+    ? { backgroundColor: theme.background, borderColor: "transparent" }
+    : androidMaterialSurface(theme, "navigation");
 
   activeIndexRef.current = activeIndex;
   navigateRef.current = onNavigate;

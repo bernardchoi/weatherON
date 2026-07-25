@@ -78,7 +78,7 @@ export function FeedbackPressable({
             <Animated.View
               pointerEvents="none"
               style={[
-                StyleSheet.absoluteFillObject,
+                StyleSheet.absoluteFill,
                 styles.feedback,
                 feedbackRadius,
                 { backgroundColor: feedbackColor ?? theme.text, opacity: disabled || usesNativeRipple ? 0 : feedback },

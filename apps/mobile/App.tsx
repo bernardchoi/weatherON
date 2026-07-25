@@ -1,5 +1,6 @@
 import { useFonts } from "expo-font";
 import React from "react";
+import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { applyPretendardToText, pretendardFontMap } from "./src/theme/fonts";
 
@@ -13,5 +14,9 @@ export default function App() {
   // 실패해도(fontError) 시스템 폰트로 폴백해 앱은 그대로 뜬다.
   if (!fontsLoaded && !fontError) return null;
 
-  return <AppNavigator />;
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AppNavigator />
+    </SafeAreaProvider>
+  );
 }

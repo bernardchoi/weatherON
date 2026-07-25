@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
@@ -822,6 +823,7 @@ function NotificationSidebar({
   onOpen: (id: string, route: P0RouteId) => void;
   theme: AppTheme;
 }) {
+  const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const [bulkDismissing, setBulkDismissing] = useState(false);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
@@ -956,7 +958,13 @@ function NotificationSidebar({
         <Animated.View
           style={[
             styles.sidebarPanel,
-            { backgroundColor: theme.cardStrong, borderColor: theme.border, shadowColor: theme.shadow },
+            {
+              backgroundColor: theme.cardStrong,
+              borderColor: theme.border,
+              shadowColor: theme.shadow,
+              paddingTop: Math.max(insets.top, spacing.xl) + spacing.sm,
+              paddingBottom: Math.max(insets.bottom, spacing.xl),
+            },
             { transform: [{ translateX: panelTranslateX }] },
           ]}
           renderToHardwareTextureAndroid
@@ -1811,17 +1819,17 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   sidebarLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 40,
     elevation: 40,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   sidebarScrim: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   sidebarScrimTouchable: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   sidebarPanel: {
     width: "86%",
