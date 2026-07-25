@@ -4,10 +4,12 @@ import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [rainEndAlertEnabled, setRainEndAlertEnabled] = useState(false);
   const rainBars = useMemo(() => buildRainBars(state.weather), [state.weather]);
   const chartColors = getRainChartColors(theme);
@@ -20,15 +22,39 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, height: layout.weatherAtmosphereHeight }]} />
 
         <View style={styles.header}>
           <BackButton onPress={onGoBack} />
           <Text style={[styles.title, { color: theme.text }]}>강수 타임라인</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.sky }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.heroCard,
+            {
+              minHeight: layout.isShort ? 112 : 122,
+              paddingHorizontal: layout.weatherPanelPadding,
+              paddingVertical: layout.weatherPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: theme.sky,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={styles.heroTop}>
             <View style={[styles.rainIconFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
               <Image source={uiIconAssets.rain} style={[styles.rainIconImage, { tintColor: theme.sky }]} resizeMode="contain" />
@@ -63,11 +89,11 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
 
         <Panel title="30분 단위 강수량" theme={theme}>
           <View style={styles.chart}>
-            <View style={styles.amountBars}>
+            <View style={[styles.amountBars, { height: layout.weatherChartHeight }]}>
               {rainBars.map((item) => {
                 const height = Math.max(6, Math.min((item.amount / 4.2) * 100, 100));
                 return (
-                  <View key={`${item.time}:${item.amount}`} style={styles.amountColumn}>
+                  <View key={`${item.time}:${item.amount}`} style={[styles.amountColumn, { height: layout.weatherChartHeight - 6 }]}>
                     <Text style={[styles.amountLabel, { color: item.amount >= 3 ? theme.text : theme.subtle }]}>{item.amount > 0 ? trimAmount(item.amount) : ""}</Text>
                     <View
                       style={[
@@ -148,8 +174,20 @@ function Panel({
   accentColor?: string;
   children: React.ReactNode;
 }) {
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card, borderLeftColor: accentColor ?? "transparent" }, accentColor ? styles.panelAccent : null, cardShadow(theme)]}>
+    <View
+      style={[
+        styles.panel,
+        {
+          backgroundColor: theme.card,
+          borderLeftColor: accentColor ?? "transparent",
+          padding: layout.weatherPanelPadding,
+        },
+        accentColor ? styles.panelAccent : null,
+        cardShadow(theme),
+      ]}
+    >
       <Text style={[styles.panelTitle, { color: theme.muted }]}>{title}</Text>
       {children}
     </View>
@@ -306,11 +344,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
     minHeight: "100%",
+    width: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -335,11 +372,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroCard: {
-    minHeight: 122,
     justifyContent: "center",
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
   },
@@ -410,7 +444,6 @@ const styles = StyleSheet.create({
   },
   panel: {
     gap: spacing.sm,
-    padding: 15,
     borderRadius: radius.lg,
     borderLeftWidth: 0,
   },
@@ -427,14 +460,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   amountBars: {
-    height: 94,
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 5,
   },
   amountColumn: {
     flex: 1,
-    height: 88,
     justifyContent: "flex-end",
     alignItems: "center",
     gap: 3,

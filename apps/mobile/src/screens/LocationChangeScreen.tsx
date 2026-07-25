@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   recoveryButton: {
-    minHeight: 38,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "flex-start",
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   recoveryButtonCompact: {
-    minHeight: 34,
+    minHeight: 44,
     marginTop: 0,
   },
   recoveryButtonText: {

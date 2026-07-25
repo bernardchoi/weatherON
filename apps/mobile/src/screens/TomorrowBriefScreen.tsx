@@ -1,10 +1,11 @@
 import React from "react";
-import { Image, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { recommendOutfit, recommendUmbrella, type DailyWeather, type UserPreferenceProfile, type WeatherSnapshot } from "@weatheron/shared";
 import { brandAssets, outfitImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
@@ -23,6 +24,7 @@ export function TomorrowBriefScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const tomorrow = buildTomorrowWeather(state.weather);
   const outfit = recommendOutfit(tomorrow.weather, getPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }), wardrobeItems);
   const outfitDecision = toTomorrowCopy(outfit.decisionText);
@@ -37,8 +39,21 @@ export function TomorrowBriefScreen({
   const umbrellaAction = getUmbrellaActionShort(umbrella.level);
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
+    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.isShort ? 4 : 10,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+      <View style={[styles.header, { minHeight: layout.isShort ? 62 : 70 }]}>
         <BackButton onPress={onGoBack} />
         <View style={styles.headerCopy}>
           <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
@@ -57,10 +72,32 @@ export function TomorrowBriefScreen({
         </View>
       </View>
 
-      <View style={[styles.weatherCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View
+        style={[
+          styles.weatherCard,
+          {
+            padding: layout.weatherPanelPadding,
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+        ]}
+      >
         <View style={styles.weatherTopRow}>
-          <View style={[styles.weatherIconFrame, { backgroundColor: `${weatherTone}18` }]}>
-            <Image source={getConditionIcon(tomorrow.weather.current.condition)} style={[styles.weatherIcon, { tintColor: weatherTone }]} resizeMode="contain" />
+          <View
+            style={[
+              styles.weatherIconFrame,
+              {
+                width: layout.isShort ? 56 : 64,
+                height: layout.isShort ? 56 : 64,
+                backgroundColor: `${weatherTone}18`,
+              },
+            ]}
+          >
+            <Image
+              source={getConditionIcon(tomorrow.weather.current.condition)}
+              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: weatherTone }]}
+              resizeMode="contain"
+            />
           </View>
           <View style={styles.weatherCopy}>
             <Text style={[styles.weatherEyebrow, { color: weatherTone }]}>내일 날씨</Text>
@@ -81,7 +118,16 @@ export function TomorrowBriefScreen({
         </View>
       </View>
 
-      <View style={[styles.outfitCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View
+        style={[
+          styles.outfitCard,
+          {
+            padding: layout.weatherPanelPadding,
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+        ]}
+      >
         <View style={styles.outfitTitleRow}>
           <View style={[styles.outfitTitleIcon, { backgroundColor: `${theme.gold}18` }]}>
             <Image source={uiIconAssets.shirt} style={[styles.outfitTitleIconImage, { tintColor: theme.gold }]} resizeMode="contain" />
@@ -92,10 +138,33 @@ export function TomorrowBriefScreen({
           </View>
           <Text style={[styles.matchPct, { color: theme.gold }]}>{outfit.matchPct}%</Text>
         </View>
-        <View style={[styles.outfitHero, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-          <View style={[styles.outfitImageFrame, { backgroundColor: theme.card }]}>
+        <View
+          style={[
+            styles.outfitHero,
+            {
+              minHeight: layout.isShort ? 80 : 92,
+              padding: layout.isShort ? 8 : 12,
+              backgroundColor: theme.cardMuted,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.outfitImageFrame,
+              {
+                width: layout.isShort ? 64 : 76,
+                height: layout.isShort ? 64 : 76,
+                backgroundColor: theme.card,
+              },
+            ]}
+          >
             {outfitPreview?.imageUrl && outfitImageAssets[outfitPreview.imageUrl] ? (
-              <Image source={outfitImageAssets[outfitPreview.imageUrl]} style={styles.outfitImage} resizeMode="contain" />
+              <Image
+                source={outfitImageAssets[outfitPreview.imageUrl]}
+                style={[styles.outfitImage, layout.isShort ? styles.outfitImageShort : null]}
+                resizeMode="contain"
+              />
             ) : (
               <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.gold }]} resizeMode="contain" />
             )}
@@ -128,6 +197,7 @@ export function TomorrowBriefScreen({
           <Text style={[styles.umbrellaBody, { color: theme.muted }]} numberOfLines={1}>{umbrella.reason}</Text>
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 }
@@ -262,11 +332,17 @@ function toTomorrowCopy(value: string) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  shell: {
     flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    width: "100%",
+    alignSelf: "center",
     gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 10,
     paddingBottom: 10,
   },
   header: {
@@ -328,7 +404,6 @@ const styles = StyleSheet.create({
   },
   weatherCard: {
     gap: 12,
-    padding: 14,
     borderWidth: 1,
     borderRadius: radius.lg,
   },
@@ -347,6 +422,10 @@ const styles = StyleSheet.create({
   weatherIcon: {
     width: 38,
     height: 38,
+  },
+  weatherIconShort: {
+    width: 34,
+    height: 34,
   },
   weatherCopy: {
     flex: 1,
@@ -409,7 +488,6 @@ const styles = StyleSheet.create({
   },
   outfitCard: {
     gap: 12,
-    padding: 14,
     borderWidth: 1,
     borderRadius: radius.lg,
   },
@@ -451,11 +529,9 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   outfitHero: {
-    minHeight: 92,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 12,
     borderWidth: 1,
     borderRadius: radius.md,
   },
@@ -470,6 +546,10 @@ const styles = StyleSheet.create({
   outfitImage: {
     width: 70,
     height: 70,
+  },
+  outfitImageShort: {
+    width: 58,
+    height: 58,
   },
   outfitFallbackIcon: {
     width: 34,

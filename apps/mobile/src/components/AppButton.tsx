@@ -65,6 +65,7 @@ export function AppButton({
       accessibilityState={{ disabled }}
       android_ripple={androidMaterialRipple(theme, resolvedVariant === "filled" ? "primary" : "surface")}
       disabled={disabled}
+      hitSlop={size === "sm" ? 5 : undefined}
       onPress={onPress}
       onPressIn={() => animateTo(0.97)}
       onPressOut={() => animateTo(1)}

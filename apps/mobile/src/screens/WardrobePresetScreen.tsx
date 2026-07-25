@@ -7,6 +7,7 @@ import { FilterRow } from "../components/FilterRow";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
@@ -36,6 +37,7 @@ export function WardrobePresetScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [query, setQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<SeasonFilter>("all");
@@ -94,7 +96,7 @@ export function WardrobePresetScreen({
     <AppScreen
       title="아이템 추가"
       subtitle="프리셋에서 골라 내 옷장에 추가"
-      badge={`${ownedCount}/${wardrobeItems.length} 보유`}
+      badge={`${ownedCount}/${wardrobeItems.length}`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
@@ -140,8 +142,28 @@ export function WardrobePresetScreen({
           caption={`${getWardrobeCategoryLabel(previewItem.category)} · ${formatOutfitTags(previewItem.seasons)} · ${formatOutfitTags(previewItem.purposes)}`}
           accent="clear"
         >
-          <View style={[styles.selectedCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-            <View style={[styles.selectedImageWrap, { backgroundColor: theme.cardMuted }]}>
+          <View
+            style={[
+              styles.selectedCard,
+              {
+                gap: layout.outfitCardGap,
+                padding: layout.isShort ? 8 : spacing.sm,
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+              cardShadow(theme),
+            ]}
+          >
+            <View
+              style={[
+                styles.selectedImageWrap,
+                {
+                  width: layout.isShort ? 54 : 58,
+                  height: layout.isShort ? 54 : 58,
+                  backgroundColor: theme.cardMuted,
+                },
+              ]}
+            >
               {outfitImageAssets[previewItem.imageUrl] ? (
                 <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMethod="resize" resizeMode="contain" />
               ) : null}
@@ -226,6 +248,7 @@ function PresetCategory({
   onToggleOwned: (itemId: string, owned: boolean) => void;
 }) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const categoryLabel = getWardrobeCategoryLabel(category);
   const contentOpacity = React.useRef(new Animated.Value(expanded ? 1 : 0)).current;
 
@@ -246,7 +269,17 @@ function PresetCategory({
   }, [contentOpacity, expanded]);
 
   return (
-    <View style={[styles.categoryCard, { backgroundColor: theme.cardMuted, borderColor: expanded ? theme.gold : theme.border }]}>
+    <View
+      style={[
+        styles.categoryCard,
+        {
+          gap: layout.outfitCardGap,
+          padding: layout.isShort ? 10 : 12,
+          backgroundColor: theme.cardMuted,
+          borderColor: expanded ? theme.gold : theme.border,
+        },
+      ]}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${categoryLabel} ${items.length}개 ${expanded ? "접기" : "펼치기"}`}
@@ -295,16 +328,22 @@ function PresetCard({
   onToggleOwned: () => void;
 }) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const imageSource = outfitImageAssets[item.imageUrl];
   return (
     <View
       style={[
         styles.presetCard,
-        { backgroundColor: theme.cardMuted, borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border },
+        {
+          width: layout.wardrobeGridItemWidth,
+          minHeight: layout.wardrobePresetCardMinHeight,
+          backgroundColor: theme.cardMuted,
+          borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
+        },
       ]}
     >
       <Pressable accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
-        <View style={[styles.presetImageWrap, { backgroundColor: theme.cardStrong }]}>
+        <View style={[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
         <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
@@ -360,8 +399,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   selectedImageWrap: {
-    width: 58,
-    height: 58,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -380,13 +417,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryCard: {
-    gap: 12,
-    padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
   },
   categoryHeader: {
-    minHeight: 42,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -420,7 +455,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   presetCard: {
-    width: "31.4%",
     minHeight: 162,
     justifyContent: "space-between",
     gap: 8,
@@ -432,7 +466,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   presetImageWrap: {
-    height: 68,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,

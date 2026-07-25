@@ -46,7 +46,9 @@ function getToneColor(theme: AppTheme, tone: NonNullable<StatusPillProps["tone"]
 
 const styles = StyleSheet.create({
   pressable: {
+    minHeight: 44,
     alignSelf: "flex-start",
+    justifyContent: "center",
     borderRadius: radius.pill,
   },
   pill: {

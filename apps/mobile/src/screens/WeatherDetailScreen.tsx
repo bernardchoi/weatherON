@@ -5,6 +5,7 @@ import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
@@ -12,6 +13,7 @@ import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils
 
 export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
   const hourly = getHourlyForecast(weather);
@@ -24,8 +26,20 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, height: layout.weatherAtmosphereHeight }]} />
 
         <View style={styles.header}>
           <BackButton onPress={onGoBack} />
@@ -35,7 +49,17 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
           </View>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.heroCard,
+            {
+              padding: layout.weatherPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={styles.heroMain}>
             <View style={[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
               <Image source={getConditionIcon(current.condition)} style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme) }]} resizeMode="contain" />
@@ -95,8 +119,19 @@ function WeatherFact({ icon, label, value, color, theme }: { icon: number; label
 }
 
 function ForecastPanel({ title, meta, theme, children }: { title: string; meta: string; theme: AppTheme; children: React.ReactNode }) {
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+    <View
+      style={[
+        styles.panel,
+        {
+          padding: layout.weatherPanelPadding,
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+        },
+        cardShadow(theme),
+      ]}
+    >
       <View style={styles.panelHeader}>
         <Text style={[styles.panelTitle, { color: theme.text }]}>{title}</Text>
         <Text style={[styles.panelMeta, { color: theme.subtle }]}>{meta}</Text>
@@ -108,8 +143,19 @@ function ForecastPanel({ title, meta, theme, children }: { title: string; meta: 
 
 function HourlyCard({ item, temperatureUnit, theme }: { item: HourlyWeather; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
   const color = getConditionColor(item.condition, theme);
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.hourlyCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+    <View
+      style={[
+        styles.hourlyCard,
+        {
+          width: layout.isShort ? 64 : layout.isRegular ? 74 : 70,
+          minHeight: layout.isShort ? 102 : layout.isRegular ? 118 : 112,
+          backgroundColor: theme.cardMuted,
+          borderColor: theme.border,
+        },
+      ]}
+    >
       <Text style={[styles.hourlyTime, { color: theme.subtle }]}>{formatTimeLabel(item.time)}</Text>
       <Image source={getConditionIcon(item.condition)} style={[styles.hourlyIcon, { tintColor: color }]} resizeMode="contain" />
       <Text style={[styles.hourlyTemp, { color: theme.text }]}>{formatTemperature(item.tempC, temperatureUnit)}</Text>
@@ -193,17 +239,15 @@ const styles = StyleSheet.create({
   },
   content: {
     minHeight: "100%",
-    gap: spacing.sm,
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
+    width: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
     left: -32,
     right: -32,
     top: 0,
-    height: 300,
     opacity: 0.54,
   },
   header: {
@@ -230,7 +274,6 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -296,7 +339,6 @@ const styles = StyleSheet.create({
   },
   panel: {
     gap: spacing.sm,
-    padding: 15,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -324,8 +366,6 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
   },
   hourlyCard: {
-    width: 70,
-    minHeight: 112,
     alignItems: "center",
     justifyContent: "center",
     gap: 6,

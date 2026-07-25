@@ -7,6 +7,7 @@ import { FilterRow } from "../components/FilterRow";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
@@ -31,6 +32,7 @@ export function WardrobeScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
@@ -61,7 +63,13 @@ export function WardrobeScreen({
       ) : null}
 
       <Section title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
-        <View style={[styles.infoCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.infoCard,
+            layout.isShort ? styles.infoCardShort : null,
+            { backgroundColor: theme.cardMuted, borderColor: theme.border },
+          ]}
+        >
           <View style={styles.copy}>
             <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text>
             <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>
@@ -99,7 +107,7 @@ export function WardrobeScreen({
         ) : filteredItems.length === 0 ? (
           <Text style={[styles.emptyText, { color: theme.muted }]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
         ) : (
-          <View style={styles.grid}>
+          <View style={[styles.grid, { gap: layout.outfitCardGap }]}>
             {filteredItems.map((item) => (
               <WardrobeItemCard
                 key={item.id}
@@ -112,7 +120,14 @@ export function WardrobeScreen({
               accessibilityLabel="내 옷장에 추가"
               accessibilityRole="button"
               onPress={() => onNavigate("C3")}
-              style={[styles.addTile, { borderColor: theme.border }]}
+              style={[
+                styles.addTile,
+                {
+                  width: layout.wardrobeGridItemWidth,
+                  minHeight: layout.wardrobeCardMinHeight,
+                  borderColor: theme.border,
+                },
+              ]}
             >
               <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
               <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
@@ -135,11 +150,22 @@ function WardrobeItemCard({
   onRemove: () => void;
 }) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
   return (
-    <View style={[styles.card, { backgroundColor: theme.cardMuted, borderColor: theme.clear }]}>
+    <View
+      style={[
+        styles.card,
+        {
+          width: layout.wardrobeGridItemWidth,
+          minHeight: layout.wardrobeCardMinHeight,
+          backgroundColor: theme.cardMuted,
+          borderColor: theme.clear,
+        },
+      ]}
+    >
       <Pressable accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
-        <View style={[styles.imageWell, { backgroundColor: theme.cardStrong }]}>
+        <View style={[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
         </View>
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
@@ -195,6 +221,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
+  infoCardShort: {
+    alignItems: "stretch",
+    flexDirection: "column",
+  },
   copy: {
     flex: 1,
     gap: 5,
@@ -212,7 +242,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   card: {
-    width: "31.5%",
     minHeight: 150,
     gap: spacing.sm,
     padding: spacing.sm,
@@ -223,7 +252,6 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   imageWell: {
-    height: 72,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
@@ -243,7 +271,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   addTile: {
-    width: "31.5%",
     minHeight: 142,
     alignItems: "center",
     justifyContent: "center",
@@ -284,7 +311,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   restoreButton: {
-    minHeight: 36,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,

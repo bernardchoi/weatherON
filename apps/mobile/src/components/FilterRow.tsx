@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   filterButton: {
-    minHeight: 34,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,

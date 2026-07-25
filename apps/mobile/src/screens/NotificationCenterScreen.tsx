@@ -5,6 +5,7 @@ import { StatusPill } from "../components/StatusPill";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
 
 export function NotificationCenterScreen({
@@ -21,6 +22,7 @@ export function NotificationCenterScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const { width } = useWindowDimensions();
   const panelTranslateX = useRef(new Animated.Value(36)).current;
   const panelOpacity = useRef(new Animated.Value(0.98)).current;
@@ -141,7 +143,18 @@ export function NotificationCenterScreen({
       {...panelPanResponder.panHandlers}
       style={[styles.shell, { backgroundColor: theme.background, opacity: panelOpacity, transform: [{ translateX: panelTranslateX }] }]}
     >
-      <ScrollView style={styles.panelScroll} contentContainerStyle={styles.panelContent}>
+      <ScrollView
+        style={styles.panelScroll}
+        contentContainerStyle={[
+          styles.panelContent,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.notificationTopPadding,
+          },
+        ]}
+      >
         <View style={styles.header}>
           <View>
             <Text style={[styles.title, { color: theme.text }]}>알림 센터</Text>
@@ -298,7 +311,7 @@ function NotificationCard({
 }) {
   const toneColor = getToneColor(theme, meta.tone);
   const translateX = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(read ? 0.72 : 1)).current;
+  const opacity = useRef(new Animated.Value(read && !previewOnly ? 0.72 : 1)).current;
   const dismissedRef = useRef(false);
 
   const animateDismiss = (commit = true) => {
@@ -324,12 +337,12 @@ function NotificationCard({
 
   useEffect(() => {
     Animated.timing(opacity, {
-      toValue: read ? 0.72 : 1,
+      toValue: read && !previewOnly ? 0.72 : 1,
       duration: 180,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [opacity, read]);
+  }, [opacity, previewOnly, read]);
 
   useEffect(() => {
     if (!bulkDismissing || previewOnly) return;
@@ -364,7 +377,7 @@ function NotificationCard({
               useNativeDriver: true,
             }),
             Animated.timing(opacity, {
-              toValue: read ? 0.72 : 1,
+              toValue: read && !previewOnly ? 0.72 : 1,
               duration: 160,
               easing: Easing.out(Easing.cubic),
               useNativeDriver: true,
@@ -553,10 +566,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   panelContent: {
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: 70,
     paddingBottom: 34,
+    width: "100%",
+    alignSelf: "center",
   },
   header: {
     minHeight: 56,
@@ -611,7 +623,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   actionButton: {
-    minHeight: 32,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
@@ -710,7 +722,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   miniHit: {
-    minHeight: 22,
+    minHeight: 44,
     justifyContent: "center",
   },
   miniText: {
@@ -758,7 +770,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   historyClearButton: {
-    minHeight: 32,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,

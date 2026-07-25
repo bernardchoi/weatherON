@@ -3,6 +3,7 @@ import { useWindowDimensions } from "react-native";
 
 export type AppWidthClass = "compact" | "regular";
 export type AppHeightClass = "short" | "standard";
+export type ResponsivePercentWidth = `${number}%`;
 
 export type ResponsiveLayout = {
   width: number;
@@ -20,6 +21,27 @@ export type ResponsiveLayout = {
   footerPaddingTop: number;
   footerPaddingBottom: number;
   contentMaxWidth: number;
+  weatherContentGap: number;
+  weatherTopPadding: number;
+  weatherPanelPadding: number;
+  weatherAtmosphereHeight: number;
+  weatherChartHeight: number;
+  homeHeroMinHeight: number;
+  homeWeatherShowcaseMinHeight: number;
+  homeWeatherHaloSize: number;
+  homeWeatherOrbSize: number;
+  homeWeatherIconSize: number;
+  homeSidebarMaxWidth: number;
+  notificationTopPadding: number;
+  outfitPanelPadding: number;
+  outfitCardGap: number;
+  wardrobeGridItemWidth: ResponsivePercentWidth;
+  wardrobeCardMinHeight: number;
+  wardrobeImageHeight: number;
+  wardrobePresetCardMinHeight: number;
+  wardrobePresetImageHeight: number;
+  outfitDetailCardMinHeight: number;
+  outfitDetailImageHeight: number;
   bottomNavHorizontalPadding: number;
   bottomNavMaxWidth: number;
   onboardingHeroVisualHeight: number;
@@ -76,6 +98,27 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     footerPaddingTop: isShort ? 6 : isTablet ? 12 : 8,
     footerPaddingBottom: isShort ? 8 : isTablet ? 20 : 16,
     contentMaxWidth: isTablet ? 680 : 640,
+    weatherContentGap: isShort ? 8 : isTablet ? 14 : isRegular ? 12 : 10,
+    weatherTopPadding: isShort ? 12 : isTablet ? 24 : isRegular ? 20 : 16,
+    weatherPanelPadding: isShort ? 12 : isTablet ? 18 : isRegular ? 16 : 14,
+    weatherAtmosphereHeight: isShort ? 220 : isTablet ? 340 : isRegular ? 300 : 280,
+    weatherChartHeight: isShort ? 78 : isTablet ? 108 : isRegular ? 100 : 94,
+    homeHeroMinHeight: isShort ? 196 : isTablet ? 252 : isRegular ? 236 : 224,
+    homeWeatherShowcaseMinHeight: isShort ? 144 : isTablet ? 188 : isRegular ? 176 : 168,
+    homeWeatherHaloSize: isShort ? 136 : isTablet ? 184 : isRegular ? 172 : 160,
+    homeWeatherOrbSize: isShort ? 88 : isTablet ? 120 : isRegular ? 112 : 106,
+    homeWeatherIconSize: isShort ? 58 : isTablet ? 78 : isRegular ? 74 : 70,
+    homeSidebarMaxWidth: isShort ? 320 : isTablet ? 420 : isRegular ? 380 : 340,
+    notificationTopPadding: isShort ? 24 : isTablet ? 64 : isRegular ? 52 : 44,
+    outfitPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,
+    outfitCardGap: isShort ? 8 : isTablet ? 12 : 10,
+    wardrobeGridItemWidth: isTablet ? "23%" : isShort ? "48%" : "30.8%",
+    wardrobeCardMinHeight: isShort ? 144 : isTablet ? 174 : isRegular ? 158 : 150,
+    wardrobeImageHeight: isShort ? 66 : isTablet ? 84 : isRegular ? 76 : 72,
+    wardrobePresetCardMinHeight: isShort ? 154 : isTablet ? 184 : isRegular ? 170 : 162,
+    wardrobePresetImageHeight: isShort ? 64 : isTablet ? 82 : isRegular ? 74 : 68,
+    outfitDetailCardMinHeight: isShort ? 82 : isTablet ? 104 : isRegular ? 92 : 86,
+    outfitDetailImageHeight: isShort ? 44 : isTablet ? 62 : isRegular ? 54 : 50,
     bottomNavHorizontalPadding: isTablet ? 32 : isRegular ? 28 : isShort ? 16 : 20,
     bottomNavMaxWidth: isTablet ? 680 : 640,
     onboardingHeroVisualHeight: isShort ? 160 : isTablet ? 280 : isRegular ? 232 : 214,

@@ -4,10 +4,12 @@ import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
 export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGoBack, onOpenAlertSettings }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const umbrella = state.umbrella;
   const rainBars = buildRainBars(state.weather);
   const peakWindow = getPeakRainWindow(rainBars);
@@ -22,15 +24,38 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, height: layout.weatherAtmosphereHeight }]} />
 
         <View style={styles.header}>
           <BackButton onPress={onGoBack} />
           <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: getUmbrellaTone(umbrella.level, theme) }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.heroCard,
+            {
+              minHeight: layout.isShort ? 96 : 104,
+              padding: layout.weatherPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: getUmbrellaTone(umbrella.level, theme),
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={[styles.heroIconFrame, { backgroundColor: `${getUmbrellaTone(umbrella.level, theme)}18` }]}>
             <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaTone(umbrella.level, theme) }]} resizeMode="contain" />
           </View>
@@ -40,6 +65,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               <Pressable
                 accessibilityRole="button"
                 onPress={() => onOpenAlertSettings("H4", "umbrella")}
+                hitSlop={9}
                 style={({ pressed }) => [
                   styles.alertLink,
                   {
@@ -130,8 +156,9 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
 }
 
 function Panel({ title, theme, children }: { title: string; theme: AppTheme; children: React.ReactNode }) {
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card }, cardShadow(theme)]}>
+    <View style={[styles.panel, { backgroundColor: theme.card, padding: layout.weatherPanelPadding }, cardShadow(theme)]}>
       <Text style={[styles.panelTitle, { color: theme.muted }]}>{title}</Text>
       {children}
     </View>
@@ -266,11 +293,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: 10,
-    paddingHorizontal: 20,
-    paddingTop: 16,
     paddingBottom: 16,
     minHeight: "100%",
+    width: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -295,11 +321,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroCard: {
-    minHeight: 104,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    padding: 16,
     borderRadius: radius.lg,
     borderLeftWidth: 3,
   },
@@ -386,7 +410,6 @@ const styles = StyleSheet.create({
   },
   panel: {
     gap: 8,
-    padding: 12,
     borderRadius: radius.lg,
   },
   panelTitle: {

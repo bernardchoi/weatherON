@@ -9,6 +9,7 @@ import { Section } from "../components/Section";
 import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { getConditionLabel } from "../utils/weatherPresentation";
@@ -22,6 +23,7 @@ export function OutfitScreen({
   onNavigate,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -36,7 +38,18 @@ export function OutfitScreen({
       badge={`${state.outfit.matchPct}%`}
       showWordmark={false}
     >
-      <View style={[styles.criteriaCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+      <View
+        style={[
+          styles.criteriaCard,
+          {
+            gap: layout.outfitCardGap,
+            padding: layout.outfitPanelPadding,
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+          cardShadow(theme),
+        ]}
+      >
         <View style={styles.criteriaHeader}>
           <View style={styles.criteriaCopy}>
             <Text style={[styles.criteriaLabel, { color: theme.subtle }]}>나만의 코디 기준</Text>
@@ -52,8 +65,8 @@ export function OutfitScreen({
             <Text style={[styles.criteriaEditText, { color: theme.gold }]}>기준 수정</Text>
           </FeedbackPressable>
         </View>
-        <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
-        <View style={styles.criteriaStats}>
+        <Text style={[styles.criteriaBody, { color: theme.muted }]} numberOfLines={layout.isShort ? 2 : 1}>{wardrobeCaption}</Text>
+        <View style={[styles.criteriaStats, { gap: layout.isShort ? 5 : 7 }]}>
           <FeedbackPressable
             accessibilityLabel={`내 옷장 ${ownedItemCount}개 반영, 내 옷장 보기`}
             accessibilityRole="button"
@@ -125,7 +138,7 @@ export function OutfitScreen({
             </View>
           ))}
         </FeedbackPressable>
-        <View style={styles.actions}>
+        <View style={[styles.actions, layout.isShort ? styles.actionsShort : null]}>
           <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} />
           <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" />
         </View>
@@ -186,7 +199,7 @@ const styles = StyleSheet.create({
   },
   criteriaStat: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 44,
     justifyContent: "center",
     gap: 4,
     paddingHorizontal: 10,
@@ -201,7 +214,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   criteriaEditButton: {
-    minHeight: 40,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -264,6 +277,10 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
+  },
+  actionsShort: {
+    flexDirection: "column",
   },
 });

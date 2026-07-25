@@ -8,6 +8,7 @@ import { StatusPill } from "../components/StatusPill";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
 
@@ -24,6 +25,7 @@ export function OutfitDetailScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
   const usesWrappedItemGrid = items.length > 3;
   const signalMetrics = buildSignalMetrics(state, theme);
@@ -71,13 +73,28 @@ export function OutfitDetailScreen({
                 accessibilityLabel={`${getOutfitSlotLabel(slot)} ${item.name}`}
                 style={[
                   styles.outfitMiniTile,
-                  usesWrappedItemGrid ? styles.outfitMiniTileGrid : styles.outfitMiniTileFlexible,
-                  { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                  usesWrappedItemGrid
+                    ? [styles.outfitMiniTileGrid, { width: layout.wardrobeGridItemWidth }]
+                    : styles.outfitMiniTileFlexible,
+                  {
+                    minHeight: layout.outfitDetailCardMinHeight,
+                    backgroundColor: theme.cardMuted,
+                    borderColor: theme.border,
+                  },
                 ]}
               >
-                <View style={[styles.outfitImageFrame, { backgroundColor: theme.card }]}>
+                <View
+                  style={[
+                    styles.outfitImageFrame,
+                    { height: layout.outfitDetailImageHeight, backgroundColor: theme.card },
+                  ]}
+                >
                   {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
-                    <Image source={outfitImageAssets[item.imageUrl]} style={styles.outfitImage} resizeMode="contain" />
+                    <Image
+                      source={outfitImageAssets[item.imageUrl]}
+                      style={[styles.outfitImage, { height: Math.max(40, layout.outfitDetailImageHeight - 4) }]}
+                      resizeMode="contain"
+                    />
                   ) : (
                     <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
@@ -113,9 +130,16 @@ export function OutfitDetailScreen({
       ) : null}
 
       <Section title="추천 근거" caption="신호 압축" accent="gold">
-        <View style={styles.signalGrid}>
+        <View style={[styles.signalGrid, { gap: layout.isShort ? layout.outfitCardGap : 0 }]}>
           {signalMetrics.map((metric) => (
-            <View key={metric.label} style={[styles.signalTile, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+            <View
+              key={metric.label}
+              style={[
+                styles.signalTile,
+                layout.isShort ? styles.signalTileShort : null,
+                { backgroundColor: theme.cardMuted, borderColor: theme.border },
+              ]}
+            >
               <Image source={metric.icon} style={[styles.signalIcon, { tintColor: metric.color }]} resizeMode="contain" />
               <Text style={[styles.signalLabel, { color: theme.subtle }]}>{metric.label}</Text>
               <Text style={[styles.signalValue, { color: theme.text }]} numberOfLines={1}>{metric.value}</Text>
@@ -182,11 +206,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   outfitMiniTileGrid: {
-    width: "31.4%",
+    width: "30.8%",
   },
   outfitImageFrame: {
     width: "100%",
-    height: 50,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
@@ -194,7 +217,6 @@ const styles = StyleSheet.create({
   },
   outfitImage: {
     width: "92%",
-    height: 46,
   },
   outfitFallbackIcon: {
     width: 24,
@@ -237,6 +259,7 @@ const styles = StyleSheet.create({
   },
   signalGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
   },
   signalTile: {
@@ -248,6 +271,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  signalTileShort: {
+    width: "48%",
   },
   signalIcon: {
     width: 18,

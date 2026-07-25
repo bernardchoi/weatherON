@@ -10,6 +10,7 @@ import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getFeelsLikeMessage } from "../utils/feelsLikeMessage";
 import { getDisplayLocationName } from "../utils/locationDisplay";
@@ -42,6 +43,7 @@ export function HomeScreen({
   onOpenNotificationDeepLink,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const pullRefreshObservedLoadingRef = useRef(false);
@@ -79,7 +81,15 @@ export function HomeScreen({
       <WeatherBackground condition={current.condition} theme={theme} />
       <ScrollView
         style={styles.homeScroll}
-        contentContainerStyle={styles.homeContent}
+        contentContainerStyle={[
+          styles.homeContent,
+          {
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.weatherContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.isShort ? 2 : 4,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -141,7 +151,17 @@ export function HomeScreen({
           ) : null}
         </View>
 
-        <View style={[styles.homePlanCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.homePlanCard,
+            {
+              padding: layout.weatherPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <DestinationSelectorCard
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
@@ -539,6 +559,7 @@ function HomeDecisionHero({
   theme: AppTheme;
   onOpenForecast: () => void;
 }) {
+  const layout = useResponsiveLayout();
   const isNight = useIsNightHour();
   const isClear = current.condition !== "rain" && current.condition !== "storm";
   const weatherIcon = !isClear ? uiIconAssets.rain : isNight ? uiIconAssets.clearNight : uiIconAssets.uv;
@@ -548,20 +569,72 @@ function HomeDecisionHero({
   return (
     <View
       accessibilityLabel="현재 날씨 요약"
-      style={[styles.decisionHero, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}
+      style={[
+        styles.decisionHero,
+        {
+          minHeight: layout.homeHeroMinHeight,
+          padding: layout.weatherPanelPadding,
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+        },
+        cardShadow(theme),
+      ]}
     >
-      <View style={styles.weatherShowcase}>
-        <View style={[styles.weatherHalo, { backgroundColor: theme.cardMuted }]} />
+      <View style={[styles.weatherShowcase, { minHeight: layout.homeWeatherShowcaseMinHeight }]}>
+        <View
+          style={[
+            styles.weatherHalo,
+            {
+              marginLeft: -(layout.homeWeatherHaloSize / 2),
+              width: layout.homeWeatherHaloSize,
+              height: layout.homeWeatherHaloSize,
+              borderRadius: layout.homeWeatherHaloSize / 2,
+              backgroundColor: theme.cardMuted,
+            },
+          ]}
+        />
         <FeedbackPressable
           accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
           accessibilityRole="button"
           onPress={onOpenForecast}
           style={styles.weatherPrimaryColumn}
         >
-          <View style={[styles.weatherOrb, { backgroundColor: `${weatherAccentColor}18`, borderColor: `${weatherAccentColor}42` }]}>
-            <Image source={weatherIcon} style={[styles.weatherOrbIcon, { tintColor: weatherAccentColor }]} resizeMode="contain" />
+          <View
+            style={[
+              styles.weatherOrb,
+              {
+                width: layout.homeWeatherOrbSize,
+                height: layout.homeWeatherOrbSize,
+                backgroundColor: `${weatherAccentColor}18`,
+                borderColor: `${weatherAccentColor}42`,
+              },
+            ]}
+          >
+            <Image
+              source={weatherIcon}
+              style={[
+                styles.weatherOrbIcon,
+                {
+                  width: layout.homeWeatherIconSize,
+                  height: layout.homeWeatherIconSize,
+                  tintColor: weatherAccentColor,
+                },
+              ]}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={[styles.showcaseTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+          <Text
+            style={[
+              styles.showcaseTemp,
+              {
+                color: theme.text,
+                fontSize: layout.isShort ? 42 : layout.isRegular ? 50 : 48,
+                lineHeight: layout.isShort ? 45 : layout.isRegular ? 53 : 51,
+              },
+            ]}
+          >
+            {formatTemperature(current.tempC, temperatureUnit)}
+          </Text>
           <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
           {todayMinMax ? (
             <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
@@ -824,6 +897,7 @@ function NotificationSidebar({
   theme: AppTheme;
 }) {
   const insets = useSafeAreaInsets();
+  const layout = useResponsiveLayout();
   const [mounted, setMounted] = useState(visible);
   const [bulkDismissing, setBulkDismissing] = useState(false);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
@@ -959,6 +1033,8 @@ function NotificationSidebar({
           style={[
             styles.sidebarPanel,
             {
+              maxWidth: layout.homeSidebarMaxWidth,
+              paddingHorizontal: layout.weatherPanelPadding,
               backgroundColor: theme.cardStrong,
               borderColor: theme.border,
               shadowColor: theme.shadow,
@@ -1333,10 +1409,9 @@ const styles = StyleSheet.create({
   homeContent: {
     // BottomNav는 스크롤 영역 밖 형제라 큰 하단 보정 없이도 마지막 카드가 가려지지 않는다.
     flexGrow: 1,
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingTop: 4,
     paddingBottom: 10,
+    width: "100%",
+    alignSelf: "center",
   },
   topBar: {
     minHeight: 44,
@@ -1377,14 +1452,11 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   decisionHero: {
-    minHeight: 224,
     gap: spacing.xs,
-    padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   weatherShowcase: {
-    minHeight: 168,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -1394,10 +1466,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: "50%",
-    marginLeft: -80,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
     opacity: 0.5,
   },
   weatherPrimaryColumn: {
@@ -1409,16 +1477,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   weatherOrb: {
-    width: 106,
-    height: 106,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   weatherOrbIcon: {
-    width: 70,
-    height: 70,
   },
   showcaseTemp: {
     marginTop: 4,
@@ -1541,7 +1605,6 @@ const styles = StyleSheet.create({
   },
   homePlanCard: {
     gap: spacing.sm,
-    padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -1833,11 +1896,8 @@ const styles = StyleSheet.create({
   },
   sidebarPanel: {
     width: "86%",
-    maxWidth: 340,
     height: "100%",
     gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: 30,
     paddingBottom: spacing.xl,
     borderLeftWidth: 1,
     shadowOffset: { width: -10, height: 0 },
