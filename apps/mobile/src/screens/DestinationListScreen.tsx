@@ -7,6 +7,7 @@ import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { isLiveTransitEstimate } from "../utils/travelEstimate";
@@ -46,6 +47,7 @@ export function DestinationListScreen({
   onDismissRemovedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const care = state.destinationCare;
   const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit);
   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
@@ -56,11 +58,35 @@ export function DestinationListScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.destinationContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, !hasDestinations ? styles.atmosphereEmpty : null, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>출발</Text>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.text,
+                fontSize: layout.screenTitleFontSize,
+                lineHeight: layout.screenTitleLineHeight,
+              },
+            ]}
+          >
+            출발
+          </Text>
         </View>
 
         <FeedbackPressable
@@ -74,7 +100,11 @@ export function DestinationListScreen({
             }
             onNavigate("P1");
           }}
-          style={[styles.todayCard, { backgroundColor: theme.card, borderLeftColor: theme.clear }, cardShadow(theme)]}
+          style={[
+            styles.todayCard,
+            { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderLeftColor: theme.clear },
+            cardShadow(theme),
+          ]}
         >
           <View style={styles.todayTop}>
             <View>
@@ -101,6 +131,9 @@ export function DestinationListScreen({
               <DestinationCard
                 key={item.id}
                 item={item}
+                isShort={layout.isShort}
+                paddingHorizontal={layout.destinationCardPaddingHorizontal}
+                paddingVertical={layout.destinationCardPaddingVertical}
                 theme={theme}
                 permissionReady={permissionReady}
                 selected={selectedDestinationPlace.id === item.place.id}
@@ -111,7 +144,11 @@ export function DestinationListScreen({
               />
             ))
           ) : (
-            <EmptyDestinationState theme={theme} onAdd={() => onNavigate("P1")} />
+            <EmptyDestinationState
+              panelPadding={layout.destinationPanelPadding}
+              theme={theme}
+              onAdd={() => onNavigate("P1")}
+            />
           )}
         </View>
 
@@ -151,9 +188,28 @@ export function DestinationListScreen({
   );
 }
 
-function EmptyDestinationState({ theme, onAdd }: { theme: AppTheme; onAdd: () => void }) {
+function EmptyDestinationState({
+  panelPadding,
+  theme,
+  onAdd,
+}: {
+  panelPadding: number;
+  theme: AppTheme;
+  onAdd: () => void;
+}) {
   return (
-    <View style={[styles.emptyCard, { backgroundColor: theme.card, borderLeftColor: theme.clear, borderColor: theme.border }, cardShadow(theme)]}>
+    <View
+      style={[
+        styles.emptyCard,
+        {
+          padding: panelPadding,
+          backgroundColor: theme.card,
+          borderLeftColor: theme.clear,
+          borderColor: theme.border,
+        },
+        cardShadow(theme),
+      ]}
+    >
       <View style={styles.emptyHeader}>
         <View style={[styles.emptyIconBox, { backgroundColor: theme.cardStrong }]}>
           <PlaceGlyph type="place" color={theme.clear} />
@@ -223,12 +279,18 @@ function EmptyBenefit({
 
 function DestinationCard({
   item,
+  isShort,
+  paddingHorizontal,
+  paddingVertical,
   theme,
   permissionReady,
   selected,
   onOpen,
 }: {
   item: DestinationCardModel;
+  isShort: boolean;
+  paddingHorizontal: number;
+  paddingVertical: number;
   theme: AppTheme;
   permissionReady: boolean;
   selected: boolean;
@@ -246,6 +308,8 @@ function DestinationCard({
           backgroundColor: theme.card,
           borderLeftColor: accent,
           borderColor: selected ? selectedAccent : "transparent",
+          paddingHorizontal,
+          paddingVertical,
         },
         cardShadow(theme),
       ]}
@@ -288,7 +352,7 @@ function DestinationCard({
           </View>
         </View>
 
-        <View style={styles.destinationBottom}>
+        <View style={[styles.destinationBottom, isShort ? styles.destinationBottomShort : null]}>
           <View style={styles.timeLine}>
             <Image source={uiIconAssets.clock} style={[styles.timeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
@@ -574,11 +638,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.md,
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.xl,
     minHeight: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -609,7 +671,6 @@ const styles = StyleSheet.create({
   },
   todayCard: {
     gap: spacing.sm,
-    padding: 16,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
   },
@@ -710,8 +771,6 @@ const styles = StyleSheet.create({
   },
   destinationCard: {
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
     borderRadius: radius.md,
     borderLeftWidth: 2,
     borderWidth: 1,
@@ -721,7 +780,6 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     gap: spacing.md,
-    padding: 16,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
     borderWidth: 1,
@@ -922,6 +980,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.xs,
+  },
+  destinationBottomShort: {
+    alignItems: "flex-start",
+    flexDirection: "column",
   },
   timeLine: {
     flex: 1,

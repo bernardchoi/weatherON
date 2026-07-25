@@ -8,6 +8,7 @@ import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -34,6 +35,7 @@ export function DestinationCareScreen({
   onRemoveSavedDestination,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const care = state.destinationCare;
   const originWeather = care.originWeather;
   const destinationWeather = care.destinationWeather;
@@ -76,7 +78,20 @@ export function DestinationCareScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.destinationContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
@@ -84,7 +99,7 @@ export function DestinationCareScreen({
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
-              <Text style={[styles.title, { color: theme.text }]}>{headerTitle}</Text>
+              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
             </View>
             <Text style={[styles.subtitle, { color: theme.subtle }]}>목적지 기준 알림 미리보기</Text>
           </View>
@@ -97,8 +112,25 @@ export function DestinationCareScreen({
           </View>
         ) : null}
 
-        <View style={[styles.decisionPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme)]}>
-          <View accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.decisionImageFrame, { borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.decisionPanel,
+            { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.gold },
+            cardShadow(theme),
+          ]}
+        >
+          <View
+            accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`}
+            style={[
+              styles.decisionImageFrame,
+              {
+                height: layout.destinationCareImageHeight,
+                marginTop: -layout.destinationPanelPadding,
+                marginHorizontal: -layout.destinationPanelPadding,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
             <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
               <Text style={[styles.generatedImageBadgeText, { color: theme.subtle }]}>AI 이미지</Text>
@@ -118,7 +150,13 @@ export function DestinationCareScreen({
               </Text>
             </View>
           </View>
-          <View style={[styles.routeSummaryStrip, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
+          <View
+            style={[
+              styles.routeSummaryStrip,
+              layout.isShort ? styles.routeSummaryStripShort : null,
+              { backgroundColor: theme.cardMuted, borderColor: "transparent" },
+            ]}
+          >
             <SummaryChip
               icon={uiIconAssets.clock}
               label="도착"
@@ -128,6 +166,8 @@ export function DestinationCareScreen({
               theme={theme}
               accessibilityLabel={`도착 희망 시각 ${targetArrivalTime}, 시간 변경 시트 열기`}
               onPress={() => setArrivalEditorOpen(true)}
+              short={layout.isShort}
+              minHeight={layout.destinationCareSummaryMinHeight}
             />
             <SummaryChip
               icon={uiIconAssets.depart}
@@ -138,11 +178,15 @@ export function DestinationCareScreen({
               theme={theme}
               accessibilityLabel={`이동수단 ${transportLabel}, 선택 시트 열기`}
               onPress={() => setTransportSelectorOpen(true)}
+              short={layout.isShort}
+              minHeight={layout.destinationCareSummaryMinHeight}
             />
             <ArrivalControl
               label="자동 여유"
               value={routeTimingReady ? `${bufferMinutes}분` : "보류"}
               caption={bufferReason}
+              short={layout.isShort}
+              minHeight={layout.destinationCareSummaryMinHeight}
               theme={theme}
             />
           </View>
@@ -338,6 +382,8 @@ function SummaryChip({
   theme,
   accessibilityLabel,
   onPress,
+  short,
+  minHeight,
 }: {
   icon: number;
   label: string;
@@ -347,6 +393,8 @@ function SummaryChip({
   theme: AppTheme;
   accessibilityLabel: string;
   onPress: () => void;
+  short: boolean;
+  minHeight: number;
 }) {
   const glassSurface = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   return (
@@ -354,7 +402,12 @@ function SummaryChip({
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.summaryChip, glassSurface ? [styles.summaryChipGlass, glassSurface] : null]}
+      style={[
+        styles.summaryChip,
+        short ? styles.routeSummaryItemShort : null,
+        { minHeight },
+        glassSurface ? [styles.summaryChipGlass, glassSurface] : null,
+      ]}
     >
       {glassSurface ? <IosGlassBackdrop theme={theme} role="chip" style={styles.summaryChipBackdrop} /> : null}
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
@@ -486,15 +539,25 @@ function ArrivalControl({
   label,
   value,
   caption,
+  short,
+  minHeight,
   theme,
 }: {
   label: string;
   value: string;
   caption: string;
+  short: boolean;
+  minHeight: number;
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.arrivalControl, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
+    <View
+      style={[
+        styles.arrivalControl,
+        short ? styles.routeSummaryItemShort : null,
+        { minHeight, backgroundColor: theme.cardMuted, borderColor: "transparent" },
+      ]}
+    >
       <View style={styles.arrivalControlCopy}>
         <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
         <Text style={[styles.arrivalControlValue, { color: theme.text }]}>{value}</Text>
@@ -587,6 +650,8 @@ function RepeatSchedulePanel({
   onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
+  const layout = useResponsiveLayout();
+  const repeatDayHorizontalHitSlop = Math.max(0, (44 - layout.destinationRepeatDaySize) / 2);
   return (
     <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.settingsRow}>
@@ -633,8 +698,16 @@ function RepeatSchedulePanel({
                 accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                hitSlop={{ left: repeatDayHorizontalHitSlop, right: repeatDayHorizontalHitSlop }}
                 onPress={() => onToggleRepeatDay(option.day)}
-                style={[styles.repeatDayChip, { backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
+                style={[
+                  styles.repeatDayChip,
+                  {
+                    width: layout.destinationRepeatDaySize,
+                    backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted,
+                    borderColor: selected ? theme.clear : theme.border,
+                  },
+                ]}
               >
                 <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
               </FeedbackPressable>
@@ -861,11 +934,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: spacing.lg,
     minHeight: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -927,7 +998,6 @@ const styles = StyleSheet.create({
   },
   decisionPanel: {
     gap: spacing.sm,
-    padding: 16,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
   },
@@ -948,10 +1018,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   decisionImageFrame: {
-    height: 126,
     alignSelf: "stretch",
-    marginTop: -16,
-    marginHorizontal: -16,
     overflow: "hidden",
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
@@ -1022,6 +1089,12 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 0,
+  },
+  routeSummaryStripShort: {
+    flexWrap: "wrap",
+  },
+  routeSummaryItemShort: {
+    flexBasis: "48%",
   },
   summaryChip: {
     flex: 1,
@@ -1451,7 +1524,6 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   repeatDayChip: {
-    width: 44,
     minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
