@@ -42,6 +42,10 @@ const pngJobs = [
 ];
 
 const iconPngSizes = [16, 24, 32, 48, 64, 128, 180, 192, 256, 512, 1024];
+const androidIconPngJobs = [
+  ["assets/icon/icon-light-v2.svg", "assets/icon/android/icon-adaptive-foreground-light-1024.png", 1024, 1024],
+  ["assets/icon/icon-dark.svg", "assets/icon/android/icon-adaptive-foreground-1024.png", 1024, 1024],
+];
 
 function attrValue(attrs, name, fallback = "") {
   const match = attrs.match(new RegExp(`${name}="([^"]*)"`, "i"));
@@ -109,7 +113,32 @@ async function buildOutlineSvg(sourcePath, targetPath) {
 
 async function renderPng(sourcePath, targetPath, width, height) {
   const source = await readFile(join(root, sourcePath), "utf8");
-  const image = await loadImage(Buffer.from(source));
+  const sizedSource = source.replace(
+    /<svg\b([^>]*)>/,
+    `<svg$1 width="${width}" height="${height}">`,
+  );
+  const image = await loadImage(Buffer.from(sizedSource));
+  const canvas = createCanvas(width, height);
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+  await writeFile(join(root, targetPath), canvas.toBuffer("image/png"));
+}
+
+async function renderAdaptiveForegroundPng(sourcePath, targetPath, width, height) {
+  const source = await readFile(join(root, sourcePath), "utf8");
+  const viewBoxMatch = source.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  const sourceWidth = viewBoxMatch ? Number.parseFloat(viewBoxMatch[1]) : 120;
+  const sourceHeight = viewBoxMatch ? Number.parseFloat(viewBoxMatch[2]) : 120;
+  const foregroundScale = 0.764;
+  const scale = Math.min(width / sourceWidth, height / sourceHeight) * foregroundScale;
+  const translateX = (width - sourceWidth * scale) / 2;
+  const translateY = (height - sourceHeight * scale) / 2;
+  const symbolOnly = source
+    .replace(/<svg\b[^>]*>/, `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`)
+    .replace(/\s*<rect width="120" height="120"[^>]*\/>\s*/, `\n<g transform="translate(${round(translateX)} ${round(translateY)}) scale(${round(scale)})">\n`)
+    .replace("</svg>", "\n</g>\n</svg>");
+  const image = await loadImage(Buffer.from(symbolOnly));
   const canvas = createCanvas(width, height);
   const context = canvas.getContext("2d");
   context.clearRect(0, 0, width, height);
@@ -129,4 +158,10 @@ for (const size of iconPngSizes) {
   await renderPng("assets/icon/icon-light-v2.svg", `assets/icon/icon-light-v2-${size}.png`, size, size);
 }
 
-console.log(`Generated ${svgJobs.length} outline SVGs, ${pngJobs.length} preview PNGs, and ${iconPngSizes.length} light v2 icon PNGs.`);
+for (const [sourcePath, targetPath, width, height] of androidIconPngJobs) {
+  await renderAdaptiveForegroundPng(sourcePath, targetPath, width, height);
+}
+
+console.log(
+  `Generated ${svgJobs.length} outline SVGs, ${pngJobs.length} preview PNGs, ${iconPngSizes.length} light v2 icon PNGs, and ${androidIconPngJobs.length} Android icon PNGs.`,
+);

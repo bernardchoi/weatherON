@@ -65,9 +65,9 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
               <Image source={getConditionIcon(current.condition)} style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme) }]} resizeMode="contain" />
             </View>
             <View style={styles.heroCopy}>
-              <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.feelsLikeC, temperatureUnit)}</Text>
+              <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
               <Text style={[styles.heroCondition, { color: theme.muted }]}>
-                {getConditionLabel(current.condition)} · 현재 {formatTemperature(current.tempC, temperatureUnit)}
+                {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
               </Text>
             </View>
           </View>
