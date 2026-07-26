@@ -8,24 +8,25 @@ type SectionProps = {
   title: string;
   caption?: string;
   accent?: "clear" | "gold" | "sky" | "warm";
+  compact?: boolean;
   children: React.ReactNode;
 };
 
-export function Section({ title, caption, accent, children }: SectionProps) {
+export function Section({ title, caption, accent, compact = false, children }: SectionProps) {
   const theme = useAppTheme();
   const accentColor = accent ? getAccentColor(theme, accent) : undefined;
   const icon = getSectionIcon(title);
   return (
     <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme)]}>
-      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={[styles.section, compact ? styles.sectionCompact : null, { backgroundColor: theme.card, borderColor: theme.border }]}>
         {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
-        <View style={styles.header}>
-          <View style={[styles.iconFrame, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>
-            <Image source={icon} style={[styles.icon, { tintColor: accentColor ?? theme.skyLite }]} resizeMode="contain" />
+        <View style={[styles.header, compact ? styles.headerCompact : null]}>
+          <View style={[styles.iconFrame, compact ? styles.iconFrameCompact : null, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>
+            <Image source={icon} style={[styles.icon, compact ? styles.iconCompact : null, { tintColor: accentColor ?? theme.skyLite }]} resizeMode="contain" />
           </View>
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-            {caption ? <Text style={[styles.caption, { color: theme.muted }]} numberOfLines={2}>{caption}</Text> : null}
+            <Text style={[styles.title, compact ? styles.titleCompact : null, { color: theme.text }]}>{title}</Text>
+            {caption ? <Text style={[styles.caption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={compact ? 1 : 2}>{caption}</Text> : null}
           </View>
         </View>
         {children}
@@ -64,6 +65,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
+  sectionCompact: {
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: 12,
+  },
   accent: {
     position: "absolute",
     left: 0,
@@ -75,6 +81,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+  },
+  headerCompact: {
+    gap: spacing.xs,
   },
   headerCopy: {
     flex: 1,
@@ -88,18 +97,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.md,
   },
+  iconFrameCompact: {
+    width: 32,
+    height: 32,
+  },
   icon: {
     width: 19,
     height: 19,
+  },
+  iconCompact: {
+    width: 17,
+    height: 17,
   },
   title: {
     fontSize: 17,
     lineHeight: 21,
     fontWeight: "900",
   },
+  titleCompact: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
   caption: {
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "700",
+  },
+  captionCompact: {
+    fontSize: 11,
+    lineHeight: 15,
   },
 });
