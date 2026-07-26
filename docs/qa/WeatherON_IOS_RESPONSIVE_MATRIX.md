@@ -1,6 +1,6 @@
 # WeatherON iOS 반응형 QA 매트릭스
 
-기준일: 2026-07-25
+기준일: 2026-07-26
 
 ## 화면 등급
 
@@ -33,7 +33,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | P0 | 진입·앱 소개 | A1, O1 | 고정 높이, 하단 CTA | 통과 | 부분 | 통과 | 통과 | 부분 |
 | P0 | 온보딩 핵심 | O2, O7, O3, O4, O5, O6 | 긴 설명, 선택 카드, 권한 CTA | 통과 | 부분 | 통과 | 통과 | 부분 |
-| P0 | 홈·날씨 | H1, H2, H3, H4, H5, H6, H7 | 카드 밀도, 사이드 패널, 차트 | 부분 | 부분 | 부분 | 부분 | 부분 |
+| P0 | 홈·날씨 | H1, H2, H3, H4, H5, H6, H7 | 카드 밀도, 사이드 패널, 차트 | 부분 | 부분 | 부분 | 통과 | 부분 |
 | P0 | 코디·옷장 | C1, C2, C3, C4 | 2열 카드, 이미지 비율, 상세 CTA | 통과 | 부분 | 통과 | 통과 | 부분 |
 | P0 | 목적지 | G1, G2, P1 | 검색 결과, 시간 선택, 고정 CTA | 대기 | 부분 | 대기 | 대기 | 대기 |
 | P0 | MY·설정 | M1, M2, M3, M4 | 설정 행, 스위치, 하단 내비게이션 | 대기 | 부분 | 대기 | 대기 | 대기 |
@@ -50,7 +50,7 @@
 | 시작 화면 | 아이콘·워드마크·문구·배경 곡면을 너비/높이 등급별 조정 |
 | iOS BottomNav | 기기 등급별 좌우 여백, tablet 최대 폭 680pt |
 | 온보딩 O2~O7 | short 대표 이미지·카드 높이 축소, regular 여백·이미지 확대, 44pt 선택 버튼 유지 |
-| 홈·날씨 H1~H7 | H1은 현재 날씨·특보·코디·선택 목적지·출발 판단을 스크롤 없는 한 페이지 요약형으로 구성, short 히어로·날씨 패널·차트 축소, regular/tablet 최대 폭 제한, H7 세로 스크롤, 44pt 조작부 유지 |
+| 홈·날씨 H1~H7 | H1은 기기 높이에 따라 compact/regular 요약 밀도를 분리, short 히어로·날씨 패널·차트 축소, regular/tablet 최대 폭 제한, H7 세로 스크롤, 44pt 조작부 유지 |
 | 코디·옷장 C1~C4 | SE3·mini 카드 2열, 일반 iPhone 3열, tablet 기준 4열, 이미지 높이·C4 저장 footer·44pt 필터·소형 버튼 조정 |
 | 계정·약관 A2·A3·A4·R1·R2 | 연결 방법·동의 행·위험 동작·정책 목록·긴 문서의 높이·여백·최대 폭과 44pt 조작부 조정 |
 | MY·설정 표시 설정 | `GlobalSettingsScreen` 세그먼트 버튼(단위·테마 전환)이 34pt로 44pt 미만이던 것을 확인해 컨트롤 높이 52pt·옵션 44pt로 조정 |
@@ -68,10 +68,14 @@
 | iPhone SE 3세대 온보딩 | O2~O7 narrow/short 네이티브 렌더링 통과 | `/tmp/weatheron-o2-se3.png` ~ `/tmp/weatheron-o7-se3-clean.png` |
 | iPhone 17e 온보딩 | O2~O7 compact/standard 네이티브 렌더링 통과 | `/tmp/weatheron-o2-17e.png` ~ `/tmp/weatheron-o7-17e-clean.png` |
 | iPhone 17 Pro Max 온보딩 | O2~O7 regular/standard 네이티브 렌더링 통과 | `/tmp/weatheron-o2-promax-clean.png` ~ `/tmp/weatheron-o7-promax.png` |
-| iPhone SE 3세대 홈·날씨 | H2~H7 narrow/short 네이티브 렌더링 통과, 현재 H1은 375 × 667 웹 뷰포트에서 마지막 카드가 하단 내비 위에 노출되고 세로 스크롤·가로 넘침·44pt 미만 조작부 없음 | `/tmp/weatheron-h2-se3.png` ~ `/tmp/weatheron-h7-se3.png`, `/tmp/weatheron-home-single-page-se3.png` |
-| iPhone 12/13 mini 홈 | 현재 H1은 375 × 812 웹 뷰포트에서 마지막 카드가 하단 내비 위에 노출되고 세로 스크롤·가로 넘침·44pt 미만 조작부 없음 | `/tmp/weatheron-home-single-page-mini.png` |
-| iPhone 17e 홈·날씨 | H2~H7 compact/standard 네이티브 렌더링 통과, 현재 H1은 390 × 844 웹 뷰포트에서 마지막 카드가 하단 내비 위에 노출되고 세로 스크롤·가로 넘침·44pt 미만 조작부 없음 | `/tmp/weatheron-h2-17e.png` ~ `/tmp/weatheron-h7-17e-late.png`, `/tmp/weatheron-home-single-page-17e.png` |
-| iPhone 17 Pro Max 홈·날씨 | H2~H7 regular/standard 네이티브 렌더링 통과, 현재 H1은 440 × 956 웹 뷰포트에서 마지막 카드가 하단 내비 위에 노출되고 세로 스크롤·가로 넘침·44pt 미만 조작부 없음 | `/tmp/weatheron-h2-promax.png` ~ `/tmp/weatheron-h7-promax.png`, `/tmp/weatheron-home-single-page-promax.png` |
+| iPhone SE 3세대 홈·날씨 | H2~H7 narrow/short 네이티브 렌더링 통과, 현재 H1은 웹 뷰포트 증거로 갱신 | `/tmp/weatheron-h2-se3.png` ~ `/tmp/weatheron-h7-se3.png`, `/private/tmp/weatheron-ios-home-se3.png` |
+| iPhone SE 3세대 현재 H1 | 375 × 667 웹 뷰포트에서 마지막 판단 카드 467pt, 하단 내비 기준 581pt, 가로 넘침·44pt 미만 조작부 없음 | `/private/tmp/weatheron-ios-home-se3.png` |
+| iPhone 12/13 mini 현재 H1 | 375 × 812 웹 뷰포트에서 마지막 판단 카드 519pt, 하단 내비 기준 726pt, 가로 넘침·44pt 미만 조작부 없음 | `/private/tmp/weatheron-ios-home-mini.png` |
+| iPhone 17e 홈·날씨 | H2~H7 compact/standard 네이티브 렌더링 통과, 현재 H1은 웹 뷰포트 증거로 갱신 | `/tmp/weatheron-h2-17e.png` ~ `/tmp/weatheron-h7-17e-late.png`, `/private/tmp/weatheron-ios-home-17e.png` |
+| iPhone 17e 현재 H1 | 390 × 844 웹 뷰포트에서 마지막 판단 카드 607pt, 하단 내비 기준 758pt, 가로 넘침·44pt 미만 조작부 없음 | `/private/tmp/weatheron-ios-home-17e.png` |
+| iPhone 17 Pro Max 홈·날씨 | H2~H7 regular/standard 네이티브 렌더링 통과, 현재 H1은 웹 뷰포트 증거로 갱신 | `/tmp/weatheron-h2-promax.png` ~ `/tmp/weatheron-h7-promax.png`, `/private/tmp/weatheron-ios-home-promax.png` |
+| iPhone 17 Pro Max 현재 H1 | 440 × 956 웹 뷰포트에서 마지막 판단 카드 806pt, 하단 내비 기준 870pt, 가로 넘침·44pt 미만 조작부 없음 | `/private/tmp/weatheron-ios-home-promax.png` |
+| iPhone 16 Pro Max 실기기 현재 H1 | Release 로컬 빌드 설치·실행 후 홈 요약 전체가 첫 화면과 하단 내비 위에 표시됨 | `/private/tmp/weatheron-ios-device-home-one-page.png` |
 | iPhone SE 3세대 코디·옷장 | C1~C4 narrow/short 네이티브 렌더링 통과 | `/tmp/weatheron-c1-se3.png` ~ `/tmp/weatheron-c4-se3.png` |
 | iPhone 17e 코디·옷장 | C1~C4 compact/standard 네이티브 렌더링 통과 | `/tmp/weatheron-c1-17e.png` ~ `/tmp/weatheron-c4-17e.png` |
 | iPhone 17 Pro Max 코디·옷장 | C1~C4 regular/standard 네이티브 렌더링 통과 | `/tmp/weatheron-c1-promax.png` ~ `/tmp/weatheron-c4-promax.png` |
@@ -83,7 +87,7 @@
 
 홈·날씨 화면도 같은 방식의 QA 전용 route 번들로 직접 시작함. H1~H7 렌더링, 세로·가로 잘림, 하단 내비게이션 겹침을 확인했으며 실제 탭·스와이프 동작은 이번 증거 범위에 포함하지 않음. H3 예시 알림 카드의 비활성 삭제 배경 비침도 보정 후 재확인함.
 
-현재 H1 한 페이지 요약형 변경은 In-app browser에서 SE3·mini·17e·Pro Max 논리 해상도로 재검증함. 네 크기 모두 마지막 판단 카드가 하단 내비게이션 위에 노출되고 세로 스크롤·가로 넘침·44pt 미만 조작부가 없음을 확인했음. 이 증거는 웹 렌더링 기준 `부분`이며 현재 H1의 네이티브 실기기 시각·터치 검증은 별도로 갱신해야 함.
+현재 H1은 `npm run export:android-web` + 정적 서버(8094) + `WEATHERON_WEB_PREVIEW_URL=http://127.0.0.1:8094/ node /private/tmp/weatheron-check-ios-home-one-page.mjs`로 SE3·mini·17e·Pro Max 논리 해상도를 재검증함. 네 크기 모두 마지막 판단 카드가 하단 내비게이션 위에 남고 가로 넘침·44pt 미만 조작부·버튼 문구 잘림이 없었음. iPhone 16 Pro Max 실기기는 Xcode Release 로컬 빌드 후 설치·실행·스크린샷까지 확인함.
 
 코디·옷장 화면도 QA 전용 route 번들로 직접 시작함. C1~C4 헤더, 카드 열 수, 이미지 비율, C4 고정 저장 footer와 하단 내비게이션 분리를 확인했으며 필터 선택·저장·삭제 동작은 이번 증거 범위에 포함하지 않음.
 

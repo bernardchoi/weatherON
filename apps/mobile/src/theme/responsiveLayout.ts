@@ -29,11 +29,14 @@ export type ResponsiveLayout = {
   weatherChartHeight: number;
   homeContentGap: number;
   homePanelPadding: number;
+  homeCompact: boolean;
   homeHeroMinHeight: number;
   homeWeatherShowcaseMinHeight: number;
   homeWeatherHaloSize: number;
   homeWeatherOrbSize: number;
   homeWeatherIconSize: number;
+  homeOutfitMinHeight: number;
+  homeDecisionMinHeight: number;
   homeSidebarMaxWidth: number;
   notificationTopPadding: number;
   outfitPanelPadding: number;
@@ -90,6 +93,7 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
   const isRegular = safeWidth >= responsiveLayoutBreakpoints.regularWidth;
   const isShort = safeHeight < responsiveLayoutBreakpoints.shortHeight;
   const isTablet = safeWidth >= responsiveLayoutBreakpoints.tabletWidth;
+  const homeCompact = safeHeight <= 844;
 
   const screenHorizontalPadding = isTablet ? 32 : isRegular ? 28 : isNarrow ? 16 : 20;
   const splashIconSize = isShort ? 86 : isTablet ? 128 : isRegular ? 112 : isNarrow ? 96 : 102;
@@ -118,13 +122,16 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     weatherPanelPadding: isShort ? 12 : isTablet ? 18 : isRegular ? 16 : isNarrow ? 13 : 14,
     weatherAtmosphereHeight: isShort ? 220 : isTablet ? 340 : isRegular ? 300 : isNarrow ? 260 : 280,
     weatherChartHeight: isShort ? 78 : isTablet ? 108 : isRegular ? 100 : isNarrow ? 88 : 94,
-    homeContentGap: isShort ? 5 : isTablet ? 10 : isRegular ? 8 : isNarrow ? 6 : 7,
-    homePanelPadding: isShort ? 9 : isTablet ? 16 : isRegular ? 13 : isNarrow ? 10 : 11,
-    homeHeroMinHeight: isShort ? 138 : isTablet ? 188 : isRegular ? 160 : isNarrow ? 146 : 152,
-    homeWeatherShowcaseMinHeight: isShort ? 60 : isTablet ? 84 : isRegular ? 72 : isNarrow ? 64 : 68,
-    homeWeatherHaloSize: isShort ? 72 : isTablet ? 98 : isRegular ? 86 : isNarrow ? 76 : 80,
-    homeWeatherOrbSize: isShort ? 58 : isTablet ? 78 : isRegular ? 70 : isNarrow ? 62 : 66,
-    homeWeatherIconSize: isShort ? 38 : isTablet ? 52 : isRegular ? 46 : isNarrow ? 41 : 43,
+    homeContentGap: isShort ? 4 : isTablet ? 10 : homeCompact ? 6 : isRegular ? 8 : 7,
+    homePanelPadding: isShort ? 8 : isTablet ? 16 : homeCompact ? 10 : isRegular ? 13 : 11,
+    homeCompact,
+    homeHeroMinHeight: isShort ? 126 : isTablet ? 214 : homeCompact ? 142 : isRegular ? 188 : 168,
+    homeWeatherShowcaseMinHeight: isShort ? 54 : isTablet ? 134 : homeCompact ? 62 : isRegular ? 118 : 92,
+    homeWeatherHaloSize: isShort ? 72 : isTablet ? 136 : homeCompact ? 78 : isRegular ? 126 : 104,
+    homeWeatherOrbSize: isShort ? 56 : isTablet ? 92 : homeCompact ? 62 : isRegular ? 84 : 72,
+    homeWeatherIconSize: isShort ? 36 : isTablet ? 58 : homeCompact ? 40 : isRegular ? 52 : 46,
+    homeOutfitMinHeight: isShort ? 68 : isTablet ? 96 : homeCompact ? 76 : isRegular ? 88 : 82,
+    homeDecisionMinHeight: isShort ? 54 : isTablet ? 76 : homeCompact ? 64 : isRegular ? 70 : 66,
     homeSidebarMaxWidth: isShort ? 320 : isTablet ? 420 : isRegular ? 380 : isNarrow ? 320 : 340,
     notificationTopPadding: isShort ? 24 : isTablet ? 64 : isRegular ? 52 : 44,
     outfitPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : isNarrow ? 14 : 16,

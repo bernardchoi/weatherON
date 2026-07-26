@@ -1,4 +1,4 @@
-import Expo
+internal import Expo
 import React
 
 final class SceneDelegate: NSObject, UIWindowSceneDelegate {

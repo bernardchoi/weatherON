@@ -51,8 +51,36 @@ await writeFile(
       weatherKitFixture,
     } from "../packages/shared/src/index.ts";
 
+    const dryCommuteSnapshot = {
+      ...seongsuRainSnapshot,
+      id: "weather-seongsu-dry-commute",
+      observedAt: "2026-06-26T08:00:00+09:00",
+      current: {
+        ...seongsuRainSnapshot.current,
+        tempC: 24,
+        feelsLikeC: 24,
+        condition: "clear",
+        precipitationMm: 0,
+        rainProbabilityPct: 0,
+        windMs: 2.2,
+      },
+      hourly: seongsuRainSnapshot.hourly.map((hour, index) => ({
+        ...hour,
+        tempC: [24, 25, 26, 24][index] ?? 24,
+        rainProbabilityPct: 0,
+        precipitationMm: 0,
+        windMs: 2.2,
+        condition: "clear",
+      })),
+    };
+    const wardrobeWithOwnedDenim = presetWardrobe.map((item) => ({
+      ...item,
+      owned: item.id === "bottom-wide-denim",
+    }));
+
     export const results = {
       outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
+      ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
       umbrella: recommendUmbrella(seongsuRainSnapshot),
       shoes: recommendShoes(seongsuRainSnapshot, "work"),
       destination: buildDestinationCare({
@@ -336,7 +364,19 @@ await build({
   jsx: "automatic",
   target: "es2022",
   loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
-  external: ["react", "react/jsx-runtime", "react-native", "expo-blur", "expo-location", "expo-navigation-bar", "expo-sqlite", "expo-status-bar"],
+  external: [
+    "react",
+    "react/jsx-runtime",
+    "react-native",
+    "react-native-safe-area-context",
+    "expo-asset",
+    "expo-blur",
+    "expo-location",
+    "expo-modules-core",
+    "expo-navigation-bar",
+    "expo-sqlite",
+    "expo-status-bar",
+  ],
   logLevel: "silent",
 });
 
@@ -358,6 +398,8 @@ const { demoResults } = await import(pathToFileURL(providerBundle).href);
 assert.equal(results.outfit.variant, "rain");
 assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
 assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
+assert.equal(results.ownedDryOutfit.items.bottom.name, "와이드 데님");
+assert.equal(results.ownedDryOutfit.items.bottom.owned, true);
 assert.equal(results.umbrella.level, "required");
 assert.equal(results.shoes.level, "recommended");
 assert.equal(results.destination.careOn, true);
