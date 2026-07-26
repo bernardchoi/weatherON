@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
+import { OutfitGrid } from "../components/OutfitGrid";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDestinationImageAsset } from "../utils/destinationImage";
+import { getOutfitVariantLabel } from "../utils/outfitLabels";
+import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { getConditionLabel } from "../utils/weatherPresentation";
 
@@ -25,6 +29,12 @@ export function DestinationCareScreen({
   selectedDestinationPlace,
   temperatureUnit,
   distanceUnit,
+  wardrobeItems,
+  styleGender,
+  ageBand,
+  fitPreference,
+  selectedStyles,
+  smartCareScenario,
   onNavigate,
   onOpenAlertSettings,
   onToggleDestinationCare,
@@ -38,7 +48,10 @@ export function DestinationCareScreen({
   const layout = useResponsiveLayout();
   const care = state.destinationCare;
   const originWeather = care.originWeather;
-  const destinationWeather = care.destinationWeather;
+  const destinationWeather = state.destinationWeatherById[selectedDestinationPlace.id] ?? care.destinationWeather;
+  const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
+  const destinationOutfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
+  const destinationOutfitReason = destinationOutfit.reasons[0] ?? "목적지 날씨 기준으로 다시 고름";
   const headerTitle = selectedDestinationPlace?.name ?? care.name;
   const justSaved = Boolean(
     selectedDestinationPlace && savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id)?.savedAtLabel === "방금 저장",
@@ -201,6 +214,26 @@ export function DestinationCareScreen({
             onToggleRepeatDay={onToggleDestinationRepeatDay}
             theme={theme}
           />
+        </View>
+
+        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme)]}>
+          <View style={styles.outfitHeader}>
+            <View style={styles.outfitCopy}>
+              <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
+              <Text style={[styles.outfitTitle, { color: theme.text }]} numberOfLines={1}>{destinationOutfit.decisionText}</Text>
+              <Text style={[styles.outfitReason, { color: theme.muted }]} numberOfLines={1}>{destinationOutfitReason}</Text>
+            </View>
+            <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.outfitMatchText, { color: theme.clear }]}>{destinationOutfit.matchPct}%</Text>
+            </View>
+          </View>
+          <OutfitGrid outfit={destinationOutfit} maxItems={4} compact dense={layout.isShort} />
+          <View style={[styles.outfitMetaRow, { backgroundColor: theme.cardMuted }]}>
+            <Image source={uiIconAssets.pin} style={[styles.outfitMetaIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <Text style={[styles.outfitMetaText, { color: theme.text }]} numberOfLines={1}>
+              {destinationName} · {getOutfitVariantLabel(destinationOutfit.variant)}
+            </Text>
+          </View>
         </View>
 
         {!permissionReady ? (
@@ -1290,6 +1323,67 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     fontWeight: "800",
+  },
+  outfitPanel: {
+    gap: spacing.sm,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderLeftWidth: 2,
+    borderWidth: 1,
+  },
+  outfitHeader: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  outfitCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  outfitTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  outfitReason: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+  outfitMatchPill: {
+    minWidth: 54,
+    minHeight: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+  },
+  outfitMatchText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  outfitMetaRow: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  outfitMetaIcon: {
+    width: 14,
+    height: 14,
+  },
+  outfitMetaText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   comparePanel: {
     gap: spacing.sm,

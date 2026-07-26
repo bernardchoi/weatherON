@@ -13,7 +13,10 @@ export function selectWardrobeItem(
     throw new Error(`Missing wardrobe preset for category: ${category}`);
   }
 
-  const ranked = [...candidates].sort((a, b) => scoreItem(b, signals, profile) - scoreItem(a, signals, profile));
+  const desiredTags = getDesiredWeatherTags(signals);
+  const weatherReadyOwnedCandidates = candidates.filter((item) => item.owned && matchesDesiredWeather(item, desiredTags));
+  const rankingCandidates = weatherReadyOwnedCandidates.length > 0 ? weatherReadyOwnedCandidates : candidates;
+  const ranked = [...rankingCandidates].sort((a, b) => scoreItem(b, signals, profile) - scoreItem(a, signals, profile));
   return ranked[0];
 }
 
@@ -27,6 +30,10 @@ function scoreItem(item: WardrobeItem, signals: WeatherSignals, profile: UserPre
   const outdoorScore = profile.fit === "outdoor" && item.purposes.includes("outdoor") ? 10 : 0;
 
   return purposeScore + weatherScore + ownedScore + formalScore + outdoorScore;
+}
+
+function matchesDesiredWeather(item: WardrobeItem, desiredTags: WeatherTag[]): boolean {
+  return desiredTags.some((tag) => item.weatherTags.includes(tag));
 }
 
 function getDesiredWeatherTags(signals: WeatherSignals): WeatherTag[] {

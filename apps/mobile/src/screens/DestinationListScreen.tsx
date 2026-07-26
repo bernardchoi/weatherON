@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import type { PlaceSearchResult } from "@weatheron/shared";
+import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
@@ -11,6 +11,8 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { isLiveTransitEstimate } from "../utils/travelEstimate";
+import { getOutfitVariantLabel } from "../utils/outfitLabels";
+import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 
 type DestinationCardModel = {
   id: string;
@@ -25,6 +27,8 @@ type DestinationCardModel = {
   arrivalTime: string;
   repeatLabel: string;
   warning: string;
+  outfitTitle: string;
+  outfitMeta: string;
   tone: "warm" | "clear";
   place: PlaceSearchResult;
   saved: boolean;
@@ -41,6 +45,12 @@ export function DestinationListScreen({
   permissionGateResult,
   permissionReady,
   temperatureUnit,
+  wardrobeItems,
+  styleGender,
+  ageBand,
+  fitPreference,
+  selectedStyles,
+  smartCareScenario,
   onNavigate,
   onSelectDestinationPlace,
   onRestoreRemovedDestination,
@@ -49,7 +59,8 @@ export function DestinationListScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const care = state.destinationCare;
-  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit);
+  const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
+  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile);
   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
@@ -365,6 +376,16 @@ function DestinationCard({
           </View>
         </View>
 
+        <View style={[styles.destinationOutfitLine, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Image source={uiIconAssets.shirt} style={[styles.destinationOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+          <View style={styles.destinationOutfitCopy}>
+            <Text style={[styles.destinationOutfitLabel, { color: theme.clear }]} numberOfLines={1}>목적지 코디</Text>
+            <Text style={[styles.destinationOutfitText, { color: theme.text }]} numberOfLines={1}>
+              {item.outfitTitle} · {item.outfitMeta}
+            </Text>
+          </View>
+        </View>
+
         <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
       </FeedbackPressable>
 
@@ -401,6 +422,8 @@ function buildDestinationCards(
   care: P0ScreenProps["state"]["destinationCare"],
   destinationWeatherById: P0ScreenProps["state"]["destinationWeatherById"],
   temperatureUnit: P0ScreenProps["temperatureUnit"],
+  wardrobeItems: P0ScreenProps["wardrobeItems"],
+  preferenceProfile: UserPreferenceProfile,
 ): DestinationCardModel[] {
   if (!savedDestinations.length) return [];
   const originWeather = care.originWeather;
@@ -412,6 +435,9 @@ function buildDestinationCards(
     const warning = buildDestinationWarning(destination.place.name, destinationRain, destinationWind, destination.alertCondition);
     const tone = destinationRain >= destination.alertCondition.rainThresholdPct || destinationWind >= destination.alertCondition.windThresholdMs ? "warm" : "clear";
     const schedule = getDestinationSchedule(destination, care);
+    const outfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
+    const outfitItems = Object.values(outfit.items).filter(Boolean);
+    const outfitMeta = outfitItems.slice(0, 2).map((item) => item?.name).filter(Boolean).join(" · ");
 
     return {
       id: destination.place.id,
@@ -426,6 +452,8 @@ function buildDestinationCards(
       arrivalTime: schedule.arrivalTime,
       repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
+      outfitTitle: getOutfitVariantLabel(outfit.variant),
+      outfitMeta: outfitMeta ? `${outfit.matchPct}% · ${outfitMeta}` : `${outfit.matchPct}%`,
       tone,
       place: destination.place,
       saved: true,
@@ -1017,6 +1045,36 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "800",
+  },
+  destinationOutfitLine: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 7,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  destinationOutfitIcon: {
+    width: 16,
+    height: 16,
+    flexShrink: 0,
+  },
+  destinationOutfitCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  destinationOutfitLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  destinationOutfitText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
   },
   warningText: {
     flexShrink: 1,

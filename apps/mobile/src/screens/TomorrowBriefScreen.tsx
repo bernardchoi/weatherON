@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
-import { recommendOutfit, recommendUmbrella, type DailyWeather, type UserPreferenceProfile, type WeatherSnapshot } from "@weatheron/shared";
+import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
 import { brandAssets, outfitImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -8,6 +8,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
+import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { formatTemperature } from "../utils/units";
 import { getOutfitSlotLabel } from "../utils/outfitLabels";
 import { getConditionColor, getConditionIcon } from "../utils/weatherPresentation";
@@ -26,7 +27,7 @@ export function TomorrowBriefScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const tomorrow = buildTomorrowWeather(state.weather);
-  const outfit = recommendOutfit(tomorrow.weather, getPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }), wardrobeItems);
+  const outfit = recommendOutfit(tomorrow.weather, toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }), wardrobeItems);
   const outfitDecision = toTomorrowCopy(outfit.decisionText);
   const outfitReason = toTomorrowCopy(outfit.reasons[0] ?? "내일 예보 기준 기본 코디 추천");
   const umbrella = recommendUmbrella(tomorrow.weather);
@@ -266,17 +267,6 @@ function buildDailyHours(summary: DailyWeather): WeatherSnapshot["hourly"] {
     windMs: summary.windMs,
     condition: summary.condition,
   }));
-}
-
-function getPreferenceProfile(values: Pick<P0ScreenProps, "styleGender" | "ageBand" | "fitPreference" | "selectedStyles" | "smartCareScenario">): UserPreferenceProfile {
-  return {
-    gender: values.styleGender === "men" ? "male" : values.styleGender === "women" ? "female" : "any",
-    ageBand: values.ageBand,
-    styleTags: values.selectedStyles,
-    fit: values.fitPreference,
-    routine: values.smartCareScenario === "travel" ? "travel" : values.smartCareScenario === "outing" ? "free" : "commute",
-    alertMode: "auto-care",
-  };
 }
 
 function getDateKey(value: string) {
