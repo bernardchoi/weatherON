@@ -130,13 +130,13 @@ export function OutfitDetailScreen({
       ) : null}
 
       <Section title="추천 근거" caption="신호 압축" accent="gold">
-        <View style={[styles.signalGrid, { gap: layout.isShort ? layout.outfitCardGap : 0 }]}>
+        <View style={[styles.signalGrid, { gap: layout.isShort || layout.isNarrow ? layout.outfitCardGap : 0 }]}>
           {signalMetrics.map((metric) => (
             <View
               key={metric.label}
               style={[
                 styles.signalTile,
-                layout.isShort ? styles.signalTileShort : null,
+                layout.isShort || layout.isNarrow ? styles.signalTileShort : null,
                 { backgroundColor: theme.cardMuted, borderColor: theme.border },
               ]}
             >

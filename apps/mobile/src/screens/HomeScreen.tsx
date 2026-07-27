@@ -85,9 +85,9 @@ export function HomeScreen({
           styles.homeContent,
           {
             maxWidth: layout.contentMaxWidth,
-            gap: layout.weatherContentGap,
+            gap: layout.homeContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
-            paddingTop: layout.isShort ? 2 : 4,
+            paddingTop: layout.isShort ? 0 : 2,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -155,7 +155,7 @@ export function HomeScreen({
           style={[
             styles.homePlanCard,
             {
-              padding: layout.weatherPanelPadding,
+              padding: layout.homePanelPadding,
               backgroundColor: theme.card,
               borderColor: theme.border,
             },
@@ -565,6 +565,10 @@ function HomeDecisionHero({
   const weatherIcon = !isClear ? uiIconAssets.rain : isNight ? uiIconAssets.clearNight : uiIconAssets.uv;
   const weatherAccentColor = !isClear ? theme.sky : isNight ? theme.skyLite : theme.gold;
   const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.skyLite : theme.warm;
+  const compactHero = layout.homeCompact;
+  const weatherPressableStyle = compactHero ? styles.weatherPrimaryRow : styles.weatherPrimaryColumn;
+  const tempFontSize = compactHero ? (layout.isShort ? 36 : 40) : layout.isRegular ? 50 : 48;
+  const tempLineHeight = compactHero ? (layout.isShort ? 40 : 44) : layout.isRegular ? 53 : 51;
 
   return (
     <View
@@ -573,7 +577,7 @@ function HomeDecisionHero({
         styles.decisionHero,
         {
           minHeight: layout.homeHeroMinHeight,
-          padding: layout.weatherPanelPadding,
+          padding: layout.homePanelPadding,
           backgroundColor: theme.card,
           borderColor: theme.border,
         },
@@ -585,7 +589,8 @@ function HomeDecisionHero({
           style={[
             styles.weatherHalo,
             {
-              marginLeft: -(layout.homeWeatherHaloSize / 2),
+              marginLeft: compactHero ? 0 : -(layout.homeWeatherHaloSize / 2),
+              marginTop: compactHero ? -(layout.homeWeatherHaloSize / 2) : 0,
               width: layout.homeWeatherHaloSize,
               height: layout.homeWeatherHaloSize,
               borderRadius: layout.homeWeatherHaloSize / 2,
@@ -597,7 +602,7 @@ function HomeDecisionHero({
           accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
           accessibilityRole="button"
           onPress={onOpenForecast}
-          style={styles.weatherPrimaryColumn}
+          style={weatherPressableStyle}
         >
           <View
             style={[
@@ -623,27 +628,31 @@ function HomeDecisionHero({
               resizeMode="contain"
             />
           </View>
-          <Text
-            style={[
-              styles.showcaseTemp,
-              {
-                color: theme.text,
-                fontSize: layout.isShort ? 42 : layout.isRegular ? 50 : 48,
-                lineHeight: layout.isShort ? 45 : layout.isRegular ? 53 : 51,
-              },
-            ]}
-          >
-            {formatTemperature(current.tempC, temperatureUnit)}
-          </Text>
-          <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
-          {todayMinMax ? (
-            <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
-              {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+          <View style={[styles.weatherSummaryCopy, compactHero ? null : styles.weatherSummaryCopyCentered]}>
+            <View style={[styles.weatherTempRow, compactHero ? null : styles.weatherTempRowCentered]}>
+              <Text
+                style={[
+                  styles.showcaseTemp,
+                  {
+                    color: theme.text,
+                    fontSize: tempFontSize,
+                    lineHeight: tempLineHeight,
+                  },
+                ]}
+              >
+                {formatTemperature(current.tempC, temperatureUnit)}
+              </Text>
+              <Text style={[styles.showcaseCondition, { color: theme.muted }]}>{getConditionLabel(current.condition)}</Text>
+            </View>
+            {todayMinMax ? (
+              <Text style={[styles.showcaseMeta, { color: theme.subtle }]} numberOfLines={1}>
+                {getHeroTemperatureRange(todayMinMax, temperatureUnit)}
+              </Text>
+            ) : null}
+            <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
+              {currentLocationName}
             </Text>
-          ) : null}
-          <Text style={[styles.showcaseMetaSub, { color: theme.subtle }]} numberOfLines={1}>
-            {currentLocationName}
-          </Text>
+          </View>
         </FeedbackPressable>
         <View style={[styles.showcaseStatus, { backgroundColor: `${locationTone}16` }]}>
           <View style={[styles.statusDot, { backgroundColor: locationTone }]} />
@@ -651,11 +660,12 @@ function HomeDecisionHero({
         </View>
       </View>
       <View style={styles.decisionMetricRow}>
+        {compactHero ? <DecisionMetric icon={uiIconAssets.shirt} label={`체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}`} theme={theme} /> : null}
         <DecisionMetric icon={uiIconAssets.drop} label={`강수 ${current.rainProbabilityPct}%`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.wind} label={`${current.windMs.toFixed(1)}m/s`} theme={theme} />
         <DecisionMetric icon={uiIconAssets.humidity} label={`${current.humidityPct}%`} theme={theme} />
       </View>
-      <FeelsLikeCard current={current} temperatureUnit={temperatureUnit} theme={theme} onPress={onOpenForecast} />
+      {compactHero ? null : <FeelsLikeCard current={current} temperatureUnit={temperatureUnit} theme={theme} onPress={onOpenForecast} />}
     </View>
   );
 }
@@ -701,10 +711,44 @@ function FeelsLikeCard({
 }
 
 function DecisionMetric({ icon, label, theme }: { icon: number; label: string; theme: AppTheme }) {
+  const layout = useResponsiveLayout();
   return (
-    <View style={[styles.decisionMetric, { backgroundColor: theme.cardMuted }]}>
-      <Image source={icon} style={[styles.decisionMetricIcon, { tintColor: theme.text }]} resizeMode="contain" />
-      <Text style={[styles.decisionMetricText, { color: theme.text }]} numberOfLines={1}>{label}</Text>
+    <View
+      style={[
+        styles.decisionMetric,
+        {
+          minHeight: layout.homeCompact ? 34 : 38,
+          gap: layout.homeCompact ? 2 : 4,
+          paddingHorizontal: layout.homeCompact ? 3 : 8,
+          backgroundColor: theme.cardMuted,
+        },
+      ]}
+    >
+      <Image
+        source={icon}
+        style={[
+          styles.decisionMetricIcon,
+          {
+            width: layout.homeCompact ? 14 : 16,
+            height: layout.homeCompact ? 14 : 16,
+            tintColor: theme.text,
+          },
+        ]}
+        resizeMode="contain"
+      />
+      <Text
+        style={[
+          styles.decisionMetricText,
+          {
+            color: theme.text,
+            fontSize: layout.homeCompact ? 11 : 13,
+            lineHeight: layout.homeCompact ? 15 : 17,
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -726,19 +770,62 @@ function VisualDecisionCard({
   theme: AppTheme;
   onPress: () => void;
 }) {
+  const layout = useResponsiveLayout();
+  const showDecisionHelper = !layout.isShort;
   return (
     <FeedbackPressable
       accessibilityLabel={`${label} ${value}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.visualDecisionCard, { backgroundColor: `${accent}10` }]}
+      style={[
+        styles.visualDecisionCard,
+        {
+          minHeight: layout.homeDecisionMinHeight,
+          gap: layout.isShort ? 1 : 4,
+          paddingHorizontal: layout.isShort ? 3 : spacing.xs,
+          paddingVertical: layout.isShort ? 4 : spacing.xs,
+          backgroundColor: `${accent}10`,
+        },
+      ]}
     >
-      <View style={[styles.visualIconFrame, { backgroundColor: `${accent}18` }]}>
-        <Image source={icon} style={[styles.visualDecisionIcon, { tintColor: accent }]} resizeMode="contain" />
+      <View
+        style={[
+          styles.visualIconFrame,
+          {
+            width: layout.isShort ? 24 : layout.homeCompact ? 28 : 34,
+            height: layout.isShort ? 24 : layout.homeCompact ? 28 : 34,
+            backgroundColor: `${accent}18`,
+          },
+        ]}
+      >
+        <Image
+          source={icon}
+          style={[
+            styles.visualDecisionIcon,
+            {
+              width: layout.isShort ? 16 : layout.homeCompact ? 18 : 22,
+              height: layout.isShort ? 16 : layout.homeCompact ? 18 : 22,
+              tintColor: accent,
+            },
+          ]}
+          resizeMode="contain"
+        />
       </View>
       <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
-      <Text style={[styles.visualDecisionValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
-      <Text style={[styles.visualDecisionHelper, { color: theme.subtle }]} numberOfLines={1}>{helper}</Text>
+      <Text
+        style={[
+          styles.visualDecisionValue,
+          {
+            color: theme.text,
+            fontSize: layout.isShort ? 17 : layout.homeCompact ? 18 : 20,
+            lineHeight: layout.isShort ? 20 : layout.homeCompact ? 22 : 25,
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+      {showDecisionHelper ? <Text style={[styles.visualDecisionHelper, { color: theme.subtle }]} numberOfLines={1}>{helper}</Text> : null}
     </FeedbackPressable>
   );
 }
@@ -754,6 +841,7 @@ function HomeOutfitPreviewCard({
   theme: AppTheme;
   onPress: () => void;
 }) {
+  const layout = useResponsiveLayout();
   const imageSource = getHomeOutfitPreviewImage(outfit);
   const compactCopy = getHomeOutfitCopy(outfit.decisionText, packTitle);
   const title = getHomeOutfitTitle(compactCopy.title);
@@ -762,20 +850,48 @@ function HomeOutfitPreviewCard({
       accessibilityLabel={`오늘 입기 좋은 코디 ${outfit.decisionText}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.homeOutfitCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[
+        styles.homeOutfitCard,
+        {
+          minHeight: layout.homeOutfitMinHeight,
+          paddingHorizontal: layout.homeCompact ? spacing.md : spacing.lg,
+          paddingVertical: layout.homeCompact ? spacing.xs : spacing.md,
+          backgroundColor: theme.cardStrong,
+          borderColor: theme.border,
+        },
+      ]}
     >
       <View style={styles.homeOutfitCopy}>
         <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 입기 좋은 코디</Text>
-        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={2}>
+        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={layout.homeCompact ? 1 : 2}>
           {title}
         </Text>
         <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
           {compactCopy.body}
         </Text>
       </View>
-      <View style={[styles.homeOutfitImageFrame, { backgroundColor: theme.cardMuted }]}>
+      <View
+        style={[
+          styles.homeOutfitImageFrame,
+          {
+            width: layout.homeCompact ? 54 : 62,
+            height: layout.homeCompact ? 54 : 62,
+            backgroundColor: theme.cardMuted,
+          },
+        ]}
+      >
         {imageSource ? (
-          <Image source={imageSource} style={styles.homeOutfitImage} resizeMode="contain" />
+          <Image
+            source={imageSource}
+            style={[
+              styles.homeOutfitImage,
+              {
+                width: layout.homeCompact ? 48 : 56,
+                height: layout.homeCompact ? 48 : 56,
+              },
+            ]}
+            resizeMode="contain"
+          />
         ) : (
           <Image source={uiIconAssets.shirt} style={[styles.homeOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
         )}
@@ -1546,6 +1662,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     zIndex: 1,
   },
+  weatherPrimaryRow: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingRight: 106,
+    zIndex: 1,
+  },
   weatherOrb: {
     alignItems: "center",
     justifyContent: "center",
@@ -1553,6 +1679,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   weatherOrbIcon: {
+  },
+  weatherSummaryCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  weatherSummaryCopyCentered: {
+    width: "100%",
+    alignItems: "center",
+  },
+  weatherTempRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+  weatherTempRowCentered: {
+    justifyContent: "center",
   },
   showcaseTemp: {
     marginTop: 4,

@@ -5,6 +5,7 @@ import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type TermsConsentScreenProps = {
@@ -25,6 +26,7 @@ const consentItems: { key: ConsentKey; label: string; meta: string; required?: b
 
 export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [accepted, setAccepted] = useState<Record<ConsentKey, boolean>>({
     age: false,
     terms: false,
@@ -62,7 +64,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
 
   return (
     <AppScreen title="약관 동의" subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요" badge="필수">
-      <View style={[styles.progressCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+      <View style={[styles.progressCard, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.clear }]}>약관 상태</Text>
           <Text style={[styles.headline, { color: theme.text }]}>{statusLabel}</Text>
@@ -81,7 +83,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         accessibilityRole="checkbox"
         accessibilityState={{ checked: allAccepted }}
         onPress={toggleAll}
-        style={[styles.allRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+        style={[styles.allRow, { minHeight: layout.accountConsentRowMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
       >
         <CheckBox checked={allAccepted} theme={theme} />
         <View style={styles.copy}>
@@ -90,7 +92,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         </View>
       </Pressable>
 
-      <View style={[styles.actionPanel, { backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }, cardShadow(theme)]}>
+      <View style={[styles.actionPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }, cardShadow(theme)]}>
         <View style={styles.actionCopy}>
           <Text style={[styles.gateTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
           <Text style={[styles.body, { color: theme.muted }]}>
@@ -122,6 +124,8 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
             item={item}
             checked={accepted[item.key]}
             onPress={() => toggleItem(item.key)}
+            minHeight={layout.accountConsentRowMinHeight}
+            horizontalPadding={layout.accountPanelPadding}
             theme={theme}
             withDivider={index < consentItems.length - 1}
           />
@@ -135,12 +139,16 @@ function ConsentRow({
   item,
   checked,
   onPress,
+  minHeight,
+  horizontalPadding,
   theme,
   withDivider,
 }: {
   item: (typeof consentItems)[number];
   checked: boolean;
   onPress: () => void;
+  minHeight: number;
+  horizontalPadding: number;
   theme: AppTheme;
   withDivider: boolean;
 }) {
@@ -150,7 +158,11 @@ function ConsentRow({
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       onPress={onPress}
-      style={[styles.consentRow, withDivider ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
+      style={[
+        styles.consentRow,
+        { minHeight, paddingHorizontal: horizontalPadding },
+        withDivider ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
+      ]}
     >
       <CheckBox checked={checked} theme={theme} />
       <View style={styles.consentCopy}>
@@ -180,7 +192,6 @@ function CheckBox({ checked, theme }: { checked: boolean; theme: AppTheme }) {
 const styles = StyleSheet.create({
   progressCard: {
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -227,11 +238,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   allRow: {
-    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -241,11 +250,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   consentRow: {
-    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   checkbox: {
@@ -291,7 +298,6 @@ const styles = StyleSheet.create({
   },
   actionPanel: {
     gap: spacing.sm,
-    padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderLeftWidth: 2,

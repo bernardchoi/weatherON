@@ -4,7 +4,7 @@ import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } f
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
-import { uiIconAssets } from "../assets";
+import { outfitImageAssets, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -28,7 +28,8 @@ type DestinationCardModel = {
   repeatLabel: string;
   warning: string;
   outfitTitle: string;
-  outfitMeta: string;
+  outfitMatchPct: number;
+  outfitItems: Array<{ id: string; name: string; imageUrl?: string }>;
   tone: "warm" | "clear";
   place: PlaceSearchResult;
   saved: boolean;
@@ -142,7 +143,6 @@ export function DestinationListScreen({
               <DestinationCard
                 key={item.id}
                 item={item}
-                isShort={layout.isShort}
                 paddingHorizontal={layout.destinationCardPaddingHorizontal}
                 paddingVertical={layout.destinationCardPaddingVertical}
                 theme={theme}
@@ -290,7 +290,6 @@ function EmptyBenefit({
 
 function DestinationCard({
   item,
-  isShort,
   paddingHorizontal,
   paddingVertical,
   theme,
@@ -299,7 +298,6 @@ function DestinationCard({
   onOpen,
 }: {
   item: DestinationCardModel;
-  isShort: boolean;
   paddingHorizontal: number;
   paddingVertical: number;
   theme: AppTheme;
@@ -363,32 +361,72 @@ function DestinationCard({
           </View>
         </View>
 
-        <View style={[styles.destinationBottom, isShort ? styles.destinationBottomShort : null]}>
-          <View style={styles.timeLine}>
-            <Image source={uiIconAssets.clock} style={[styles.timeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
-              {item.departureTime} → {item.arrivalTime}
-            </Text>
-          </View>
-          <View style={styles.repeatLine}>
-            <Image source={uiIconAssets.check} style={[styles.repeatIcon, { tintColor: theme.subtle }]} resizeMode="contain" />
-            <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>{item.repeatLabel}</Text>
-          </View>
+        <View style={styles.destinationPrepRow}>
+          <CompactSignal icon={uiIconAssets.clock} label={item.departureTime} color={theme.clear} theme={theme} />
+          <CompactSignal icon={uiIconAssets.rain} label={item.rainPct} color={warningColor} theme={theme} />
+          <OutfitSignal item={item} theme={theme} />
         </View>
 
-        <View style={[styles.destinationOutfitLine, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Image source={uiIconAssets.shirt} style={[styles.destinationOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-          <View style={styles.destinationOutfitCopy}>
-            <Text style={[styles.destinationOutfitLabel, { color: theme.clear }]} numberOfLines={1}>목적지 코디</Text>
-            <Text style={[styles.destinationOutfitText, { color: theme.text }]} numberOfLines={1}>
-              {item.outfitTitle} · {item.outfitMeta}
-            </Text>
-          </View>
+        <View style={styles.destinationFooterRow}>
+          <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
+          <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>{item.repeatLabel}</Text>
         </View>
-
-        <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
       </FeedbackPressable>
 
+    </View>
+  );
+}
+
+function CompactSignal({
+  icon,
+  label,
+  color,
+  theme,
+}: {
+  icon: number;
+  label: string;
+  color: string;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={[styles.compactSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <Image source={icon} style={[styles.compactSignalIcon, { tintColor: color }]} resizeMode="contain" />
+      <Text style={[styles.compactSignalText, { color: theme.text }]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
+
+function OutfitSignal({ item, theme }: { item: DestinationCardModel; theme: AppTheme }) {
+  return (
+    <View
+      accessibilityLabel={`목적지 코디 ${item.outfitTitle}, 매치 ${item.outfitMatchPct}%`}
+      style={[styles.outfitSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+    >
+      <View style={styles.outfitPreviewStack}>
+        {item.outfitItems.slice(0, 3).map((outfitItem, index) => {
+          const imageSource = outfitItem.imageUrl ? outfitImageAssets[outfitItem.imageUrl] : undefined;
+          return (
+            <View
+              key={outfitItem.id}
+              style={[
+                styles.outfitPreviewBubble,
+                index > 0 ? styles.outfitPreviewBubbleOverlap : null,
+                { backgroundColor: theme.card, borderColor: theme.cardStrong },
+              ]}
+            >
+              {imageSource ? (
+                <Image source={imageSource} style={styles.outfitPreviewImage} resizeMode="contain" />
+              ) : (
+                <Image source={uiIconAssets.shirt} style={[styles.outfitPreviewFallback, { tintColor: theme.clear }]} resizeMode="contain" />
+              )}
+            </View>
+          );
+        })}
+      </View>
+      <View style={styles.outfitSignalCopy}>
+        <Text style={[styles.outfitSignalTitle, { color: theme.text }]} numberOfLines={1}>{item.outfitTitle}</Text>
+        <Text style={[styles.outfitSignalMeta, { color: theme.clear }]} numberOfLines={1}>{item.outfitMatchPct}%</Text>
+      </View>
     </View>
   );
 }
@@ -437,7 +475,6 @@ function buildDestinationCards(
     const schedule = getDestinationSchedule(destination, care);
     const outfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
     const outfitItems = Object.values(outfit.items).filter(Boolean);
-    const outfitMeta = outfitItems.slice(0, 2).map((item) => item?.name).filter(Boolean).join(" · ");
 
     return {
       id: destination.place.id,
@@ -453,7 +490,12 @@ function buildDestinationCards(
       repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
       outfitTitle: getOutfitVariantLabel(outfit.variant),
-      outfitMeta: outfitMeta ? `${outfit.matchPct}% · ${outfitMeta}` : `${outfit.matchPct}%`,
+      outfitMatchPct: outfit.matchPct,
+      outfitItems: outfitItems.slice(0, 3).map((item) => ({
+        id: item?.id ?? "",
+        name: item?.name ?? "",
+        imageUrl: item?.imageUrl,
+      })),
       tone,
       place: destination.place,
       saved: true,
@@ -1045,6 +1087,88 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "800",
+  },
+  destinationPrepRow: {
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.xs,
+  },
+  compactSignal: {
+    width: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 5,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  compactSignalIcon: {
+    width: 15,
+    height: 15,
+  },
+  compactSignalText: {
+    maxWidth: "100%",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  outfitSignal: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 7,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  outfitPreviewStack: {
+    width: 70,
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  outfitPreviewBubble: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 2,
+  },
+  outfitPreviewBubbleOverlap: {
+    marginLeft: -16,
+  },
+  outfitPreviewImage: {
+    width: 30,
+    height: 30,
+  },
+  outfitPreviewFallback: {
+    width: 18,
+    height: 18,
+  },
+  outfitSignalCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  outfitSignalTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  outfitSignalMeta: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  destinationFooterRow: {
+    minHeight: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
   destinationOutfitLine: {
     minHeight: 48,

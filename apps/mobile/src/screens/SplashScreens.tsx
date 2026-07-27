@@ -68,7 +68,7 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
         ]}
       />
 
-      <View style={[styles.center, { maxWidth: layout.splashContentMaxWidth, gap: layout.isShort ? spacing.sm : spacing.md }]}>
+      <View style={[styles.center, { maxWidth: layout.splashContentMaxWidth, gap: layout.isShort || layout.isNarrow ? spacing.sm : spacing.md }]}>
         <View style={[styles.iconShadow, { shadowColor: theme.shadow }]}>
           <AnimatedBrandMark size={layout.splashIconSize} />
         </View>
@@ -77,7 +77,7 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
           style={{
             width: layout.splashWordmarkWidth,
             height: layout.splashWordmarkHeight,
-            marginTop: layout.isShort ? spacing.sm : spacing.md,
+            marginTop: layout.isShort || layout.isNarrow ? spacing.sm : spacing.md,
           }}
           resizeMode="contain"
         />

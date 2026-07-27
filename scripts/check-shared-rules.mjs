@@ -364,7 +364,19 @@ await build({
   jsx: "automatic",
   target: "es2022",
   loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
-  external: ["react", "react/jsx-runtime", "react-native", "expo-blur", "expo-location", "expo-navigation-bar", "expo-sqlite", "expo-status-bar"],
+  external: [
+    "react",
+    "react/jsx-runtime",
+    "react-native",
+    "react-native-safe-area-context",
+    "expo-asset",
+    "expo-blur",
+    "expo-location",
+    "expo-modules-core",
+    "expo-navigation-bar",
+    "expo-sqlite",
+    "expo-status-bar",
+  ],
   logLevel: "silent",
 });
 

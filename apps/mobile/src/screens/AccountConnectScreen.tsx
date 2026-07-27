@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AccountConnectScreenProps = {
@@ -27,35 +28,60 @@ const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
 
 export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [showOtherMethods, setShowOtherMethods] = useState(false);
   const resumeLabel = gate?.resumeLabel ?? "준비 설정";
   const destinationName = gate?.selectedDestinationName;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            width: "100%",
+            maxWidth: layout.contentMaxWidth,
+            gap: layout.accountContentGap,
+            paddingHorizontal: layout.screenHorizontalPadding,
+            paddingTop: layout.weatherTopPadding,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
-        <View style={styles.header}>
+        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
           <BackButton onPress={onCancel} />
-          <Text style={[styles.title, { color: theme.text }]}>계정 연결</Text>
+          <Text style={[styles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>계정 연결</Text>
         </View>
 
-        <View style={[styles.heroCard, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.heroCard,
+            {
+              minHeight: layout.accountHeroMinHeight,
+              padding: layout.accountPanelPadding,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <Text style={[styles.heroTitle, { color: theme.text }]}>계정 상태를 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
           <Text style={[styles.heroBody, { color: theme.muted }]}>
             계정을 연결하면 저장·동기화 상태를{"\n"}이어서 사용할 수 있어요
           </Text>
         </View>
 
-        <View style={[styles.stepNotice, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <View style={[styles.stepNotice, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
           <Text style={[styles.stepKicker, { color: theme.gold }]}>다음 단계</Text>
           <Text style={[styles.stepTitle, { color: theme.text }]}>약관 확인 후 원래 화면으로 돌아감</Text>
           <Text style={[styles.stepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도이며 MY에서 따로 켤 수 있음</Text>
         </View>
 
         {destinationName ? (
-          <View style={[styles.contextCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.contextCard, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <Text style={[styles.contextKicker, { color: theme.gold }]}>{resumeLabel}</Text>
             <Text style={[styles.contextTitle, { color: theme.text }]}>{destinationName}</Text>
             <Text style={[styles.contextBody, { color: theme.muted }]}>계정 연결 후 이 목적지의 날씨 비교와 출발 알림을 이어서 저장해요</Text>
@@ -77,10 +103,10 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
 
           <View style={styles.providerList}>
             {primaryProviders.map((provider) => (
-              <ProviderButton key={provider.id} provider={provider} onPress={onComplete} theme={theme} />
+              <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />
             ))}
             {showOtherMethods
-              ? extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} onPress={onComplete} theme={theme} />)
+              ? extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />)
               : null}
           </View>
 
@@ -105,15 +131,17 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
 
 function ProviderButton({
   provider,
+  minHeight,
   onPress,
   theme,
 }: {
   provider: { id: ProviderTone; label: string; caption: string };
+  minHeight: number;
   onPress: () => void;
   theme: AppTheme;
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.providerButton, { backgroundColor: theme.cardStrong }]}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.providerButton, { minHeight, backgroundColor: theme.cardStrong }]}>
       <View style={[styles.providerIcon, { backgroundColor: getProviderColor(provider.id, theme) }]}>
         <Text style={[styles.providerIconText, { color: getProviderTextColor(provider.id) }]}>{getProviderMark(provider.id)}</Text>
       </View>
@@ -156,11 +184,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.md,
     minHeight: "100%",
-    paddingHorizontal: 24,
-    paddingTop: 20,
     paddingBottom: 28,
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -172,7 +198,6 @@ const styles = StyleSheet.create({
     borderRadius: 80,
   },
   header: {
-    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -184,11 +209,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroCard: {
-    minHeight: 156,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    padding: 20,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
@@ -206,7 +229,6 @@ const styles = StyleSheet.create({
   },
   contextCard: {
     gap: 5,
-    padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderLeftWidth: 2,
@@ -228,7 +250,6 @@ const styles = StyleSheet.create({
   },
   stepNotice: {
     gap: 4,
-    padding: 14,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -285,7 +306,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   providerButton: {
-    minHeight: 50,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
@@ -319,7 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   otherButton: {
-    minHeight: 36,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -331,7 +351,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   laterButton: {
-    minHeight: 28,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },
