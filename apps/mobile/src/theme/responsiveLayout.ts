@@ -31,6 +31,14 @@ export type ResponsiveLayout = {
   homeWeatherHaloSize: number;
   homeWeatherOrbSize: number;
   homeWeatherIconSize: number;
+  homeSpecialAlertMinHeight: number;
+  homeSpecialAlertIconSize: number;
+  homeSpecialAlertPaddingHorizontal: number;
+  homeSpecialAlertPaddingVertical: number;
+  homeSpecialAlertTitleFontSize: number;
+  homeSpecialAlertTitleLineHeight: number;
+  homeSpecialAlertBodyFontSize: number;
+  homeSpecialAlertBodyLineHeight: number;
   homeSidebarMaxWidth: number;
   notificationTopPadding: number;
   outfitPanelPadding: number;
@@ -93,6 +101,7 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
   const isRegular = safeWidth >= responsiveLayoutBreakpoints.regularWidth;
   const isShort = safeHeight < responsiveLayoutBreakpoints.shortHeight;
   const isTablet = safeWidth >= responsiveLayoutBreakpoints.tabletWidth;
+  const isNarrowPhone = safeWidth <= 360;
 
   const screenHorizontalPadding = isTablet ? 32 : isRegular ? 28 : isShort ? 16 : 20;
   const splashIconSize = isShort ? 86 : isTablet ? 128 : isRegular ? 112 : 102;
@@ -125,6 +134,14 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     homeWeatherHaloSize: isShort ? 136 : isTablet ? 184 : isRegular ? 172 : 160,
     homeWeatherOrbSize: isShort ? 88 : isTablet ? 120 : isRegular ? 112 : 106,
     homeWeatherIconSize: isShort ? 58 : isTablet ? 78 : isRegular ? 74 : 70,
+    homeSpecialAlertMinHeight: isShort || isNarrowPhone ? 64 : isTablet ? 78 : isRegular ? 76 : 72,
+    homeSpecialAlertIconSize: isShort || isNarrowPhone ? 30 : isTablet ? 38 : isRegular ? 36 : 34,
+    homeSpecialAlertPaddingHorizontal: isShort || isNarrowPhone ? 8 : isTablet ? 12 : 10,
+    homeSpecialAlertPaddingVertical: isShort || isNarrowPhone ? 4 : isTablet ? 8 : 6,
+    homeSpecialAlertTitleFontSize: isShort || isNarrowPhone ? 14 : isTablet ? 16 : 15,
+    homeSpecialAlertTitleLineHeight: isShort || isNarrowPhone ? 18 : isTablet ? 21 : 20,
+    homeSpecialAlertBodyFontSize: isShort || isNarrowPhone ? 12 : 13,
+    homeSpecialAlertBodyLineHeight: isShort || isNarrowPhone ? 15 : 16,
     homeSidebarMaxWidth: isShort ? 320 : isTablet ? 420 : isRegular ? 380 : 340,
     notificationTopPadding: isShort ? 24 : isTablet ? 64 : isRegular ? 52 : 44,
     outfitPanelPadding: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : 16,

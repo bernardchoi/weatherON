@@ -806,26 +806,96 @@ function SpecialWeatherAlertCard({
   theme: AppTheme;
   onPress: () => void;
 }) {
+  const layout = useResponsiveLayout();
   const isHeavyRain = alert.type === "heavy-rain";
   const accent = isHeavyRain ? theme.skyLite : theme.warm;
+  const copy = getHomeSpecialAlertCopy(alert);
   return (
     <FeedbackPressable
-      accessibilityLabel={`${alert.title}. 특보 기준 상세 보기`}
+      accessibilityLabel={`${copy.title}. ${copy.body}. 특보 기준 상세 보기`}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.specialAlertCard, { backgroundColor: `${accent}16`, borderColor: `${accent}70` }]}
+      style={[
+        styles.specialAlertCard,
+        {
+          minHeight: layout.homeSpecialAlertMinHeight,
+          paddingHorizontal: layout.homeSpecialAlertPaddingHorizontal,
+          paddingVertical: layout.homeSpecialAlertPaddingVertical,
+          backgroundColor: `${accent}16`,
+          borderColor: `${accent}70`,
+        },
+      ]}
     >
-      <View style={[styles.specialAlertIconFrame, { backgroundColor: accent }]} accessibilityElementsHidden>
+      <View
+        style={[
+          styles.specialAlertIconFrame,
+          {
+            width: layout.homeSpecialAlertIconSize,
+            height: layout.homeSpecialAlertIconSize,
+            backgroundColor: accent,
+          },
+        ]}
+        accessibilityElementsHidden
+      >
         <Text style={[styles.specialAlertWarningMark, { color: theme.onAccent }]}>!</Text>
       </View>
       <View style={styles.specialAlertCopy}>
         <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>
-        <Text style={[styles.specialAlertTitle, { color: theme.text }]} numberOfLines={1}>{alert.title}</Text>
-        <Text style={[styles.specialAlertBody, { color: theme.muted }]} numberOfLines={1}>{alert.reason}</Text>
+        <Text
+          style={[
+            styles.specialAlertTitle,
+            {
+              color: theme.text,
+              fontSize: layout.homeSpecialAlertTitleFontSize,
+              lineHeight: layout.homeSpecialAlertTitleLineHeight,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {copy.title}
+        </Text>
+        <Text
+          style={[
+            styles.specialAlertBody,
+            {
+              color: theme.muted,
+              fontSize: layout.homeSpecialAlertBodyFontSize,
+              lineHeight: layout.homeSpecialAlertBodyLineHeight,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {copy.body}
+        </Text>
       </View>
       <Text style={[styles.specialAlertChevron, { color: accent }]}>›</Text>
     </FeedbackPressable>
   );
+}
+
+function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["notifications"][number]) {
+  const isWarning = alert.id.endsWith("warning") || alert.title.includes("경보");
+  const tempMatch = alert.reason.match(/(\d+)℃/u)?.[1];
+  const rainWindowMatch = alert.reason.match(/((?:3|12)시간\s+\d+mm)/u)?.[1];
+
+  if (alert.type === "heatwave") {
+    return {
+      title: isWarning ? "오늘 더위, 무리 금지" : "한낮 더위, 쉬어가요",
+      body: tempMatch ? `최고 ${tempMatch}℃ · 물·그늘·실내 휴식` : "물·그늘·실내 휴식",
+    };
+  }
+
+  if (alert.type === "heavy-rain") {
+    return {
+      title: isWarning ? "비가 세게 와요, 길 조심" : "비 소식 커요, 우산 챙겨요",
+      body: rainWindowMatch ? `${rainWindowMatch} · 배수·교통 확인` : "이동 전 배수·교통 확인",
+    };
+  }
+
+  return {
+    title: alert.title.replace(/\s+/gu, " ").trim(),
+    body: alert.reason.replace(/\s+/gu, " ").trim(),
+  };
 }
 
 function getHomeOutfitPreviewImage(outfit: P0ScreenProps["state"]["outfit"]) {
@@ -1769,17 +1839,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   specialAlertCard: {
-    minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   specialAlertIconFrame: {
-    width: 38,
-    height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -1800,13 +1866,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   specialAlertTitle: {
-    fontSize: 16,
-    lineHeight: 21,
     fontWeight: "900",
   },
   specialAlertBody: {
-    fontSize: 13,
-    lineHeight: 17,
     fontWeight: "700",
   },
   specialAlertChevron: {
