@@ -11,6 +11,10 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
+# Add any project specific keep options here:
+
+# WeatherON release keep rules
+
 # expo-location maps JavaScript option objects to Kotlin Record classes at runtime.
 # Keep their constructors, fields, and annotations in R8 release builds.
 -keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations,RuntimeVisibleParameterAnnotations,RuntimeInvisibleParameterAnnotations,AnnotationDefault,Signature,InnerClasses,EnclosingMethod
@@ -27,5 +31,3 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
-
-# Add any project specific keep options here:

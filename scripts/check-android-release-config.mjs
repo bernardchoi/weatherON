@@ -64,6 +64,10 @@ const appConfig = readJson(appJsonPath).expo;
 const easConfig = readJson(easJsonPath);
 const packageConfig = readJson(packageJsonPath);
 const mobilePackageConfig = readJson(mobilePackageJsonPath);
+const splashPlugin = appConfig.plugins?.find(
+  (plugin) => Array.isArray(plugin) && plugin[0] === "expo-splash-screen",
+);
+const splashPluginConfig = Array.isArray(splashPlugin) ? splashPlugin[1] : undefined;
 
 assert.ok(appConfig, "apps/mobile/app.json must contain expo config");
 assert.equal(appConfig.name, "WeatherON");
@@ -83,9 +87,10 @@ assertDocIncludes(androidAppBuildGradlePath, [
 assert.ok(appConfig.android.permissions.includes("ACCESS_COARSE_LOCATION"));
 assert.ok(appConfig.android.permissions.includes("ACCESS_FINE_LOCATION"));
 assertAssetExists(appConfig.icon, "expo.icon");
-assertAssetExists(appConfig.splash?.image, "expo.splash.image");
+assertAssetExists(splashPluginConfig?.image, "expo-splash-screen image");
 assertAssetExists(appConfig.android.adaptiveIcon?.foregroundImage, "android.adaptiveIcon.foregroundImage");
-assert.equal(mobilePackageConfig.dependencies?.["expo-file-system"], "~18.1.11");
+assert.equal(mobilePackageConfig.dependencies?.["expo-file-system"], "~57.0.1");
+assert.equal(mobilePackageConfig.dependencies?.["expo-splash-screen"], "~57.0.5");
 
 assert.equal(easConfig.cli?.appVersionSource, "remote");
 assert.equal(easConfig.build?.development?.developmentClient, true);

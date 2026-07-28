@@ -26,6 +26,7 @@ type AppScreenProps = {
   // 스크롤 밖에 고정하는 하단 영역. 저장/취소처럼 화면 어디서든 바로 눌러야 하는 주요 액션을 담는다 —
   // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
   footer?: React.ReactNode;
+  contentPaddingBottom?: number;
   children: React.ReactNode;
 };
 
@@ -36,6 +37,7 @@ export function AppScreen({
   heroAction,
   onBack,
   footer,
+  contentPaddingBottom,
   showWordmark = true,
   compactHeader = false,
   children,
@@ -53,6 +55,7 @@ export function AppScreen({
           {
             maxWidth: layout.contentMaxWidth,
             paddingHorizontal: layout.screenHorizontalPadding,
+            paddingBottom: contentPaddingBottom ?? navClearancePadding,
             gap: layout.screenContentGap,
           },
         ]}
@@ -154,7 +157,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: spacing.sm,
-    paddingBottom: navClearancePadding,
     flexGrow: 1,
     width: "100%",
     alignSelf: "center",

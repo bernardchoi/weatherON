@@ -66,7 +66,7 @@ export function WardrobeScreen({
         <View
           style={[
             styles.infoCard,
-            layout.isShort ? styles.infoCardShort : null,
+            layout.isShort || layout.isNarrow ? styles.infoCardShort : null,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
           ]}
         >

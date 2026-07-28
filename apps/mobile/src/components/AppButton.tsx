@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
     height: 14,
   },
   buttonSm: {
-    minHeight: 34,
+    minHeight: 44,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
   },
   buttonSmAndroid: {
-    minHeight: 40,
+    minHeight: 48,
     borderRadius: radius.pill,
   },
   label: {

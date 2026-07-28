@@ -147,7 +147,7 @@ export function WardrobePresetScreen({
               styles.selectedCard,
               {
                 gap: layout.outfitCardGap,
-                padding: layout.isShort ? 8 : spacing.sm,
+                padding: layout.isShort || layout.isNarrow ? 8 : spacing.sm,
                 backgroundColor: theme.card,
                 borderColor: theme.border,
               },
@@ -158,8 +158,8 @@ export function WardrobePresetScreen({
               style={[
                 styles.selectedImageWrap,
                 {
-                  width: layout.isShort ? 54 : 58,
-                  height: layout.isShort ? 54 : 58,
+                  width: layout.isShort || layout.isNarrow ? 54 : 58,
+                  height: layout.isShort || layout.isNarrow ? 54 : 58,
                   backgroundColor: theme.cardMuted,
                 },
               ]}
@@ -274,7 +274,7 @@ function PresetCategory({
         styles.categoryCard,
         {
           gap: layout.outfitCardGap,
-          padding: layout.isShort ? 10 : 12,
+          padding: layout.isShort || layout.isNarrow ? 10 : 12,
           backgroundColor: theme.cardMuted,
           borderColor: expanded ? theme.gold : theme.border,
         },
@@ -369,6 +369,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   searchInput: {
+    minHeight: 44,
     fontSize: 14,
     fontWeight: "800",
     padding: 0,

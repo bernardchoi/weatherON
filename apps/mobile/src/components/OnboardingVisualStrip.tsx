@@ -36,7 +36,7 @@ export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
                 backgroundColor: theme.cardStrong,
                 borderColor: theme.border,
                 minHeight: layout.onboardingVisualItemMinHeight,
-                paddingVertical: layout.isShort ? 6 : spacing.sm,
+                paddingVertical: layout.isShort || layout.isNarrow ? 6 : spacing.sm,
               },
             ]}
           >

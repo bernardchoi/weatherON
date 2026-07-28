@@ -5,6 +5,7 @@ const viewportFilter = process.env.WEATHERON_SMALL_SCREEN_VIEWPORT;
 
 const viewports = [
   { name: "compact", width: 360, height: 800 },
+  { name: "iphone-mini", width: 375, height: 812 },
   { name: "large-phone", width: 430, height: 932 },
 ].filter((viewport) => !viewportFilter || viewport.name === viewportFilter);
 

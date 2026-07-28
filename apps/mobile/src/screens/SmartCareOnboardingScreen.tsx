@@ -122,7 +122,7 @@ export function SmartCareOnboardingScreen({
             backgroundColor: theme.cardStrong,
             borderColor: permissionReady ? theme.clear : theme.border,
             minHeight: layout.onboardingCompactRowMinHeight,
-            padding: layout.isShort ? spacing.xs : spacing.sm,
+            padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
           cardShadow(theme),
         ]}
