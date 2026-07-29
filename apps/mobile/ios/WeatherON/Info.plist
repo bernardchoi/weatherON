@@ -49,6 +49,8 @@
     </dict>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>날씨 배경 효과와 화면 전환을 기기 움직임 및 접근성 설정에 맞춰 제공하기 위해 동작 정보를 사용합니다.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
