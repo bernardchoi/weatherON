@@ -5,6 +5,8 @@ node_modules/
 .npm-cache/
 .expo/
 apps/*/.expo/
+apps/mobile/.npm-cache/
+apps/mobile/.tmp-check/
 
 # Local build outputs
 dist/
