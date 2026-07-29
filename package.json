@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "node scripts/patch-expo-modules-jsi-swift.mjs",
     "dev:mockups": "vite --host 127.0.0.1",
     "build:brand": "node scripts/build-brand-assets.js",
     "build:ui-icons": "node scripts/build-ui-icons.mjs",
