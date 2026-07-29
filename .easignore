@@ -17,6 +17,7 @@ apps/mobile/android/.gradle/
 apps/mobile/android/build/
 apps/mobile/android/**/build/
 apps/mobile/ios/build/
+apps/mobile/ios/Pods/
 coverage/
 
 # Design, mockup, and documentation sources not needed for native EAS builds
