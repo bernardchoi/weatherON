@@ -98,9 +98,28 @@ for (const relativePath of files) {
 }
 
 patchFile(join(expoModulesCoreRoot, "Core/Events/EventEmitter.swift"), (original) =>
-  original.replaceAll(
-    "nonisolated(unsafe) weak let emitter = self",
-    "nonisolated(unsafe) weak var emitter = self",
+  original
+    .replace(
+      "public protocol EventEmitter: AnyObject {",
+      "public protocol EventEmitter: AnyObject, Sendable {",
+    )
+    .replaceAll(
+      "nonisolated(unsafe) weak let emitter = self",
+      "nonisolated(unsafe) weak var emitter = self",
+    ),
+);
+
+patchFile(join(expoModulesCoreRoot, "Core/Modules/Module.swift"), (original) =>
+  original.replace(
+    "extension BaseModule: EventEmitter {",
+    "extension BaseModule: EventEmitter, @unchecked Sendable {",
+  ),
+);
+
+patchFile(join(expoModulesCoreRoot, "Core/SharedObjects/SharedObject.swift"), (original) =>
+  original.replace(
+    "extension SharedObject: EventEmitter {",
+    "extension SharedObject: EventEmitter, @unchecked Sendable {",
   ),
 );
 
