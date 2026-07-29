@@ -34,7 +34,40 @@ for (const relativePath of files) {
   }
 
   const original = readFileSync(filePath, "utf8");
-  const patched = original.replaceAll("weak let runtime:", "weak var runtime:");
+  let patched = original.replaceAll("weak let runtime:", "weak var runtime:");
+  patched = patched
+    .replace(
+      "internal final class HostFunctionContext: Sendable",
+      "internal final class HostFunctionContext: @unchecked Sendable",
+    )
+    .replace(
+      "internal final class UnownedThisHostFunctionContext: Sendable",
+      "internal final class UnownedThisHostFunctionContext: @unchecked Sendable",
+    )
+    .replace(
+      "internal final class HostObjectContext: Sendable",
+      "internal final class HostObjectContext: @unchecked Sendable",
+    )
+    .replace(
+      "public final class JavaScriptPropNameID: JavaScriptType",
+      "public final class JavaScriptPropNameID: JavaScriptType, @unchecked Sendable",
+    )
+    .replace(
+      "public final class JavaScriptError: Error, Sendable",
+      "public final class JavaScriptError: Error, @unchecked Sendable",
+    )
+    .replace(
+      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable",
+      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, @unchecked Sendable",
+    )
+    .replace(
+      "public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable",
+      "public struct JavaScriptObject: JavaScriptType, @unchecked Sendable, ~Copyable",
+    )
+    .replace(
+      "public struct JavaScriptBigInt: JavaScriptType, Sendable, ~Copyable",
+      "public struct JavaScriptBigInt: JavaScriptType, @unchecked Sendable, ~Copyable",
+    );
 
   if (patched !== original) {
     writeFileSync(filePath, patched);
