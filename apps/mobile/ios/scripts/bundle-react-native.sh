@@ -36,5 +36,9 @@ if [[ -z "$BUNDLE_COMMAND" ]]; then
   export BUNDLE_COMMAND="export:embed"
 fi
 
+if [[ -n "$HERMES_CLI_PATH" && ! -x "$HERMES_CLI_PATH" ]]; then
+  unset HERMES_CLI_PATH
+fi
+
 react_native_xcode_script="$("$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'")"
 bash "$react_native_xcode_script"
