@@ -11,6 +11,7 @@ if (!existsSync(sourceRoot)) {
 const files = [
   "Contexts/HostFunctionContext.swift",
   "Contexts/HostObjectContext.swift",
+  "Coding/JavaScriptCodable+Date.swift",
   "Runtime/JavaScriptActor.swift",
   "Runtime/JavaScriptPropNameID.swift",
   "Runtime/Values/JavaScriptArray.swift",
@@ -34,39 +35,46 @@ for (const relativePath of files) {
   }
 
   const original = readFileSync(filePath, "utf8");
-  let patched = original.replaceAll("weak let runtime:", "weak var runtime:");
+  let patched = original
+    .replaceAll("weak let runtime:", "weak var runtime:")
+    .replaceAll("Swift.Swift.abs", "Swift.abs")
+    .replaceAll(", @unchecked Sendable, @unchecked Sendable", ", @unchecked Sendable");
   patched = patched
     .replace(
-      "internal final class HostFunctionContext: Sendable",
-      "internal final class HostFunctionContext: @unchecked Sendable",
+      "guard milliseconds.isFinite, abs(milliseconds) <= maxJavaScriptDateMilliseconds else",
+      "guard milliseconds.isFinite, Swift.abs(milliseconds) <= maxJavaScriptDateMilliseconds else",
     )
     .replace(
-      "internal final class UnownedThisHostFunctionContext: Sendable",
-      "internal final class UnownedThisHostFunctionContext: @unchecked Sendable",
+      "internal final class HostFunctionContext: Sendable {",
+      "internal final class HostFunctionContext: @unchecked Sendable {",
     )
     .replace(
-      "internal final class HostObjectContext: Sendable",
-      "internal final class HostObjectContext: @unchecked Sendable",
+      "internal final class UnownedThisHostFunctionContext: Sendable {",
+      "internal final class UnownedThisHostFunctionContext: @unchecked Sendable {",
     )
     .replace(
-      "public final class JavaScriptPropNameID: JavaScriptType",
-      "public final class JavaScriptPropNameID: JavaScriptType, @unchecked Sendable",
+      "internal final class HostObjectContext: Sendable {",
+      "internal final class HostObjectContext: @unchecked Sendable {",
     )
     .replace(
-      "public final class JavaScriptError: Error, Sendable",
-      "public final class JavaScriptError: Error, @unchecked Sendable",
+      "public final class JavaScriptPropNameID: JavaScriptType {",
+      "public final class JavaScriptPropNameID: JavaScriptType, @unchecked Sendable {",
     )
     .replace(
-      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable",
-      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, @unchecked Sendable",
+      "public final class JavaScriptError: Error, Sendable {",
+      "public final class JavaScriptError: Error, @unchecked Sendable {",
     )
     .replace(
-      "public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable",
-      "public struct JavaScriptObject: JavaScriptType, @unchecked Sendable, ~Copyable",
+      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable {",
+      "public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, @unchecked Sendable {",
     )
     .replace(
-      "public struct JavaScriptBigInt: JavaScriptType, Sendable, ~Copyable",
-      "public struct JavaScriptBigInt: JavaScriptType, @unchecked Sendable, ~Copyable",
+      "public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {",
+      "public struct JavaScriptObject: JavaScriptType, @unchecked Sendable, ~Copyable {",
+    )
+    .replace(
+      "public struct JavaScriptBigInt: JavaScriptType, Sendable, ~Copyable {",
+      "public struct JavaScriptBigInt: JavaScriptType, @unchecked Sendable, ~Copyable {",
     );
 
   if (patched !== original) {
