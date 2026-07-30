@@ -2,7 +2,7 @@
 // 저장소가 손상되거나 구버전 형식이어도 앱이 깨지지 않도록 모든 필드를 타입 가드로 걸러 읽는다.
 import { presetWardrobe, type PlaceSearchResult } from "@weatheron/shared";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
-import type { WeatherProviderResult } from "../providers/weatherProvider";
+import type { OfficialSpecialAlert, WeatherProviderResult } from "../providers/weatherProvider";
 import { defaultSeoulWeatherLocation, type WeatherLocationPreset } from "../providers/weatherLocations";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 import {
@@ -144,11 +144,16 @@ export function normalizePersistedWeatherProviderResult(value: unknown): Weather
     current: markPersistedWeatherSnapshotStale(value.current),
     destination: markPersistedWeatherSnapshotStale(value.destination),
     destinationSnapshots: value.destinationSnapshots.filter(isWeatherSnapshot).map(markPersistedWeatherSnapshotStale),
+    officialSpecialAlert: createInactiveOfficialSpecialAlert(),
     status: "stale",
     message: "최근 저장 예보 기준 추천",
     retryable: true,
     fallbackUsed: value.fallbackUsed === true,
   };
+}
+
+function createInactiveOfficialSpecialAlert(): OfficialSpecialAlert {
+  return { source: "kma", active: false };
 }
 
 function isWeatherProviderResult(value: unknown): value is WeatherProviderResult {

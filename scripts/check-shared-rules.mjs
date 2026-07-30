@@ -196,7 +196,20 @@ await writeFile(
     const requestedUrls = [];
     const fakeFetch = async (url) => {
       requestedUrls.push(url);
-      const payload = String(url).includes("open-meteo") || String(url).includes("forecast?")
+      const payload = String(url).includes("getPwnStatus")
+        ? {
+            response: {
+              body: {
+                items: {
+                  item: [
+                    { WRN: "R", LVL: "3", CMD: "1", REG_KO: "서울특별시", TM_FC: "202607301000", REM: "호우경보 발표" },
+                    { WRN: "H", LVL: "2", CMD: "3", REG_KO: "서울특별시", TM_FC: "202607301000", REM: "폭염주의보 해제" },
+                  ],
+                },
+              },
+            },
+          }
+        : String(url).includes("open-meteo") || String(url).includes("forecast?")
         ? openMeteoFixture
         : { response: { body: { items: { item: kmaForecastFixture } } } };
       return {
@@ -249,6 +262,7 @@ await writeFile(
       message: "rain notification fixture",
       retryable: false,
       fallbackUsed: false,
+      officialSpecialAlert: { source: "kma", active: false },
       current: seongsuRainSnapshot,
       destination: seongsuRainSnapshot,
       destinationSnapshots: [],
@@ -454,6 +468,8 @@ assert.equal(demoResults.current.destinationCare.originWeather.source, "openmete
 assert.equal(demoResults.current.destinationCare.destinationWeather.source, "openmeteo");
 assert.equal(demoResults.httpProvider.current.source, "kma");
 assert.equal(demoResults.httpProvider.destination.source, "kma");
+assert.equal(demoResults.httpProvider.officialSpecialAlert.active, true);
+assert.equal(demoResults.httpProvider.officialSpecialAlert.title, "호우경보");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
@@ -485,6 +501,7 @@ assert.equal(demoResults.parallelProvider.destinationSnapshots.length, 2);
 assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "kr-gangneung-anmok-beach");
 assert.equal(demoResults.parallelProvider.destinationSnapshots[1].locationId, "kr-jamsil-baseball-stadium");
 assert.ok(demoResults.httpUrls.some((url) => url.includes("getVilageFcst")));
+assert.ok(demoResults.httpUrls.some((url) => url.includes("getPwnStatus")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("temperature_2m")));
 assert.deepEqual(demoResults.kmaBaseEarly, { baseDate: "20260625", baseTime: "2300" });
 assert.deepEqual(demoResults.kmaBaseMorning, { baseDate: "20260626", baseTime: "0500" });

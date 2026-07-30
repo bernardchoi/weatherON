@@ -2,6 +2,7 @@ import { getKmaForecastBaseDateTime, kmaForecastFixture, openMeteoFixture } from
 import type { KmaForecastItem, KmaForecastResponse, OpenMeteoResponse, WeatherKitResponse } from "@weatheron/shared";
 import {
   DEFAULT_KMA_FORECAST_URL,
+  DEFAULT_KMA_SPECIAL_ALERT_URL,
   DEFAULT_OPEN_METEO_FORECAST_URL,
   DEFAULT_WEATHER_TIMEOUT_MS,
   getWeatherRuntimeConfig,
@@ -29,6 +30,7 @@ export type FetchWeatherKitForecastParams = FetchOpenMeteoForecastParams & {
 
 export type WeatherClient = {
   fetchKmaForecast: (params: FetchKmaForecastParams) => Promise<KmaForecastResponse | KmaForecastItem[]>;
+  fetchKmaSpecialAlert?: () => Promise<unknown>;
   fetchOpenMeteoForecast: (params: FetchOpenMeteoForecastParams) => Promise<OpenMeteoResponse>;
   fetchWeatherKitForecast?: (params: FetchWeatherKitForecastParams) => Promise<WeatherKitResponse>;
 };
@@ -36,6 +38,7 @@ export type WeatherClient = {
 export type HttpWeatherClientOptions = {
   kmaServiceKey?: string;
   kmaForecastUrl?: string;
+  kmaSpecialAlertUrl?: string;
   openMeteoForecastUrl?: string;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
@@ -85,6 +88,17 @@ export function createHttpWeatherClient(options: HttpWeatherClientOptions = {}):
       const items = payload.response?.body?.items?.item;
       if (!items?.length) throw new Error("KMA forecast response is empty");
       return payload;
+    },
+    async fetchKmaSpecialAlert() {
+      if (!options.kmaServiceKey) {
+        throw new Error("KMA service key is not configured");
+      }
+      const url = new URL(options.kmaSpecialAlertUrl ?? DEFAULT_KMA_SPECIAL_ALERT_URL);
+      url.searchParams.set("serviceKey", normalizeKmaServiceKey(options.kmaServiceKey));
+      url.searchParams.set("pageNo", "1");
+      url.searchParams.set("numOfRows", "1000");
+      url.searchParams.set("dataType", "JSON");
+      return fetchJson<unknown>(url, timeoutMs, options.fetchImpl);
     },
     async fetchOpenMeteoForecast(params) {
       const url = new URL(options.openMeteoForecastUrl ?? DEFAULT_OPEN_METEO_FORECAST_URL);
@@ -168,6 +182,10 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       const items = payload.response?.body?.items?.item;
       if (!items?.length) throw new Error("KMA forecast response is empty");
       return payload;
+    },
+    async fetchKmaSpecialAlert() {
+      const url = new URL("/weather/kma-special-alert", normalizeBaseUrl(options.weatherApiBaseUrl));
+      return fetchJson<unknown>(url, timeoutMs, options.fetchImpl, headers);
     },
     async fetchOpenMeteoForecast(params) {
       const url = new URL("/weather/openmeteo", normalizeBaseUrl(options.weatherApiBaseUrl));

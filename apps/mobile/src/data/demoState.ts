@@ -133,6 +133,7 @@ export function buildDemoStateFromWeatherResult(
     outfit,
     umbrella,
     notifications: [...notifications, ...destinationNotifications],
+    officialSpecialAlert: weatherProviderResult.officialSpecialAlert,
     destinationCare,
     destinationWeatherById,
     weatherProvider: {

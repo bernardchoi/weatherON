@@ -9,6 +9,7 @@ export type WeatherRuntimeConfig = {
   weatherApiBaseUrl?: string;
   weatherApiToken?: string;
   kmaForecastUrl?: string;
+  kmaSpecialAlertUrl?: string;
   openMeteoForecastUrl?: string;
   openMeteoGeocodingUrl?: string;
   timeoutMs: number;
@@ -16,6 +17,7 @@ export type WeatherRuntimeConfig = {
 };
 
 export const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
+export const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 export const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const DEFAULT_OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 export const DEFAULT_WEATHER_TIMEOUT_MS = 8000;
@@ -26,6 +28,7 @@ export function getWeatherRuntimeConfig(): WeatherRuntimeConfig {
     weatherApiBaseUrl: process.env.EXPO_PUBLIC_WEATHER_API_BASE_URL,
     weatherApiToken: process.env.EXPO_PUBLIC_WEATHER_API_TOKEN,
     kmaForecastUrl: process.env.EXPO_PUBLIC_KMA_FORECAST_URL,
+    kmaSpecialAlertUrl: process.env.EXPO_PUBLIC_KMA_SPECIAL_ALERT_URL,
     openMeteoForecastUrl: process.env.EXPO_PUBLIC_OPEN_METEO_FORECAST_URL,
     openMeteoGeocodingUrl: process.env.EXPO_PUBLIC_OPEN_METEO_GEOCODING_URL,
     timeoutMs: Number(process.env.EXPO_PUBLIC_WEATHER_TIMEOUT_MS) || DEFAULT_WEATHER_TIMEOUT_MS,

@@ -3,6 +3,7 @@
 import { getKmaForecastBaseDateTime } from "./kmaTime.mjs";
 
 const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
+const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const DEFAULT_WEATHERKIT_WEATHER_URL = "https://weatherkit.apple.com/api/v1/weather";
 const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
@@ -55,6 +56,9 @@ export async function handleProxyRoute(url, readEnvValue, getRequestHeader, opti
   if (url.pathname === "/weather/kma") {
     return { status: 200, payload: await fetchKmaForecast(url.searchParams, readEnvValue) };
   }
+  if (url.pathname === "/weather/kma-special-alert") {
+    return { status: 200, payload: await fetchKmaSpecialAlert(url.searchParams, readEnvValue) };
+  }
   if (url.pathname === "/weather/openmeteo") {
     return { status: 200, payload: await fetchOpenMeteoForecast(url.searchParams, readEnvValue) };
   }
@@ -98,6 +102,22 @@ async function fetchKmaForecast(params, readEnvValue) {
   return fetchCachedJson(
     forecastCache,
     getUrlCacheKey("kma", url, ["serviceKey"]),
+    readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
+    () => fetchJson(url, readEnvValue),
+  );
+}
+
+async function fetchKmaSpecialAlert(params, readEnvValue) {
+  const serviceKey = readEnvValue("KMA_SERVICE_KEY");
+  if (!serviceKey) throw new Error("KMA_SERVICE_KEY is not configured");
+  const url = new URL(readEnvValue("KMA_SPECIAL_ALERT_URL") ?? DEFAULT_KMA_SPECIAL_ALERT_URL);
+  url.searchParams.set("serviceKey", normalizeKmaServiceKey(serviceKey));
+  url.searchParams.set("pageNo", params.get("pageNo") ?? "1");
+  url.searchParams.set("numOfRows", params.get("numOfRows") ?? "1000");
+  url.searchParams.set("dataType", params.get("dataType") ?? "JSON");
+  return fetchCachedJson(
+    forecastCache,
+    getUrlCacheKey("kma-special-alert", url, ["serviceKey"]),
     readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
     () => fetchJson(url, readEnvValue),
   );

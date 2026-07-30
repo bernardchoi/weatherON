@@ -21,10 +21,23 @@ export type WeatherLocationKey = "current" | "destination";
 export type WeatherProviderStatus = "ready" | "stale" | "fallback" | "error";
 export type WeatherProviderMode = WeatherProviderStatus;
 
+export type OfficialSpecialAlert = {
+  source: "kma";
+  active: boolean;
+  type?: "heatwave" | "heavy-rain";
+  level?: "advisory" | "warning";
+  title?: string;
+  reason?: string;
+  issuedAt?: string;
+  regionName?: string;
+  rawStatus?: string;
+};
+
 export type WeatherProviderResult = {
   current: WeatherSnapshot;
   destination: WeatherSnapshot;
   destinationSnapshots: WeatherSnapshot[];
+  officialSpecialAlert: OfficialSpecialAlert;
   status: WeatherProviderStatus;
   message: string;
   retryable: boolean;
@@ -70,10 +83,14 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           (createOptions.platform ?? Platform.OS) === "ios" && options.currentSnapshot?.source !== "weatherkit"
             ? undefined
             : options.currentSnapshot;
-        const [current, ...destinationSnapshots] = await Promise.all([
-          currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions),
-          ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions)),
+        const [weatherSnapshots, officialSpecialAlert] = await Promise.all([
+          Promise.all([
+            currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions),
+            ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions)),
+          ]),
+          fetchOfficialSpecialAlert(client, currentLocation),
         ]);
+        const [current, ...destinationSnapshots] = weatherSnapshots;
         const destination = destinationSnapshots[0] ?? normalizeOpenMeteoWeather(openMeteoFixture, {
           locationId: destinationLocation.locationId,
           locationName: destinationLocation.locationName,
@@ -85,6 +102,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           current,
           destination,
           destinationSnapshots,
+          officialSpecialAlert,
           status: mode,
           message: getProviderMessage(mode, fallback),
           retryable: mode !== "ready",
@@ -123,6 +141,7 @@ export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback")
     current,
     destination,
     destinationSnapshots: [destination],
+    officialSpecialAlert: createInactiveOfficialSpecialAlert(),
     status,
     message: getProviderMessage(status, true),
     retryable: true,
@@ -175,6 +194,17 @@ async function fetchWeatherSnapshot(
   return fetchOpenMeteoSnapshot(client, location, stale);
 }
 
+async function fetchOfficialSpecialAlert(client: WeatherClient, location: WeatherLocationPreset): Promise<OfficialSpecialAlert> {
+  if (location.countryCode !== "KR" || typeof client.fetchKmaSpecialAlert !== "function") {
+    return createInactiveOfficialSpecialAlert();
+  }
+  try {
+    return normalizeKmaOfficialSpecialAlert(await client.fetchKmaSpecialAlert(), location);
+  } catch {
+    return createInactiveOfficialSpecialAlert("fetch_failed");
+  }
+}
+
 async function fetchOpenMeteoSnapshot(
   client: WeatherClient,
   location: WeatherLocationPreset,
@@ -219,6 +249,7 @@ function markProviderResultStale(result: WeatherProviderResult, status: WeatherP
     current: markSnapshotStale(result.current, options.currentLocation),
     destination: destinationSnapshots[0] ?? markSnapshotStale(result.destination, options.destinationLocation),
     destinationSnapshots,
+    officialSpecialAlert: createInactiveOfficialSpecialAlert(),
     status,
     message: getProviderMessage(status, result.fallbackUsed),
     retryable: true,
@@ -275,4 +306,144 @@ function markSnapshotFallback(snapshot: WeatherSnapshot): WeatherSnapshot {
     ...snapshot,
     source: "fallback",
   };
+}
+
+function createInactiveOfficialSpecialAlert(rawStatus?: string): OfficialSpecialAlert {
+  return { source: "kma", active: false, ...(rawStatus ? { rawStatus } : {}) };
+}
+
+function normalizeKmaOfficialSpecialAlert(payload: unknown, location: WeatherLocationPreset): OfficialSpecialAlert {
+  const candidates = extractKmaAlertRecords(payload)
+    .map(parseKmaOfficialSpecialAlertRecord)
+    .filter((alert): alert is OfficialSpecialAlert => Boolean(alert))
+    .filter((alert) => matchesOfficialAlertLocation(alert, location));
+  const activeAlerts = candidates.filter((alert) => alert.active && alert.type && alert.level);
+  if (!activeAlerts.length) return createInactiveOfficialSpecialAlert();
+  activeAlerts.sort(compareOfficialSpecialAlerts);
+  return activeAlerts[0];
+}
+
+function extractKmaAlertRecords(value: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(value)) return value.flatMap(extractKmaAlertRecords);
+  if (!value || typeof value !== "object") return [];
+  const record = value as Record<string, unknown>;
+  const nestedCandidates = [
+    readFieldValue(record, ["response.body.items.item"]),
+    readFieldValue(record, ["response.body.items"]),
+    readFieldValue(record, ["body.items.item"]),
+    readFieldValue(record, ["items.item"]),
+    readFieldValue(record, ["items"]),
+    readFieldValue(record, ["item"]),
+  ];
+  const nestedRecords = nestedCandidates.flatMap(extractKmaAlertRecords);
+  if (nestedRecords.length) return nestedRecords;
+  return [record];
+}
+
+function parseKmaOfficialSpecialAlertRecord(record: Record<string, unknown>): OfficialSpecialAlert | null {
+  const title = readStringField(record, ["title", "TITLE", "titl", "wrnTitle"]);
+  const contents = readStringField(record, ["contents", "content", "body", "reason", "rem", "text"]);
+  const typeRaw = readStringField(record, ["wrn", "warnVar", "warnCode", "warningCode", "warn"]);
+  const levelRaw = readStringField(record, ["lvl", "level", "warnStress", "warningLevel"]);
+  const commandRaw = readStringField(record, ["cmd", "command", "status", "warningStatus"]);
+  const regionName = readStringField(record, ["regKo", "regName", "areaName", "regionName", "stnName", "region"]);
+  const issuedAt = readStringField(record, ["tmFc", "tmFcStr", "announceTime", "issuedAt", "issueTime"]);
+  const haystack = cleanKmaText([typeRaw, levelRaw, commandRaw, title, contents].filter(Boolean).join(" "));
+  if (isReleasedOrPreliminaryKmaAlert(commandRaw, haystack)) return null;
+
+  const type = resolveKmaSpecialAlertType(typeRaw, haystack);
+  const level = resolveKmaSpecialAlertLevel(levelRaw, haystack);
+  if (!type || !level) return null;
+
+  const officialTitle = `${type === "heavy-rain" ? "호우" : "폭염"}${level === "warning" ? "경보" : "주의보"}`;
+  const reason = cleanKmaText(contents ?? title ?? [regionName, issuedAt].filter(Boolean).join(" · "));
+  return {
+    source: "kma",
+    active: true,
+    type,
+    level,
+    title: officialTitle,
+    reason: reason || officialTitle,
+    ...(issuedAt ? { issuedAt } : {}),
+    ...(regionName ? { regionName } : {}),
+    rawStatus: cleanKmaText(commandRaw ?? title ?? officialTitle),
+  };
+}
+
+function resolveKmaSpecialAlertType(raw: string | undefined, haystack: string): OfficialSpecialAlert["type"] | undefined {
+  const code = raw?.trim().toUpperCase();
+  if (code === "R" || code === "2" || code === "02" || haystack.includes("호우")) return "heavy-rain";
+  if (code === "H" || code === "12" || haystack.includes("폭염")) return "heatwave";
+  return undefined;
+}
+
+function resolveKmaSpecialAlertLevel(raw: string | undefined, haystack: string): OfficialSpecialAlert["level"] | undefined {
+  const code = raw?.trim().toUpperCase();
+  if (code === "3" || code === "W" || code === "WARNING" || haystack.includes("경보")) return "warning";
+  if (code === "2" || code === "A" || code === "ADVISORY" || haystack.includes("주의보")) return "advisory";
+  return undefined;
+}
+
+function isReleasedOrPreliminaryKmaAlert(commandRaw: string | undefined, haystack: string): boolean {
+  const command = commandRaw?.trim();
+  return command === "3" || command === "4" || command === "7" || haystack.includes("해제") || haystack.includes("예비");
+}
+
+function matchesOfficialAlertLocation(alert: OfficialSpecialAlert, location: WeatherLocationPreset): boolean {
+  if (!alert.regionName) return true;
+  const region = normalizeKoreanRegionText(alert.regionName);
+  const locationName = normalizeKoreanRegionText(location.locationName);
+  const locationParts = locationName.split(/\s+/u).filter(Boolean);
+  const city = locationParts[0];
+  const district = locationParts[1];
+  return Boolean((city && region.includes(city)) || (district && region.includes(district)) || region.includes(locationName.replace(/\s+/gu, "")));
+}
+
+function compareOfficialSpecialAlerts(left: OfficialSpecialAlert, right: OfficialSpecialAlert): number {
+  const leftLevel = left.level === "warning" ? 2 : 1;
+  const rightLevel = right.level === "warning" ? 2 : 1;
+  if (leftLevel !== rightLevel) return rightLevel - leftLevel;
+  const leftType = left.type === "heavy-rain" ? 2 : 1;
+  const rightType = right.type === "heavy-rain" ? 2 : 1;
+  return rightType - leftType;
+}
+
+function readStringField(record: Record<string, unknown>, keys: string[]): string | undefined {
+  const value = readFieldValue(record, keys);
+  if (typeof value === "string") return value.trim() || undefined;
+  if (typeof value === "number") return String(value);
+  return undefined;
+}
+
+function readFieldValue(record: Record<string, unknown>, keys: string[]): unknown {
+  for (const key of keys) {
+    const pathValue = readFieldPath(record, key);
+    if (pathValue !== undefined && pathValue !== null) return pathValue;
+    const normalizedKey = normalizeFieldName(key);
+    const entry = Object.entries(record).find(([name]) => normalizeFieldName(name) === normalizedKey);
+    if (entry?.[1] !== undefined && entry[1] !== null) return entry[1];
+  }
+  return undefined;
+}
+
+function readFieldPath(record: Record<string, unknown>, path: string): unknown {
+  return path.split(".").reduce<unknown>((current, part) => {
+    if (!current || typeof current !== "object") return undefined;
+    return (current as Record<string, unknown>)[part];
+  }, record);
+}
+
+function normalizeFieldName(value: string): string {
+  return value.replace(/[^a-z0-9]/giu, "").toLowerCase();
+}
+
+function cleanKmaText(value: string): string {
+  return value.replace(/\s+/gu, " ").trim();
+}
+
+function normalizeKoreanRegionText(value: string): string {
+  return value
+    .replace(/특별시|광역시|특별자치시|특별자치도|자치도|도|시|군|구/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
 }

@@ -9,11 +9,13 @@ const upstreamPort = 19092;
 const proxyHost = "127.0.0.1";
 const proxyPort = 19091;
 let kmaRequestCount = 0;
+let kmaSpecialAlertRequestCount = 0;
 let weatherKitRequestCount = 0;
 let kakaoTransitRequestCount = 0;
 let googleTransitRequestCount = 0;
 const { privateKey: weatherKitPrivateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
 const weatherKitPrivateKeyPem = weatherKitPrivateKey.export({ type: "pkcs8", format: "pem" });
+const futureTransitArrivalTime = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
 
 const upstream = createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? `${upstreamHost}:${upstreamPort}`}`);
@@ -24,6 +26,19 @@ const upstream = createServer((request, response) => {
       return;
     }
     sendText(response, 429, "API rate limit exceeded");
+    return;
+  }
+  if (url.pathname === "/kma-special-alert") {
+    kmaSpecialAlertRequestCount += 1;
+    sendJson(response, 200, {
+      response: {
+        body: {
+          items: {
+            item: [{ WRN: "R", LVL: "3", CMD: "1", REG_KO: "서울특별시", TM_FC: "202607301000", REM: "호우경보 발표" }],
+          },
+        },
+      },
+    });
     return;
   }
   if (url.pathname === "/openmeteo") {
@@ -87,6 +102,7 @@ const proxy = spawn(process.execPath, ["apps/server/src/index.mjs"], {
     WEATHER_CACHE_TTL_MS: "1",
     KMA_SERVICE_KEY: "decoded-test-key",
     KMA_FORECAST_URL: `http://${upstreamHost}:${upstreamPort}/kma`,
+    KMA_SPECIAL_ALERT_URL: `http://${upstreamHost}:${upstreamPort}/kma-special-alert`,
     OPEN_METEO_FORECAST_URL: `http://${upstreamHost}:${upstreamPort}/openmeteo`,
     KAKAO_REST_API_KEY: "test-kakao-key",
     KAKAO_PUBLIC_TRANSIT_URL: `http://${upstreamHost}:${upstreamPort}/kakao-transit`,
@@ -110,6 +126,9 @@ try {
   const fallbackKma = await fetchJson(`http://${proxyHost}:${proxyPort}/weather/kma?nx=61&ny=125`);
   assert.equal(fallbackKma.response?.body?.items?.item?.[0]?.category, "TMP");
   assert.equal(kmaRequestCount, 2);
+  const kmaSpecialAlert = await fetchJson(`http://${proxyHost}:${proxyPort}/weather/kma-special-alert`);
+  assert.equal(kmaSpecialAlert.response?.body?.items?.item?.[0]?.WRN, "R");
+  assert.equal(kmaSpecialAlertRequestCount, 1);
 
   const openMeteo = await fetchJson(`http://${proxyHost}:${proxyPort}/weather/openmeteo?latitude=37.7715&longitude=128.9483`);
   assert.ok(openMeteo.current);
@@ -123,7 +142,7 @@ try {
   assert.equal(kakaoTransit.travelMinutes, 55);
   assert.equal(kakaoTransitRequestCount, 1);
   const googleTransit = await fetchJson(
-    `http://${proxyHost}:${proxyPort}/routes/estimate?origin=35.6812,139.7671&destination=35.6580,139.7016&originCountryCode=JP&destinationCountryCode=JP&transportMode=transit&arrivalTime=2026-07-23T23%3A45%3A00.000Z`,
+    `http://${proxyHost}:${proxyPort}/routes/estimate?origin=35.6812,139.7671&destination=35.6580,139.7016&originCountryCode=JP&destinationCountryCode=JP&transportMode=transit&arrivalTime=${encodeURIComponent(futureTransitArrivalTime)}`,
   );
   assert.equal(googleTransit.provider, "google-transit");
   assert.equal(googleTransit.travelMinutes, 46);

@@ -24,8 +24,8 @@ export function OutfitScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const ultraCompactLayout = layout.isShort;
-  const onePageLayout = layout.isShort || layout.height <= 844;
+  const ultraCompactLayout = layout.isShort || layout.height <= 812;
+  const onePageLayout = layout.isShort || layout.height <= 896;
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   advicePreviewUltraCompact: {
-    minHeight: 36,
+    minHeight: 44,
     paddingVertical: 3,
   },
   advicePreviewRow: {

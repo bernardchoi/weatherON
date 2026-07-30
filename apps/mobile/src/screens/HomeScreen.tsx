@@ -48,7 +48,7 @@ export function HomeScreen({
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const pullRefreshObservedLoadingRef = useRef(false);
   const activeNotifications = state.notifications.filter((item) => item.active);
-  const activeWeatherAlert = activeNotifications.find((item) => item.type === "heatwave" || item.type === "heavy-rain");
+  const activeWeatherAlert = state.officialSpecialAlert.active ? state.officialSpecialAlert : null;
   const unreadNotificationCount = permissionReady
     ? activeNotifications.filter((item) => !readNotificationIds.includes(item.id)).length
     : 0;
@@ -138,7 +138,7 @@ export function HomeScreen({
             <SpecialWeatherAlertCard
               alert={activeWeatherAlert}
               theme={theme}
-              onPress={() => onOpenNotificationDeepLink(activeWeatherAlert.id, "H3")}
+              onPress={() => onOpenNotificationDeepLink("official-kma-special-alert", "H3")}
             />
           ) : null}
           {HOME_OUTFIT_CARD_VISIBLE ? (
@@ -918,7 +918,7 @@ function SpecialWeatherAlertCard({
   theme,
   onPress,
 }: {
-  alert: P0ScreenProps["state"]["notifications"][number];
+  alert: P0ScreenProps["state"]["officialSpecialAlert"];
   theme: AppTheme;
   onPress: () => void;
 }) {
@@ -989,28 +989,29 @@ function SpecialWeatherAlertCard({
   );
 }
 
-function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["notifications"][number]) {
-  const isWarning = alert.id.endsWith("warning") || alert.title.includes("경보");
-  const tempMatch = alert.reason.match(/(\d+)℃/u)?.[1];
-  const rainWindowMatch = alert.reason.match(/((?:3|12)시간\s+\d+mm)/u)?.[1];
+function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["officialSpecialAlert"]) {
+  const isWarning = alert.level === "warning" || alert.title?.includes("경보") === true;
+  const reason = alert.reason ?? "";
+  const tempMatch = reason.match(/(\d+)℃/u)?.[1];
+  const rainWindowMatch = reason.match(/((?:3|12)시간\s+\d+mm)/u)?.[1];
 
   if (alert.type === "heatwave") {
     return {
-      title: isWarning ? "오늘 더위, 무리 금지" : "한낮 더위, 쉬어가요",
+      title: isWarning ? "오늘은 더위 조심해요" : "한낮엔 잠깐 쉬어가요",
       body: tempMatch ? `최고 ${tempMatch}℃ · 물·그늘·실내 휴식` : "물·그늘·실내 휴식",
     };
   }
 
   if (alert.type === "heavy-rain") {
     return {
-      title: isWarning ? "비가 세게 와요, 길 조심" : "비 소식 커요, 우산 챙겨요",
+      title: isWarning ? "비가 많이 와요, 천천히 가요" : "비가 꽤 올 수 있어요",
       body: rainWindowMatch ? `${rainWindowMatch} · 배수·교통 확인` : "이동 전 배수·교통 확인",
     };
   }
 
   return {
-    title: alert.title.replace(/\s+/gu, " ").trim(),
-    body: alert.reason.replace(/\s+/gu, " ").trim(),
+    title: (alert.title ?? "기상청 특보가 있어요").replace(/\s+/gu, " ").trim(),
+    body: reason.replace(/\s+/gu, " ").trim() || "기상청 발표 내용을 확인해요",
   };
 }
 

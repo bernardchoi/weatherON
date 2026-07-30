@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type AppWidthClass = "narrow" | "compact" | "regular";
 export type AppHeightClass = "short" | "standard";
@@ -111,15 +112,15 @@ export const responsiveLayoutBreakpoints = {
   tabletWidth: 744,
 } as const;
 
-export function resolveResponsiveLayout(width: number, height: number): ResponsiveLayout {
+export function resolveResponsiveLayout(width: number, height: number, verticalSafeAreaInset = 0): ResponsiveLayout {
   const safeWidth = Math.max(0, width);
-  const safeHeight = Math.max(0, height);
+  const safeHeight = Math.max(0, height - Math.max(0, verticalSafeAreaInset));
   const isNarrow = safeWidth < responsiveLayoutBreakpoints.narrowWidth;
   const isRegular = safeWidth >= responsiveLayoutBreakpoints.regularWidth;
   const isShort = safeHeight < responsiveLayoutBreakpoints.shortHeight;
   const isTablet = safeWidth >= responsiveLayoutBreakpoints.tabletWidth;
   const isNarrowPhone = safeWidth <= 360;
-  const homeCompact = safeHeight <= 844;
+  const homeCompact = safeHeight <= 896;
 
   const screenHorizontalPadding = isTablet ? 32 : isRegular ? 28 : isNarrow ? 16 : 20;
   const splashIconSize = isShort ? 86 : isTablet ? 128 : isRegular ? 112 : isNarrow ? 96 : 102;
@@ -228,5 +229,7 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
 
 export function useResponsiveLayout(): ResponsiveLayout {
   const { width, height } = useWindowDimensions();
-  return useMemo(() => resolveResponsiveLayout(width, height), [height, width]);
+  const insets = useSafeAreaInsets();
+  const verticalSafeAreaInset = insets.top + insets.bottom;
+  return useMemo(() => resolveResponsiveLayout(width, height, verticalSafeAreaInset), [height, verticalSafeAreaInset, width]);
 }
