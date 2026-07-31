@@ -77,10 +77,52 @@ await writeFile(
       ...item,
       owned: item.id === "bottom-wide-denim",
     }));
+    const wardrobeWithOwnedWarmLayers = presetWardrobe.map((item) => ({
+      ...item,
+      owned: item.id === "outer-cardigan" || item.id === "top-striped-long-sleeve",
+    }));
+    const hotHumidLargeSwingSnapshot = {
+      ...dryCommuteSnapshot,
+      id: "weather-seongsu-hot-humid-large-swing",
+      current: {
+        ...dryCommuteSnapshot.current,
+        tempC: 30,
+        feelsLikeC: 35,
+        humidityPct: 78,
+      },
+      hourly: dryCommuteSnapshot.hourly.map((hour, index) => ({
+        ...hour,
+        tempC: [24, 29, 33, 35][index] ?? 30,
+      })),
+    };
+    const coolLargeSwingSnapshot = {
+      ...dryCommuteSnapshot,
+      id: "weather-seongsu-cool-large-swing",
+      current: {
+        ...dryCommuteSnapshot.current,
+        tempC: 16,
+        feelsLikeC: 15,
+        humidityPct: 60,
+      },
+      hourly: dryCommuteSnapshot.hourly.map((hour, index) => ({
+        ...hour,
+        tempC: [12, 16, 20, 24][index] ?? 16,
+      })),
+    };
 
     export const results = {
       outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
       ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
+      hotHumidLargeSwingOutfit: recommendOutfit(
+        hotHumidLargeSwingSnapshot,
+        defaultPreferenceProfile,
+        wardrobeWithOwnedWarmLayers,
+      ),
+      coolLargeSwingOutfit: recommendOutfit(
+        coolLargeSwingSnapshot,
+        defaultPreferenceProfile,
+        wardrobeWithOwnedWarmLayers,
+      ),
       umbrella: recommendUmbrella(seongsuRainSnapshot),
       shoes: recommendShoes(seongsuRainSnapshot, "work"),
       destination: buildDestinationCare({
@@ -190,6 +232,7 @@ await writeFile(
     const { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
+    const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
     const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
@@ -349,6 +392,24 @@ await writeFile(
       openMeteoProvider: await httpProvider.getSnapshots("ready", {
         destinationLocation: toWeatherLocation(globalPlace),
       }),
+      summerFeelsHotterMessage: getFeelsLikeMessage({
+        tempC: 24,
+        feelsLikeC: 26,
+        humidityPct: 68,
+        temperatureUnit: "celsius",
+      }),
+      mildFeelsWarmerMessage: getFeelsLikeMessage({
+        tempC: 18,
+        feelsLikeC: 20,
+        humidityPct: 45,
+        temperatureUnit: "celsius",
+      }),
+      summerFeelsCoolerMessage: getFeelsLikeMessage({
+        tempC: 27,
+        feelsLikeC: 25,
+        humidityPct: 60,
+        temperatureUnit: "celsius",
+      }),
       httpUrls: requestedUrls,
       kmaBaseEarly: getKmaForecastBaseDateTime(new Date("2026-06-26T01:59:00+09:00")),
       kmaBaseMorning: getKmaForecastBaseDateTime(new Date("2026-06-26T05:10:00+09:00")),
@@ -414,6 +475,14 @@ assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
 assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
 assert.equal(results.ownedDryOutfit.items.bottom.name, "와이드 데님");
 assert.equal(results.ownedDryOutfit.items.bottom.owned, true);
+assert.equal(results.hotHumidLargeSwingOutfit.variant, "heat");
+assert.equal(results.hotHumidLargeSwingOutfit.items.outer, undefined);
+assert.ok(results.hotHumidLargeSwingOutfit.items.top.seasons.includes("summer"));
+assert.ok(results.hotHumidLargeSwingOutfit.items.top.weatherTags.includes("heat"));
+assert.ok(results.hotHumidLargeSwingOutfit.reasons.some((reason) => reason.includes("긴 겉옷은 뺐어요")));
+assert.equal(results.coolLargeSwingOutfit.items.outer.name, "얇은 가디건");
+assert.equal(results.coolLargeSwingOutfit.items.outer.owned, true);
+assert.ok(results.coolLargeSwingOutfit.reasons.some((reason) => reason.includes("얇게 걸칠 옷")));
 assert.equal(results.umbrella.level, "required");
 assert.equal(results.shoes.level, "recommended");
 assert.equal(results.destination.careOn, true);
@@ -422,7 +491,8 @@ assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.act
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushTitle === "우산 챙길 시간이에요"));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushBody === "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요"));
 assert.ok(results.notifications.some((item) => item.id === "routine-morning" && item.pushTitle === "오늘 아침, 가볍게 준비해요"));
-assert.ok(results.notifications.some((item) => item.ruleVersion === results.outfit.ruleVersion));
+assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.2.0");
+assert.ok(results.notifications.every((item) => item.ruleVersion !== results.outfit.ruleVersion));
 assert.ok(results.destinationNotificationsStrict.some((item) => item.id === "destination-change" && !item.active && item.reason.includes("강수 70%")));
 assert.ok(results.destinationNotificationsWind.some((item) => item.id === "destination-change" && item.active && item.reason.includes("출발 30분 전")));
 assert.equal(results.kma.source, "kma");
@@ -497,6 +567,9 @@ assert.equal(demoResults.iosWeatherKitFailureProvider.current.source, "fallback"
 assert.equal(demoResults.iosWeatherKitFailureProvider.destination.source, "fallback");
 assert.deepEqual(demoResults.iosWeatherKitFailureCalls, { weatherkit: 2, kma: 0, openmeteo: 0 });
 assert.equal(demoResults.openMeteoProvider.destination.source, "openmeteo");
+assert.equal(demoResults.summerFeelsHotterMessage, "실제보다 조금 더 덥게 느껴져요. (+2°)");
+assert.equal(demoResults.mildFeelsWarmerMessage, "실제보다 따뜻하게 느껴져요. (+2°)");
+assert.equal(demoResults.summerFeelsCoolerMessage, "실제보다 조금 선선하게 느껴져요. (-2°)");
 assert.equal(demoResults.parallelProvider.destinationSnapshots.length, 2);
 assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "kr-gangneung-anmok-beach");
 assert.equal(demoResults.parallelProvider.destinationSnapshots[1].locationId, "kr-jamsil-baseball-stadium");
