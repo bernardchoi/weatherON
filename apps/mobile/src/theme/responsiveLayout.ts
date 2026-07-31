@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type AppWidthClass = "narrow" | "compact" | "regular";
 export type AppHeightClass = "short" | "standard";
@@ -112,15 +111,15 @@ export const responsiveLayoutBreakpoints = {
   tabletWidth: 744,
 } as const;
 
-export function resolveResponsiveLayout(width: number, height: number, verticalSafeAreaInset = 0): ResponsiveLayout {
+export function resolveResponsiveLayout(width: number, height: number): ResponsiveLayout {
   const safeWidth = Math.max(0, width);
-  const safeHeight = Math.max(0, height - Math.max(0, verticalSafeAreaInset));
+  const safeHeight = Math.max(0, height);
   const isNarrow = safeWidth < responsiveLayoutBreakpoints.narrowWidth;
   const isRegular = safeWidth >= responsiveLayoutBreakpoints.regularWidth;
   const isShort = safeHeight < responsiveLayoutBreakpoints.shortHeight;
   const isTablet = safeWidth >= responsiveLayoutBreakpoints.tabletWidth;
   const isNarrowPhone = safeWidth <= 360;
-  const homeCompact = safeHeight <= 896;
+  const homeCompact = safeHeight <= 844;
 
   const screenHorizontalPadding = isTablet ? 32 : isRegular ? 28 : isNarrow ? 16 : 20;
   const splashIconSize = isShort ? 86 : isTablet ? 128 : isRegular ? 112 : isNarrow ? 96 : 102;
@@ -157,14 +156,14 @@ export function resolveResponsiveLayout(width: number, height: number, verticalS
     homeWeatherHaloSize: isShort ? 72 : isTablet ? 136 : homeCompact ? 78 : isRegular ? 126 : 104,
     homeWeatherOrbSize: isShort ? 56 : isTablet ? 92 : homeCompact ? 62 : isRegular ? 84 : 72,
     homeWeatherIconSize: isShort ? 36 : isTablet ? 58 : homeCompact ? 40 : isRegular ? 52 : 46,
-    homeSpecialAlertMinHeight: isShort || isNarrowPhone ? 64 : isTablet ? 78 : isRegular ? 76 : 72,
-    homeSpecialAlertIconSize: isShort || isNarrowPhone ? 30 : isTablet ? 38 : isRegular ? 36 : 34,
+    homeSpecialAlertMinHeight: isShort || isNarrowPhone ? 48 : isTablet ? 62 : homeCompact ? 52 : 58,
+    homeSpecialAlertIconSize: isShort || isNarrowPhone ? 24 : isTablet ? 32 : homeCompact ? 26 : 30,
     homeSpecialAlertPaddingHorizontal: isShort || isNarrowPhone ? 8 : isTablet ? 12 : 10,
-    homeSpecialAlertPaddingVertical: isShort || isNarrowPhone ? 4 : isTablet ? 8 : 6,
-    homeSpecialAlertTitleFontSize: isShort || isNarrowPhone ? 14 : isTablet ? 16 : 15,
-    homeSpecialAlertTitleLineHeight: isShort || isNarrowPhone ? 18 : isTablet ? 21 : 20,
-    homeSpecialAlertBodyFontSize: isShort || isNarrowPhone ? 12 : 13,
-    homeSpecialAlertBodyLineHeight: isShort || isNarrowPhone ? 15 : 16,
+    homeSpecialAlertPaddingVertical: isShort || isNarrowPhone ? 3 : isTablet ? 6 : 4,
+    homeSpecialAlertTitleFontSize: isShort || isNarrowPhone ? 13 : isTablet ? 15 : 14,
+    homeSpecialAlertTitleLineHeight: isShort || isNarrowPhone ? 16 : isTablet ? 20 : 18,
+    homeSpecialAlertBodyFontSize: isShort || isNarrowPhone ? 11 : 12,
+    homeSpecialAlertBodyLineHeight: isShort || isNarrowPhone ? 14 : 15,
     homeOutfitMinHeight: isShort ? 68 : isTablet ? 96 : homeCompact ? 76 : isRegular ? 88 : 82,
     homeDecisionMinHeight: isShort ? 54 : isTablet ? 76 : homeCompact ? 64 : isRegular ? 70 : 66,
     homeSidebarMaxWidth: isShort ? 320 : isTablet ? 420 : isRegular ? 380 : isNarrow ? 320 : 340,
@@ -229,7 +228,5 @@ export function resolveResponsiveLayout(width: number, height: number, verticalS
 
 export function useResponsiveLayout(): ResponsiveLayout {
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const verticalSafeAreaInset = insets.top + insets.bottom;
-  return useMemo(() => resolveResponsiveLayout(width, height, verticalSafeAreaInset), [height, verticalSafeAreaInset, width]);
+  return useMemo(() => resolveResponsiveLayout(width, height), [height, width]);
 }
