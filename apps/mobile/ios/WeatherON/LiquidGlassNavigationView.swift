@@ -96,10 +96,15 @@ private struct NavigationGlassSurface: View {
         ForEach(0..<4, id: \.self) { index in
           Group {
             if index == state.activeIndex {
-              Color.white.opacity(0.001)
+              Capsule()
+                .fill(Color.white.opacity(state.isDarkTheme ? 0.12 : 0.08))
+                .overlay(
+                  Capsule()
+                    .stroke(Color.white.opacity(state.isDarkTheme ? 0.3 : 0.22), lineWidth: 1)
+                )
                 .glassEffect(
                   .regular
-                    .tint(.white.opacity(state.isDarkTheme ? 0.22 : 0.14))
+                    .tint(.white.opacity(state.isDarkTheme ? 0.24 : 0.16))
                     .interactive(),
                   in: Capsule()
                 )
@@ -112,7 +117,9 @@ private struct NavigationGlassSurface: View {
           .padding(4)
         }
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .animation(.spring(response: 0.42, dampingFraction: 0.82), value: state.activeIndex)
   }
 }

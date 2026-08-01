@@ -135,11 +135,12 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                 active={active}
                 onPress={() => onNavigate(route.id)}
               >
-                {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
+                {isIos && active ? (
                   <View
                     pointerEvents="none"
                     style={[
                       styles.iosActivePill,
+                      hasNativeLiquidGlassNavigationSurface ? styles.iosNativeActivePillBacking : null,
                       {
                         backgroundColor: iosColors.activeBackground,
                         borderColor: iosColors.activeBorder,
@@ -308,8 +309,8 @@ function getIosTabColors(theme: AppTheme) {
       activeDot: theme.clear,
       inactiveIcon: colorWithAlpha(theme.skyLite, 0.92),
       inactiveLabel: colorWithAlpha(theme.text, 0.86),
-      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.3 : 0.24),
-      activeBorder: colorWithAlpha(theme.clear, 0.58),
+      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.34 : 0.28),
+      activeBorder: colorWithAlpha(theme.clear, 0.66),
     };
   }
 
@@ -319,8 +320,8 @@ function getIosTabColors(theme: AppTheme) {
     activeDot: theme.clear,
     inactiveIcon: colorWithAlpha(theme.text, 0.62),
     inactiveLabel: colorWithAlpha(theme.text, 0.58),
-    activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.14 : 0.1),
-    activeBorder: colorWithAlpha(theme.clear, 0.24),
+    activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.22 : 0.16),
+    activeBorder: colorWithAlpha(theme.clear, 0.34),
   };
 }
 
@@ -418,6 +419,12 @@ const styles = StyleSheet.create({
     left: 5,
     borderWidth: 1,
     borderRadius: 28,
+  },
+  iosNativeActivePillBacking: {
+    top: 6,
+    right: 6,
+    bottom: 6,
+    left: 6,
   },
   label: {
     minWidth: 42,
