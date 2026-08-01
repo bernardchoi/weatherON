@@ -401,6 +401,12 @@ await writeFile(
       openMeteoPayload: await fixtureWeatherClient.fetchOpenMeteoForecast({ latitude: 37.77, longitude: 128.94 }),
       readyProvider: await fixtureWeatherProvider.getSnapshots("ready"),
       httpProvider: await httpProvider.getSnapshots("ready"),
+      httpProviderGenericCurrentLocation: await httpProvider.getSnapshots("ready", {
+        currentLocation: createKmaWeatherLocationFromCoordinate(
+          { latitude: 37.5446, longitude: 127.0559 },
+          "내 위치 주변",
+        ),
+      }),
       iosWeatherKitProvider: await iosWeatherKitProvider.getSnapshots("ready", {
         currentSnapshot: seongsuRainSnapshot,
       }),
@@ -566,6 +572,8 @@ assert.equal(demoResults.httpProvider.current.source, "kma");
 assert.equal(demoResults.httpProvider.destination.source, "kma");
 assert.equal(demoResults.httpProvider.officialSpecialAlert.active, true);
 assert.equal(demoResults.httpProvider.officialSpecialAlert.title, "호우경보");
+assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.active, true);
+assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.title, "호우경보");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));

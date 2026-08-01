@@ -410,7 +410,7 @@ function parseKmaOfficialSpecialAlertRecord(record: Record<string, unknown>): Of
 function resolveKmaSpecialAlertType(raw: string | undefined, haystack: string): OfficialSpecialAlert["type"] | undefined {
   const code = raw?.trim().toUpperCase();
   if (code === "R" || code === "2" || code === "02" || haystack.includes("호우")) return "heavy-rain";
-  if (code === "H" || code === "12" || haystack.includes("폭염")) return "heatwave";
+  if (code === "H" || code === "O" || code === "12" || haystack.includes("폭염")) return "heatwave";
   return undefined;
 }
 
@@ -433,7 +433,21 @@ function matchesOfficialAlertLocation(alert: OfficialSpecialAlert, location: Wea
   const locationParts = locationName.split(/\s+/u).filter(Boolean);
   const city = locationParts[0];
   const district = locationParts[1];
-  return Boolean((city && region.includes(city)) || (district && region.includes(district)) || region.includes(locationName.replace(/\s+/gu, "")));
+  const coordinateRegions = inferKoreanRegionNamesFromCoordinate(location);
+  return Boolean(
+    (city && region.includes(city)) ||
+    (district && region.includes(district)) ||
+    region.includes(locationName.replace(/\s+/gu, "")) ||
+    coordinateRegions.some((name) => region.includes(normalizeKoreanRegionText(name))),
+  );
+}
+
+function inferKoreanRegionNamesFromCoordinate(location: WeatherLocationPreset): string[] {
+  if (location.countryCode !== "KR") return [];
+  const { latitude, longitude } = location.coordinate;
+  if (latitude >= 37.4 && latitude <= 37.72 && longitude >= 126.75 && longitude <= 127.2) return ["서울"];
+  if (latitude >= 37.68 && latitude <= 37.86 && longitude >= 128.78 && longitude <= 129.08) return ["강릉", "강원"];
+  return [];
 }
 
 function compareOfficialSpecialAlerts(left: OfficialSpecialAlert, right: OfficialSpecialAlert): number {
