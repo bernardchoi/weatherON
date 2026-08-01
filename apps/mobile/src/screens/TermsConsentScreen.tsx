@@ -172,7 +172,6 @@ function ConsentRow({
         </View>
         <Text style={[styles.body, { color: theme.muted }]}>{item.meta}</Text>
       </View>
-      {item.key !== "age" ? <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text> : null}
     </Pressable>
   );
 }

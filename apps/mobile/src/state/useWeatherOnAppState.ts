@@ -1311,7 +1311,7 @@ export function useWeatherOnAppState() {
       setRoute("A3");
       return;
     }
-    const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
+    const returnTo = gate?.returnTo ?? "H1";
     completeAccountAction(gate);
     setRoute(returnTo);
     setGate(null);
@@ -1319,7 +1319,7 @@ export function useWeatherOnAppState() {
 
   const completeTerms = () => {
     setTermsRequiredAccepted(true);
-    const returnTo = gate?.returnTo === "A4" ? "M1" : gate?.returnTo ?? "H1";
+    const returnTo = gate?.returnTo ?? "H1";
     completeAccountAction(gate);
     setRoute(returnTo);
     setGate(null);
