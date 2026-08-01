@@ -131,6 +131,7 @@ await writeFile(
     };
 
     export const results = {
+      presetWardrobeIds: presetWardrobe.map((item) => item.id),
       outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
       ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
       hotHumidLargeSwingOutfit: recommendOutfit(
@@ -498,6 +499,13 @@ await build({
 const { results } = await import(pathToFileURL(bundled).href);
 const { demoResults } = await import(pathToFileURL(providerBundle).href);
 
+assert.equal(results.presetWardrobeIds.length, 54);
+assert.ok(results.presetWardrobeIds.includes("outer-packable-windbreaker"));
+assert.ok(results.presetWardrobeIds.includes("outer-light-trench-coat"));
+assert.ok(results.presetWardrobeIds.includes("outer-zip-hoodie"));
+assert.ok(results.presetWardrobeIds.includes("bottom-pleated-skirt"));
+assert.ok(results.presetWardrobeIds.includes("shoes-low-sneakers"));
+assert.ok(results.presetWardrobeIds.includes("accessory-navy-cap"));
 assert.equal(results.outfit.variant, "rain");
 assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
 assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
