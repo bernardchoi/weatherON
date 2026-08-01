@@ -14,7 +14,7 @@ export function sortPlaceSearchResults(
       place,
       index,
       textRank: getTextMatchRank(place, query),
-      distanceMeters: origin ? getCoordinateDistanceMeters(origin.coordinate, place.coordinate) : 0,
+      distanceMeters: origin ? getSearchDistanceMeters(place, origin.coordinate) : 0,
     }))
     .sort((a, b) => {
       if (!origin) return a.textRank - b.textRank || a.index - b.index;
@@ -49,6 +49,11 @@ function getTextMatchRank(place: PlaceSearchResult, query: string) {
   if (normalizedName.includes(normalizedQuery)) return 2;
   if (normalizedAddress.includes(normalizedQuery)) return 3;
   return 4;
+}
+
+function getSearchDistanceMeters(place: PlaceSearchResult, origin: PlaceSearchResult["coordinate"]) {
+  if (typeof place.distanceMeters === "number" && Number.isFinite(place.distanceMeters)) return place.distanceMeters;
+  return getCoordinateDistanceMeters(origin, place.coordinate);
 }
 
 function normalizeText(value: string) {

@@ -355,32 +355,46 @@ function shouldUseGoogleRoute(originCountryCode, destinationCountryCode) {
 }
 
 async function searchKakaoPlaces(query, origin, readEnvValue) {
+  const documents = [];
+  for (let page = 1; page <= 2; page += 1) {
+    const payload = await fetchKakaoPlacePage(query, origin, page, readEnvValue);
+    documents.push(...(payload.documents ?? []));
+    if (payload.meta?.is_end !== false) break;
+  }
+  return documents
+    .map((item) => {
+      const distanceMeters = Number(item.distance);
+      return {
+        id: `kakao-${item.id}`,
+        name: item.place_name,
+        address: item.road_address_name || item.address_name || "주소 정보 없음",
+        category: inferPlaceCategory(`${item.category_name} ${item.category_group_name} ${item.place_name}`),
+        countryCode: "KR",
+        coordinate: {
+          latitude: Number(item.y),
+          longitude: Number(item.x),
+        },
+        distanceMeters: Number.isFinite(distanceMeters) ? distanceMeters : undefined,
+        timezone: "Asia/Seoul",
+        provider: "kakao",
+      };
+    })
+    .filter((place) => Number.isFinite(place.coordinate.latitude) && Number.isFinite(place.coordinate.longitude));
+}
+
+async function fetchKakaoPlacePage(query, origin, page, readEnvValue) {
   const url = new URL(readEnvValue("KAKAO_LOCAL_KEYWORD_URL") ?? DEFAULT_KAKAO_LOCAL_KEYWORD_URL);
   url.searchParams.set("query", query || "강릉 안목해변");
-  url.searchParams.set("size", "8");
+  url.searchParams.set("size", "15");
+  url.searchParams.set("page", String(page));
   if (origin) {
     url.searchParams.set("x", String(origin.longitude));
     url.searchParams.set("y", String(origin.latitude));
     url.searchParams.set("sort", "distance");
   }
-  const payload = await fetchJson(url, readEnvValue, {
+  return fetchJson(url, readEnvValue, {
     Authorization: `KakaoAK ${readEnvValue("KAKAO_REST_API_KEY")}`,
   });
-  return (payload.documents ?? [])
-    .map((item) => ({
-      id: `kakao-${item.id}`,
-      name: item.place_name,
-      address: item.road_address_name || item.address_name || "주소 정보 없음",
-      category: inferPlaceCategory(`${item.category_name} ${item.category_group_name} ${item.place_name}`),
-      countryCode: "KR",
-      coordinate: {
-        latitude: Number(item.y),
-        longitude: Number(item.x),
-      },
-      timezone: "Asia/Seoul",
-      provider: "kakao",
-    }))
-    .filter((place) => Number.isFinite(place.coordinate.latitude) && Number.isFinite(place.coordinate.longitude));
 }
 
 async function searchGooglePlaces(query, countryCode, language, readEnvValue) {

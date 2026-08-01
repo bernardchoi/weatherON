@@ -10,6 +10,7 @@ export type PlaceSearchResult = {
   category: DestinationCare["category"];
   countryCode: "KR" | "JP" | "GLOBAL";
   coordinate: GeoCoordinate;
+  distanceMeters?: number;
   timezone: string;
   provider: PlaceSearchProvider;
 };

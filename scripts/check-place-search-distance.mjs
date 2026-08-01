@@ -8,7 +8,7 @@ const upstreamUrls = [];
 globalThis.fetch = async (input) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   upstreamUrls.push(url);
-  return new Response(JSON.stringify({ documents: buildClinicDocuments() }), {
+  return new Response(JSON.stringify({ documents: buildClinicDocuments(url), meta: { is_end: url.searchParams.get("page") === "2" } }), {
     status: 200,
     headers: { "content-type": "application/json" },
   });
@@ -29,16 +29,19 @@ try {
   const query = encodeURIComponent("한의원 거리 회귀");
   const nearSeongsu = await fetchWorkerJson(`/places/search?q=${query}&latitude=37.5446&longitude=127.0559`, env);
   assert.equal(nearSeongsu[0].name, "성수 가까운 한의원", "current-location nearest clinic should be first");
+  assert.equal(nearSeongsu[0].distanceMeters, 12, "Kakao distance should be preserved for UI and ranking diagnostics");
 
   const nearJamsil = await fetchWorkerJson(`/places/search?q=${query}&latitude=37.5122&longitude=127.0719`, env);
   assert.equal(nearJamsil[0].name, "잠실 가까운 한의원", "cache must not reuse results from another origin");
-  assert.equal(upstreamUrls.length, 2, "different origins should use different place-search cache entries");
+  assert.equal(upstreamUrls.length, 4, "different origins and pages should use distinct Kakao upstream calls");
 
   for (const url of upstreamUrls) {
+    assert.equal(url.searchParams.get("size"), "15", "Kakao search should request the maximum page size");
     assert.equal(url.searchParams.get("sort"), "distance", "Kakao search should request distance ordering");
     assert.ok(url.searchParams.has("x"), "Kakao search should receive longitude");
     assert.ok(url.searchParams.has("y"), "Kakao search should receive latitude");
   }
+  assert.deepEqual(upstreamUrls.map((url) => url.searchParams.get("page")), ["1", "2", "1", "2"]);
 
   console.log("place search distance check passed");
 } finally {
@@ -52,8 +55,10 @@ async function fetchWorkerJson(path, env) {
   return JSON.parse(bodyText);
 }
 
-function buildClinicDocuments() {
-  return [
+function buildClinicDocuments(url) {
+  const page = url.searchParams.get("page") ?? "1";
+  const isNearSeongsuOrigin = Math.abs(Number(url.searchParams.get("y")) - 37.5446) < 0.001;
+  if (page === "1") return [
     {
       id: "clinic-jamsil",
       place_name: "잠실 가까운 한의원",
@@ -61,9 +66,12 @@ function buildClinicDocuments() {
       address_name: "서울 송파구 잠실동",
       category_name: "의료,건강 > 병원 > 한의원",
       category_group_name: "병원",
+      distance: isNearSeongsuOrigin ? "4300" : "18",
       x: "127.0718",
       y: "37.5123",
     },
+  ];
+  return [
     {
       id: "clinic-seongsu",
       place_name: "성수 가까운 한의원",
@@ -71,6 +79,7 @@ function buildClinicDocuments() {
       address_name: "서울 성동구 성수동",
       category_name: "의료,건강 > 병원 > 한의원",
       category_group_name: "병원",
+      distance: isNearSeongsuOrigin ? "12" : "4300",
       x: "127.0560",
       y: "37.5447",
     },
@@ -86,6 +95,7 @@ function buildAppClinicResults() {
       category: "medical",
       countryCode: "KR",
       coordinate: { latitude: 37.5123, longitude: 127.0718 },
+      distanceMeters: 4300,
       timezone: "Asia/Seoul",
       provider: "kakao",
     },
@@ -96,6 +106,7 @@ function buildAppClinicResults() {
       category: "medical",
       countryCode: "KR",
       coordinate: { latitude: 37.5447, longitude: 127.0560 },
+      distanceMeters: 12,
       timezone: "Asia/Seoul",
       provider: "kakao",
     },
