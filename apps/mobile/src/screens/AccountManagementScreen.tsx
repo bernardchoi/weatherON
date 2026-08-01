@@ -24,6 +24,7 @@ export function AccountManagementScreen({
   const primaryLabel = accountReady ? "정책 보기" : needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "정책 및 법적 고지 보기" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
+  const showPrimaryAction = accountLinked;
 
   const requestConnect = () => onRequireAccount("account-connect", "A4");
   const handlePrimaryAccountAction = () => {
@@ -57,7 +58,19 @@ export function AccountManagementScreen({
           <Text style={[styles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>계정 관리</Text>
         </View>
 
-        <View style={[styles.profileCard, { minHeight: layout.accountHeroMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border }, cardShadow(theme)]}>
+        <View
+          style={[
+            styles.profileCard,
+            {
+              minHeight: layout.accountProfileMinHeight,
+              paddingHorizontal: layout.accountPanelPadding,
+              paddingVertical: layout.isShort ? 10 : 12,
+              backgroundColor: theme.card,
+              borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border,
+            },
+            cardShadow(theme),
+          ]}
+        >
           <View style={[styles.profileVisual, { backgroundColor: theme.cardStrong }]}>
             <View style={[styles.avatar, layout.isShort || layout.isNarrow ? styles.avatarShort : null, { borderColor: primaryTone }]}>
               <PersonGlyph color={primaryTone} />
@@ -65,26 +78,30 @@ export function AccountManagementScreen({
             <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
           <View style={styles.profileCopy}>
-            <View style={[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }]}>
-              <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
+            <View style={styles.profileTitleRow}>
+              <Text style={[styles.profileTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
+              <View style={[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }]}>
+                <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
+              </View>
             </View>
-            <Text style={[styles.profileTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
             <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={1}>{profileMeta}</Text>
           </View>
         </View>
 
-        <Pressable
-          accessibilityLabel={primaryAccessibilityLabel}
-          accessibilityRole="button"
-          onPress={handlePrimaryAccountAction}
-          style={[styles.primaryRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
-        >
-          <View style={styles.actionIcon}>
-            <DoorGlyph color={primaryTone} />
-          </View>
-          <Text style={[styles.primaryText, { color: theme.text }]}>{primaryLabel}</Text>
-          <ChevronRight color={theme.subtle} />
-        </Pressable>
+        {showPrimaryAction ? (
+          <Pressable
+            accessibilityLabel={primaryAccessibilityLabel}
+            accessibilityRole="button"
+            onPress={handlePrimaryAccountAction}
+            style={[styles.primaryRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+          >
+            <View style={styles.actionIcon}>
+              <DoorGlyph color={primaryTone} />
+            </View>
+            <Text style={[styles.primaryText, { color: theme.text }]}>{primaryLabel}</Text>
+            <ChevronRight color={theme.subtle} />
+          </Pressable>
+        ) : null}
 
         {accountLinked ? (
           <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "unlink" ? theme.alert : theme.border }, cardShadow(theme)]}>
@@ -184,62 +201,69 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
   profileVisual: {
-    width: 74,
-    height: 74,
+    width: 46,
+    height: 46,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   avatar: {
-    width: 50,
-    height: 50,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 2,
   },
   avatarShort: {
-    width: 44,
-    height: 44,
+    width: 30,
+    height: 30,
   },
   statusDot: {
     position: "absolute",
-    right: 9,
-    bottom: 9,
-    width: 14,
-    height: 14,
+    right: 5,
+    bottom: 5,
+    width: 9,
+    height: 9,
     borderRadius: radius.pill,
   },
   profileCopy: {
     flex: 1,
     alignItems: "flex-start",
-    gap: spacing.xs,
+    gap: 3,
+  },
+  profileTitleRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   statusPill: {
-    minHeight: 28,
+    minHeight: 22,
     justifyContent: "center",
     borderRadius: radius.pill,
     borderWidth: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
   },
   statusPillText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
     fontWeight: "900",
   },
   profileTitle: {
-    fontSize: 20,
-    lineHeight: 25,
+    flexShrink: 1,
+    fontSize: 17,
+    lineHeight: 21,
     fontWeight: "900",
   },
   profileMeta: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
   },
   primaryRow: {
@@ -298,21 +322,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   personGlyph: {
-    width: 26,
-    height: 26,
+    width: 22,
+    height: 22,
     alignItems: "center",
   },
   personHead: {
-    width: 10,
-    height: 10,
+    width: 8,
+    height: 8,
     borderWidth: 1.7,
     borderRadius: radius.pill,
   },
   personBody: {
     position: "absolute",
     bottom: 1,
-    width: 20,
-    height: 12,
+    width: 17,
+    height: 10,
     borderWidth: 1.7,
     borderTopLeftRadius: radius.pill,
     borderTopRightRadius: radius.pill,

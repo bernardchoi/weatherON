@@ -23,6 +23,7 @@ export function MyScreen({
   distanceUnit,
   themeMode,
   onNavigate,
+  onRequireAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -46,6 +47,10 @@ export function MyScreen({
         : "clear";
 
   const openProfile = () => {
+    if (!isAccountReady) {
+      onRequireAccount("account-connect", "M1");
+      return;
+    }
     onNavigate("A4");
   };
 
