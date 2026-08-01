@@ -14,16 +14,16 @@ type AccountConnectScreenProps = {
 
 type ProviderTone = "kakao" | "naver" | "line" | "google" | "apple" | "email";
 
-const primaryProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "kakao", label: "카카오로 계속", caption: "간편하게 연결" },
-  { id: "naver", label: "네이버로 계속", caption: "자주 쓰는 계정으로 연결" },
+const primaryProviders: { id: ProviderTone; label: string }[] = [
+  { id: "kakao", label: "카카오로 계속" },
+  { id: "naver", label: "네이버로 계속" },
 ];
 
-const extraProviders: { id: ProviderTone; label: string; caption: string }[] = [
-  { id: "line", label: "LINE으로 계속", caption: "해외 계정으로 연결" },
-  { id: "google", label: "Google로 계속", caption: "공용 계정으로 연결" },
-  { id: "apple", label: "Apple로 계속", caption: "이메일 숨기기 지원" },
-  { id: "email", label: "이메일 코드로 계속", caption: "이메일로 계정 연결" },
+const extraProviders: { id: ProviderTone; label: string }[] = [
+  { id: "line", label: "LINE으로 계속" },
+  { id: "google", label: "Google로 계속" },
+  { id: "apple", label: "Apple로 계속" },
+  { id: "email", label: "이메일 코드로 계속" },
 ];
 
 export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
@@ -68,62 +68,47 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
             cardShadow(theme),
           ]}
         >
-          <Text style={[styles.heroTitle, { color: theme.text }]}>계정 상태를 연결하면{"\n"}준비 설정을 이어갈 수 있어요</Text>
-          <Text style={[styles.heroBody, { color: theme.muted }]}>
-            계정을 연결하면 저장·동기화 상태를{"\n"}이어서 사용할 수 있어요
-          </Text>
-        </View>
-
-        <View style={[styles.stepNotice, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-          <Text style={[styles.stepKicker, { color: theme.gold }]}>다음 단계</Text>
-          <Text style={[styles.stepTitle, { color: theme.text }]}>약관 확인 후 원래 화면으로 돌아감</Text>
-          <Text style={[styles.stepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도이며 MY에서 따로 켤 수 있음</Text>
-        </View>
-
-        {destinationName ? (
-          <View style={[styles.contextCard, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-            <Text style={[styles.contextKicker, { color: theme.gold }]}>{resumeLabel}</Text>
-            <Text style={[styles.contextTitle, { color: theme.text }]}>{destinationName}</Text>
-            <Text style={[styles.contextBody, { color: theme.muted }]}>계정 연결 후 이 목적지의 날씨 비교와 출발 알림을 이어서 저장해요</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.recommendBlock}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>연결 방법</Text>
-          <Text style={[styles.sectionCaption, { color: theme.subtle }]}>사용할 계정 방식을 선택</Text>
-
-          <View style={styles.intentTabs}>
-            <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.intentText, { color: theme.text }]}>{destinationName ? "목적지 유지" : "설정 이어보기"}</Text>
+          <View style={styles.heroTop}>
+            <View style={[styles.heroIcon, { backgroundColor: theme.cardStrong }]}>
+              <ConnectGlyph color={theme.sky} />
             </View>
-            <View style={[styles.intentTab, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.intentText, { color: theme.text }]}>{resumeLabel}</Text>
+            <View style={styles.heroCopy}>
+              <Text style={[styles.heroKicker, { color: theme.sky }]}>바로 연결</Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>계정 선택</Text>
             </View>
           </View>
+
+          {destinationName ? (
+            <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong }]}>
+              <Text style={[styles.contextKicker, { color: theme.gold }]} numberOfLines={1}>{resumeLabel}</Text>
+              <Text style={[styles.contextTitle, { color: theme.text }]} numberOfLines={1}>{destinationName}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.providerList}>
             {primaryProviders.map((provider) => (
-              <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />
+              <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight + 12} onPress={onComplete} theme={theme} featured />
             ))}
-            {showOtherMethods
-              ? extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />)
-              : null}
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setShowOtherMethods((current) => !current)}
-            style={[styles.otherButton, { borderColor: theme.border, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent" }]}
-          >
-            <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "다른 방법 접기" : "다른 방법 보기"}</Text>
-          </Pressable>
         </View>
+
+        {showOtherMethods ? (
+          <View style={styles.providerList}>
+            {extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />)}
+          </View>
+        ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setShowOtherMethods((current) => !current)}
+          style={[styles.otherButton, { borderColor: theme.border, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent" }]}
+        >
+          <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "다른 방법 접기" : "다른 계정으로 연결"}</Text>
+        </Pressable>
 
         <Pressable accessibilityRole="button" onPress={onCancel} style={styles.laterButton}>
           <Text style={[styles.laterText, { color: theme.subtle }]}>나중에 할래요</Text>
         </Pressable>
-
-        <Text style={[styles.footer, { color: theme.subtle }]}>약관 확인 후 저장 상태가 연결됨</Text>
       </ScrollView>
     </View>
   );
@@ -134,23 +119,48 @@ function ProviderButton({
   minHeight,
   onPress,
   theme,
+  featured = false,
 }: {
-  provider: { id: ProviderTone; label: string; caption: string };
+  provider: { id: ProviderTone; label: string };
   minHeight: number;
   onPress: () => void;
   theme: AppTheme;
+  featured?: boolean;
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.providerButton, { minHeight, backgroundColor: theme.cardStrong }]}>
-      <View style={[styles.providerIcon, { backgroundColor: getProviderColor(provider.id, theme) }]}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[
+        styles.providerButton,
+        {
+          minHeight,
+          backgroundColor: featured ? theme.cardMuted : theme.cardStrong,
+          borderColor: featured ? theme.sky : "transparent",
+        },
+      ]}
+    >
+      <View style={[styles.providerIcon, featured ? styles.providerIconFeatured : null, { backgroundColor: getProviderColor(provider.id, theme) }]}>
         <Text style={[styles.providerIconText, { color: getProviderTextColor(provider.id) }]}>{getProviderMark(provider.id)}</Text>
       </View>
-      <View style={styles.providerCopy}>
-        <Text style={[styles.providerLabel, { color: theme.text }]}>{provider.label}</Text>
-        <Text style={[styles.providerCaption, { color: theme.subtle }]}>{provider.caption}</Text>
-      </View>
+      <Text style={[styles.providerLabel, featured ? styles.providerLabelFeatured : null, { color: theme.text }]}>{provider.label}</Text>
+      <ChevronRight color={theme.subtle} />
     </Pressable>
   );
+}
+
+function ConnectGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.connectGlyph} accessibilityElementsHidden>
+      <View style={[styles.connectNode, styles.connectNodeLeft, { borderColor: color }]} />
+      <View style={[styles.connectNode, styles.connectNodeRight, { borderColor: color }]} />
+      <View style={[styles.connectLine, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function ChevronRight({ color }: { color: string }) {
+  return <Text style={[styles.chevron, { color }]} accessibilityElementsHidden>›</Text>;
 }
 
 function getProviderColor(providerId: ProviderTone, theme: AppTheme) {
@@ -209,29 +219,43 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroCard: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
+    gap: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
-  heroTitle: {
-    textAlign: "center",
-    fontSize: 22,
-    lineHeight: 30,
+  heroTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  heroIcon: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  heroCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  heroKicker: {
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
-  heroBody: {
-    textAlign: "center",
-    fontSize: 12,
-    lineHeight: 19,
-    fontWeight: "700",
+  heroTitle: {
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: "900",
   },
-  contextCard: {
-    gap: 5,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderLeftWidth: 2,
+  contextStrip: {
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
   },
   contextKicker: {
     fontSize: 11,
@@ -239,67 +263,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   contextTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
-  contextBody: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  stepNotice: {
-    gap: 4,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  stepKicker: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  stepTitle: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-  stepBody: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  recommendBlock: {
-    gap: spacing.sm,
-    alignItems: "stretch",
-  },
-  sectionTitle: {
-    marginTop: 4,
-    textAlign: "center",
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-  sectionCaption: {
-    textAlign: "center",
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "700",
-  },
-  intentTabs: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginTop: 2,
-  },
-  intentTab: {
     flex: 1,
-    minHeight: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  intentText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   providerList: {
@@ -311,6 +277,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: 16,
     borderRadius: radius.md,
+    borderWidth: 1,
   },
   providerIcon: {
     width: 28,
@@ -319,24 +286,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
   },
+  providerIconFeatured: {
+    width: 34,
+    height: 34,
+  },
   providerIconText: {
     fontSize: 15,
     lineHeight: 18,
     fontWeight: "900",
   },
-  providerCopy: {
-    flex: 1,
-    gap: 2,
-  },
   providerLabel: {
+    flex: 1,
     fontSize: 14,
     lineHeight: 18,
     fontWeight: "900",
   },
-  providerCaption: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "700",
+  providerLabelFeatured: {
+    fontSize: 16,
+    lineHeight: 20,
   },
   otherButton: {
     minHeight: 44,
@@ -360,11 +327,37 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "900",
   },
-  footer: {
-    marginTop: "auto",
-    textAlign: "center",
-    fontSize: 10,
-    lineHeight: 15,
+  connectGlyph: {
+    width: 38,
+    height: 26,
+  },
+  connectNode: {
+    position: "absolute",
+    width: 18,
+    height: 18,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    backgroundColor: "transparent",
+  },
+  connectNodeLeft: {
+    left: 1,
+    top: 4,
+  },
+  connectNodeRight: {
+    right: 1,
+    top: 4,
+  },
+  connectLine: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    top: 12,
+    height: 2,
+    borderRadius: radius.pill,
+  },
+  chevron: {
+    fontSize: 30,
+    lineHeight: 32,
     fontWeight: "700",
   },
 });

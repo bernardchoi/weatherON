@@ -4,14 +4,11 @@ import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
   accountLinked,
   termsRequiredAccepted,
-  savedDestinations,
-  wardrobeItems,
-  permissionReady,
   onNavigate,
   onRequireAccount,
   onSignOutAccount,
@@ -21,15 +18,12 @@ export function AccountManagementScreen({
   const [dangerConfirm, setDangerConfirm] = useState<"none" | "unlink">("none");
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const profileTitle = accountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileMeta = accountReady ? "저장·동기화 사용 가능" : needsTerms ? "필수 약관 확인 후 동기화 가능" : "연결하면 저장·동기화를 사용할 수 있음";
-  const primaryLabel = accountReady ? "정책 및 약관 보기" : needsTerms ? "약관 동의 이어가기" : "계정 연결";
+  const profileMeta = accountReady ? "WeatherON ID" : needsTerms ? "필수 약관 대기" : "연결 전";
+  const statusLabel = accountReady ? "연결됨" : needsTerms ? "확인" : "게스트";
+  const primaryLabel = accountReady ? "정책 보기" : needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "정책 및 법적 고지 보기" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
-  const providerLabel = accountLinked ? "WeatherON ID" : "게스트";
-  const termsLabel = termsRequiredAccepted ? "완료" : accountLinked ? "필요" : "연결 후";
-  const permissionLabel = permissionReady ? "허용됨" : "설정 가능";
 
   const requestConnect = () => onRequireAccount("account-connect", "A4");
   const handlePrimaryAccountAction = () => {
@@ -63,13 +57,19 @@ export function AccountManagementScreen({
           <Text style={[styles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>계정 관리</Text>
         </View>
 
-        <View style={[styles.profileCard, { minHeight: layout.accountProfileMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
-          <View style={[styles.avatar, layout.isShort || layout.isNarrow ? styles.avatarShort : null, { borderColor: accountReady ? theme.clear : theme.gold }]}>
-            <PersonGlyph color={accountReady ? theme.clear : theme.gold} />
+        <View style={[styles.profileCard, { minHeight: layout.accountHeroMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border }, cardShadow(theme)]}>
+          <View style={[styles.profileVisual, { backgroundColor: theme.cardStrong }]}>
+            <View style={[styles.avatar, layout.isShort || layout.isNarrow ? styles.avatarShort : null, { borderColor: primaryTone }]}>
+              <PersonGlyph color={primaryTone} />
+            </View>
+            <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
-          <View style={styles.copy}>
+          <View style={styles.profileCopy}>
+            <View style={[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }]}>
+              <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
+            </View>
             <Text style={[styles.profileTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
-            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
+            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={1}>{profileMeta}</Text>
           </View>
         </View>
 
@@ -86,32 +86,10 @@ export function AccountManagementScreen({
           <ChevronRight color={theme.subtle} />
         </Pressable>
 
-        <View style={styles.summaryGrid}>
-          <StatusTile label="연결 방식" value={providerLabel} tone={accountLinked ? theme.clear : theme.sky} theme={theme} />
-          <StatusTile label="필수 약관" value={termsLabel} tone={termsRequiredAccepted ? theme.clear : theme.gold} theme={theme} />
-          <StatusTile label="저장 위치" value={`${savedDestinations.length}곳`} tone={savedDestinations.length > 0 ? theme.clear : theme.subtle} theme={theme} />
-          <StatusTile label="내 옷장" value={`${ownedItemCount}개`} tone={ownedItemCount > 0 ? theme.clear : theme.subtle} theme={theme} />
-        </View>
-
-        <View style={[styles.infoPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-          <Text style={[styles.panelTitle, { color: theme.text }]}>계정으로 유지되는 항목</Text>
-          <View style={styles.infoRows}>
-            <InfoRow label="저장·동기화" value={accountReady ? "사용 가능" : needsTerms ? "약관 필요" : "계정 필요"} color={accountReady ? theme.clear : theme.gold} theme={theme} />
-            <InfoRow label="목적지 케어" value={`${savedDestinations.length}곳 저장`} color={savedDestinations.length > 0 ? theme.clear : theme.subtle} theme={theme} />
-            <InfoRow label="코디 추천" value={`내 옷장 ${ownedItemCount}개 반영`} color={ownedItemCount > 0 ? theme.clear : theme.subtle} theme={theme} />
-            <InfoRow label="알림 권한" value={permissionLabel} color={permissionReady ? theme.clear : theme.sky} theme={theme} />
-          </View>
-        </View>
-
         {accountLinked ? (
           <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "unlink" ? theme.alert : theme.border }, cardShadow(theme)]}>
             <Text style={[styles.dangerTitle, { color: dangerConfirm === "none" ? theme.text : theme.warm }]}>
               {dangerConfirm === "none" ? "계정 연결 해제" : "연결 해제 확인"}
-            </Text>
-            <Text style={[styles.dangerBody, { color: theme.subtle }]}>
-              {dangerConfirm === "none"
-                ? "필요할 때만 확인 후 실행"
-                : "확정 시 계정 기반 저장 데이터가 비회원 상태로 초기화됨"}
             </Text>
             <View style={styles.dangerActions}>
               <Pressable
@@ -138,24 +116,6 @@ export function AccountManagementScreen({
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-    </View>
-  );
-}
-
-function StatusTile({ label, value, tone, theme }: { label: string; value: string; tone: string; theme: AppTheme }) {
-  return (
-    <View style={[styles.statusTile, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
-      <Text style={[styles.statusLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
-      <Text style={[styles.statusValue, { color: tone }]} numberOfLines={1}>{value}</Text>
-    </View>
-  );
-}
-
-function InfoRow({ label, value, color, theme }: { label: string; value: string; color: string; theme: AppTheme }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={[styles.infoLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color }]}>{value}</Text>
     </View>
   );
 }
@@ -228,6 +188,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
+  profileVisual: {
+    width: 74,
+    height: 74,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
   avatar: {
     width: 50,
     height: 50,
@@ -240,13 +207,34 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
   },
-  copy: {
+  statusDot: {
+    position: "absolute",
+    right: 9,
+    bottom: 9,
+    width: 14,
+    height: 14,
+    borderRadius: radius.pill,
+  },
+  profileCopy: {
     flex: 1,
-    gap: 4,
+    alignItems: "flex-start",
+    gap: spacing.xs,
+  },
+  statusPill: {
+    minHeight: 28,
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  },
+  statusPillText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
   },
   profileTitle: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 20,
+    lineHeight: 25,
     fontWeight: "900",
   },
   profileMeta: {
@@ -273,61 +261,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "900",
   },
-  summaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  statusTile: {
-    minWidth: "47%",
-    flex: 1,
-    gap: 4,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  statusLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  statusValue: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-  infoPanel: {
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  panelTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  infoRows: {
-    gap: spacing.sm,
-  },
-  infoRow: {
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-  },
-  infoLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "800",
-  },
-  infoValue: {
-    flexShrink: 1,
-    textAlign: "right",
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
   dangerPanel: {
     gap: spacing.sm,
     borderRadius: radius.lg,
@@ -337,11 +270,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
     fontWeight: "900",
-  },
-  dangerBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
   },
   dangerActions: {
     flexDirection: "row",
