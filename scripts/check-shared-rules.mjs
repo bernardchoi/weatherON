@@ -252,7 +252,7 @@ await writeFile(
 
     const { buildDemoState, buildDemoStateFromWeatherResult } = await import("../apps/mobile/src/data/demoState.ts");
     const { applyLocalNotificationPolicy } = await import("../apps/mobile/src/providers/notificationPolicy.ts");
-    const { createHttpWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
+    const { createHttpWeatherClient, createProxyWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
@@ -262,7 +262,10 @@ await writeFile(
     const requestedUrls = [];
     const fakeFetch = async (url) => {
       requestedUrls.push(url);
-      const payload = String(url).includes("getPwnStatus")
+      const urlText = String(url);
+      const payload = urlText.includes("/weather/air-quality")
+        ? { current: { uv_index: 6, pm10: 42, pm2_5: 18 } }
+        : urlText.includes("getPwnStatus") || urlText.includes("/weather/kma-special-alert")
         ? {
             response: {
               body: {
@@ -275,7 +278,9 @@ await writeFile(
               },
             },
           }
-        : String(url).includes("open-meteo") || String(url).includes("forecast?")
+        : urlText.includes("getUVIdxV4")
+        ? { response: { body: { items: { item: [{ h0: "6", h3: "7", h6: "5" }] } } } }
+        : urlText.includes("open-meteo") || urlText.includes("forecast?") || urlText.includes("/weather/openmeteo")
         ? openMeteoFixture
         : { response: { body: { items: { item: kmaForecastFixture } } } };
       return {
@@ -291,6 +296,13 @@ await writeFile(
       fetchImpl: fakeFetch,
     });
     const httpProvider = createWeatherProvider(httpClient, { preferKma: true });
+    const proxyClient = createProxyWeatherClient({
+      weatherApiBaseUrl: "https://weatheron.test",
+      apiToken: "test-token",
+      timeoutMs: 1000,
+      fetchImpl: fakeFetch,
+    });
+    const proxyProvider = createWeatherProvider(proxyClient, { preferKma: true });
     const iosWeatherKitCalls = { weatherkit: 0, kma: 0, openmeteo: 0 };
     const iosWeatherKitClient = {
       async fetchWeatherKitForecast() {
@@ -369,6 +381,20 @@ await writeFile(
           coordinate: place.coordinate,
           timezone: place.timezone,
         };
+    const httpProviderReady = await httpProvider.getSnapshots("ready");
+    const proxyProviderReady = await proxyProvider.getSnapshots("ready");
+    const proxyProviderCurrentWithoutLifestyle = {
+      ...proxyProviderReady.current,
+      current: {
+        ...proxyProviderReady.current.current,
+        uvIndex: undefined,
+        pm10: undefined,
+        pm25: undefined,
+      },
+    };
+    const proxyProviderCachedCurrent = await proxyProvider.getSnapshots("ready", {
+      currentSnapshot: proxyProviderCurrentWithoutLifestyle,
+    });
 
     export const demoResults = {
       rainNotifications: rainDemo.notifications,
@@ -401,7 +427,9 @@ await writeFile(
       kmaPayload: await fixtureWeatherClient.fetchKmaForecast({ nx: 61, ny: 125 }),
       openMeteoPayload: await fixtureWeatherClient.fetchOpenMeteoForecast({ latitude: 37.77, longitude: 128.94 }),
       readyProvider: await fixtureWeatherProvider.getSnapshots("ready"),
-      httpProvider: await httpProvider.getSnapshots("ready"),
+      httpProvider: httpProviderReady,
+      proxyProvider: proxyProviderReady,
+      proxyProviderCachedCurrent,
       httpProviderGenericCurrentLocation: await httpProvider.getSnapshots("ready", {
         currentLocation: createKmaWeatherLocationFromCoordinate(
           { latitude: 37.5446, longitude: 127.0559 },
@@ -582,6 +610,13 @@ assert.equal(demoResults.current.destinationCare.originWeather.source, "openmete
 assert.equal(demoResults.current.destinationCare.destinationWeather.source, "openmeteo");
 assert.equal(demoResults.httpProvider.current.source, "kma");
 assert.equal(demoResults.httpProvider.destination.source, "kma");
+assert.equal(demoResults.httpProvider.current.current.uvIndex, 6);
+assert.equal(demoResults.proxyProvider.current.current.uvIndex, 6);
+assert.equal(demoResults.proxyProvider.current.current.pm10, 42);
+assert.equal(demoResults.proxyProvider.current.current.pm25, 18);
+assert.equal(demoResults.proxyProviderCachedCurrent.current.current.uvIndex, 6);
+assert.equal(demoResults.proxyProviderCachedCurrent.current.current.pm10, 42);
+assert.equal(demoResults.proxyProviderCachedCurrent.current.current.pm25, 18);
 assert.equal(demoResults.httpProvider.officialSpecialAlert.active, true);
 assert.equal(demoResults.httpProvider.officialSpecialAlert.title, "호우경보");
 assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.active, true);
@@ -621,6 +656,8 @@ assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "k
 assert.equal(demoResults.parallelProvider.destinationSnapshots[1].locationId, "kr-jamsil-baseball-stadium");
 assert.ok(demoResults.httpUrls.some((url) => url.includes("getVilageFcst")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("getPwnStatus")));
+assert.ok(demoResults.httpUrls.some((url) => url.includes("getUVIdxV4")));
+assert.ok(demoResults.httpUrls.some((url) => url.includes("/weather/air-quality")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("temperature_2m")));
 assert.deepEqual(demoResults.kmaBaseEarly, { baseDate: "20260625", baseTime: "2300" });
 assert.deepEqual(demoResults.kmaBaseMorning, { baseDate: "20260626", baseTime: "0500" });

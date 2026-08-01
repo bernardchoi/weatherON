@@ -86,7 +86,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
             : options.currentSnapshot;
         const [weatherSnapshots, officialSpecialAlert] = await Promise.all([
           Promise.all([
-            currentSnapshot ?? fetchWeatherSnapshot(client, currentLocation, stale, createOptions),
+            resolveCurrentWeatherSnapshot(client, currentLocation, currentSnapshot, stale, createOptions),
             ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions)),
           ]),
           fetchOfficialSpecialAlert(client, currentLocation),
@@ -193,6 +193,32 @@ async function fetchWeatherSnapshot(
     }
   }
   return fetchOpenMeteoSnapshot(client, location, stale);
+}
+
+async function resolveCurrentWeatherSnapshot(
+  client: WeatherClient,
+  location: WeatherLocationPreset,
+  currentSnapshot: WeatherSnapshot | undefined,
+  stale: boolean,
+  options: WeatherProviderCreateOptions,
+): Promise<WeatherSnapshot> {
+  if (!currentSnapshot) return fetchWeatherSnapshot(client, location, stale, options);
+  if (currentSnapshot.locationId !== location.locationId) return fetchWeatherSnapshot(client, location, stale, options);
+  if (shouldRefreshLifestyleIndex(currentSnapshot, location, options)) {
+    return enhanceAirQuality(client, location, currentSnapshot);
+  }
+  return currentSnapshot;
+}
+
+function shouldRefreshLifestyleIndex(
+  snapshot: WeatherSnapshot,
+  location: WeatherLocationPreset,
+  options: WeatherProviderCreateOptions,
+): boolean {
+  if ((options.platform ?? Platform.OS) === "ios") return false;
+  if (location.countryCode !== "KR") return false;
+  const current = snapshot.current;
+  return typeof current.uvIndex !== "number" || typeof current.pm10 !== "number" || typeof current.pm25 !== "number";
 }
 
 async function fetchOfficialSpecialAlert(client: WeatherClient, location: WeatherLocationPreset): Promise<OfficialSpecialAlert> {
