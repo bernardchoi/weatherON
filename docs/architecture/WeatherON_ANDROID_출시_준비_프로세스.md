@@ -88,7 +88,7 @@ Base44 관련:
 {
   "android": {
     "package": "com.weatheron.mobile",
-    "versionCode": 10,
+    "versionCode": 15,
     "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
   }
 }
@@ -183,6 +183,7 @@ npm run check:eas-production-build-status -- <eas-build-id>
 - UI 문구/하단 탭 후속 보정 재검증 build는 Android `versionCode=5` 기준으로 생성한다.
 - D9/D13 실기기 QA 보정 재검증 build는 Android `versionCode=6` 기준으로 생성한다.
 - WeatherON `1.0.0` 이후 Android 테스트 build는 Play Console에 업로드된 `0.1.0 (9)`보다 큰 `versionCode=10`부터 생성한다.
+- 공개 테스트 AAB는 Android `versionCode=15` 기준으로 생성한다.
 - 최신 preview APK 설치는 `npm run install:android-preview-apk`로 수행하고 결과는 `WeatherON_ANDROID_INSTALL_STATUS.md`에 남긴다.
 - 오래 기다리는 preview 빌드는 `npm run build:android:preview:no-wait`로 시작하고, build id를 `check:eas-build-status`로 추적한다.
 - 오래 기다리는 production AAB 빌드는 `npm run build:android:production:no-wait`로 시작하고, build id를 `check:eas-production-build-status`로 추적한다.
@@ -403,6 +404,7 @@ APK 산출 후 상세 체크는 `docs/architecture/WeatherON_ANDROID_APK_QA_체�
 | 2026-07-09 | 비공개 테스트 업데이트 AAB 생성을 위해 Android `versionCode=8` 반영 |
 | 2026-07-15 | 비공개 테스트 업데이트 AAB와 local release APK 기준 동기화를 위해 Android `versionCode=9` 반영 |
 | 2026-07-16 | WeatherON `1.0.0` 릴리스 기준으로 Android `versionCode=10`, iOS buildNumber `7` 반영 |
+| 2026-08-01 | Android 공개테스트 AAB `1.0.0 (15)` 빌드를 위해 Android `versionCode=15` 반영 |
 | 2026-06-28 | Google Play 휴대전화 스크린샷 계획과 상태 리포트 검증 추가 |
 | 2026-06-28 | Android release action board 생성 명령과 통합 게이트 연결 |
 | 2026-06-28 | 폐쇄 테스트 readiness 상태 리포트와 통합 게이트 연결 |

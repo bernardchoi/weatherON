@@ -37,11 +37,12 @@ export function OutfitDetailScreen({
   return (
     <AppScreen
       title="코디 상세"
-      subtitle={state.outfit.decisionText}
       badge={`${state.outfit.matchPct}%`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
+      contentGap={layout.isShort ? layout.outfitCardGap : 10}
+      contentPaddingBottom={0}
       footer={
         <View style={styles.footer}>
           <CompletionStatus
@@ -63,7 +64,7 @@ export function OutfitDetailScreen({
         </View>
       }
     >
-      <Section title="오늘 입을 세트" caption="이미지로 확인" accent="clear">
+      <Section title="오늘 입을 세트" caption={state.outfit.decisionText} accent="clear">
         <View style={styles.outfitRail}>
           {items.map(([slot, item]) =>
             item ? (

@@ -26,6 +26,7 @@ type AppScreenProps = {
   // 스크롤 밖에 고정하는 하단 영역. 저장/취소처럼 화면 어디서든 바로 눌러야 하는 주요 액션을 담는다 —
   // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
   footer?: React.ReactNode;
+  contentGap?: number;
   contentPaddingBottom?: number;
   children: React.ReactNode;
 };
@@ -37,6 +38,7 @@ export function AppScreen({
   heroAction,
   onBack,
   footer,
+  contentGap,
   contentPaddingBottom,
   showWordmark = true,
   compactHeader = false,
@@ -45,6 +47,7 @@ export function AppScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
+  const inlineHeader = compactHeader && Boolean(onBack);
   const heroGlass = compactHeader ? undefined : barGlass;
   return (
     <View style={styles.shell}>
@@ -56,7 +59,8 @@ export function AppScreen({
             maxWidth: layout.contentMaxWidth,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingBottom: contentPaddingBottom ?? navClearancePadding,
-            gap: layout.screenContentGap,
+            paddingTop: inlineHeader ? 0 : spacing.sm,
+            gap: contentGap ?? layout.screenContentGap,
           },
         ]}
       >
@@ -65,10 +69,11 @@ export function AppScreen({
           style={[
             styles.hero,
             compactHeader ? styles.compactHero : null,
+            inlineHeader ? styles.inlineHero : null,
             heroGlass ? styles.heroPlatformSurface : null,
             heroGlass,
             {
-              gap: compactHeader ? spacing.sm : layout.screenHeaderGap,
+              gap: inlineHeader ? spacing.xs : compactHeader ? spacing.sm : layout.screenHeaderGap,
             },
           ]}
         >
@@ -98,7 +103,11 @@ export function AppScreen({
             >
               {title}
             </Text>
-            {subtitle ? <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text> : null}
+            {subtitle ? (
+              <Text style={[styles.subtitle, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
+                {subtitle}
+              </Text>
+            ) : null}
           </View>
           {badge || heroAction ? (
             <View style={styles.heroMeta}>
@@ -177,12 +186,15 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   compactHero: {
-    minHeight: 52,
+    minHeight: 44,
     alignItems: "center",
     gap: spacing.sm,
     paddingTop: 0,
     paddingHorizontal: 0,
     paddingBottom: 0,
+  },
+  inlineHero: {
+    minHeight: 44,
   },
   heroPlatformSurface: {
     paddingHorizontal: spacing.md,
@@ -222,5 +234,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: spacing.sm,
+  },
+  compactSubtitle: {
+    marginTop: 1,
   },
 });
