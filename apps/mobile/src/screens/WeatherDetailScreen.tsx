@@ -6,7 +6,7 @@ import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing, type AppTheme, type ToneColor } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
 import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils/weatherPresentation";
@@ -19,6 +19,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
   const hourly = getHourlyForecast(weather);
   const daily = getDailyForecast(weather.daily, weather.hourly);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
+  const lifestyleIndices = getLifestyleIndices(current);
   const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
     if (!peak) return item;
     return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
@@ -79,6 +80,18 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
         </View>
 
         <ForecastPanel
+          title="생활 지수"
+          meta={getLifestyleIndexMeta(lifestyleIndices)}
+          theme={theme}
+        >
+          <View style={styles.indexGrid}>
+            {lifestyleIndices.map((item) => (
+              <LifestyleIndexCard key={item.id} item={item} theme={theme} />
+            ))}
+          </View>
+        </ForecastPanel>
+
+        <ForecastPanel
           title="시간별 예보"
           meta={rainyHour ? `${formatTimeLabel(rainyHour.time)} 강수 ${rainyHour.rainProbabilityPct}%` : "강수 신호 낮음"}
           theme={theme}
@@ -108,12 +121,37 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
   );
 }
 
+type LifestyleIndexItem = {
+  id: string;
+  icon: number;
+  label: string;
+  value: string;
+  grade: string;
+  description: string;
+  tone: ToneColor;
+};
+
 function WeatherFact({ icon, label, value, color, theme }: { icon: number; label: string; value: string; color: string; theme: AppTheme }) {
   return (
     <View style={[styles.factCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <Image source={icon} style={[styles.factIcon, { tintColor: color }]} resizeMode="contain" />
       <Text style={[styles.factLabel, { color }]}>{label}</Text>
       <Text style={[styles.factValue, { color: theme.text }]}>{value}</Text>
+    </View>
+  );
+}
+
+function LifestyleIndexCard({ item, theme }: { item: LifestyleIndexItem; theme: AppTheme }) {
+  const color = getTone(theme, item.tone);
+  return (
+    <View style={[styles.indexCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+      <View style={styles.indexTopRow}>
+        <Image source={item.icon} style={[styles.indexIcon, { tintColor: color }]} resizeMode="contain" />
+        <Text style={[styles.indexGrade, { color }]} numberOfLines={1}>{item.grade}</Text>
+      </View>
+      <Text style={[styles.indexLabel, { color: theme.subtle }]} numberOfLines={1}>{item.label}</Text>
+      <Text style={[styles.indexValue, { color: theme.text }]} numberOfLines={1}>{item.value}</Text>
+      <Text style={[styles.indexDescription, { color: theme.muted }]} numberOfLines={2}>{item.description}</Text>
     </View>
   );
 }
@@ -139,6 +177,68 @@ function ForecastPanel({ title, meta, theme, children }: { title: string; meta: 
       {children}
     </View>
   );
+}
+
+function getLifestyleIndices(current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]): LifestyleIndexItem[] {
+  return [
+    {
+      id: "uv",
+      icon: uiIconAssets.uv,
+      label: "자외선",
+      value: typeof current.uvIndex === "number" ? `${Math.round(current.uvIndex)}` : "확인 중",
+      ...getUvIndexGrade(current.uvIndex),
+    },
+    {
+      id: "pm10",
+      icon: uiIconAssets.wind,
+      label: "미세먼지",
+      value: typeof current.pm10 === "number" ? `${Math.round(current.pm10)}µg/m³` : "확인 중",
+      ...getPm10Grade(current.pm10),
+    },
+    {
+      id: "pm25",
+      icon: uiIconAssets.drop,
+      label: "초미세먼지",
+      value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : "확인 중",
+      ...getPm25Grade(current.pm25),
+    },
+  ];
+}
+
+function getLifestyleIndexMeta(items: LifestyleIndexItem[]): string {
+  const risky = items.find((item) => item.tone === "warm" || item.tone === "gold");
+  return risky ? `${risky.label} ${risky.grade}` : "외출 부담 낮음";
+}
+
+function getUvIndexGrade(value?: number): Pick<LifestyleIndexItem, "grade" | "description" | "tone"> {
+  if (typeof value !== "number") return { grade: "대기", description: "관측값 확인 중", tone: "sky" };
+  if (value >= 8) return { grade: "매우 높음", description: "모자와 선크림 필요", tone: "warm" };
+  if (value >= 6) return { grade: "높음", description: "햇빛 차단 준비", tone: "gold" };
+  if (value >= 3) return { grade: "보통", description: "긴 외출은 차단 권장", tone: "sky" };
+  return { grade: "낮음", description: "외출 부담 낮음", tone: "clear" };
+}
+
+function getPm10Grade(value?: number): Pick<LifestyleIndexItem, "grade" | "description" | "tone"> {
+  if (typeof value !== "number") return { grade: "대기", description: "관측값 확인 중", tone: "sky" };
+  if (value > 150) return { grade: "매우 나쁨", description: "마스크 권장", tone: "warm" };
+  if (value > 80) return { grade: "나쁨", description: "민감하면 마스크", tone: "gold" };
+  if (value > 30) return { grade: "보통", description: "장시간 외출만 주의", tone: "sky" };
+  return { grade: "좋음", description: "외출 부담 낮음", tone: "clear" };
+}
+
+function getPm25Grade(value?: number): Pick<LifestyleIndexItem, "grade" | "description" | "tone"> {
+  if (typeof value !== "number") return { grade: "대기", description: "관측값 확인 중", tone: "sky" };
+  if (value > 75) return { grade: "매우 나쁨", description: "마스크 권장", tone: "warm" };
+  if (value > 35) return { grade: "나쁨", description: "민감하면 마스크", tone: "gold" };
+  if (value > 15) return { grade: "보통", description: "장시간 외출만 주의", tone: "sky" };
+  return { grade: "좋음", description: "외출 부담 낮음", tone: "clear" };
+}
+
+function getTone(theme: AppTheme, tone: ToneColor): string {
+  if (tone === "gold") return theme.gold;
+  if (tone === "sky") return theme.sky;
+  if (tone === "warm") return theme.warm;
+  return theme.clear;
 }
 
 function HourlyCard({ item, temperatureUnit, theme }: { item: HourlyWeather; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
@@ -336,6 +436,54 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "900",
+  },
+  indexGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  indexCard: {
+    flexGrow: 1,
+    flexBasis: 96,
+    minHeight: 104,
+    justifyContent: "space-between",
+    gap: 4,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  indexTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.xs,
+  },
+  indexIcon: {
+    width: 17,
+    height: 17,
+  },
+  indexGrade: {
+    flex: 1,
+    minWidth: 0,
+    textAlign: "right",
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  indexLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  indexValue: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  indexDescription: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
   },
   panel: {
     gap: spacing.sm,

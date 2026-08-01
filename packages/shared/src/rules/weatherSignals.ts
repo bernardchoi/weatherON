@@ -11,10 +11,15 @@ export type WeatherSignals = {
   maxRainProbabilityPct: number;
   maxPrecipitationMm: number;
   maxWindMs: number;
+  uvIndex?: number;
+  pm10?: number;
+  pm25?: number;
   isRainy: boolean;
   isHeavyRain: boolean;
   isLongRain: boolean;
   isWindy: boolean;
+  isHighUv: boolean;
+  isPoorAirQuality: boolean;
   isHot: boolean;
   isCold: boolean;
   isHumid: boolean;
@@ -34,9 +39,17 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
   const maxPrecipitation = Math.max(snapshot.current.precipitationMm, ...hours.map((hour) => hour.precipitationMm));
   const maxRainProbability = Math.max(snapshot.current.rainProbabilityPct, ...hours.map((hour) => hour.rainProbabilityPct));
   const maxWind = Math.max(snapshot.current.windMs, ...hours.map((hour) => hour.windMs));
+  const uvIndex = snapshot.current.uvIndex;
+  const pm10 = snapshot.current.pm10;
+  const pm25 = snapshot.current.pm25;
   const isRainy = snapshot.current.condition === "rain" || maxRainProbability >= 60 || maxPrecipitation >= 1;
   const isHeavyRain = maxPrecipitation >= 5;
   const isWindy = maxWind >= 7;
+  const isHighUv = typeof uvIndex === "number" && uvIndex >= 6;
+  const isPoorAirQuality =
+    snapshot.current.condition === "dust" ||
+    (typeof pm10 === "number" && pm10 > 80) ||
+    (typeof pm25 === "number" && pm25 > 35);
   const isHumid = snapshot.current.humidityPct >= 70;
   const isHot =
     snapshot.current.feelsLikeC >= 27 ||
@@ -60,10 +73,15 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
     maxRainProbabilityPct: maxRainProbability,
     maxPrecipitationMm: maxPrecipitation,
     maxWindMs: maxWind,
+    uvIndex,
+    pm10,
+    pm25,
     isRainy,
     isHeavyRain,
     isLongRain: rainyHours.length >= 3,
     isWindy,
+    isHighUv,
+    isPoorAirQuality,
     isHot,
     isCold,
     isHumid,

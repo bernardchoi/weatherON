@@ -1,7 +1,8 @@
 import { getKmaForecastBaseDateTime, kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
-import type { KmaForecastItem, KmaForecastResponse, OpenMeteoResponse, WeatherKitResponse } from "@weatheron/shared";
+import type { KmaForecastItem, KmaForecastResponse, LifestyleIndexResponse, OpenMeteoResponse, WeatherKitResponse } from "@weatheron/shared";
 import {
   DEFAULT_KMA_FORECAST_URL,
+  DEFAULT_KMA_LIFESTYLE_INDEX_URL,
   DEFAULT_KMA_SPECIAL_ALERT_URL,
   DEFAULT_OPEN_METEO_FORECAST_URL,
   DEFAULT_WEATHER_TIMEOUT_MS,
@@ -23,6 +24,12 @@ export type FetchOpenMeteoForecastParams = {
   timezone?: string;
 };
 
+export type FetchLifestyleIndexParams = FetchOpenMeteoForecastParams & {
+  countryCode?: string;
+  locationName?: string;
+  areaNo?: string;
+};
+
 export type FetchWeatherKitForecastParams = FetchOpenMeteoForecastParams & {
   countryCode?: string;
   language?: string;
@@ -32,12 +39,14 @@ export type WeatherClient = {
   fetchKmaForecast: (params: FetchKmaForecastParams) => Promise<KmaForecastResponse | KmaForecastItem[]>;
   fetchKmaSpecialAlert?: () => Promise<unknown>;
   fetchOpenMeteoForecast: (params: FetchOpenMeteoForecastParams) => Promise<OpenMeteoResponse>;
+  fetchLifestyleIndex?: (params: FetchLifestyleIndexParams) => Promise<LifestyleIndexResponse>;
   fetchWeatherKitForecast?: (params: FetchWeatherKitForecastParams) => Promise<WeatherKitResponse>;
 };
 
 export type HttpWeatherClientOptions = {
   kmaServiceKey?: string;
   kmaForecastUrl?: string;
+  kmaLifestyleIndexUrl?: string;
   kmaSpecialAlertUrl?: string;
   openMeteoForecastUrl?: string;
   timeoutMs?: number;
@@ -63,6 +72,16 @@ export const fixtureWeatherClient: WeatherClient = {
   },
   async fetchOpenMeteoForecast() {
     return openMeteoFixture;
+  },
+  async fetchLifestyleIndex() {
+    return {
+      current: {
+        time: openMeteoFixture.current?.time,
+        pm10: 82,
+        pm2_5: 38,
+        uv_index: openMeteoFixture.current?.uv_index,
+      },
+    };
   },
 };
 
@@ -149,6 +168,21 @@ export function createHttpWeatherClient(options: HttpWeatherClientOptions = {}):
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
       return payload;
     },
+    async fetchLifestyleIndex(params) {
+      if (params.countryCode !== "KR") return { current: {} };
+      if (!options.kmaServiceKey) {
+        throw new Error("KMA service key is not configured");
+      }
+      const url = new URL(options.kmaLifestyleIndexUrl ?? DEFAULT_KMA_LIFESTYLE_INDEX_URL);
+      url.searchParams.set("serviceKey", normalizeKmaServiceKey(options.kmaServiceKey));
+      url.searchParams.set("pageNo", "1");
+      url.searchParams.set("numOfRows", "10");
+      url.searchParams.set("dataType", "JSON");
+      url.searchParams.set("areaNo", params.areaNo ?? "1100000000");
+      url.searchParams.set("time", getKmaLifestyleIndexTimeKey());
+      const payload = await fetchJson<unknown>(url, timeoutMs, options.fetchImpl);
+      return normalizeKmaLifestyleIndexPayload(payload, params.areaNo ?? "1100000000");
+    },
   };
 }
 
@@ -194,6 +228,18 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
       const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
+      return payload;
+    },
+    async fetchLifestyleIndex(params) {
+      const url = new URL("/weather/air-quality", normalizeBaseUrl(options.weatherApiBaseUrl));
+      url.searchParams.set("latitude", String(params.latitude));
+      url.searchParams.set("longitude", String(params.longitude));
+      url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
+      if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
+      if (params.locationName) url.searchParams.set("locationName", params.locationName);
+      if (params.areaNo) url.searchParams.set("areaNo", params.areaNo);
+      const payload = await fetchJson<LifestyleIndexResponse>(url, timeoutMs, options.fetchImpl, headers);
+      if (!payload.current) throw new Error("Lifestyle index response is empty");
       return payload;
     },
     async fetchWeatherKitForecast(params) {
@@ -246,6 +292,57 @@ function getProxyAuthHeaders(apiToken?: string): Record<string, string> | undefi
 
 // 기존 사용처(스크립트 포함) 호환을 위해 shared 구현을 그대로 재노출한다.
 export { getKmaForecastBaseDateTime };
+
+function getKmaLifestyleIndexTimeKey(date = new Date()): string {
+  const koreaTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  const year = koreaTime.getUTCFullYear();
+  const month = String(koreaTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(koreaTime.getUTCDate()).padStart(2, "0");
+  const hour = String(Math.floor(koreaTime.getUTCHours() / 3) * 3).padStart(2, "0");
+  return `${year}${month}${day}${hour}`;
+}
+
+function normalizeKmaLifestyleIndexPayload(payload: unknown, areaNo: string): LifestyleIndexResponse {
+  const item = firstApiItem(payload);
+  const uvIndex = readFirstNumber(item, ["h0", "h3", "h6", "h9", "h12", "value", "uvIndex"]);
+  if (uvIndex === undefined) {
+    throw new Error("KMA lifestyle index response is empty");
+  }
+  return {
+    current: {
+      uv_index: uvIndex,
+      areaNo,
+      source: "kma-airkorea",
+    },
+  };
+}
+
+function firstApiItem(payload: unknown): Record<string, unknown> {
+  const record = typeof payload === "object" && payload ? payload as Record<string, unknown> : {};
+  const response = typeof record.response === "object" && record.response ? record.response as Record<string, unknown> : {};
+  const body = typeof response.body === "object" && response.body ? response.body as Record<string, unknown> : {};
+  const itemsRecord = typeof body.items === "object" && body.items ? body.items as Record<string, unknown> : {};
+  const item = itemsRecord.item ?? body.items ?? record.items;
+  if (Array.isArray(item)) return typeof item[0] === "object" && item[0] ? item[0] as Record<string, unknown> : {};
+  return typeof item === "object" && item ? item as Record<string, unknown> : {};
+}
+
+function readFirstNumber(record: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = toNumberOrUndefined(record[key]);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
+function toNumberOrUndefined(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  if (!normalized || normalized === "-" || normalized.toLowerCase() === "nan") return undefined;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
 
 function normalizeKmaServiceKey(serviceKey: string): string {
   try {

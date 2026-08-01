@@ -110,9 +110,12 @@ type WeatherSnapshotRow = {
   wind_ms: number;
   humidity_pct: number;
   uv_index: number | null;
+  pm10: number | null;
+  pm2_5: number | null;
   source: string;
   stale: number;
 };
+type TableInfoRow = { name: string };
 type HourlyWeatherRow = {
   role: string;
   snapshot_seq: number;
@@ -358,6 +361,8 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         wind_ms REAL NOT NULL,
         humidity_pct REAL NOT NULL,
         uv_index REAL,
+        pm10 REAL,
+        pm2_5 REAL,
         source TEXT NOT NULL,
         stale INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -391,6 +396,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         PRIMARY KEY (role, snapshot_seq, seq)
       );
     `);
+    await ensureWeatherSnapshotColumns(database);
     await migrateLegacyStorage(database);
     return database;
   } catch {
@@ -950,6 +956,8 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
       windMs: row.wind_ms,
       humidityPct: row.humidity_pct,
       uvIndex: row.uv_index ?? undefined,
+      pm10: row.pm10 ?? undefined,
+      pm25: row.pm2_5 ?? undefined,
     },
     hourly: hourly.map((item) => ({
       time: item.time,
@@ -979,9 +987,9 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
   await database.runAsync(
     `INSERT INTO weather_snapshots (
       role, seq, snapshot_id, location_id, location_name, country_code, observed_at,
-      temp_c, feels_like_c, condition, precipitation_mm, rain_probability_pct, wind_ms, humidity_pct, uv_index,
+      temp_c, feels_like_c, condition, precipitation_mm, rain_probability_pct, wind_ms, humidity_pct, uv_index, pm10, pm2_5,
       source, stale, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     role,
     seq,
     textValue(snapshot.id) ?? null,
@@ -997,6 +1005,8 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     numberValue(current.windMs),
     numberValue(current.humidityPct),
     typeof current.uvIndex === "number" ? current.uvIndex : null,
+    typeof current.pm10 === "number" ? current.pm10 : null,
+    typeof current.pm25 === "number" ? current.pm25 : null,
     textValue(snapshot.source) ?? "cache",
     boolValue(snapshot.stale) ? 1 : 0,
     now,
@@ -1032,6 +1042,13 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
       textValue(daily.condition) ?? "clear",
     );
   }
+}
+
+async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {
+  const rows = await database.getAllAsync<TableInfoRow>("PRAGMA table_info(weather_snapshots)");
+  const columns = new Set(rows.map((row) => row.name));
+  if (!columns.has("pm10")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm10 REAL");
+  if (!columns.has("pm2_5")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm2_5 REAL");
 }
 
 async function migrateLegacyStorage(database: SQLiteDatabase) {

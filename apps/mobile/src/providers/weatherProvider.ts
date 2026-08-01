@@ -1,4 +1,5 @@
 import {
+  applyLifestyleIndex,
   normalizeKmaWeather,
   normalizeOpenMeteoWeather,
   normalizeWeatherKitWeather,
@@ -180,13 +181,13 @@ async function fetchWeatherSnapshot(
         nx: location.grid.nx,
         ny: location.grid.ny,
       });
-      return normalizeKmaWeather(payload, {
+      return enhanceAirQuality(client, location, normalizeKmaWeather(payload, {
         locationId: location.locationId,
         locationName: location.locationName,
         countryCode: location.countryCode,
         timezone: "+09:00",
         stale,
-      });
+      }));
     } catch {
       return fetchOpenMeteoSnapshot(client, location, stale);
     }
@@ -215,12 +216,48 @@ async function fetchOpenMeteoSnapshot(
     longitude: location.coordinate.longitude,
     timezone: location.timezone,
   });
-  return normalizeOpenMeteoWeather(payload, {
+  return enhanceAirQuality(client, location, normalizeOpenMeteoWeather(payload, {
     locationId: location.locationId,
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale,
-  });
+  }));
+}
+
+async function enhanceAirQuality(
+  client: WeatherClient,
+  location: WeatherLocationPreset,
+  snapshot: WeatherSnapshot,
+): Promise<WeatherSnapshot> {
+  if (typeof client.fetchLifestyleIndex !== "function" || location.countryCode !== "KR") return snapshot;
+  try {
+    const payload = await client.fetchLifestyleIndex({
+      latitude: location.coordinate.latitude,
+      longitude: location.coordinate.longitude,
+      timezone: location.timezone,
+      countryCode: location.countryCode,
+      locationName: location.locationName,
+      areaNo: inferKmaLifestyleAreaNo(location),
+    });
+    return applyLifestyleIndex(snapshot, payload);
+  } catch {
+    return snapshot;
+  }
+}
+
+function inferKmaLifestyleAreaNo(location: WeatherLocationPreset): string {
+  if (location.locationName.includes("송파") || location.locationName.includes("잠실")) return "1171000000";
+  if (location.locationName.includes("강릉")) return "4215000000";
+  if (
+    location.locationName.includes("서울") ||
+    (location.coordinate.latitude >= 37.4 &&
+      location.coordinate.latitude <= 37.72 &&
+      location.coordinate.longitude >= 126.75 &&
+      location.coordinate.longitude <= 127.2)
+  ) {
+    return "1100000000";
+  }
+  return "1100000000";
 }
 
 function shouldUseKmaForecast(location: WeatherLocationPreset, preferKma?: boolean): location is KmaWeatherLocationPreset {

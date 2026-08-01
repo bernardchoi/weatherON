@@ -184,6 +184,7 @@ async function checkHomeDecisionFlow(page) {
   await clickText(page, "홈");
   await clickAriaIncludes(page, "날씨 상세 보기");
   await assertText(page, "날씨 상세");
+  await assertText(page, "생활 지수");
   await assertText(page, "주간 예보");
   await assertBottomNav(page);
   await clickAriaIncludes(page, "뒤로");
@@ -216,7 +217,7 @@ async function checkOutfitLaunchFlow(page) {
   await assertBottomNav(page);
 
   await clickText(page, "코디 자세히 보기");
-  await assertText(page, "착장 구성");
+  await assertText(page, "오늘 입을 세트");
   await assertText(page, "코디 저장");
   await clickText(page, "코디 저장");
   await assertText(page, "저장 완료");
@@ -231,7 +232,7 @@ async function checkOutfitLaunchFlow(page) {
   await clickText(page, "코디 자세히 보기");
   await clickText(page, "내 옷장 보기");
   await assertText(page, "내 옷장");
-  await clickText(page, "아이템 추가");
+  await clickText(page, "내 옷장에 추가");
   await assertText(page, "프리셋 전체");
   await assertAriaIncludes(page, "겉옷 8개 접기");
   await clickAriaIncludes(page, "겉옷 8개 접기");
@@ -268,7 +269,7 @@ async function checkOutfitSaveGateFlow(browser) {
     await waitForApp();
     await clickAriaIncludes(page, "코디 탭");
     await clickText(page, "코디 자세히 보기");
-    await assertText(page, "착장 구성");
+    await assertText(page, "오늘 입을 세트");
     await clickText(page, "계정 연결 후 저장");
     await assertText(page, "계정 연결");
   } finally {

@@ -15,6 +15,8 @@ export const seongsuRainSnapshot: WeatherSnapshot = {
     windMs: 5.4,
     humidityPct: 84,
     uvIndex: 2,
+    pm10: 42,
+    pm25: 18,
   },
   hourly: [
     { time: "08:00", tempC: 23, rainProbabilityPct: 72, precipitationMm: 1.2, windMs: 5.4, condition: "rain" },
@@ -50,6 +52,8 @@ export const gangneungClearSnapshot: WeatherSnapshot = {
     windMs: 3.2,
     humidityPct: 70,
     uvIndex: 7,
+    pm10: 82,
+    pm25: 38,
   },
   hourly: [
     { time: "10:00", tempC: 29, rainProbabilityPct: 18, precipitationMm: 0, windMs: 3.1, condition: "clear" },

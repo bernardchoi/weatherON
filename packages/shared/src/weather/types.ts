@@ -67,6 +67,18 @@ export type OpenMeteoResponse = {
   };
 };
 
+export type LifestyleIndexResponse = {
+  current?: {
+    time?: string;
+    pm10?: number;
+    pm2_5?: number;
+    uv_index?: number;
+    stationName?: string;
+    areaNo?: string;
+    source?: "kma-airkorea" | "openmeteo";
+  };
+};
+
 export type WeatherKitResponse = {
   currentWeather?: WeatherKitCurrentWeather;
   forecastHourly?: {

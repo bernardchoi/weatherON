@@ -38,6 +38,8 @@ export type WeatherSnapshot = {
     windMs: number;
     humidityPct: number;
     uvIndex?: number;
+    pm10?: number;
+    pm25?: number;
   };
   hourly: HourlyWeather[];
   daily?: DailyWeather[];

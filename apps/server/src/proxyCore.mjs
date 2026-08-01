@@ -3,7 +3,9 @@
 import { getKmaForecastBaseDateTime } from "./kmaTime.mjs";
 
 const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
+const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/LivingWthrIdxServiceV4/getUVIdxV4";
 const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
+const DEFAULT_AIRKOREA_SIDO_URL = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
 const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const DEFAULT_WEATHERKIT_WEATHER_URL = "https://weatherkit.apple.com/api/v1/weather";
 const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
@@ -61,6 +63,9 @@ export async function handleProxyRoute(url, readEnvValue, getRequestHeader, opti
   }
   if (url.pathname === "/weather/openmeteo") {
     return { status: 200, payload: await fetchOpenMeteoForecast(url.searchParams, readEnvValue) };
+  }
+  if (url.pathname === "/weather/air-quality") {
+    return { status: 200, payload: await fetchOfficialLifestyleIndex(url.searchParams, readEnvValue) };
   }
   if (url.pathname === "/weather/weatherkit") {
     return { status: 200, payload: await fetchWeatherKitForecast(url.searchParams, readEnvValue) };
@@ -165,6 +170,82 @@ async function fetchOpenMeteoForecast(params, readEnvValue) {
     readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
     () => fetchJson(url, readEnvValue),
   );
+}
+
+async function fetchOfficialLifestyleIndex(params, readEnvValue) {
+  const countryCode = normalizeCountryCode(params.get("countryCode"));
+  if (countryCode && countryCode !== "KR") return { current: {} };
+
+  const locationName = params.get("locationName") ?? "";
+  const areaNo = params.get("areaNo") ?? inferKmaLifestyleAreaNo(locationName, params);
+  const [uvResult, airResult] = await Promise.allSettled([
+    fetchKmaUvIndex(areaNo, params, readEnvValue),
+    fetchAirKoreaDust(locationName, params, readEnvValue),
+  ]);
+  const uvPayload = uvResult.status === "fulfilled" ? uvResult.value : {};
+  const dustPayload = airResult.status === "fulfilled" ? airResult.value : {};
+  const current = {
+    ...uvPayload,
+    ...dustPayload,
+    source: "kma-airkorea",
+  };
+  if (
+    uvResult.status === "rejected" &&
+    airResult.status === "rejected"
+  ) {
+    throw uvResult.reason;
+  }
+  return { current };
+}
+
+async function fetchKmaUvIndex(areaNo, params, readEnvValue) {
+  const serviceKey = readEnvValue("KMA_SERVICE_KEY");
+  if (!serviceKey) throw new Error("KMA_SERVICE_KEY is not configured");
+  const url = new URL(readEnvValue("KMA_LIFESTYLE_INDEX_URL") ?? DEFAULT_KMA_LIFESTYLE_INDEX_URL);
+  url.searchParams.set("serviceKey", normalizeKmaServiceKey(serviceKey));
+  url.searchParams.set("pageNo", params.get("pageNo") ?? "1");
+  url.searchParams.set("numOfRows", params.get("numOfRows") ?? "10");
+  url.searchParams.set("dataType", params.get("dataType") ?? "JSON");
+  url.searchParams.set("areaNo", areaNo);
+  url.searchParams.set("time", params.get("time") ?? getKmaLifestyleIndexTimeKey());
+  const payload = await fetchCachedJson(
+    forecastCache,
+    getUrlCacheKey("kma-lifestyle-uv", url, ["serviceKey"]),
+    readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
+    () => fetchJson(url, readEnvValue),
+  );
+  const item = firstApiItem(payload);
+  const uvIndex = readFirstNumber(item, ["h0", "h3", "h6", "h9", "h12", "value", "uvIndex"]);
+  return {
+    ...(typeof uvIndex === "number" ? { uv_index: uvIndex } : {}),
+    areaNo,
+  };
+}
+
+async function fetchAirKoreaDust(locationName, params, readEnvValue) {
+  const serviceKey = readEnvValue("AIRKOREA_SERVICE_KEY") ?? readEnvValue("KMA_SERVICE_KEY");
+  if (!serviceKey) throw new Error("AIRKOREA_SERVICE_KEY is not configured");
+  const sidoName = params.get("sidoName") ?? inferSidoName(locationName, params);
+  const url = new URL(readEnvValue("AIRKOREA_SIDO_URL") ?? DEFAULT_AIRKOREA_SIDO_URL);
+  url.searchParams.set("serviceKey", normalizeKmaServiceKey(serviceKey));
+  url.searchParams.set("returnType", params.get("returnType") ?? "json");
+  url.searchParams.set("numOfRows", params.get("numOfRows") ?? "100");
+  url.searchParams.set("pageNo", params.get("pageNo") ?? "1");
+  url.searchParams.set("sidoName", sidoName);
+  url.searchParams.set("ver", params.get("ver") ?? "1.0");
+  const payload = await fetchCachedJson(
+    forecastCache,
+    getUrlCacheKey("airkorea-sido", url, ["serviceKey"]),
+    readNumberEnv(readEnvValue, "WEATHER_CACHE_TTL_MS", DEFAULT_WEATHER_CACHE_TTL_MS),
+    () => fetchJson(url, readEnvValue),
+  );
+  const items = apiItems(payload);
+  const station = selectAirKoreaStation(items, locationName);
+  return {
+    ...(station?.pm10Value !== undefined ? { pm10: toNumberOrUndefined(station.pm10Value) } : {}),
+    ...(station?.pm25Value !== undefined ? { pm2_5: toNumberOrUndefined(station.pm25Value) } : {}),
+    ...(station?.stationName ? { stationName: String(station.stationName) } : {}),
+  };
 }
 
 async function fetchWeatherKitForecast(params, readEnvValue) {
@@ -468,6 +549,98 @@ function getInternationalFallbackTravelMinutes(countryCode) {
 function normalizeCountryCode(value) {
   if (value === "KR" || value === "JP" || value === "GLOBAL") return value;
   return null;
+}
+
+function inferKmaLifestyleAreaNo(locationName, params) {
+  if (locationName.includes("송파") || locationName.includes("잠실")) return "1171000000";
+  if (locationName.includes("강릉")) return "4215000000";
+  const latitude = Number(params.get("latitude"));
+  const longitude = Number(params.get("longitude"));
+  if (
+    locationName.includes("서울") ||
+    (Number.isFinite(latitude) &&
+      Number.isFinite(longitude) &&
+      latitude >= 37.4 &&
+      latitude <= 37.72 &&
+      longitude >= 126.75 &&
+      longitude <= 127.2)
+  ) {
+    return "1100000000";
+  }
+  return "1100000000";
+}
+
+function inferSidoName(locationName, params) {
+  if (locationName.includes("서울") || locationName.includes("성수") || locationName.includes("송파") || locationName.includes("잠실")) return "서울";
+  if (locationName.includes("강릉") || locationName.includes("강원")) return "강원";
+  const latitude = Number(params.get("latitude"));
+  const longitude = Number(params.get("longitude"));
+  if (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= 37.4 &&
+    latitude <= 37.72 &&
+    longitude >= 126.75 &&
+    longitude <= 127.2
+  ) {
+    return "서울";
+  }
+  return "서울";
+}
+
+function selectAirKoreaStation(items, locationName) {
+  const preferredTokens = getAirKoreaStationTokens(locationName);
+  return items.find((item) =>
+    preferredTokens.some((token) => String(item.stationName ?? "").includes(token)) &&
+    (toNumberOrUndefined(item.pm10Value) !== undefined || toNumberOrUndefined(item.pm25Value) !== undefined)
+  ) ?? items.find((item) =>
+    toNumberOrUndefined(item.pm10Value) !== undefined || toNumberOrUndefined(item.pm25Value) !== undefined
+  );
+}
+
+function getAirKoreaStationTokens(locationName) {
+  if (locationName.includes("성수")) return ["성동구", "성동"];
+  if (locationName.includes("송파") || locationName.includes("잠실")) return ["송파구", "송파"];
+  if (locationName.includes("강릉")) return ["강릉", "옥천동"];
+  const normalized = locationName.replace(/\s+/g, "");
+  return normalized ? [normalized] : [];
+}
+
+function firstApiItem(payload) {
+  return apiItems(payload)[0] ?? {};
+}
+
+function apiItems(payload) {
+  const items = payload?.response?.body?.items?.item ?? payload?.response?.body?.items ?? payload?.items ?? [];
+  if (Array.isArray(items)) return items;
+  if (items && typeof items === "object") return [items];
+  return [];
+}
+
+function readFirstNumber(record, keys) {
+  for (const key of keys) {
+    const value = toNumberOrUndefined(record?.[key]);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
+function toNumberOrUndefined(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  if (!normalized || normalized === "-" || normalized.toLowerCase() === "nan") return undefined;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function getKmaLifestyleIndexTimeKey(date = new Date()) {
+  const koreaTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  const year = koreaTime.getUTCFullYear();
+  const month = String(koreaTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(koreaTime.getUTCDate()).padStart(2, "0");
+  const hour = String(Math.floor(koreaTime.getUTCHours() / 3) * 3).padStart(2, "0");
+  return `${year}${month}${day}${hour}`;
 }
 
 function normalizeTransportMode(value) {

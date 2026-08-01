@@ -73,7 +73,7 @@ function getDesiredWeatherTags(signals: WeatherSignals): WeatherTag[] {
   if (signals.isRainy) tags.push("rain");
   if (signals.isWindy) tags.push("wind");
   if (signals.isCold) tags.push("cold");
-  if (signals.isHot) tags.push("heat");
+  if (signals.isHot || signals.isHighUv) tags.push("heat");
   if (tags.length === 0) tags.push("dry");
   return tags;
 }

@@ -1,6 +1,6 @@
 import type { DailyWeather, HourlyWeather, WeatherSnapshot } from "../types/weather";
 import { conditionFromOpenMeteo } from "./condition";
-import type { OpenMeteoResponse, WeatherNormalizeOptions } from "./types";
+import type { LifestyleIndexResponse, OpenMeteoResponse, WeatherNormalizeOptions } from "./types";
 
 export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: WeatherNormalizeOptions): WeatherSnapshot {
   const current = payload.current;
@@ -32,6 +32,20 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     daily,
     source: "openmeteo",
     stale: options.stale ?? false,
+  };
+}
+
+export function applyLifestyleIndex(snapshot: WeatherSnapshot, payload: LifestyleIndexResponse): WeatherSnapshot {
+  const current = payload.current;
+  if (!current) return snapshot;
+  return {
+    ...snapshot,
+    current: {
+      ...snapshot.current,
+      uvIndex: current.uv_index ?? snapshot.current.uvIndex,
+      pm10: current.pm10 ?? snapshot.current.pm10,
+      pm25: current.pm2_5 ?? snapshot.current.pm25,
+    },
   };
 }
 
