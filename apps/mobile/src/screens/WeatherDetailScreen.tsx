@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -19,7 +19,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
   const hourly = getHourlyForecast(weather);
   const daily = getDailyForecast(weather.daily, weather.hourly);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
-  const lifestyleIndices = getLifestyleIndices(current);
+  const lifestyleIndices = getLifestyleIndices(current, Platform.OS);
   const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
     if (!peak) return item;
     return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
@@ -179,8 +179,11 @@ function ForecastPanel({ title, meta, theme, children }: { title: string; meta: 
   );
 }
 
-function getLifestyleIndices(current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]): LifestyleIndexItem[] {
-  return [
+function getLifestyleIndices(
+  current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"],
+  platform: typeof Platform.OS,
+): LifestyleIndexItem[] {
+  const indices: LifestyleIndexItem[] = [
     {
       id: "uv",
       icon: uiIconAssets.uv,
@@ -188,21 +191,28 @@ function getLifestyleIndices(current: P0ScreenProps["state"]["destinationCare"][
       value: typeof current.uvIndex === "number" ? `${Math.round(current.uvIndex)}` : "확인 중",
       ...getUvIndexGrade(current.uvIndex),
     },
-    {
-      id: "pm10",
-      icon: uiIconAssets.wind,
-      label: "미세먼지",
-      value: typeof current.pm10 === "number" ? `${Math.round(current.pm10)}µg/m³` : "확인 중",
-      ...getPm10Grade(current.pm10),
-    },
-    {
-      id: "pm25",
-      icon: uiIconAssets.drop,
-      label: "초미세먼지",
-      value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : "확인 중",
-      ...getPm25Grade(current.pm25),
-    },
   ];
+
+  if (platform !== "ios") {
+    indices.push(
+      {
+        id: "pm10",
+        icon: uiIconAssets.wind,
+        label: "미세먼지",
+        value: typeof current.pm10 === "number" ? `${Math.round(current.pm10)}µg/m³` : "확인 중",
+        ...getPm10Grade(current.pm10),
+      },
+      {
+        id: "pm25",
+        icon: uiIconAssets.drop,
+        label: "초미세먼지",
+        value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : "확인 중",
+        ...getPm25Grade(current.pm25),
+      },
+    );
+  }
+
+  return indices;
 }
 
 function getLifestyleIndexMeta(items: LifestyleIndexItem[]): string {
