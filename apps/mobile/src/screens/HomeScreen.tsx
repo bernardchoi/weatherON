@@ -10,7 +10,7 @@ import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
-import { useResponsiveLayout } from "../theme/responsiveLayout";
+import { useResponsiveLayout, type ResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getFeelsLikeMessage } from "../utils/feelsLikeMessage";
 import { getDisplayLocationName } from "../utils/locationDisplay";
@@ -80,6 +80,7 @@ export function HomeScreen({
     <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
       <WeatherBackground condition={current.condition} theme={theme} />
       <ScrollView
+        testID="home-scroll"
         style={styles.homeScroll}
         contentContainerStyle={[
           styles.homeContent,
@@ -124,7 +125,7 @@ export function HomeScreen({
           />
         </View>
 
-        <View style={styles.decisionStack}>
+        <View testID="home-decision-stack" style={styles.decisionStack}>
           <HomeDecisionHero
             current={current}
             currentLocationName={currentLocationName}
@@ -152,6 +153,7 @@ export function HomeScreen({
         </View>
 
         <View
+          testID="home-plan-card"
           style={[
             styles.homePlanCard,
             {
@@ -257,6 +259,10 @@ function getHomeLocationStatus(
   return { value: "위치 확인 필요", tone: "warm" };
 }
 
+function isHomeTightLayout(layout: ResponsiveLayout) {
+  return layout.isShort || (layout.isNarrow && layout.homeCompact);
+}
+
 function DestinationSelectorCard({
   savedDestinations,
   selectedDestinationId,
@@ -270,7 +276,9 @@ function DestinationSelectorCard({
   onSelect: (place: P0ScreenProps["selectedDestinationPlace"]) => void;
   onAdd: () => void;
 }) {
+  const layout = useResponsiveLayout();
   const hasDestinations = savedDestinations.length > 0;
+  const tightLayout = isHomeTightLayout(layout);
   const addControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
   const destinationChipGlass = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   const headerCaption = hasDestinations
@@ -285,7 +293,7 @@ function DestinationSelectorCard({
         </View>
         <View style={styles.destinationSelectorCopy}>
           <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>오늘의 목적지</Text>
-          <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>
+          {tightLayout ? null : <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>}
         </View>
         <FeedbackPressable
           accessibilityLabel="새 목적지 추가"
@@ -566,9 +574,10 @@ function HomeDecisionHero({
   const weatherAccentColor = !isClear ? theme.sky : isNight ? theme.skyLite : theme.gold;
   const locationTone = locationStatus.tone === "clear" ? theme.clear : locationStatus.tone === "sky" ? theme.skyLite : theme.warm;
   const compactHero = layout.homeCompact;
+  const tightHero = isHomeTightLayout(layout);
   const weatherPressableStyle = compactHero ? styles.weatherPrimaryRow : styles.weatherPrimaryColumn;
-  const tempFontSize = compactHero ? (layout.isShort ? 36 : 40) : layout.isRegular ? 50 : 48;
-  const tempLineHeight = compactHero ? (layout.isShort ? 40 : 44) : layout.isRegular ? 53 : 51;
+  const tempFontSize = compactHero ? (tightHero ? 34 : 38) : layout.isRegular ? 50 : 48;
+  const tempLineHeight = compactHero ? (tightHero ? 38 : 42) : layout.isRegular ? 53 : 51;
 
   return (
     <View
@@ -602,7 +611,15 @@ function HomeDecisionHero({
           accessibilityLabel={`${currentLocationName} 현재 날씨 ${getConditionLabel(current.condition)} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`}
           accessibilityRole="button"
           onPress={onOpenForecast}
-          style={weatherPressableStyle}
+          style={[
+            weatherPressableStyle,
+            compactHero
+              ? {
+                  minHeight: layout.homeWeatherShowcaseMinHeight,
+                  paddingRight: tightHero ? 76 : 92,
+                }
+              : null,
+          ]}
         >
           <View
             style={[
@@ -771,7 +788,8 @@ function VisualDecisionCard({
   onPress: () => void;
 }) {
   const layout = useResponsiveLayout();
-  const showDecisionHelper = !layout.isShort;
+  const tightLayout = isHomeTightLayout(layout);
+  const showDecisionHelper = !tightLayout;
   return (
     <FeedbackPressable
       accessibilityLabel={`${label} ${value}`}
@@ -781,9 +799,9 @@ function VisualDecisionCard({
         styles.visualDecisionCard,
         {
           minHeight: layout.homeDecisionMinHeight,
-          gap: layout.isShort ? 1 : 4,
-          paddingHorizontal: layout.isShort ? 3 : spacing.xs,
-          paddingVertical: layout.isShort ? 4 : spacing.xs,
+          gap: tightLayout ? 1 : 4,
+          paddingHorizontal: tightLayout ? 3 : spacing.xs,
+          paddingVertical: tightLayout ? 3 : spacing.xs,
           backgroundColor: `${accent}10`,
         },
       ]}
@@ -792,8 +810,8 @@ function VisualDecisionCard({
         style={[
           styles.visualIconFrame,
           {
-            width: layout.isShort ? 24 : layout.homeCompact ? 28 : 34,
-            height: layout.isShort ? 24 : layout.homeCompact ? 28 : 34,
+            width: tightLayout ? 22 : layout.homeCompact ? 28 : 34,
+            height: tightLayout ? 22 : layout.homeCompact ? 28 : 34,
             backgroundColor: `${accent}18`,
           },
         ]}
@@ -803,22 +821,34 @@ function VisualDecisionCard({
           style={[
             styles.visualDecisionIcon,
             {
-              width: layout.isShort ? 16 : layout.homeCompact ? 18 : 22,
-              height: layout.isShort ? 16 : layout.homeCompact ? 18 : 22,
+              width: tightLayout ? 16 : layout.homeCompact ? 18 : 22,
+              height: tightLayout ? 16 : layout.homeCompact ? 18 : 22,
               tintColor: accent,
             },
           ]}
           resizeMode="contain"
         />
       </View>
-      <Text style={[styles.visualDecisionLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
+      <Text
+        style={[
+          styles.visualDecisionLabel,
+          {
+            color: accent,
+            fontSize: tightLayout ? 11 : 12,
+            lineHeight: tightLayout ? 14 : 16,
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
       <Text
         style={[
           styles.visualDecisionValue,
           {
             color: theme.text,
-            fontSize: layout.isShort ? 17 : layout.homeCompact ? 18 : 20,
-            lineHeight: layout.isShort ? 20 : layout.homeCompact ? 22 : 25,
+            fontSize: tightLayout ? 16 : layout.homeCompact ? 18 : 20,
+            lineHeight: tightLayout ? 19 : layout.homeCompact ? 22 : 25,
           },
         ]}
         numberOfLines={1}
@@ -842,6 +872,7 @@ function HomeOutfitPreviewCard({
   onPress: () => void;
 }) {
   const layout = useResponsiveLayout();
+  const tightLayout = isHomeTightLayout(layout);
   const imageSource = getHomeOutfitPreviewImage(outfit);
   const compactCopy = getHomeOutfitCopy(outfit.decisionText, packTitle);
   const title = getHomeOutfitTitle(compactCopy.title);
@@ -854,8 +885,9 @@ function HomeOutfitPreviewCard({
         styles.homeOutfitCard,
         {
           minHeight: layout.homeOutfitMinHeight,
-          paddingHorizontal: layout.homeCompact ? spacing.md : spacing.lg,
-          paddingVertical: layout.homeCompact ? spacing.xs : spacing.md,
+          gap: tightLayout ? spacing.sm : spacing.md,
+          paddingHorizontal: tightLayout ? spacing.sm : layout.homeCompact ? spacing.md : spacing.lg,
+          paddingVertical: tightLayout ? 4 : layout.homeCompact ? spacing.xs : spacing.md,
           backgroundColor: theme.cardStrong,
           borderColor: theme.border,
         },
@@ -866,16 +898,18 @@ function HomeOutfitPreviewCard({
         <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={layout.homeCompact ? 1 : 2}>
           {title}
         </Text>
-        <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
-          {compactCopy.body}
-        </Text>
+        {tightLayout ? null : (
+          <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
+            {compactCopy.body}
+          </Text>
+        )}
       </View>
       <View
         style={[
           styles.homeOutfitImageFrame,
           {
-            width: layout.homeCompact ? 54 : 62,
-            height: layout.homeCompact ? 54 : 62,
+            width: tightLayout ? 44 : layout.homeCompact ? 54 : 62,
+            height: tightLayout ? 44 : layout.homeCompact ? 54 : 62,
             backgroundColor: theme.cardMuted,
           },
         ]}
@@ -886,8 +920,8 @@ function HomeOutfitPreviewCard({
             style={[
               styles.homeOutfitImage,
               {
-                width: layout.homeCompact ? 48 : 56,
-                height: layout.homeCompact ? 48 : 56,
+                width: tightLayout ? 40 : layout.homeCompact ? 48 : 56,
+                height: tightLayout ? 40 : layout.homeCompact ? 48 : 56,
               },
             ]}
             resizeMode="contain"
@@ -923,6 +957,7 @@ function SpecialWeatherAlertCard({
   onPress: () => void;
 }) {
   const layout = useResponsiveLayout();
+  const tightLayout = isHomeTightLayout(layout);
   const isHeavyRain = alert.type === "heavy-rain";
   const accent = isHeavyRain ? theme.skyLite : theme.warm;
   const copy = getHomeSpecialAlertCopy(alert);
@@ -953,10 +988,21 @@ function SpecialWeatherAlertCard({
         ]}
         accessibilityElementsHidden
       >
-        <Text style={[styles.specialAlertWarningMark, { color: theme.onAccent }]}>!</Text>
+        <Text
+          style={[
+            styles.specialAlertWarningMark,
+            {
+              color: theme.onAccent,
+              fontSize: Math.max(15, Math.round(layout.homeSpecialAlertIconSize * 0.72)),
+              lineHeight: layout.homeSpecialAlertIconSize,
+            },
+          ]}
+        >
+          !
+        </Text>
       </View>
       <View style={styles.specialAlertCopy}>
-        <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>
+        {tightLayout ? null : <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>}
         <Text
           style={[
             styles.specialAlertTitle,
@@ -1596,7 +1642,7 @@ const styles = StyleSheet.create({
   homeContent: {
     // BottomNav는 스크롤 영역 밖 형제라 큰 하단 보정 없이도 마지막 카드가 가려지지 않는다.
     flexGrow: 1,
-    paddingBottom: 10,
+    paddingBottom: 0,
     width: "100%",
     alignSelf: "center",
   },

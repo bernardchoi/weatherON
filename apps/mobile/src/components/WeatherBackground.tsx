@@ -32,7 +32,7 @@ type Props = {
 // 화면 전체 높이에 걸쳐 떨어뜨린다. 카드가 불투명이라 카드 뒤 파티클은 카드 사이 여백에서만 보이고,
 // 추가로 variant="overlay" 레이어를 카드 위에 얹으면 비가 UI 앞을 가로지르는 것처럼 보인다.
 export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, variant = "scene" }: Props) {
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const isNight = useIsNightHour();
   const enabled = useAnimationEnabled();
   const motionState = resolveMotionState(condition, isNight);
@@ -52,7 +52,7 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <GradientBackdrop colors={gradientColors} />
+      <GradientBackdrop colors={gradientColors} windowWidth={windowWidth} />
       <View style={StyleSheet.absoluteFill}>
         {motionState === "clear" ? <GlowPulseLayer color={theme.gold} enabled={enabled} /> : null}
         {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.55} enabled={enabled} /> : null}
@@ -70,13 +70,16 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
   );
 });
 
-function GradientBackdrop({ colors }: { colors: [string, string, string] }) {
+function GradientBackdrop({ colors, windowWidth }: { colors: [string, string, string]; windowWidth: number }) {
+  const isNarrowScene = windowWidth <= 390;
+  const largeOrbSize = isNarrowScene ? Math.max(220, Math.min(300, windowWidth * 0.76)) : 420;
+  const smallOrbSize = isNarrowScene ? Math.max(190, Math.min(260, windowWidth * 0.66)) : 360;
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: colors[1] }]}>
       <View style={[StyleSheet.absoluteFill, styles.gradientTop, { backgroundColor: colors[0] }]} />
       <View style={[StyleSheet.absoluteFill, styles.gradientBottom, { backgroundColor: colors[2] }]} />
-      <View style={[styles.gradientOrb, styles.gradientOrbLarge, { backgroundColor: colors[0] }]} />
-      <View style={[styles.gradientOrb, styles.gradientOrbSmall, { backgroundColor: colors[2] }]} />
+      <View style={[styles.gradientOrb, styles.gradientOrbLarge, { backgroundColor: colors[0], width: largeOrbSize, height: largeOrbSize, opacity: isNarrowScene ? 0.06 : 0.16 }]} />
+      <View style={[styles.gradientOrb, styles.gradientOrbSmall, { backgroundColor: colors[2], width: smallOrbSize, height: smallOrbSize, opacity: isNarrowScene ? 0.05 : 0.13 }]} />
     </View>
   );
 }
@@ -511,15 +514,11 @@ const styles = StyleSheet.create({
   gradientOrbLarge: {
     top: "8%",
     right: "-22%",
-    width: 420,
-    height: 420,
     opacity: 0.16,
   },
   gradientOrbSmall: {
-    left: "-18%",
-    bottom: "2%",
-    width: 360,
-    height: 360,
+    left: "-20%",
+    bottom: "-2%",
     opacity: 0.13,
   },
   glow: {

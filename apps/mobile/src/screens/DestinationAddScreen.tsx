@@ -103,18 +103,19 @@ export function DestinationAddScreen({
         <View
           style={[
             styles.searchField,
-            { backgroundColor: theme.cardStrong, borderColor: theme.border },
+            { backgroundColor: theme.card, borderColor: semanticColor(theme, "accentBorder") },
+            cardShadow(theme),
             searchGlassSurface,
           ]}
         >
           {searchGlassSurface ? <IosGlassBackdrop theme={theme} role="input" style={styles.searchGlassBackdrop} /> : null}
-          <SearchGlyph color={theme.subtle} />
+          <SearchGlyph color={theme.sky} />
           <TextInput
             accessibilityLabel="목적지 검색어"
             onChangeText={onSearchPlaces}
             onSubmitEditing={() => onSearchPlaces(placeSearchQuery)}
             placeholder="장소명 또는 주소 검색"
-            placeholderTextColor={theme.subtle}
+            placeholderTextColor={theme.muted}
             returnKeyType="search"
             style={[styles.input, { color: theme.text }]}
             value={placeSearchQuery}
@@ -514,13 +515,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   searchField: {
-    minHeight: 48,
+    minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     overflow: "hidden",
   },
   searchGlassBackdrop: {
@@ -550,10 +551,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 48,
     padding: 0,
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "900",
   },
   searchClearButton: {
