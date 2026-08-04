@@ -24,8 +24,8 @@ export function OutfitScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const ultraCompactLayout = layout.isShort || layout.height <= 812;
-  const onePageLayout = layout.isShort || layout.height <= 896;
+  const ultraCompactLayout = layout.isShort || layout.height <= 812 || layout.width <= 360;
+  const onePageLayout = !layout.isTablet || layout.height <= 900;
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -39,7 +39,8 @@ export function OutfitScreen({
       subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)}
       badge={`${state.outfit.matchPct}%`}
       showWordmark={false}
-      compactHeader={ultraCompactLayout}
+      compactHeader
+      contentGap={onePageLayout ? 8 : 12}
       contentPaddingBottom={ultraCompactLayout ? 0 : onePageLayout ? 8 : undefined}
     >
       <View
@@ -47,8 +48,8 @@ export function OutfitScreen({
           styles.criteriaCard,
           onePageLayout ? styles.criteriaCardOnePage : null,
           {
-            gap: onePageLayout ? 7 : layout.outfitCardGap,
-            padding: onePageLayout ? 11 : layout.outfitPanelPadding,
+            gap: onePageLayout ? 6 : layout.outfitCardGap,
+            padding: onePageLayout ? 10 : layout.outfitPanelPadding,
             backgroundColor: theme.card,
             borderColor: theme.border,
           },
