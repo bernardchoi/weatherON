@@ -4,6 +4,8 @@ import { RULE_VERSION } from "./constants";
 import { recommendShoes } from "./shoes";
 import { recommendUmbrella } from "./umbrella";
 
+export const RAIN_NOTIFICATION_THRESHOLD_PCT = 50;
+
 export const defaultNotificationRules: NotificationRule[] = [
   {
     id: "routine-morning",
@@ -123,6 +125,7 @@ export function evaluateNotificationRules(
   const destinationCondition = options.destinationAlertCondition ?? defaultDestinationAlertCondition;
   const destinationShoes = destinationWeather ? recommendShoes(destinationWeather, options.destinationCategory) : undefined;
   const weatherAlertSignals = getWeatherAlertSignals(weather);
+  const rainNotificationActive = getMaxRainProbabilityPct(weather) >= RAIN_NOTIFICATION_THRESHOLD_PCT;
 
   return rules.map((rule) => {
     const destinationSignals =
@@ -134,6 +137,7 @@ export function evaluateNotificationRules(
       isRuleActive(rule, umbrella.level, shoes.level, {
         careOn: options.destinationCareOn ?? true,
         destinationSignals,
+        rainNotificationActive,
         weatherAlertSignals,
       });
     const weatherAlertSignal = getWeatherAlertSignal(rule, weatherAlertSignals);
@@ -172,11 +176,13 @@ function isRuleActive(
   context: {
     careOn: boolean;
     destinationSignals?: DestinationAlertSignals;
+    rainNotificationActive: boolean;
     weatherAlertSignals: WeatherAlertSignals;
   },
 ): boolean {
   if (rule.type === "routine" || rule.type === "bedtime") return true;
-  if (rule.type === "rain" || rule.type === "umbrella") return umbrellaLevel === "recommended" || umbrellaLevel === "required";
+  if (rule.type === "rain") return context.rainNotificationActive;
+  if (rule.type === "umbrella") return umbrellaLevel === "recommended" || umbrellaLevel === "required";
   if (rule.type === "shoes") return shoesLevel === "recommended";
   if (rule.type === "destination") {
     return Boolean(context.careOn && context.destinationSignals?.active);
@@ -430,7 +436,7 @@ function getDestinationAlertSignals(
   condition: DestinationAlertCondition,
   shoesLevel: string | undefined,
 ): DestinationAlertSignals {
-  const maxRainProbabilityPct = Math.max(weather.current.rainProbabilityPct, ...weather.hourly.map((hour) => hour.rainProbabilityPct));
+  const maxRainProbabilityPct = getMaxRainProbabilityPct(weather);
   const maxWindMs = Math.max(weather.current.windMs, ...weather.hourly.map((hour) => hour.windMs));
   const rainExceeded = maxRainProbabilityPct >= condition.rainThresholdPct;
   const windExceeded = maxWindMs >= condition.windThresholdMs;
@@ -444,6 +450,10 @@ function getDestinationAlertSignals(
     maxRainProbabilityPct,
     maxWindMs,
   };
+}
+
+function getMaxRainProbabilityPct(weather: WeatherSnapshot): number {
+  return Math.max(weather.current.rainProbabilityPct, ...weather.hourly.map((hour) => hour.rainProbabilityPct));
 }
 
 function getDestinationActiveReason(

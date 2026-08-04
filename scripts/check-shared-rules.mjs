@@ -347,6 +347,62 @@ await writeFile(
     }, false, {
       notificationNow: new Date(seongsuRainSnapshot.observedAt).getTime(),
     });
+    const belowThresholdRainSnapshot = {
+      ...seongsuRainSnapshot,
+      id: "weather-below-rain-notification-threshold",
+      current: {
+        ...seongsuRainSnapshot.current,
+        rainProbabilityPct: 49,
+        precipitationMm: 2,
+        condition: "rain",
+      },
+      hourly: seongsuRainSnapshot.hourly.map((hour) => ({
+        ...hour,
+        rainProbabilityPct: 49,
+        precipitationMm: 1.2,
+        condition: "rain",
+      })),
+    };
+    const belowThresholdRainDemo = buildDemoStateFromWeatherResult({
+      status: "ready",
+      message: "below-threshold rain notification fixture",
+      retryable: false,
+      fallbackUsed: false,
+      officialSpecialAlert: { source: "kma", active: false },
+      current: belowThresholdRainSnapshot,
+      destination: belowThresholdRainSnapshot,
+      destinationSnapshots: [],
+    }, false, {
+      notificationNow: new Date(belowThresholdRainSnapshot.observedAt).getTime(),
+    });
+    const thresholdRainSnapshot = {
+      ...belowThresholdRainSnapshot,
+      id: "weather-at-rain-notification-threshold",
+      current: {
+        ...belowThresholdRainSnapshot.current,
+        rainProbabilityPct: 20,
+        precipitationMm: 0,
+        condition: "cloud",
+      },
+      hourly: belowThresholdRainSnapshot.hourly.map((hour, index) => ({
+        ...hour,
+        rainProbabilityPct: index === 1 ? 50 : 20,
+        precipitationMm: 0,
+        condition: "cloud",
+      })),
+    };
+    const thresholdRainDemo = buildDemoStateFromWeatherResult({
+      status: "ready",
+      message: "at-threshold rain notification fixture",
+      retryable: false,
+      fallbackUsed: false,
+      officialSpecialAlert: { source: "kma", active: false },
+      current: thresholdRainSnapshot,
+      destination: thresholdRainSnapshot,
+      destinationSnapshots: [],
+    }, false, {
+      notificationNow: new Date(thresholdRainSnapshot.observedAt).getTime(),
+    });
     const policyDate = new Date();
     policyDate.setDate(policyDate.getDate() + 2);
     policyDate.setHours(8, 0, 0, 0);
@@ -398,6 +454,8 @@ await writeFile(
 
     export const demoResults = {
       rainNotifications: rainDemo.notifications,
+      belowThresholdRainNotifications: belowThresholdRainDemo.notifications,
+      thresholdRainNotifications: thresholdRainDemo.notifications,
       cappedNotifications,
       quietHoursNotifications,
       current: await buildDemoState(false),
@@ -599,6 +657,11 @@ assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && i
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "shoes" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "routine" && item.active && item.scheduledAt));
+assert.ok(demoResults.belowThresholdRainNotifications
+  .filter((item) => item.type === "rain" || item.type === "umbrella" || item.type === "shoes")
+  .every((item) => !item.active && !item.scheduledAt && !item.deliveryKey));
+assert.ok(demoResults.thresholdRainNotifications
+  .some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
 assert.equal(demoResults.cappedNotifications.length, 3);
 assert.ok(demoResults.cappedNotifications.some((item) => item.id === "heavy-rain"));
 assert.ok(!demoResults.cappedNotifications.some((item) => item.id === "routine"));

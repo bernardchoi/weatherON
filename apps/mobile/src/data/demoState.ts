@@ -3,6 +3,7 @@ import {
   defaultNotificationRules,
   defaultPreferenceProfile,
   evaluateNotificationRules,
+  RAIN_NOTIFICATION_THRESHOLD_PCT,
   type UserPreferenceProfile,
   presetWardrobe,
   recommendOutfit,
@@ -385,14 +386,22 @@ function withScheduledNotificationTimes(
       return { ...notification, scheduledAt: getNextDailyReminderAt(nowMs, timeZone, bedtimeReminderHour).toISOString() };
     }
     if ((notification.type === "rain" || notification.type === "umbrella" || notification.type === "shoes") && notification.active) {
+      if (!rainEvent) {
+        return {
+          ...notification,
+          active: false,
+          scheduledAt: undefined,
+          deliveryKey: undefined,
+          reason: `강수확률 ${RAIN_NOTIFICATION_THRESHOLD_PCT}% 이상 비 시작 예보 대기`,
+        };
+      }
       const leadMinutes = notification.type === "rain" ? 60 : notification.type === "umbrella" ? 45 : 10;
-      const desiredAt = rainEvent ? rainEvent.timestamp - leadMinutes * 60_000 : nowMs;
+      const desiredAt = rainEvent.timestamp - leadMinutes * 60_000;
       const scheduledAt = Math.max(nowMs + weatherAlertDeliveryLeadMs, desiredAt);
-      const eventKey = rainEvent?.key ?? weather.observedAt.slice(0, 10);
       return {
         ...notification,
         scheduledAt: new Date(scheduledAt).toISOString(),
-        deliveryKey: `${notification.id}:${eventKey}`,
+        deliveryKey: `${notification.id}:${rainEvent.key}`,
       };
     }
     if ((notification.type === "heatwave" || notification.type === "heavy-rain") && notification.active) {
@@ -411,15 +420,22 @@ function getNextDailyReminderAt(nowMs: number, timeZone: string, hour: number, m
 }
 
 function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string): { timestamp: number; key: string } | null {
-  const rainyHours = weather.hourly
-    .filter((hour) => hour.rainProbabilityPct >= 40 || hour.precipitationMm > 0 || hour.condition === "rain" || hour.condition === "snow")
+  const forecastHours = weather.hourly
     .map((hour) => ({
       timestamp: getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone),
       key: hour.time,
+      rainProbabilityPct: hour.rainProbabilityPct,
     }))
     .filter((item) => Number.isFinite(item.timestamp))
     .sort((left, right) => left.timestamp - right.timestamp);
-  return rainyHours.find((item) => item.timestamp >= nowMs - 2 * 60 * 60_000) ?? rainyHours[0] ?? null;
+  return forecastHours.find((item, index) => {
+    const previous = forecastHours[index - 1];
+    return (
+      item.timestamp >= nowMs &&
+      item.rainProbabilityPct >= RAIN_NOTIFICATION_THRESHOLD_PCT &&
+      (!previous || previous.rainProbabilityPct < RAIN_NOTIFICATION_THRESHOLD_PCT)
+    );
+  }) ?? null;
 }
 
 function getDestinationWeatherSnapshot(

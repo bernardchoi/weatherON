@@ -86,6 +86,9 @@ export async function syncLocalWeatherNotifications(options: {
 
   const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
   const scheduledIdentifiers = new Set(scheduledNotifications.map((notification) => notification.identifier));
+  const scheduledNotificationsByIdentifier = new Map(
+    scheduledNotifications.map((notification) => [notification.identifier, notification]),
+  );
   const presentedNotifications = await getPresentedNotifications(Notifications);
   const nowIso = new Date().toISOString();
   const storedDeliveryRecords = await readSpecialAlertDeliveryRecords();
@@ -122,7 +125,11 @@ export async function syncLocalWeatherNotifications(options: {
     desiredNotifications
       .filter((item) => {
         const identifier = getSmartNotificationIdentifier(item);
-        return scheduledIdentifiers.has(identifier) && (Boolean(item.deliveryKey) || item.type === "routine" || item.type === "bedtime");
+        const scheduled = scheduledNotificationsByIdentifier.get(identifier);
+        if (!scheduled) return false;
+        if (item.type === "routine" || item.type === "bedtime") return true;
+        const scheduledDeliveryKey = scheduled.content.data?.deliveryKey;
+        return Boolean(item.deliveryKey && scheduledDeliveryKey === item.deliveryKey);
       })
       .map(getSmartNotificationIdentifier),
   );
