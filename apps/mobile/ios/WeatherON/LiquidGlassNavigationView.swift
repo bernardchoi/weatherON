@@ -92,30 +92,44 @@ private struct NavigationGlassSurface: View {
 
   var body: some View {
     GlassEffectContainer(spacing: 8) {
-      HStack(spacing: 4) {
-        ForEach(0..<4, id: \.self) { index in
-          Group {
-            if index == state.activeIndex {
-              Capsule()
-                .fill(Color.white.opacity(state.isDarkTheme ? 0.12 : 0.08))
-                .overlay(
-                  Capsule()
-                    .stroke(Color.white.opacity(state.isDarkTheme ? 0.3 : 0.22), lineWidth: 1)
-                )
-                .glassEffect(
-                  .regular
-                    .tint(.white.opacity(state.isDarkTheme ? 0.24 : 0.16))
-                    .interactive(),
-                  in: Capsule()
-                )
-                .glassEffectID("active-tab", in: activeTabNamespace)
-            } else {
-              Color.clear
+      ZStack {
+        Capsule()
+          .fill(Color.white.opacity(state.isDarkTheme ? 0.07 : 0.12))
+          .overlay(
+            Capsule()
+              .stroke(Color.white.opacity(state.isDarkTheme ? 0.3 : 0.58), lineWidth: 1)
+          )
+          .glassEffect(
+            .regular.tint(.white.opacity(state.isDarkTheme ? 0.11 : 0.08)),
+            in: Capsule()
+          )
+
+        HStack(spacing: 4) {
+          ForEach(0..<4, id: \.self) { index in
+            Group {
+              if index == state.activeIndex {
+                Capsule()
+                  .fill(Color.white.opacity(state.isDarkTheme ? 0.14 : 0.12))
+                  .overlay(
+                    Capsule()
+                      .stroke(Color.white.opacity(state.isDarkTheme ? 0.36 : 0.3), lineWidth: 1)
+                  )
+                  .glassEffect(
+                    .regular
+                      .tint(.white.opacity(state.isDarkTheme ? 0.24 : 0.16))
+                      .interactive(),
+                    in: Capsule()
+                  )
+                  .glassEffectID("active-tab", in: activeTabNamespace)
+              } else {
+                Color.clear
+              }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(4)
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .padding(4)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

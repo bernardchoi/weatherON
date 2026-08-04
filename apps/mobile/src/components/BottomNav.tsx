@@ -16,7 +16,9 @@ import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
+import { iosGlassSurface } from "../theme/iosGlass";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
+import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
 
 type BottomNavProps = {
@@ -39,7 +41,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const iosColors = getIosTabColors(theme);
   const activeColor = isIos ? iosColors.activeIcon : androidMaterialColor(theme, "primary");
   const navigationBackground = isIos
-    ? { backgroundColor: theme.background, borderColor: "transparent" }
+    ? iosGlassSurface(theme, "dock", { nativeBackdrop: hasNativeLiquidGlassNavigationSurface })
     : androidMaterialSurface(theme, "navigation");
 
   activeIndexRef.current = activeIndex;
@@ -123,6 +125,9 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
             navigationBackground,
           ]}
         >
+          {isIos && !hasNativeLiquidGlassNavigationSurface ? (
+            <IosGlassBackdrop theme={theme} role="dock" style={styles.iosDockBackdrop} />
+          ) : null}
           {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"} /> : null}
           {bottomNavRoutes.map((route) => {
             const active = route.id === activeTabRoute;
@@ -377,6 +382,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   iosDock: {
+    borderRadius: 32,
+  },
+  iosDockBackdrop: {
     borderRadius: 32,
   },
   androidDock: {
