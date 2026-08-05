@@ -27,6 +27,7 @@ type AppScreenProps = {
   // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
   footer?: React.ReactNode;
   contentGap?: number;
+  contentPaddingTop?: number;
   contentPaddingBottom?: number;
   children: React.ReactNode;
 };
@@ -39,6 +40,7 @@ export function AppScreen({
   onBack,
   footer,
   contentGap,
+  contentPaddingTop,
   contentPaddingBottom,
   showWordmark = true,
   compactHeader = false,
@@ -59,7 +61,7 @@ export function AppScreen({
             maxWidth: layout.contentMaxWidth,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingBottom: contentPaddingBottom ?? navClearancePadding,
-            paddingTop: inlineHeader ? 0 : spacing.sm,
+            paddingTop: contentPaddingTop ?? (inlineHeader ? 0 : spacing.sm),
             gap: contentGap ?? layout.screenContentGap,
           },
         ]}

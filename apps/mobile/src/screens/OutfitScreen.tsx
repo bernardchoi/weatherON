@@ -41,6 +41,7 @@ export function OutfitScreen({
       showWordmark={false}
       compactHeader
       contentGap={onePageLayout ? 8 : 12}
+      contentPaddingTop={ultraCompactLayout ? 12 : spacing.md}
       contentPaddingBottom={ultraCompactLayout ? 0 : onePageLayout ? 8 : undefined}
     >
       <View
@@ -48,6 +49,7 @@ export function OutfitScreen({
           styles.criteriaCard,
           onePageLayout ? styles.criteriaCardOnePage : null,
           {
+            marginTop: onePageLayout ? 8 : spacing.sm,
             gap: onePageLayout ? 6 : layout.outfitCardGap,
             padding: onePageLayout ? 10 : layout.outfitPanelPadding,
             backgroundColor: theme.card,
