@@ -51,10 +51,6 @@
       "android": {
         "buildType": "app-bundle"
       }
-    },
-    "production-ios-1-0-0-16": {
-      "extends": "production",
-      "autoIncrement": false
     }
   },
   "submit": {
