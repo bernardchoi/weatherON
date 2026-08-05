@@ -55,7 +55,7 @@
         "NSMotionUsageDescription": "날씨 배경 효과와 화면 전환을 기기 움직임 및 접근성 설정에 맞춰 제공하기 위해 동작 정보를 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "15"
+      "buildNumber": "16"
     },
     "android": {
       "package": "com.weatheron.mobile",
