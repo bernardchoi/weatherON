@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
-import { brandAssets, outfitImageAssets, uiIconAssets } from "../assets";
+import { outfitImageAssets, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -57,7 +57,6 @@ export function TomorrowBriefScreen({
       <View style={[styles.header, { minHeight: layout.isShort ? 62 : 70 }]}>
         <BackButton onPress={onGoBack} />
         <View style={styles.headerCopy}>
-          <Image source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark} style={styles.wordmark} resizeMode="contain" />
           <View style={styles.headerHeadlineRow}>
             <View style={styles.headerTextBlock}>
               <Text style={[styles.headerTitle, { color: theme.text }]}>내일 브리핑</Text>
@@ -115,7 +114,7 @@ export function TomorrowBriefScreen({
         <View style={styles.factRow} accessibilityLabel="내일 핵심 예보">
           <BriefFact icon={uiIconAssets.rain} label="예상 강수" value={tomorrow.summary.precipitationMm > 0 ? `${tomorrow.summary.precipitationMm.toFixed(1)}mm` : "비 없음"} color={theme.sky} theme={theme} />
           <BriefFact icon={uiIconAssets.wind} label="최대 바람" value={`${tomorrow.summary.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
-          <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time) : "하루 종일"} color={theme.gold} theme={theme} />
+          <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time) : "강수 없음"} color={theme.gold} theme={theme} />
         </View>
       </View>
 
@@ -344,11 +343,10 @@ const styles = StyleSheet.create({
   headerCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
   },
   headerHeadlineRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
   },
@@ -357,15 +355,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 2,
   },
-  wordmark: {
-    width: 98,
-    height: 20,
-  },
   schedulePill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    marginTop: 2,
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderWidth: 1,

@@ -16,6 +16,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
   const toggleColors = getRainToggleColors(theme, rainEndAlertEnabled);
   const peakAmount = getPeakRainAmount(rainBars);
   const rainWindow = getRainWindow(rainBars);
+  const hasRain = rainBars.some((item) => item.amount > 0);
   const rainStart = rainWindow.start;
   const rainEnd = rainWindow.end;
   const umbrella = state.umbrella;
@@ -46,9 +47,8 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           style={[
             styles.heroCard,
             {
-              minHeight: layout.isShort ? 112 : 122,
               paddingHorizontal: layout.weatherPanelPadding,
-              paddingVertical: layout.weatherPanelPadding,
+              paddingVertical: layout.isShort ? 10 : 12,
               backgroundColor: theme.card,
               borderColor: theme.sky,
             },
@@ -61,13 +61,15 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
             </View>
             <View style={styles.heroCopy}>
               <Text style={[styles.heroTitle, { color: theme.text }]}>{rainWindow.title}</Text>
-              <Text style={[styles.heroMeta, { color: theme.muted }]}>시간당 최대 {peakAmount}mm · {rainWindow.body}</Text>
+              <Text style={[styles.heroMeta, { color: theme.muted }]}>
+                {hasRain ? `시간당 최대 ${peakAmount}mm · ${rainWindow.body}` : rainWindow.body}
+              </Text>
             </View>
           </View>
           <View style={styles.rainDecisionStrip}>
-            <RainFact icon={uiIconAssets.clock} label="시작" value={rainStart} color={theme.sky} theme={theme} />
+            <RainFact icon={uiIconAssets.clock} label="시작" value={hasRain ? rainStart : "없음"} color={theme.sky} theme={theme} />
             <RainFact icon={uiIconAssets.drop} label="최대" value={`${peakAmount}mm`} color={theme.warm} theme={theme} />
-            <RainFact icon={uiIconAssets.check} label="완화" value={rainEnd} color={theme.clear} theme={theme} />
+            <RainFact icon={uiIconAssets.check} label="완화" value={hasRain ? rainEnd : "해당 없음"} color={theme.clear} theme={theme} />
           </View>
         </View>
 
@@ -78,22 +80,25 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
           style={[styles.togglePanel, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>완화 알림</Text>
-            <Text style={[styles.toggleTitle, { color: theme.text }]}>비 약해지면 알려줘</Text>
-            <Text style={[styles.toggleMeta, { color: theme.muted }]}>{rainEnd} 전후로 완화 알림을 받을지 선택</Text>
+            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>{hasRain ? "완화 알림" : "강수 알림"}</Text>
+            <Text style={[styles.toggleTitle, { color: theme.text }]}>{hasRain ? "비 약해지면 알려줘" : "비 예보 생기면 알려줘"}</Text>
+            <Text style={[styles.toggleMeta, { color: theme.muted }]}>
+              {hasRain ? `${rainEnd} 전후로 완화 알림을 받을지 선택` : "새 강수 신호가 잡히면 알림 받기"}
+            </Text>
           </View>
           <View style={[styles.toggleTrack, { backgroundColor: toggleColors.track, borderColor: toggleColors.trackBorder }]}>
             <View style={[styles.toggleKnob, { backgroundColor: toggleColors.knob, marginLeft: rainEndAlertEnabled ? 22 : 3 }]} />
           </View>
         </Pressable>
 
-        <Panel title="30분 단위 강수량" theme={theme}>
+        <Panel title="시간대별 강수량" theme={theme} compact={!hasRain}>
+          {hasRain ? (
           <View style={styles.chart}>
-            <View style={[styles.amountBars, { height: layout.weatherChartHeight }]}>
+            <View style={[styles.amountBars, { height: Math.max(58, Math.round(layout.weatherChartHeight * 0.72)) }]}>
               {rainBars.map((item) => {
                 const height = Math.max(6, Math.min((item.amount / 4.2) * 100, 100));
                 return (
-                  <View key={`${item.time}:${item.amount}`} style={[styles.amountColumn, { height: layout.weatherChartHeight - 6 }]}>
+                  <View key={`${item.time}:${item.amount}`} style={[styles.amountColumn, { height: Math.max(52, Math.round(layout.weatherChartHeight * 0.72) - 6) }]}>
                     <Text style={[styles.amountLabel, { color: item.amount >= 3 ? theme.text : theme.subtle }]}>{item.amount > 0 ? trimAmount(item.amount) : ""}</Text>
                     <View
                       style={[
@@ -120,12 +125,28 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
               <LegendSwatch label="강함" color={chartColors.strong} theme={theme} />
             </View>
           </View>
+          ) : (
+            <View style={styles.dryTimeline} accessibilityLabel={`향후 ${rainBars.length}시간 예상 강수 없음`}>
+              <Text style={[styles.dryTimelineText, { color: theme.text }]}>향후 {rainBars.length}시간 예상 강수 없음</Text>
+              <View style={[styles.dryTimelineLine, { backgroundColor: theme.border }]} />
+              <View style={styles.timeAxis}>
+                {getAxisLabels(rainBars).map((label) => (
+                  <Text key={label} style={[styles.axisText, { color: theme.subtle }]}>{label}</Text>
+                ))}
+              </View>
+            </View>
+          )}
         </Panel>
 
         <Panel title="외출 가이드" theme={theme} accentColor={theme.clear}>
           <GuideRow icon={uiIconAssets.check} text={getDepartureGuideText(rainStart, umbrella)} color={theme.clear} theme={theme} />
           <GuideRow icon={uiIconAssets.umbrella} text={getUmbrellaGuideText(rainStart, umbrella)} color={theme.sky} theme={theme} />
-          <GuideRow icon={uiIconAssets.clock} text={getRainEndGuideText(rainEnd)} color={theme.subtle} theme={theme} />
+          <GuideRow
+            icon={uiIconAssets.clock}
+            text={hasRain ? getRainEndGuideText(rainEnd) : `향후 ${rainBars.length}시간 강수 가능성 낮음`}
+            color={theme.subtle}
+            theme={theme}
+          />
         </Panel>
 
         <Pressable
@@ -167,11 +188,13 @@ function Panel({
   title,
   theme,
   accentColor,
+  compact = false,
   children,
 }: {
   title: string;
   theme: AppTheme;
   accentColor?: string;
+  compact?: boolean;
   children: React.ReactNode;
 }) {
   const layout = useResponsiveLayout();
@@ -182,7 +205,7 @@ function Panel({
         {
           backgroundColor: theme.card,
           borderLeftColor: accentColor ?? "transparent",
-          padding: layout.weatherPanelPadding,
+          padding: compact ? Math.min(layout.weatherPanelPadding, 12) : layout.weatherPanelPadding,
         },
         accentColor ? styles.panelAccent : null,
         cardShadow(theme),
@@ -459,6 +482,18 @@ const styles = StyleSheet.create({
   chart: {
     gap: 6,
   },
+  dryTimeline: {
+    gap: 7,
+  },
+  dryTimelineText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  dryTimelineLine: {
+    height: 2,
+    borderRadius: radius.pill,
+  },
   amountBars: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -532,12 +567,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   umbrellaCard: {
-    minHeight: 86,
+    minHeight: 72,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
     paddingHorizontal: 14,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -582,7 +617,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   togglePanel: {
-    minHeight: 76,
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
