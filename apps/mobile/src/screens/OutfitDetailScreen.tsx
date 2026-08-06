@@ -41,6 +41,8 @@ export function OutfitDetailScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
+      contentPaddingTop={spacing.sm}
+      headerBottomSpacing={spacing.xs}
       contentGap={layout.isShort ? layout.outfitCardGap : 10}
       contentPaddingBottom={0}
       footer={

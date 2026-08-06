@@ -140,12 +140,11 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                 active={active}
                 onPress={() => onNavigate(route.id)}
               >
-                {isIos && active ? (
+                {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
                   <View
                     pointerEvents="none"
                     style={[
                       styles.iosActivePill,
-                      hasNativeLiquidGlassNavigationSurface ? styles.iosNativeActivePillBacking : null,
                       {
                         backgroundColor: iosColors.activeBackground,
                         borderColor: iosColors.activeBorder,
@@ -427,12 +426,6 @@ const styles = StyleSheet.create({
     left: 5,
     borderWidth: 1,
     borderRadius: 28,
-  },
-  iosNativeActivePillBacking: {
-    top: 6,
-    right: 6,
-    bottom: 6,
-    left: 6,
   },
   label: {
     minWidth: 42,

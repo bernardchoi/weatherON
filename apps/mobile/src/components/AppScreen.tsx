@@ -29,6 +29,7 @@ type AppScreenProps = {
   contentGap?: number;
   contentPaddingTop?: number;
   contentPaddingBottom?: number;
+  headerBottomSpacing?: number;
   children: React.ReactNode;
 };
 
@@ -42,6 +43,7 @@ export function AppScreen({
   contentGap,
   contentPaddingTop,
   contentPaddingBottom,
+  headerBottomSpacing,
   showWordmark = true,
   compactHeader = false,
   children,
@@ -76,6 +78,7 @@ export function AppScreen({
             heroGlass,
             {
               gap: inlineHeader ? spacing.xs : compactHeader ? spacing.sm : layout.screenHeaderGap,
+              marginBottom: headerBottomSpacing,
             },
           ]}
         >
