@@ -9,16 +9,24 @@ type SectionProps = {
   caption?: string;
   accent?: "clear" | "gold" | "sky" | "warm";
   compact?: boolean;
+  contentGap?: number;
   children: React.ReactNode;
 };
 
-export function Section({ title, caption, accent, compact = false, children }: SectionProps) {
+export function Section({ title, caption, accent, compact = false, contentGap, children }: SectionProps) {
   const theme = useAppTheme();
   const accentColor = accent ? getAccentColor(theme, accent) : undefined;
   const icon = getSectionIcon(title);
   return (
     <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme)]}>
-      <View style={[styles.section, compact ? styles.sectionCompact : null, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View
+        style={[
+          styles.section,
+          compact ? styles.sectionCompact : null,
+          contentGap === undefined ? null : { gap: contentGap },
+          { backgroundColor: theme.card, borderColor: theme.border },
+        ]}
+      >
         {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
         <View style={[styles.header, compact ? styles.headerCompact : null]}>
           <View style={[styles.iconFrame, compact ? styles.iconFrameCompact : null, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>

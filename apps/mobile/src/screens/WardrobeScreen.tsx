@@ -57,8 +57,8 @@ export function WardrobeScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={spacing.sm}
-      headerBottomSpacing={spacing.xs}
+      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentGap={layout.destinationContentGap}
     >
       {removedItem ? (
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />

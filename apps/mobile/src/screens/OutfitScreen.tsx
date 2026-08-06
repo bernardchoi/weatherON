@@ -40,8 +40,8 @@ export function OutfitScreen({
       badge={`${state.outfit.matchPct}%`}
       showWordmark={false}
       compactHeader
-      contentGap={onePageLayout ? 8 : 12}
-      contentPaddingTop={ultraCompactLayout ? 12 : spacing.md}
+      contentGap={layout.destinationContentGap}
+      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
       contentPaddingBottom={ultraCompactLayout ? 0 : onePageLayout ? 8 : undefined}
     >
       <View
@@ -49,7 +49,6 @@ export function OutfitScreen({
           styles.criteriaCard,
           onePageLayout ? styles.criteriaCardOnePage : null,
           {
-            marginTop: onePageLayout ? 8 : spacing.sm,
             gap: onePageLayout ? 6 : layout.outfitCardGap,
             padding: onePageLayout ? 10 : layout.outfitPanelPadding,
             backgroundColor: theme.card,
@@ -107,7 +106,13 @@ export function OutfitScreen({
         </View>
       </View>
 
-      <Section title="오늘 입기 좋은 조합" caption={state.outfit.decisionText} accent="clear" compact={onePageLayout}>
+      <Section
+        title="오늘 입기 좋은 조합"
+        caption={state.outfit.decisionText}
+        accent="clear"
+        compact={onePageLayout}
+        contentGap={onePageLayout ? 10 : spacing.md}
+      >
         <OutfitGrid outfit={state.outfit} maxItems={4} dense onePage={onePageLayout} singleRow={ultraCompactLayout} onItemPress={() => onNavigate("C4")} />
         <View style={styles.pillRow}>
           <StatusPill

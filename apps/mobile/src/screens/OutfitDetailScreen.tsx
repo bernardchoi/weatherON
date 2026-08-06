@@ -41,9 +41,8 @@ export function OutfitDetailScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={spacing.sm}
-      headerBottomSpacing={spacing.xs}
-      contentGap={layout.isShort ? layout.outfitCardGap : 10}
+      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentGap={layout.destinationContentGap}
       contentPaddingBottom={0}
       footer={
         <View style={styles.footer}>

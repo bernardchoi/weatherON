@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
     rowGap: spacing.sm,
   },
   outfitGridOnePage: {
-    columnGap: 6,
-    rowGap: 6,
+    columnGap: spacing.sm,
+    rowGap: spacing.sm,
   },
   outfitGridSingleRow: {
     flexWrap: "nowrap",
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
   },
   itemCellOnePage: {
     minHeight: 88,
-    gap: 3,
-    padding: 7,
+    gap: 4,
+    padding: spacing.sm,
   },
   itemCellSingleRow: {
     flexBasis: 0,

@@ -100,8 +100,8 @@ export function WardrobePresetScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={spacing.sm}
-      headerBottomSpacing={spacing.xs}
+      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentGap={layout.destinationContentGap}
     >
       <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <TextInput
