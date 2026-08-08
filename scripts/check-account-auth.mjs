@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { createHash, createSign, generateKeyPairSync } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import cbor from "cbor";
 import worker from "../apps/server/src/worker.mjs";
 
 class D1DatabaseAdapter {
@@ -45,10 +47,15 @@ class D1PreparedStatementAdapter {
     const result = this.database.prepare(this.sql).run(...this.values);
     return { success: true, meta: { changes: Number(result.changes) } };
   }
+
+  async all() {
+    return { success: true, results: this.database.prepare(this.sql).all(...this.values) };
+  }
 }
 
 const sqlite = new DatabaseSync(":memory:");
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0001_account_auth.sql", import.meta.url), "utf8"));
+sqlite.exec(readFileSync(new URL("../apps/server/migrations/0002_app_integrity.sql", import.meta.url), "utf8"));
 const database = new D1DatabaseAdapter(sqlite);
 const keyPair = await crypto.subtle.generateKey(
   {
@@ -75,6 +82,9 @@ const env = {
   WEATHERON_DB: database,
   APPLE_CLIENT_IDS: "com.weatheron.mobile,com.weatheron.mobile.dev",
   WEATHERON_TERMS_VERSION: "2026-08-08",
+  APPLE_TEAM_IDENTIFIER: "R4L3X54675",
+  APP_ATTEST_BUNDLE_IDS: "com.weatheron.mobile,com.weatheron.mobile.dev",
+  APP_INTEGRITY_MODE: "monitor",
 };
 
 try {
@@ -120,6 +130,82 @@ try {
   const session = await requestJson("/auth/session", { headers: { authorization } });
   assert.equal(session.response.status, 200);
   assert.equal(session.body.account.email, "weatheron-test@privaterelay.appleid.com");
+
+  const integrityChallenge = await requestJson("/app-integrity/challenge", {
+    method: "POST",
+    headers: { authorization },
+    body: { purpose: "attestation" },
+  });
+  assert.equal(integrityChallenge.response.status, 201);
+  assert.equal(integrityChallenge.body.purpose, "attestation");
+
+  const integrityStatus = await requestJson("/app-integrity/status", { headers: { authorization } });
+  assert.equal(integrityStatus.response.status, 200);
+  assert.equal(integrityStatus.body.mode, "monitor");
+  assert.deepEqual(integrityStatus.body.devices, []);
+
+  const integrityKeyId = "weatheron-app-attest-test-key";
+  const integrityKeyPair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const nowIso = new Date().toISOString();
+  sqlite
+    .prepare(
+      `INSERT INTO app_integrity_keys
+       (key_id, user_id, device_id, public_key_pem, bundle_identifier, environment, assertion_counter, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'production', 0, 'active', ?, ?)`,
+    )
+    .run(
+      integrityKeyId,
+      exchange.body.account.userId,
+      "weatheron-test-device",
+      integrityKeyPair.publicKey.export({ type: "spki", format: "pem" }),
+      "com.weatheron.mobile",
+      nowIso,
+      nowIso,
+    );
+  const assertionChallenge = await requestJson("/app-integrity/challenge", {
+    method: "POST",
+    headers: { authorization },
+    body: { purpose: "GET /auth/session" },
+  });
+  const assertion = createAppAttestAssertion({
+    challenge: assertionChallenge.body.challenge,
+    method: "GET",
+    path: "/auth/session",
+    bodyText: "",
+    privateKey: integrityKeyPair.privateKey,
+    counter: 1,
+  });
+  const assertionHeaders = {
+    authorization,
+    "x-weatheron-integrity-key-id": integrityKeyId,
+    "x-weatheron-integrity-challenge-id": assertionChallenge.body.challengeId,
+    "x-weatheron-integrity-challenge": assertionChallenge.body.challenge,
+    "x-weatheron-integrity-assertion": assertion,
+  };
+  const verifiedSession = await requestJson("/auth/session", { headers: assertionHeaders });
+  assert.equal(verifiedSession.response.status, 200);
+  assert.equal(sqlite.prepare("SELECT assertion_counter FROM app_integrity_keys WHERE key_id = ?").get(integrityKeyId).assertion_counter, 1);
+
+  env.APP_INTEGRITY_MODE = "enforce";
+  const replayedAssertion = await requestJson("/auth/session", { headers: assertionHeaders });
+  assert.equal(replayedAssertion.response.status, 409);
+  assert.equal(replayedAssertion.body.error, "integrity_challenge_invalid");
+  env.APP_INTEGRITY_MODE = "monitor";
+
+  const monitoredFailures = sqlite
+    .prepare("SELECT COUNT(*) AS count FROM app_integrity_events WHERE outcome = 'failed'")
+    .get();
+  assert.ok(monitoredFailures.count >= 1, "monitor mode must record missing assertions");
+
+  env.APP_INTEGRITY_MODE = "enforce";
+  const enforcedTerms = await requestJson("/account/terms", {
+    method: "POST",
+    headers: { authorization },
+    body: { requiredAccepted: true, marketingAccepted: false },
+  });
+  assert.equal(enforcedTerms.response.status, 401);
+  assert.equal(enforcedTerms.body.error, "integrity_assertion_missing");
+  env.APP_INTEGRITY_MODE = "monitor";
 
   const terms = await requestJson("/account/terms", {
     method: "POST",
@@ -172,4 +258,22 @@ function encodeBase64Url(value) {
 async function sha256Hex(value) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Buffer.from(digest).toString("hex");
+}
+
+function createAppAttestAssertion({ challenge, method, path, bodyText, privateKey, counter }) {
+  const clientData = JSON.stringify({
+    challenge,
+    method,
+    path,
+    bodyHash: createHash("sha256").update(bodyText).digest("hex"),
+  });
+  const authenticatorData = Buffer.alloc(37);
+  createHash("sha256").update("R4L3X54675.com.weatheron.mobile").digest().copy(authenticatorData, 0);
+  authenticatorData.writeUInt32BE(counter, 33);
+  const clientDataHash = createHash("sha256").update(clientData).digest();
+  const nonce = createHash("sha256").update(Buffer.concat([authenticatorData, clientDataHash])).digest();
+  const signer = createSign("SHA256");
+  signer.update(nonce);
+  const signature = signer.sign(privateKey);
+  return cbor.encode({ signature, authenticatorData }).toString("base64");
 }

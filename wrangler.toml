@@ -1,6 +1,7 @@
 name = "weatheron-api"
 main = "apps/server/src/worker.mjs"
 compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 preview_urls = false
 
@@ -11,6 +12,11 @@ PLACE_CACHE_TTL_MS = "1800000"
 ROUTE_CACHE_TTL_MS = "600000"
 APPLE_CLIENT_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
 WEATHERON_TERMS_VERSION = "2026-08-08"
+APPLE_TEAM_IDENTIFIER = "R4L3X54675"
+APP_ATTEST_BUNDLE_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
+APP_ATTEST_ALLOW_DEVELOPMENT = "false"
+APP_INTEGRITY_MODE = "monitor"
+APP_INTEGRITY_CHALLENGE_TTL_SECONDS = "120"
 
 [[d1_databases]]
 binding = "WEATHERON_DB"

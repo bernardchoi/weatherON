@@ -26,6 +26,10 @@ module.exports = ({ config }) => {
   expo.ios = {
     ...expo.ios,
     usesAppleSignIn: true,
+    entitlements: {
+      ...(expo.ios?.entitlements ?? {}),
+      "com.apple.developer.devicecheck.appattest-environment": isDevelopmentBuild ? "development" : "production",
+    },
   };
 
   if (isDevelopmentBuild) {

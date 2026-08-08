@@ -559,6 +559,7 @@ await build({
     "react/jsx-runtime",
     "react-native",
     "react-native-safe-area-context",
+    "expo",
     "expo-apple-authentication",
     "expo-asset",
     "expo-blur",
@@ -580,7 +581,7 @@ await build({
   platform: "node",
   format: "esm",
   target: "node20",
-  external: ["react", "react/jsx-runtime", "expo-sqlite"],
+  external: ["react", "react/jsx-runtime", "expo", "expo-sqlite"],
   plugins: [reactNativePlatformStub],
   logLevel: "silent",
 });

@@ -1,3 +1,5 @@
+import { IntegrityHttpError, verifyAppIntegrityRequest } from "./integrityCore.mjs";
+
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URL = `${APPLE_ISSUER}/auth/keys`;
 const DEFAULT_CHALLENGE_TTL_SECONDS = 5 * 60;
@@ -25,7 +27,7 @@ export async function handleAccountRoute(request, env = {}, options = {}) {
     if (routeKey === "POST /account/terms") return await acceptTerms(request, database, env);
     throw new AuthHttpError(404, "not_found", "요청한 계정 API가 없습니다.");
   } catch (error) {
-    if (error instanceof AuthHttpError) {
+    if (error instanceof AuthHttpError || error instanceof IntegrityHttpError) {
       return { status: error.status, payload: { error: error.code, message: error.message } };
     }
     console.error("account route failed", error instanceof Error ? error.message : String(error));
@@ -112,18 +114,21 @@ async function exchangeAppleCredential(request, database, env, options) {
 
 async function getCurrentSession(request, database, env) {
   const session = await requireSession(request, database);
+  await verifyAppIntegrityRequest(request.clone(), database, env, { session, routeKey: "GET /auth/session" });
   await database.prepare("UPDATE auth_sessions SET last_seen_at = ? WHERE id = ?").bind(new Date().toISOString(), session.session_id).run();
   return { status: 200, payload: { account: toAccountProfile(session, env), expiresAt: session.expires_at } };
 }
 
-async function signOutSession(request, database) {
+async function signOutSession(request, database, env) {
   const session = await requireSession(request, database);
+  await verifyAppIntegrityRequest(request.clone(), database, env, { session, routeKey: "POST /auth/logout" });
   await database.prepare("UPDATE auth_sessions SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").bind(new Date().toISOString(), session.session_id).run();
   return { status: 200, payload: { signedOut: true } };
 }
 
 async function acceptTerms(request, database, env) {
   const session = await requireSession(request, database);
+  await verifyAppIntegrityRequest(request.clone(), database, env, { session, routeKey: "POST /account/terms" });
   const body = await readJsonObject(request);
   if (body.requiredAccepted !== true) {
     throw new AuthHttpError(400, "required_terms_missing", "필수 약관 동의가 필요합니다.");
@@ -196,7 +201,7 @@ async function createSession(database, userId, env, nowIso) {
   return { token, expiresAt };
 }
 
-async function requireSession(request, database) {
+export async function requireSession(request, database) {
   const authorization = request.headers.get("authorization") ?? "";
   const match = /^Bearer\s+([^\s]+)$/i.exec(authorization);
   if (!match || match[1].length < 32 || match[1].length > 256) {

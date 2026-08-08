@@ -1,6 +1,7 @@
 // Cloudflare Worker 어댑터. 라우팅·업스트림 호출·캐시는 proxyCore.mjs가 담당한다.
 import { handleProxyRoute, PROXY_TOKEN_HEADER } from "./proxyCore.mjs";
-import { handleAccountRoute, isAccountRoute } from "./authCore.mjs";
+import { handleAccountRoute, isAccountRoute, requireSession } from "./authCore.mjs";
+import { handleAppIntegrityRoute, INTEGRITY_HEADERS, isAppIntegrityRoute } from "./integrityCore.mjs";
 
 export default {
   async fetch(request, env = {}) {
@@ -16,6 +17,10 @@ export async function handleWeatherProxyRequest(request, env = {}) {
   }
 
   try {
+    if (isAppIntegrityRoute(url.pathname)) {
+      const result = await handleAppIntegrityRoute(request, env, { requireSession });
+      return jsonResponse(result.payload, result.status);
+    }
     if (isAccountRoute(url.pathname)) {
       const result = await handleAccountRoute(request, env);
       return jsonResponse(result.payload, result.status);
@@ -44,7 +49,7 @@ function corsHeaders() {
   return {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET, POST, OPTIONS",
-    "access-control-allow-headers": `authorization, content-type, ${PROXY_TOKEN_HEADER}`,
+    "access-control-allow-headers": `authorization, content-type, ${PROXY_TOKEN_HEADER}, ${Object.values(INTEGRITY_HEADERS).join(", ")}`,
   };
 }
 

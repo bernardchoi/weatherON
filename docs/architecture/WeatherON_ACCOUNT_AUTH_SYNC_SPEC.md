@@ -164,6 +164,14 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - iOS는 App Attest, Android는 Play Integrity 검증을 단계적으로 적용한다.
 - 계정 삭제와 연결 변경은 최근 인증 또는 재인증을 요구한다.
 
+### App Attest 2단계 구현 상태
+
+- iOS 로컬 Expo 모듈이 키 생성, attestation, assertion을 `DCAppAttestService`로 수행한다.
+- Worker는 D1에 일회용 challenge, 사용자·기기별 공개키, assertion counter, 실패 이력을 저장한다.
+- 현재 보호 요청은 세션 복원, 약관 저장, 로그아웃이며 동기화·결제 API가 추가되면 같은 검증 계층에 연결한다.
+- `APP_INTEGRITY_MODE=monitor`는 실패를 기록하고 요청을 통과시킨다. 실기기 안정화 후 `enforce`로 전환한다.
+- Android는 현재 비활성이며 후속 Play Integrity 결과를 동일한 challenge·정책·감사 계층에 연결한다.
+
 ## 11. 실제 로그인 활성화 완료 기준
 
 - 원격 D1 마이그레이션과 Worker 배포 완료
@@ -173,6 +181,10 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - A3 완료 후 필요한 경우 O3를 거쳐 원래 액션으로 복귀
 - 로그아웃 후 세션 API가 401을 반환하고 로컬 토큰이 제거됨
 - 토큰·이메일·nonce가 운영 로그에 노출되지 않음
+- Apple Developer App ID에 App Attest capability 활성화 및 운영 entitlement 서명 확인
+- D1 `0002_app_integrity.sql` 원격 마이그레이션 및 Worker `monitor` 배포 완료
+- iOS 실기기에서 attestation 등록, assertion counter 증가, 재사용 실패 기록 확인
+- 실패율·미지원 기기 비율을 확인한 뒤 `APP_INTEGRITY_MODE=enforce` 전환
 - Android 전환을 약속하기 전 공통 로그인 수단과 동기화 API가 실제 기기에서 검증됨
 
 ## 12. 관련 문서
@@ -183,4 +195,3 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - `docs/architecture/WeatherON_SQLITE_STORAGE_SCHEMA.md`
 - `docs/policy/weatheron_security_policy.html`
 - `docs/policy/WeatherON_약관_정책.md`
-

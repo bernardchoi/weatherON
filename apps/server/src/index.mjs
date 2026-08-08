@@ -4,7 +4,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleProxyRoute, PROXY_TOKEN_HEADER } from "./proxyCore.mjs";
-import { handleAccountRoute, isAccountRoute } from "./authCore.mjs";
+import { handleAccountRoute, isAccountRoute, requireSession } from "./authCore.mjs";
+import { handleAppIntegrityRoute, INTEGRITY_HEADERS, isAppIntegrityRoute } from "./integrityCore.mjs";
 
 const SERVER_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const ROOT_DIR = resolve(SERVER_DIR, "../..");
@@ -28,6 +29,17 @@ const server = createServer(async (request, response) => {
   }
 
   try {
+    if (isAppIntegrityRoute(url.pathname)) {
+      const body = await readRequestBody(request);
+      const webRequest = new Request(url, {
+        method: request.method,
+        headers: normalizeRequestHeaders(request.headers),
+        ...(request.method === "GET" || request.method === "HEAD" ? {} : { body }),
+      });
+      const result = await handleAppIntegrityRoute(webRequest, process.env, { requireSession });
+      sendJson(response, result.status, result.payload);
+      return;
+    }
     if (isAccountRoute(url.pathname)) {
       const body = await readRequestBody(request);
       const webRequest = new Request(url, {
@@ -71,7 +83,10 @@ function sendJson(response, status, payload) {
 function setCorsHeaders(response) {
   response.setHeader("access-control-allow-origin", "*");
   response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
-  response.setHeader("access-control-allow-headers", `authorization, content-type, ${PROXY_TOKEN_HEADER}`);
+  response.setHeader(
+    "access-control-allow-headers",
+    `authorization, content-type, ${PROXY_TOKEN_HEADER}, ${Object.values(INTEGRITY_HEADERS).join(", ")}`,
+  );
 }
 
 function normalizeRequestHeaders(headers) {

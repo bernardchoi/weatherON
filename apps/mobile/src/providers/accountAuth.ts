@@ -3,6 +3,12 @@ import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
 import { getAccountRuntimeConfig } from "../config/accountEnv";
 import { normalizeBaseUrl } from "../utils/httpJson";
+import {
+  createAppIntegrityHeaders,
+  ensureAppAttestEnrollment,
+  forgetIntegrityUser,
+  rememberIntegrityUser,
+} from "./appIntegrity";
 
 export type AccountProfile = {
   userId: string;
@@ -81,6 +87,10 @@ export async function signInWithAppleAccount(): Promise<AccountSessionResult> {
       },
     });
     await writeSessionToken(exchange.sessionToken);
+    await rememberIntegrityUser(exchange.account.userId);
+    await ensureAppAttestEnrollment(exchange.sessionToken, exchange.account.userId).catch((error) => {
+      console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
+    });
     return { account: exchange.account, expiresAt: exchange.expiresAt };
   } catch (error) {
     if (isAppleCancellation(error)) throw new AccountAuthError("apple_canceled", "Apple 로그인을 취소했습니다.");
@@ -93,11 +103,16 @@ export async function restoreAccountSession(): Promise<AccountRestoreResult> {
     const token = await readSessionToken();
     if (!token) return { status: "signed-out", account: null };
     const session = await accountRequest<AccountSessionResult>("/auth/session", { token });
+    await rememberIntegrityUser(session.account.userId);
+    await ensureAppAttestEnrollment(token, session.account.userId).catch((error) => {
+      console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
+    });
     return { status: "authenticated", account: session.account, expiresAt: session.expiresAt };
   } catch (error) {
     const normalized = normalizeAccountError(error);
     if (normalized.status === 401) {
       await deleteSessionToken().catch(() => {});
+      await forgetIntegrityUser().catch(() => {});
       return { status: "signed-out", account: null };
     }
     return { status: "offline", account: null };
@@ -122,6 +137,7 @@ export async function signOutAccountSession(): Promise<void> {
     // 서버 연결이 끊겨도 이 기기의 세션은 즉시 제거한다.
   } finally {
     await deleteSessionToken();
+    await forgetIntegrityUser();
   }
 }
 
@@ -141,21 +157,27 @@ async function accountRequest<T>(
     throw new AccountAuthError("account_api_missing", "계정 서버 주소가 설정되지 않았습니다.");
   }
   const url = new URL(path, normalizeBaseUrl(config.apiBaseUrl));
+  const method = options.method ?? "GET";
+  const bodyText = options.body ? JSON.stringify(options.body) : "";
+  const integrityHeaders = options.token
+    ? await createAppIntegrityHeaders({ token: options.token, method, path, bodyText })
+    : {};
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
   try {
     const response = await expoFetch(url.toString(), {
-      method: options.method ?? "GET",
+      method,
       signal: controller.signal,
       headers: {
         accept: "application/json",
         ...(options.body ? { "content-type": "application/json" } : {}),
         ...(options.token ? { authorization: `Bearer ${options.token}` } : {}),
+        ...integrityHeaders,
       },
-      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.body ? { body: bodyText } : {}),
     });
-    const bodyText = await response.text();
-    const payload = parseJsonObject(bodyText);
+    const responseText = await response.text();
+    const payload = parseJsonObject(responseText);
     if (!response.ok) {
       throw new AccountAuthError(
         typeof payload.error === "string" ? payload.error : "account_request_failed",

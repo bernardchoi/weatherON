@@ -6,5 +6,8 @@
   "scripts": {
     "dev": "node src/index.mjs",
     "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "node-app-attest": "^1.0.1"
   }
 }
