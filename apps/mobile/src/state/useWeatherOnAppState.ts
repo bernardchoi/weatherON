@@ -22,6 +22,14 @@ import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/pl
 import { sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { runtimeTravelEstimateClient } from "../providers/travelEstimateClient";
 import {
+  acceptAccountTerms,
+  restoreAccountSession,
+  signInWithAppleAccount,
+  signOutAccountSession,
+  subscribeToAppleCredentialRevocation,
+  type AccountProfile,
+} from "../providers/accountAuth";
+import {
   addLocalNotificationReceivedListener,
   addLocalNotificationResponseListener,
   checkLocalNotificationPermission,
@@ -39,6 +47,7 @@ import {
 } from "./appStateTypes";
 import type {
   AccountGateResultState,
+  AccountAuthStatus,
   AccountGateReturnRouteId,
   AccountGateState,
   AccountPendingAction,
@@ -116,6 +125,7 @@ import {
 // 화면들이 이 모듈에서 타입을 임포트하던 기존 경로를 유지하기 위해 재노출한다.
 export type {
   AccountGateResultState,
+  AccountAuthStatus,
   AccountGateReturnRouteId,
   AccountGateState,
   AccountPendingAction,
@@ -218,6 +228,9 @@ export function useWeatherOnAppState() {
   const [styleProfileReturnRoute, setStyleProfileReturnRoute] = useState<P0RouteId | null>(null);
   const [destinationAddReturnRoute, setDestinationAddReturnRoute] = useState<DestinationAddReturnRouteId>("G1");
   const [accountLinked, setAccountLinked] = useState(false);
+  const [accountProfile, setAccountProfile] = useState<AccountProfile | null>(null);
+  const [accountAuthStatus, setAccountAuthStatus] = useState<AccountAuthStatus>("restoring");
+  const [accountAuthMessage, setAccountAuthMessage] = useState<string | null>(null);
   const [termsRequiredAccepted, setTermsRequiredAccepted] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
   const [permissionReady, setPermissionReady] = useState(false);
@@ -331,12 +344,32 @@ export function useWeatherOnAppState() {
       readPersistedWeatherProviderResult(Platform.OS === "ios" ? "weatherkit" : undefined),
       readPersistedAppState(),
       readPersistedNotificationState(),
+      restoreAccountSession(),
     ])
-      .then(([persistedWeatherResult, persistedState, persistedNotificationState]) => {
+      .then(([persistedWeatherResult, persistedState, persistedNotificationState, restoredAccount]) => {
         if (!active) return;
         if (persistedWeatherResult) {
           persistedWeatherProviderResultRef.current = persistedWeatherResult;
           setWeatherProviderResult(persistedWeatherResult);
+        }
+        if (restoredAccount.status === "authenticated") {
+          setAccountLinked(true);
+          setAccountProfile(restoredAccount.account);
+          setTermsRequiredAccepted(restoredAccount.account.termsAccepted);
+          setAccountAuthStatus("ready");
+          setAccountAuthMessage(null);
+        } else if (restoredAccount.status === "offline" && persistedState?.accountLinked) {
+          setAccountLinked(true);
+          setAccountProfile(null);
+          setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
+          setAccountAuthStatus("offline");
+          setAccountAuthMessage("오프라인 상태예요. 연결되면 계정을 다시 확인해요.");
+        } else {
+          setAccountLinked(false);
+          setAccountProfile(null);
+          setTermsRequiredAccepted(false);
+          setAccountAuthStatus("idle");
+          setAccountAuthMessage(null);
         }
         if (!persistedState) {
           setReadNotificationIds(persistedNotificationState.readNotificationIds);
@@ -345,8 +378,6 @@ export function useWeatherOnAppState() {
         }
         setOnboardingCompleted(persistedState.onboardingCompleted);
         setSmartCareEnabled(persistedState.smartCareEnabled);
-        setAccountLinked(persistedState.accountLinked);
-        setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
         setLocationReady(persistedState.locationReady);
         setPermissionReady(persistedState.permissionReady);
         setOutfitSaved(persistedState.outfitSaved);
@@ -831,17 +862,39 @@ export function useWeatherOnAppState() {
   }, []);
 
   const signOutAccount = useCallback(() => {
-    setAccountLinked(false);
-    setTermsRequiredAccepted(false);
-    setOutfitSaved(false);
-    setSavedDestinations([]);
-    setRecentlyRemovedDestination(null);
-    setWardrobeOwnedItemIds([]);
-    setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
-    setRecentlyRemovedWardrobeItemId(null);
-    setAccountGateResult(null);
-    setRoute("M1");
+    setAccountAuthStatus("signing-out");
+    setAccountAuthMessage(null);
+    void signOutAccountSession().finally(() => {
+      setAccountLinked(false);
+      setAccountProfile(null);
+      setTermsRequiredAccepted(false);
+      setOutfitSaved(false);
+      setSavedDestinations([]);
+      setRecentlyRemovedDestination(null);
+      setWardrobeOwnedItemIds([]);
+      setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+      setRecentlyRemovedWardrobeItemId(null);
+      setAccountGateResult(null);
+      setAccountAuthStatus("idle");
+      setRoute("M1");
+    });
   }, []);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    let active = true;
+    let unsubscribe = () => {};
+    void subscribeToAppleCredentialRevocation(() => {
+      if (active) signOutAccount();
+    }).then((remove) => {
+      if (active) unsubscribe = remove;
+      else remove();
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [appStateHydrated, signOutAccount]);
 
   const toggleStyleTag = useCallback((tag: string) => {
     setSelectedStyles((current) => {
@@ -1305,20 +1358,43 @@ export function useWeatherOnAppState() {
     setAccountGateResult(createAccountGateResult(pendingGate.reason, pendingGate.returnTo));
   };
 
-  const completeAccountLink = () => {
-    setAccountLinked(true);
-    if (!termsRequiredAccepted) {
-      setRoute("A3");
-      return;
+  const signInWithApple = async () => {
+    setAccountAuthStatus("signing-in");
+    setAccountAuthMessage(null);
+    try {
+      const result = await signInWithAppleAccount();
+      setAccountLinked(true);
+      setAccountProfile(result.account);
+      setTermsRequiredAccepted(result.account.termsAccepted);
+      setAccountAuthStatus("ready");
+      if (!result.account.termsAccepted) {
+        setRoute("A3");
+        return;
+      }
+      const returnTo = gate?.returnTo ?? "H1";
+      completeAccountAction(gate);
+      setRoute(returnTo);
+      setGate(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Apple 로그인에 실패했습니다.";
+      setAccountAuthStatus(message.includes("취소") ? "idle" : "error");
+      setAccountAuthMessage(message);
     }
-    const returnTo = gate?.returnTo ?? "H1";
-    completeAccountAction(gate);
-    setRoute(returnTo);
-    setGate(null);
   };
 
-  const completeTerms = () => {
-    setTermsRequiredAccepted(true);
+  const completeTerms = async ({ marketingAccepted }: { marketingAccepted: boolean }) => {
+    setAccountAuthStatus("saving-terms");
+    setAccountAuthMessage(null);
+    try {
+      const profile = await acceptAccountTerms(marketingAccepted);
+      setAccountProfile(profile);
+      setTermsRequiredAccepted(profile.termsAccepted);
+      setAccountAuthStatus("ready");
+    } catch (error) {
+      setAccountAuthStatus("error");
+      setAccountAuthMessage(error instanceof Error ? error.message : "약관 동의를 저장하지 못했습니다.");
+      return;
+    }
     const returnTo = gate?.returnTo ?? "H1";
     completeAccountAction(gate);
     setRoute(returnTo);
@@ -1492,6 +1568,9 @@ export function useWeatherOnAppState() {
     onboardingCompleted,
     isWeatherLoading,
     accountLinked,
+    accountProfile,
+    accountAuthStatus,
+    accountAuthMessage,
     termsRequiredAccepted,
     locationReady,
     permissionReady,
@@ -1558,7 +1637,7 @@ export function useWeatherOnAppState() {
     requestAccountGate,
     signOutAccount,
     requestPermissionGate,
-    completeAccountLink,
+    signInWithApple,
     completeTerms,
     cancelAccountGate,
     completePermissionGate,

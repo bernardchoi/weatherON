@@ -99,7 +99,7 @@ WeatherON은 한국 지역에서는 기상청 날씨와 Kakao Local 장소 검�
 |---|---|---|---|
 | 위치 | 제한적 가능 | 날씨/장소 API provider | 서버 adapter 경유, 원본 키 앱 미노출 |
 | 기기 또는 기타 ID | 1차 제출 기준 아니오 | Google AdMob | 실제 SDK 도입 전까지 미적용 |
-| 개인 정보 | 인증 provider와 처리 | Kakao/Naver/LINE/Google/Apple/Firebase | 계정 연결 시 |
+| 개인 정보 | 인증 provider와 처리 | Kakao/Naver/LINE/Google/Apple 및 Cloudflare Workers·D1 | 계정 연결 시 |
 
 ### 보안 답변 초안
 

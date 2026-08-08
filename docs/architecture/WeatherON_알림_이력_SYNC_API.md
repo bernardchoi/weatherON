@@ -1,6 +1,7 @@
 # WeatherON 알림 이력 Sync API 메모
 
 > 목적: H3/M2 알림 읽음·이동 이력을 계정 연결 후 서버에 동기화하기 위한 추후 API 범위 정리.
+> 계정·인증·동기화 공통 원칙은 `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`를 따른다.
 
 ## 현재 구현
 
@@ -24,7 +25,7 @@
 ### 1. 알림 상태 조회
 
 - `GET /me/notifications/state`
-- 인증: Firebase ID Token.
+- 인증: `Authorization: Bearer <WeatherON opaque session token>`.
 - 응답:
   - `readNotificationIds: string[]`
   - `history: NotificationHistoryItem[]`
@@ -33,7 +34,7 @@
 ### 2. 알림 읽음 처리
 
 - `POST /me/notifications/read`
-- 인증: Firebase ID Token.
+- 인증: `Authorization: Bearer <WeatherON opaque session token>`.
 - 요청:
   - `notificationId: string`
   - `title: string`
@@ -46,7 +47,7 @@
 ### 3. 알림 딥링크 열림 기록
 
 - `POST /me/notifications/open`
-- 인증: Firebase ID Token.
+- 인증: `Authorization: Bearer <WeatherON opaque session token>`.
 - 요청:
   - `notificationId: string`
   - `title: string`
@@ -57,27 +58,32 @@
   - read set에 upsert.
   - history에 `action="open"` 이벤트 upsert.
 
-## Firestore 초안
+## D1 초안
 
-- `users/{uid}/notification_state/current`
-  - `readNotificationIds: string[]`
-  - `updatedAt`
-- `users/{uid}/notification_history/{eventId}`
-  - `notificationId`
-  - `title`
-  - `action`
-  - `occurredAt`
-  - `route`
-  - `source`
-  - `createdAt`
+- `notification_state`
+  - `user_id TEXT PRIMARY KEY`
+  - `read_notification_ids_json TEXT NOT NULL`
+  - `revision INTEGER NOT NULL`
+  - `updated_at TEXT NOT NULL`
+- `notification_history`
+  - `event_id TEXT PRIMARY KEY`
+  - `user_id TEXT NOT NULL`
+  - `notification_id TEXT NOT NULL`
+  - `title TEXT NOT NULL`
+  - `action TEXT NOT NULL`
+  - `occurred_at TEXT NOT NULL`
+  - `route TEXT`
+  - `source TEXT NOT NULL`
+  - `created_at TEXT NOT NULL`
+- 모든 조회·변경은 인증된 세션의 `user_id`를 서버에서 주입한다. 클라이언트가 보낸 사용자 id를 신뢰하지 않는다.
 
 ## 보안/운영 기준
 
-- 클라이언트는 Firebase Auth 이후에만 서버 sync를 호출한다.
+- 클라이언트는 WeatherON 세션 발급 이후에만 서버 sync를 호출한다.
 - 알림 이력에 정밀 좌표, 원문 API 응답, provider token을 저장하지 않는다.
-- 목적지명이 포함될 수 있으므로 Firestore Security Rules로 본인만 접근 가능하게 한다.
+- 목적지명이 포함될 수 있으므로 Worker가 세션의 `user_id`로 D1 쿼리를 제한한다.
 - Guest 상태는 로컬 최소 저장만 허용하고, 계정 연결 전 서버 전송은 하지 않는다.
-- App Check 적용 후 Cloud Functions 경유로만 쓰기 처리한다.
+- 쓰기는 Workers API로만 처리하고 Rate Limiting과 App Attest/Play Integrity 검증을 적용한다.
 
 ## 남은 결정
 

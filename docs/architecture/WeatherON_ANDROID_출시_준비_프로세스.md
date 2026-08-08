@@ -48,7 +48,7 @@ Base44 관련:
 - production 제출은 `AAB` 기준으로 준비한다.
 - 실제 단말 공유/내부 검증은 `APK` preview 빌드로 먼저 진행한다.
 - Play Console 계정 유형이 개인 신규 계정이면 최소 14일 테스트 기간을 일정에 반영한다.
-- 날씨/장소 provider 키는 앱에 넣지 않고 서버 환경변수 또는 Secret Manager에만 둔다.
+- 날씨/장소 provider 키는 앱에 넣지 않고 로컬 서버 환경변수 또는 Cloudflare Worker Secrets에만 둔다.
 
 ---
 
@@ -201,7 +201,7 @@ npm run check:eas-production-build-status -- <eas-build-id>
 | D1 | KMA 키 만료/연장 운영 캘린더 등록 | 진행 필요 |
 | D2 | Kakao Local API 서버 환경변수 운영 반영 | 로컬 smoke 통과 |
 | D3 | Google Maps Geocoding 키 발급 여부 결정 | 해외 목적지 실제 연동 시. 비용 기준은 `WeatherON_MAP_PROVIDER_COST_COMPARISON.md` |
-| D4 | Firebase/Cloud Functions/Secret Manager 도입 | 계정/동기화/운영 배포 시 |
+| D4 | Cloudflare Workers·D1·R2·Worker Secrets 운영 구성 | 계정/동기화/운영 배포 시 |
 | D5 | API 키 앱 미노출 검증 | `check:android-release` 통과 |
 
 현재 활성 API:
@@ -213,7 +213,7 @@ npm run check:eas-production-build-status -- <eas-build-id>
 - Google Maps Geocoding API
 - Google Places API
 - Mapbox Geocoding/Search API(비용 절감 대안. 현재 키 발급 불필요)
-- Firebase/Cloud Functions/Secret Manager
+- Cloudflare Workers/D1/R2/Worker Secrets
 - AdMob
 - Kakao Directions API
 - Google Routes API
@@ -222,7 +222,7 @@ npm run check:eas-production-build-status -- <eas-build-id>
 운영 원칙:
 - `EXPO_PUBLIC_*`에 외부 provider 키를 넣지 않는다.
 - 앱은 `/weather/*`, `/places/search` 내부 adapter만 호출한다.
-- 운영 배포 전 `apps/server/.env.local` 기반 로컬 키를 Secret Manager로 이관한다.
+- 운영 배포 전 `apps/server/.env.local` 기반 로컬 키를 Cloudflare Worker Secrets로 이관한다.
 - 국내는 Kakao/T-map, 해외는 Google Maps를 기준으로 한다. Mapbox는 Google Maps 월 비용이 커질 때만 대안 PoC로 검토한다.
 
 ### Phase E. Android QA

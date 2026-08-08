@@ -9,3 +9,10 @@ WEATHER_TIMEOUT_MS = "8000"
 WEATHER_CACHE_TTL_MS = "600000"
 PLACE_CACHE_TTL_MS = "1800000"
 ROUTE_CACHE_TTL_MS = "600000"
+APPLE_CLIENT_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
+WEATHERON_TERMS_VERSION = "2026-08-08"
+
+[[d1_databases]]
+binding = "WEATHERON_DB"
+database_name = "weatheron-users"
+migrations_dir = "apps/server/migrations"

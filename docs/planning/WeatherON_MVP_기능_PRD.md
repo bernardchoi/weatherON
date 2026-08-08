@@ -1,6 +1,6 @@
 # WeatherON — MVP 기능 PRD
 **Feature Set: MVP Core Product**
-Version 1.1 · July 2026 · Daehyeon
+Version 1.2 · August 2026 · Daehyeon
 
 ---
 
@@ -93,10 +93,10 @@ UI 구현 기준은 `docs/design/WeatherON_UI_Design_Spec.md`를 따른다.
 | 영역 | ADR 결정 |
 |---|---|
 | 앱 | React Native + Expo Dev Client + TypeScript |
-| 날씨 | 한국 KMA, 일본/글로벌 Open-Meteo |
+| 날씨 | iOS WeatherKit 전용, Android 한국 KMA, Android 해외 Open-Meteo |
 | 장소 검색 | 한국 Kakao Local, 글로벌 Google Maps Geocoding |
-| 룰엔진 | TypeScript deterministic rule engine, 앱/Cloud Functions 공통 shared 모듈 |
-| 백엔드/계정 | Firebase Auth + Cloud Functions + Firestore + FCM + Secret Manager + App Check |
+| 룰엔진 | TypeScript deterministic rule engine, 앱/Cloudflare Workers 공통 shared 모듈 |
+| 백엔드/계정 | Cloudflare Workers + D1 + R2 + Worker Secrets + 내부 WeatherON 세션 |
 
 ---
 
@@ -282,6 +282,7 @@ type AccountConsentState = {
 - 계정 미연결 상태에서는 저장 버튼 탭 시 A2로 이동하고, 완료 후 원래 화면으로 복귀한다.
 - 권한 거부 상태에서도 앱 내 추천과 수동 위치 검색은 유지한다.
 - 계정 연결 직후 권한을 나중에 설정해도 홈 진입은 막지 않고, 수동 위치/푸시 대기 상태로 운영한다.
+- 계정·인증·동기화의 서버 원본, Provider 연결, 데이터 범위, 완료 기준은 `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`를 따른다.
 
 ---
 
@@ -291,8 +292,9 @@ type AccountConsentState = {
 
 **요구사항**
 
-- 한국은 KMA/공공데이터 기반을 우선으로 한다.
-- 일본/일반 해외는 Open-Meteo 계열 글로벌 날씨를 1차 기준으로 한다.
+- iOS 날씨는 국내외 모두 WeatherKit만 사용한다.
+- Android 한국은 KMA/공공데이터 기반을 사용한다.
+- Android 일본/일반 해외는 Open-Meteo 계열 글로벌 날씨를 사용한다.
 - 장소 검색은 한국 Kakao Local 우선, 해외 Google Maps Geocoding 우선으로 설계한다.
 - 현재 빌드에 필요한 키가 없는 API는 `docs/architecture/WeatherON_API_연동_대기목록.md`에 기록하고 fixture/고정값 fallback으로 화면 검증을 계속한다.
 - 현재 위치, 검색 위치, 목적지 위치 모두 `WeatherSnapshot`으로 정규화한다.
@@ -570,15 +572,16 @@ type AccountConsentState = {
 
 - 프리셋 옷장 기본 세트 수량
 - 법무 검토 후 정책 문구 최종화
-- KMA/Open-Meteo/Google Maps/Firebase 실제 운영 쿼터와 비용 재산정
+- KMA/Open-Meteo/Google Maps/Cloudflare Workers·D1·R2 실제 운영 쿼터와 비용 재산정
 - Provider별 Expo Dev Client 호환성 PoC
 
 ## 9. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-08 | v1.2. Cloudflare Workers·D1 계정 구조와 계정·인증·동기화 기준 문서 반영. iOS WeatherKit 전용 및 Android 지역별 Provider 정책 명시 |
 | 2026-07-03 | 통합 디자인 스펙 참조 추가. MVP 기능 검증 우선순위와 디자인 스펙 우선순위 분리 |
 | 2026-07-03 | 현재 구현 기준 반영. H1/G1/M1 기능 검증 우선순위, 숨김 라우트, G1 empty state, MY warning/info 톤, 탭 아이콘 21px 기준 추가 |
 | 2026-06 | v1.0 작성. MVP 기능 범위, 데이터 구조, 계정/권한/알림/목적지 케어 기준 정의 |
 
-*WeatherON MVP 기능 PRD v1.1 · July 2026*
+*WeatherON MVP 기능 PRD v1.2 · August 2026*

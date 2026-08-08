@@ -17,10 +17,16 @@ module.exports = ({ config }) => {
     ...new Set([
       ...(expo.plugins ?? []),
       "expo-font",
+      "expo-apple-authentication",
+      "expo-secure-store",
       "expo-sqlite",
       "expo-status-bar",
     ]),
   ];
+  expo.ios = {
+    ...expo.ios,
+    usesAppleSignIn: true,
+  };
 
   if (isDevelopmentBuild) {
     expo.name = "WeatherON Dev";

@@ -27,7 +27,7 @@ function buildSlides21_29(pptx) {
     });
 
     s.addText('BACKEND · AI', { x: 5.2, y: 1.5, w: 4.3, h: 0.25, fontFace: FONT_MONO, fontSize: 10, color: COLORS.sky, charSpacing: 1 });
-    const be = ['Cloud Functions (Node.js)', 'Firebase Auth', 'Firestore', 'Secret Manager', 'TypeScript 룰엔진(shared)'];
+    const be = ['Cloudflare Workers', 'WeatherON Auth', 'Cloudflare D1', 'Worker Secrets / R2', 'TypeScript 룰엔진(shared)'];
     be.forEach((c, i) => {
       const x = 5.2 + (i % 2) * 2.25;
       const y = 1.78 + Math.floor(i / 2) * 0.42;
@@ -384,9 +384,9 @@ function buildSlides21_29(pptx) {
     });
 
     const steps = [
-      { no: '01', t: '개발 리소스 배정', d: 'React Native + Expo 앱 1~2명, Firebase/Cloud Functions 백엔드 협업 인력 확정' },
+      { no: '01', t: '개발 리소스 배정', d: 'React Native + Expo 앱 1~2명, Cloudflare Workers/D1 백엔드 협업 인력 확정' },
       { no: '02', t: '법무·정책 문서 준비', d: '개인정보처리방침·이용약관·위치기반서비스 이용약관 — AdMob 심사 선제 대응' },
-      { no: '03', t: 'API 키 및 도메인 확보', d: '카카오·Google Maps·Firebase·AdMob 계정 개설, weatheron.kr 도메인 등록' },
+      { no: '03', t: 'API 키 및 도메인 확보', d: '카카오·Google Maps·Cloudflare·AdMob 계정 개설, weatheron.kr 도메인 등록' },
       { no: '04', t: 'Phase 1 MVP 개발 착수', d: '핵심 날씨 + ON Square Lite + 인증/정책 + 신고·차단·스팸 제한 (M1~M3)' },
       { no: '05', t: '베타 테스트 & 정식 출시 준비', d: '핵심 날씨·ON Square Lite 통합 베타 → 동시 출시, Mail·CP샵은 출시 후 순차 개발' },
     ];

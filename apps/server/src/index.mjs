@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleProxyRoute, PROXY_TOKEN_HEADER } from "./proxyCore.mjs";
+import { handleAccountRoute, isAccountRoute } from "./authCore.mjs";
 
 const SERVER_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const ROOT_DIR = resolve(SERVER_DIR, "../..");
@@ -27,6 +28,17 @@ const server = createServer(async (request, response) => {
   }
 
   try {
+    if (isAccountRoute(url.pathname)) {
+      const body = await readRequestBody(request);
+      const webRequest = new Request(url, {
+        method: request.method,
+        headers: normalizeRequestHeaders(request.headers),
+        ...(request.method === "GET" || request.method === "HEAD" ? {} : { body }),
+      });
+      const result = await handleAccountRoute(webRequest, process.env);
+      sendJson(response, result.status, result.payload);
+      return;
+    }
     if (request.method !== "GET") {
       sendJson(response, 405, { error: "method_not_allowed" });
       return;
@@ -58,8 +70,28 @@ function sendJson(response, status, payload) {
 
 function setCorsHeaders(response) {
   response.setHeader("access-control-allow-origin", "*");
-  response.setHeader("access-control-allow-methods", "GET, OPTIONS");
-  response.setHeader("access-control-allow-headers", `content-type, ${PROXY_TOKEN_HEADER}`);
+  response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
+  response.setHeader("access-control-allow-headers", `authorization, content-type, ${PROXY_TOKEN_HEADER}`);
+}
+
+function normalizeRequestHeaders(headers) {
+  const normalized = new Headers();
+  for (const [name, value] of Object.entries(headers)) {
+    if (Array.isArray(value)) value.forEach((item) => normalized.append(name, item));
+    else if (typeof value === "string") normalized.set(name, value);
+  }
+  return normalized;
+}
+
+async function readRequestBody(request) {
+  const chunks = [];
+  let totalBytes = 0;
+  for await (const chunk of request) {
+    totalBytes += chunk.length;
+    if (totalBytes > 32 * 1024) throw new Error("request_too_large");
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 function loadEnvFile(path) {

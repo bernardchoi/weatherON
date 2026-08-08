@@ -1,37 +1,49 @@
-import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
-import type { AccountGateState } from "../state/useWeatherOnAppState";
+import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type AccountConnectScreenProps = {
   gate: AccountGateState | null;
-  onComplete: () => void;
+  authStatus: AccountAuthStatus;
+  authMessage: string | null;
+  onSignInWithApple: () => Promise<void>;
   onCancel: () => void;
 };
 
 type ProviderTone = "kakao" | "naver" | "line" | "google" | "apple" | "email";
 
-const primaryProviders: { id: ProviderTone; label: string }[] = [
-  { id: "kakao", label: "카카오로 계속" },
-  { id: "naver", label: "네이버로 계속" },
-];
-
 const extraProviders: { id: ProviderTone; label: string }[] = [
-  { id: "line", label: "LINE으로 계속" },
-  { id: "google", label: "Google로 계속" },
-  { id: "apple", label: "Apple로 계속" },
-  { id: "email", label: "이메일 코드로 계속" },
+  { id: "kakao", label: "카카오 로그인 · 준비 중" },
+  { id: "naver", label: "네이버 로그인 · 준비 중" },
+  { id: "line", label: "LINE 로그인 · 준비 중" },
+  { id: "google", label: "Google 로그인 · 준비 중" },
+  { id: "email", label: "이메일 로그인 · 준비 중" },
 ];
 
-export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConnectScreenProps) {
+export function AccountConnectScreen({ gate, authStatus, authMessage, onSignInWithApple, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const [showOtherMethods, setShowOtherMethods] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const resumeLabel = gate?.resumeLabel ?? "준비 설정";
   const destinationName = gate?.selectedDestinationName;
+  const isSigningIn = authStatus === "signing-in";
+
+  useEffect(() => {
+    let active = true;
+    if (Platform.OS !== "ios") return;
+    void AppleAuthentication.isAvailableAsync().then((available) => {
+      if (active) setAppleAvailable(available);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -73,8 +85,8 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
               <ConnectGlyph color={theme.sky} />
             </View>
             <View style={styles.heroCopy}>
-              <Text style={[styles.heroKicker, { color: theme.sky }]}>바로 연결</Text>
-              <Text style={[styles.heroTitle, { color: theme.text }]}>계정 선택</Text>
+              <Text style={[styles.heroKicker, { color: theme.sky }]}>안전한 계정 연결</Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>Apple로 계속</Text>
             </View>
           </View>
 
@@ -86,15 +98,29 @@ export function AccountConnectScreen({ gate, onComplete, onCancel }: AccountConn
           ) : null}
 
           <View style={styles.providerList}>
-            {primaryProviders.map((provider) => (
-              <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight + 12} onPress={onComplete} theme={theme} featured />
-            ))}
+            {appleAvailable ? (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                buttonStyle={theme.name === "dark" ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={radius.md}
+                style={[styles.appleButton, { height: layout.accountProviderMinHeight + 12, opacity: isSigningIn ? 0.6 : 1 }]}
+                onPress={() => {
+                  if (!isSigningIn) void onSignInWithApple();
+                }}
+              />
+            ) : (
+              <View style={[styles.unavailablePanel, { minHeight: layout.accountProviderMinHeight + 12, backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                <Text style={[styles.unavailableText, { color: theme.muted }]}>Apple 로그인은 iOS 실기기 빌드에서 사용할 수 있어요</Text>
+              </View>
+            )}
+            {isSigningIn ? <Text style={[styles.authStatus, { color: theme.sky }]}>Apple 계정 확인 중</Text> : null}
+            {authMessage ? <Text style={[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
           </View>
         </View>
 
         {showOtherMethods ? (
           <View style={styles.providerList}>
-            {extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} onPress={onComplete} theme={theme} />)}
+            {extraProviders.map((provider) => <ProviderButton key={provider.id} provider={provider} minHeight={layout.accountProviderMinHeight} theme={theme} disabled />)}
           </View>
         ) : null}
 
@@ -120,19 +146,24 @@ function ProviderButton({
   onPress,
   theme,
   featured = false,
+  disabled = false,
 }: {
   provider: { id: ProviderTone; label: string };
   minHeight: number;
-  onPress: () => void;
+  onPress?: () => void;
   theme: AppTheme;
   featured?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
       style={[
         styles.providerButton,
+        disabled ? styles.providerButtonDisabled : null,
         {
           minHeight,
           backgroundColor: featured ? theme.cardMuted : theme.cardStrong,
@@ -278,6 +309,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  providerButtonDisabled: {
+    opacity: 0.56,
+  },
+  appleButton: {
+    width: "100%",
+  },
+  unavailablePanel: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+  },
+  unavailableText: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+  authStatus: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800",
   },
   providerIcon: {
     width: 28,

@@ -6,6 +6,8 @@
     <true/>
     <key>CFBundleDevelopmentRegion</key>
     <string>ko</string>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
     <key>CFBundleDisplayName</key>
     <string>WeatherON</string>
     <key>CFBundleExecutable</key>

@@ -44,7 +44,7 @@ Geocoding 단순 비교용 예시다. Places API, 지도 표시, 자동완성, D
 3. 자동완성/검색 입력은 debounce, 최소 글자 수, 서버 캐시를 적용한다.
 4. 같은 검색어/좌표 결과는 서버에서 캐시한다.
 5. Mapbox는 비용 압박이 실제로 발생하거나 Google Places 비용이 과도할 때 대안 실험으로 검토한다.
-6. API 키는 앱에 직접 넣지 않고 서버 프록시/Secret Manager 계층에서만 사용한다.
+6. API 키는 앱에 직접 넣지 않고 서버 프록시/Cloudflare Worker Secrets 계층에서만 사용한다.
 
 ## 5. 재검토 트리거
 

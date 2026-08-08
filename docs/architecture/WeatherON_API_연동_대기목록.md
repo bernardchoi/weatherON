@@ -9,10 +9,10 @@
 |---|---|---|---|
 | KMA 단기예보 조회서비스 | 활성 | 서버 weather proxy, live smoke | Decoding 서비스키 사용. 서버 프록시는 TTL 캐시와 이전 성공값 fallback 적용. 현재 upstream 429 발생 가능성이 있어 활용기간/쿼터 확인 필요 |
 | KMA 기상특보 조회서비스 | 연동 대기 | 공식 특보 발효 확인 | 현재 앱은 단기예보 기준으로 폭염·호우 주의보/경보 도달 예상만 로컬 알림 처리. 공식 발효 특보는 `WthrWrnInfoService`와 특보구역 매핑 추가 후 우선 적용 필요 |
-| Kakao Local API | 활성 | `/places/search?countryCode=KR` | 국내 장소 검색 우선 provider. `WEATHERON_PLACE_SMOKE=1` 통과. REST API 키는 서버 환경변수/Secret Manager에만 보관 |
-| Open-Meteo | 활성 | 글로벌/보조 날씨 | 별도 키 없음. 서버 adapter 경유. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과 |
+| Kakao Local API | 활성 | `/places/search?countryCode=KR` | 국내 장소 검색 우선 provider. `WEATHERON_PLACE_SMOKE=1` 통과. REST API 키는 서버 환경변수/Cloudflare Worker Secrets에만 보관 |
+| Open-Meteo | 활성 | Android 해외 날씨 | 별도 키 없음. 서버 adapter 경유. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과 |
 
-## 추후 키 필요
+## 추후 운영 연동 필요
 
 | API | 필요 시점 | 용도 | 현재 fallback |
 |---|---|---|---|
@@ -22,7 +22,12 @@
 | Kakao Directions API | MVP 1 출발시간 역산 실측 고도화 시 | 국내 목적지 자차/자동 소요시간 계산 | 사용자 선택 이동수단 + 거리 기반 fallback |
 | Google Routes API | 해외 이동시간 고도화 검토 시 | 해외 도시/공항 이동시간 | 고정값 처리 |
 | T-map API | Phase 4 국내 정밀 소요시간 검토 시 | 국내 주행/대중교통 소요시간 정밀화 | Kakao Directions 또는 사용자 선택 이동수단 fallback |
-| Firebase/Cloud Functions/Secret Manager | 계정·동기화·운영 배포 시 | 서버 adapter, Secret 보관, 계정 동기화 | 로컬 상태/로컬 proxy |
+| Cloudflare D1 계정 DB | 원격 계정 개통 시 | 사용자·인증 연결·challenge·session·약관 | 로컬 migration과 통합 테스트 완료. 원격 D1 생성·migration 미완료 |
+| Sign in with Apple | iOS 실제 로그인 개통 시 | Apple credential 검증과 WeatherON 세션 발급 | 앱·Worker 코드 구현. Apple capability와 실기기 검증 미완료 |
+| 이메일 코드/Google 로그인 | Android·다기기 복원 개통 시 | 플랫폼 공통 로그인과 계정 복구 | 미구현. 자동 이메일 병합 금지, 명시적 계정 연결 필요 |
+| Cloudflare D1 동기화 API | 로그인 이후 계정 가치 검증 시 | 목적지·옷장·코디·설정·알림 조건 복원 | 미구현. `WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md` 기준 적용 |
+| Cloudflare R2 | 사용자 옷 사진 업로드를 승인할 때 | 계정 이미지 자산 | MVP 초기 보류. 메타데이터 동기화 우선 |
+| App Attest/Play Integrity | 운영 인증 API 보호 시 | 정식 앱 요청 검증 | 미구현. Rate Limiting과 함께 운영 전 적용 |
 | AdMob | MVP 사용 지표 확인 후 광고 실험 전 | 배너/네이티브 광고 | mock slot |
 | Google Play Console / EAS Submit 권한 | Android 프로덕션 제출 시 | AAB 업로드, 내부/폐쇄 테스트, 프로덕션 배포 | EAS Build 산출물 수동 업로드 |
 | Google Calendar API | 프리미엄 캘린더 연동 시 | 코디 캘린더, 일정 기반 알림 | 앱 내부 일정 상태 |

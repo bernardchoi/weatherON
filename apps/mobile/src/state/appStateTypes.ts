@@ -25,6 +25,7 @@ export type StyleGender = "all" | "women" | "men";
 export type AgeBand = "10-20" | "20-30" | "30-40" | "40-50" | "50+";
 export type FitPreference = "standard" | "relaxed" | "formal" | "outdoor";
 export type SmartCareScenario = "commute" | "outing" | "travel";
+export type AccountAuthStatus = "restoring" | "idle" | "signing-in" | "saving-terms" | "ready" | "offline" | "error" | "signing-out";
 export type PermissionReturnRouteId = P0RouteId | OnboardingRouteId;
 export type AccountGateReturnRouteId = P0RouteId | "A4";
 export type DestinationAddReturnRouteId = P0RouteId | "O6";

@@ -117,6 +117,9 @@ export function AppNavigator() {
     onboardingCompleted: appState.onboardingCompleted,
     isWeatherLoading: appState.isWeatherLoading,
     accountLinked: appState.accountLinked,
+    accountProfile: appState.accountProfile,
+    accountAuthStatus: appState.accountAuthStatus,
+    accountAuthMessage: appState.accountAuthMessage,
     termsRequiredAccepted: appState.termsRequiredAccepted,
     locationReady: appState.locationReady,
     permissionReady: appState.permissionReady,
@@ -232,10 +235,22 @@ export function AppNavigator() {
       {route === "O5" ? <SmartCareOnboardingScreen {...screenProps} /> : null}
       {route === "O6" ? <OnboardingDestinationScreen {...screenProps} /> : null}
       {route === "A2" ? (
-        <AccountConnectScreen gate={appState.gate} onCancel={appState.cancelAccountGate} onComplete={appState.completeAccountLink} />
+        <AccountConnectScreen
+          gate={appState.gate}
+          authStatus={appState.accountAuthStatus}
+          authMessage={appState.accountAuthMessage}
+          onCancel={appState.cancelAccountGate}
+          onSignInWithApple={appState.signInWithApple}
+        />
       ) : null}
       {route === "A3" ? (
-        <TermsConsentScreen gate={appState.gate} onCancel={appState.cancelAccountGate} onComplete={appState.completeTerms} />
+        <TermsConsentScreen
+          gate={appState.gate}
+          authStatus={appState.accountAuthStatus}
+          authMessage={appState.accountAuthMessage}
+          onCancel={appState.cancelAccountGate}
+          onComplete={appState.completeTerms}
+        />
       ) : null}
       {route === "O3" ? (
         <PermissionGateScreen

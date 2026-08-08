@@ -913,7 +913,7 @@
         </div>
         <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-sub); line-height:1.8;">
           <strong style="color:var(--ink);">구현 메모:</strong> 최초 실행 시 OS/기기 언어를 자동 감지해 한국어·일본어·영어 중 지원 언어를 즉시 적용하고, 미지원 언어는 영어로 fallback한다. 설정에는 "기기 설정 따름"을 기본값으로 두고 한국어/日本語/English 수동 선택을 제공한다. i18n 프레임워크(react-i18next 등)는 Phase 1부터 구조에 반영해 전체 UI 문자열을 처음부터 분리 — 이후 언어 추가가 코드 변경 없이 번역 리소스 추가만으로 가능하도록 설계.
-          날씨 데이터는 Open-Meteo가 이미 전세계를 커버해 일본·해외 지역에도 별도 연동 없이 대응 가능 (한국만 KMA 보정 추가).
+          날씨 데이터는 iOS 국내외 WeatherKit 전용, Android 한국 KMA, Android 일본·일반 해외 Open-Meteo 기준으로 분기한다.
           로그인은 현재 여행 위치보다 계정 환경을 우선해 자동 추천한다 — 스토어 국가, SIM/전화 국가, OS 지역, 기기 언어, 타임존, 현재 위치 순서로 판단하고 한국은 카카오·네이버, 일본은 LINE, 일반 해외는 Google·Apple·이메일 코드 중심으로 노출한다.
           언어와 국가/지역은 분리한다. 일본에 있는 영어 기기 사용자는 영어 UI를 보고, 한국에 여행 온 일본어 기기 사용자는 일본어 UI를 본다. 일본어 기기·일본 스토어 사용자가 한국 여행 중 가입하면 현재 위치가 한국이어도 LINE/Apple/Google을 우선 추천한다. 가입 화면에서 국가 선택을 먼저 요구하지 않고, 국가/지역 선택 버튼도 노출하지 않는다. 사용자는 "다른 방법 보기"에서 추가 로그인 수단만 확인한다.
           중국권 등 Google/Apple/LINE 접근성이 제한되거나 실명·데이터 규제가 큰 특수 환경 국가는 이번 1차 글로벌 범위에서 제외하고 별도 진출 전략으로 분리한다.
@@ -1904,7 +1904,7 @@
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
         <div style="background:#fff; border-radius:12px; border:1px solid var(--border); padding:18px 16px;">
           <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">기술 구현</div>
-          <div style="font-size:12px; color:var(--text-sub); line-height:1.7;">Open-Meteo 글로벌 커버리지로 해외 도시 날씨 지원. 기존 코디 매트릭스를 도시별 날짜에 그대로 적용. 짐 체크리스트는 날씨 파라미터 기반 룰 테이블로 구현 — 추가 API 불필요</div>
+          <div style="font-size:12px; color:var(--text-sub); line-height:1.7;">iOS는 WeatherKit, Android 해외는 Open-Meteo로 도시 날씨를 지원. 기존 코디 매트릭스를 도시별 날짜에 그대로 적용. 짐 체크리스트는 날씨 파라미터 기반 룰 테이블로 구현 — 추가 API 불필요</div>
         </div>
         <div style="background:#fff; border-radius:12px; border:1px solid var(--border); padding:18px 16px;">
           <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">Phase 위치</div>
@@ -2977,7 +2977,7 @@
 
     <div class="concept-strip" style="margin-bottom:20px;"><p style="font-size:13px;">
       <strong>MVP 구현 전 기술 ADR 확정 완료.</strong>
-      앱은 React Native + Expo Dev Client + TypeScript, 백엔드는 Firebase/Google Cloud, 추천은 TypeScript 룰엔진, 날씨는 한국 KMA·일본/글로벌 Open-Meteo 기준으로 구현한다.
+      앱은 React Native + Expo Dev Client + TypeScript, 백엔드는 Cloudflare Workers + D1 + R2, 추천은 TypeScript 룰엔진, 날씨는 iOS WeatherKit·Android 한국 KMA·Android 해외 Open-Meteo 기준으로 구현한다.
       세부 결정 근거는 <strong>docs/architecture/WeatherON_MVP_기술_ADR.md</strong>를 따른다.
     </p></div>
 
@@ -2997,11 +2997,11 @@
       <div>
         <div style="font-size:12px; font-family:'DM Mono',monospace; color:var(--rain); letter-spacing:0.12em; margin-bottom:12px;">BACKEND · AI</div>
         <div class="tech-row">
-          <div class="tech-chip">Cloud Functions <span>Node.js</span></div>
-          <div class="tech-chip">Firebase Auth</div>
-          <div class="tech-chip">Firestore</div>
+          <div class="tech-chip">Cloudflare Workers</div>
+          <div class="tech-chip">WeatherON Auth Session</div>
+          <div class="tech-chip">Cloudflare D1</div>
           <div class="tech-chip">FCM <span>푸시</span></div>
-          <div class="tech-chip">Secret Manager</div>
+          <div class="tech-chip">Worker Secrets</div>
           <div class="tech-chip">TypeScript 룰엔진 <span>shared</span></div>
         </div>
       </div>
@@ -3030,11 +3030,11 @@
         <div style="flex:1; min-width:0;">
           <div style="background:#E8F5EC; border-radius:10px; padding:12px 14px; margin-bottom:8px; border:1px solid rgba(58,191,160,0.3);">
             <div style="font-size:11px; font-weight:700; color:var(--fresh-darker); margin-bottom:4px;">🇰🇷 국내</div>
-            <div style="font-size:11px; color:var(--fresh-darker); line-height:1.6;">카카오 Local API 장소 검색<br>카카오 Directions API 소요시간<br>T-map API (Phase 4+ 전환)<br>Open-Meteo + KMA 날씨</div>
+            <div style="font-size:11px; color:var(--fresh-darker); line-height:1.6;">카카오 Local API 장소 검색<br>카카오 Directions API 소요시간<br>T-map API (Phase 4+ 전환)<br>iOS WeatherKit · Android KMA</div>
           </div>
           <div style="background:#E8EEFF; border-radius:10px; padding:12px 14px; border:1px solid rgba(74,143,212,0.3);">
             <div style="font-size:11px; font-weight:700; color:var(--sky-strong); margin-bottom:4px;">🌍 해외</div>
-            <div style="font-size:11px; color:var(--sky-strong); line-height:1.6;">Google Maps Geocoding<br>소요시간 → 고정값 처리<br>Open-Meteo 글로벌 날씨</div>
+            <div style="font-size:11px; color:var(--sky-strong); line-height:1.6;">Google Maps Geocoding<br>소요시간 → 고정값 처리<br>iOS WeatherKit · Android Open-Meteo</div>
           </div>
         </div>
         <div style="flex-shrink:0; display:flex; align-items:center; padding:0 8px; color:var(--mist); font-size:18px; margin-top:14px;">→</div>
@@ -3066,8 +3066,8 @@
             <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">실주행 기반 소요시간 — 일 1,000건 무료 · 초과 건당 10원 · 프리미엄 차별화 포인트</div>
           </div>
           <div style="background:#F0FBF7; border-radius:8px; padding:10px 13px;">
-            <div style="font-size:12px; font-weight:700; color:var(--ink);">KMA + Open-Meteo</div>
-            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">국내 날씨는 기상청 우선, 글로벌은 Open-Meteo 기준</div>
+            <div style="font-size:12px; font-weight:700; color:var(--ink);">WeatherKit + KMA</div>
+            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">iOS 국내외 WeatherKit 전용, Android 국내 KMA 기준</div>
           </div>
         </div>
       </div>
@@ -3091,8 +3091,8 @@
             <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">비행기 = 공항 3시간 전 출발 · 도시 간 = 대중교통 일반값 · Phase 4~에서 Google Routes API 연동 검토</div>
           </div>
           <div style="background:#EEF3FF; border-radius:8px; padding:10px 13px;">
-            <div style="font-size:12px; font-weight:700; color:var(--ink);">Open-Meteo 글로벌</div>
-            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">전 세계 날씨 데이터 — 무료 API 한도 기준 · 해외 여행 도시 커버</div>
+            <div style="font-size:12px; font-weight:700; color:var(--ink);">WeatherKit + Open-Meteo</div>
+            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">iOS WeatherKit 전용 · Android 해외 Open-Meteo 기준</div>
           </div>
         </div>
       </div>
@@ -3156,7 +3156,7 @@
           </tr>
           <tr>
             <td style="padding:10px 16px; font-weight:600; color:var(--fresh);">Open-Meteo</td>
-            <td style="padding:10px 14px; color:var(--mist);">국내+해외 날씨 전체</td>
+            <td style="padding:10px 14px; color:var(--mist);">Android 해외 날씨</td>
             <td style="padding:10px 14px; text-align:center; color:var(--fresh); font-weight:700;">무료 한도 기준</td>
             <td style="padding:10px 14px; text-align:center; color:var(--fresh);">—</td>
             <td style="padding:10px 14px; text-align:center;"><span style="background:#D4F5EC; color:var(--fresh-darker); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">P1~</span></td>
@@ -3171,7 +3171,7 @@
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; font-size:12.5px;">
         <div>
           <strong style="color:var(--fresh); display:block; margin-bottom:4px;">Phase 1~2 (MAU ~5천)</strong>
-          <div style="color:var(--mist); line-height:1.7;">카카오 Local·Directions 일 1만건 무료 범위 내 · Open-Meteo 무료<br>→ <strong style="color:var(--fresh);">API 비용 ₩0</strong></div>
+          <div style="color:var(--mist); line-height:1.7;">카카오 Local·Directions 무료 범위 · Android KMA/Open-Meteo · iOS WeatherKit 멤버십/한도 별도 관리<br>→ <strong style="color:var(--fresh);">사용량 기준 재확인</strong></div>
         </div>
         <div>
           <strong style="color:var(--dawn); display:block; margin-bottom:4px;">Phase 3 (MAU ~1만 · 여행 플래너 추가)</strong>
@@ -3197,9 +3197,14 @@
     <div class="concept-strip" style="margin-bottom:20px;"><p style="font-size:14px;">
       <strong>신규 사용자는 기기 언어 자동 적용 후 스플래시를 거쳐 바로 홈으로 진입한다.</strong>
       회원가입은 첫 관문이 아니라 <strong class="green">저장·다기기 동기화·히스토리·여행 플래너·프리미엄 구독</strong>을 위한 선택.
-      모든 인증은 OAuth 2.0 + PKCE 표준 준수,
-      계정 세션은 <strong>Firebase Auth + Cloud Functions auth broker</strong> 기준으로 관리한다.
+      브라우저 기반 인증은 OAuth 2.0 + PKCE 표준을 따르고 네이티브 Apple 인증은 nonce/state와 identity token 서명을 검증하며,
+      계정 세션은 <strong>Cloudflare Workers auth broker + D1 token hash + 모바일 SecureStore</strong> 기준으로 관리한다.
+      구현 상태와 동기화 범위는 <strong>docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md</strong>를 따른다.
     </p></div>
+
+    <div style="margin:-6px 0 20px; padding:12px 16px; border-radius:12px; background:var(--cloud); border:1px solid var(--border); font-size:11.5px; color:var(--text-sub); line-height:1.7;">
+      2026-08-08 상태: Apple 로그인·D1 세션의 로컬 구현은 완료됐으나 원격 D1/Worker 개통, 실기기 Apple 로그인, 사용자 데이터 동기화, Android 공통 로그인, 회원 탈퇴·내보내기는 미완료다. 아래 계정 권리는 목표 상태이며 운영 완료 상태를 의미하지 않는다.
+    </div>
 
     <!-- Guest vs Account -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
@@ -3320,8 +3325,8 @@
           <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:12px;">🔐 토큰 관리</div>
           <ul style="list-style:none; font-size:12px; color:var(--text-sub); line-height:1.8;">
             <li>• <strong style="color:var(--ink);">OAuth 2.0 + PKCE</strong> — 모바일 앱 표준 (Authorization Code Flow)</li>
-            <li>• <strong style="color:var(--ink);">Cloud Functions auth broker</strong> — Provider 토큰 서버 교환</li>
-            <li>• <strong style="color:var(--ink);">Firebase Auth session</strong> — 앱 로그인 상태 기준</li>
+            <li>• <strong style="color:var(--ink);">Cloudflare Workers auth broker</strong> — Provider credential 서버 검증</li>
+            <li>• <strong style="color:var(--ink);">WeatherON opaque session</strong> — D1 token hash + 모바일 SecureStore 기준</li>
             <li>• <strong style="color:var(--ink);">Provider 토큰</strong> — 클라이언트 미전달, 서버 전용 보관</li>
             <li>• 세션 Payload에 PII(개인정보) 미포함 — user ID 중심으로 제한</li>
           </ul>
@@ -3376,7 +3381,7 @@
         </div>
         <div>
           <div style="font-weight:700; color:var(--warm); margin-bottom:4px;">만료 세션</div>
-          <div style="color:var(--text-sub); line-height:1.6;">Firebase Auth 세션 갱신 → 홈</div>
+          <div style="color:var(--text-sub); line-height:1.6;">WeatherON 세션 검증·복원 → 홈</div>
         </div>
         <div>
           <div style="font-weight:700; color:var(--mist); margin-bottom:4px;">세션 없음</div>

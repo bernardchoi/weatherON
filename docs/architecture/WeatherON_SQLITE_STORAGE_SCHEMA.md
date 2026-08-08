@@ -58,3 +58,22 @@ The old `app_values` table is treated as migration input only, not as the active
 
 New native app persistence must add or extend SQLite tables.
 Do not add new native JSON file storage or JSON blob storage for app state.
+
+## Account Sync Boundary
+
+SQLite remains the native local/offline store after account login. Cloudflare D1 is the server source of truth for cross-platform restoration.
+
+Sync candidates:
+
+- user-selected settings and style profile
+- wardrobe ownership and saved outfits
+- saved destinations, schedules, destination care, and alert conditions
+
+Device-local only:
+
+- location and notification permission state
+- weather response cache and provider fallback state
+- authentication tokens
+- transient route/form state and device-local notification read state
+
+Detailed merge, deletion, and account lifecycle rules are defined in `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`.

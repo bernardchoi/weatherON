@@ -8,6 +8,9 @@ import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
   accountLinked,
+  accountProfile,
+  accountAuthStatus,
+  accountAuthMessage,
   termsRequiredAccepted,
   onNavigate,
   onRequireAccount,
@@ -19,8 +22,8 @@ export function AccountManagementScreen({
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = accountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileMeta = accountReady ? "WeatherON ID" : needsTerms ? "필수 약관 대기" : "연결 전";
-  const statusLabel = accountReady ? "연결됨" : needsTerms ? "확인" : "게스트";
+  const profileMeta = accountReady ? (accountProfile?.email ?? "Apple 계정") : needsTerms ? "필수 약관 대기" : "연결 전";
+  const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결됨" : needsTerms ? "확인" : "게스트";
   const primaryLabel = accountReady ? "정책 보기" : needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "정책 및 법적 고지 보기" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
@@ -85,6 +88,7 @@ export function AccountManagementScreen({
               </View>
             </View>
             <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={1}>{profileMeta}</Text>
+            {accountAuthMessage ? <Text style={[styles.profileMeta, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }]} numberOfLines={2}>{accountAuthMessage}</Text> : null}
           </View>
         </View>
 

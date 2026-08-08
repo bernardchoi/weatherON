@@ -1,6 +1,6 @@
 # WeatherON — MVP 기술 ADR
 **Architecture Decision Record**
-Version 1.0 · June 2026
+Version 1.1 · August 2026
 
 ---
 
@@ -8,6 +8,7 @@ Version 1.0 · June 2026
 
 WeatherON MVP 구현 착수 전 모바일 앱 기술스택, 날씨/위치 API, 추천 룰엔진, 백엔드/계정 구조를 확정한다.
 본 ADR은 `docs/planning/WeatherON_MVP_기능_PRD.md`의 구현 기준 문서이며, MVP 1차 범위인 A/O/H/C/G1-G2/P/M/R 화면군을 대상으로 한다.
+계정·인증·동기화 세부 계약은 `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`를 따른다.
 
 ---
 
@@ -17,11 +18,11 @@ WeatherON MVP 구현 착수 전 모바일 앱 기술스택, 날씨/위치 API, �
 |---|---|---|
 | 앱 프레임워크 | React Native + Expo Dev Client + TypeScript | 채택 |
 | 1차 출시 플랫폼 | Android 우선, Google Play 기준 | 채택 |
-| 날씨 API | 한국 KMA, 일본/글로벌 Open-Meteo | 채택 |
+| 날씨 API | iOS WeatherKit 전용, Android 한국 KMA, Android 해외 Open-Meteo | 채택 |
 | 위치/장소 API | 한국 Kakao Local + T-map 전환 검토, 글로벌 Google Maps Platform | 채택 |
 | 룰엔진 | TypeScript deterministic rule engine | 채택 |
-| 백엔드 | Firebase/Google Cloud 기반 | 채택 |
-| 계정 | Firebase Auth + Cloud Functions auth broker + OAuth2/OIDC PKCE | 채택 |
+| 백엔드 | Cloudflare Workers + D1 + R2 | 채택 |
+| 계정 | Workers auth broker + 내부 WeatherON 세션 + OAuth2/OIDC | 채택 |
 
 ---
 
@@ -38,7 +39,7 @@ MVP 핵심은 복잡한 3D/게임 렌더링보다 날씨 데이터, 추천 카�
 
 - Expo Go가 아니라 Expo Dev Client/EAS 기준으로 개발한다.
 - 푸시, 딥링크, 소셜 로그인, 네이티브 권한, 앱 아이콘/스플래시 검증은 Dev Client 빌드에서 확인한다.
-- TypeScript를 앱, shared 룰엔진, Cloud Functions에서 공통 사용한다.
+- TypeScript를 앱, shared 룰엔진, Cloudflare Workers에서 공통 사용한다.
 
 ### Alternatives
 
@@ -69,8 +70,9 @@ WeatherON 추천 품질은 현재 위치/목적지 날씨, 강수, 바람, 체�
 
 | 범위 | 1차 API | 역할 |
 |---|---|---|
-| 한국 날씨 | 기상청 단기예보 조회서비스(KMA/공공데이터) | 현재/초단기/단기 예보 |
-| 일본/글로벌 날씨 | Open-Meteo | 현재/시간별/일별 예보 |
+| iOS 국내외 날씨 | WeatherKit | 현재/시간별/일별 예보 |
+| Android 한국 날씨 | 기상청 단기예보 조회서비스(KMA/공공데이터) | 현재/초단기/단기 예보 |
+| Android 일본/글로벌 날씨 | Open-Meteo | 현재/시간별/일별 예보 |
 | 한국 장소 검색 | Kakao Local | 국내 장소/주소 검색 |
 | 글로벌 장소 검색 | Google Maps Geocoding | 해외 목적지 검색 |
 
@@ -79,7 +81,7 @@ WeatherON 추천 품질은 현재 위치/목적지 날씨, 강수, 바람, 체�
 ### Data Flow
 
 1. 앱이 현재 위치 또는 목적지 좌표를 요청한다.
-2. Cloud Functions weather adapter가 국가/좌표 기준으로 KMA 또는 Open-Meteo를 호출한다.
+2. Cloudflare Worker weather adapter가 국가/좌표 기준으로 KMA, WeatherKit 또는 Open-Meteo를 호출한다.
 3. 원본 응답을 `WeatherSnapshot`으로 정규화한다.
 4. 정규화 결과를 캐시하고 앱, 룰엔진, 알림 작업이 같은 구조로 사용한다.
 
@@ -111,7 +113,7 @@ WeatherON 추천 품질은 현재 위치/목적지 날씨, 강수, 바람, 체�
 - 앱이 `countryCode`를 넘기지 않는 검색은 서버가 검색어 기반으로 KR/JP/GLOBAL을 추정한다.
 - 외부 장소 검색 키가 없으면 fixture 결과를 반환해 P1/G1/G2/P3 플로우를 계속 검증 가능하게 한다.
 - 검색 결과는 `PlaceSearchResult`로 정규화하고, 선택된 장소의 좌표/카테고리/timezone을 목적지 날씨와 목적지 케어에 반영한다.
-- `KAKAO_REST_API_KEY`, `GOOGLE_MAPS_API_KEY`는 서버 환경변수 또는 Secret Manager에만 보관한다.
+- `KAKAO_REST_API_KEY`, `GOOGLE_MAPS_API_KEY`는 로컬 서버 환경변수 또는 Cloudflare Worker Secrets에만 보관한다.
 - 아직 키/계정/약관 확인이 필요한 API는 `docs/architecture/WeatherON_API_연동_대기목록.md`에서 별도 추적한다.
 - Google Maps와 Mapbox 비용/키 필요성은 `WeatherON_MAP_PROVIDER_COST_COMPARISON.md`에서 추적한다. 현재 Mapbox 키는 발급하지 않는다.
 
@@ -121,9 +123,9 @@ WeatherON 추천 품질은 현재 위치/목적지 날씨, 강수, 바람, 체�
 - 해당 서비스키는 계속 사용하려면 공공데이터포털에서 일정 기간마다 활용기간 연장신청이 필요하다.
 - 운영 캘린더에 만료 30일 전, 7일 전 알림을 등록하고 만료 전에 연장 상태를 확인한다.
 - 연장 누락 또는 키 만료로 KMA 호출이 실패하면 마지막 성공 캐시를 `stale=true`로 표시하고 Open-Meteo/기본 위치 fallback 정책을 따른다.
-- 앱 런타임은 KMA 키를 직접 들고 있지 않고 서버 프록시 또는 Cloud Functions weather adapter를 통해 호출한다.
+- 앱 런타임은 KMA 키를 직접 들고 있지 않고 서버 프록시 또는 Cloudflare Worker weather adapter를 통해 호출한다.
 - 로컬 proxy smoke test는 `WEATHERON_PROXY_SMOKE=1 npm run check:weather-proxy`, adapter 직접 smoke test는 `WEATHERON_LIVE_SMOKE=1 npm run check:weather-live`로 확인한다.
-- 키는 `apps/server/.env.local`, 서버 환경변수, Secret Manager에만 보관하고 `EXPO_PUBLIC_*` 이름으로 저장하지 않는다.
+- 키는 `apps/server/.env.local`, 서버 환경변수, Cloudflare Worker Secrets에만 보관하고 `EXPO_PUBLIC_*` 이름으로 저장하지 않는다.
 
 ### Consequences
 
@@ -144,7 +146,7 @@ MVP는 “정확한 AI 추천”보다 사용자가 납득 가능한 일관된 �
 
 `TypeScript deterministic rule engine`을 채택한다.
 
-- 룰엔진은 `shared` 모듈로 분리해 React Native 앱과 Cloud Functions에서 같은 로직을 사용한다.
+- 룰엔진은 `shared` 모듈로 분리해 React Native 앱과 Cloudflare Workers에서 같은 로직을 사용한다.
 - MVP 룰은 기온, 체감온도, 일교차, 강수확률, 강수량, 바람, 목적지 카테고리, 스타일 태그, 옷장 보유 여부를 기준으로 한다.
 - ML/AI 개인화 추천은 MVP 이후 P2로 미룬다.
 
@@ -161,7 +163,7 @@ MVP는 “정확한 AI 추천”보다 사용자가 납득 가능한 일관된 �
 ### Execution Policy
 
 - 실시간 화면 렌더링용 추천은 앱에서 실행 가능해야 한다.
-- 푸시 알림, 예약 작업, 목적지 케어 갱신은 Cloud Functions에서 같은 룰엔진으로 실행한다.
+- 푸시 알림, 예약 작업, 목적지 케어 갱신은 Cloudflare Workers/Cron Triggers에서 같은 룰엔진으로 실행한다.
 - 룰 버전은 결과 payload에 포함해 추천 이력과 알림 판단을 추적한다.
 
 ### Consequences
@@ -181,37 +183,40 @@ WeatherON은 Guest 홈 우선 진입을 유지하되, 저장·동기화·알림 
 
 ### Decision
 
-`Firebase Auth + Cloud Functions + Firestore + FCM + Secret Manager + App Check`를 채택한다.
+`Cloudflare Workers + D1 + R2 + Worker Secrets`를 채택한다.
 
-- Cloud Functions는 OAuth2/OIDC + PKCE 기반 auth broker 역할을 한다.
-- Provider token은 클라이언트로 반환하지 않고 서버에서만 교환·보관·폐기한다.
-- 앱은 Firebase Auth session/custom token 기준으로 로그인 상태를 유지한다.
-- Firestore는 사용자별 데이터 저장소로 사용하고 Security Rules로 본인 데이터만 접근하게 한다.
-- FCM/APNs는 Cloud Functions를 통해 발송한다.
-- 제3자 API key와 Provider secret은 Secret Manager에서 관리한다.
+- Workers는 OAuth2/OIDC Provider 검증과 WeatherON 세션 발급을 담당한다.
+- Provider token은 클라이언트로 반환하지 않고 서버에서만 교환·검증·폐기한다.
+- 앱은 Worker가 발급한 opaque session token으로 로그인 상태를 유지하고 원문 토큰은 SecureStore에만 보관한다.
+- D1은 내부 WeatherON `userId`, 인증 연결, 약관, 세션, 사용자 동기화 메타데이터의 서버 원본이다.
+- R2는 향후 사용자 옷 사진 등 바이너리 자산이 실제로 필요할 때만 사용한다.
+- APNs/FCM 기기 토큰은 사용자와 기기를 분리한 레코드로 관리한다.
+- 제3자 API key와 Provider secret은 Cloudflare Worker Secrets에서 관리한다.
+- 세부 구현과 동기화 기준은 `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`를 따른다.
 
 ### Account State
 
 | 상태 | 저장 위치 | 정책 |
 |---|---|---|
 | Guest session | 앱 로컬 저장소 | 홈/코디/우산/목적지 미리보기 가능 |
-| Account session | Firebase Auth | 저장/동기화/알림 확장 가능 |
-| Wardrobe/Destination/Profile | Firestore | 계정 연결 후 영구 저장 |
+| Account session | SecureStore + D1 token hash | 저장/동기화/알림 확장 가능 |
+| Wardrobe/Destination/Profile | SQLite 로컬 + D1 서버 원본 | 계정 연결 후 다기기 복원 |
 | Provider token | 서버 전용 | 앱 미노출, 연결 해제 시 revoke |
-| Push token | Firestore 사용자 하위 컬렉션 | 알림 권한 동의 후 저장 |
+| Push token | D1 기기 레코드 | 알림 권한 동의 후 저장 |
 
 ### Security Policy
 
 - 앱 첫 실행에 계정 연결을 강제하지 않는다.
 - 계정 필요 액션에서 A2/A3를 호출하고 완료 후 원래 화면으로 복귀한다.
-- Firebase App Check로 비정상 클라이언트 요청을 차단한다.
-- 모든 서버 함수는 `context.auth.uid`와 요청 userId 일치를 검증한다.
-- 계정 삭제 시 Firestore 사용자 데이터, push token, provider 연결 정보를 함께 삭제한다.
+- iOS App Attest/DeviceCheck와 Android Play Integrity를 단계적으로 적용한다.
+- 모든 사용자 API는 검증된 세션의 내부 `userId`만 사용하고 요청 body의 userId를 신뢰하지 않는다.
+- 인증 API에는 IP·계정·기기 단위 Rate Limiting을 적용한다.
+- 계정 삭제 시 D1 사용자 데이터, 세션, push token, provider 연결, R2 자산을 함께 삭제한다.
 
 ### Consequences
 
-- MVP에서 별도 백엔드 서버를 크게 운영하지 않아도 인증, DB, 알림, 서버 작업을 구성할 수 있다.
-- Firebase 의존도가 생기므로 비용/쿼터/락인 리스크는 운영 문서에서 추적한다.
+- 기존 날씨 프록시와 같은 Worker 배포 경로에서 인증, DB, 알림, 서버 작업을 운영할 수 있다.
+- D1 용량·쿼터, R2 비용, Provider 정책과 Cloudflare 락인 리스크를 운영 문서에서 추적한다.
 - Provider별 세부 로그인 정책은 보안 정책서와 앱스토어 심사 기준에 맞춰 추가 검증이 필요하다.
 
 ---
@@ -221,7 +226,7 @@ WeatherON은 Guest 홈 우선 진입을 유지하되, 저장·동기화·알림 
 - 앱: React Native + Expo Dev Client + TypeScript
 - 상태 관리: Zustand 우선 검토, 서버 상태는 query 계열 라이브러리 도입 검토
 - 공통 모듈: `shared/weather`, `shared/rules`, `shared/types` 구조 권장
-- 백엔드: Firebase Functions for Node.js, Firestore, FCM, Secret Manager, App Check
+- 백엔드: Cloudflare Workers, D1, R2, Worker Secrets, APNs/FCM adapter
 - 테스트: 룰엔진 단위 테스트, WeatherSnapshot adapter fixture 테스트, auth gate 복귀 시나리오 테스트
 
 ---
@@ -230,7 +235,7 @@ WeatherON은 Guest 홈 우선 진입을 유지하되, 저장·동기화·알림 
 
 - KMA 격자 변환과 실시간성 한계는 실제 API 테스트로 보정해야 한다.
 - Google Maps Geocoding 결과 저장 정책은 요금제와 약관 확인 후 캐시 정책을 확정해야 한다.
-- Firebase 비용은 사용자 수, 날씨 캐시 주기, 알림 배치 빈도에 따라 재산정해야 한다.
+- D1/R2 비용은 사용자 수, 동기화 변경량, 사진 저장량, 알림 배치 빈도에 따라 재산정해야 한다.
 - 카카오/네이버/LINE SDK의 Expo Dev Client 호환성은 구현 착수 전 PoC로 확인해야 한다.
 
 ---
@@ -241,7 +246,8 @@ WeatherON은 Guest 홈 우선 진입을 유지하되, 저장·동기화·알림 
 - React Native New Architecture: https://reactnative.dev/architecture/landing-page
 - 기상청 단기예보 조회서비스: https://www.data.go.kr/data/15084084/openapi.do
 - Open-Meteo Docs: https://open-meteo.com/en/docs
-- Firebase Docs: https://firebase.google.com/docs
+- Cloudflare Workers Docs: https://developers.cloudflare.com/workers/
+- Cloudflare D1 Docs: https://developers.cloudflare.com/d1/
 - Google Maps Geocoding API: https://developers.google.com/maps/documentation/geocoding
 
-*WeatherON MVP 기술 ADR v1.0 · June 2026*
+*WeatherON MVP 기술 ADR v1.1 · August 2026*

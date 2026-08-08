@@ -67,6 +67,8 @@ MVP 범위에서도 디자인 스펙을 낮추지 않는다.
 `W1~W4`, `G3~G6`, `P2/P3`, `R3/R4`, `S0~S3`는 기능 출시 판단을 보류할 수 있지만, 아이콘/컴포넌트/상태 표현은 통합 디자인 스펙을 따른다.
 확장 라우트는 실제 사용자 검증 지표가 나온 뒤 단계별로 노출 여부를 다시 판단한다.
 
+소셜/ON Square 보류는 계정 로그인을 보류한다는 의미가 아니다. MVP 1의 저장·알림 gate를 실제 기능으로 검증하려면 최소 한 개의 운영 로그인 수단, 원격 세션, 약관 기록, 원래 액션 복귀가 필요하다. Provider와 동기화 단계는 `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md`를 따른다.
+
 ---
 
 ## 4. MVP 0 범위
@@ -148,6 +150,7 @@ UI 추가보다 알림 신뢰성, 목적지 저장, 권한 복구를 우선한�
 | `docs/Project Wind/yokohama_tower_of_winds_ui_design_system.md` | 출시 후 대규모 UI 업데이트용 신규 디자인 시스템 연구 |
 | `docs/Project Wind/tower_of_winds_ui_trademark_supplement_2026-07-09.md` | Project Wind 네이밍/상표 리스크 보충 검토 |
 | `docs/architecture/WeatherON_MVP_기술_ADR.md` | 기술 스택과 백엔드 결정 |
+| `docs/architecture/WeatherON_ACCOUNT_AUTH_SYNC_SPEC.md` | 계정·인증·동기화 서버 원본과 실제 로그인 완료 기준 |
 | `docs/architecture/WeatherON_ANDROID_RELEASE_ACTION_BOARD.md` | Android 출시 준비 실행 보드 |
 | `docs/architecture/WeatherON_ANDROID_PRODUCT_QUALITY_AUDIT.md` | 제품 완성도 감사와 품질 기준 |
 | `docs/architecture/WeatherON_API_연동_대기목록.md` | 단계별 API 연동 대기 목록 |
@@ -160,6 +163,7 @@ UI 추가보다 알림 신뢰성, 목적지 저장, 권한 복구를 우선한�
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-08 | Cloudflare Workers·D1 기반 계정·인증·동기화 기준과 MVP 실제 로그인 개통 조건 추가 |
 | 2026-07-09 | Project Wind를 출시 후 대규모 UI 업데이트용 신규 디자인 시스템 연구 트랙으로 추가. 현행 MVP/v1.0 UI 스펙과 분리 |
 | 2026-07-08 | 정식 출시 후보와 Android 비공개 테스트 14일 운영 범위에 코디 추천/상세/저장 gate/옷장 프리셋 포함으로 로드맵 조정 |
 | 2026-07-05 | UI 디자인 스펙 14장 갭(탭바/radius/텍스트 아이콘/상태 톤) 구현 정합 완료. MVP 1 테스트 피드백 기록 양식 연결 |

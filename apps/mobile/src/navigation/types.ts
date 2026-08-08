@@ -8,6 +8,7 @@ import type {
   AlertSettingsFocus,
   AlertPreferenceKey,
   AlertPreferences,
+  AccountAuthStatus,
   AccountGateResultState,
   PermissionGateResultState,
   PermissionGateReason,
@@ -36,6 +37,7 @@ import type {
 import type { DeviceLocationState } from "../providers/deviceLocation";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
 import type { WeatherLocationPreset } from "../providers/weatherLocations";
+import type { AccountProfile } from "../providers/accountAuth";
 
 export type P0ScreenProps = {
   state: DemoState;
@@ -83,6 +85,9 @@ export type P0ScreenProps = {
   onboardingCompleted: boolean;
   isWeatherLoading: boolean;
   accountLinked: boolean;
+  accountProfile: AccountProfile | null;
+  accountAuthStatus: AccountAuthStatus;
+  accountAuthMessage: string | null;
   termsRequiredAccepted: boolean;
   locationReady: boolean;
   permissionReady: boolean;

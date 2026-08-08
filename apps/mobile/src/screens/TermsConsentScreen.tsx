@@ -3,14 +3,16 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
-import type { AccountGateState } from "../state/useWeatherOnAppState";
+import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 
 type TermsConsentScreenProps = {
   gate: AccountGateState | null;
-  onComplete: () => void;
+  authStatus: AccountAuthStatus;
+  authMessage: string | null;
+  onComplete: (input: { marketingAccepted: boolean }) => Promise<void>;
   onCancel: () => void;
 };
 
@@ -24,7 +26,7 @@ const consentItems: { key: ConsentKey; label: string; meta: string; required?: b
   { key: "marketing", label: "마케팅 정보 수신 동의", meta: "선택 항목 · 언제든 철회 가능" },
 ];
 
-export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentScreenProps) {
+export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, onCancel }: TermsConsentScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const [accepted, setAccepted] = useState<Record<ConsentKey, boolean>>({
@@ -41,6 +43,7 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
   const requiredAccepted = requiredCount === requiredItems.length;
   const totalAccepted = consentItems.filter((item) => accepted[item.key]).length;
   const allAccepted = totalAccepted === consentItems.length;
+  const isSaving = authStatus === "saving-terms";
 
   const statusLabel = useMemo(() => {
     if (requiredAccepted) return "필수 항목이 준비됐어요";
@@ -102,16 +105,17 @@ export function TermsConsentScreen({ gate, onComplete, onCancel }: TermsConsentS
         <Pressable
           accessibilityLabel={requiredAccepted ? "동의하고 계정 연결 계속" : "필수 동의 필요"}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !requiredAccepted }}
+          accessibilityState={{ disabled: !requiredAccepted || isSaving }}
           onPress={() => {
-            if (requiredAccepted) onComplete();
+            if (requiredAccepted && !isSaving) void onComplete({ marketingAccepted: accepted.marketing });
           }}
           style={[styles.primaryButton, { backgroundColor: requiredAccepted ? theme.gold : theme.cardMuted, borderColor: requiredAccepted ? theme.gold : theme.border }]}
         >
           <Text style={[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }]}>
-            {requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
+            {isSaving ? "동의 저장 중" : requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
           </Text>
         </Pressable>
+        {authMessage ? <Text style={[styles.body, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
         <Pressable accessibilityLabel="계정 연결 취소" accessibilityRole="button" onPress={onCancel} style={styles.cancelButton}>
           <Text style={[styles.cancelText, { color: theme.subtle }]}>취소</Text>
         </Pressable>
