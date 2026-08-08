@@ -259,13 +259,13 @@ export async function verifyAppleIdentityToken(identityToken, { expectedNonce, c
 
   const header = decodeJwtJson(parts[0]);
   const claims = decodeJwtJson(parts[1]);
-  if (header.alg !== "ES256" || typeof header.kid !== "string") {
+  if (header.alg !== "RS256" || typeof header.kid !== "string") {
     throw new AuthHttpError(401, "apple_token_algorithm_invalid", "Apple 로그인 토큰 서명 방식을 확인할 수 없습니다.");
   }
 
   const key = await getAppleVerificationKey(header.kid, fetchImpl);
   const verified = await crypto.subtle.verify(
-    { name: "ECDSA", hash: "SHA-256" },
+    { name: "RSASSA-PKCS1-v1_5" },
     key,
     decodeBase64Url(parts[2]),
     new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
@@ -301,11 +301,17 @@ async function getAppleVerificationKey(kid, fetchImpl) {
   if (!response.ok) throw new AuthHttpError(503, "apple_keys_unavailable", "Apple 공개키를 불러오지 못했습니다.");
   const payload = await response.json();
   const jwk = Array.isArray(payload?.keys)
-    ? payload.keys.find((item) => item?.kid === kid && item?.kty === "EC" && item?.crv === "P-256")
+    ? payload.keys.find((item) => item?.kid === kid && item?.kty === "RSA" && item?.alg === "RS256")
     : null;
   if (!jwk) throw new AuthHttpError(401, "apple_token_key_invalid", "Apple 로그인 공개키를 찾을 수 없습니다.");
 
-  const key = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"],
+  );
   appleJwksCache.set(kid, { key, expiresAt: Date.now() + 60 * 60 * 1000 });
   return key;
 }

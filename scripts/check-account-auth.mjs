@@ -50,14 +50,23 @@ class D1PreparedStatementAdapter {
 const sqlite = new DatabaseSync(":memory:");
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0001_account_auth.sql", import.meta.url), "utf8"));
 const database = new D1DatabaseAdapter(sqlite);
-const keyPair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+const keyPair = await crypto.subtle.generateKey(
+  {
+    name: "RSASSA-PKCS1-v1_5",
+    modulusLength: 2048,
+    publicExponent: new Uint8Array([1, 0, 1]),
+    hash: "SHA-256",
+  },
+  true,
+  ["sign", "verify"],
+);
 const publicJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 const keyId = "weatheron-test-key";
 const originalFetch = globalThis.fetch;
 
 globalThis.fetch = async (input, init) => {
   if (String(input) === "https://appleid.apple.com/auth/keys") {
-    return Response.json({ keys: [{ ...publicJwk, kid: keyId, use: "sig", alg: "ES256" }] });
+    return Response.json({ keys: [{ ...publicJwk, kid: keyId, use: "sig", alg: "RS256" }] });
   }
   return originalFetch(input, init);
 };
@@ -144,11 +153,11 @@ async function requestJson(path, { method = "GET", headers = {}, body } = {}) {
 }
 
 async function createAppleIdentityToken({ keyId: kid, privateKey, claims }) {
-  const headerPart = encodeBase64Url(JSON.stringify({ alg: "ES256", kid, typ: "JWT" }));
+  const headerPart = encodeBase64Url(JSON.stringify({ alg: "RS256", kid, typ: "JWT" }));
   const payloadPart = encodeBase64Url(JSON.stringify(claims));
   const signingInput = `${headerPart}.${payloadPart}`;
   const signature = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
+    { name: "RSASSA-PKCS1-v1_5" },
     privateKey,
     new TextEncoder().encode(signingInput),
   );

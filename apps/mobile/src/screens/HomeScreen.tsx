@@ -88,7 +88,7 @@ export function HomeScreen({
             maxWidth: layout.contentMaxWidth,
             gap: layout.homeContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
-            paddingTop: layout.isShort ? 0 : 2,
+            paddingTop: layout.weatherTopPadding,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -1271,7 +1271,8 @@ function NotificationSidebar({
               backgroundColor: theme.cardStrong,
               borderColor: theme.border,
               shadowColor: theme.shadow,
-              paddingTop: Math.max(insets.top, spacing.xl) + spacing.sm,
+              marginTop: insets.top,
+              paddingTop: spacing.xl,
               paddingBottom: Math.max(insets.bottom, spacing.xl),
             },
             { transform: [{ translateX: panelTranslateX }] },
@@ -2148,10 +2149,11 @@ const styles = StyleSheet.create({
   },
   sidebarPanel: {
     width: "86%",
-    height: "100%",
+    alignSelf: "stretch",
     gap: spacing.sm,
     paddingBottom: spacing.xl,
     borderLeftWidth: 1,
+    borderTopLeftRadius: radius.xl,
     shadowOffset: { width: -10, height: 0 },
     shadowOpacity: 0.18,
     shadowRadius: 24,
