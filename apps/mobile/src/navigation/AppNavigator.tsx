@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import * as NavigationBar from "expo-navigation-bar";
-import { BackHandler, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
+import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
 import { ScreenTransition } from "../components/ScreenTransition";
@@ -70,6 +70,17 @@ export function AppNavigator() {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
     return () => subscription.remove();
   }, [appState.goBack]);
+
+  useEffect(() => {
+    const openDeepLink = (url: string | null) => {
+      if (url?.toLowerCase().replace(/[/?#]+$/u, "") === "weatheron://home") {
+        appState.navigate("H1");
+      }
+    };
+    void Linking.getInitialURL().then(openDeepLink);
+    const subscription = Linking.addEventListener("url", ({ url }) => openDeepLink(url));
+    return () => subscription.remove();
+  }, [appState.navigate]);
 
   const screenProps = {
     state: appState.state,

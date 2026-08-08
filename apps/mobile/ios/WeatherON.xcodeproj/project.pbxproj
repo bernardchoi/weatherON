@@ -11,20 +11,50 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		53CE0002F6C2F8578512C26A /* libPods-WeatherON.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E26B2C3C23F043E869E1B89 /* libPods-WeatherON.a */; };
 		5AF939C3A402EBCD9D1032E8 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49AF18EE5E5CDCD3033C030 /* ExpoModulesProvider.swift */; };
+		85613D02920FADE3CDBED29F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CACAFC73FF154C2A43C0796 /* Foundation.framework */; };
 		A11C26010000000000000001 /* LiquidGlassNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000011 /* LiquidGlassNavigationView.swift */; };
 		A11C26010000000000000002 /* LiquidGlassNavigationView.m in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000012 /* LiquidGlassNavigationView.m */; };
 		B2F64F94C6529480B4064978 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		D393E4B4DF48A101560AFC09 /* WeatherONWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 782B913B34598D76A9DB1500 /* WeatherONWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F11748462D0307B40044C1D9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748452D0307B40044C1D9 /* SceneDelegate.swift */; };
+		F99F200AC2D68A41DE85F81B /* WeatherONWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8001577306FA67085A49F3B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 30461A8053BCA37F2BD1F353;
+			remoteInfo = WeatherONWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA6BCB1015A56988BD2B2DF1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D393E4B4DF48A101560AFC09 /* WeatherONWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* WeatherON.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeatherON.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WeatherON/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WeatherON/Info.plist; sourceTree = "<group>"; };
 		43D854AC55A59F547AED9959 /* Pods-WeatherON.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WeatherON.release.xcconfig"; path = "Target Support Files/Pods-WeatherON/Pods-WeatherON.release.xcconfig"; sourceTree = "<group>"; };
+		66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WeatherONWidget.swift; sourceTree = "<group>"; };
+		782B913B34598D76A9DB1500 /* WeatherONWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WeatherONWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E26B2C3C23F043E869E1B89 /* libPods-WeatherON.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WeatherON.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8CACAFC73FF154C2A43C0796 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		9FB6D87C045A522848899D8F /* Pods-WeatherON.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WeatherON.debug.xcconfig"; path = "Target Support Files/Pods-WeatherON/Pods-WeatherON.debug.xcconfig"; sourceTree = "<group>"; };
 		A11C26010000000000000011 /* LiquidGlassNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiquidGlassNavigationView.swift; path = WeatherON/LiquidGlassNavigationView.swift; sourceTree = "<group>"; };
 		A11C26010000000000000012 /* LiquidGlassNavigationView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiquidGlassNavigationView.m; path = WeatherON/LiquidGlassNavigationView.m; sourceTree = "<group>"; };
@@ -44,6 +74,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				53CE0002F6C2F8578512C26A /* libPods-WeatherON.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		276846C456F76F67C88B0FA2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				85613D02920FADE3CDBED29F /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,8 +110,18 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				7E26B2C3C23F043E869E1B89 /* libPods-WeatherON.a */,
+				CE57A79F06AD141FB81CA09D /* iOS */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		56D60D3665C8DA42323A9121 /* WeatherONWidget */ = {
+			isa = PBXGroup;
+			children = (
+				66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */,
+			);
+			name = WeatherONWidget;
+			path = WeatherONWidget;
 			sourceTree = "<group>";
 		};
 		7196BF68151AF97FD78524A0 /* WeatherON */ = {
@@ -100,6 +148,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				C83BE9DA8B3F01B90D60D7C4 /* Pods */,
 				92C434F03D67099E6F860DFE /* ExpoModulesProviders */,
+				56D60D3665C8DA42323A9121 /* WeatherONWidget */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -110,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* WeatherON.app */,
+				782B913B34598D76A9DB1500 /* WeatherONWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,6 +190,14 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		CE57A79F06AD141FB81CA09D /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				8CACAFC73FF154C2A43C0796 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -155,15 +213,34 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
 				101D96740997B0DEEAB1A5A0 /* [CP] Embed Pods Frameworks */,
+				AA6BCB1015A56988BD2B2DF1 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				805AA27EEEB390B2667F72F2 /* PBXTargetDependency */,
 			);
 			name = WeatherON;
 			productName = WeatherON;
 			productReference = 13B07F961A680F5B00A75B9A /* WeatherON.app */;
 			productType = "com.apple.product-type.application";
+		};
+		30461A8053BCA37F2BD1F353 /* WeatherONWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33B70293ED6FA952923A199E /* Build configuration list for PBXNativeTarget "WeatherONWidget" */;
+			buildPhases = (
+				BD01A310E143059FB0AB0CE6 /* Sources */,
+				276846C456F76F67C88B0FA2 /* Frameworks */,
+				0765151519F11E0038795838 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WeatherONWidget;
+			productName = WeatherONWidget;
+			productReference = 782B913B34598D76A9DB1500 /* WeatherONWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -192,11 +269,19 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* WeatherON */,
+				30461A8053BCA37F2BD1F353 /* WeatherONWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0765151519F11E0038795838 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		13B07F8E1A680F5B00A75B9A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -345,9 +430,53 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BD01A310E143059FB0AB0CE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F99F200AC2D68A41DE85F81B /* WeatherONWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		805AA27EEEB390B2667F72F2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WeatherONWidget;
+			target = 30461A8053BCA37F2BD1F353 /* WeatherONWidget */;
+			targetProxy = 8001577306FA67085A49F3B1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		04C57CCC2C0F08A506196E75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = WeatherONWidget/WeatherONWidget.entitlements;
+				CURRENT_PROJECT_VERSION = 19;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WeatherONWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = com.weatheron.mobile.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9FB6D87C045A522848899D8F /* Pods-WeatherON.debug.xcconfig */;
@@ -417,6 +546,32 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
+		};
+		61C208D892AE2C8A91605063 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = WeatherONWidget/WeatherONWidget.entitlements;
+				CURRENT_PROJECT_VERSION = 19;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WeatherONWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = com.weatheron.mobile.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -570,6 +725,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33B70293ED6FA952923A199E /* Build configuration list for PBXNativeTarget "WeatherONWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				04C57CCC2C0F08A506196E75 /* Release */,
+				61C208D892AE2C8A91605063 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

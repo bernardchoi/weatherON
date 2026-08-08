@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import type { PlaceSearchResult } from "@weatheron/shared";
-import { presetWardrobe, type UserPreferenceProfile } from "@weatheron/shared";
+import { presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
 import { isLaunchHiddenRoute, isP0Route, type AppRouteId, type P0RouteId } from "../navigation/routes";
 import {
@@ -21,6 +21,7 @@ import {
 import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
 import { sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { runtimeTravelEstimateClient } from "../providers/travelEstimateClient";
+import { createWeatheronWidgetSnapshot, saveWeatheronWidgetSnapshot } from "../providers/widgetSnapshot";
 import {
   acceptAccountTerms,
   restoreAccountSession,
@@ -304,6 +305,14 @@ export function useWeatherOnAppState() {
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
   const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
+  const currentLocationWidgetSnapshot = useMemo(() => {
+    const weather = weatherProviderResult.current;
+    return createWeatheronWidgetSnapshot(
+      weather,
+      recommendOutfit(weather, userPreferenceProfile, wardrobe),
+      recommendUmbrella(weather),
+    );
+  }, [userPreferenceProfile, wardrobe, weatherProviderResult.current]);
   const placeSearchOrigin = deviceLocationState.location
     ?? deviceWeatherLocation
     ?? (weatherLocationMode === "manual" ? manualWeatherLocation : null);
@@ -472,6 +481,11 @@ export function useWeatherOnAppState() {
     const intervalId = setInterval(() => setNowMinuteTick(Date.now()), 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!appStateHydrated || isWeatherLoading || Platform.OS !== "ios") return;
+    saveWeatheronWidgetSnapshot(currentLocationWidgetSnapshot);
+  }, [appStateHydrated, currentLocationWidgetSnapshot, isWeatherLoading]);
 
   useEffect(() => {
     if (!appStateHydrated) return;

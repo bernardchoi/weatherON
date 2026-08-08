@@ -29,6 +29,7 @@ module.exports = ({ config }) => {
     entitlements: {
       ...(expo.ios?.entitlements ?? {}),
       "com.apple.developer.devicecheck.appattest-environment": isDevelopmentBuild ? "development" : "production",
+      "com.apple.security.application-groups": ["group.com.weatheron.mobile"],
     },
   };
 
