@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,6 +55,7 @@ import { appColors, resolveAppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
+  const handledDeepLinkRef = useRef<string | null>(null);
   const systemTheme = useColorScheme();
   const theme = resolveAppTheme(
     appState.themeMode,
@@ -73,14 +74,35 @@ export function AppNavigator() {
 
   useEffect(() => {
     const openDeepLink = (url: string | null) => {
-      if (url?.toLowerCase().replace(/[/?#]+$/u, "") === "weatheron://home") {
+      if (!url || handledDeepLinkRef.current === url) return;
+      if (url.toLowerCase().replace(/[/?#]+$/u, "") === "weatheron://home") {
+        handledDeepLinkRef.current = url;
         appState.navigate("H1");
+        return;
       }
+      if (!/^weatheron:\/\/destination(?:[/?#]|$)/iu.test(url) || !appState.destinationSelectionReady) return;
+      const encodedDestinationId = url.match(/[?&]id=([^&#]+)/u)?.[1];
+      const destinationId = encodedDestinationId
+        ? decodeURIComponent(encodedDestinationId.replace(/\+/gu, " "))
+        : null;
+      const destination = appState.savedDestinations.find(({ place }) => place.id === destinationId);
+      handledDeepLinkRef.current = url;
+      if (!destination) {
+        appState.navigate("G1");
+        return;
+      }
+      appState.selectDestinationPlace(destination.place);
+      appState.navigate("G2");
     };
     void Linking.getInitialURL().then(openDeepLink);
     const subscription = Linking.addEventListener("url", ({ url }) => openDeepLink(url));
     return () => subscription.remove();
-  }, [appState.navigate]);
+  }, [
+    appState.destinationSelectionReady,
+    appState.navigate,
+    appState.savedDestinations,
+    appState.selectDestinationPlace,
+  ]);
 
   const screenProps = {
     state: appState.state,

@@ -21,7 +21,14 @@ import {
 import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
 import { sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { runtimeTravelEstimateClient } from "../providers/travelEstimateClient";
-import { createWeatheronWidgetSnapshot, saveWeatheronWidgetSnapshot } from "../providers/widgetSnapshot";
+import {
+  createWeatheronWidgetLocationSnapshot,
+  createWeatheronWidgetStoreSnapshot,
+  getWeatheronDestinationDeepLink,
+  saveWeatheronWidgetSnapshot,
+  subtractWidgetTime,
+  type WeatheronWidgetLocationSnapshot,
+} from "../providers/widgetSnapshot";
 import {
   acceptAccountTerms,
   restoreAccountSession,
@@ -305,14 +312,57 @@ export function useWeatherOnAppState() {
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
   const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
-  const currentLocationWidgetSnapshot = useMemo(() => {
-    const weather = weatherProviderResult.current;
-    return createWeatheronWidgetSnapshot(
-      weather,
-      recommendOutfit(weather, userPreferenceProfile, wardrobe),
-      recommendUmbrella(weather),
+  const widgetStoreSnapshot = useMemo(() => {
+    const currentWeather = weatherProviderResult.current;
+    const current = createWeatheronWidgetLocationSnapshot(
+      currentWeather,
+      recommendOutfit(currentWeather, userPreferenceProfile, wardrobe),
+      recommendUmbrella(currentWeather),
     );
-  }, [userPreferenceProfile, wardrobe, weatherProviderResult.current]);
+    const destinations = savedDestinations.reduce<WeatheronWidgetLocationSnapshot[]>((items, destination) => {
+      const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
+      if (!weather) return items;
+      const travelMinutes = getTravelMinutesForTransport(
+        destination.travelEstimate,
+        destination.schedulePreference.transportMode,
+        destination.place.countryCode,
+      );
+      const bufferMinutes = typeof travelMinutes === "number"
+        ? getAutoBufferMinutes(destination.schedulePreference.targetArrivalTime, travelMinutes, nowMinuteTick, destination.place.timezone)
+        : undefined;
+      const departureTime = typeof travelMinutes === "number" && typeof bufferMinutes === "number"
+        ? subtractWidgetTime(destination.schedulePreference.targetArrivalTime, travelMinutes + bufferMinutes)
+        : undefined;
+      items.push(createWeatheronWidgetLocationSnapshot(
+        weather,
+        recommendOutfit(weather, userPreferenceProfile, wardrobe),
+        recommendUmbrella(weather),
+        {
+          id: destination.place.id,
+          kind: "destination",
+          departureTime,
+          arrivalTime: destination.schedulePreference.targetArrivalTime,
+          travelMinutes,
+          transportMode: destination.schedulePreference.transportMode,
+          deepLink: getWeatheronDestinationDeepLink(destination.place.id),
+        },
+      ));
+      return items;
+    }, []);
+    return createWeatheronWidgetStoreSnapshot(
+      current,
+      destinations,
+      destinations.some((destination) => destination.id === selectedDestinationPlace.id) ? selectedDestinationPlace.id : undefined,
+    );
+  }, [
+    nowMinuteTick,
+    savedDestinations,
+    selectedDestinationPlace.id,
+    userPreferenceProfile,
+    wardrobe,
+    weatherProviderResult.current,
+    weatherProviderResult.destinationSnapshots,
+  ]);
   const placeSearchOrigin = deviceLocationState.location
     ?? deviceWeatherLocation
     ?? (weatherLocationMode === "manual" ? manualWeatherLocation : null);
@@ -484,8 +534,8 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated || isWeatherLoading || Platform.OS !== "ios") return;
-    saveWeatheronWidgetSnapshot(currentLocationWidgetSnapshot);
-  }, [appStateHydrated, currentLocationWidgetSnapshot, isWeatherLoading]);
+    saveWeatheronWidgetSnapshot(widgetStoreSnapshot);
+  }, [appStateHydrated, isWeatherLoading, widgetStoreSnapshot]);
 
   useEffect(() => {
     if (!appStateHydrated) return;

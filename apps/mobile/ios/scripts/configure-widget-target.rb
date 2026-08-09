@@ -8,7 +8,7 @@ app_target = project.targets.find { |target| target.name == "WeatherON" }
 raise "WeatherON app target not found" unless app_target
 
 widget_target = project.targets.find { |target| target.name == "WeatherONWidget" }
-widget_target ||= project.new_target(:app_extension, "WeatherONWidget", :ios, "16.4")
+widget_target ||= project.new_target(:app_extension, "WeatherONWidget", :ios, "17.0")
 
 widget_group = project.main_group.find_subpath("WeatherONWidget", true)
 widget_group.set_source_tree("<group>")
@@ -37,7 +37,7 @@ widget_target.build_configurations.each do |configuration|
   settings["CURRENT_PROJECT_VERSION"] = "22"
   settings["GENERATE_INFOPLIST_FILE"] = "NO"
   settings["INFOPLIST_FILE"] = "WeatherONWidget/Info.plist"
-  settings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.4"
+  settings["IPHONEOS_DEPLOYMENT_TARGET"] = "17.0"
   settings["LD_RUNPATH_SEARCH_PATHS"] = ["$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks"]
   settings["MARKETING_VERSION"] = "1.0.0"
   settings["PRODUCT_BUNDLE_IDENTIFIER"] = "com.weatheron.mobile.widget"

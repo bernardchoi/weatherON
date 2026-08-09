@@ -2,7 +2,7 @@ import ExpoModulesCore
 import WidgetKit
 
 private let appGroupIdentifier = "group.com.weatheron.mobile"
-private let widgetSnapshotKey = "weatheron.widget.snapshot.v1"
+private let widgetSnapshotKey = "weatheron.widget.store.v2"
 private let widgetKind = "WeatherONSmallWidget"
 
 public class WeatheronWidgetDataModule: Module {
