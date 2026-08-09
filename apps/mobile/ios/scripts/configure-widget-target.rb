@@ -34,7 +34,7 @@ widget_target.build_configurations.each do |configuration|
   settings = configuration.build_settings
   settings["APPLICATION_EXTENSION_API_ONLY"] = "YES"
   settings["CODE_SIGN_ENTITLEMENTS"] = "WeatherONWidget/WeatherONWidget.entitlements"
-  settings["CURRENT_PROJECT_VERSION"] = "19"
+  settings["CURRENT_PROJECT_VERSION"] = "22"
   settings["GENERATE_INFOPLIST_FILE"] = "NO"
   settings["INFOPLIST_FILE"] = "WeatherONWidget/Info.plist"
   settings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.4"

@@ -4,11 +4,15 @@ import {
   weatheronWidgetAppGroup,
   weatheronWidgetDeepLink,
   type WeatheronWidgetSnapshot,
-} from "./widgetSnapshot";
+} from "./widgetSnapshot.shared";
 
 export { createWeatheronWidgetSnapshot, weatheronWidgetAppGroup, weatheronWidgetDeepLink };
 export type { WeatheronWidgetSnapshot };
 
 export function saveWeatheronWidgetSnapshot(snapshot: WeatheronWidgetSnapshot): boolean {
-  return WeatheronWidgetDataModule.saveSnapshot(JSON.stringify(snapshot));
+  try {
+    return WeatheronWidgetDataModule?.saveSnapshot(JSON.stringify(snapshot)) ?? false;
+  } catch {
+    return false;
+  }
 }
