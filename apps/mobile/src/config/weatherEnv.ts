@@ -18,7 +18,7 @@ export type WeatherRuntimeConfig = {
 };
 
 export const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
-export const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/LivingWthrIdxServiceV4/getUVIdxV4";
+export const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/LivingWthrIdxServiceV5/getUVIdxV5";
 export const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 export const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const DEFAULT_OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";

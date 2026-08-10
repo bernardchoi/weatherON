@@ -278,7 +278,7 @@ await writeFile(
               },
             },
           }
-        : urlText.includes("getUVIdxV4")
+        : urlText.includes("getUVIdxV5")
         ? { response: { body: { items: { item: [{ h0: "6", h3: "7", h6: "5" }] } } } }
         : urlText.includes("open-meteo") || urlText.includes("forecast?") || urlText.includes("/weather/openmeteo")
         ? openMeteoFixture
@@ -723,7 +723,7 @@ assert.equal(demoResults.parallelProvider.destinationSnapshots[0].locationId, "k
 assert.equal(demoResults.parallelProvider.destinationSnapshots[1].locationId, "kr-jamsil-baseball-stadium");
 assert.ok(demoResults.httpUrls.some((url) => url.includes("getVilageFcst")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("getPwnStatus")));
-assert.ok(demoResults.httpUrls.some((url) => url.includes("getUVIdxV4")));
+assert.ok(demoResults.httpUrls.some((url) => url.includes("getUVIdxV5")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("/weather/air-quality")));
 assert.ok(demoResults.httpUrls.some((url) => url.includes("temperature_2m")));
 assert.deepEqual(demoResults.kmaBaseEarly, { baseDate: "20260625", baseTime: "2300" });

@@ -19,7 +19,8 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
   const hourly = getHourlyForecast(weather);
   const daily = getDailyForecast(weather.daily, weather.hourly);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
-  const lifestyleIndices = getLifestyleIndices(current, Platform.OS);
+  const uvIndex = getUvIndexSummary(current.uvIndex);
+  const airQualityIndices = getAirQualityIndices(current, Platform.OS);
   const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
     if (!peak) return item;
     return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
@@ -67,10 +68,11 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
             </View>
             <View style={styles.heroCopy}>
               <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
-              <Text style={[styles.heroCondition, { color: theme.muted }]}>
+              <Text style={[styles.heroCondition, { color: theme.muted }]} numberOfLines={1}>
                 {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
               </Text>
             </View>
+            <UvSummaryBadge item={uvIndex} theme={theme} />
           </View>
           <View style={styles.factGrid}>
             <WeatherFact icon={uiIconAssets.drop} label="강수" value={`${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />
@@ -79,17 +81,19 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
           </View>
         </View>
 
-        <ForecastPanel
-          title="생활 지수"
-          meta={getLifestyleIndexMeta(lifestyleIndices)}
-          theme={theme}
-        >
-          <View style={styles.indexGrid}>
-            {lifestyleIndices.map((item) => (
-              <LifestyleIndexCard key={item.id} item={item} compact={lifestyleIndices.length === 1} theme={theme} />
-            ))}
-          </View>
-        </ForecastPanel>
+        {airQualityIndices.length > 0 ? (
+          <ForecastPanel
+            title="대기질"
+            meta={getLifestyleIndexMeta(airQualityIndices)}
+            theme={theme}
+          >
+            <View style={styles.indexGrid}>
+              {airQualityIndices.map((item) => (
+                <LifestyleIndexCard key={item.id} item={item} compact={false} theme={theme} />
+              ))}
+            </View>
+          </ForecastPanel>
+        ) : null}
 
         <ForecastPanel
           title="시간별 예보"
@@ -137,6 +141,23 @@ function WeatherFact({ icon, label, value, color, theme }: { icon: number; label
       <Image source={icon} style={[styles.factIcon, { tintColor: color }]} resizeMode="contain" />
       <Text style={[styles.factLabel, { color }]}>{label}</Text>
       <Text style={[styles.factValue, { color: theme.text }]}>{value}</Text>
+    </View>
+  );
+}
+
+function UvSummaryBadge({ item, theme }: { item: LifestyleIndexItem; theme: AppTheme }) {
+  const color = getTone(theme, item.tone);
+  return (
+    <View
+      style={[styles.uvBadge, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+      accessibilityLabel={`자외선 지수 ${item.value}, ${item.grade}`}
+    >
+      <View style={styles.uvBadgeLabelRow}>
+        <Image source={item.icon} style={[styles.uvBadgeIcon, { tintColor: color }]} resizeMode="contain" />
+        <Text style={[styles.uvBadgeLabel, { color: theme.subtle }]}>자외선</Text>
+      </View>
+      <Text style={[styles.uvBadgeValue, { color: theme.text }]}>{item.value}</Text>
+      <Text style={[styles.uvBadgeGrade, { color }]} numberOfLines={1}>{item.grade}</Text>
     </View>
   );
 }
@@ -194,22 +215,22 @@ function ForecastPanel({ title, meta, theme, children }: { title: string; meta: 
   );
 }
 
-function getLifestyleIndices(
+function getUvIndexSummary(value?: number): LifestyleIndexItem {
+  return {
+    id: "uv",
+    icon: uiIconAssets.uv,
+    label: "자외선",
+    value: typeof value === "number" ? `${Math.round(value)}` : "—",
+    ...getUvIndexGrade(value),
+  };
+}
+
+function getAirQualityIndices(
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"],
   platform: typeof Platform.OS,
 ): LifestyleIndexItem[] {
-  const indices: LifestyleIndexItem[] = [
-    {
-      id: "uv",
-      icon: uiIconAssets.uv,
-      label: "자외선",
-      value: typeof current.uvIndex === "number" ? `${Math.round(current.uvIndex)}` : "확인 중",
-      ...getUvIndexGrade(current.uvIndex),
-    },
-  ];
-
   if (platform !== "ios") {
-    indices.push(
+    return [
       {
         id: "pm10",
         icon: uiIconAssets.wind,
@@ -224,10 +245,9 @@ function getLifestyleIndices(
         value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : "확인 중",
         ...getPm25Grade(current.pm25),
       },
-    );
+    ];
   }
-
-  return indices;
+  return [];
 }
 
 function getLifestyleIndexMeta(items: LifestyleIndexItem[]): string {
@@ -422,6 +442,43 @@ const styles = StyleSheet.create({
   heroCopy: {
     flex: 1,
     minWidth: 0,
+  },
+  uvBadge: {
+    width: 70,
+    minHeight: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 1,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 7,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  uvBadgeLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  uvBadgeIcon: {
+    width: 13,
+    height: 13,
+  },
+  uvBadgeLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+  },
+  uvBadgeValue: {
+    fontSize: 19,
+    lineHeight: 22,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+  uvBadgeGrade: {
+    maxWidth: "100%",
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
   },
   heroTemp: {
     fontSize: 42,

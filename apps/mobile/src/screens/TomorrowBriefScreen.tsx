@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
 import { outfitImageAssets, uiIconAssets } from "../assets";
@@ -159,15 +159,11 @@ export function TomorrowBriefScreen({
               },
             ]}
           >
-            {outfitPreview?.imageUrl && outfitImageAssets[outfitPreview.imageUrl] ? (
-              <Image
-                source={outfitImageAssets[outfitPreview.imageUrl]}
-                style={[styles.outfitImage, layout.isShort ? styles.outfitImageShort : null]}
-                resizeMode="contain"
-              />
-            ) : (
-              <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-            )}
+            <OutfitItemImage
+              imageUrl={outfitPreview?.imageUrl}
+              imageStyle={[styles.outfitImage, layout.isShort ? styles.outfitImageShort : null]}
+              fallbackStyle={[styles.outfitFallbackIcon, { tintColor: theme.gold }]}
+            />
           </View>
           <View style={styles.outfitCopy}>
             <Text style={[styles.outfitDecision, { color: theme.text }]} numberOfLines={1}>{toFriendlyOutfitHeadline(outfitDecision)}</Text>
@@ -176,11 +172,13 @@ export function TomorrowBriefScreen({
         </View>
         <View style={styles.outfitItems} accessibilityLabel="추천 코디 구성">
           {outfitItems.slice(0, 4).map(([slot, item]) => (
-            <View key={slot} style={[styles.outfitItem, { backgroundColor: theme.cardMuted }]}>
+            <View key={`${slot}:${item.id}`} style={[styles.outfitItem, { backgroundColor: theme.cardMuted }]}>
               <View style={[styles.outfitMiniImageFrame, { backgroundColor: theme.card }]}>
-                {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
-                  <Image source={outfitImageAssets[item.imageUrl]} style={styles.outfitMiniImage} resizeMode="contain" />
-                ) : null}
+                <OutfitItemImage
+                  imageUrl={item.imageUrl}
+                  imageStyle={styles.outfitMiniImage}
+                  fallbackStyle={[styles.outfitMiniFallbackIcon, { tintColor: theme.gold }]}
+                />
               </View>
               <Text style={[styles.outfitSlot, { color: theme.gold }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
             </View>
@@ -199,6 +197,37 @@ export function TomorrowBriefScreen({
       </View>
       </ScrollView>
     </View>
+  );
+}
+
+function OutfitItemImage({
+  imageUrl,
+  imageStyle,
+  fallbackStyle,
+}: {
+  imageUrl?: string;
+  imageStyle: React.ComponentProps<typeof Image>["style"];
+  fallbackStyle: React.ComponentProps<typeof Image>["style"];
+}) {
+  const source = imageUrl ? outfitImageAssets[imageUrl] : undefined;
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedImageUrl(null);
+  }, [imageUrl]);
+
+  if (!source || failedImageUrl === imageUrl) {
+    return <Image source={uiIconAssets.shirt} style={fallbackStyle} resizeMode="contain" />;
+  }
+
+  return (
+    <Image
+      key={imageUrl}
+      source={source}
+      style={imageStyle}
+      resizeMode="contain"
+      onError={() => setFailedImageUrl(imageUrl ?? null)}
+    />
   );
 }
 
@@ -576,6 +605,10 @@ const styles = StyleSheet.create({
   outfitMiniImage: {
     width: 34,
     height: 34,
+  },
+  outfitMiniFallbackIcon: {
+    width: 22,
+    height: 22,
   },
   outfitSlot: {
     maxWidth: "100%",

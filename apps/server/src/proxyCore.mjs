@@ -3,7 +3,7 @@
 import { getKmaForecastBaseDateTime } from "./kmaTime.mjs";
 
 const DEFAULT_KMA_FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
-const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/LivingWthrIdxServiceV4/getUVIdxV4";
+const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/LivingWthrIdxServiceV5/getUVIdxV5";
 const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 const DEFAULT_AIRKOREA_SIDO_URL = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
 const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
