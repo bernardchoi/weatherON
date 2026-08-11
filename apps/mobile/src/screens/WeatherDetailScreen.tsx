@@ -67,7 +67,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
               <Image source={getConditionIcon(current.condition)} style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme) }]} resizeMode="contain" />
             </View>
             <View style={styles.heroCopy}>
-              <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+              <Text style={[styles.heroTemp, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>{formatTemperature(current.tempC, temperatureUnit)}</Text>
               <Text style={[styles.heroCondition, { color: theme.muted }]} numberOfLines={1}>
                 {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
               </Text>
@@ -89,7 +89,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
           >
             <View style={styles.indexGrid}>
               {airQualityIndices.map((item) => (
-                <LifestyleIndexCard key={item.id} item={item} compact={false} theme={theme} />
+                <LifestyleIndexCard key={item.id} item={item} theme={theme} />
               ))}
             </View>
           </ForecastPanel>
@@ -135,6 +135,8 @@ type LifestyleIndexItem = {
   tone: ToneColor;
 };
 
+const PENDING_VALUE_PLACEHOLDER = "—";
+
 function WeatherFact({ icon, label, value, color, theme }: { icon: number; label: string; value: string; color: string; theme: AppTheme }) {
   return (
     <View style={[styles.factCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
@@ -162,23 +164,8 @@ function UvSummaryBadge({ item, theme }: { item: LifestyleIndexItem; theme: AppT
   );
 }
 
-function LifestyleIndexCard({ item, compact, theme }: { item: LifestyleIndexItem; compact: boolean; theme: AppTheme }) {
+function LifestyleIndexCard({ item, theme }: { item: LifestyleIndexItem; theme: AppTheme }) {
   const color = getTone(theme, item.tone);
-  if (compact) {
-    return (
-      <View
-        style={[styles.indexCard, styles.indexCardCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
-        accessibilityLabel={`${item.label} ${item.value}, ${item.grade}, ${item.description}`}
-      >
-        <View style={styles.indexCompactLabel}>
-          <Image source={item.icon} style={[styles.indexIcon, { tintColor: color }]} resizeMode="contain" />
-          <Text style={[styles.indexLabel, { color: theme.subtle }]} numberOfLines={1}>{item.label}</Text>
-        </View>
-        <Text style={[styles.indexValue, styles.indexValueCompact, { color: theme.text }]} numberOfLines={1}>{item.value}</Text>
-        <Text style={[styles.indexGrade, styles.indexGradeCompact, { color }]} numberOfLines={1}>{item.grade}</Text>
-      </View>
-    );
-  }
   return (
     <View style={[styles.indexCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <View style={styles.indexTopRow}>
@@ -220,7 +207,7 @@ function getUvIndexSummary(value?: number): LifestyleIndexItem {
     id: "uv",
     icon: uiIconAssets.uv,
     label: "자외선",
-    value: typeof value === "number" ? `${Math.round(value)}` : "—",
+    value: typeof value === "number" ? `${Math.round(value)}` : PENDING_VALUE_PLACEHOLDER,
     ...getUvIndexGrade(value),
   };
 }
@@ -235,14 +222,14 @@ function getAirQualityIndices(
         id: "pm10",
         icon: uiIconAssets.wind,
         label: "미세먼지",
-        value: typeof current.pm10 === "number" ? `${Math.round(current.pm10)}µg/m³` : "확인 중",
+        value: typeof current.pm10 === "number" ? `${Math.round(current.pm10)}µg/m³` : PENDING_VALUE_PLACEHOLDER,
         ...getPm10Grade(current.pm10),
       },
       {
         id: "pm25",
         icon: uiIconAssets.drop,
         label: "초미세먼지",
-        value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : "확인 중",
+        value: typeof current.pm25 === "number" ? `${Math.round(current.pm25)}µg/m³` : PENDING_VALUE_PLACEHOLDER,
         ...getPm25Grade(current.pm25),
       },
     ];
@@ -534,23 +521,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  indexCardCompact: {
-    minHeight: 56,
-    flexBasis: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  indexCompactLabel: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
   indexTopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -569,12 +539,6 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: "900",
   },
-  indexGradeCompact: {
-    flex: 1,
-    textAlign: "right",
-    fontSize: 11,
-    lineHeight: 15,
-  },
   indexLabel: {
     fontSize: 10,
     lineHeight: 13,
@@ -584,12 +548,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 19,
     fontWeight: "900",
-  },
-  indexValueCompact: {
-    minWidth: 40,
-    textAlign: "center",
-    fontSize: 18,
-    lineHeight: 22,
   },
   indexDescription: {
     fontSize: 10,
