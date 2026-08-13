@@ -1,4 +1,5 @@
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { AppNavigator } from "./src/navigation/AppNavigator";
@@ -6,6 +7,7 @@ import { applyPretendardToText, pretendardFontMap } from "./src/theme/fonts";
 
 // 폰트 로드 전에 Text 렌더 패치를 걸어 두면, 폰트가 준비되는 즉시 모든 텍스트가 Pretendard로 렌더된다.
 applyPretendardToText();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts(pretendardFontMap);

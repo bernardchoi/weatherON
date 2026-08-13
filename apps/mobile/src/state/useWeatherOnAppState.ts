@@ -256,6 +256,7 @@ export function useWeatherOnAppState() {
   const deviceLocationRequestInFlightRef = useRef(false);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const weatherLoadedFromNetworkRef = useRef(false);
+  const locallyRestoredAccountLinkedRef = useRef(false);
   const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
   const currentWeatherSnapshotRef = useRef<WeatherProviderResult["current"] | null>(null);
   const selectedDestinationPlaceIdRef = useRef(selectedDestinationPlace.id);
@@ -403,40 +404,24 @@ export function useWeatherOnAppState() {
       readPersistedWeatherProviderResult(Platform.OS === "ios" ? "weatherkit" : undefined),
       readPersistedAppState(),
       readPersistedNotificationState(),
-      restoreAccountSession(),
     ])
-      .then(([persistedWeatherResult, persistedState, persistedNotificationState, restoredAccount]) => {
+      .then(([persistedWeatherResult, persistedState, persistedNotificationState]) => {
         if (!active) return;
         if (persistedWeatherResult) {
           persistedWeatherProviderResultRef.current = persistedWeatherResult;
           setWeatherProviderResult(persistedWeatherResult);
         }
-        if (restoredAccount.status === "authenticated") {
-          setAccountLinked(true);
-          setAccountProfile(restoredAccount.account);
-          setTermsRequiredAccepted(restoredAccount.account.termsAccepted);
-          setAccountAuthStatus("ready");
-          setAccountAuthMessage(null);
-        } else if (restoredAccount.status === "offline" && persistedState?.accountLinked) {
-          setAccountLinked(true);
-          setAccountProfile(null);
-          setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
-          setAccountAuthStatus("offline");
-          setAccountAuthMessage("오프라인 상태예요. 연결되면 계정을 다시 확인해요.");
-        } else {
-          setAccountLinked(false);
-          setAccountProfile(null);
-          setTermsRequiredAccepted(false);
-          setAccountAuthStatus("idle");
-          setAccountAuthMessage(null);
-        }
         if (!persistedState) {
           setReadNotificationIds(persistedNotificationState.readNotificationIds);
           setNotificationHistory(persistedNotificationState.notificationHistory);
+          setRoute("O1");
           return;
         }
         setOnboardingCompleted(persistedState.onboardingCompleted);
         setSmartCareEnabled(persistedState.smartCareEnabled);
+        locallyRestoredAccountLinkedRef.current = persistedState.accountLinked;
+        setAccountLinked(persistedState.accountLinked);
+        setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
         setLocationReady(persistedState.locationReady);
         setPermissionReady(persistedState.permissionReady);
         setOutfitSaved(persistedState.outfitSaved);
@@ -476,6 +461,36 @@ export function useWeatherOnAppState() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    let active = true;
+    void restoreAccountSession().then((restoredAccount) => {
+      if (!active) return;
+      if (restoredAccount.status === "authenticated") {
+        setAccountLinked(true);
+        setAccountProfile(restoredAccount.account);
+        setTermsRequiredAccepted(restoredAccount.account.termsAccepted);
+        setAccountAuthStatus("ready");
+        setAccountAuthMessage(null);
+        return;
+      }
+      if (restoredAccount.status === "offline" && locallyRestoredAccountLinkedRef.current) {
+        setAccountProfile(null);
+        setAccountAuthStatus("offline");
+        setAccountAuthMessage("오프라인 상태예요. 연결되면 계정을 다시 확인해요.");
+        return;
+      }
+      setAccountLinked(false);
+      setAccountProfile(null);
+      setTermsRequiredAccepted(false);
+      setAccountAuthStatus("idle");
+      setAccountAuthMessage(null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [appStateHydrated]);
 
   const state = useMemo(
     () => {
@@ -1584,6 +1599,7 @@ export function useWeatherOnAppState() {
   const canGoBack = route !== "A1" && route !== "H1" && route !== "O1" && route !== "O2";
 
   return {
+    appStateHydrated,
     route,
     styleProfileReturnRoute,
     overlayReturnRoutes,

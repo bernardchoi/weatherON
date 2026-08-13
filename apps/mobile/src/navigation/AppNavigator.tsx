@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as NavigationBar from "expo-navigation-bar";
+import * as SplashScreen from "expo-splash-screen";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
@@ -66,6 +67,11 @@ export function AppNavigator() {
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4);
   const appBackgroundColor = theme.background;
+
+  useEffect(() => {
+    if (!appState.appStateHydrated) return;
+    void SplashScreen.hideAsync().catch(() => {});
+  }, [appState.appStateHydrated]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
