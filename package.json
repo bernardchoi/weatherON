@@ -43,6 +43,7 @@
     "check:cloudflare-worker-proxy": "node scripts/check-cloudflare-worker-proxy.mjs",
     "check:account-auth": "node scripts/check-account-auth.mjs",
     "check:ios-launch-state": "node scripts/check-ios-launch-state.mjs",
+    "check:ios-live-activity": "node scripts/check-ios-live-activity.mjs",
     "migrate:account-db:local": "npx --yes --cache ./.npm-cache wrangler d1 migrations apply WEATHERON_DB --local",
     "migrate:account-db:remote": "npx --yes --cache ./.npm-cache wrangler d1 migrations apply weatheron-users --remote",
     "prepare:proxy-access-token": "node scripts/prepare-proxy-access-token.mjs",

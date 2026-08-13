@@ -14,6 +14,8 @@
 		85613D02920FADE3CDBED29F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CACAFC73FF154C2A43C0796 /* Foundation.framework */; };
 		A11C26010000000000000001 /* LiquidGlassNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000011 /* LiquidGlassNavigationView.swift */; };
 		A11C26010000000000000002 /* LiquidGlassNavigationView.m in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000012 /* LiquidGlassNavigationView.m */; };
+		A11C26010000000000000003 /* WeatherONDepartureLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */; };
+		A11C26010000000000000004 /* WeatherONDepartureActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */; };
 		B2F64F94C6529480B4064978 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		D393E4B4DF48A101560AFC09 /* WeatherONWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 782B913B34598D76A9DB1500 /* WeatherONWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -58,6 +60,8 @@
 		9FB6D87C045A522848899D8F /* Pods-WeatherON.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WeatherON.debug.xcconfig"; path = "Target Support Files/Pods-WeatherON/Pods-WeatherON.debug.xcconfig"; sourceTree = "<group>"; };
 		A11C26010000000000000011 /* LiquidGlassNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiquidGlassNavigationView.swift; path = WeatherON/LiquidGlassNavigationView.swift; sourceTree = "<group>"; };
 		A11C26010000000000000012 /* LiquidGlassNavigationView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiquidGlassNavigationView.m; path = WeatherON/LiquidGlassNavigationView.m; sourceTree = "<group>"; };
+		A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherONDepartureLiveActivity.swift; sourceTree = "<group>"; };
+		A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../../modules/weatheron-widget-data/ios/WeatherONDepartureActivityAttributes.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WeatherON/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B49AF18EE5E5CDCD3033C030 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WeatherON/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WeatherON/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -119,6 +123,8 @@
 			isa = PBXGroup;
 			children = (
 				66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */,
+				A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */,
+				A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */,
 			);
 			name = WeatherONWidget;
 			path = WeatherONWidget;
@@ -435,6 +441,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F99F200AC2D68A41DE85F81B /* WeatherONWidget.swift in Sources */,
+				A11C26010000000000000003 /* WeatherONDepartureLiveActivity.swift in Sources */,
+				A11C26010000000000000004 /* WeatherONDepartureActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -17,6 +17,12 @@ import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { getConditionLabel } from "../utils/weatherPresentation";
+import {
+  endDepartureLiveActivity,
+  getDepartureLiveActivityStatus,
+  startDepartureLiveActivity,
+  type DepartureLiveActivityStatus,
+} from "../providers/departureLiveActivity";
 
 export function DestinationCareScreen({
   permissionReady,
@@ -26,6 +32,7 @@ export function DestinationCareScreen({
   selectedDestinationAlertCondition,
   selectedDestinationSchedulePreference,
   selectedDestinationTravelEstimate,
+  selectedDestinationDepartureAt,
   selectedDestinationPlace,
   temperatureUnit,
   distanceUnit,
@@ -67,6 +74,13 @@ export function DestinationCareScreen({
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [repeatDaysOpen, setRepeatDaysOpen] = useState(false);
   const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
+  const [departureActivityStatus, setDepartureActivityStatus] = useState<DepartureLiveActivityStatus>({
+    supported: Platform.OS === "ios",
+    enabled: false,
+    active: false,
+  });
+  const [departureActivityBusy, setDepartureActivityBusy] = useState(false);
+  const [departureActivityMessage, setDepartureActivityMessage] = useState<string | null>(null);
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
   const alertTimingCopy = routeTimingReady ? `${prepAlertTime}/${rainAlertTime}/${departureTime}` : "출발 알림 보류";
@@ -84,10 +98,81 @@ export function DestinationCareScreen({
   const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;
   const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode);
   const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
+  const departureWeatherGuidance = getDepartureWeatherGuidance(
+    destinationWeather,
+    selectedDestinationAlertCondition.rainThresholdPct,
+    selectedDestinationAlertCondition.windThresholdMs,
+  );
+  const departureActivityMatchesDestination =
+    departureActivityStatus.active && departureActivityStatus.destinationId === selectedDestinationPlace.id;
+  const departureActivityMatchesCurrentPlan = departureActivityMatchesDestination && Boolean(
+    departureActivityStatus.departureAt &&
+    selectedDestinationDepartureAt &&
+    Math.abs(new Date(departureActivityStatus.departureAt).getTime() - new Date(selectedDestinationDepartureAt).getTime()) < 1000,
+  );
+  const departureActivityCanStart = Boolean(
+    routeTimingReady && selectedDestinationDepartureAt && new Date(selectedDestinationDepartureAt).getTime() > Date.now(),
+  );
 
   useEffect(() => {
     if (transportMode === "walk" && walkUnavailable) onSetDestinationTransportMode("auto");
   }, [onSetDestinationTransportMode, transportMode, walkUnavailable]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    let active = true;
+    void getDepartureLiveActivityStatus().then((status) => {
+      if (active) setDepartureActivityStatus(status);
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedDestinationDepartureAt, selectedDestinationPlace.id]);
+
+  useEffect(() => {
+    if (!departureActivityMatchesCurrentPlan || !departureActivityStatus.departureAt) return;
+    const remainingMs = new Date(departureActivityStatus.departureAt).getTime() - Date.now();
+    if (remainingMs <= 0) {
+      void getDepartureLiveActivityStatus().then(setDepartureActivityStatus);
+      return;
+    }
+    const timer = setTimeout(() => {
+      void getDepartureLiveActivityStatus().then(setDepartureActivityStatus);
+    }, Math.min(remainingMs + 500, 2_147_483_647));
+    return () => clearTimeout(timer);
+  }, [departureActivityMatchesCurrentPlan, departureActivityStatus.departureAt]);
+
+  const handleDepartureActivity = async () => {
+    if (departureActivityBusy) return;
+    setDepartureActivityBusy(true);
+    setDepartureActivityMessage(null);
+    try {
+      if (departureActivityMatchesCurrentPlan) {
+        await endDepartureLiveActivity();
+        setDepartureActivityStatus(await getDepartureLiveActivityStatus());
+        setDepartureActivityMessage("출발 카운트다운 종료됨");
+        return;
+      }
+      if (!selectedDestinationDepartureAt || !departureActivityCanStart) {
+        setDepartureActivityMessage("출발 시각을 계산한 뒤 시작할 수 있음");
+        return;
+      }
+      const status = await startDepartureLiveActivity({
+        destinationId: selectedDestinationPlace.id,
+        destinationName,
+        departureAt: selectedDestinationDepartureAt,
+        departureTimeLabel: departureTime,
+        guidance: departureWeatherGuidance,
+        deepLink: `weatheron://destination?id=${encodeURIComponent(selectedDestinationPlace.id)}`,
+      });
+      setDepartureActivityStatus(status);
+      setDepartureActivityMessage("잠금 화면과 Dynamic Island에 표시 중");
+    } catch (error) {
+      setDepartureActivityMessage(error instanceof Error ? error.message : "출발 카운트다운을 시작하지 못했음");
+    } finally {
+      setDepartureActivityBusy(false);
+    }
+  };
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -216,6 +301,63 @@ export function DestinationCareScreen({
           />
         </View>
 
+        {Platform.OS === "ios" ? (
+          <View style={[styles.liveActivityPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme)]}>
+            <View style={styles.liveActivityHeader}>
+              <View style={styles.liveActivityCopy}>
+                <Text style={[styles.sectionTitle, { color: theme.gold }]}>실시간 출발 현황</Text>
+                <Text style={[styles.liveActivityTitle, { color: theme.text }]}>잠금 화면 출발 카운트다운</Text>
+                <Text style={[styles.liveActivityBody, { color: theme.muted }]}>
+                  {departureActivityMatchesDestination
+                    ? `${destinationName} · ${departureTime} 출발까지 남은 시간 표시 중`
+                    : `${destinationName} · ${departureTime} 권장 출발 · ${departureWeatherGuidance}`}
+                </Text>
+              </View>
+              <View style={[styles.liveActivityStatePill, { backgroundColor: departureActivityMatchesDestination ? theme.cardStrong : theme.cardMuted }]}>
+                <Text style={[styles.liveActivityStateText, { color: departureActivityMatchesDestination ? theme.clear : theme.subtle }]}>
+                  {departureActivityMatchesDestination ? "진행 중" : "대기"}
+                </Text>
+              </View>
+            </View>
+            <FeedbackPressable
+              accessibilityLabel={departureActivityMatchesCurrentPlan ? "출발 카운트다운 종료" : "출발 카운트다운 시작 또는 갱신"}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: departureActivityBusy || (!departureActivityMatchesCurrentPlan && !departureActivityCanStart) }}
+              disabled={departureActivityBusy || (!departureActivityMatchesCurrentPlan && (!departureActivityCanStart || !departureActivityStatus.enabled))}
+              onPress={() => void handleDepartureActivity()}
+              style={({ pressed }) => [
+                styles.liveActivityButton,
+                {
+                  backgroundColor: departureActivityMatchesCurrentPlan ? "transparent" : theme.gold,
+                  borderColor: theme.gold,
+                  opacity: departureActivityBusy || (!departureActivityMatchesCurrentPlan && (!departureActivityCanStart || !departureActivityStatus.enabled))
+                    ? 0.45
+                    : pressed
+                      ? 0.84
+                      : 1,
+                },
+              ]}
+            >
+              <Text style={[styles.liveActivityButtonText, { color: departureActivityMatchesCurrentPlan ? theme.gold : theme.onAccent }]}>
+                {departureActivityBusy
+                  ? "처리 중"
+                  : departureActivityMatchesCurrentPlan
+                    ? "카운트다운 종료"
+                    : departureActivityMatchesDestination
+                      ? "변경 시각으로 갱신"
+                      : departureActivityStatus.active
+                        ? "이 목적지로 변경"
+                      : "카운트다운 시작"}
+              </Text>
+            </FeedbackPressable>
+            {!departureActivityStatus.enabled ? (
+              <Text style={[styles.liveActivityMessage, { color: theme.warm }]}>iOS 설정에서 WeatherON Live Activity 허용이 필요함</Text>
+            ) : departureActivityMessage ? (
+              <Text style={[styles.liveActivityMessage, { color: theme.clear }]}>{departureActivityMessage}</Text>
+            ) : null}
+          </View>
+        ) : null}
+
         <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme)]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
@@ -340,6 +482,7 @@ export function DestinationCareScreen({
             accessibilityRole="button"
             onPress={() => {
               if (!selectedDestinationPlace) return;
+              if (departureActivityMatchesDestination) void endDepartureLiveActivity();
               onRemoveSavedDestination(selectedDestinationPlace.id);
               onNavigate("G1");
             }}
@@ -856,6 +999,22 @@ function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCa
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "확인 전";
   return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+}
+
+function getDepartureWeatherGuidance(
+  weather: P0ScreenProps["state"]["destinationCare"]["destinationWeather"],
+  rainThresholdPct: number,
+  windThresholdMs: number,
+) {
+  const upcoming = weather.hourly.slice(0, 6);
+  const maxRainProbabilityPct = Math.max(weather.current.rainProbabilityPct, ...upcoming.map((item) => item.rainProbabilityPct));
+  const maxWindMs = Math.max(weather.current.windMs, ...upcoming.map((item) => item.windMs));
+  const rainRisk = maxRainProbabilityPct >= rainThresholdPct;
+  const windRisk = maxWindMs >= windThresholdMs;
+  if (rainRisk && windRisk) return "비·강풍 대비 필요";
+  if (rainRisk) return "비 대비 필요 · 강풍 위험 낮음";
+  if (windRisk) return "비 위험 낮음 · 강풍 대비 필요";
+  return "비·강풍 위험 낮음";
 }
 
 function getTravelEstimateCopy(
@@ -1390,6 +1549,61 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  liveActivityPanel: {
+    gap: spacing.sm,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  liveActivityHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+  },
+  liveActivityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  liveActivityTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  liveActivityBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  liveActivityStatePill: {
+    minHeight: 26,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+  },
+  liveActivityStateText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  liveActivityButton: {
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  liveActivityButtonText: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  liveActivityMessage: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
   },
   compareGrid: {
     flexDirection: "row",

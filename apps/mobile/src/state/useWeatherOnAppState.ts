@@ -46,6 +46,7 @@ import {
   syncLocalWeatherNotifications,
 } from "../providers/localNotifications";
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
+import { getDepartureLiveActivityStatus } from "../providers/departureLiveActivity";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts } from "../utils/zonedDateTime";
 import {
@@ -613,6 +614,18 @@ export function useWeatherOnAppState() {
       ),
     [selectedDestinationSchedulePreference.targetArrivalTime, selectedDestinationPlace.timezone, nowMinuteTick],
   );
+  const selectedDestinationDepartureAt = useMemo(() => {
+    if (
+      !destinationArrivalTimeIso ||
+      typeof selectedDestinationTravelMinutes !== "number" ||
+      typeof selectedDestinationAutoBufferMinutes !== "number"
+    ) {
+      return undefined;
+    }
+    const departureAt = new Date(destinationArrivalTimeIso).getTime()
+      - (selectedDestinationTravelMinutes + selectedDestinationAutoBufferMinutes) * 60 * 1000;
+    return new Date(departureAt).toISOString();
+  }, [destinationArrivalTimeIso, selectedDestinationAutoBufferMinutes, selectedDestinationTravelMinutes]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -669,10 +682,12 @@ export function useWeatherOnAppState() {
     if (!appStateHydrated) return;
     void reconcileNotificationPermission();
     void reconcileDeviceLocationPermission();
+    void getDepartureLiveActivityStatus();
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
         void reconcileNotificationPermission();
         void reconcileDeviceLocationPermission();
+        void getDepartureLiveActivityStatus();
       }
     });
     return () => {
@@ -1618,6 +1633,7 @@ export function useWeatherOnAppState() {
     selectedDestinationAlertCondition,
     selectedDestinationSchedulePreference,
     selectedDestinationTravelEstimate,
+    selectedDestinationDepartureAt,
     selectedDestinationPlace,
     destinationSelectionReady,
     placeSearchQuery,

@@ -126,6 +126,7 @@ export function AppNavigator() {
     selectedDestinationAlertCondition: appState.selectedDestinationAlertCondition,
     selectedDestinationSchedulePreference: appState.selectedDestinationSchedulePreference,
     selectedDestinationTravelEstimate: appState.selectedDestinationTravelEstimate,
+    selectedDestinationDepartureAt: appState.selectedDestinationDepartureAt,
     selectedDestinationPlace: appState.selectedDestinationPlace,
     destinationSelectionReady: appState.destinationSelectionReady,
     placeSearchQuery: appState.placeSearchQuery,

@@ -14,9 +14,18 @@ widget_group = project.main_group.find_subpath("WeatherONWidget", true)
 widget_group.set_source_tree("<group>")
 widget_group.set_path("WeatherONWidget")
 
-swift_file = widget_group.files.find { |file| file.path == "WeatherONWidget.swift" }
-swift_file ||= widget_group.new_file("WeatherONWidget.swift")
-widget_target.source_build_phase.add_file_reference(swift_file, true)
+swift_file_paths = [
+  "WeatherONWidget.swift",
+  "WeatherONDepartureLiveActivity.swift",
+  "../../modules/weatheron-widget-data/ios/WeatherONDepartureActivityAttributes.swift",
+]
+swift_file_paths.each do |file_path|
+  swift_file = widget_group.files.find { |file| file.path == file_path }
+  swift_file ||= widget_group.new_file(file_path)
+  unless widget_target.source_build_phase.files_references.include?(swift_file)
+    widget_target.source_build_phase.add_file_reference(swift_file, true)
+  end
+end
 
 unless app_target.dependencies.any? { |dependency| dependency.target == widget_target }
   app_target.add_dependency(widget_target)

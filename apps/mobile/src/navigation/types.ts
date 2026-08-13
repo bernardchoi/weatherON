@@ -55,6 +55,7 @@ export type P0ScreenProps = {
   selectedDestinationAlertCondition: DestinationAlertCondition;
   selectedDestinationSchedulePreference: DestinationSchedulePreference;
   selectedDestinationTravelEstimate: DestinationTravelEstimate;
+  selectedDestinationDepartureAt?: string;
   selectedDestinationPlace: PlaceSearchResult;
   destinationSelectionReady: boolean;
   placeSearchQuery: string;

@@ -981,7 +981,6 @@ private extension WeatherONWidgetStore {
   }
 }
 
-@main
 struct WeatherONWidget: Widget {
   let kind = "WeatherONSmallWidget"
 
@@ -996,6 +995,14 @@ struct WeatherONWidget: Widget {
     .configurationDisplayName("WeatherON 날씨와 외출 준비")
     .description("현재 위치 또는 저장한 목적지의 날씨, 출발 시각과 코디를 확인해요.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+  }
+}
+
+@main
+struct WeatherONWidgetBundle: WidgetBundle {
+  var body: some Widget {
+    WeatherONWidget()
+    WeatherONDepartureLiveActivity()
   }
 }
 
