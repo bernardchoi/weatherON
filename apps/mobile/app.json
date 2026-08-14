@@ -57,7 +57,7 @@
         "NSSupportsLiveActivities": true,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "22"
+      "buildNumber": "27"
     },
     "android": {
       "package": "com.weatheron.mobile",

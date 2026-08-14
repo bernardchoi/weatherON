@@ -9,6 +9,9 @@ const nativeModule = read("apps/mobile/modules/weatheron-widget-data/ios/Weather
 const liveActivity = read("apps/mobile/ios/WeatherONWidget/WeatherONDepartureLiveActivity.swift");
 const widgetBundle = read("apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift");
 const destinationScreen = read("apps/mobile/src/screens/DestinationCareScreen.tsx");
+const appState = read("apps/mobile/src/state/useWeatherOnAppState.ts");
+const liveActivityProvider = read("apps/mobile/src/providers/departureLiveActivity.ios.ts");
+const liveActivityShared = read("apps/mobile/src/providers/departureLiveActivity.shared.ts");
 const iosWidgetSnapshot = read("apps/mobile/src/providers/widgetSnapshot.ios.ts");
 const project = read("apps/mobile/ios/WeatherON.xcodeproj/project.pbxproj");
 const configureTarget = read("apps/mobile/ios/scripts/configure-widget-target.rb");
@@ -28,16 +31,43 @@ assert.match(nativeModule, /dismissalPolicy: \.immediate/u);
 assert.match(nativeModule, /endExpiredDepartureActivities/u);
 
 assert.match(liveActivity, /ActivityConfiguration\(for: WeatherONDepartureActivityAttributes\.self\)/u);
-assert.match(liveActivity, /Text\(timerInterval:/u);
+assert.match(liveActivity, /timerInterval: Date\(\)\.\.\.max\(Date\(\), departureAt\)/u);
+assert.match(liveActivity, /showsHours: !compact/u);
+assert.match(liveActivity, /maxWidth: compact \? 46 : nil/u);
 assert.match(liveActivity, /context\.attributes\.destinationName/u);
 assert.match(liveActivity, /context\.attributes\.departureTimeLabel/u);
 assert.match(liveActivity, /context\.state\.guidance/u);
 assert.match(widgetBundle, /WeatherONDepartureLiveActivity\(\)/u);
+assert.match(widgetBundle, /return entry\.hasSharedSnapshot \? entry : \.placeholder/u);
+assert.doesNotMatch(widgetBundle, /context\.isPreview \? \.placeholder/u);
+assert.match(widgetBundle, /Library\/Application Support\/WeatherONWidget\/weatheron-widget-store-v2\.json/u);
+assert.match(widgetBundle, /let kind = "WeatherONWeatherWidgetV2"/u);
+assert.match(widgetBundle, /StaticConfiguration\(/u);
+assert.doesNotMatch(widgetBundle, /AppIntentConfiguration\(/u);
+assert.match(widgetBundle, /\.contentMarginsDisabled\(\)/u);
+assert.match(nativeModule, /WidgetCenter\.shared\.reloadTimelines\(ofKind: widgetKind\)/u);
+assert.match(nativeModule, /widgetReloadWorkItem\?\.cancel\(\)/u);
+assert.doesNotMatch(nativeModule, /WidgetCenter\.shared\.reloadAllTimelines\(\)/u);
+assert.match(nativeModule, /Library\/Application Support\/WeatherONWidget\/weatheron-widget-store-v2\.json/u);
+assert.match(nativeModule, /widgetKind = "WeatherONWeatherWidgetV2"/u);
+assert.match(nativeModule, /createDirectory\(/u);
+assert.match(nativeModule, /Data\(snapshotJson\.utf8\)/u);
 
-assert.match(destinationScreen, /startDepartureLiveActivity\(\{/u);
+const nativeBuildVersions = [...project.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/gu)].map((match) => match[1]);
+assert.ok(nativeBuildVersions.length > 0, "native build version missing");
+assert.ok(
+  nativeBuildVersions.every((version) => version === appConfig.expo.ios.buildNumber),
+  "Expo and native iOS build versions must match",
+);
+
 assert.match(destinationScreen, /실시간 출발 현황/u);
 assert.match(destinationScreen, /getDepartureWeatherGuidance/u);
 assert.match(destinationScreen, /endDepartureLiveActivity\(\)/u);
+assert.doesNotMatch(destinationScreen, /카운트다운 시작/u);
+assert.match(appState, /syncAutomaticDepartureLiveActivity\(automaticDepartureActivityInput\)/u);
+assert.match(appState, /repeatDays\.includes\(getWeekdayForZonedDate\(arrivalDate\)\)/u);
+assert.match(liveActivityProvider, /isDepartureLiveActivityAutoWindow\(input\.departureAt\)/u);
+assert.match(liveActivityShared, /departureLiveActivityAutoLeadMinutes = 60/u);
 assert.match(iosWidgetSnapshot, /export \* from "\.\/widgetSnapshot\.shared";/u);
 
 for (const source of ["WeatherONDepartureLiveActivity.swift", "WeatherONDepartureActivityAttributes.swift"]) {

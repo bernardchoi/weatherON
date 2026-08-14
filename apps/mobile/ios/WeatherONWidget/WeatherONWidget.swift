@@ -4,6 +4,7 @@ import WidgetKit
 
 private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetStoreKey = "weatheron.widget.store.v2"
+private let widgetStoreRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
 private let legacySnapshotKey = "weatheron.widget.snapshot.v1"
 private let currentLocationEntityID = "__current__"
 private let homeDeepLink = URL(string: "weatheron://home")!
@@ -23,6 +24,28 @@ private struct WeatherONHourlySnapshot: Codable, Hashable, Identifiable {
   let rainProbabilityPct: Int
 
   var id: String { time }
+
+  private enum CodingKeys: String, CodingKey {
+    case time
+    case temperatureC
+    case condition
+    case rainProbabilityPct
+  }
+
+  init(time: String, temperatureC: Int, condition: String, rainProbabilityPct: Int) {
+    self.time = time
+    self.temperatureC = temperatureC
+    self.condition = condition
+    self.rainProbabilityPct = rainProbabilityPct
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    time = try values.decodeIfPresent(String.self, forKey: .time) ?? "--:--"
+    temperatureC = try values.decodeIfPresent(Int.self, forKey: .temperatureC) ?? 0
+    condition = try values.decodeIfPresent(String.self, forKey: .condition) ?? "cloud"
+    rainProbabilityPct = try values.decodeIfPresent(Int.self, forKey: .rainProbabilityPct) ?? 0
+  }
 }
 
 private struct WeatherONOutfitItem: Codable, Hashable, Identifiable {
@@ -30,6 +53,22 @@ private struct WeatherONOutfitItem: Codable, Hashable, Identifiable {
   let name: String
 
   var id: String { "\(category):\(name)" }
+
+  private enum CodingKeys: String, CodingKey {
+    case category
+    case name
+  }
+
+  init(category: String, name: String) {
+    self.category = category
+    self.name = name
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    category = try values.decodeIfPresent(String.self, forKey: .category) ?? "top"
+    name = try values.decodeIfPresent(String.self, forKey: .name) ?? "추천 코디"
+  }
 }
 
 private struct WeatherONLocationSnapshot: Codable, Hashable {
@@ -59,6 +98,109 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
 
   var isDestination: Bool { kind == "destination" }
   var deepLinkURL: URL { URL(string: deepLink) ?? homeDeepLink }
+
+  private enum CodingKeys: String, CodingKey {
+    case id
+    case kind
+    case locationName
+    case temperatureC
+    case feelsLikeC
+    case condition
+    case conditionLabel
+    case rainProbabilityPct
+    case humidityPct
+    case windMs
+    case umbrellaNeeded
+    case outerNeeded
+    case maskNeeded
+    case outfitSummary
+    case outfitItems
+    case outfitVariant
+    case observedAt
+    case hourly
+    case departureTime
+    case arrivalTime
+    case travelMinutes
+    case transportMode
+    case deepLink
+  }
+
+  init(
+    id: String,
+    kind: String,
+    locationName: String,
+    temperatureC: Int,
+    feelsLikeC: Int,
+    condition: String,
+    conditionLabel: String,
+    rainProbabilityPct: Int,
+    humidityPct: Int,
+    windMs: Double,
+    umbrellaNeeded: Bool,
+    outerNeeded: Bool,
+    maskNeeded: Bool,
+    outfitSummary: String,
+    outfitItems: [WeatherONOutfitItem],
+    outfitVariant: String,
+    observedAt: String,
+    hourly: [WeatherONHourlySnapshot],
+    departureTime: String?,
+    arrivalTime: String?,
+    travelMinutes: Int?,
+    transportMode: String?,
+    deepLink: String
+  ) {
+    self.id = id
+    self.kind = kind
+    self.locationName = locationName
+    self.temperatureC = temperatureC
+    self.feelsLikeC = feelsLikeC
+    self.condition = condition
+    self.conditionLabel = conditionLabel
+    self.rainProbabilityPct = rainProbabilityPct
+    self.humidityPct = humidityPct
+    self.windMs = windMs
+    self.umbrellaNeeded = umbrellaNeeded
+    self.outerNeeded = outerNeeded
+    self.maskNeeded = maskNeeded
+    self.outfitSummary = outfitSummary
+    self.outfitItems = outfitItems
+    self.outfitVariant = outfitVariant
+    self.observedAt = observedAt
+    self.hourly = hourly
+    self.departureTime = departureTime
+    self.arrivalTime = arrivalTime
+    self.travelMinutes = travelMinutes
+    self.transportMode = transportMode
+    self.deepLink = deepLink
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    id = try values.decodeIfPresent(String.self, forKey: .id) ?? "current"
+    kind = try values.decodeIfPresent(String.self, forKey: .kind) ?? "current"
+    locationName = try values.decodeIfPresent(String.self, forKey: .locationName) ?? "WeatherON"
+    temperatureC = try values.decodeIfPresent(Int.self, forKey: .temperatureC) ?? 0
+    feelsLikeC = try values.decodeIfPresent(Int.self, forKey: .feelsLikeC) ?? temperatureC
+    condition = try values.decodeIfPresent(String.self, forKey: .condition) ?? "cloud"
+    conditionLabel = try values.decodeIfPresent(String.self, forKey: .conditionLabel) ?? "날씨 확인 중"
+    rainProbabilityPct = try values.decodeIfPresent(Int.self, forKey: .rainProbabilityPct) ?? 0
+    humidityPct = try values.decodeIfPresent(Int.self, forKey: .humidityPct) ?? 0
+    windMs = try values.decodeIfPresent(Double.self, forKey: .windMs) ?? 0
+    umbrellaNeeded = try values.decodeIfPresent(Bool.self, forKey: .umbrellaNeeded) ?? false
+    outerNeeded = try values.decodeIfPresent(Bool.self, forKey: .outerNeeded) ?? false
+    maskNeeded = try values.decodeIfPresent(Bool.self, forKey: .maskNeeded) ?? false
+    outfitSummary = try values.decodeIfPresent(String.self, forKey: .outfitSummary) ?? "코디 준비 중"
+    outfitItems = try values.decodeIfPresent([WeatherONOutfitItem].self, forKey: .outfitItems) ?? []
+    outfitVariant = try values.decodeIfPresent(String.self, forKey: .outfitVariant) ?? "default"
+    observedAt = try values.decodeIfPresent(String.self, forKey: .observedAt) ?? ""
+    hourly = try values.decodeIfPresent([WeatherONHourlySnapshot].self, forKey: .hourly) ?? []
+    departureTime = try values.decodeIfPresent(String.self, forKey: .departureTime)
+    arrivalTime = try values.decodeIfPresent(String.self, forKey: .arrivalTime)
+    travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
+    transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
+    deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
+  }
 }
 
 private struct WeatherONWidgetStore: Codable {
@@ -67,6 +209,37 @@ private struct WeatherONWidgetStore: Codable {
   let selectedDestinationId: String?
   let current: WeatherONLocationSnapshot
   let destinations: [WeatherONLocationSnapshot]
+
+  private enum CodingKeys: String, CodingKey {
+    case schemaVersion
+    case updatedAt
+    case selectedDestinationId
+    case current
+    case destinations
+  }
+
+  init(
+    schemaVersion: Int,
+    updatedAt: String,
+    selectedDestinationId: String?,
+    current: WeatherONLocationSnapshot,
+    destinations: [WeatherONLocationSnapshot]
+  ) {
+    self.schemaVersion = schemaVersion
+    self.updatedAt = updatedAt
+    self.selectedDestinationId = selectedDestinationId
+    self.current = current
+    self.destinations = destinations
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    schemaVersion = try values.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 2
+    updatedAt = try values.decodeIfPresent(String.self, forKey: .updatedAt) ?? ""
+    selectedDestinationId = try values.decodeIfPresent(String.self, forKey: .selectedDestinationId)
+    current = try values.decodeIfPresent(WeatherONLocationSnapshot.self, forKey: .current) ?? .currentPlaceholder
+    destinations = try values.decodeIfPresent([WeatherONLocationSnapshot].self, forKey: .destinations) ?? []
+  }
 }
 
 private struct WeatherONLegacySnapshot: Codable {
@@ -80,9 +253,15 @@ private struct WeatherONLegacySnapshot: Codable {
 
 private enum WeatherONStoreReader {
   static func load() -> (store: WeatherONWidgetStore, hasSharedSnapshot: Bool) {
-    guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
-      return (.placeholder, false)
+    if
+      let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier),
+      let data = try? Data(contentsOf: containerURL.appendingPathComponent(widgetStoreRelativePath, isDirectory: false)),
+      let store = try? JSONDecoder().decode(WeatherONWidgetStore.self, from: data)
+    {
+      return (store, true)
     }
+
+    guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return (.placeholder, false) }
 
     if
       let json = defaults.string(forKey: widgetStoreKey),
@@ -146,13 +325,18 @@ private enum WeatherONTimelineFactory {
     let refresh = Calendar.current.date(byAdding: .minute, value: 90, to: now) ?? now.addingTimeInterval(5_400)
     return Timeline(entries: entries, policy: .after(refresh))
   }
+
+  static func snapshot(selectionID: String?) -> WeatherONEntry {
+    let entry = entry(selectionID: selectionID)
+    return entry.hasSharedSnapshot ? entry : .placeholder
+  }
 }
 
 private struct WeatherONLegacyProvider: TimelineProvider {
   func placeholder(in context: Context) -> WeatherONEntry { .placeholder }
 
   func getSnapshot(in context: Context, completion: @escaping (WeatherONEntry) -> Void) {
-    completion(context.isPreview ? .placeholder : WeatherONTimelineFactory.entry(selectionID: nil))
+    completion(WeatherONTimelineFactory.snapshot(selectionID: nil))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherONEntry>) -> Void) {
@@ -212,7 +396,7 @@ private struct WeatherONIntentProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> WeatherONEntry { .placeholder }
 
   func snapshot(for configuration: WeatherONWidgetConfigurationIntent, in context: Context) async -> WeatherONEntry {
-    context.isPreview ? .placeholder : WeatherONTimelineFactory.entry(selectionID: configuration.location?.id)
+    WeatherONTimelineFactory.snapshot(selectionID: configuration.location?.id)
   }
 
   func timeline(for configuration: WeatherONWidgetConfigurationIntent, in context: Context) async -> Timeline<WeatherONEntry> {
@@ -982,19 +1166,22 @@ private extension WeatherONWidgetStore {
 }
 
 struct WeatherONWidget: Widget {
-  let kind = "WeatherONSmallWidget"
+  // 실기기에 이미 배치된 위젯과 동일한 식별자를 유지해야 WidgetKit이
+  // 플레이스홀더 대신 새 타임라인을 연결한다.
+  let kind = "WeatherONWeatherWidgetV2"
 
   var body: some WidgetConfiguration {
-    AppIntentConfiguration(
+    StaticConfiguration(
       kind: kind,
-      intent: WeatherONWidgetConfigurationIntent.self,
-      provider: WeatherONIntentProvider()
+      provider: WeatherONLegacyProvider()
     ) { entry in
       WeatherONWidgetView(entry: entry)
     }
     .configurationDisplayName("WeatherON 날씨와 외출 준비")
     .description("현재 위치 또는 저장한 목적지의 날씨, 출발 시각과 코디를 확인해요.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    .contentMarginsDisabled()
+    .containerBackgroundRemovable(false)
   }
 }
 

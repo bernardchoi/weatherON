@@ -107,11 +107,16 @@ private struct WeatherONDepartureCountdown: View {
   let compact: Bool
 
   var body: some View {
-    Text(timerInterval: Date()...max(Date(), departureAt), countsDown: true)
-      .font(compact ? .caption2.monospacedDigit().bold() : .title2.monospacedDigit().bold())
+    Text(
+      timerInterval: Date()...max(Date(), departureAt),
+      countsDown: true,
+      showsHours: !compact
+    )
+      .font(compact ? .system(size: 11, weight: .bold, design: .monospaced) : .title2.monospacedDigit().bold())
       .foregroundStyle(departureGold)
       .lineLimit(1)
       .minimumScaleFactor(0.72)
+      .frame(maxWidth: compact ? 46 : nil, alignment: .trailing)
       .accessibilityLabel("출발까지 남은 시간")
   }
 }

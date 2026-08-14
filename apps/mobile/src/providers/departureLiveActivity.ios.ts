@@ -1,5 +1,6 @@
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
 import {
+  isDepartureLiveActivityAutoWindow,
   parseDepartureLiveActivityStatus,
   unavailableDepartureLiveActivityStatus,
   type DepartureLiveActivityInput,
@@ -7,6 +8,11 @@ import {
 } from "./departureLiveActivity.shared";
 
 export type { DepartureLiveActivityInput, DepartureLiveActivityStatus } from "./departureLiveActivity.shared";
+export {
+  departureLiveActivityAutoLeadMinutes,
+  getDepartureWeatherGuidance,
+  isDepartureLiveActivityAutoWindow,
+} from "./departureLiveActivity.shared";
 
 export async function getDepartureLiveActivityStatus(): Promise<DepartureLiveActivityStatus> {
   if (!WeatheronWidgetDataModule) return unavailableDepartureLiveActivityStatus;
@@ -36,4 +42,30 @@ export async function endDepartureLiveActivity(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function syncAutomaticDepartureLiveActivity(
+  input: DepartureLiveActivityInput | null,
+): Promise<DepartureLiveActivityStatus> {
+  const status = await getDepartureLiveActivityStatus();
+  if (!status.supported || !status.enabled) return status;
+
+  if (!input || !isDepartureLiveActivityAutoWindow(input.departureAt)) {
+    if (status.active) {
+      await endDepartureLiveActivity();
+      return getDepartureLiveActivityStatus();
+    }
+    return status;
+  }
+
+  if (
+    status.active &&
+    status.destinationId === input.destinationId &&
+    status.departureAt &&
+    Math.abs(new Date(status.departureAt).getTime() - new Date(input.departureAt).getTime()) < 1_000
+  ) {
+    return status;
+  }
+
+  return startDepartureLiveActivity(input);
 }

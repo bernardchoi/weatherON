@@ -5,7 +5,8 @@ import WidgetKit
 
 private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetSnapshotKey = "weatheron.widget.store.v2"
-private let widgetKind = "WeatherONSmallWidget"
+private let widgetSnapshotRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
+private let widgetKind = "WeatherONWeatherWidgetV2"
 
 private struct DepartureActivityPayload: Decodable {
   let destinationId: String
@@ -25,6 +26,7 @@ private enum DepartureActivityError: Error {
 
 public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   private var departureEndWorkItem: DispatchWorkItem?
+  private var widgetReloadWorkItem: DispatchWorkItem?
 
   public func definition() -> ModuleDefinition {
     Name("WeatheronWidgetData")
@@ -32,13 +34,38 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     Function("saveSnapshot") { (snapshotJson: String) -> Bool in
       guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return false }
 
-      if defaults.string(forKey: widgetSnapshotKey) == snapshotJson {
-        return false
+      let snapshotData = Data(snapshotJson.utf8)
+      let fileURL = FileManager.default
+        .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
+        .appendingPathComponent(widgetSnapshotRelativePath, isDirectory: false)
+      let previousFileData = fileURL.flatMap { try? Data(contentsOf: $0) }
+      let changed = defaults.string(forKey: widgetSnapshotKey) != snapshotJson || previousFileData != snapshotData
+      if changed {
+        defaults.set(snapshotJson, forKey: widgetSnapshotKey)
+      }
+      defaults.synchronize()
+
+      if let fileURL {
+        try? FileManager.default.createDirectory(
+          at: fileURL.deletingLastPathComponent(),
+          withIntermediateDirectories: true
+        )
+        try? snapshotData.write(to: fileURL, options: .atomic)
+        try? FileManager.default.setAttributes(
+          [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+          ofItemAtPath: fileURL.path
+        )
       }
 
-      defaults.set(snapshotJson, forKey: widgetSnapshotKey)
-      WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-      return true
+      // React 상태가 연달아 바뀔 때 reload 요청이 폭주하면 WidgetKit이 throttle한다.
+      // 마지막 스냅샷 저장 뒤 한 번만 타임라인을 갱신한다.
+      self.widgetReloadWorkItem?.cancel()
+      let reloadWorkItem = DispatchWorkItem {
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+      }
+      self.widgetReloadWorkItem = reloadWorkItem
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: reloadWorkItem)
+      return changed
     }
 
     AsyncFunction("getDepartureActivityStatus") { () async -> String in

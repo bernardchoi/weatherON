@@ -46,9 +46,18 @@ import {
   syncLocalWeatherNotifications,
 } from "../providers/localNotifications";
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
-import { getDepartureLiveActivityStatus } from "../providers/departureLiveActivity";
+import {
+  getDepartureWeatherGuidance,
+  syncAutomaticDepartureLiveActivity,
+  type DepartureLiveActivityInput,
+} from "../providers/departureLiveActivity";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
-import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts } from "../utils/zonedDateTime";
+import {
+  addZonedCalendarDays,
+  createDateAtTimeInZone,
+  getWeekdayForZonedDate,
+  getZonedDateTimeParts,
+} from "../utils/zonedDateTime";
 import {
   defaultAlertPreferences,
   defaultDestinationAlertCondition,
@@ -611,8 +620,16 @@ export function useWeatherOnAppState() {
         selectedDestinationSchedulePreference.targetArrivalTime,
         selectedDestinationPlace.timezone,
         nowMinuteTick,
+        selectedDestinationSchedulePreference.repeatEnabled,
+        selectedDestinationSchedulePreference.repeatDays,
       ),
-    [selectedDestinationSchedulePreference.targetArrivalTime, selectedDestinationPlace.timezone, nowMinuteTick],
+    [
+      selectedDestinationSchedulePreference.repeatDays,
+      selectedDestinationSchedulePreference.repeatEnabled,
+      selectedDestinationSchedulePreference.targetArrivalTime,
+      selectedDestinationPlace.timezone,
+      nowMinuteTick,
+    ],
   );
   const selectedDestinationDepartureAt = useMemo(() => {
     if (
@@ -678,22 +695,65 @@ export function useWeatherOnAppState() {
     saveNotificationState({ readNotificationIds, notificationHistory });
   }, [appStateHydrated, notificationHistory, readNotificationIds]);
 
+  const automaticDepartureActivityInput = useMemo<DepartureLiveActivityInput | null>(() => {
+    if (
+      Platform.OS !== "ios" ||
+      !smartCareEnabled ||
+      !destinationCareEnabled ||
+      !selectedDestinationDepartureAt ||
+      new Date(selectedDestinationDepartureAt).getTime() <= nowMinuteTick
+    ) {
+      return null;
+    }
+
+    const destinationWeather = state.destinationCare.destinationWeather;
+    const departureParts = getZonedDateTimeParts(new Date(selectedDestinationDepartureAt), selectedDestinationPlace.timezone);
+    return {
+      destinationId: selectedDestinationPlace.id,
+      destinationName: selectedDestinationPlace.name,
+      departureAt: selectedDestinationDepartureAt,
+      departureTimeLabel: `${String(departureParts.hour).padStart(2, "0")}:${String(departureParts.minute).padStart(2, "0")}`,
+      guidance: getDepartureWeatherGuidance(
+        destinationWeather,
+        selectedDestinationAlertCondition.rainThresholdPct,
+        selectedDestinationAlertCondition.windThresholdMs,
+      ),
+      deepLink: `weatheron://destination?id=${encodeURIComponent(selectedDestinationPlace.id)}`,
+    };
+  }, [
+    destinationCareEnabled,
+    nowMinuteTick,
+    selectedDestinationAlertCondition.rainThresholdPct,
+    selectedDestinationAlertCondition.windThresholdMs,
+    selectedDestinationDepartureAt,
+    selectedDestinationPlace.id,
+    selectedDestinationPlace.name,
+    selectedDestinationPlace.timezone,
+    smartCareEnabled,
+    state.destinationCare.destinationWeather,
+  ]);
+
   useEffect(() => {
     if (!appStateHydrated) return;
     void reconcileNotificationPermission();
     void reconcileDeviceLocationPermission();
-    void getDepartureLiveActivityStatus();
+    void syncAutomaticDepartureLiveActivity(automaticDepartureActivityInput);
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
         void reconcileNotificationPermission();
         void reconcileDeviceLocationPermission();
-        void getDepartureLiveActivityStatus();
+        void syncAutomaticDepartureLiveActivity(automaticDepartureActivityInput);
       }
     });
     return () => {
       subscription.remove();
     };
-  }, [appStateHydrated, reconcileDeviceLocationPermission, reconcileNotificationPermission]);
+  }, [
+    appStateHydrated,
+    automaticDepartureActivityInput,
+    reconcileDeviceLocationPermission,
+    reconcileNotificationPermission,
+  ]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1741,13 +1801,20 @@ export function useWeatherOnAppState() {
   };
 }
 
-function getRouteArrivalTimeIso(targetArrivalTime: string, timeZone: string, nowMs: number): string | undefined {
+function getRouteArrivalTimeIso(
+  targetArrivalTime: string,
+  timeZone: string,
+  nowMs: number,
+  repeatEnabled: boolean,
+  repeatDays: DestinationRepeatDay[],
+): string | undefined {
   if (!isValidTimeText(targetArrivalTime)) return undefined;
   const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
-  for (let offset = 0; offset <= 1; offset += 1) {
+  for (let offset = 0; offset <= 7; offset += 1) {
     const arrivalDate = addZonedCalendarDays(nowParts, offset);
+    if (repeatEnabled && !repeatDays.includes(getWeekdayForZonedDate(arrivalDate))) continue;
     const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
     if (arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
   }
-  return createDateAtTimeInZone(addZonedCalendarDays(nowParts, 1), targetArrivalTime, timeZone).toISOString();
+  return undefined;
 }
