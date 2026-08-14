@@ -9,6 +9,7 @@ const nativeModule = read("apps/mobile/modules/weatheron-widget-data/ios/Weather
 const liveActivity = read("apps/mobile/ios/WeatherONWidget/WeatherONDepartureLiveActivity.swift");
 const widgetBundle = read("apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift");
 const destinationScreen = read("apps/mobile/src/screens/DestinationCareScreen.tsx");
+const iosWidgetSnapshot = read("apps/mobile/src/providers/widgetSnapshot.ios.ts");
 const project = read("apps/mobile/ios/WeatherON.xcodeproj/project.pbxproj");
 const configureTarget = read("apps/mobile/ios/scripts/configure-widget-target.rb");
 
@@ -37,6 +38,7 @@ assert.match(destinationScreen, /startDepartureLiveActivity\(\{/u);
 assert.match(destinationScreen, /실시간 출발 현황/u);
 assert.match(destinationScreen, /getDepartureWeatherGuidance/u);
 assert.match(destinationScreen, /endDepartureLiveActivity\(\)/u);
+assert.match(iosWidgetSnapshot, /export \* from "\.\/widgetSnapshot\.shared";/u);
 
 for (const source of ["WeatherONDepartureLiveActivity.swift", "WeatherONDepartureActivityAttributes.swift"]) {
   assert.match(project, new RegExp(source.replaceAll(".", "\\."), "u"), `Xcode source missing: ${source}`);

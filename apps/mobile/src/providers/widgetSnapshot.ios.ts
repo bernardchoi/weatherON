@@ -1,13 +1,7 @@
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
-import {
-  createWeatheronWidgetSnapshot,
-  weatheronWidgetAppGroup,
-  weatheronWidgetDeepLink,
-  type WeatheronWidgetSnapshot,
-} from "./widgetSnapshot.shared";
+import type { WeatheronWidgetSnapshot } from "./widgetSnapshot.shared";
 
-export { createWeatheronWidgetSnapshot, weatheronWidgetAppGroup, weatheronWidgetDeepLink };
-export type { WeatheronWidgetSnapshot };
+export * from "./widgetSnapshot.shared";
 
 export function saveWeatheronWidgetSnapshot(snapshot: WeatheronWidgetSnapshot): boolean {
   try {
