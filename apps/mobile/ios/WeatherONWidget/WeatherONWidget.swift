@@ -1177,8 +1177,27 @@ struct WeatherONWidget: Widget {
     ) { entry in
       WeatherONWidgetView(entry: entry)
     }
-    .configurationDisplayName("WeatherON 날씨와 외출 준비")
-    .description("현재 위치 또는 저장한 목적지의 날씨, 출발 시각과 코디를 확인해요.")
+    .configurationDisplayName("WeatherON 현재 위치")
+    .description("현재 위치의 날씨와 외출 준비 정보를 확인해요.")
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    .contentMarginsDisabled()
+    .containerBackgroundRemovable(false)
+  }
+}
+
+struct WeatherONConfigurableWidget: Widget {
+  let kind = "WeatherONLocationWidgetV3"
+
+  var body: some WidgetConfiguration {
+    AppIntentConfiguration(
+      kind: kind,
+      intent: WeatherONWidgetConfigurationIntent.self,
+      provider: WeatherONIntentProvider()
+    ) { entry in
+      WeatherONWidgetView(entry: entry)
+    }
+    .configurationDisplayName("WeatherON 위치 선택")
+    .description("현재 위치 또는 저장한 목적지를 선택해 날씨와 외출 준비 정보를 확인해요.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     .contentMarginsDisabled()
     .containerBackgroundRemovable(false)
@@ -1189,6 +1208,7 @@ struct WeatherONWidget: Widget {
 struct WeatherONWidgetBundle: WidgetBundle {
   var body: some Widget {
     WeatherONWidget()
+    WeatherONConfigurableWidget()
     WeatherONDepartureLiveActivity()
   }
 }
