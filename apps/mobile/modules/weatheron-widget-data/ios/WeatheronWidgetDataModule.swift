@@ -40,9 +40,9 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
         .appendingPathComponent(widgetSnapshotRelativePath, isDirectory: false)
       let previousFileData = fileURL.flatMap { try? Data(contentsOf: $0) }
       let changed = defaults.string(forKey: widgetSnapshotKey) != snapshotJson || previousFileData != snapshotData
-      if changed {
-        defaults.set(snapshotJson, forKey: widgetSnapshotKey)
-      }
+      guard changed else { return true }
+
+      defaults.set(snapshotJson, forKey: widgetSnapshotKey)
       defaults.synchronize()
 
       if let fileURL {

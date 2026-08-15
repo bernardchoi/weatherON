@@ -37,6 +37,16 @@ export function isDepartureLiveActivityAutoWindow(
   return remainingMs > 0 && remainingMs <= leadMinutes * 60_000;
 }
 
+export function getDepartureLiveActivityActivationDelay(
+  departureAt: string,
+  nowMs = Date.now(),
+  leadMinutes = departureLiveActivityAutoLeadMinutes,
+): number | null {
+  const departureMs = new Date(departureAt).getTime();
+  if (!Number.isFinite(departureMs) || departureMs <= nowMs) return null;
+  return Math.max(0, departureMs - leadMinutes * 60_000 - nowMs);
+}
+
 export function getDepartureWeatherGuidance(
   weather: WeatherSnapshot,
   rainThresholdPct: number,

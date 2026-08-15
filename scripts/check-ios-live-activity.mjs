@@ -53,6 +53,7 @@ assert.match(widgetBundle, /\.contentMarginsDisabled\(\)/u);
 assert.match(nativeModule, /widgetKinds = \["WeatherONWeatherWidgetV2", "WeatherONLocationWidgetV3"\]/u);
 assert.match(nativeModule, /widgetKinds\.forEach \{ WidgetCenter\.shared\.reloadTimelines\(ofKind: \$0\) \}/u);
 assert.match(nativeModule, /widgetReloadWorkItem\?\.cancel\(\)/u);
+assert.match(nativeModule, /guard changed else \{ return true \}/u);
 assert.doesNotMatch(nativeModule, /WidgetCenter\.shared\.reloadAllTimelines\(\)/u);
 assert.match(nativeModule, /Library\/Application Support\/WeatherONWidget\/weatheron-widget-store-v2\.json/u);
 assert.match(nativeModule, /createDirectory\(/u);
@@ -70,9 +71,13 @@ assert.match(destinationScreen, /getDepartureWeatherGuidance/u);
 assert.match(destinationScreen, /endDepartureLiveActivity\(\)/u);
 assert.doesNotMatch(destinationScreen, /카운트다운 시작/u);
 assert.match(appState, /syncAutomaticDepartureLiveActivity\(automaticDepartureActivityInput\)/u);
+assert.match(appState, /getDepartureLiveActivityActivationDelay\(automaticDepartureActivityInput\.departureAt\)/u);
+assert.match(appState, /widgetSnapshotContentKeyRef\.current === widgetSnapshotContentKey/u);
+assert.doesNotMatch(appState, /new Date\(selectedDestinationDepartureAt\)\.getTime\(\) <= nowMinuteTick/u);
 assert.match(appState, /repeatDays\.includes\(getWeekdayForZonedDate\(arrivalDate\)\)/u);
 assert.match(liveActivityProvider, /isDepartureLiveActivityAutoWindow\(input\.departureAt\)/u);
 assert.match(liveActivityShared, /departureLiveActivityAutoLeadMinutes = 60/u);
+assert.match(liveActivityShared, /getDepartureLiveActivityActivationDelay/u);
 assert.match(iosWidgetSnapshot, /export \* from "\.\/widgetSnapshot\.shared";/u);
 
 for (const source of ["WeatherONDepartureLiveActivity.swift", "WeatherONDepartureActivityAttributes.swift"]) {

@@ -10,6 +10,7 @@ import {
 export type { DepartureLiveActivityInput, DepartureLiveActivityStatus } from "./departureLiveActivity.shared";
 export {
   departureLiveActivityAutoLeadMinutes,
+  getDepartureLiveActivityActivationDelay,
   getDepartureWeatherGuidance,
   isDepartureLiveActivityAutoWindow,
 } from "./departureLiveActivity.shared";

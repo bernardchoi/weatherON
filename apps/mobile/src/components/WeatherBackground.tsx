@@ -43,9 +43,9 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
     // 카드 위에 얹히는 전경 레이어: 비/폭풍/눈에만, 성긴 밀도·낮은 대비로 가독성을 해치지 않게.
     return (
       <View pointerEvents="none" style={styles.wrap}>
-        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={26} enabled={enabled} foreground /> : null}
-        {motionState === "storm" ? <RainDropsLayer height={fullBand} color={theme.sky} count={38} enabled={enabled} intense foreground /> : null}
-        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={22} enabled={enabled} foreground /> : null}
+        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={12} enabled={enabled} foreground /> : null}
+        {motionState === "storm" ? <RainDropsLayer height={fullBand} color={theme.sky} count={16} enabled={enabled} intense foreground /> : null}
+        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={12} enabled={enabled} foreground /> : null}
       </View>
     );
   }
@@ -56,15 +56,15 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
       <View style={StyleSheet.absoluteFill}>
         {motionState === "clear" ? <GlowPulseLayer color={theme.gold} enabled={enabled} /> : null}
         {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.55} enabled={enabled} /> : null}
-        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={90} enabled={enabled} /> : null}
+        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={48} enabled={enabled} /> : null}
         {motionState === "storm" ? (
           <>
-            <RainDropsLayer height={fullBand} color={theme.sky} count={120} enabled={enabled} intense />
+            <RainDropsLayer height={fullBand} color={theme.sky} count={64} enabled={enabled} intense />
             <LightningFlashLayer enabled={enabled} />
           </>
         ) : null}
-        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={64} enabled={enabled} /> : null}
-        {motionState === "night" ? <StarTwinkleLayer height={windowHeight} count={30} enabled={enabled} /> : null}
+        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={32} enabled={enabled} /> : null}
+        {motionState === "night" ? <StarTwinkleLayer height={windowHeight} count={20} enabled={enabled} /> : null}
       </View>
     </View>
   );

@@ -42,7 +42,14 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
       };
     }
 
-    const position = await Location.getCurrentPositionAsync();
+    // 날씨용 위치는 내비게이션 수준의 연속 정밀도가 필요하지 않다. 앱 복귀 때마다
+    // GPS를 새로 깨우지 않도록 최근 15분 내 캐시를 우선 사용하고, 없을 때만
+    // 배터리 균형 정확도로 한 번 조회한다.
+    const position = (
+      !shouldRequestPermission
+        ? await Location.getLastKnownPositionAsync({ maxAge: 15 * 60_000, requiredAccuracy: 3_000 })
+        : null
+    ) ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
     const coordinate = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
