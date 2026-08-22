@@ -39,7 +39,8 @@
       "../../assets/place-categories/*",
       "../../assets/wordmark/*",
       "../../assets/onboarding/*",
-      "../../assets/ui-icons/*"
+      "../../assets/ui-icons/*",
+      "../../assets/auth-providers/*"
     ],
     "ios": {
       "version": "1.0.0",
@@ -57,7 +58,7 @@
         "NSSupportsLiveActivities": true,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "28"
+      "buildNumber": "32"
     },
     "android": {
       "package": "com.weatheron.mobile",

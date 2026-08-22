@@ -57,17 +57,18 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
     const address = await resolveDeviceAddress(coordinate);
     const locationName = formatDeviceLocationName(address) ?? "내 위치 주변";
     const kmaLocation = createKmaWeatherLocationFromCoordinate(coordinate, locationName);
+    const countryCode = getDeviceCountryCode(address?.isoCountryCode, coordinate);
     return {
       status: "granted",
       message: "현재 위치 반영",
-      // 한국 밖에서는 KMA 격자·서울 시간대가 맞지 않으므로 역지오코딩 국가 기준으로 보정한다.
-      // 국가를 확인하지 못하면 기존과 동일하게 KR로 둔다.
+      // 한국 밖에서는 KMA 격자·서울 시간대가 맞지 않으므로 국가와 좌표를 함께 본다.
+      // 역지오코딩이 여행지 네트워크에서 실패해도 해외 좌표를 한국으로 오판하지 않는다.
       location:
-        address?.isoCountryCode && address.isoCountryCode !== "KR"
+        countryCode !== "KR"
           ? {
               ...kmaLocation,
-              countryCode: address.isoCountryCode === "JP" ? "JP" : "GLOBAL",
-              timezone: getDeviceTimezone(),
+              countryCode,
+              timezone: countryCode === "JP" ? "Asia/Tokyo" : getDeviceTimezone(),
             }
           : kmaLocation,
     };
@@ -77,6 +78,33 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
       message: "위치 확인 실패",
     };
   }
+}
+
+function getDeviceCountryCode(
+  isoCountryCode: string | null | undefined,
+  coordinate: { latitude: number; longitude: number },
+): "KR" | "JP" | "GLOBAL" {
+  const normalized = isoCountryCode?.trim().toUpperCase();
+  if (normalized === "KR" || normalized === "KOR") return "KR";
+  if (normalized === "JP" || normalized === "JPN") return "JP";
+  if (normalized) return "GLOBAL";
+  if (isCoordinateInKorea(coordinate)) return "KR";
+  if (isCoordinateInJapan(coordinate)) return "JP";
+  return "GLOBAL";
+}
+
+function isCoordinateInKorea(coordinate: { latitude: number; longitude: number }) {
+  const { latitude, longitude } = coordinate;
+  const mainland = latitude >= 34.3 && latitude <= 38.8 && longitude >= 125.8 && longitude <= 129.8;
+  const jeju = latitude >= 33 && latitude <= 33.7 && longitude >= 126 && longitude <= 127;
+  const ulleungdo = latitude >= 37.3 && latitude <= 37.7 && longitude >= 130.7 && longitude <= 131;
+  const dokdo = latitude >= 37.1 && latitude <= 37.4 && longitude >= 131.7 && longitude <= 132;
+  return mainland || jeju || ulleungdo || dokdo;
+}
+
+function isCoordinateInJapan(coordinate: { latitude: number; longitude: number }) {
+  return coordinate.latitude >= 24 && coordinate.latitude <= 46
+    && coordinate.longitude >= 122 && coordinate.longitude <= 154;
 }
 
 async function resolveDeviceAddress(coordinate: { latitude: number; longitude: number }) {

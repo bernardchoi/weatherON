@@ -1,4 +1,11 @@
 import { IntegrityHttpError, verifyAppIntegrityRequest } from "./integrityCore.mjs";
+import {
+  createOAuthChallenge,
+  disconnectOAuthProviders,
+  exchangeOAuthCredential,
+  getOAuthProviderAvailability,
+  handleOAuthCallback,
+} from "./oauthCore.mjs";
 
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URL = `${APPLE_ISSUER}/auth/keys`;
@@ -20,14 +27,26 @@ export async function handleAccountRoute(request, env = {}, options = {}) {
 
     const url = new URL(request.url);
     const routeKey = `${request.method.toUpperCase()} ${url.pathname}`;
+    if (routeKey === "GET /auth/providers") return { status: 200, payload: { providers: getOAuthProviderAvailability(env) } };
+    if (routeKey === "GET /auth/oauth/callback") return await handleOAuthCallback(request, database, env);
     if (routeKey === "POST /auth/apple/challenge") return await createAppleChallenge(database, env);
     if (routeKey === "POST /auth/apple/exchange") return await exchangeAppleCredential(request, database, env, options);
+    if (routeKey === "POST /auth/oauth/challenge") return await createOAuthChallenge(request, database, env);
+    if (routeKey === "POST /auth/oauth/exchange") {
+      return await exchangeOAuthCredential(request, database, env, {
+        fetchImpl: options.fetchImpl ?? globalThis.fetch,
+        upsertIdentity: (identity) => upsertIdentity(database, identity),
+        createSession: (userId, nowIso) => createSession(database, userId, env, nowIso),
+        readProfile: (userId) => readAccountProfile(database, userId, env),
+      });
+    }
     if (routeKey === "GET /auth/session") return await getCurrentSession(request, database, env);
     if (routeKey === "POST /auth/logout") return await signOutSession(request, database, env);
     if (routeKey === "POST /account/terms") return await acceptTerms(request, database, env);
+    if (routeKey === "POST /account/delete") return await deleteAccount(request, database, env, options);
     throw new AuthHttpError(404, "not_found", "요청한 계정 API가 없습니다.");
   } catch (error) {
-    if (error instanceof AuthHttpError || error instanceof IntegrityHttpError) {
+    if (error instanceof AuthHttpError || error instanceof IntegrityHttpError || error?.name === "OAuthHttpError") {
       return { status: error.status, payload: { error: error.code, message: error.message } };
     }
     console.error("account route failed", error instanceof Error ? error.message : String(error));
@@ -98,7 +117,7 @@ async function exchangeAppleCredential(request, database, env, options) {
 
   const subjectHash = await sha256Hex(claims.sub);
   const email = readOptionalString(claims.email, 320);
-  const userId = await upsertAppleUser(database, { subjectHash, email, displayName, nowIso });
+  const userId = await upsertIdentity(database, { provider: "apple", subjectHash, email, displayName, nowIso });
   const session = await createSession(database, userId, env, nowIso);
   const profile = await readAccountProfile(database, userId, env);
 
@@ -144,16 +163,28 @@ async function acceptTerms(request, database, env) {
   return { status: 200, payload: { account: await readAccountProfile(database, session.user_id, env) } };
 }
 
-async function upsertAppleUser(database, { subjectHash, email, displayName, nowIso }) {
+async function deleteAccount(request, database, env, options) {
+  const session = await requireSession(request, database);
+  await verifyAppIntegrityRequest(request.clone(), database, env, { session, routeKey: "POST /account/delete" });
+  const recentAuthLimit = Date.now() - 15 * 60 * 1000;
+  if (!session.created_at || Date.parse(session.created_at) < recentAuthLimit) {
+    throw new AuthHttpError(401, "recent_auth_required", "회원 탈퇴를 위해 다시 로그인해 주세요.");
+  }
+  await disconnectOAuthProviders(database, session.user_id, env, options.fetchImpl ?? globalThis.fetch);
+  await database.prepare("DELETE FROM users WHERE id = ?").bind(session.user_id).run();
+  return { status: 200, payload: { deleted: true } };
+}
+
+async function upsertIdentity(database, { provider, subjectHash, email, displayName, nowIso }) {
   const existing = await database
-    .prepare("SELECT user_id FROM auth_identities WHERE provider = 'apple' AND subject_hash = ?")
-    .bind(subjectHash)
+    .prepare("SELECT user_id FROM auth_identities WHERE provider = ? AND subject_hash = ?")
+    .bind(provider, subjectHash)
     .first();
   if (existing?.user_id) {
     await database.batch([
       database
-        .prepare("UPDATE auth_identities SET email = COALESCE(?, email), last_login_at = ?, updated_at = ? WHERE provider = 'apple' AND subject_hash = ?")
-        .bind(email, nowIso, nowIso, subjectHash),
+        .prepare("UPDATE auth_identities SET email = COALESCE(?, email), last_login_at = ?, updated_at = ? WHERE provider = ? AND subject_hash = ?")
+        .bind(email, nowIso, nowIso, provider, subjectHash),
       database
         .prepare("UPDATE users SET email = COALESCE(?, email), display_name = COALESCE(?, display_name), updated_at = ? WHERE id = ?")
         .bind(email, displayName, nowIso, existing.user_id),
@@ -171,15 +202,15 @@ async function upsertAppleUser(database, { subjectHash, email, displayName, nowI
         .bind(userId, email, displayName, nowIso, nowIso),
       database
         .prepare(
-          "INSERT INTO auth_identities (provider, subject_hash, user_id, email, created_at, updated_at, last_login_at) VALUES ('apple', ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO auth_identities (provider, subject_hash, user_id, email, created_at, updated_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
-        .bind(subjectHash, userId, email, nowIso, nowIso, nowIso),
+        .bind(provider, subjectHash, userId, email, nowIso, nowIso, nowIso),
     ]);
     return userId;
   } catch (error) {
     const concurrent = await database
-      .prepare("SELECT user_id FROM auth_identities WHERE provider = 'apple' AND subject_hash = ?")
-      .bind(subjectHash)
+      .prepare("SELECT user_id FROM auth_identities WHERE provider = ? AND subject_hash = ?")
+      .bind(provider, subjectHash)
       .first();
     if (concurrent?.user_id) return concurrent.user_id;
     throw error;
@@ -215,11 +246,13 @@ export async function requireSession(request, database) {
         sessions.id AS session_id,
         sessions.user_id,
         sessions.expires_at,
+        sessions.created_at,
         users.email,
         users.display_name,
         users.terms_version,
         users.terms_accepted_at,
-        users.marketing_consent
+        users.marketing_consent,
+        (SELECT provider FROM auth_identities WHERE user_id = users.id ORDER BY last_login_at DESC LIMIT 1) AS provider
       FROM auth_sessions AS sessions
       JOIN users ON users.id = sessions.user_id
       WHERE sessions.token_hash = ? AND sessions.revoked_at IS NULL AND sessions.expires_at > ?`,
@@ -232,7 +265,11 @@ export async function requireSession(request, database) {
 
 async function readAccountProfile(database, userId, env) {
   const user = await database
-    .prepare("SELECT id AS user_id, email, display_name, terms_version, terms_accepted_at, marketing_consent FROM users WHERE id = ?")
+    .prepare(
+      `SELECT id AS user_id, email, display_name, terms_version, terms_accepted_at, marketing_consent,
+        (SELECT provider FROM auth_identities WHERE user_id = users.id ORDER BY last_login_at DESC LIMIT 1) AS provider
+       FROM users WHERE id = ?`,
+    )
     .bind(userId)
     .first();
   if (!user) throw new AuthHttpError(404, "account_not_found", "계정을 찾을 수 없습니다.");
@@ -245,7 +282,7 @@ function toAccountProfile(row, env) {
     userId: row.user_id,
     email: row.email ?? null,
     displayName: row.display_name ?? null,
-    provider: "apple",
+    provider: row.provider ?? "apple",
     termsAccepted: Boolean(row.terms_accepted_at && row.terms_version === termsVersion),
     termsVersion: row.terms_version ?? null,
     marketingAccepted: row.marketing_consent === 1,

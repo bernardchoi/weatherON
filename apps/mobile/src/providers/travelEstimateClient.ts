@@ -98,19 +98,23 @@ function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl?: typeof fetch, hea
 }
 
 function estimateFallbackRoute(params: TravelEstimateParams): Omit<TravelEstimateResult, "updatedAt"> {
+  const originCountryCode = params.originCountryCode ?? "KR";
   const destinationCountryCode = params.destinationCountryCode ?? "KR";
   const directDistanceMeters = getDistanceMeters(params.origin, params.destination);
-  const distanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : 1));
+  const sameCountry = originCountryCode === destinationCountryCode;
+  const distanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : sameCountry ? 1.25 : 1));
   const travelMinutes =
     destinationCountryCode === "KR"
       ? Math.max(15, Math.ceil((distanceMeters / 1000 / 32) * 60))
-      : getInternationalFallbackTravelMinutes(destinationCountryCode);
+      : sameCountry
+        ? Math.max(10, Math.ceil((distanceMeters / 1000 / 28) * 60))
+        : getInternationalFallbackTravelMinutes(destinationCountryCode);
   return {
     provider: "fallback",
     status: "fallback",
     travelMinutes,
     distanceMeters,
-    message: destinationCountryCode === "KR" ? "좌표 거리 기반 추정" : "해외 목적지 기본 이동시간",
+    message: sameCountry ? "현지 좌표 거리 기반 추정" : "국가 간 경로 확인 필요",
   };
 }
 

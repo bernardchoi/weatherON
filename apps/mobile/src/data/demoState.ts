@@ -45,6 +45,7 @@ export type DemoStateOptions = {
 
 export type DestinationScheduleInput = {
   targetArrivalTime: string;
+  originPlaceId?: string;
   travelMinutes?: number;
   distanceMeters?: number;
   bufferMinutes?: number;
@@ -62,7 +63,7 @@ export type DestinationNotificationInput = {
   schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
   // 저장된 목적지는 실제 TravelEstimateResult(provider/status 필드명)를, 미저장 임시 목적지는
   // DestinationScheduleInput(travelProvider/travelStatus 필드명)을 그대로 재사용해 넘기므로 두 필드명을 모두 허용한다.
-  travelEstimate?: Pick<DestinationScheduleInput, "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
+  travelEstimate?: Pick<DestinationScheduleInput, "originPlaceId" | "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
     provider?: DestinationScheduleInput["travelProvider"];
     status?: DestinationScheduleInput["travelStatus"];
   };
@@ -103,6 +104,7 @@ export function buildDemoStateFromWeatherResult(
   );
   const destinationNotifications = hasDestination
     ? buildDestinationNotifications(activeWeather, weatherProviderResult.destination, {
+        originWeather: weatherProviderResult.current,
         destination: options.destination,
         destinationAlertCondition: options.destinationAlertCondition,
         destinationSnapshots: weatherProviderResult.destinationSnapshots,
@@ -120,7 +122,13 @@ export function buildDemoStateFromWeatherResult(
     destinationWeather,
     careOn: hasDestination ? options.destinationCareEnabled ?? true : false,
     alertCondition: options.destinationAlertCondition,
-    travelMinutes: getTravelMinutes(options.destinationSchedule?.transportMode, options.destinationSchedule, options.destination?.countryCode),
+    travelMinutes: getTravelMinutes(
+      options.destinationSchedule?.transportMode,
+      options.destinationSchedule,
+      weatherProviderResult.current.countryCode,
+      options.destination?.countryCode,
+      weatherProviderResult.current.locationId,
+    ),
     targetArrivalTime: options.destinationSchedule?.targetArrivalTime ?? "13:00",
     bufferMinutes: options.destinationSchedule?.bufferMinutes,
     transportMode: options.destinationSchedule?.transportMode ?? "auto",
@@ -169,6 +177,7 @@ function buildDestinationNotifications(
   activeWeather: WeatherSnapshot,
   fallbackDestinationWeather: WeatherSnapshot,
   options: {
+    originWeather: Pick<WeatherSnapshot, "locationId" | "countryCode">;
     destination?: DemoStateOptions["destination"];
     destinationAlertCondition?: DestinationAlertCondition;
     destinationSnapshots: WeatherSnapshot[];
@@ -204,7 +213,7 @@ function buildDestinationNotifications(
     const destinationWeather =
       options.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id) ??
       relabelWeatherSnapshot(fallbackDestinationWeather, destination.place);
-    const timing = getDestinationNotificationTiming(destination, destinationWeather, options.nowMs);
+    const timing = getDestinationNotificationTiming(destination, destinationWeather, options.originWeather, options.nowMs);
     const weatherAtDeparture = timing
       ? getWeatherAtDeparture(destinationWeather, timing.departureAt, destination.place.timezone)
       : undefined;
@@ -234,13 +243,20 @@ type DestinationNotificationTiming = {
 function getDestinationNotificationTiming(
   destination: DestinationNotificationInput,
   weather: WeatherSnapshot,
+  originWeather: Pick<WeatherSnapshot, "locationId" | "countryCode">,
   nowMs: number,
 ): DestinationNotificationTiming | null {
   const schedule = destination.schedulePreference;
   const targetArrivalTime = schedule?.targetArrivalTime;
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
-  const travelMinutes = getTravelMinutes(schedule?.transportMode, destination.travelEstimate, destination.place.countryCode);
+  const travelMinutes = getTravelMinutes(
+    schedule?.transportMode,
+    destination.travelEstimate,
+    originWeather.countryCode,
+    destination.place.countryCode,
+    originWeather.locationId,
+  );
   if (typeof travelMinutes !== "number") return null;
   const arrivalAt = getNextArrivalAt(
     targetArrivalTime,
@@ -316,19 +332,24 @@ function getWeatherHourTimestamp(hourTime: string, observedAt: string, timeZone:
 function getTravelMinutes(
   mode: DestinationTransportMode | undefined,
   travelEstimate: DestinationNotificationInput["travelEstimate"],
+  originCountryCode: PlaceSearchResult["countryCode"] | undefined,
   destinationCountryCode: PlaceSearchResult["countryCode"] | undefined,
+  currentOriginPlaceId?: string,
 ): number | undefined {
   const baseTravelMinutes = travelEstimate?.travelMinutes;
   if (typeof baseTravelMinutes !== "number" || baseTravelMinutes <= 0) return undefined;
   return getTravelMinutesForTransport(
     {
+      originPlaceId: travelEstimate?.originPlaceId,
       travelMinutes: baseTravelMinutes,
       distanceMeters: travelEstimate?.distanceMeters ?? 0,
       provider: travelEstimate?.provider ?? travelEstimate?.travelProvider,
       status: travelEstimate?.status ?? travelEstimate?.travelStatus ?? "fallback",
     },
     mode ?? "auto",
+    originCountryCode,
     destinationCountryCode,
+    currentOriginPlaceId,
   );
 }
 

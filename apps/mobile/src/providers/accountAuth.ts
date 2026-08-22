@@ -10,11 +10,13 @@ import {
   rememberIntegrityUser,
 } from "./appIntegrity";
 
+export type AccountProvider = "apple" | "kakao" | "naver" | "line" | "google";
+
 export type AccountProfile = {
   userId: string;
   email: string | null;
   displayName: string | null;
-  provider: "apple";
+  provider: AccountProvider;
   termsAccepted: boolean;
   termsVersion: string | null;
   marketingAccepted: boolean;
@@ -40,6 +42,20 @@ type AppleChallenge = {
 type AppleExchangeResponse = AccountSessionResult & {
   sessionToken: string;
 };
+
+type OAuthChallenge = {
+  provider: Exclude<AccountProvider, "apple">;
+  challengeId: string;
+  state: string;
+  verifier: string;
+  redirectUri: string;
+  authorizationUrl: string;
+  expiresAt: string;
+};
+
+type OAuthExchangeResponse = AccountSessionResult & { sessionToken: string };
+
+export type AccountProviderAvailability = { provider: Exclude<AccountProvider, "apple">; available: boolean };
 
 const sessionTokenKey = "weatheron.account.session.v1";
 const keychainService = "com.weatheron.mobile.account-session";
@@ -98,6 +114,60 @@ export async function signInWithAppleAccount(): Promise<AccountSessionResult> {
   }
 }
 
+export async function listAvailableAccountProviders(): Promise<AccountProviderAvailability[]> {
+  try {
+    const response = await accountRequest<{ providers: AccountProviderAvailability[] }>("/auth/providers");
+    return Array.isArray(response.providers) ? response.providers.filter(isProviderAvailability) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function signInWithOAuthAccount(
+  provider: Exclude<AccountProvider, "apple">,
+): Promise<AccountSessionResult> {
+  if (Platform.OS !== "ios") {
+    throw new AccountAuthError("oauth_unavailable", "이 로그인 방식은 현재 iOS 앱에서 사용할 수 있습니다.");
+  }
+  const redirectUri = "weatheron://oauth/callback";
+  const challenge = await accountRequest<OAuthChallenge>("/auth/oauth/challenge", {
+    method: "POST",
+    body: { provider, redirectUri },
+  });
+  const WebBrowser = await import("expo-web-browser");
+  const browserResult = await WebBrowser.openAuthSessionAsync(challenge.authorizationUrl, redirectUri, {
+    preferEphemeralSession: true,
+  });
+  if (browserResult.type === "cancel" || browserResult.type === "dismiss") {
+    throw new AccountAuthError("oauth_canceled", "로그인을 취소했습니다.");
+  }
+  if (browserResult.type !== "success" || !browserResult.url) {
+    throw new AccountAuthError("oauth_response_invalid", "로그인 응답을 확인할 수 없습니다.");
+  }
+  const callback = new URL(browserResult.url);
+  const responseState = callback.searchParams.get("state");
+  const code = callback.searchParams.get("code");
+  if (callback.searchParams.has("error")) {
+    throw new AccountAuthError("oauth_denied", "로그인이 완료되지 않았습니다.");
+  }
+  if (!code || responseState !== challenge.state) {
+    throw new AccountAuthError("oauth_response_invalid", "로그인 응답을 확인할 수 없습니다.");
+  }
+  const exchange = await accountRequest<OAuthExchangeResponse>("/auth/oauth/exchange", {
+    method: "POST",
+    body: {
+      provider,
+      challengeId: challenge.challengeId,
+      state: responseState,
+      verifier: challenge.verifier,
+      redirectUri,
+      code,
+    },
+  });
+  await persistAuthenticatedSession(exchange);
+  return { account: exchange.account, expiresAt: exchange.expiresAt };
+}
+
 export async function restoreAccountSession(): Promise<AccountRestoreResult> {
   try {
     const token = await readSessionToken();
@@ -139,6 +209,13 @@ export async function signOutAccountSession(): Promise<void> {
     await deleteSessionToken();
     await forgetIntegrityUser();
   }
+}
+
+export async function deleteAccountSession(): Promise<void> {
+  const token = await requireStoredSessionToken();
+  await accountRequest<{ deleted: boolean }>("/account/delete", { method: "POST", token });
+  await deleteSessionToken();
+  await forgetIntegrityUser();
 }
 
 export async function subscribeToAppleCredentialRevocation(onRevoked: () => void): Promise<() => void> {
@@ -252,6 +329,23 @@ function isAppleCancellation(error: unknown): boolean {
 function normalizeAccountError(error: unknown): AccountAuthError {
   if (error instanceof AccountAuthError) return error;
   return new AccountAuthError("account_unknown_error", error instanceof Error ? error.message : "계정 요청에 실패했습니다.");
+}
+
+async function persistAuthenticatedSession(exchange: OAuthExchangeResponse): Promise<void> {
+  await writeSessionToken(exchange.sessionToken);
+  await rememberIntegrityUser(exchange.account.userId);
+  await ensureAppAttestEnrollment(exchange.sessionToken, exchange.account.userId).catch((error) => {
+    console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
+  });
+}
+
+function isProviderAvailability(value: unknown): value is AccountProviderAvailability {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<AccountProviderAvailability>;
+  return Boolean(
+    (item.provider === "kakao" || item.provider === "naver" || item.provider === "line" || item.provider === "google") &&
+      typeof item.available === "boolean",
+  );
 }
 
 export class AccountAuthError extends Error {

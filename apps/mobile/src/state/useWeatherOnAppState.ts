@@ -31,10 +31,13 @@ import {
 } from "../providers/widgetSnapshot";
 import {
   acceptAccountTerms,
+  deleteAccountSession,
   restoreAccountSession,
   signInWithAppleAccount,
+  signInWithOAuthAccount,
   signOutAccountSession,
   subscribeToAppleCredentialRevocation,
+  type AccountProvider,
   type AccountProfile,
 } from "../providers/accountAuth";
 import {
@@ -304,10 +307,13 @@ export function useWeatherOnAppState() {
   const selectedDestinationAlertCondition = selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition;
   const selectedDestinationSchedulePreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
   const selectedDestinationTravelEstimate = selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate;
+  const activeWeatherLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
   const selectedDestinationTravelMinutes = getTravelMinutesForTransport(
     selectedDestinationTravelEstimate,
     selectedDestinationSchedulePreference.transportMode,
+    activeWeatherLocation.countryCode,
     selectedDestinationPlace.countryCode,
+    activeWeatherLocation.locationId,
   );
   const selectedDestinationAutoBufferMinutes = typeof selectedDestinationTravelMinutes === "number"
     ? getAutoBufferMinutes(
@@ -342,7 +348,9 @@ export function useWeatherOnAppState() {
       const travelMinutes = getTravelMinutesForTransport(
         destination.travelEstimate,
         destination.schedulePreference.transportMode,
+        activeWeatherLocation.countryCode,
         destination.place.countryCode,
+        activeWeatherLocation.locationId,
       );
       const bufferMinutes = typeof travelMinutes === "number"
         ? getAutoBufferMinutes(destination.schedulePreference.targetArrivalTime, travelMinutes, nowMinuteTick, destination.place.timezone)
@@ -372,6 +380,8 @@ export function useWeatherOnAppState() {
       destinations.some((destination) => destination.id === selectedDestinationPlace.id) ? selectedDestinationPlace.id : undefined,
     );
   }, [
+    activeWeatherLocation.countryCode,
+    activeWeatherLocation.locationId,
     nowMinuteTick,
     savedDestinations,
     selectedDestinationPlace.id,
@@ -547,6 +557,7 @@ export function useWeatherOnAppState() {
           // 다시 계산하므로, 여기서는 가공 전 원본 이동시간·거리를 넘긴다.
           travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
           distanceMeters: selectedDestinationTravelEstimate.distanceMeters,
+          originPlaceId: selectedDestinationTravelEstimate.originPlaceId,
           transportMode: selectedDestinationSchedulePreference.transportMode,
           travelProvider: selectedDestinationTravelEstimate.provider,
           travelStatus: selectedDestinationTravelEstimate.status,
@@ -1553,11 +1564,11 @@ export function useWeatherOnAppState() {
     setAccountGateResult(createAccountGateResult(pendingGate.reason, pendingGate.returnTo));
   };
 
-  const signInWithApple = async () => {
+  const signInWithProvider = async (provider: AccountProvider) => {
     setAccountAuthStatus("signing-in");
     setAccountAuthMessage(null);
     try {
-      const result = await signInWithAppleAccount();
+      const result = provider === "apple" ? await signInWithAppleAccount() : await signInWithOAuthAccount(provider);
       setAccountLinked(true);
       setAccountProfile(result.account);
       setTermsRequiredAccepted(result.account.termsAccepted);
@@ -1571,9 +1582,25 @@ export function useWeatherOnAppState() {
       setRoute(returnTo);
       setGate(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Apple 로그인에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "로그인에 실패했습니다.";
       setAccountAuthStatus(message.includes("취소") ? "idle" : "error");
       setAccountAuthMessage(message);
+    }
+  };
+
+  const deleteAccount = async () => {
+    setAccountAuthStatus("signing-out");
+    setAccountAuthMessage(null);
+    try {
+      await deleteAccountSession();
+      setAccountLinked(false);
+      setAccountProfile(null);
+      setTermsRequiredAccepted(false);
+      setAccountAuthStatus("idle");
+      setRoute("M1");
+    } catch (error) {
+      setAccountAuthStatus("error");
+      setAccountAuthMessage(error instanceof Error ? error.message : "회원 탈퇴를 완료하지 못했습니다.");
     }
   };
 
@@ -1834,7 +1861,8 @@ export function useWeatherOnAppState() {
     requestAccountGate,
     signOutAccount,
     requestPermissionGate,
-    signInWithApple,
+    signInWithProvider,
+    deleteAccount,
     completeTerms,
     cancelAccountGate,
     completePermissionGate,

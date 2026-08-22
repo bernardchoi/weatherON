@@ -3,14 +3,26 @@ import type { DestinationTransportMode } from "@weatheron/shared";
 export const maxWalkableDestinationDistanceKm = 25;
 
 export type TravelEstimateInput = {
+  originPlaceId?: string;
   travelMinutes: number;
   distanceMeters: number;
   provider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
   status: "idle" | "loading" | "ready" | "fallback" | "error";
 };
 
-export function isUnverifiedInternationalRoute(estimate: TravelEstimateInput, destinationCountryCode?: "KR" | "JP" | "GLOBAL"): boolean {
-  return destinationCountryCode !== "KR" && estimate.status !== "ready";
+export function isUnverifiedInternationalRoute(
+  estimate: TravelEstimateInput,
+  originCountryCode?: "KR" | "JP" | "GLOBAL",
+  destinationCountryCode?: "KR" | "JP" | "GLOBAL",
+  currentOriginPlaceId?: string,
+): boolean {
+  if (currentOriginPlaceId && estimate.originPlaceId && estimate.originPlaceId !== currentOriginPlaceId) return true;
+  if (!originCountryCode || !destinationCountryCode) {
+    return destinationCountryCode !== "KR" && estimate.status !== "ready";
+  }
+  if (originCountryCode !== destinationCountryCode) return true;
+  if (destinationCountryCode === "KR") return false;
+  return estimate.status !== "ready" && estimate.status !== "fallback";
 }
 
 export function isWalkUnavailableForEstimate(estimate: TravelEstimateInput, transportMode: DestinationTransportMode): boolean {
@@ -24,9 +36,11 @@ export function isWalkUnavailableForEstimate(estimate: TravelEstimateInput, tran
 export function getTravelMinutesForTransport(
   estimate: TravelEstimateInput,
   transportMode: DestinationTransportMode,
+  originCountryCode?: "KR" | "JP" | "GLOBAL",
   destinationCountryCode?: "KR" | "JP" | "GLOBAL",
+  currentOriginPlaceId?: string,
 ): number | undefined {
-  if (isUnverifiedInternationalRoute(estimate, destinationCountryCode)) return undefined;
+  if (isUnverifiedInternationalRoute(estimate, originCountryCode, destinationCountryCode, currentOriginPlaceId)) return undefined;
   const baseMinutes = estimate.travelMinutes || 35;
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   if (transportMode === "walk") {

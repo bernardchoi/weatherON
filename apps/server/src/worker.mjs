@@ -23,6 +23,7 @@ export async function handleWeatherProxyRequest(request, env = {}) {
     }
     if (isAccountRoute(url.pathname)) {
       const result = await handleAccountRoute(request, env);
+      if (result.redirect) return Response.redirect(result.redirect, result.status);
       return jsonResponse(result.payload, result.status);
     }
     if (request.method !== "GET") return jsonResponse({ error: "method_not_allowed" }, 405);

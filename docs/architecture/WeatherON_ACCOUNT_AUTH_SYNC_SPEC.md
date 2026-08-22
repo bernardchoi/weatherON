@@ -1,7 +1,7 @@
 # WeatherON 계정·인증·동기화 기준
 
-기준일: 2026-08-08  
-상태: 구현 기준 채택, 원격 운영 개통 전
+기준일: 2026-08-22
+상태: 다중 OAuth Worker·D1 반영 완료, 공급자 콘솔·운영 시크릿 개통 전
 
 ## 1. 목적
 
@@ -48,23 +48,34 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 
 - `POST /auth/apple/challenge`
 - `POST /auth/apple/exchange`
+- `GET /auth/providers`
+- `POST /auth/oauth/challenge`
+- `GET /auth/oauth/callback`
+- `POST /auth/oauth/exchange`
 - `GET /auth/session`
 - `POST /auth/logout`
 - `POST /account/terms`
+- `POST /account/delete`
 - Apple identity token의 서명, issuer, audience, 만료, nonce 검증
+- 카카오·네이버·LINE·Google Authorization Code 로그인과 state 검증
+- LINE·Google PKCE 검증, 공급자 토큰 암호화 저장, 탈퇴 시 공급자 연결 해제
 - 일회성 challenge와 state 검증
-- D1 `users`, `auth_identities`, `auth_challenges`, `auth_sessions` 스키마
+- D1 `users`, `auth_identities`, `auth_challenges`, `auth_sessions`, `auth_provider_tokens` 스키마
 - 세션 토큰 해시 저장과 모바일 SecureStore 보관
-- A2 Apple 로그인, A3 약관 저장, A4 연결 해제 UI 연결
+- A2 지역별 로그인 추천, 정식 브랜드 이미지, A3 약관 저장, A4 로그아웃·회원 탈퇴 UI 연결
+- 설정이 완료된 Provider만 앱에 노출하며 미설정 Provider는 더미 버튼으로 노출하지 않음
+- 계정 화면에는 Provider명과 연결 상태만 표시하고 내부 userId, 이메일, subject, 토큰은 표시하지 않음
+- D1 `0003_oauth_provider_tokens.sql` 원격 적용 및 Worker 운영 배포
 
 ### 아직 운영 완료로 볼 수 없음
 
-- 원격 D1 생성·마이그레이션과 Worker 운영 배포
+- 카카오·네이버·LINE·Google 개발자 콘솔의 운영 callback 등록과 client credential 설정
+- 공급자 토큰 암호화용 `AUTH_PROVIDER_TOKEN_KEY` 운영 Secret 설정
 - Apple Developer의 Sign in with Apple capability 활성 상태 확인
-- EAS iOS 실기기 빌드에서 실제 Apple 로그인 검증
+- EAS iOS 실기기 빌드에서 Apple 및 활성화한 OAuth Provider 실제 로그인 검증
 - 로그인 이후 사용자 데이터 동기화 API
 - Android에서 사용할 공통 로그인 수단
-- 계정 연결, 전체 세션 종료, 회원 탈퇴, 데이터 내보내기
+- 계정 연결 추가, 전체 세션 종료, 데이터 내보내기
 - Rate Limiting, App Attest/Play Integrity, 운영 감사 로그
 
 ## 5. 로그인 Provider 단계
@@ -72,18 +83,18 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 | 단계 | Provider | 목적 |
 |---|---|---|
 | 1 | Sign in with Apple | iOS 실제 로그인과 D1 세션 개통 |
-| 2 | 이메일 코드 | iOS·Android 공통 복구 및 보조 로그인 수단 |
-| 3 | Google | Android와 일반 해외 기본 로그인 |
-| 4 | 카카오 | 한국 사용자 우선 로그인 |
-| 5 | 네이버·LINE | 한국 보완 및 일본 진출 시 추가 |
+| 2 | 카카오·네이버 | 한국 사용자 우선 로그인 |
+| 3 | LINE | 일본 사용자 우선 로그인 |
+| 4 | Google | 일반 해외 기본 로그인 |
+| 5 | 이메일 코드 | iOS·Android 공통 복구 수단으로 후속 검토 |
 
 지역별 최종 노출 우선순위는 기존 기획을 유지한다.
 
-- 한국: 카카오·네이버 우선, Google·Apple·이메일 코드 보조
-- 일본: LINE 우선, Apple·Google·이메일 코드 보조
-- 일반 해외: Google·Apple·이메일 코드 중심
+- 한국: 카카오·네이버·Apple·Google·LINE
+- 일본: LINE·Apple·Google·카카오·네이버
+- 일반 해외: Google·Apple·LINE·카카오·네이버
 
-단, MVP 검증을 위해 모든 Provider를 동시에 개통하지 않는다. 현재 위치가 아니라 스토어 국가, SIM/전화 국가, OS 지역, 기기 언어, 타임존 순으로 로그인 수단을 추천하고 현재 위치는 마지막 보조 신호로만 사용한다.
+실제 구현은 현재 GPS가 아닌 OS locale의 국가 코드를 우선 사용하고, 국가 코드가 없을 때 언어와 타임존을 보조 신호로 사용한다. 따라서 한국 계정 환경 사용자가 해외여행 중이어도 로그인 추천 순서가 현재 위치 때문에 바뀌지 않는다. 공급자 콘솔과 운영 Secret이 모두 준비된 Provider만 `GET /auth/providers`에서 활성화하고 앱에 노출한다.
 
 ## 6. 내부 사용자와 계정 연결
 
@@ -163,6 +174,8 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - 운영 로그에 identity token, session token, 이메일 원문, GPS 원본을 기록하지 않는다.
 - iOS는 App Attest, Android는 Play Integrity 검증을 단계적으로 적용한다.
 - 계정 삭제와 연결 변경은 최근 인증 또는 재인증을 요구한다.
+- OAuth access/refresh token은 AES-GCM으로 암호화하여 D1에 저장하고 운영 로그와 API 응답에 포함하지 않는다.
+- Provider subject 원문은 저장·로그·화면 표시하지 않고 SHA-256 해시만 사용한다.
 
 ### App Attest 2단계 구현 상태
 
@@ -175,7 +188,10 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 ## 11. 실제 로그인 활성화 완료 기준
 
 - 원격 D1 마이그레이션과 Worker 배포 완료
+- 각 Provider 콘솔에 `https://weatheron-api.weatheron.workers.dev/auth/oauth/callback` 등록 완료
+- Provider client credential과 `AUTH_PROVIDER_TOKEN_KEY`를 Worker Secret으로 설정
 - iOS 실기기에서 Apple 로그인 성공
+- iOS 실기기에서 활성화한 카카오·네이버·LINE·Google 로그인과 취소·실패·재실행 복원 성공
 - 신규 로그인, 취소, 실패, 약관 저장, 앱 재실행 세션 복원 검증
 - 기존 약관 사용자는 A3를 건너뛰고 미동의 사용자는 A3로 이동
 - A3 완료 후 필요한 경우 O3를 거쳐 원래 액션으로 복귀

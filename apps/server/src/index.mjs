@@ -48,6 +48,11 @@ const server = createServer(async (request, response) => {
         ...(request.method === "GET" || request.method === "HEAD" ? {} : { body }),
       });
       const result = await handleAccountRoute(webRequest, process.env);
+      if (result.redirect) {
+        response.writeHead(result.status, { location: result.redirect });
+        response.end();
+        return;
+      }
       sendJson(response, result.status, result.payload);
       return;
     }

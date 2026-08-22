@@ -17,6 +17,8 @@ APP_ATTEST_BUNDLE_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
 APP_ATTEST_ALLOW_DEVELOPMENT = "false"
 APP_INTEGRITY_MODE = "monitor"
 APP_INTEGRITY_CHALLENGE_TTL_SECONDS = "120"
+OAUTH_CALLBACK_URL = "https://weatheron-api.weatheron.workers.dev/auth/oauth/callback"
+OAUTH_REDIRECT_URIS = "weatheron://oauth/callback"
 
 [[d1_databases]]
 binding = "WEATHERON_DB"

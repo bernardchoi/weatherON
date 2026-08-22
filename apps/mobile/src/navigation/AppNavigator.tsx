@@ -223,6 +223,7 @@ export function AppNavigator() {
     onRequireAccount: appState.requestAccountGate,
     onRequestPermissionGate: appState.requestPermissionGate,
     onSignOutAccount: appState.signOutAccount,
+    onDeleteAccount: appState.deleteAccount,
   };
 
   return (
@@ -280,7 +281,7 @@ export function AppNavigator() {
           authStatus={appState.accountAuthStatus}
           authMessage={appState.accountAuthMessage}
           onCancel={appState.cancelAccountGate}
-          onSignInWithApple={appState.signInWithApple}
+          onSignIn={appState.signInWithProvider}
         />
       ) : null}
       {route === "A3" ? (

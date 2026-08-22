@@ -6,7 +6,7 @@ import WidgetKit
 private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetSnapshotKey = "weatheron.widget.store.v2"
 private let widgetSnapshotRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
-private let widgetKinds = ["WeatherONWeatherWidgetV2", "WeatherONLocationWidgetV3"]
+private let widgetKind = "WeatherONLocationWidgetV4"
 
 private struct DepartureActivityPayload: Decodable {
   let destinationId: String
@@ -61,7 +61,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       // 마지막 스냅샷 저장 뒤 한 번만 타임라인을 갱신한다.
       self.widgetReloadWorkItem?.cancel()
       let reloadWorkItem = DispatchWorkItem {
-        widgetKinds.forEach { WidgetCenter.shared.reloadTimelines(ofKind: $0) }
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
       }
       self.widgetReloadWorkItem = reloadWorkItem
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: reloadWorkItem)

@@ -91,7 +91,11 @@ export function DestinationCareScreen({
   const repeatEnabled = selectedDestinationSchedulePreference.repeatEnabled;
   const repeatDays = selectedDestinationSchedulePreference.repeatDays;
   const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
-  const routeMeta = getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit);
+  const routeMeta = routeTimingReady
+    ? getTravelEstimateCopy(selectedDestinationTravelEstimate.status, selectedDestinationTravelEstimate.provider, selectedDestinationTravelEstimate.distanceMeters, distanceUnit)
+    : originWeather.countryCode !== destinationWeather.countryCode
+      ? "국가 간 이동 · 외부 경로 확인 필요"
+      : "현지 경로 확인 전";
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const destinationSaved = Boolean(selectedDestinationPlace);
   const ctaAccent = destinationCareEnabled ? theme.warm : theme.gold;

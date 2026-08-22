@@ -332,19 +332,7 @@ private enum WeatherONTimelineFactory {
   }
 }
 
-private struct WeatherONLegacyProvider: TimelineProvider {
-  func placeholder(in context: Context) -> WeatherONEntry { .placeholder }
-
-  func getSnapshot(in context: Context, completion: @escaping (WeatherONEntry) -> Void) {
-    completion(WeatherONTimelineFactory.snapshot(selectionID: nil))
-  }
-
-  func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherONEntry>) -> Void) {
-    completion(WeatherONTimelineFactory.timeline(selectionID: nil))
-  }
-}
-
-private struct WeatherONLocationEntity: AppEntity, Identifiable {
+struct WeatherONLocationEntity: AppEntity, Identifiable {
   static let typeDisplayRepresentation: TypeDisplayRepresentation = "날씨 위치"
   static let defaultQuery = WeatherONLocationQuery()
 
@@ -360,7 +348,7 @@ private struct WeatherONLocationEntity: AppEntity, Identifiable {
   }
 }
 
-private struct WeatherONLocationQuery: EntityQuery {
+struct WeatherONLocationQuery: EntityQuery {
   func entities(for identifiers: [WeatherONLocationEntity.ID]) async throws -> [WeatherONLocationEntity] {
     availableEntities().filter { identifiers.contains($0.id) }
   }
@@ -380,12 +368,24 @@ private struct WeatherONLocationQuery: EntityQuery {
   }
 }
 
-private struct WeatherONWidgetConfigurationIntent: WidgetConfigurationIntent {
+struct WeatherONWidgetConfigurationIntent: WidgetConfigurationIntent {
   static let title: LocalizedStringResource = "표시할 위치 선택"
   static let description = IntentDescription("현재 위치 또는 저장된 목적지를 선택해요.")
 
   @Parameter(title: "위치")
   var location: WeatherONLocationEntity?
+
+  init() {
+    location = WeatherONLocationEntity(
+      id: currentLocationEntityID,
+      name: "현재 위치",
+      kind: "current"
+    )
+  }
+
+  init(location: WeatherONLocationEntity) {
+    self.location = location
+  }
 
   static var parameterSummary: some ParameterSummary {
     Summary("\(\.$location)의 날씨")
@@ -526,17 +526,24 @@ private struct WeatherONLargeView: View {
       HStack(spacing: 12) {
         HStack(spacing: 10) {
           Text("\(entry.location.temperatureC)°")
-            .font(.system(size: 52, weight: .bold, design: .rounded))
+            .font(.system(size: 48, weight: .bold, design: .rounded))
             .tracking(-2)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .allowsTightening(true)
+            .fixedSize(horizontal: true, vertical: false)
+            .layoutPriority(2)
           VStack(alignment: .leading, spacing: 3) {
             Text(entry.location.conditionLabel)
               .font(.system(size: 16, weight: .bold, design: .rounded))
+              .lineLimit(1)
+              .minimumScaleFactor(0.8)
             Text("체감 \(entry.location.feelsLikeC)°")
               .font(.system(size: 11, weight: .semibold, design: .rounded))
               .foregroundStyle(palette.secondaryText)
           }
           Spacer(minLength: 0)
-          WeatherONConditionGlyph(condition: entry.location.condition, palette: palette, size: 54)
+          WeatherONConditionGlyph(condition: entry.location.condition, palette: palette, size: 48)
         }
         .frame(maxWidth: .infinity)
 
@@ -1165,28 +1172,8 @@ private extension WeatherONWidgetStore {
   }
 }
 
-struct WeatherONWidget: Widget {
-  // 실기기에 이미 배치된 위젯과 동일한 식별자를 유지해야 WidgetKit이
-  // 플레이스홀더 대신 새 타임라인을 연결한다.
-  let kind = "WeatherONWeatherWidgetV2"
-
-  var body: some WidgetConfiguration {
-    StaticConfiguration(
-      kind: kind,
-      provider: WeatherONLegacyProvider()
-    ) { entry in
-      WeatherONWidgetView(entry: entry)
-    }
-    .configurationDisplayName("WeatherON 현재 위치")
-    .description("현재 위치의 날씨와 외출 준비 정보를 확인해요.")
-    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
-    .contentMarginsDisabled()
-    .containerBackgroundRemovable(false)
-  }
-}
-
 struct WeatherONConfigurableWidget: Widget {
-  let kind = "WeatherONLocationWidgetV3"
+  let kind = "WeatherONLocationWidgetV4"
 
   var body: some WidgetConfiguration {
     AppIntentConfiguration(
@@ -1196,7 +1183,7 @@ struct WeatherONConfigurableWidget: Widget {
     ) { entry in
       WeatherONWidgetView(entry: entry)
     }
-    .configurationDisplayName("WeatherON 위치 선택")
+    .configurationDisplayName("WeatherON")
     .description("현재 위치 또는 저장한 목적지를 선택해 날씨와 외출 준비 정보를 확인해요.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     .contentMarginsDisabled()
@@ -1207,7 +1194,6 @@ struct WeatherONConfigurableWidget: Widget {
 @main
 struct WeatherONWidgetBundle: WidgetBundle {
   var body: some Widget {
-    WeatherONWidget()
     WeatherONConfigurableWidget()
     WeatherONDepartureLiveActivity()
   }

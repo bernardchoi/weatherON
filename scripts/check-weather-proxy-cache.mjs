@@ -147,6 +147,14 @@ try {
   assert.equal(googleTransit.provider, "google-transit");
   assert.equal(googleTransit.travelMinutes, 46);
   assert.equal(googleTransitRequestCount, 1);
+  const internationalFallback = await fetchJson(
+    `http://${proxyHost}:${proxyPort}/routes/estimate?origin=34.3974,132.4755&destination=37.5665,126.9780&originCountryCode=JP&destinationCountryCode=KR&transportMode=auto`,
+  );
+  assert.equal(internationalFallback.provider, "fallback");
+  assert.equal(internationalFallback.status, "fallback");
+  assert.equal(internationalFallback.message, "국가 간 경로 확인 필요");
+  assert.equal(kakaoTransitRequestCount, 1);
+  assert.equal(googleTransitRequestCount, 1);
   console.log("weather proxy cache check passed");
 } finally {
   proxy.kill("SIGTERM");

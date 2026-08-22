@@ -254,8 +254,10 @@ await writeFile(
     const { applyLocalNotificationPolicy } = await import("../apps/mobile/src/providers/notificationPolicy.ts");
     const { createHttpWeatherClient, createProxyWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
+    const { fallbackTravelEstimateClient } = await import("../apps/mobile/src/providers/travelEstimateClient.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
+    const { getTravelMinutesForTransport } = await import("../apps/mobile/src/utils/travelEstimate.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
     const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
@@ -451,8 +453,25 @@ await writeFile(
     const proxyProviderCachedCurrent = await proxyProvider.getSnapshots("ready", {
       currentSnapshot: proxyProviderCurrentWithoutLifestyle,
     });
+    const hiroshimaLocalFallback = await fallbackTravelEstimateClient.estimateRoute({
+      origin: { latitude: 34.3974, longitude: 132.4755 },
+      destination: { latitude: 34.3964, longitude: 132.4596 },
+      originCountryCode: "JP",
+      destinationCountryCode: "JP",
+    });
+    const hiroshimaToSeoulFallback = await fallbackTravelEstimateClient.estimateRoute({
+      origin: { latitude: 34.3974, longitude: 132.4755 },
+      destination: { latitude: 37.5665, longitude: 126.9780 },
+      originCountryCode: "JP",
+      destinationCountryCode: "KR",
+    });
+    const hiroshimaEstimate = { ...hiroshimaLocalFallback, originPlaceId: "jp-device-hiroshima" };
 
     export const demoResults = {
+      hiroshimaLocalFallback,
+      hiroshimaLocalMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-hiroshima"),
+      hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
+      staleHiroshimaMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-tokyo"),
       rainNotifications: rainDemo.notifications,
       belowThresholdRainNotifications: belowThresholdRainDemo.notifications,
       thresholdRainNotifications: thresholdRainDemo.notifications,
@@ -570,6 +589,7 @@ await build({
     "expo-secure-store",
     "expo-sqlite",
     "expo-status-bar",
+    "expo-web-browser",
   ],
   logLevel: "silent",
 });
@@ -657,6 +677,11 @@ assert.equal(results.weatherkit.daily[0].rainProbabilityPct, 65);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");
+assert.equal(demoResults.hiroshimaLocalFallback.status, "fallback");
+assert.ok(demoResults.hiroshimaLocalFallback.distanceMeters > 0);
+assert.ok(demoResults.hiroshimaLocalMinutes >= 10 && demoResults.hiroshimaLocalMinutes < 60);
+assert.equal(demoResults.hiroshimaToSeoulMinutes, undefined);
+assert.equal(demoResults.staleHiroshimaMinutes, undefined);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "shoes" && item.active && item.scheduledAt && item.deliveryKey));

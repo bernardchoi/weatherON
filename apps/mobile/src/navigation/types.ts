@@ -152,4 +152,5 @@ export type P0ScreenProps = {
   onRequireAccount: (reason: GateReason, returnTo: AccountGateReturnRouteId) => void;
   onRequestPermissionGate: (reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => void;
   onSignOutAccount: () => void;
+  onDeleteAccount: () => Promise<void>;
 };

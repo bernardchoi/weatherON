@@ -2,26 +2,29 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
+import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
   accountLinked,
+  accountProfile,
   accountAuthStatus,
   accountAuthMessage,
   termsRequiredAccepted,
   onNavigate,
   onRequireAccount,
   onSignOutAccount,
+  onDeleteAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const [dangerConfirm, setDangerConfirm] = useState<"none" | "unlink">("none");
+  const [dangerConfirm, setDangerConfirm] = useState<"none" | "logout" | "delete">("none");
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const profileTitle = accountReady ? "Apple 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileMeta = accountReady ? "정상적으로 연결됨" : needsTerms ? "필수 약관 대기" : "연결 전";
+  const profileTitle = accountReady ? `${getProviderLabel(accountProfile?.provider)} 계정` : needsTerms ? "약관 동의 필요" : "게스트 모드";
+  const profileMeta = accountReady ? "저장·동기화 사용 가능" : needsTerms ? "필수 약관 대기" : "연결 전";
   const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결됨" : needsTerms ? "확인" : "게스트";
   const primaryLabel = accountReady ? "정책 보기" : needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "정책 및 법적 고지 보기" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
@@ -107,22 +110,22 @@ export function AccountManagementScreen({
         ) : null}
 
         {accountLinked ? (
-          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "unlink" ? theme.alert : theme.border }, cardShadow(theme)]}>
-            <Text style={[styles.dangerTitle, { color: dangerConfirm === "none" ? theme.text : theme.warm }]}>
-              {dangerConfirm === "none" ? "계정 연결 해제" : "연결 해제 확인"}
+          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border }, cardShadow(theme)]}>
+            <Text style={[styles.dangerTitle, { color: dangerConfirm === "logout" ? theme.warm : theme.text }]}>
+              {dangerConfirm === "logout" ? "로그아웃 확인" : "로그아웃"}
             </Text>
             <View style={styles.dangerActions}>
               <Pressable
-                accessibilityLabel={dangerConfirm === "unlink" ? "계정 연결 해제 확정" : "계정 연결 해제"}
+                accessibilityLabel={dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
                 accessibilityRole="button"
                 onPress={() => {
-                  if (dangerConfirm === "unlink") onSignOutAccount();
-                  else setDangerConfirm("unlink");
+                  if (dangerConfirm === "logout") onSignOutAccount();
+                  else setDangerConfirm("logout");
                 }}
-                style={[styles.smallButton, { backgroundColor: dangerConfirm === "unlink" ? `${theme.alert}22` : theme.cardMuted, borderColor: theme.border }]}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: theme.border }]}
               >
-                <Text style={[styles.smallButtonText, { color: dangerConfirm === "unlink" ? theme.alert : theme.text }]}>
-                  {dangerConfirm === "unlink" ? "해제 확정" : "연결 해제"}
+                <Text style={[styles.smallButtonText, { color: dangerConfirm === "logout" ? theme.alert : theme.text }]}>
+                  {dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
                 </Text>
               </Pressable>
               {dangerConfirm !== "none" ? (
@@ -134,10 +137,43 @@ export function AccountManagementScreen({
           </View>
         ) : null}
 
+        {accountLinked ? (
+          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }, cardShadow(theme)]}>
+            <Text style={[styles.dangerTitle, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>회원 탈퇴</Text>
+            <Text style={[styles.profileMeta, { color: theme.subtle }]}>저장된 계정 데이터가 삭제됨</Text>
+            <View style={styles.dangerActions}>
+              <Pressable
+                accessibilityLabel={dangerConfirm === "delete" ? "회원 탈퇴 확정" : "회원 탈퇴"}
+                accessibilityRole="button"
+                onPress={() => {
+                  if (dangerConfirm === "delete") void onDeleteAccount();
+                  else setDangerConfirm("delete");
+                }}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : theme.cardMuted, borderColor: theme.border }]}
+              >
+                <Text style={[styles.smallButtonText, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>{dangerConfirm === "delete" ? "탈퇴 확정" : "회원 탈퇴"}</Text>
+              </Pressable>
+              {dangerConfirm === "delete" ? (
+                <Pressable accessibilityLabel="회원 탈퇴 취소" accessibilityRole="button" onPress={() => setDangerConfirm("none")} style={[styles.smallButton, { backgroundColor: "transparent", borderColor: theme.border }]}>
+                  <Text style={[styles.smallButtonText, { color: theme.subtle }]}>취소</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
+}
+
+function getProviderLabel(provider?: AccountProvider) {
+  if (provider === "kakao") return "카카오";
+  if (provider === "naver") return "네이버";
+  if (provider === "line") return "LINE";
+  if (provider === "google") return "Google";
+  return "Apple";
 }
 
 function PersonGlyph({ color }: { color: string }) {

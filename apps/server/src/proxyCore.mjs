@@ -339,9 +339,9 @@ async function estimateRoute(params, readEnvValue) {
         }
       } catch (error) {
         console.warn(`route provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
-        throw new UncachedFallbackError(estimateFallbackRoute(origin, destination, destinationCountryCode));
+        throw new UncachedFallbackError(estimateFallbackRoute(origin, destination, originCountryCode, destinationCountryCode));
       }
-      return estimateFallbackRoute(origin, destination, destinationCountryCode);
+      return estimateFallbackRoute(origin, destination, originCountryCode, destinationCountryCode);
     },
   );
 }
@@ -540,18 +540,21 @@ function getGoogleRouteLanguage(countryCode) {
   return "en";
 }
 
-function estimateFallbackRoute(origin, destination, destinationCountryCode = "KR") {
+function estimateFallbackRoute(origin, destination, originCountryCode = "KR", destinationCountryCode = "KR") {
   const directDistanceMeters = getDistanceMeters(origin, destination);
-  const roadDistanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : 1));
+  const sameCountry = originCountryCode === destinationCountryCode;
+  const roadDistanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : sameCountry ? 1.25 : 1));
   const travelMinutes = destinationCountryCode === "KR"
     ? Math.max(15, Math.ceil((roadDistanceMeters / 1000 / 32) * 60))
-    : getInternationalFallbackTravelMinutes(destinationCountryCode);
+    : sameCountry
+      ? Math.max(10, Math.ceil((roadDistanceMeters / 1000 / 28) * 60))
+      : getInternationalFallbackTravelMinutes(destinationCountryCode);
   return {
     provider: "fallback",
     status: "fallback",
     travelMinutes,
     distanceMeters: roadDistanceMeters,
-    message: destinationCountryCode === "KR" ? "좌표 거리 기반 추정" : "해외 목적지 기본 이동시간",
+    message: sameCountry ? "현지 좌표 거리 기반 추정" : "국가 간 경로 확인 필요",
   };
 }
 

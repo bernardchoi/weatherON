@@ -56,6 +56,7 @@ class D1PreparedStatementAdapter {
 const sqlite = new DatabaseSync(":memory:");
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0001_account_auth.sql", import.meta.url), "utf8"));
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0002_app_integrity.sql", import.meta.url), "utf8"));
+sqlite.exec(readFileSync(new URL("../apps/server/migrations/0003_oauth_provider_tokens.sql", import.meta.url), "utf8"));
 const database = new D1DatabaseAdapter(sqlite);
 const keyPair = await crypto.subtle.generateKey(
   {
@@ -70,10 +71,22 @@ const keyPair = await crypto.subtle.generateKey(
 const publicJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 const keyId = "weatheron-test-key";
 const originalFetch = globalThis.fetch;
+let kakaoUnlinkCount = 0;
 
 globalThis.fetch = async (input, init) => {
   if (String(input) === "https://appleid.apple.com/auth/keys") {
     return Response.json({ keys: [{ ...publicJwk, kid: keyId, use: "sig", alg: "RS256" }] });
+  }
+  if (String(input) === "https://kauth.kakao.com/oauth/token") {
+    return Response.json({ access_token: "kakao-access-token", refresh_token: "kakao-refresh-token", expires_in: 3600 });
+  }
+  if (String(input) === "https://kapi.kakao.com/v2/user/me") {
+    assert.equal(init?.headers?.authorization, "Bearer kakao-access-token");
+    return Response.json({ id: 987654321, properties: { nickname: "WeatherON Kakao" } });
+  }
+  if (String(input) === "https://kapi.kakao.com/v1/user/unlink") {
+    kakaoUnlinkCount += 1;
+    return Response.json({ id: 987654321 });
   }
   return originalFetch(input, init);
 };
@@ -85,6 +98,10 @@ const env = {
   APPLE_TEAM_IDENTIFIER: "R4L3X54675",
   APP_ATTEST_BUNDLE_IDS: "com.weatheron.mobile,com.weatheron.mobile.dev",
   APP_INTEGRITY_MODE: "monitor",
+  KAKAO_OAUTH_CLIENT_ID: "kakao-test-client",
+  AUTH_PROVIDER_TOKEN_KEY: "weatheron-provider-token-test-key",
+  OAUTH_REDIRECT_URIS: "weatheron://oauth/callback",
+  OAUTH_CALLBACK_URL: "https://weatheron-api.test/auth/oauth/callback",
 };
 
 try {
@@ -219,6 +236,55 @@ try {
   assert.equal(logout.response.status, 200);
   const expiredSession = await requestJson("/auth/session", { headers: { authorization } });
   assert.equal(expiredSession.response.status, 401);
+
+  const providers = await requestJson("/auth/providers");
+  assert.equal(providers.response.status, 200);
+  assert.equal(providers.body.providers.find((item) => item.provider === "kakao")?.available, true);
+  assert.equal(providers.body.providers.find((item) => item.provider === "naver")?.available, false);
+
+  const oauthChallenge = await requestJson("/auth/oauth/challenge", {
+    method: "POST",
+    body: { provider: "kakao", redirectUri: "weatheron://oauth/callback" },
+  });
+  assert.equal(oauthChallenge.response.status, 201);
+  const authorizeUrl = new URL(oauthChallenge.body.authorizationUrl);
+  assert.equal(authorizeUrl.origin, "https://kauth.kakao.com");
+  assert.equal(authorizeUrl.searchParams.get("state"), oauthChallenge.body.state);
+  assert.equal(authorizeUrl.searchParams.get("redirect_uri"), env.OAUTH_CALLBACK_URL);
+
+  const callbackResponse = await worker.fetch(
+    new Request(`${env.OAUTH_CALLBACK_URL}?code=kakao-test-code&state=${encodeURIComponent(oauthChallenge.body.state)}`),
+    env,
+  );
+  assert.equal(callbackResponse.status, 302);
+  const callbackUrl = new URL(callbackResponse.headers.get("location"));
+  assert.equal(callbackUrl.protocol, "weatheron:");
+  assert.equal(callbackUrl.searchParams.get("code"), "kakao-test-code");
+
+  const oauthExchange = await requestJson("/auth/oauth/exchange", {
+    method: "POST",
+    body: {
+      provider: "kakao",
+      challengeId: oauthChallenge.body.challengeId,
+      state: oauthChallenge.body.state,
+      verifier: oauthChallenge.body.verifier,
+      redirectUri: oauthChallenge.body.redirectUri,
+      code: "kakao-test-code",
+    },
+  });
+  assert.equal(oauthExchange.response.status, 200);
+  assert.equal(oauthExchange.body.account.provider, "kakao");
+  assert.equal(oauthExchange.body.account.email, null);
+  const storedToken = sqlite.prepare("SELECT token_ciphertext FROM auth_provider_tokens WHERE provider = 'kakao'").get();
+  assert.ok(storedToken?.token_ciphertext.startsWith("v1."));
+  assert.ok(!storedToken.token_ciphertext.includes("kakao-access-token"));
+
+  const oauthAuthorization = `Bearer ${oauthExchange.body.sessionToken}`;
+  const deleted = await requestJson("/account/delete", { method: "POST", headers: { authorization: oauthAuthorization } });
+  assert.equal(deleted.response.status, 200);
+  assert.equal(deleted.body.deleted, true);
+  assert.equal(kakaoUnlinkCount, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM users WHERE id = ?").get(oauthExchange.body.account.userId).count, 0);
 
   console.log("account auth check passed");
 } finally {
