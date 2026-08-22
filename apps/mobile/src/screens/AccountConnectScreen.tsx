@@ -162,7 +162,7 @@ function ProviderButton({ provider, minHeight, onPress, theme, disabled }: { pro
   }
   if (provider === "kakao") {
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} disabled={disabled} onPress={onPress} style={[styles.brandImageButton, { minHeight, opacity: disabled ? 0.55 : 1 }]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} disabled={disabled} onPress={onPress} style={[styles.brandImageButton, { height: minHeight, opacity: disabled ? 0.55 : 1 }]}>
         <Image source={brandAssets.kakao} resizeMode="contain" style={styles.fullBrandImage} accessibilityIgnoresInvertColors />
       </Pressable>
     );
