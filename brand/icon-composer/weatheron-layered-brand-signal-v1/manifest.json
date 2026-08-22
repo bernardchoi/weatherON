@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "name": "WeatherON Layered Brand Signal",
+  "direction": 3,
+  "canvas": {
+    "width": 1024,
+    "height": 1024,
+    "viewBox": "0 0 120 120",
+    "includesPlatformMask": false
+  },
+  "sourceOfTruth": "assets/icon/icon-primary.svg",
+  "iconComposerDocument": "WeatherON-App-Icon.icon",
+  "iconComposerMapping": {
+    "L1-background": "group 3 (back) with document fill fallback",
+    "L3-foreground": "group 1 (front)",
+    "L2-mid": "group 2 (middle)"
+  },
+  "layers": [
+    {
+      "order": 1,
+      "id": "L1-background",
+      "file": "layers/l1-background.svg",
+      "contents": ["Clear Navy full-bleed background"],
+      "material": {
+        "glass": "off",
+        "translucency": "off",
+        "specular": "off",
+        "shadow": "off"
+      }
+    },
+    {
+      "order": 2,
+      "id": "L2-mid",
+      "file": "layers/l2-mid.svg",
+      "contents": ["Cream toggle track", "Clear Navy OFF mark", "Paper White cloud"],
+      "material": {
+        "glass": "on",
+        "translucency": "off",
+        "specular": "off",
+        "shadow": "subtle-contact"
+      }
+    },
+    {
+      "order": 3,
+      "id": "L3-foreground",
+      "file": "layers/l3-foreground.svg",
+      "contents": ["Warm Gold ON knob", "Exactly three Warm Gold rays"],
+      "material": {
+        "glass": "on",
+        "translucency": "off-core",
+        "specular": "on",
+        "shadow": "subtle-contact"
+      }
+    }
+  ],
+  "appearances": {
+    "default": {
+      "background": "#0C1F3F",
+      "track": "#FDF6EB",
+      "offMark": "#0C1F3F",
+      "cloud": "#F4F7FC",
+      "sun": "#F0A020"
+    },
+    "dark": {
+      "background": "#070F1F",
+      "track": "#C9C2B4",
+      "offMark": "#070F1F",
+      "cloud": "#A9B6CC",
+      "sun": "#D9941F"
+    },
+    "mono": {
+      "systemTint": true,
+      "preserveLayerOrder": true,
+      "preserveGlyphGeometry": true
+    }
+  },
+  "constraints": {
+    "lockedGeometry": true,
+    "lockedBrandColors": true,
+    "minimumLockedColorCoveragePercent": 90,
+    "rayCount": 3,
+    "bakedBlur": false,
+    "bakedShadow": false,
+    "bakedSpecular": false
+  }
+}

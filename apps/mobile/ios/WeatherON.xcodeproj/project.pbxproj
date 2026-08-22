@@ -16,6 +16,7 @@
 		A11C26010000000000000002 /* LiquidGlassNavigationView.m in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000012 /* LiquidGlassNavigationView.m */; };
 		A11C26010000000000000003 /* WeatherONDepartureLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */; };
 		A11C26010000000000000004 /* WeatherONDepartureActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */; };
+		A11C26010000000000000005 /* WeatherON-App-Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = A11C26010000000000000015 /* WeatherON-App-Icon.icon */; };
 		B2F64F94C6529480B4064978 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		D393E4B4DF48A101560AFC09 /* WeatherONWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 782B913B34598D76A9DB1500 /* WeatherONWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -62,6 +63,7 @@
 		A11C26010000000000000012 /* LiquidGlassNavigationView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiquidGlassNavigationView.m; path = WeatherON/LiquidGlassNavigationView.m; sourceTree = "<group>"; };
 		A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherONDepartureLiveActivity.swift; sourceTree = "<group>"; };
 		A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../../modules/weatheron-widget-data/ios/WeatherONDepartureActivityAttributes.swift"; sourceTree = "<group>"; };
+		A11C26010000000000000015 /* WeatherON-App-Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; name = WeatherON-App-Icon.icon; path = WeatherON/WeatherON-App-Icon.icon; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WeatherON/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B49AF18EE5E5CDCD3033C030 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WeatherON/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WeatherON/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				F11748442D0722820044C1D9 /* WeatherON-Bridging-Header.h */,
 				A11C26010000000000000011 /* LiquidGlassNavigationView.swift */,
 				A11C26010000000000000012 /* LiquidGlassNavigationView.m */,
+				A11C26010000000000000015 /* WeatherON-App-Icon.icon */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -299,6 +302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
+				A11C26010000000000000005 /* WeatherON-App-Icon.icon in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				B2F64F94C6529480B4064978 /* PrivacyInfo.xcprivacy in Resources */,
@@ -496,7 +500,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9FB6D87C045A522848899D8F /* Pods-WeatherON.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = WeatherON-App-Icon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WeatherON/WeatherON.entitlements;
 				CURRENT_PROJECT_VERSION = 32;
@@ -536,7 +540,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 43D854AC55A59F547AED9959 /* Pods-WeatherON.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = WeatherON-App-Icon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WeatherON/WeatherON.entitlements;
 				CURRENT_PROJECT_VERSION = 32;
