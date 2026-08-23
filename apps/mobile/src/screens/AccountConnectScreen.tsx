@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
+import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
-import { getAccountRegionLabel, orderProvidersForRegion, resolveAccountRegion } from "../providers/accountRegion";
+import { orderProvidersForRegion, resolveAccountRegion } from "../providers/accountRegion";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -21,16 +22,9 @@ const providerLabels: Record<AccountProvider, string> = {
   apple: "Apple로 계속",
   kakao: "카카오 로그인",
   naver: "네이버로 계속",
-  line: "LINE으로 로그인",
+  line: "LINE으로 계속",
   google: "Google로 계속",
 };
-
-const brandAssets = {
-  kakao: require("../../../../assets/auth-providers/kakao-login-ko.png"),
-  naver: require("../../../../assets/auth-providers/naver-icon.png"),
-  line: require("../../../../assets/auth-providers/line-icon.png"),
-  google: require("../../../../assets/auth-providers/google-icon-ios.png"),
-} as const;
 
 export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
@@ -90,15 +84,15 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 
         <View style={[styles.heroCard, { padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
           <View style={styles.heroCopy}>
-            <Text style={[styles.heroKicker, { color: theme.sky }]}>추천 로그인 방법</Text>
-            <Text style={[styles.heroTitle, { color: theme.text }]}>사용할 계정 방식을 선택</Text>
-            <Text style={[styles.heroBody, { color: theme.muted }]}>{getAccountRegionLabel(region)}</Text>
+            <Text style={[styles.heroKicker, { color: theme.sky }]}>WeatherON을 더 편리하게</Text>
+            <Text style={[styles.heroTitle, { color: theme.text }]}>나만의 날씨 준비를 계속 이어가세요</Text>
+            <Text style={[styles.heroBody, { color: theme.muted }]}>자주 쓰는 계정을 먼저 보여드렸어요</Text>
           </View>
 
           {destinationName ? (
             <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.contextKicker, { color: theme.gold }]} numberOfLines={1}>{resumeLabel}</Text>
-              <Text style={[styles.contextTitle, { color: theme.text }]} numberOfLines={1}>{destinationName}</Text>
+              <Text style={[styles.contextKicker, { color: theme.gold }]} numberOfLines={1}>연결 후 바로 이어져요</Text>
+              <Text style={[styles.contextTitle, { color: theme.text }]} numberOfLines={1}>{`${destinationName} · ${resumeLabel}`}</Text>
             </View>
           ) : null}
 
@@ -109,13 +103,13 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
             {recommendedProviders.length === 0 ? (
               <View style={[styles.unavailablePanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                 <Text style={[styles.unavailableText, { color: theme.muted }]}>
-                  {providerCheckComplete ? "현재 사용할 수 있는 로그인 방식이 없어요" : "사용 가능한 로그인 방식을 확인하고 있어요"}
+                  {providerCheckComplete ? "간편 로그인을 불러오지 못했어요. 잠시 후 다시 시도해 주세요" : "간편 로그인을 준비하고 있어요"}
                 </Text>
               </View>
             ) : null}
           </View>
 
-          {isSigningIn ? <Text style={[styles.authStatus, { color: theme.sky }]}>계정 확인 중</Text> : null}
+          {isSigningIn ? <Text style={[styles.authStatus, { color: theme.sky }]}>안전하게 계정을 연결하고 있어요</Text> : null}
           {authMessage ? <Text style={[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
         </View>
 
@@ -129,17 +123,17 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 
         {otherProviders.length > 0 ? (
           <Pressable accessibilityRole="button" onPress={() => setShowOtherMethods((current) => !current)} style={[styles.otherButton, { borderColor: theme.border, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent" }]}>
-            <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "다른 방법 접기" : "다른 방법으로 계속"}</Text>
+            <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "계정 선택 줄이기" : "다른 계정으로 계속하기"}</Text>
           </Pressable>
         ) : null}
 
         <View style={[styles.nextStep, { borderColor: theme.border, backgroundColor: theme.cardStrong }]}>
-          <Text style={[styles.nextStepTitle, { color: theme.text }]}>다음 단계</Text>
-          <Text style={[styles.nextStepBody, { color: theme.muted }]}>약관 확인 후 원래 화면으로 돌아감</Text>
-          <Text style={[styles.nextStepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도</Text>
+          <Text style={[styles.nextStepTitle, { color: theme.text }]}>연결하면 더 편리해져요</Text>
+          <Text style={[styles.nextStepBody, { color: theme.muted }]}>목적지와 코디를 저장하고 다음에도 바로 이어볼 수 있어요</Text>
+          <Text style={[styles.nextStepBody, { color: theme.subtle }]}>위치와 알림은 원할 때 직접 켤 수 있어요</Text>
         </View>
         <Pressable accessibilityRole="button" onPress={onCancel} style={styles.laterButton}>
-          <Text style={[styles.laterText, { color: theme.subtle }]}>나중에 하기</Text>
+          <Text style={[styles.laterText, { color: theme.subtle }]}>지금은 둘러보기</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -147,36 +141,26 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 }
 
 function ProviderButton({ provider, minHeight, onPress, theme, disabled }: { provider: AccountProvider; minHeight: number; onPress: () => void; theme: AppTheme; disabled: boolean }) {
-  if (provider === "apple") {
-    return (
-      <AppleAuthentication.AppleAuthenticationButton
-        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-        buttonStyle={theme.name === "dark" ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-        cornerRadius={radius.md}
-        style={[styles.appleButton, { height: minHeight, opacity: disabled ? 0.55 : 1 }]}
-        onPress={() => {
-          if (!disabled) onPress();
-        }}
-      />
-    );
-  }
-  if (provider === "kakao") {
-    return (
-      <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} disabled={disabled} onPress={onPress} style={[styles.brandImageButton, { height: minHeight, opacity: disabled ? 0.55 : 1 }]}>
-        <Image source={brandAssets.kakao} resizeMode="contain" style={styles.fullBrandImage} accessibilityIgnoresInvertColors />
-      </Pressable>
-    );
-  }
   const palette = getProviderPalette(provider, theme);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} disabled={disabled} onPress={onPress} style={[styles.providerButton, { minHeight, opacity: disabled ? 0.55 : 1, backgroundColor: palette.background, borderColor: palette.border }]}>
-      <Image source={brandAssets[provider]} resizeMode="contain" style={styles.providerIcon} accessibilityIgnoresInvertColors />
-      <Text style={[styles.providerLabel, { color: palette.text }]}>{providerLabels[provider]}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} disabled={disabled} onPress={onPress} style={[styles.providerButton, { height: minHeight, opacity: disabled ? 0.55 : 1, backgroundColor: palette.background, borderColor: palette.border }]}>
+      <View style={styles.providerContent}>
+        <View style={styles.providerIconSlot}>
+          <ProviderBrandIcon provider={provider} size={22} appleColor={palette.text} />
+        </View>
+        <Text style={[styles.providerLabel, { color: palette.text }]}>{providerLabels[provider]}</Text>
+      </View>
     </Pressable>
   );
 }
 
-function getProviderPalette(provider: Exclude<AccountProvider, "apple" | "kakao">, _theme: AppTheme) {
+function getProviderPalette(provider: AccountProvider, theme: AppTheme) {
+  if (provider === "apple") {
+    return theme.name === "dark"
+      ? { background: "#FFFFFF", border: "#FFFFFF", text: "#000000" }
+      : { background: "#000000", border: "#000000", text: "#FFFFFF" };
+  }
+  if (provider === "kakao") return { background: "#FEE500", border: "#FEE500", text: "#191919" };
   if (provider === "naver") return { background: "#03A94D", border: "#03A94D", text: "#FFFFFF" };
   if (provider === "line") return { background: "#06C755", border: "#06C755", text: "#FFFFFF" };
   return { background: "#FFFFFF", border: "#747775", text: "#1F1F1F" };
@@ -198,12 +182,10 @@ const styles = StyleSheet.create({
   contextKicker: { fontSize: 11, lineHeight: 15, fontWeight: "900" },
   contextTitle: { flex: 1, fontSize: 12, lineHeight: 16, fontWeight: "900" },
   providerList: { gap: spacing.sm },
-  appleButton: { width: "100%" },
-  brandImageButton: { width: "100%", alignItems: "center", justifyContent: "center" },
-  fullBrandImage: { width: "100%", height: "100%" },
-  providerButton: { width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, borderRadius: 12, borderWidth: 1, paddingHorizontal: 16 },
-  providerIcon: { width: 28, height: 28 },
-  providerLabel: { fontSize: 14, lineHeight: 20, fontWeight: "800" },
+  providerButton: { width: "100%", alignItems: "center", justifyContent: "center", borderRadius: radius.md, borderWidth: 1, paddingHorizontal: 16 },
+  providerContent: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  providerIconSlot: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
+  providerLabel: { fontSize: 16, lineHeight: 21, fontWeight: "800" },
   unavailablePanel: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: radius.md, borderWidth: 1, paddingHorizontal: spacing.md },
   unavailableText: { textAlign: "center", fontSize: 12, lineHeight: 17, fontWeight: "800" },
   authStatus: { textAlign: "center", fontSize: 12, lineHeight: 17, fontWeight: "800" },

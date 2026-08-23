@@ -231,6 +231,7 @@ export function useWeatherOnAppState() {
   const [notificationDeliveryStatus, setNotificationDeliveryStatus] = useState<NotificationDeliveryStatus>(defaultNotificationDeliveryStatus);
   const [alertSettingsRouteState, setAlertSettingsRouteState] = useState<AlertSettingsRouteState | null>(null);
   const [selectedPolicyDocument, setSelectedPolicyDocument] = useState<PolicyDocumentType>("privacy");
+  const [policyHubReturnRoute, setPolicyHubReturnRoute] = useState<"M1" | "A4">("M1");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("celsius");
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
@@ -1024,6 +1025,7 @@ export function useWeatherOnAppState() {
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
     setAlertSettingsRouteState(null);
+    if (nextRoute === "R1") setPolicyHubReturnRoute(route === "A4" ? "A4" : "M1");
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
     if (nextRoute === "P1") setDestinationAddReturnRoute(route === "O6" ? "O6" : "G1");
     // 오버레이 화면들(우산 H4, 알림센터 H3, 옷장 C2, 프리셋 C3)은 여러 진입점에서 열릴 수 있어,
@@ -1715,6 +1717,10 @@ export function useWeatherOnAppState() {
       setRoute("R1");
       return true;
     }
+    if (route === "R1") {
+      setRoute(policyHubReturnRoute);
+      return true;
+    }
     if (route === "O4" && styleProfileReturnRoute) {
       setRoute(styleProfileReturnRoute);
       return true;
@@ -1735,6 +1741,7 @@ export function useWeatherOnAppState() {
     gate?.returnTo,
     overlayReturnRoutes,
     permissionGate?.returnTo,
+    policyHubReturnRoute,
     route,
     styleProfileReturnRoute,
   ]);

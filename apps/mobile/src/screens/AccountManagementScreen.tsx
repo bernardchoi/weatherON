@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
+import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -23,9 +24,10 @@ export function AccountManagementScreen({
   const [dangerConfirm, setDangerConfirm] = useState<"none" | "logout" | "delete">("none");
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
-  const profileTitle = accountReady ? `${getProviderLabel(accountProfile?.provider)} 계정` : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileMeta = accountReady ? "저장·동기화 사용 가능" : needsTerms ? "필수 약관 대기" : "연결 전";
-  const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결됨" : needsTerms ? "확인" : "게스트";
+  const provider = accountProfile?.provider ?? "apple";
+  const profileTitle = accountReady ? getProviderConnectedTitle(provider) : needsTerms ? "약관 동의가 필요해요" : "게스트 모드";
+  const profileMeta = accountReady ? "저장한 목적지와 코디를 다음에도 편리하게 이어보세요" : needsTerms ? "필수 약관 확인 후 저장·동기화를 시작할 수 있어요" : "계정을 연결하면 저장한 정보를 계속 사용할 수 있어요";
+  const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결 완료" : needsTerms ? "확인 필요" : "게스트";
   const primaryLabel = accountReady ? "정책 보기" : needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = accountReady ? "정책 및 법적 고지 보기" : needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
@@ -76,10 +78,8 @@ export function AccountManagementScreen({
             cardShadow(theme),
           ]}
         >
-          <View style={[styles.profileVisual, { backgroundColor: theme.cardStrong }]}>
-            <View style={[styles.avatar, layout.isShort || layout.isNarrow ? styles.avatarShort : null, { borderColor: primaryTone }]}>
-              <PersonGlyph color={primaryTone} />
-            </View>
+          <View style={[styles.profileVisual, { backgroundColor: provider === "apple" ? "#FFFFFF" : theme.cardStrong }]}>
+            <ProviderBrandIcon provider={provider} size={28} />
             <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
           <View style={styles.profileCopy}>
@@ -89,7 +89,7 @@ export function AccountManagementScreen({
                 <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
               </View>
             </View>
-            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={1}>{profileMeta}</Text>
+            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
             {accountAuthMessage ? <Text style={[styles.profileMeta, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }]} numberOfLines={2}>{accountAuthMessage}</Text> : null}
           </View>
         </View>
@@ -110,10 +110,7 @@ export function AccountManagementScreen({
         ) : null}
 
         {accountLinked ? (
-          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border }, cardShadow(theme)]}>
-            <Text style={[styles.dangerTitle, { color: dangerConfirm === "logout" ? theme.warm : theme.text }]}>
-              {dangerConfirm === "logout" ? "로그아웃 확인" : "로그아웃"}
-            </Text>
+          <View style={styles.accountActions}>
             <View style={styles.dangerActions}>
               <Pressable
                 accessibilityLabel={dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
@@ -122,26 +119,12 @@ export function AccountManagementScreen({
                   if (dangerConfirm === "logout") onSignOutAccount();
                   else setDangerConfirm("logout");
                 }}
-                style={[styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: theme.border }]}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "logout" ? theme.alert : theme.text }]}>
                   {dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
                 </Text>
               </Pressable>
-              {dangerConfirm !== "none" ? (
-                <Pressable accessibilityLabel="계정 작업 취소" accessibilityRole="button" onPress={() => setDangerConfirm("none")} style={[styles.smallButton, { backgroundColor: "transparent", borderColor: theme.border }]}>
-                  <Text style={[styles.smallButtonText, { color: theme.subtle }]}>취소</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
-        ) : null}
-
-        {accountLinked ? (
-          <View style={[styles.dangerPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }, cardShadow(theme)]}>
-            <Text style={[styles.dangerTitle, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>회원 탈퇴</Text>
-            <Text style={[styles.profileMeta, { color: theme.subtle }]}>저장된 계정 데이터가 삭제됨</Text>
-            <View style={styles.dangerActions}>
               <Pressable
                 accessibilityLabel={dangerConfirm === "delete" ? "회원 탈퇴 확정" : "회원 탈퇴"}
                 accessibilityRole="button"
@@ -149,16 +132,17 @@ export function AccountManagementScreen({
                   if (dangerConfirm === "delete") void onDeleteAccount();
                   else setDangerConfirm("delete");
                 }}
-                style={[styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : theme.cardMuted, borderColor: theme.border }]}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : "transparent", borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>{dangerConfirm === "delete" ? "탈퇴 확정" : "회원 탈퇴"}</Text>
               </Pressable>
-              {dangerConfirm === "delete" ? (
-                <Pressable accessibilityLabel="회원 탈퇴 취소" accessibilityRole="button" onPress={() => setDangerConfirm("none")} style={[styles.smallButton, { backgroundColor: "transparent", borderColor: theme.border }]}>
-                  <Text style={[styles.smallButtonText, { color: theme.subtle }]}>취소</Text>
-                </Pressable>
-              ) : null}
             </View>
+            {dangerConfirm !== "none" ? (
+              <Pressable accessibilityLabel="계정 작업 취소" accessibilityRole="button" onPress={() => setDangerConfirm("none")} style={styles.cancelButton}>
+                <Text style={[styles.cancelButtonText, { color: theme.subtle }]}>취소</Text>
+              </Pressable>
+            ) : null}
+            {dangerConfirm === "delete" ? <Text style={[styles.confirmHint, { color: theme.alert }]}>탈퇴하면 서버에 저장된 계정 데이터가 삭제됨</Text> : null}
           </View>
         ) : null}
 
@@ -176,13 +160,9 @@ function getProviderLabel(provider?: AccountProvider) {
   return "Apple";
 }
 
-function PersonGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.personGlyph} accessibilityElementsHidden>
-      <View style={[styles.personHead, { borderColor: color }]} />
-      <View style={[styles.personBody, { borderColor: color }]} />
-    </View>
-  );
+function getProviderConnectedTitle(provider: AccountProvider) {
+  if (provider === "line") return "LINE으로 연결됐어요";
+  return `${getProviderLabel(provider)}로 연결됐어요`;
 }
 
 function DoorGlyph({ color }: { color: string }) {
@@ -251,18 +231,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.pill,
   },
-  avatar: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 2,
-  },
-  avatarShort: {
-    width: 30,
-    height: 30,
-  },
   statusDot: {
     position: "absolute",
     right: 5,
@@ -302,7 +270,7 @@ const styles = StyleSheet.create({
   },
   profileMeta: {
     fontSize: 11,
-    lineHeight: 15,
+    lineHeight: 16,
     fontWeight: "700",
   },
   primaryRow: {
@@ -324,33 +292,29 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "900",
   },
-  dangerPanel: {
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  dangerTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
+  accountActions: { alignItems: "center", gap: spacing.xs },
   dangerActions: {
+    width: "100%",
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: spacing.sm,
   },
   smallButton: {
+    flex: 1,
     minHeight: 44,
+    alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
     borderRadius: radius.sm,
     borderWidth: 1,
   },
   smallButtonText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
+  cancelButton: { minHeight: 36, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.md },
+  cancelButtonText: { fontSize: 12, lineHeight: 16, fontWeight: "800" },
+  confirmHint: { textAlign: "center", fontSize: 11, lineHeight: 15, fontWeight: "700" },
   bottomSpacer: {
     height: 10,
   },
@@ -359,27 +323,6 @@ const styles = StyleSheet.create({
     height: 20,
     alignItems: "center",
     justifyContent: "center",
-  },
-  personGlyph: {
-    width: 22,
-    height: 22,
-    alignItems: "center",
-  },
-  personHead: {
-    width: 8,
-    height: 8,
-    borderWidth: 1.7,
-    borderRadius: radius.pill,
-  },
-  personBody: {
-    position: "absolute",
-    bottom: 1,
-    width: 17,
-    height: 10,
-    borderWidth: 1.7,
-    borderTopLeftRadius: radius.pill,
-    borderTopRightRadius: radius.pill,
-    borderBottomWidth: 0,
   },
   doorBox: {
     position: "absolute",

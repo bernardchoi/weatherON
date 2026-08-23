@@ -15,7 +15,7 @@ const policyRows: { type: PolicyDocumentType; icon: number; title: string; body:
   { type: "open-source", icon: uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
 ];
 
-export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenProps) {
+export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   return (
@@ -37,7 +37,7 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onNavigate }: P0ScreenPr
         <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
 
         <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
-          <BackButton accessibilityLabel="MY로 돌아가기" onPress={() => onNavigate("M1")} />
+          <BackButton accessibilityLabel="이전 화면으로 돌아가기" onPress={onGoBack} />
           <Text style={[styles.screenTitle, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>정책</Text>
         </View>
 
