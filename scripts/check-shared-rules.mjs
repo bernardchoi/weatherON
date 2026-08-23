@@ -130,7 +130,55 @@ await writeFile(
       },
     };
 
+    const worldwideWeatherKitCases = [
+      { timeZone: "America/New_York", forecastStart: "2026-01-15T12:00:00Z" },
+      { timeZone: "America/New_York", forecastStart: "2026-07-15T12:00:00Z" },
+      { timeZone: "Europe/London", forecastStart: "2026-07-15T12:00:00Z" },
+      { timeZone: "Asia/Kathmandu", forecastStart: "2026-01-15T00:00:00Z" },
+      { timeZone: "Australia/Adelaide", forecastStart: "2026-07-15T00:00:00Z" },
+      { timeZone: "America/St_Johns", forecastStart: "2026-07-15T12:00:00Z" },
+      { timeZone: "Pacific/Chatham", forecastStart: "2026-07-15T00:00:00Z" },
+      { timeZone: "Pacific/Kiritimati", forecastStart: "2026-08-23T12:00:00Z" },
+      { timeZone: "Pacific/Honolulu", forecastStart: "2026-08-23T05:00:00Z" },
+    ] as const;
+
+    function normalizeWeatherKitTime(timeZone: string, forecastStart: string) {
+      return normalizeWeatherKitWeather({
+        ...weatherKitFixture,
+        currentWeather: {
+          ...weatherKitFixture.currentWeather,
+          asOf: forecastStart,
+        },
+        forecastHourly: {
+          hours: [{ ...weatherKitFixture.forecastHourly.hours[0], forecastStart }],
+        },
+        forecastDaily: undefined,
+      }, {
+        locationId: "worldwide-" + timeZone,
+        locationName: timeZone,
+        countryCode: "GLOBAL",
+        timezone: timeZone,
+      }).hourly[0]?.time;
+    }
+
+    const worldwideWeatherKitTimes = worldwideWeatherKitCases.map(({ timeZone, forecastStart }) => ({
+      timeZone,
+      time: normalizeWeatherKitTime(timeZone, forecastStart),
+    }));
+
+    const supportedValuesOf = (Intl as typeof Intl & {
+      supportedValuesOf?: (key: "timeZone") => string[];
+    }).supportedValuesOf;
+    const supportedIanaTimeZones = supportedValuesOf?.("timeZone") ?? worldwideWeatherKitCases.map((item) => item.timeZone);
+    const unsupportedIanaTimeZones = supportedIanaTimeZones.filter((timeZone) => {
+      const time = normalizeWeatherKitTime(timeZone, "2026-01-15T12:00:00Z");
+      return !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$/.test(time ?? "");
+    });
+
     export const results = {
+      supportedIanaTimeZoneCount: supportedIanaTimeZones.length,
+      unsupportedIanaTimeZones,
+      worldwideWeatherKitTimes,
       presetWardrobeIds: presetWardrobe.map((item) => item.id),
       outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
       ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
@@ -185,6 +233,26 @@ await writeFile(
         locationId: "kr-seoul-seongsu",
         locationName: "서울 성수동",
         countryCode: "KR",
+        timezone: "Asia/Seoul",
+      }),
+      weatherkitCurrentHour: normalizeWeatherKitWeather({
+        ...weatherKitFixture,
+        currentWeather: {
+          ...weatherKitFixture.currentWeather,
+          asOf: "2026-08-22T23:58:00Z",
+        },
+        forecastHourly: {
+          hours: [
+            { ...weatherKitFixture.forecastHourly.hours[0], forecastStart: "2026-08-22T22:00:00Z" },
+            { ...weatherKitFixture.forecastHourly.hours[0], forecastStart: "2026-08-22T23:00:00Z" },
+            { ...weatherKitFixture.forecastHourly.hours[1], forecastStart: "2026-08-23T00:00:00Z" },
+          ],
+        },
+      }, {
+        locationId: "kr-goyang-samsong",
+        locationName: "고양시 삼송동",
+        countryCode: "KR",
+        timezone: "Asia/Seoul",
       }),
       openmeteoHourlyHumidity: normalizeOpenMeteoWeather({
         ...openMeteoFixture,
@@ -673,7 +741,25 @@ assert.equal(results.weatherkit.source, "weatherkit");
 assert.equal(results.weatherkit.current.condition, "cloud");
 assert.equal(results.weatherkit.current.humidityPct, 70);
 assert.equal(results.weatherkit.hourly[1].condition, "rain");
+assert.equal(results.weatherkit.hourly[0].time, "2026-06-26T18:00");
 assert.equal(results.weatherkit.daily[0].rainProbabilityPct, 65);
+assert.deepEqual(
+  results.weatherkitCurrentHour.hourly.map((item) => item.time),
+  ["2026-08-23T08:00", "2026-08-23T09:00"],
+);
+assert.deepEqual(results.worldwideWeatherKitTimes, [
+  { timeZone: "America/New_York", time: "2026-01-15T07:00" },
+  { timeZone: "America/New_York", time: "2026-07-15T08:00" },
+  { timeZone: "Europe/London", time: "2026-07-15T13:00" },
+  { timeZone: "Asia/Kathmandu", time: "2026-01-15T05:45" },
+  { timeZone: "Australia/Adelaide", time: "2026-07-15T09:30" },
+  { timeZone: "America/St_Johns", time: "2026-07-15T09:30" },
+  { timeZone: "Pacific/Chatham", time: "2026-07-15T12:45" },
+  { timeZone: "Pacific/Kiritimati", time: "2026-08-24T02:00" },
+  { timeZone: "Pacific/Honolulu", time: "2026-08-22T19:00" },
+]);
+assert.ok(results.supportedIanaTimeZoneCount > 300);
+assert.deepEqual(results.unsupportedIanaTimeZones, []);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");
