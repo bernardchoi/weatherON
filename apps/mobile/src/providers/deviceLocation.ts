@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { resolveTimezoneFromCoordinate } from "./placeSearchClient";
 import { createKmaWeatherLocationFromCoordinate, type KmaWeatherLocationPreset } from "./weatherLocations";
 
 export type DeviceLocationStatus = "idle" | "requesting" | "granted" | "denied" | "unavailable" | "error";
@@ -58,6 +59,12 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
     const locationName = formatDeviceLocationName(address) ?? "내 위치 주변";
     const kmaLocation = createKmaWeatherLocationFromCoordinate(coordinate, locationName);
     const countryCode = getDeviceCountryCode(address?.isoCountryCode, coordinate);
+    const timezone = countryCode === "JP"
+      ? "Asia/Tokyo"
+      : countryCode === "GLOBAL"
+        ? await resolveTimezoneFromCoordinate(coordinate)
+        : "Asia/Seoul";
+    if (!timezone) throw new Error("Current location timezone could not be resolved");
     return {
       status: "granted",
       message: "현재 위치 반영",
@@ -68,7 +75,7 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
           ? {
               ...kmaLocation,
               countryCode,
-              timezone: countryCode === "JP" ? "Asia/Tokyo" : getDeviceTimezone(),
+              timezone,
             }
           : kmaLocation,
     };
@@ -113,14 +120,6 @@ async function resolveDeviceAddress(coordinate: { latitude: number; longitude: n
     return address ?? null;
   } catch {
     return null;
-  }
-}
-
-function getDeviceTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
-  } catch {
-    return "Asia/Seoul";
   }
 }
 

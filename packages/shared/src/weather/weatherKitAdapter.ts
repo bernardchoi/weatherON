@@ -1,5 +1,6 @@
 import type { DailyWeather, HourlyWeather, WeatherSnapshot } from "../types/weather";
 import { conditionFromWeatherKit } from "./condition";
+import { isValidIanaTimeZone } from "./timezone";
 import type { WeatherKitResponse, WeatherNormalizeOptions } from "./types";
 
 export function normalizeWeatherKitWeather(
@@ -9,6 +10,9 @@ export function normalizeWeatherKitWeather(
   const current = payload.currentWeather;
   if (!current) {
     throw new Error("WeatherKit payload has no current weather");
+  }
+  if (!isValidIanaTimeZone(options.timezone) || (options.countryCode === "GLOBAL" && options.timezone === "UTC")) {
+    throw new Error("WeatherKit location has an invalid IANA timezone");
   }
 
   const observedAt = options.observedAt ?? current.asOf ?? current.metadata?.reportedTime ?? current.metadata?.readTime ?? new Date(0).toISOString();

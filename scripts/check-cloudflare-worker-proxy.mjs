@@ -25,6 +25,7 @@ assert.equal(health.runtime, "cloudflare-worker");
 
 await checkProxyAuthentication();
 await checkProviderFallbackIsNotCached();
+await checkGlobalTimezoneResolution();
 
 if (process.env.WEATHERON_WORKER_SMOKE === "1") {
   const domestic = await fetchWorkerJson("/places/search?q=%EC%9E%A0%EC%8B%A4&countryCode=KR&language=ko");
@@ -113,6 +114,59 @@ async function checkProviderFallbackIsNotCached() {
     const recovered = await fetchWorkerJson(fallbackPath, fallbackEnv);
     assert.equal(requestCount, 2, "provider fallback must not be cached for the normal TTL");
     assert.ok(recovered.some((place) => place.provider === "kakao"), "the next request should observe provider recovery");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+async function checkGlobalTimezoneResolution() {
+  const originalFetch = globalThis.fetch;
+  let timezoneRequestCount = 0;
+  globalThis.fetch = async (request) => {
+    const url = new URL(String(request));
+    if (url.hostname === "maps.googleapis.com") {
+      return new Response(
+        JSON.stringify({
+          status: "OK",
+          results: [
+            {
+              place_id: `timezone-${url.searchParams.get("address")}`,
+              formatted_address: "New York, NY, USA",
+              types: ["locality"],
+              address_components: [{ long_name: "New York", types: ["locality"] }],
+              geometry: { location: { lat: 40.7128, lng: -74.006 } },
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }
+    if (url.hostname === "openmeteo.test") {
+      timezoneRequestCount += 1;
+      assert.equal(url.searchParams.get("timezone"), "auto");
+      assert.equal(url.searchParams.get("forecast_days"), "0");
+      return new Response(JSON.stringify({ timezone: "America/New_York" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response("not found", { status: 404 });
+  };
+
+  const timezoneEnv = {
+    PROXY_ACCESS_TOKEN: "",
+    GOOGLE_MAPS_API_KEY: "test-key",
+    OPEN_METEO_FORECAST_URL: "https://openmeteo.test/forecast",
+    PLACE_CACHE_TTL_MS: "1800000",
+    TIMEZONE_CACHE_TTL_MS: "2592000000",
+    WEATHER_TIMEOUT_MS: "8000",
+  };
+  try {
+    const first = await fetchWorkerJson("/places/search?q=Codex%20Timezone%20One&countryCode=GLOBAL", timezoneEnv);
+    const second = await fetchWorkerJson("/places/search?q=Codex%20Timezone%20Two&countryCode=GLOBAL", timezoneEnv);
+    assert.equal(first[0]?.timezone, "America/New_York", "missing global timezone should resolve from coordinates");
+    assert.equal(second[0]?.timezone, "America/New_York", "resolved timezone should remain stable");
+    assert.equal(timezoneRequestCount, 1, "coordinate timezone lookup should use its long-lived cache");
   } finally {
     globalThis.fetch = originalFetch;
   }

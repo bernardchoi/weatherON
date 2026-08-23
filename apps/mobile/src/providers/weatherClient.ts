@@ -1,4 +1,4 @@
-import { getKmaForecastBaseDateTime, kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
+import { getKmaForecastBaseDateTime, isValidIanaTimeZone, kmaForecastFixture, openMeteoFixture } from "@weatheron/shared";
 import type { KmaForecastItem, KmaForecastResponse, LifestyleIndexResponse, OpenMeteoResponse, WeatherKitResponse } from "@weatheron/shared";
 import {
   DEFAULT_KMA_FORECAST_URL,
@@ -30,7 +30,8 @@ export type FetchLifestyleIndexParams = FetchOpenMeteoForecastParams & {
   areaNo?: string;
 };
 
-export type FetchWeatherKitForecastParams = FetchOpenMeteoForecastParams & {
+export type FetchWeatherKitForecastParams = Omit<FetchOpenMeteoForecastParams, "timezone"> & {
+  timezone: string;
   countryCode?: string;
   language?: string;
 };
@@ -123,7 +124,7 @@ export function createHttpWeatherClient(options: HttpWeatherClientOptions = {}):
       const url = new URL(options.openMeteoForecastUrl ?? DEFAULT_OPEN_METEO_FORECAST_URL);
       url.searchParams.set("latitude", String(params.latitude));
       url.searchParams.set("longitude", String(params.longitude));
-      url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
+      url.searchParams.set("timezone", params.timezone ?? "auto");
       url.searchParams.set(
         "current",
         [
@@ -225,7 +226,7 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       const url = new URL("/weather/openmeteo", normalizeBaseUrl(options.weatherApiBaseUrl));
       url.searchParams.set("latitude", String(params.latitude));
       url.searchParams.set("longitude", String(params.longitude));
-      url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
+      url.searchParams.set("timezone", params.timezone ?? "auto");
       const payload = await fetchJson<OpenMeteoResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.current) throw new Error("Open-Meteo forecast response is empty");
       return payload;
@@ -243,10 +244,13 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       return payload;
     },
     async fetchWeatherKitForecast(params) {
+      if (!isValidIanaTimeZone(params.timezone)) {
+        throw new Error("WeatherKit request requires a valid IANA timezone");
+      }
       const url = new URL("/weather/weatherkit", normalizeBaseUrl(options.weatherApiBaseUrl));
       url.searchParams.set("latitude", String(params.latitude));
       url.searchParams.set("longitude", String(params.longitude));
-      url.searchParams.set("timezone", params.timezone ?? "Asia/Seoul");
+      url.searchParams.set("timezone", params.timezone);
       url.searchParams.set("language", params.language ?? "ko");
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
       const payload = await fetchJson<WeatherKitResponse>(url, timeoutMs, options.fetchImpl, headers);

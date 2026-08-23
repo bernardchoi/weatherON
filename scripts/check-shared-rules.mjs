@@ -174,8 +174,15 @@ await writeFile(
       const time = normalizeWeatherKitTime(timeZone, "2026-01-15T12:00:00Z");
       return !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$/.test(time ?? "");
     });
+    let invalidWeatherKitTimezoneRejected = false;
+    try {
+      normalizeWeatherKitTime("Invalid/Zone", "2026-01-15T12:00:00Z");
+    } catch {
+      invalidWeatherKitTimezoneRejected = true;
+    }
 
     export const results = {
+      invalidWeatherKitTimezoneRejected,
       supportedIanaTimeZoneCount: supportedIanaTimeZones.length,
       unsupportedIanaTimeZones,
       worldwideWeatherKitTimes,
@@ -320,6 +327,7 @@ await writeFile(
 
     const { buildDemoState, buildDemoStateFromWeatherResult } = await import("../apps/mobile/src/data/demoState.ts");
     const { applyLocalNotificationPolicy } = await import("../apps/mobile/src/providers/notificationPolicy.ts");
+    const { createOpenMeteoPlaceSearchClient, createProxyPlaceSearchClient } = await import("../apps/mobile/src/providers/placeSearchClient.ts");
     const { createHttpWeatherClient, createProxyWeatherClient, fixtureWeatherClient, getKmaForecastBaseDateTime } = await import("../apps/mobile/src/providers/weatherClient.ts");
     const { createKmaWeatherLocationFromCoordinate } = await import("../apps/mobile/src/providers/weatherLocations.ts");
     const { fallbackTravelEstimateClient } = await import("../apps/mobile/src/providers/travelEstimateClient.ts");
@@ -534,8 +542,99 @@ await writeFile(
       destinationCountryCode: "KR",
     });
     const hiroshimaEstimate = { ...hiroshimaLocalFallback, originPlaceId: "jp-device-hiroshima" };
+    const timezoneLookupUrls = [];
+    const missingTimezoneClient = createOpenMeteoPlaceSearchClient({
+      geocodingUrl: "https://geocoding.test/search",
+      timezoneLookupUrl: "https://forecast.test/forecast",
+      timeoutMs: 1000,
+      fetchImpl: async (url) => {
+        const requestUrl = new URL(String(url));
+        if (requestUrl.hostname === "geocoding.test") {
+          const payload = {
+            results: [
+              { id: 1, name: "New York", latitude: 40.7128, longitude: -74.006, country_code: "US", timezone: "" },
+              { id: 2, name: "Kathmandu", latitude: 27.7172, longitude: 85.324, country_code: "NP", timezone: "Invalid/Zone" },
+            ],
+          };
+          return {
+            ok: true,
+            status: 200,
+            json: async () => payload,
+            text: async () => JSON.stringify(payload),
+          };
+        }
+        timezoneLookupUrls.push(requestUrl.toString());
+        const payload = [{ timezone: "America/New_York" }, { timezone: "Asia/Kathmandu" }];
+        return {
+          ok: true,
+          status: 200,
+          json: async () => payload,
+          text: async () => JSON.stringify(payload),
+        };
+      },
+    });
+    const missingTimezonePlaces = await missingTimezoneClient.searchPlaces({ query: "world", countryCode: "GLOBAL", locale: "en-US" });
+    const cachedTimezonePlaces = await missingTimezoneClient.searchPlaces({ query: "world again", countryCode: "GLOBAL", locale: "en-US" });
+    const unresolvableTimezonePlaces = await createOpenMeteoPlaceSearchClient({
+      geocodingUrl: "https://invalid-geocoding.test/search",
+      timezoneLookupUrl: "https://invalid-forecast.test/forecast",
+      timeoutMs: 1000,
+      fetchImpl: async (url) => {
+        const requestUrl = new URL(String(url));
+        const payload = requestUrl.hostname === "invalid-geocoding.test"
+          ? { results: [{ id: 3, name: "Unknown Place", latitude: 1.2345, longitude: 6.789, country_code: "ZZ" }] }
+          : { timezone: "Invalid/Zone" };
+        return {
+          ok: true,
+          status: 200,
+          json: async () => payload,
+          text: async () => JSON.stringify(payload),
+        };
+      },
+    }).searchPlaces({ query: "unknown", countryCode: "GLOBAL", locale: "en-US" });
+    const proxyTimezoneLookupUrls = [];
+    const legacyProxyTimezonePlaces = await createProxyPlaceSearchClient({
+      apiBaseUrl: "https://weatheron.test",
+      timezoneLookupUrl: "https://forecast.test/forecast",
+      timeoutMs: 1000,
+      fetchImpl: async (url) => {
+        const requestUrl = new URL(String(url));
+        if (requestUrl.hostname === "weatheron.test") {
+          const payload = [{
+            id: "legacy-global-utc",
+            name: "Los Angeles",
+            address: "California · United States",
+            category: "custom",
+            countryCode: "GLOBAL",
+            coordinate: { latitude: 34.0522, longitude: -118.2437 },
+            timezone: "UTC",
+            provider: "google",
+          }];
+          return {
+            ok: true,
+            status: 200,
+            json: async () => payload,
+            text: async () => JSON.stringify(payload),
+          };
+        }
+        proxyTimezoneLookupUrls.push(requestUrl.toString());
+        const payload = { timezone: "America/Los_Angeles" };
+        return {
+          ok: true,
+          status: 200,
+          json: async () => payload,
+          text: async () => JSON.stringify(payload),
+        };
+      },
+    }).searchPlaces({ query: "Los Angeles", countryCode: "GLOBAL", locale: "en-US" });
 
     export const demoResults = {
+      missingTimezonePlaces,
+      cachedTimezonePlaces,
+      unresolvableTimezonePlaces,
+      timezoneLookupUrls,
+      legacyProxyTimezonePlaces,
+      proxyTimezoneLookupUrls,
       hiroshimaLocalFallback,
       hiroshimaLocalMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-hiroshima"),
       hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
@@ -760,6 +859,7 @@ assert.deepEqual(results.worldwideWeatherKitTimes, [
 ]);
 assert.ok(results.supportedIanaTimeZoneCount > 300);
 assert.deepEqual(results.unsupportedIanaTimeZones, []);
+assert.equal(results.invalidWeatherKitTimezoneRejected, true);
 assert.equal(results.placeSearchDefault[0].name, "강릉 안목해변");
 assert.equal(results.placeSearchSports[0].category, "sports");
 assert.equal(demoResults.current.weather.source, "openmeteo");
@@ -826,6 +926,23 @@ assert.equal(demoResults.iosWeatherKitFailureProvider.current.source, "fallback"
 assert.equal(demoResults.iosWeatherKitFailureProvider.destination.source, "fallback");
 assert.deepEqual(demoResults.iosWeatherKitFailureCalls, { weatherkit: 2, kma: 0, openmeteo: 0 });
 assert.equal(demoResults.openMeteoProvider.destination.source, "openmeteo");
+assert.deepEqual(
+  demoResults.missingTimezonePlaces.map((place) => place.timezone),
+  ["America/New_York", "Asia/Kathmandu"],
+);
+assert.deepEqual(
+  demoResults.cachedTimezonePlaces.map((place) => place.timezone),
+  ["America/New_York", "Asia/Kathmandu"],
+);
+assert.equal(demoResults.timezoneLookupUrls.length, 1);
+assert.ok(demoResults.timezoneLookupUrls[0].includes("timezone=auto"));
+assert.ok(demoResults.timezoneLookupUrls[0].includes("forecast_days=0"));
+assert.deepEqual(demoResults.unresolvableTimezonePlaces, []);
+assert.deepEqual(
+  demoResults.legacyProxyTimezonePlaces.map((place) => place.timezone),
+  ["America/Los_Angeles"],
+);
+assert.equal(demoResults.proxyTimezoneLookupUrls.length, 1);
 assert.equal(demoResults.summerFeelsHotterMessage, "실제보다 조금 더 덥게 느껴져요. (+2°)");
 assert.equal(demoResults.mildFeelsWarmerMessage, "실제보다 따뜻하게 느껴져요. (+2°)");
 assert.equal(demoResults.summerFeelsCoolerMessage, "실제보다 조금 선선하게 느껴져요. (-2°)");

@@ -1,5 +1,6 @@
 import {
   applyLifestyleIndex,
+  isValidIanaTimeZone,
   normalizeKmaWeather,
   normalizeOpenMeteoWeather,
   normalizeWeatherKitWeather,
@@ -156,6 +157,9 @@ async function fetchWeatherSnapshot(
   stale: boolean,
   options: WeatherProviderCreateOptions,
 ): Promise<WeatherSnapshot> {
+  if (!isValidIanaTimeZone(location.timezone) || (location.countryCode === "GLOBAL" && location.timezone === "UTC")) {
+    throw new Error("Weather location requires a resolved IANA timezone");
+  }
   if ((options.platform ?? Platform.OS) === "ios") {
     if (typeof client.fetchWeatherKitForecast !== "function") {
       throw new Error("WeatherKit client is not configured for iOS");

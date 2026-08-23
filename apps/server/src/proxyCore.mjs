@@ -15,6 +15,7 @@ const DEFAULT_GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_PLACE_CACHE_TTL_MS = 30 * 60 * 1000;
+const DEFAULT_TIMEZONE_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const DEFAULT_ROUTE_CACHE_TTL_MS = 10 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 500;
 
@@ -22,6 +23,7 @@ export const PROXY_TOKEN_HEADER = "x-weatheron-proxy-token";
 
 const forecastCache = new Map();
 const placeSearchCache = new Map();
+const timezoneLookupCache = new Map();
 const routeEstimateCache = new Map();
 const pendingCacheFetches = new Map();
 
@@ -134,7 +136,7 @@ async function fetchOpenMeteoForecast(params, readEnvValue) {
   const url = new URL(readEnvValue("OPEN_METEO_FORECAST_URL") ?? DEFAULT_OPEN_METEO_FORECAST_URL);
   url.searchParams.set("latitude", latitude);
   url.searchParams.set("longitude", longitude);
-  url.searchParams.set("timezone", params.get("timezone") ?? "Asia/Seoul");
+  url.searchParams.set("timezone", params.get("timezone") ?? "auto");
   url.searchParams.set(
     "current",
     [
@@ -253,7 +255,7 @@ async function fetchWeatherKitForecast(params, readEnvValue) {
   const longitude = getRequiredParam(params, "longitude");
   const language = normalizeWeatherKitLanguage(params.get("language") ?? params.get("locale"));
   const url = new URL(`${trimTrailingSlash(readEnvValue("WEATHERKIT_WEATHER_URL") ?? DEFAULT_WEATHERKIT_WEATHER_URL)}/${language}/${latitude}/${longitude}`);
-  url.searchParams.set("timezone", params.get("timezone") ?? "Asia/Seoul");
+  url.searchParams.set("timezone", getRequiredParam(params, "timezone"));
   url.searchParams.set("dataSets", params.get("dataSets") ?? "currentWeather,forecastHourly,forecastDaily");
   const countryCode = normalizeWeatherKitCountryCode(params.get("countryCode"));
   if (countryCode) url.searchParams.set("countryCode", countryCode);
@@ -289,17 +291,15 @@ async function searchPlaces(params, readEnvValue) {
       const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
       try {
         if (countryCode === "KR" && readEnvValue("KAKAO_REST_API_KEY")) {
-          return sortPlacesByDistance(
-            mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, origin, readEnvValue)),
-            origin,
-          );
+          const places = mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, origin, readEnvValue));
+          return sortPlacesByDistance(await ensurePlaceTimezones(places, readEnvValue), origin);
         }
         if (getGoogleMapsApiKey(readEnvValue)) {
           const googleResults = localizePlaceSearchResults(
             await searchGooglePlaces(searchQuery, countryCode, language, readEnvValue),
             language,
           );
-          return mergePlaceSearchResults(curatedResults, googleResults);
+          return ensurePlaceTimezones(mergePlaceSearchResults(curatedResults, googleResults), readEnvValue);
         }
       } catch (error) {
         console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
@@ -420,9 +420,59 @@ async function searchGooglePlaces(query, countryCode, language, readEnvValue) {
       latitude: Number(item.geometry?.location?.lat),
       longitude: Number(item.geometry?.location?.lng),
     },
-    timezone: countryCode === "JP" ? "Asia/Tokyo" : "UTC",
+    ...(countryCode === "JP" ? { timezone: "Asia/Tokyo" } : {}),
     provider: "google",
   }));
+}
+
+async function ensurePlaceTimezones(places, readEnvValue) {
+  const resolvedTimezones = new Map();
+  const unresolved = [];
+  places.forEach((place, index) => {
+    if (!Number.isFinite(place.coordinate?.latitude) || !Number.isFinite(place.coordinate?.longitude)) return;
+    if (isUsablePlaceTimezone(place.timezone, place.countryCode)) {
+      resolvedTimezones.set(index, place.timezone);
+      return;
+    }
+    unresolved.push({ index, place });
+  });
+  if (unresolved.length > 0) {
+    const url = new URL(readEnvValue("OPEN_METEO_FORECAST_URL") ?? DEFAULT_OPEN_METEO_FORECAST_URL);
+    url.searchParams.set("latitude", unresolved.map(({ place }) => place.coordinate.latitude).join(","));
+    url.searchParams.set("longitude", unresolved.map(({ place }) => place.coordinate.longitude).join(","));
+    url.searchParams.set("timezone", "auto");
+    url.searchParams.set("forecast_days", "0");
+    const payload = await fetchCachedJson(
+      timezoneLookupCache,
+      getUrlCacheKey("timezone", url),
+      readNumberEnv(readEnvValue, "TIMEZONE_CACHE_TTL_MS", DEFAULT_TIMEZONE_CACHE_TTL_MS),
+      () => fetchJson(url, readEnvValue),
+    );
+    const results = Array.isArray(payload) ? payload : [payload];
+    unresolved.forEach(({ index }, resultIndex) => {
+      const timezone = results[resultIndex]?.timezone;
+      if (isValidIanaTimeZone(timezone)) resolvedTimezones.set(index, timezone);
+    });
+  }
+  return places.flatMap((place, index) => {
+    const timezone = resolvedTimezones.get(index);
+    return timezone ? [{ ...place, timezone }] : [];
+  });
+}
+
+function isUsablePlaceTimezone(value, countryCode) {
+  if (!isValidIanaTimeZone(value)) return false;
+  return countryCode !== "GLOBAL" || value !== "UTC";
+}
+
+function isValidIanaTimeZone(value) {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format(0);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function getGoogleMapsApiKey(readEnvValue) {

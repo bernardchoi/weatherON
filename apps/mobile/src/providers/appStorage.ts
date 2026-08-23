@@ -587,6 +587,8 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
     const schedulePreference = objectRecord(destination.schedulePreference);
     const travelEstimate = objectRecord(destination.travelEstimate);
     const placeId = textValue(place.id) ?? `destination-${index}`;
+    const timezone = textValue(place.timezone);
+    if (!timezone) continue;
     await database.runAsync(
       `INSERT INTO destinations (
         place_id, seq, name, address, category, country_code, latitude, longitude, timezone, provider,
@@ -603,7 +605,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       textValue(place.countryCode) ?? "GLOBAL",
       numberValue(objectRecord(place.coordinate).latitude),
       numberValue(objectRecord(place.coordinate).longitude),
-      textValue(place.timezone) ?? "UTC",
+      timezone,
       textValue(place.provider) ?? "fixture",
       boolValue(destination.careEnabled) ? 1 : 0,
       numberValue(alertCondition.rainThresholdPct),
@@ -723,7 +725,8 @@ async function readPlace(database: SQLiteExecutor, kind: string): Promise<Record
 
 async function writePlace(database: SQLiteExecutor, kind: string, value: unknown, now: number) {
   const place = objectRecord(value);
-  if (!textValue(place.id)) return;
+  const timezone = textValue(place.timezone);
+  if (!textValue(place.id) || !timezone) return;
   await database.runAsync(
     `INSERT INTO places (kind, place_id, name, address, category, country_code, latitude, longitude, timezone, provider, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -746,7 +749,7 @@ async function writePlace(database: SQLiteExecutor, kind: string, value: unknown
     textValue(place.countryCode) ?? "GLOBAL",
     numberValue(objectRecord(place.coordinate).latitude),
     numberValue(objectRecord(place.coordinate).longitude),
-    textValue(place.timezone) ?? "UTC",
+    timezone,
     textValue(place.provider) ?? "fixture",
     now,
   );
@@ -766,7 +769,8 @@ async function readWeatherLocation(database: SQLiteExecutor, kind: string): Prom
 
 async function writeWeatherLocation(database: SQLiteExecutor, kind: string, value: unknown, now: number) {
   const location = objectRecord(value);
-  if (!textValue(location.locationId)) return;
+  const timezone = textValue(location.timezone);
+  if (!textValue(location.locationId) || !timezone) return;
   await database.runAsync(
     `INSERT INTO weather_locations (kind, location_id, location_name, country_code, latitude, longitude, timezone, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -784,7 +788,7 @@ async function writeWeatherLocation(database: SQLiteExecutor, kind: string, valu
     textValue(location.countryCode) ?? "GLOBAL",
     numberValue(objectRecord(location.coordinate).latitude),
     numberValue(objectRecord(location.coordinate).longitude),
-    textValue(location.timezone) ?? "UTC",
+    timezone,
     now,
   );
 }
