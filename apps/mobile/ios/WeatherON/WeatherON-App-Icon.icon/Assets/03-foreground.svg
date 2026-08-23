@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
-  <!-- Warm Gold ON knob and exactly three rays. -->
-  <circle cx="88.8" cy="64.8" r="18.05" fill="#F0A020"/>
-  <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
-  <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
-  <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#F0A020" stroke-width="2.88" stroke-linecap="round"/>
+  <circle cx="88.8" cy="64.8" r="18.05" fill="#FFFFFF"/>
+  <line x1="76.04" y1="46.57" x2="69.51" y2="37.23" stroke="#FFFFFF" stroke-width="2.88" stroke-linecap="round"/>
+  <line x1="88.8" y1="42.55" x2="88.8" y2="31.15" stroke="#FFFFFF" stroke-width="2.88" stroke-linecap="round"/>
+  <line x1="101.56" y1="46.57" x2="108.1" y2="37.23" stroke="#FFFFFF" stroke-width="2.88" stroke-linecap="round"/>
 </svg>

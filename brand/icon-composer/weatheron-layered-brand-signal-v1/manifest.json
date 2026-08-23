@@ -8,19 +8,23 @@
     "viewBox": "0 0 120 120",
     "includesPlatformMask": false
   },
-  "sourceOfTruth": "assets/icon/icon-primary.svg",
+  "sourceOfTruth": {
+    "default": "assets/icon/icon-light-v2.svg",
+    "dark": "assets/icon/icon-dark.svg",
+    "mono": "assets/icon/icon-mono.svg"
+  },
   "iconComposerDocument": "WeatherON-App-Icon.icon",
   "iconComposerMapping": {
-    "L1-background": "group 3 (back) with document fill fallback",
+    "L1-background": "group 3 (back) with Default and Dark fill specializations",
     "L3-foreground": "group 1 (front)",
-    "L2-mid": "group 2 (middle)"
+    "L2-mid": "group 2 (middle), split into track, OFF mark, and cloud masks for appearance colors"
   },
   "layers": [
     {
       "order": 1,
       "id": "L1-background",
       "file": "layers/l1-background.svg",
-      "contents": ["Clear Navy full-bleed background"],
+      "contents": ["Snow White default background", "Night Navy dark background"],
       "material": {
         "glass": "off",
         "translucency": "off",
@@ -32,7 +36,7 @@
       "order": 2,
       "id": "L2-mid",
       "file": "layers/l2-mid.svg",
-      "contents": ["Cream toggle track", "Clear Navy OFF mark", "Paper White cloud"],
+      "contents": ["Brand Blue default track/cloud", "Snow White default OFF mark", "Stone dark track", "Night Navy dark OFF mark", "Mist Blue dark cloud"],
       "material": {
         "glass": "on",
         "translucency": "off",
@@ -44,7 +48,7 @@
       "order": 3,
       "id": "L3-foreground",
       "file": "layers/l3-foreground.svg",
-      "contents": ["Warm Gold ON knob", "Exactly three Warm Gold rays"],
+      "contents": ["Rust Orange default ON knob and rays", "Warm Gold dark ON knob and rays"],
       "material": {
         "glass": "on",
         "translucency": "off-core",
@@ -55,11 +59,11 @@
   ],
   "appearances": {
     "default": {
-      "background": "#0C1F3F",
-      "track": "#FDF6EB",
-      "offMark": "#0C1F3F",
-      "cloud": "#F4F7FC",
-      "sun": "#F0A020"
+      "background": "#F8FBFF",
+      "track": "#1F4E79",
+      "offMark": "#F8FBFF",
+      "cloud": "#1F4E79",
+      "sun": "#C2410C"
     },
     "dark": {
       "background": "#070F1F",

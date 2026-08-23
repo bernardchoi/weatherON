@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
-  <!-- Cream toggle track and Clear Navy OFF mark. -->
-  <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#FDF6EB"/>
-  <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#0C1F3F"/>
+  <!-- Light appearance source: Blue toggle track and Snow White OFF mark. -->
+  <rect x="12" y="45.6" width="96" height="38.4" rx="19.2" fill="#1F4E79"/>
+  <rect x="29.88" y="56.74" width="2.64" height="16.13" rx="1.32" fill="#F8FBFF"/>
 
-  <!-- Paper White cloud stays in the middle-depth group. -->
-  <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#F4F7FC"/>
-  <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#F4F7FC"/>
-  <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#F4F7FC"/>
+  <!-- Brand Blue cloud stays in the middle-depth group. -->
+  <rect x="12.6" y="20.64" width="40.8" height="12.73" rx="6.37" fill="#1F4E79"/>
+  <ellipse cx="24.84" cy="21.12" rx="9.76" ry="9.76" fill="#1F4E79"/>
+  <ellipse cx="37.9" cy="19.4" rx="12.31" ry="12.31" fill="#1F4E79"/>
 </svg>
