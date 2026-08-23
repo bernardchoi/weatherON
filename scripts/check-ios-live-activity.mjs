@@ -13,6 +13,7 @@ const appState = read("apps/mobile/src/state/useWeatherOnAppState.ts");
 const liveActivityProvider = read("apps/mobile/src/providers/departureLiveActivity.ios.ts");
 const liveActivityShared = read("apps/mobile/src/providers/departureLiveActivity.shared.ts");
 const iosWidgetSnapshot = read("apps/mobile/src/providers/widgetSnapshot.ios.ts");
+const sharedWidgetSnapshot = read("apps/mobile/src/providers/widgetSnapshot.shared.ts");
 const project = read("apps/mobile/ios/WeatherON.xcodeproj/project.pbxproj");
 const configureTarget = read("apps/mobile/ios/scripts/configure-widget-target.rb");
 
@@ -56,6 +57,10 @@ assert.match(widgetBundle, /init\(location: WeatherONLocationEntity\)/u);
 assert.match(widgetBundle, /suggestedEntities\(\)/u);
 assert.match(widgetBundle, /store\.destinations\.map/u);
 assert.match(widgetBundle, /\.contentMarginsDisabled\(\)/u);
+assert.match(widgetBundle, /private enum WeatherONSolarClock/u);
+assert.match(widgetBundle, /nextSolarTransition\(after: now\)/u);
+assert.match(widgetBundle, /isNight \? "moon\.stars\.fill" : "sun\.max\.fill"/u);
+assert.match(widgetBundle, /WeatherONWidgetPalette\(colorScheme: colorScheme, condition: entry\.location\.condition, isNight: isNight\)/u);
 assert.match(nativeModule, /widgetKind = "WeatherONLocationWidgetV4"/u);
 assert.match(nativeModule, /WidgetCenter\.shared\.reloadTimelines\(ofKind: widgetKind\)/u);
 assert.doesNotMatch(nativeModule, /WeatherONWeatherWidgetV2/u);
@@ -87,6 +92,13 @@ assert.match(liveActivityProvider, /isDepartureLiveActivityAutoWindow\(input\.de
 assert.match(liveActivityShared, /departureLiveActivityAutoLeadMinutes = 60/u);
 assert.match(liveActivityShared, /getDepartureLiveActivityActivationDelay/u);
 assert.match(iosWidgetSnapshot, /export \* from "\.\/widgetSnapshot\.shared";/u);
+for (const field of ["latitude", "longitude", "timeZone"]) {
+  assert.match(sharedWidgetSnapshot, new RegExp(`${field}\\?:`, "u"), `Widget solar field missing: ${field}`);
+}
+assert.match(appState, /coordinate: activeWeatherLocation\.coordinate/u);
+assert.match(appState, /timeZone: activeWeatherLocation\.timezone/u);
+assert.match(appState, /coordinate: destination\.place\.coordinate/u);
+assert.match(appState, /timeZone: destination\.place\.timezone/u);
 
 for (const source of ["WeatherONDepartureLiveActivity.swift", "WeatherONDepartureActivityAttributes.swift"]) {
   assert.match(project, new RegExp(source.replaceAll(".", "\\."), "u"), `Xcode source missing: ${source}`);

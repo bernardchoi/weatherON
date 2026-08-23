@@ -75,6 +75,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
   let id: String
   let kind: String
   let locationName: String
+  let latitude: Double?
+  let longitude: Double?
+  let timeZone: String?
   let temperatureC: Int
   let feelsLikeC: Int
   let condition: String
@@ -103,6 +106,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     case id
     case kind
     case locationName
+    case latitude
+    case longitude
+    case timeZone
     case temperatureC
     case feelsLikeC
     case condition
@@ -129,6 +135,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     id: String,
     kind: String,
     locationName: String,
+    latitude: Double? = nil,
+    longitude: Double? = nil,
+    timeZone: String? = nil,
     temperatureC: Int,
     feelsLikeC: Int,
     condition: String,
@@ -153,6 +162,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     self.id = id
     self.kind = kind
     self.locationName = locationName
+    self.latitude = latitude
+    self.longitude = longitude
+    self.timeZone = timeZone
     self.temperatureC = temperatureC
     self.feelsLikeC = feelsLikeC
     self.condition = condition
@@ -180,6 +192,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     id = try values.decodeIfPresent(String.self, forKey: .id) ?? "current"
     kind = try values.decodeIfPresent(String.self, forKey: .kind) ?? "current"
     locationName = try values.decodeIfPresent(String.self, forKey: .locationName) ?? "WeatherON"
+    latitude = try values.decodeIfPresent(Double.self, forKey: .latitude)
+    longitude = try values.decodeIfPresent(Double.self, forKey: .longitude)
+    timeZone = try values.decodeIfPresent(String.self, forKey: .timeZone)
     temperatureC = try values.decodeIfPresent(Int.self, forKey: .temperatureC) ?? 0
     feelsLikeC = try values.decodeIfPresent(Int.self, forKey: .feelsLikeC) ?? temperatureC
     condition = try values.decodeIfPresent(String.self, forKey: .condition) ?? "cloud"
@@ -200,6 +215,173 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
     transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
     deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
+  }
+}
+
+private struct WeatherONSolarEvents {
+  let sunrise: Date
+  let sunset: Date
+}
+
+private enum WeatherONSolarClock {
+  private static let officialZenith = 90.833
+
+  static func events(
+    for date: Date,
+    latitude: Double,
+    longitude: Double,
+    timeZone: TimeZone
+  ) -> WeatherONSolarEvents? {
+    guard
+      latitude.isFinite,
+      longitude.isFinite,
+      abs(latitude) <= 90,
+      abs(longitude) <= 180,
+      let sunrise = eventDate(
+        for: date,
+        latitude: latitude,
+        longitude: longitude,
+        timeZone: timeZone,
+        isSunrise: true
+      ),
+      let sunset = eventDate(
+        for: date,
+        latitude: latitude,
+        longitude: longitude,
+        timeZone: timeZone,
+        isSunrise: false
+      )
+    else {
+      return nil
+    }
+    return WeatherONSolarEvents(sunrise: sunrise, sunset: sunset)
+  }
+
+  private static func eventDate(
+    for date: Date,
+    latitude: Double,
+    longitude: Double,
+    timeZone: TimeZone,
+    isSunrise: Bool
+  ) -> Date? {
+    var localCalendar = Calendar(identifier: .gregorian)
+    localCalendar.timeZone = timeZone
+    let components = localCalendar.dateComponents([.year, .month, .day], from: date)
+    guard
+      let year = components.year,
+      let month = components.month,
+      let day = components.day,
+      let dayOfYear = localCalendar.ordinality(of: .day, in: .year, for: date),
+      let localNoon = localCalendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))
+    else {
+      return nil
+    }
+
+    let longitudeHour = longitude / 15
+    let approximateTime = Double(dayOfYear) + ((isSunrise ? 6 : 18) - longitudeHour) / 24
+    let meanAnomaly = (0.9856 * approximateTime) - 3.289
+    let trueLongitude = normalizedDegrees(
+      meanAnomaly
+        + 1.916 * sin(degreesToRadians(meanAnomaly))
+        + 0.020 * sin(2 * degreesToRadians(meanAnomaly))
+        + 282.634
+    )
+
+    var rightAscension = normalizedDegrees(
+      radiansToDegrees(atan(0.91764 * tan(degreesToRadians(trueLongitude))))
+    )
+    let longitudeQuadrant = floor(trueLongitude / 90) * 90
+    let rightAscensionQuadrant = floor(rightAscension / 90) * 90
+    rightAscension = (rightAscension + longitudeQuadrant - rightAscensionQuadrant) / 15
+
+    let sinDeclination = 0.39782 * sin(degreesToRadians(trueLongitude))
+    let cosDeclination = cos(asin(sinDeclination))
+    let cosHourAngle = (
+      cos(degreesToRadians(officialZenith))
+        - sinDeclination * sin(degreesToRadians(latitude))
+    ) / (cosDeclination * cos(degreesToRadians(latitude)))
+    guard cosHourAngle >= -1, cosHourAngle <= 1 else { return nil }
+
+    let hourAngleDegrees = isSunrise
+      ? 360 - radiansToDegrees(acos(cosHourAngle))
+      : radiansToDegrees(acos(cosHourAngle))
+    let localMeanTime = hourAngleDegrees / 15 + rightAscension - 0.06571 * approximateTime - 6.622
+    let utcHour = normalizedHours(localMeanTime - longitudeHour)
+
+    var utcCalendar = Calendar(identifier: .gregorian)
+    utcCalendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+    guard let utcMidnight = utcCalendar.date(
+      from: DateComponents(timeZone: utcCalendar.timeZone, year: year, month: month, day: day)
+    ) else {
+      return nil
+    }
+
+    var event = utcMidnight.addingTimeInterval(utcHour * 3_600)
+    while event.timeIntervalSince(localNoon) <= -43_200 { event = event.addingTimeInterval(86_400) }
+    while event.timeIntervalSince(localNoon) > 43_200 { event = event.addingTimeInterval(-86_400) }
+    return event
+  }
+
+  private static func normalizedDegrees(_ value: Double) -> Double {
+    let remainder = value.truncatingRemainder(dividingBy: 360)
+    return remainder < 0 ? remainder + 360 : remainder
+  }
+
+  private static func normalizedHours(_ value: Double) -> Double {
+    let remainder = value.truncatingRemainder(dividingBy: 24)
+    return remainder < 0 ? remainder + 24 : remainder
+  }
+
+  private static func degreesToRadians(_ value: Double) -> Double { value * .pi / 180 }
+  private static func radiansToDegrees(_ value: Double) -> Double { value * 180 / .pi }
+}
+
+private extension WeatherONLocationSnapshot {
+  var resolvedTimeZone: TimeZone {
+    timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
+  }
+
+  func isNight(at date: Date) -> Bool {
+    if
+      let latitude,
+      let longitude,
+      let events = WeatherONSolarClock.events(
+        for: date,
+        latitude: latitude,
+        longitude: longitude,
+        timeZone: resolvedTimeZone
+      )
+    {
+      return date < events.sunrise || date >= events.sunset
+    }
+
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = resolvedTimeZone
+    let hour = calendar.component(.hour, from: date)
+    return hour >= 19 || hour < 6
+  }
+
+  func nextSolarTransition(after date: Date) -> Date? {
+    guard let latitude, let longitude else { return nil }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = resolvedTimeZone
+    var candidates: [Date] = []
+    for offset in 0...2 {
+      guard
+        let targetDate = calendar.date(byAdding: .day, value: offset, to: date),
+        let events = WeatherONSolarClock.events(
+          for: targetDate,
+          latitude: latitude,
+          longitude: longitude,
+          timeZone: resolvedTimeZone
+        )
+      else {
+        continue
+      }
+      candidates.append(events.sunrise)
+      candidates.append(events.sunset)
+    }
+    return candidates.filter { $0 > date }.min()
   }
 }
 
@@ -315,14 +497,24 @@ private enum WeatherONTimelineFactory {
 
   static func timeline(selectionID: String?) -> Timeline<WeatherONEntry> {
     let now = Date()
-    let entries = (0..<3).map { phase in
-      entry(
-        selectionID: selectionID,
-        date: Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now,
-        phase: phase
+    let refresh = Calendar.current.date(byAdding: .minute, value: 90, to: now) ?? now.addingTimeInterval(5_400)
+    let loaded = WeatherONStoreReader.load()
+    let location = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
+    var entryDates = (0..<3).map { phase in
+      Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
+    }
+    if let transition = location.nextSolarTransition(after: now), transition <= refresh {
+      entryDates.append(transition)
+    }
+    entryDates.sort()
+    let entries = entryDates.enumerated().map { phase, date in
+      WeatherONEntry(
+        date: date,
+        location: location,
+        hasSharedSnapshot: loaded.hasSharedSnapshot,
+        visualPhase: phase
       )
     }
-    let refresh = Calendar.current.date(byAdding: .minute, value: 90, to: now) ?? now.addingTimeInterval(5_400)
     return Timeline(entries: entries, policy: .after(refresh))
   }
 
@@ -424,13 +616,18 @@ private struct WeatherONWidgetView: View {
     .widgetURL(entry.location.deepLinkURL)
     .weatherONWidgetBackground(
       condition: entry.location.condition,
+      isNight: isNight,
       palette: palette,
       visualPhase: entry.visualPhase
     )
   }
 
+  private var isNight: Bool {
+    entry.location.isNight(at: entry.date)
+  }
+
   private var palette: WeatherONWidgetPalette {
-    WeatherONWidgetPalette(colorScheme: colorScheme, condition: entry.location.condition)
+    WeatherONWidgetPalette(colorScheme: colorScheme, condition: entry.location.condition, isNight: isNight)
   }
 }
 
@@ -456,6 +653,7 @@ private struct WeatherONSmallView: View {
 
         WeatherONConditionGlyph(
           condition: entry.location.condition,
+          isNight: entry.location.isNight(at: entry.date),
           palette: palette,
           size: 42
         )
@@ -488,7 +686,12 @@ private struct WeatherONMediumView: View {
           Text("\(entry.location.temperatureC)°")
             .font(.system(size: 44, weight: .bold, design: .rounded))
             .tracking(-2)
-          WeatherONConditionGlyph(condition: entry.location.condition, palette: palette, size: 44)
+          WeatherONConditionGlyph(
+            condition: entry.location.condition,
+            isNight: entry.location.isNight(at: entry.date),
+            palette: palette,
+            size: 44
+          )
         }
         Text("체감 \(entry.location.feelsLikeC)° · \(entry.location.conditionLabel)")
           .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -543,7 +746,12 @@ private struct WeatherONLargeView: View {
               .foregroundStyle(palette.secondaryText)
           }
           Spacer(minLength: 0)
-          WeatherONConditionGlyph(condition: entry.location.condition, palette: palette, size: 48)
+          WeatherONConditionGlyph(
+            condition: entry.location.condition,
+            isNight: entry.location.isNight(at: entry.date),
+            palette: palette,
+            size: 48
+          )
         }
         .frame(maxWidth: .infinity)
 
@@ -607,13 +815,14 @@ private struct WeatherONHeader: View {
 
 private struct WeatherONConditionGlyph: View {
   let condition: String
+  let isNight: Bool
   let palette: WeatherONWidgetPalette
   let size: CGFloat
 
   var body: some View {
     ZStack {
       Circle().fill(palette.accent.opacity(0.18))
-      Image(systemName: weatherSymbol(condition))
+      Image(systemName: weatherSymbol(condition, isNight: isNight))
         .font(.system(size: size * 0.50, weight: .semibold))
         .symbolRenderingMode(.monochrome)
         .foregroundStyle(palette.accent)
@@ -845,6 +1054,7 @@ private struct WeatherONMetric: View {
 
 private struct WeatherONWeatherBackdrop: View {
   let condition: String
+  let isNight: Bool
   let palette: WeatherONWidgetPalette
   let visualPhase: Int
 
@@ -872,7 +1082,7 @@ private struct WeatherONWeatherBackdrop: View {
   private func weatherDecoration(size: CGSize) -> some View {
     switch condition {
     case "clear":
-      Image(systemName: "sun.max.fill")
+      Image(systemName: isNight ? "moon.stars.fill" : "sun.max.fill")
         .font(.system(size: min(size.width, size.height) * 0.48))
         .foregroundStyle(palette.accent.opacity(0.10))
         .offset(x: size.width * 0.30, y: -size.height * 0.22)
@@ -932,7 +1142,7 @@ private struct WeatherONWidgetPalette {
   let highlightedCard: Color
   let backgroundColors: [Color]
 
-  init(colorScheme: ColorScheme, condition: String) {
+  init(colorScheme: ColorScheme, condition: String, isNight: Bool) {
     let isDark = colorScheme == .dark
     primaryText = isDark ? .white : Color(red: 0.04, green: 0.10, blue: 0.18)
     secondaryText = isDark ? Color.white.opacity(0.70) : Color(red: 0.24, green: 0.32, blue: 0.41)
@@ -942,10 +1152,17 @@ private struct WeatherONWidgetPalette {
 
     switch condition {
     case "clear":
-      accent = isDark ? Color(red: 1.0, green: 0.74, blue: 0.25) : Color(red: 0.95, green: 0.48, blue: 0.05)
-      backgroundColors = isDark
-        ? [Color(red: 0.04, green: 0.08, blue: 0.16), Color(red: 0.10, green: 0.19, blue: 0.30)]
-        : [Color(red: 0.98, green: 0.93, blue: 0.78), Color(red: 0.89, green: 0.96, blue: 1.0)]
+      if isNight {
+        accent = isDark ? Color(red: 0.70, green: 0.86, blue: 1.0) : Color(red: 0.27, green: 0.48, blue: 0.82)
+        backgroundColors = isDark
+          ? [Color(red: 0.02, green: 0.05, blue: 0.13), Color(red: 0.07, green: 0.14, blue: 0.29)]
+          : [Color(red: 0.82, green: 0.89, blue: 0.98), Color(red: 0.66, green: 0.77, blue: 0.93)]
+      } else {
+        accent = isDark ? Color(red: 1.0, green: 0.74, blue: 0.25) : Color(red: 0.95, green: 0.48, blue: 0.05)
+        backgroundColors = isDark
+          ? [Color(red: 0.04, green: 0.08, blue: 0.16), Color(red: 0.10, green: 0.19, blue: 0.30)]
+          : [Color(red: 0.98, green: 0.93, blue: 0.78), Color(red: 0.89, green: 0.96, blue: 1.0)]
+      }
     case "rain", "storm":
       accent = rain
       backgroundColors = isDark
@@ -976,15 +1193,16 @@ private extension View {
   @ViewBuilder
   func weatherONWidgetBackground(
     condition: String,
+    isNight: Bool,
     palette: WeatherONWidgetPalette,
     visualPhase: Int
   ) -> some View {
     if #available(iOSApplicationExtension 17.0, *) {
       containerBackground(for: .widget) {
-        WeatherONWeatherBackdrop(condition: condition, palette: palette, visualPhase: visualPhase)
+        WeatherONWeatherBackdrop(condition: condition, isNight: isNight, palette: palette, visualPhase: visualPhase)
       }
     } else {
-      background(WeatherONWeatherBackdrop(condition: condition, palette: palette, visualPhase: visualPhase))
+      background(WeatherONWeatherBackdrop(condition: condition, isNight: isNight, palette: palette, visualPhase: visualPhase))
     }
   }
 
@@ -1000,9 +1218,9 @@ private extension View {
   }
 }
 
-private func weatherSymbol(_ condition: String) -> String {
+private func weatherSymbol(_ condition: String, isNight: Bool = false) -> String {
   switch condition {
-  case "clear": return "sun.max.fill"
+  case "clear": return isNight ? "moon.stars.fill" : "sun.max.fill"
   case "cloud": return "cloud.fill"
   case "rain": return "cloud.rain.fill"
   case "snow": return "cloud.snow.fill"
@@ -1057,6 +1275,9 @@ private extension WeatherONLocationSnapshot {
     id: "current-placeholder",
     kind: "current",
     locationName: "서울",
+    latitude: 37.5665,
+    longitude: 126.9780,
+    timeZone: "Asia/Seoul",
     temperatureC: 24,
     feelsLikeC: 25,
     condition: "clear",
@@ -1093,6 +1314,9 @@ private extension WeatherONLocationSnapshot {
     id: "destination-placeholder",
     kind: "destination",
     locationName: "서울역",
+    latitude: 37.5547,
+    longitude: 126.9706,
+    timeZone: "Asia/Seoul",
     temperatureC: 22,
     feelsLikeC: 21,
     condition: "rain",

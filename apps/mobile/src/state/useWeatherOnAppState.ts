@@ -342,6 +342,10 @@ export function useWeatherOnAppState() {
       currentWeather,
       recommendOutfit(currentWeather, userPreferenceProfile, wardrobe),
       recommendUmbrella(currentWeather),
+      {
+        coordinate: activeWeatherLocation.coordinate,
+        timeZone: activeWeatherLocation.timezone,
+      },
     );
     const destinations = savedDestinations.reduce<WeatheronWidgetLocationSnapshot[]>((items, destination) => {
       const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
@@ -366,6 +370,8 @@ export function useWeatherOnAppState() {
         {
           id: destination.place.id,
           kind: "destination",
+          coordinate: destination.place.coordinate,
+          timeZone: destination.place.timezone,
           departureTime,
           arrivalTime: destination.schedulePreference.targetArrivalTime,
           travelMinutes,
@@ -382,7 +388,10 @@ export function useWeatherOnAppState() {
     );
   }, [
     activeWeatherLocation.countryCode,
+    activeWeatherLocation.coordinate.latitude,
+    activeWeatherLocation.coordinate.longitude,
     activeWeatherLocation.locationId,
+    activeWeatherLocation.timezone,
     nowMinuteTick,
     savedDestinations,
     selectedDestinationPlace.id,

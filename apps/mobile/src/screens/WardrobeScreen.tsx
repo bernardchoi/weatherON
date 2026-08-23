@@ -260,7 +260,7 @@ function WardrobeItemCard({
           {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
         </View>
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
-        <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
+        <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </Pressable>
       <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
@@ -479,10 +479,13 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: "800",
   },
+  cardMeta: {
+    paddingRight: 36,
+  },
   deleteButton: {
     position: "absolute",
     zIndex: 2,
-    top: 2,
+    bottom: 2,
     right: 2,
     width: 44,
     height: 44,

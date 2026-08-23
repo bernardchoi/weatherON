@@ -25,6 +25,9 @@ export type WeatheronWidgetLocationSnapshot = {
   id: string;
   kind: "current" | "destination";
   locationName: string;
+  latitude?: number;
+  longitude?: number;
+  timeZone?: string;
   temperatureC: number;
   feelsLikeC: number;
   condition: WeatherSnapshot["current"]["condition"];
@@ -61,6 +64,11 @@ export type WeatheronWidgetSnapshot = WeatheronWidgetStoreSnapshot;
 type WidgetLocationOptions = {
   id?: string;
   kind?: WeatheronWidgetLocationSnapshot["kind"];
+  coordinate?: {
+    latitude: number;
+    longitude: number;
+  };
+  timeZone?: string;
   departureTime?: string;
   arrivalTime?: string;
   travelMinutes?: number;
@@ -79,6 +87,9 @@ export function createWeatheronWidgetLocationSnapshot(
     id: options.id ?? weather.locationId,
     kind,
     locationName: weather.locationName,
+    latitude: options.coordinate?.latitude,
+    longitude: options.coordinate?.longitude,
+    timeZone: options.timeZone,
     temperatureC: Math.round(weather.current.tempC),
     feelsLikeC: Math.round(weather.current.feelsLikeC),
     condition: weather.current.condition,
