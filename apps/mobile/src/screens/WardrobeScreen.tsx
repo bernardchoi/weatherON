@@ -1,9 +1,10 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { outfitImageAssets } from "../assets";
+import { outfitImageAssets, uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
-import { FilterRow } from "../components/FilterRow";
+import { BottomSheet } from "../components/BottomSheet";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { Section } from "../components/Section";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -19,6 +20,13 @@ const purposes = ["all", "commute", "school", "travel", "outdoor", "formal", "da
 type WardrobeCategoryFilter = (typeof categories)[number];
 type WardrobeSeasonFilter = (typeof seasons)[number];
 type WardrobePurposeFilter = (typeof purposes)[number];
+type WardrobeFilterId = "category" | "season" | "purpose";
+type WardrobeFilterConfig = {
+  label: string;
+  values: readonly string[];
+  activeValue: string;
+  renderLabel: (value: string) => string;
+};
 
 export function WardrobeScreen({
   wardrobeItems,
@@ -36,6 +44,7 @@ export function WardrobeScreen({
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
+  const [openFilter, setOpenFilter] = React.useState<WardrobeFilterId | null>(null);
 
   const ownedItems = wardrobeItems.filter((item) => item.owned);
   const removedItem = recentlyRemovedWardrobeItemId
@@ -48,6 +57,15 @@ export function WardrobeScreen({
     const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
     return categoryMatch && seasonMatch && purposeMatch;
   });
+  const wardrobeItemWidth = layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const filterConfig = getFilterConfig(openFilter, categoryFilter, seasonFilter, purposeFilter);
+
+  const selectFilterValue = (value: string) => {
+    if (openFilter === "category") setCategoryFilter(value as WardrobeCategoryFilter);
+    if (openFilter === "season") setSeasonFilter(value as WardrobeSeasonFilter);
+    if (openFilter === "purpose") setPurposeFilter(value as WardrobePurposeFilter);
+    setOpenFilter(null);
+  };
 
   return (
     <AppScreen
@@ -81,24 +99,24 @@ export function WardrobeScreen({
           <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />
         </View>
 
-        <View style={styles.filterStack}>
-          <FilterRow
-            values={categories}
-            activeValue={categoryFilter}
-            onSelect={(value) => setCategoryFilter(value as WardrobeCategoryFilter)}
-            renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
+        <View style={styles.filterSelectorRow}>
+          <WardrobeFilterSelect
+            label="종류"
+            value={getCategoryFilterLabel(categoryFilter)}
+            active={categoryFilter !== "all"}
+            onPress={() => setOpenFilter("category")}
           />
-          <FilterRow
-            values={seasons}
-            activeValue={seasonFilter}
-            onSelect={(value) => setSeasonFilter(value as WardrobeSeasonFilter)}
-            renderLabel={(value) => (value === "all" ? "계절 전체" : formatOutfitTags([value]))}
+          <WardrobeFilterSelect
+            label="계절"
+            value={getSeasonFilterLabel(seasonFilter)}
+            active={seasonFilter !== "all"}
+            onPress={() => setOpenFilter("season")}
           />
-          <FilterRow
-            values={purposes}
-            activeValue={purposeFilter}
-            onSelect={(value) => setPurposeFilter(value as WardrobePurposeFilter)}
-            renderLabel={(value) => (value === "all" ? "목적 전체" : getOutfitTagLabel(value))}
+          <WardrobeFilterSelect
+            label="목적"
+            value={getPurposeFilterLabel(purposeFilter)}
+            active={purposeFilter !== "all"}
+            onPress={() => setOpenFilter("purpose")}
           />
         </View>
         {ownedItems.length === 0 ? (
@@ -125,7 +143,7 @@ export function WardrobeScreen({
               style={[
                 styles.addTile,
                 {
-                  width: layout.wardrobeGridItemWidth,
+                  width: wardrobeItemWidth,
                   minHeight: layout.wardrobeCardMinHeight,
                   borderColor: theme.border,
                 },
@@ -138,7 +156,77 @@ export function WardrobeScreen({
         )}
       </Section>
 
+      <BottomSheet
+        visible={openFilter !== null}
+        onClose={() => setOpenFilter(null)}
+        accessibilityLabel={`${filterConfig.label} 필터 선택 시트`}
+      >
+        <View style={styles.filterSheetHeader}>
+          <Text style={[styles.filterSheetTitle, { color: theme.text }]}>{filterConfig.label} 필터</Text>
+          <Text style={[styles.filterSheetCaption, { color: theme.muted }]}>1개를 선택하면 바로 목록에 반영됨</Text>
+        </View>
+        <View style={[styles.filterOptionList, { borderColor: theme.border }]}>
+          {filterConfig.values.map((value, index) => {
+            const selected = filterConfig.activeValue === value;
+            return (
+              <FeedbackPressable
+                key={value}
+                accessibilityLabel={`${filterConfig.renderLabel(value)} 필터${selected ? ", 현재 선택됨" : ""}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => selectFilterValue(value)}
+                style={[
+                  styles.filterOption,
+                  index < filterConfig.values.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
+                  selected ? { backgroundColor: theme.cardMuted } : null,
+                ]}
+              >
+                <Text style={[styles.filterOptionText, { color: selected ? theme.clear : theme.text }]}>
+                  {filterConfig.renderLabel(value)}
+                </Text>
+                {selected ? (
+                  <Image source={uiIconAssets.check} style={[styles.filterCheckIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+                ) : null}
+              </FeedbackPressable>
+            );
+          })}
+        </View>
+      </BottomSheet>
     </AppScreen>
+  );
+}
+
+function WardrobeFilterSelect({
+  label,
+  value,
+  active,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const theme = useAppTheme();
+  return (
+    <FeedbackPressable
+      accessibilityLabel={`${label} 필터, 현재 ${value}, 선택 목록 열기`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[
+        styles.filterSelect,
+        {
+          backgroundColor: active ? theme.cardStrong : theme.cardMuted,
+          borderColor: active ? theme.clear : theme.border,
+        },
+      ]}
+    >
+      <View style={styles.filterSelectCopy}>
+        <Text style={[styles.filterSelectLabel, { color: theme.subtle }]}>{label}</Text>
+        <Text style={[styles.filterSelectValue, { color: active ? theme.clear : theme.text }]} numberOfLines={1}>{value}</Text>
+      </View>
+      <ChevronDown color={active ? theme.clear : theme.subtle} />
+    </FeedbackPressable>
   );
 }
 
@@ -154,35 +242,90 @@ function WardrobeItemCard({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
+  const wardrobeItemWidth = layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
   return (
     <View
       style={[
         styles.card,
         {
-          width: layout.wardrobeGridItemWidth,
+          width: wardrobeItemWidth,
           minHeight: layout.wardrobeCardMinHeight,
           backgroundColor: theme.cardMuted,
           borderColor: theme.clear,
         },
       ]}
     >
-      <Pressable accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
+      <Pressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
         </View>
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
         <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </Pressable>
-      <AppButton
-        label="삭제"
+      <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
+        accessibilityRole="button"
         onPress={onRemove}
-        tone="warning"
-        variant="outlined"
-        size="sm"
-      />
+        hitSlop={2}
+        style={styles.deleteButton}
+      >
+        <View style={[styles.deleteButtonSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <Image source={uiIconAssets.trash} style={[styles.deleteIcon, { tintColor: theme.warm }]} resizeMode="contain" />
+        </View>
+      </FeedbackPressable>
     </View>
   );
+}
+
+function ChevronDown({ color }: { color: string }) {
+  return (
+    <View style={styles.chevronDown} accessibilityElementsHidden>
+      <View style={[styles.chevronDownLeft, { backgroundColor: color }]} />
+      <View style={[styles.chevronDownRight, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function getCategoryFilterLabel(value: WardrobeCategoryFilter) {
+  return value === "all" ? "전체" : getWardrobeCategoryLabel(value);
+}
+
+function getSeasonFilterLabel(value: WardrobeSeasonFilter) {
+  return value === "all" ? "전체" : formatOutfitTags([value]);
+}
+
+function getPurposeFilterLabel(value: WardrobePurposeFilter) {
+  return value === "all" ? "전체" : getOutfitTagLabel(value);
+}
+
+function getFilterConfig(
+  filter: WardrobeFilterId | null,
+  categoryFilter: WardrobeCategoryFilter,
+  seasonFilter: WardrobeSeasonFilter,
+  purposeFilter: WardrobePurposeFilter,
+): WardrobeFilterConfig {
+  if (filter === "season") {
+    return {
+      label: "계절",
+      values: seasons,
+      activeValue: seasonFilter,
+      renderLabel: (value) => getSeasonFilterLabel(value as WardrobeSeasonFilter),
+    };
+  }
+  if (filter === "purpose") {
+    return {
+      label: "목적",
+      values: purposes,
+      activeValue: purposeFilter,
+      renderLabel: (value) => getPurposeFilterLabel(value as WardrobePurposeFilter),
+    };
+  }
+  return {
+    label: "종류",
+    values: categories,
+    activeValue: categoryFilter,
+    renderLabel: (value) => getCategoryFilterLabel(value as WardrobeCategoryFilter),
+  };
 }
 
 function RemovedItemBanner({
@@ -235,8 +378,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
   },
-  filterStack: {
+  filterSelectorRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  filterSelect: {
+    minWidth: 0,
+    minHeight: 52,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 4,
+    paddingHorizontal: 9,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  filterSelectCopy: {
+    minWidth: 0,
+    flex: 1,
+    gap: 2,
+  },
+  filterSelectLabel: {
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "800",
+  },
+  filterSelectValue: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "900",
+  },
+  filterSheetHeader: {
+    gap: 4,
+  },
+  filterSheetTitle: {
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900",
+  },
+  filterSheetCaption: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  filterOptionList: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  filterOption: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  filterOptionText: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  filterCheckIcon: {
+    width: 17,
+    height: 17,
   },
   grid: {
     flexDirection: "row",
@@ -244,14 +451,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   card: {
-    minHeight: 150,
-    gap: spacing.sm,
-    padding: spacing.sm,
+    minHeight: 118,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: "hidden",
   },
   cardMain: {
-    gap: spacing.xs,
+    gap: 4,
+    padding: 7,
   },
   imageWell: {
     alignItems: "center",
@@ -259,8 +466,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   itemImage: {
-    width: "92%",
-    height: "92%",
+    width: "86%",
+    height: "86%",
   },
   itemName: {
     fontSize: 11,
@@ -272,8 +479,31 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: "800",
   },
+  deleteButton: {
+    position: "absolute",
+    zIndex: 2,
+    top: 2,
+    right: 2,
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  deleteButtonSurface: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  deleteIcon: {
+    width: 13,
+    height: 13,
+  },
   addTile: {
-    minHeight: 142,
+    minHeight: 118,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
@@ -285,6 +515,27 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 34,
     fontWeight: "700",
+  },
+  chevronDown: {
+    width: 12,
+    height: 12,
+    justifyContent: "center",
+  },
+  chevronDownLeft: {
+    position: "absolute",
+    left: 1,
+    width: 7,
+    height: 1.5,
+    borderRadius: 2,
+    transform: [{ rotate: "45deg" }, { translateX: 1 }],
+  },
+  chevronDownRight: {
+    position: "absolute",
+    right: 1,
+    width: 7,
+    height: 1.5,
+    borderRadius: 2,
+    transform: [{ rotate: "-45deg" }, { translateX: -1 }],
   },
   emptyState: {
     gap: spacing.sm,
