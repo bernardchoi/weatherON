@@ -361,6 +361,63 @@ private extension WeatherONLocationSnapshot {
     return hour >= 19 || hour < 6
   }
 
+  func isNight(for hourlyTime: String, relativeTo referenceDate: Date) -> Bool {
+    isNight(at: date(for: hourlyTime, relativeTo: referenceDate))
+  }
+
+  private func date(for hourlyTime: String, relativeTo referenceDate: Date) -> Date {
+    if let date = snapshotDateFormatter.date(from: hourlyTime)
+      ?? fallbackSnapshotDateFormatter.date(from: hourlyTime)
+    {
+      return date
+    }
+
+    let localDateFormats = [
+      "yyyy-MM-dd'T'HH:mm:ss",
+      "yyyy-MM-dd'T'HH:mm",
+      "yyyy-MM-dd HH:mm:ss",
+      "yyyy-MM-dd HH:mm",
+    ]
+    for format in localDateFormats {
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.calendar = Calendar(identifier: .gregorian)
+      formatter.timeZone = resolvedTimeZone
+      formatter.dateFormat = format
+      if let date = formatter.date(from: hourlyTime) {
+        return date
+      }
+    }
+
+    guard hourlyTime.range(of: #"^\d{2}:\d{2}$"#, options: .regularExpression) != nil else {
+      return referenceDate
+    }
+
+    let parts = hourlyTime.split(separator: ":")
+    guard
+      parts.count == 2,
+      let hour = Int(parts[0]),
+      let minute = Int(parts[1])
+    else {
+      return referenceDate
+    }
+
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = resolvedTimeZone
+    var components = calendar.dateComponents([.year, .month, .day], from: referenceDate)
+    components.hour = hour
+    components.minute = minute
+    guard var date = calendar.date(from: components) else { return referenceDate }
+
+    // 자정을 넘는 단축 시각(예: 23:00 다음 00:00)은 다음 날 예보로 해석한다.
+    if date < referenceDate.addingTimeInterval(-2 * 3_600),
+      let nextDay = calendar.date(byAdding: .day, value: 1, to: date)
+    {
+      date = nextDay
+    }
+    return date
+  }
+
   func nextSolarTransition(after date: Date) -> Date? {
     guard let latitude, let longitude else { return nil }
     var calendar = Calendar(identifier: .gregorian)
@@ -707,7 +764,7 @@ private struct WeatherONMediumView: View {
           WeatherONScheduleCard(location: entry.location, palette: palette, compact: true)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         } else {
-          WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 3)
+          WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 3, referenceDate: entry.date)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         }
       }
@@ -761,7 +818,7 @@ private struct WeatherONLargeView: View {
         }
       }
 
-      WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 5)
+      WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 5, referenceDate: entry.date)
 
       HStack(spacing: 10) {
         WeatherONOutfitCard(location: entry.location, palette: palette, compact: false)
@@ -996,6 +1053,7 @@ private struct WeatherONHourlyStrip: View {
   let location: WeatherONLocationSnapshot
   let palette: WeatherONWidgetPalette
   let limit: Int
+  let referenceDate: Date
 
   var body: some View {
     HStack(spacing: 5) {
@@ -1004,7 +1062,12 @@ private struct WeatherONHourlyStrip: View {
           Text(compactHour(hour.time))
             .font(.system(size: 8, weight: .semibold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
-          Image(systemName: weatherSymbol(hour.condition))
+          Image(
+            systemName: weatherSymbol(
+              hour.condition,
+              isNight: location.isNight(for: hour.time, relativeTo: referenceDate)
+            )
+          )
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(palette.accent)
           Text("\(hour.temperatureC)°")

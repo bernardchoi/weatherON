@@ -60,6 +60,7 @@ assert.match(widgetBundle, /\.contentMarginsDisabled\(\)/u);
 assert.match(widgetBundle, /private enum WeatherONSolarClock/u);
 assert.match(widgetBundle, /nextSolarTransition\(after: now\)/u);
 assert.match(widgetBundle, /isNight \? "moon\.stars\.fill" : "sun\.max\.fill"/u);
+assert.match(widgetBundle, /location\.isNight\(for: hour\.time, relativeTo: referenceDate\)/u);
 assert.match(widgetBundle, /WeatherONWidgetPalette\(colorScheme: colorScheme, condition: entry\.location\.condition, isNight: isNight\)/u);
 assert.match(nativeModule, /widgetKind = "WeatherONLocationWidgetV4"/u);
 assert.match(nativeModule, /WidgetCenter\.shared\.reloadTimelines\(ofKind: widgetKind\)/u);
