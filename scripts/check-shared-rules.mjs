@@ -333,9 +333,15 @@ await writeFile(
     const { fallbackTravelEstimateClient } = await import("../apps/mobile/src/providers/travelEstimateClient.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
+    const {
+      buildUmbrellaRainSignals,
+      getUmbrellaPeakIndex,
+      getUmbrellaPeakRainProbability,
+      getUmbrellaPeakWindSpeed,
+    } = await import("../apps/mobile/src/utils/umbrellaRainSignals.ts");
     const { getTravelMinutesForTransport } = await import("../apps/mobile/src/utils/travelEstimate.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
-    const { kmaForecastFixture, openMeteoFixture, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
+    const { kmaForecastFixture, openMeteoFixture, recommendUmbrella, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
     const fakeFetch = async (url) => {
@@ -425,6 +431,25 @@ await writeFile(
     }, false, {
       notificationNow: new Date(seongsuRainSnapshot.observedAt).getTime(),
     });
+    const mismatchedUmbrellaSnapshot = {
+      ...seongsuRainSnapshot,
+      observedAt: "2026-08-25T20:32:00+09:00",
+      current: {
+        ...seongsuRainSnapshot.current,
+        precipitationMm: 6,
+        rainProbabilityPct: 37,
+        windMs: 1,
+      },
+      hourly: Array.from({ length: 6 }, (_, index) => ({
+        ...seongsuRainSnapshot.hourly[0],
+        time: "2026-08-" + (index === 5 ? "26" : "25") + "T" + String((20 + index) % 24).padStart(2, "0") + ":00",
+        rainProbabilityPct: 0,
+        precipitationMm: 0,
+        windMs: 1,
+        condition: "cloud",
+      })),
+    };
+    const mismatchedUmbrellaSignals = buildUmbrellaRainSignals(mismatchedUmbrellaSnapshot);
     const belowThresholdRainSnapshot = {
       ...seongsuRainSnapshot,
       id: "weather-below-rain-notification-threshold",
@@ -640,6 +665,11 @@ await writeFile(
       hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
       staleHiroshimaMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-tokyo"),
       rainNotifications: rainDemo.notifications,
+      mismatchedUmbrellaRecommendation: recommendUmbrella(mismatchedUmbrellaSnapshot),
+      mismatchedUmbrellaSignals,
+      mismatchedUmbrellaPeakIndex: getUmbrellaPeakIndex(mismatchedUmbrellaSignals),
+      mismatchedUmbrellaPeakProbability: getUmbrellaPeakRainProbability(mismatchedUmbrellaSignals),
+      mismatchedUmbrellaPeakWind: getUmbrellaPeakWindSpeed(mismatchedUmbrellaSignals),
       belowThresholdRainNotifications: belowThresholdRainDemo.notifications,
       thresholdRainNotifications: thresholdRainDemo.notifications,
       cappedNotifications,
@@ -870,6 +900,13 @@ assert.equal(demoResults.hiroshimaToSeoulMinutes, undefined);
 assert.equal(demoResults.staleHiroshimaMinutes, undefined);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
+assert.equal(demoResults.mismatchedUmbrellaRecommendation.title, "큰 3단 우산 추천");
+assert.equal(demoResults.mismatchedUmbrellaSignals[0].rainProbabilityPct, 37);
+assert.equal(demoResults.mismatchedUmbrellaSignals[0].precipitationMm, 6);
+assert.equal(demoResults.mismatchedUmbrellaSignals[0].signalPercent, 80);
+assert.equal(demoResults.mismatchedUmbrellaPeakIndex, 0);
+assert.equal(demoResults.mismatchedUmbrellaPeakProbability, 37);
+assert.equal(demoResults.mismatchedUmbrellaPeakWind, 1);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "shoes" && item.active && item.scheduledAt && item.deliveryKey));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "routine" && item.active && item.scheduledAt));
 assert.ok(demoResults.belowThresholdRainNotifications

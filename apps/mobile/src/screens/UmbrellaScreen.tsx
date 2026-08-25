@@ -6,15 +6,23 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
+import {
+  buildUmbrellaRainSignals,
+  formatUmbrellaRainAmount,
+  getUmbrellaPeakIndex,
+  getUmbrellaPeakRainProbability,
+  getUmbrellaPeakWindSpeed,
+  type UmbrellaRainSignal,
+} from "../utils/umbrellaRainSignals";
 
 export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGoBack, onOpenAlertSettings }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const umbrella = state.umbrella;
-  const rainBars = buildRainBars(state.weather);
+  const rainBars = buildUmbrellaRainSignals(state.weather);
   const peakWindow = getPeakRainWindow(rainBars);
-  const peakRainProbability = getPeakRainProbability(state.weather);
-  const windSpeed = state.weather.current.windMs;
+  const peakRainProbability = getUmbrellaPeakRainProbability(rainBars);
+  const windSpeed = getUmbrellaPeakWindSpeed(rainBars);
   const umbrellaOptions = getUmbrellaOptions(umbrella.title, umbrella.level);
   const recommendedOption = umbrellaOptions.find((item) => item.recommended) ?? umbrellaOptions[0];
 
@@ -86,14 +94,14 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         <View style={styles.metricRow}>
           <MetricTile icon="clock" label="피크" value={peakWindow} theme={theme} tone={theme.sky} />
           <MetricTile icon="drop" label="확률" value={`${peakRainProbability}%`} theme={theme} tone={theme.sky} />
-          <MetricTile icon="wind" label="바람" value={`초속 ${windSpeed.toFixed(0)}m`} theme={theme} tone={getWindTone(windSpeed, theme)} />
+          <MetricTile icon="wind" label="최대 바람" value={`초속 ${windSpeed.toFixed(0)}m`} theme={theme} tone={getWindTone(windSpeed, theme)} />
         </View>
 
         <Panel title="비 신호" theme={theme}>
           <View style={styles.chart}>
             <View style={styles.chartBars}>
               {rainBars.map((hour) => {
-                const probability = Math.max(8, Math.min(hour.rainProbabilityPct, 100));
+                const rainAmount = formatUmbrellaRainAmount(hour.precipitationMm);
                 return (
                   <View key={hour.time} style={styles.barColumn}>
                     <View style={[styles.barTrack, { backgroundColor: theme.cardStrong }]}>
@@ -101,13 +109,18 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                         style={[
                           styles.barFill,
                           {
-                            height: `${probability}%`,
-                            backgroundColor: hour.rainProbabilityPct >= 70 ? theme.sky : theme.cardSoft,
+                            height: `${hour.signalPercent}%`,
+                            backgroundColor: hour.signalPercent >= 70 ? theme.sky : theme.cardSoft,
                           },
                         ]}
                       />
                     </View>
-                    <Text style={[styles.barValue, { color: hour.rainProbabilityPct >= 70 ? theme.sky : theme.subtle }]}>{hour.rainProbabilityPct}%</Text>
+                    <Text
+                      style={[styles.barValue, { color: hour.signalPercent >= 70 ? theme.sky : theme.subtle }]}
+                      numberOfLines={2}
+                    >
+                      {hour.rainProbabilityPct}%{rainAmount ? `\n${rainAmount}` : ""}
+                    </Text>
                   </View>
                 );
               })}
@@ -248,31 +261,13 @@ function getWindTone(windSpeed: number, theme: AppTheme) {
   return theme.clear;
 }
 
-function buildRainBars(weather: P0ScreenProps["state"]["weather"]) {
-  if (weather.hourly.length > 0) return weather.hourly.slice(0, 6);
-  return [
-    {
-      time: weather.observedAt,
-      tempC: weather.current.tempC,
-      rainProbabilityPct: weather.current.rainProbabilityPct,
-      precipitationMm: weather.current.precipitationMm,
-      windMs: weather.current.windMs,
-      condition: weather.current.condition,
-    },
-  ];
-}
-
-function getPeakRainWindow(items: P0ScreenProps["state"]["weather"]["hourly"]) {
+function getPeakRainWindow(items: UmbrellaRainSignal[]) {
   if (items.length === 0) return "현재";
-  const peakIndex = items.reduce((bestIndex, item, index) => (item.rainProbabilityPct > items[bestIndex].rainProbabilityPct ? index : bestIndex), 0);
+  const peakIndex = getUmbrellaPeakIndex(items);
   const start = items[Math.max(0, peakIndex - 1)]?.time ?? items[peakIndex]?.time ?? "";
   const end = items[Math.min(items.length - 1, peakIndex + 1)]?.time ?? start;
   if (!start || start === end) return formatHour(start);
   return `${formatHour(start)}~${formatHour(end)}`;
-}
-
-function getPeakRainProbability(weather: P0ScreenProps["state"]["weather"]) {
-  return Math.round(Math.max(weather.current.rainProbabilityPct, ...weather.hourly.map((item) => item.rainProbabilityPct)));
 }
 
 function formatHour(value: string) {
@@ -487,7 +482,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   chartBars: {
-    height: 58,
+    height: 70,
     flexDirection: "row",
     alignItems: "flex-end",
     gap: spacing.xs,
