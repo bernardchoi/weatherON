@@ -9,14 +9,21 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme, type ToneColor } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
+import { isNightAtWeatherTime, type WeatherDaylightContext } from "../utils/weatherDaylight";
 import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils/weatherPresentation";
 
-export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0ScreenProps) {
+export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const [currentTimeMs, setCurrentTimeMs] = React.useState(() => Date.now());
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
   const hourly = getHourlyForecast(weather);
+  const daylightContext: WeatherDaylightContext = {
+    coordinate: placeSearchOrigin?.coordinate,
+    timeZone: placeSearchOrigin?.timezone ?? getWeatherFallbackTimeZone(weather.countryCode),
+  };
+  const currentIsNight = isNightAtWeatherTime(new Date(currentTimeMs).toISOString(), daylightContext);
   const daily = getDailyForecast(weather.daily, weather.hourly);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
   const uvIndex = getUvIndexSummary(current.uvIndex);
@@ -25,6 +32,11 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
     if (!peak) return item;
     return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
   }, null);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTimeMs(Date.now()), 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -64,7 +76,11 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
         >
           <View style={styles.heroMain}>
             <View style={[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <Image source={getConditionIcon(current.condition)} style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme) }]} resizeMode="contain" />
+              <Image
+                source={getConditionIcon(current.condition, currentIsNight)}
+                style={[styles.weatherIcon, { tintColor: getConditionColor(current.condition, theme, currentIsNight) }]}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.heroCopy}>
               <Text style={[styles.heroTemp, { color: theme.text }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
@@ -101,9 +117,10 @@ export function WeatherDetailScreen({ state, temperatureUnit, onGoBack }: P0Scre
           theme={theme}
         >
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourlyList}>
-            {hourly.slice(0, 12).map((item) => (
-              <HourlyCard key={item.time} item={item} temperatureUnit={temperatureUnit} theme={theme} />
-            ))}
+            {hourly.slice(0, 12).map((item) => {
+              const isNight = isNightAtWeatherTime(item.time, daylightContext, weather.observedAt);
+              return <HourlyCard key={item.time} item={item} isNight={isNight} temperatureUnit={temperatureUnit} theme={theme} />;
+            })}
           </ScrollView>
         </ForecastPanel>
 
@@ -286,8 +303,8 @@ function getTone(theme: AppTheme, tone: ToneColor): string {
   return theme.clear;
 }
 
-function HourlyCard({ item, temperatureUnit, theme }: { item: HourlyWeather; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
-  const color = getConditionColor(item.condition, theme);
+function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWeather; isNight: boolean; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
+  const color = getConditionColor(item.condition, theme, isNight);
   const layout = useResponsiveLayout();
   return (
     <View
@@ -302,7 +319,7 @@ function HourlyCard({ item, temperatureUnit, theme }: { item: HourlyWeather; tem
       ]}
     >
       <Text style={[styles.hourlyTime, { color: theme.subtle }]}>{formatTimeLabel(item.time)}</Text>
-      <Image source={getConditionIcon(item.condition)} style={[styles.hourlyIcon, { tintColor: color }]} resizeMode="contain" />
+      <Image source={getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: color }]} resizeMode="contain" />
       <Text style={[styles.hourlyTemp, { color: theme.text }]}>{formatTemperature(item.tempC, temperatureUnit)}</Text>
       <Text style={[styles.hourlyRain, { color }]}>{item.rainProbabilityPct}%</Text>
     </View>
@@ -336,6 +353,12 @@ function getHourlyForecast(weather: P0ScreenProps["state"]["destinationCare"]["o
     windMs: weather.current.windMs,
     condition: weather.current.condition,
   }];
+}
+
+function getWeatherFallbackTimeZone(countryCode: P0ScreenProps["state"]["destinationCare"]["originWeather"]["countryCode"]) {
+  if (countryCode === "KR") return "Asia/Seoul";
+  if (countryCode === "JP") return "Asia/Tokyo";
+  return undefined;
 }
 
 function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeather[]): DailyWeather[] {

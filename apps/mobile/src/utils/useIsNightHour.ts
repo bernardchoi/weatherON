@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
-// 실제 일출·일몰 데이터가 아직 없어 로컬 시각 기준(19시~6시)으로 근사한다.
-// TODO: 날씨 상세 화면의 일출·일몰 계산이 공용화되면 그 값으로 교체.
+// 위치 컨텍스트를 받지 않는 홈 배경은 로컬 시각 기준(19시~6시)으로 근사한다.
 export function isNightHour(date: Date): boolean {
   const hour = date.getHours();
   return hour >= 19 || hour < 6;

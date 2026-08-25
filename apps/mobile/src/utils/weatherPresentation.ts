@@ -12,14 +12,16 @@ export function getConditionLabel(condition: WeatherCondition | string): string 
   return "날씨";
 }
 
-export function getConditionIcon(condition: WeatherCondition | string) {
+export function getConditionIcon(condition: WeatherCondition | string, isNight = false) {
   if (condition === "rain" || condition === "storm" || condition === "snow") return uiIconAssets.rain;
   if (condition === "dust") return uiIconAssets.wind;
+  if (condition === "clear" && isNight) return uiIconAssets.clearNight;
   return uiIconAssets.uv;
 }
 
-export function getConditionColor(condition: WeatherCondition | string, theme: AppTheme): string {
+export function getConditionColor(condition: WeatherCondition | string, theme: AppTheme, isNight = false): string {
   if (condition === "rain" || condition === "storm" || condition === "snow") return theme.sky;
   if (condition === "dust" || condition === "cloud") return theme.clear;
+  if (condition === "clear" && isNight) return theme.skyLite;
   return theme.gold;
 }

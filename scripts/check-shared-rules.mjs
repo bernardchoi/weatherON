@@ -333,6 +333,7 @@ await writeFile(
     const { fallbackTravelEstimateClient } = await import("../apps/mobile/src/providers/travelEstimateClient.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
+    const { isNightAtWeatherTime } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
     const {
       buildUmbrellaRainSignals,
       getUmbrellaPeakIndex,
@@ -665,6 +666,22 @@ await writeFile(
       hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
       staleHiroshimaMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-tokyo"),
       rainNotifications: rainDemo.notifications,
+      seoulSummerNight: isNightAtWeatherTime("2026-08-23T22:00", {
+        coordinate: { latitude: 37.5446, longitude: 127.0559 },
+        timeZone: "Asia/Seoul",
+      }),
+      seoulSummerDay: isNightAtWeatherTime("2026-08-23T18:00", {
+        coordinate: { latitude: 37.5446, longitude: 127.0559 },
+        timeZone: "Asia/Seoul",
+      }),
+      seoulWinterAfterSunset: isNightAtWeatherTime("2026-12-21T18:00", {
+        coordinate: { latitude: 37.5446, longitude: 127.0559 },
+        timeZone: "Asia/Seoul",
+      }),
+      seoulMidnightRollover: isNightAtWeatherTime("00:00", {
+        coordinate: { latitude: 37.5446, longitude: 127.0559 },
+        timeZone: "Asia/Seoul",
+      }, "2026-08-23T22:00"),
       mismatchedUmbrellaRecommendation: recommendUmbrella(mismatchedUmbrellaSnapshot),
       mismatchedUmbrellaSignals,
       mismatchedUmbrellaPeakIndex: getUmbrellaPeakIndex(mismatchedUmbrellaSignals),
@@ -899,6 +916,10 @@ assert.ok(demoResults.hiroshimaLocalMinutes >= 10 && demoResults.hiroshimaLocalM
 assert.equal(demoResults.hiroshimaToSeoulMinutes, undefined);
 assert.equal(demoResults.staleHiroshimaMinutes, undefined);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
+assert.equal(demoResults.seoulSummerNight, true);
+assert.equal(demoResults.seoulSummerDay, false);
+assert.equal(demoResults.seoulWinterAfterSunset, true);
+assert.equal(demoResults.seoulMidnightRollover, true);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
 assert.equal(demoResults.mismatchedUmbrellaRecommendation.title, "큰 3단 우산 추천");
 assert.equal(demoResults.mismatchedUmbrellaSignals[0].rainProbabilityPct, 37);
