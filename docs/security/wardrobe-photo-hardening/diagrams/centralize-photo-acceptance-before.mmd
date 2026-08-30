@@ -1,0 +1,11 @@
+flowchart LR
+  U[사용자 선택 사진] --> P[OS 카메라·사진 선택기]
+  P --> C[모바일 JPEG 재인코딩]
+  C --> A[인증된 /wardrobe/analyze]
+  A --> I[App Attest monitor]
+  I --> V[Workers AI 분류]
+  V --> R[의류 속성 결과]
+  R --> S[앱 로컬 사진·메타데이터 저장]
+  V -. 실패 .-> M[사용자 수동 입력]
+  M --> S
+  A -. 문자·길이 검사만 .-> V

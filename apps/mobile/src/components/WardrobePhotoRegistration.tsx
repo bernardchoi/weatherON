@@ -11,9 +11,12 @@ import { radius, spacing } from "../theme/tokens";
 import { getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import {
   analyzeWardrobePhoto,
+  isPermanentWardrobePhotoRejection,
   persistWardrobePhoto,
   pickAndPrepareWardrobePhoto,
+  removePreparedWardrobePhoto,
   removePersistedWardrobePhotos,
+  WARDROBE_PHOTO_POLICY_VERSION,
   type PreparedWardrobePhoto,
   type WardrobePhotoAnalysis,
   type WardrobePhotoSource,
@@ -47,12 +50,53 @@ export function WardrobePhotoRegistration({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const [preparedPhoto, setPreparedPhoto] = React.useState<PreparedWardrobePhoto | null>(null);
+  const preparedPhotoRef = React.useRef<PreparedWardrobePhoto | null>(null);
   const [previewUri, setPreviewUri] = React.useState(existingItem?.imageUrl ?? "");
   const [draft, setDraft] = React.useState<Draft>(() => existingItem ? toDraft(existingItem) : fallbackDraft);
   const [analysis, setAnalysis] = React.useState<WardrobePhotoAnalysis | null>(null);
   const [status, setStatus] = React.useState<Status>(existingItem ? "ready" : "idle");
-  const [message, setMessage] = React.useState(existingItem ? "저장된 분석 결과를 수정할 수 있음" : "옷 한 개가 화면에 크게 보이는 사진이 좋음");
+  const [message, setMessage] = React.useState(existingItem ? "저장된 사진의 분류를 수정할 수 있음" : "옷 한 개가 화면에 크게 보이는 사진이 좋음");
   const [detailsOpen, setDetailsOpen] = React.useState(Boolean(existingItem));
+
+  const replacePreparedPhoto = React.useCallback((photo: PreparedWardrobePhoto | null) => {
+    const previous = preparedPhotoRef.current;
+    if (previous && previous.previewUri !== photo?.previewUri) removePreparedWardrobePhoto(previous.previewUri);
+    preparedPhotoRef.current = photo;
+    setPreparedPhoto(photo);
+  }, []);
+
+  React.useEffect(() => () => {
+    const current = preparedPhotoRef.current;
+    if (current) removePreparedWardrobePhoto(current.previewUri);
+  }, []);
+
+  const runAnalysis = React.useCallback(async (photo: PreparedWardrobePhoto) => {
+    setAnalysis(null);
+    setStatus("analyzing");
+    setMessage("옷장 등록 가능 여부와 날씨 태그를 확인 중");
+    try {
+      const result = await analyzeWardrobePhoto(photo);
+      setAnalysis(result);
+      setDraft(toDraft(result));
+      setStatus("ready");
+      setDetailsOpen(result.quality !== "good" || result.confidence < 0.72);
+      setMessage(getAnalysisMessage(result));
+    } catch (error) {
+      setAnalysis(null);
+      setDetailsOpen(true);
+      setStatus("error");
+      if (Platform.OS === "ios" && isPermanentWardrobePhotoRejection(error)) {
+        replacePreparedPhoto(null);
+        setPreviewUri(existingItem?.imageUrl ?? "");
+        setDraft(existingItem ? toDraft(existingItem) : fallbackDraft);
+        setMessage(error instanceof Error ? error.message : "등록할 수 없는 사진임");
+        return;
+      }
+      setDraft(existingItem ? toDraft(existingItem) : fallbackDraft);
+      const detail = error instanceof Error ? error.message : "AI 분석에 실패함";
+      setMessage(Platform.OS === "ios" ? `${detail} · 분석에 성공해야 저장 가능` : `${detail} · 직접 입력해서 저장 가능`);
+    }
+  }, [existingItem, replacePreparedPhoto]);
 
   const selectPhoto = async (source: WardrobePhotoSource) => {
     setStatus("picking");
@@ -64,24 +108,9 @@ export function WardrobePhotoRegistration({
         setMessage(previewUri ? "기존 사진을 유지함" : "사진 선택을 취소함");
         return;
       }
-      setPreparedPhoto(photo);
+      replacePreparedPhoto(photo);
       setPreviewUri(photo.previewUri);
-      setStatus("analyzing");
-      setMessage("AI가 옷 종류와 날씨 태그를 분석 중");
-      try {
-        const result = await analyzeWardrobePhoto(photo);
-        setAnalysis(result);
-        setDraft(toDraft(result));
-        setStatus("ready");
-        setDetailsOpen(result.quality !== "good" || result.confidence < 0.72);
-        setMessage(getAnalysisMessage(result));
-      } catch (error) {
-        setAnalysis(null);
-        setDraft(existingItem ? toDraft(existingItem) : fallbackDraft);
-        setStatus("error");
-        setDetailsOpen(true);
-        setMessage(`${error instanceof Error ? error.message : "AI 분석에 실패함"} · 직접 입력해서 저장 가능`);
-      }
+      await runAnalysis(photo);
     } catch (error) {
       setStatus(previewUri ? "ready" : "error");
       setMessage(error instanceof Error ? error.message : "사진을 불러오지 못함");
@@ -95,15 +124,37 @@ export function WardrobePhotoRegistration({
       setMessage("이름과 모든 분류 항목을 하나 이상 선택해야 함");
       return;
     }
+    if (
+      Platform.OS === "ios" &&
+      preparedPhoto &&
+      (analysis?.decision !== "accept" || analysis.policyVersion !== WARDROBE_PHOTO_POLICY_VERSION)
+    ) {
+      setStatus("error");
+      setMessage("서버의 옷 사진 승인이 완료돼야 저장할 수 있음");
+      return;
+    }
     setStatus("saving");
-    setMessage("내 옷장에 저장 중");
+      setMessage("내 옷장에 저장 중");
     try {
       const itemId = existingItem?.id ?? `photo-${Crypto.randomUUID()}`;
-      const imageUrl = preparedPhoto ? await persistWardrobePhoto(preparedPhoto.previewUri, itemId) : previewUri;
-      onSave({ id: itemId, source: "photo", ...draft, imageUrl, owned: true });
+      const persistedPhoto = preparedPhoto ? await persistWardrobePhoto(preparedPhoto, itemId) : null;
+      const imageUrl = persistedPhoto?.imageUrl ?? previewUri;
+      const approval = preparedPhoto
+        ? {
+            photoPolicyVersion: persistedPhoto?.photoPolicyVersion,
+            photoDigest: persistedPhoto?.photoDigest,
+            photoApprovedAt: persistedPhoto?.photoDigest ? new Date().toISOString() : undefined,
+          }
+        : {
+            photoPolicyVersion: existingItem?.photoPolicyVersion,
+            photoDigest: existingItem?.photoDigest,
+            photoApprovedAt: existingItem?.photoApprovedAt,
+          };
+      onSave({ id: itemId, source: "photo", ...draft, imageUrl, owned: true, ...approval });
       if (preparedPhoto && existingItem?.imageUrl && existingItem.imageUrl !== imageUrl) {
         removePersistedWardrobePhotos([existingItem.imageUrl]);
       }
+      if (preparedPhoto) replacePreparedPhoto(null);
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "사진 아이템을 저장하지 못함");
@@ -112,19 +163,26 @@ export function WardrobePhotoRegistration({
 
   const busy = status === "picking" || status === "analyzing" || status === "saving";
   const canUseNativePhoto = Platform.OS !== "web";
+  const requiresApproval = Platform.OS === "ios" && Boolean(preparedPhoto);
+  const hasApproval = analysis?.decision === "accept" && analysis.policyVersion === WARDROBE_PHOTO_POLICY_VERSION;
+  const canSave = !busy && Boolean(previewUri) && (!requiresApproval || hasApproval);
+  const cancel = () => {
+    replacePreparedPhoto(null);
+    onCancel();
+  };
 
   return (
     <AppScreen
       title={existingItem ? "사진 아이템 수정" : "내 옷 사진 추가"}
-      subtitle="AI 제안 후 직접 확인해서 저장"
-      badge={analysis ? `신뢰도 ${Math.round(analysis.confidence * 100)}%` : "선택 기능"}
-      onBack={onCancel}
+      subtitle={Platform.OS === "ios" ? "서버 승인 후 분류를 확인해서 저장" : "AI 제안 후 직접 확인해서 저장"}
+      badge={analysis ? `등록 판정 ${Math.round(analysis.eligibilityConfidence * 100)}%` : "선택 기능"}
+      onBack={cancel}
       showWordmark={false}
       compactHeader
       contentPaddingTop={layout.weatherTopPadding + spacing.sm}
       contentGap={layout.destinationContentGap}
     >
-      <Section title="옷 사진" caption="AI 분석에만 전송하며 WeatherON 서버에는 사진을 저장하지 않음" accent="clear">
+      <Section title="옷 사진" caption="분석용 축소 JPEG를 암호화 전송하며 WeatherON 서버 저장소에는 사진을 남기지 않음" accent="clear">
         {previewUri ? (
           <View style={[styles.photoFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
             <Image source={{ uri: previewUri }} style={styles.photo} resizeMode="contain" />
@@ -132,7 +190,7 @@ export function WardrobePhotoRegistration({
         ) : (
           <View style={[styles.photoPlaceholder, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
             <Text style={[styles.placeholderTitle, { color: theme.text }]}>옷 한 개를 정면에서 촬영</Text>
-            <Text style={[styles.placeholderBody, { color: theme.muted }]}>밝은 곳·단순한 배경·옷 전체가 보이게 촬영하면 정확도가 높아짐 · 사람 정보는 분석하지 않음</Text>
+            <Text style={[styles.placeholderBody, { color: theme.muted }]}>밝은 곳·단순한 배경·옷 전체가 보이게 촬영 권장 · 사람이 보이면 등록 차단 · 신원은 추론하지 않음</Text>
           </View>
         )}
         <View style={styles.photoActions}>
@@ -146,6 +204,9 @@ export function WardrobePhotoRegistration({
           </Text>
           <Text style={[styles.message, { color: theme.muted }]}>{message}</Text>
           {analysis?.issues.length ? <Text style={[styles.issueText, { color: theme.muted }]}>{analysis.issues.join(" · ")}</Text> : null}
+          {Platform.OS === "ios" && preparedPhoto && status === "error" ? (
+            <AppButton label="분석 다시 시도" onPress={() => void runAnalysis(preparedPhoto)} tone="secondary" size="sm" />
+          ) : null}
         </View>
       </Section>
 
@@ -184,8 +245,8 @@ export function WardrobePhotoRegistration({
           ) : null}
 
           <View style={styles.saveActions}>
-            <AppButton label={existingItem ? "수정 저장" : "내 옷장에 추가"} onPress={() => void save()} tone="warning" disabled={busy || !previewUri} />
-            <AppButton label="취소" onPress={onCancel} tone="secondary" disabled={busy} />
+            <AppButton label={existingItem ? "수정 저장" : "내 옷장에 추가"} onPress={() => void save()} tone="warning" disabled={!canSave} />
+            <AppButton label="취소" onPress={cancel} tone="secondary" disabled={busy} />
           </View>
         </Section>
       ) : null}

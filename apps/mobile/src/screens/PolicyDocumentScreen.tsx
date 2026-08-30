@@ -12,17 +12,19 @@ import { cardShadow, radius, spacing } from "../theme/tokens";
 const policyDocuments: Record<PolicyDocumentType, { title: string; updated: string; summary: string; points: string[]; notice: string }> = {
   privacy: {
     title: "개인정보처리방침",
-    updated: "2026.06.20",
+    updated: "2026.08.30",
     summary: "개인정보 수집·이용 고지",
     points: [
-      "수집하는 개인정보 항목: 기기정보, 네트워크 기반 위치, 앱 사용 데이터",
+      "수집하는 개인정보 항목: 기기정보, 네트워크 기반 위치, 앱 사용 데이터, 사용자가 선택한 옷장 사진",
+      "옷장 사진 처리: 분석용 축소 JPEG를 Cloudflare Workers AI에 전송하며 등록 가능 여부와 분류 확인 후 WeatherON 서버 저장소에 보관하지 않음",
+      "승인된 옷장 사진은 기기에 저장되며 iOS에서는 iCloud 백업 제외와 잠금 시 파일 보호를 적용. 로그아웃 또는 계정 데이터 초기화 시 함께 삭제",
       "제3자 제공: 법령상 의무 또는 사용자가 동의한 경우에만 제공",
       "위치 정보 안내: 기기 설정에서 언제든 권한을 변경할 수 있음",
       "보관기간 및 파기: 회원 탈퇴 시 즉시 파기",
       "이용자 권리: 개인정보 열람·정정·삭제 요청 가능",
       "개인정보 보호책임자: privacy@weatheron.kr",
     ],
-    notice: "약관 동의 화면의 개인정보 수집·이용 동의 항목과 같은 기준임",
+    notice: "옷장 사진에서는 사람 존재 여부만 등록 안전성 확인에 사용하며 신원은 추론하지 않음",
   },
   terms: {
     title: "이용약관",

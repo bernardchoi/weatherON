@@ -40,7 +40,7 @@ import {
   type AccountProvider,
   type AccountProfile,
 } from "../providers/accountAuth";
-import { removePersistedWardrobePhotos } from "../providers/wardrobePhoto";
+import { consumePersistedWardrobePhotoApproval, removePersistedWardrobePhotos } from "../providers/wardrobePhoto";
 import {
   addLocalNotificationReceivedListener,
   addLocalNotificationResponseListener,
@@ -1144,6 +1144,13 @@ export function useWeatherOnAppState() {
 
   const savePhotoWardrobeItem = useCallback((item: WardrobeItem) => {
     if (item.source !== "photo") return;
+    const existingItem = photoWardrobeItems.find((currentItem) => currentItem.id === item.id);
+    const imageChanged = !existingItem || existingItem.imageUrl !== item.imageUrl;
+    if (
+      Platform.OS === "ios" &&
+      imageChanged &&
+      !consumePersistedWardrobePhotoApproval(item.imageUrl, item.photoPolicyVersion, item.photoDigest)
+    ) return;
     setPhotoWardrobeItems((current) => {
       const exists = current.some((currentItem) => currentItem.id === item.id);
       const next = exists
@@ -1155,7 +1162,7 @@ export function useWeatherOnAppState() {
     setSelectedWardrobeItemId(item.id);
     setRecentlyRemovedWardrobeItemId(null);
     setRoute("C2");
-  }, []);
+  }, [photoWardrobeItems]);
 
   const openWardrobeItem = useCallback((itemId: string) => {
     setSelectedWardrobeItemId(itemId);

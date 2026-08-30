@@ -328,6 +328,9 @@ function normalizePhotoWardrobeItem(value: unknown): WardrobeItem | null {
     weatherTags: normalizedWeatherTags,
     imageUrl: item.imageUrl.slice(0, 2_000),
     owned: true,
+    photoPolicyVersion: typeof item.photoPolicyVersion === "string" ? item.photoPolicyVersion.slice(0, 80) : undefined,
+    photoDigest: typeof item.photoDigest === "string" && /^[a-f0-9]{64}$/u.test(item.photoDigest) ? item.photoDigest : undefined,
+    photoApprovedAt: typeof item.photoApprovedAt === "string" ? item.photoApprovedAt.slice(0, 40) : undefined,
   };
 }
 

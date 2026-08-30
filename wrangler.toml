@@ -17,6 +17,7 @@ APP_ATTEST_BUNDLE_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
 APP_ATTEST_ALLOW_DEVELOPMENT = "false"
 APP_INTEGRITY_MODE = "monitor"
 APP_INTEGRITY_CHALLENGE_TTL_SECONDS = "120"
+WARDROBE_AI_DAILY_LIMIT = "100"
 OAUTH_CALLBACK_URL = "https://weatheron-api.weatheron.workers.dev/auth/oauth/callback"
 OAUTH_REDIRECT_URIS = "weatheron://oauth/callback"
 
@@ -28,3 +29,11 @@ migrations_dir = "apps/server/migrations"
 
 [ai]
 binding = "AI"
+
+[[ratelimits]]
+name = "WARDROBE_RATE_LIMITER"
+namespace_id = "20260830"
+
+[ratelimits.simple]
+limit = 12
+period = 60

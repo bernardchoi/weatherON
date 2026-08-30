@@ -7,7 +7,13 @@ import { normalizeBaseUrl } from "../utils/httpJson";
 const deviceIdKey = "weatheron.app-integrity.device.v1";
 const activeUserIdKey = "weatheron.app-integrity.active-user.v1";
 const keychainService = "com.weatheron.mobile.app-integrity";
-const protectedPurposes = new Set(["GET /auth/session", "POST /auth/logout", "POST /account/terms", "POST /account/delete"]);
+const protectedPurposes = new Set([
+  "GET /auth/session",
+  "POST /auth/logout",
+  "POST /account/terms",
+  "POST /account/delete",
+  "POST /wardrobe/analyze",
+]);
 
 type IntegrityChallenge = {
   challengeId: string;

@@ -1,0 +1,160 @@
+{
+  "documentType": "codex-security.hardening-analysis",
+  "schemaVersion": "1.0",
+  "analysisId": "hardening_20260830_wardrobe_photo",
+  "sourceEvidence": {
+    "kind": "source_collection",
+    "label": "WeatherON wardrobe photo upload and policy source",
+    "collectionSha256": "5e7e33c705d51df5eb323523513b400f156eeddca27c180acd8723e33fbee807",
+    "artifactCount": 8,
+    "targetRevision": "554bef0edb966e6d865b8eecec487ea54255843c",
+    "sourceDrift": "none"
+  },
+  "assessment": {
+    "outcome": "opportunities_identified",
+    "summary": "사진 의미 판별, 입력 검증, 저장 승인, 남용 방지를 하나의 실패-폐쇄 경계로 통합할 기회가 확인됨. 아직 구현된 상태는 아님."
+  },
+  "constraints": {
+    "profile": "balanced",
+    "changeHorizons": ["incremental", "medium_term"],
+    "nonNegotiables": [
+      "신규 비승인 사진은 옷장 상태에 저장되지 않아야 함.",
+      "이미지 본문은 WeatherON 저장소와 로그에 남기지 않아야 함."
+    ],
+    "assumptions": [
+      "측정된 분류 정확도, 지연시간, 메모리 예산이 아직 없음.",
+      "서버 이미지 동기화는 이번 범위에 포함하지 않음."
+    ]
+  },
+  "opportunities": [
+    {
+      "opportunityId": "centralize-photo-acceptance",
+      "title": "옷장 사진 승인 경계 통합",
+      "summary": "서버가 의미 판별, 바이너리 검증, 사용량 정책과 신규 사진 저장 승인권을 함께 소유하게 함.",
+      "diagnosis": "분석 실패 후 수동 저장이 가능하고 서버 응답에는 비의류 거절 결정이 없어 승인 정책이 UI, 모델, 저장 상태 사이에 분산됨.",
+      "evidence": [
+        { "claimType": "observed", "sourceKind": "source", "evidenceId": "E1", "path": "apps/mobile/src/providers/wardrobePhoto.ts", "claim": "클라이언트는 JPEG 재인코딩과 base64 길이 제한 후 인증 요청을 보냄." },
+        { "claimType": "observed", "sourceKind": "source", "evidenceId": "E2", "path": "apps/mobile/src/components/WardrobePhotoRegistration.tsx", "claim": "AI 분석 실패 뒤 직접 입력해 신규 사진을 저장할 수 있음." },
+        { "claimType": "observed", "sourceKind": "source", "evidenceId": "E3", "path": "apps/server/src/wardrobeCore.mjs", "claim": "서버는 허용 여부 없이 의류 카테고리 중 하나를 요구하고 실제 이미지 시그니처를 검사하지 않음." },
+        { "claimType": "observed", "sourceKind": "source", "evidenceId": "E4", "path": "apps/server/src/integrityCore.mjs", "claim": "App Attest 실패는 monitor 모드에서 요청을 차단하지 않음." },
+        { "claimType": "observed", "sourceKind": "document", "evidenceId": "E7", "path": "apps/mobile/src/screens/PolicyDocumentScreen.tsx", "claim": "앱 내 개인정보 요약에 옷장 이미지와 Workers AI 처리가 반영되지 않음." },
+        { "claimType": "inferred", "sourceKind": "source", "evidenceId": "E2", "path": "apps/mobile/src/components/WardrobePhotoRegistration.tsx", "claim": "신규 사진 저장 승인권을 소유하는 신뢰 경계가 없음." }
+      ],
+      "desiredInvariants": [
+        "신규 사진은 현재 서버 정책 버전이 accept한 경우에만 저장 가능함.",
+        "reject, review, 오류, 시간 초과는 모두 저장 불가임.",
+        "제한 스트리밍 수신과 실제 이미지 형식·디코딩 크기 검증이 추론보다 먼저 실행됨.",
+        "이미지 본문과 모델 자유문은 로그와 저장소에 기록되지 않음.",
+        "인증 사용자별 속도 제한과 일일 비용 예산이 적용됨."
+      ],
+      "proposalPath": "proposals/centralize-photo-acceptance.md",
+      "options": [
+        {
+          "optionId": "ui-guards",
+          "title": "UI·프롬프트 보강",
+          "kind": "baseline",
+          "summary": "현재 API를 유지하면서 분석 실패와 낮은 신뢰도에서 저장 UI를 차단함.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-photo-acceptance-before.mmd",
+            "after": "diagrams/centralize-photo-acceptance-ui-guards-after.mmd"
+          },
+          "evidenceCoverage": [
+            { "evidenceId": "E2", "effect": "mitigates", "tacticalFixRequired": true, "rationale": "정상 UI의 수동 저장은 막지만 변조 클라이언트 우회가 남음." },
+            { "evidenceId": "E3", "effect": "mitigates", "tacticalFixRequired": true, "rationale": "프롬프트는 개선되지만 서버 승인 계약이 없음." }
+          ],
+          "tradeoffs": [
+            { "dimension": "security", "direction": "improves", "confidence": "high", "basis": "source-derived", "assessment": "정상 사용자의 비의류 저장은 줄지만 서버 우회가 남음.", "validationPlan": "공식 앱과 직접 API 호출을 각각 시험함." },
+            { "dimension": "performance", "direction": "neutral", "confidence": "medium", "basis": "source-derived", "assessment": "추가 네트워크 단계가 없음.", "validationPlan": "현재 대비 분석 p95를 비교함." },
+            { "dimension": "memory", "direction": "neutral", "confidence": "high", "basis": "source-derived", "assessment": "새 버퍼나 모델이 없음.", "validationPlan": "모바일 피크 메모리를 회귀 확인함." },
+            { "dimension": "reliability", "direction": "regresses", "confidence": "medium", "basis": "hypothetical", "assessment": "AI 장애 시 신규 사진을 저장하지 못함.", "validationPlan": "timeout과 5xx UX를 시험함." },
+            { "dimension": "operability", "direction": "neutral", "confidence": "medium", "basis": "source-derived", "assessment": "새 인프라는 없으나 거절률 가시성도 부족함.", "validationPlan": "필요 텔레메트리 여부를 운영 검토함." },
+            { "dimension": "migration", "direction": "neutral", "confidence": "high", "basis": "source-derived", "assessment": "UI와 프롬프트의 집중 변경임.", "validationPlan": "기존 사진 편집 회귀를 시험함." }
+          ],
+          "residualRisks": ["변조 클라이언트 우회", "임의 바이너리 전달", "호출 비용 남용"],
+          "implementationReadiness": {
+            "affectedComponents": ["apps/mobile/src/components/WardrobePhotoRegistration.tsx", "apps/server/src/wardrobeCore.mjs"],
+            "workPackages": ["실패 시 저장 차단", "비의류 거절 프롬프트"],
+            "acceptanceCriteria": ["공식 앱에서 분석 실패 사진을 신규 저장할 수 없음."],
+            "migrationNotes": [],
+            "rollback": "UI와 프롬프트 변경을 되돌림."
+          }
+        },
+        {
+          "optionId": "central-policy-gate",
+          "title": "중앙 실패-폐쇄 승인 게이트",
+          "kind": "structural",
+          "summary": "서버가 입력 검증, 사용량, 의미 판별과 accept/reject 결정을 소유함.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-photo-acceptance-before.mmd",
+            "after": "diagrams/centralize-photo-acceptance-central-policy-gate-after.mmd"
+          },
+          "evidenceCoverage": [
+            { "evidenceId": "E1", "effect": "addresses", "tacticalFixRequired": true, "rationale": "클라이언트 재인코딩을 유지하면서 서버가 실제 입력을 재검증함." },
+            { "evidenceId": "E2", "effect": "addresses", "tacticalFixRequired": true, "rationale": "accept가 없는 신규 사진 저장을 금지함." },
+            { "evidenceId": "E3", "effect": "addresses", "tacticalFixRequired": true, "rationale": "서버가 거절 가능한 명시적 정책 계약을 소유함." },
+            { "evidenceId": "E4", "effect": "mitigates", "tacticalFixRequired": true, "rationale": "무결성은 다층 신호로 사용하되 별도 단계적 enforce가 필요함." },
+            { "evidenceId": "E7", "effect": "addresses", "tacticalFixRequired": true, "rationale": "처리 흐름과 앱 내 고지를 동기화함." },
+            { "evidenceId": "E8", "effect": "addresses", "tacticalFixRequired": true, "rationale": "Workers AI 이미지 추론·비저장·국외 처리 고지를 검토함." }
+          ],
+          "tradeoffs": [
+            { "dimension": "security", "direction": "improves", "confidence": "high", "basis": "source-derived", "assessment": "변조 클라이언트에도 하나의 승인·입력·남용 정책을 적용함.", "validationPlan": "직접 API, 변조 입력, 거절 코퍼스로 시험함." },
+            { "dimension": "performance", "direction": "regresses", "confidence": "medium", "basis": "hypothetical", "assessment": "스트림 검증과 카운터 접근이 추가됨.", "validationPlan": "100KB~1.1MB 사진의 p50/p95 지연을 기준 버전과 비교함." },
+            { "dimension": "memory", "direction": "neutral", "confidence": "medium", "basis": "hypothetical", "assessment": "본문을 제한 버퍼로 읽으면 현재 상한 내에서 유지 가능함.", "validationPlan": "최대 허용 사진과 병렬 요청에서 Worker 메모리를 측정함." },
+            { "dimension": "reliability", "direction": "improves", "confidence": "medium", "basis": "source-derived", "assessment": "오류가 저장 부작용 전에 차단되지만 오탐은 재촬영을 늘림.", "validationPlan": "모델 오류, timeout, 429와 오탐 UX를 시험함." },
+            { "dimension": "operability", "direction": "regresses", "confidence": "high", "basis": "source-derived", "assessment": "정책 버전, 거절률, rate limit, 일일 예산 운영이 필요함.", "validationPlan": "본문 없는 지표와 알림 런북을 검토함." },
+            { "dimension": "migration", "direction": "regresses", "confidence": "high", "basis": "source-derived", "assessment": "API·모바일 상태·기존 사진 표시를 함께 바꿔야 함.", "validationPlan": "구버전 앱 호환과 legacy-unverified 마이그레이션을 시험함." }
+          ],
+          "residualRisks": ["민감 사진이 의미 판별을 위해 원격 AI에 도달함", "모델 오탐·미탐", "계정 탈취와 지원기기 무결성 공백"],
+          "implementationReadiness": {
+            "affectedComponents": ["apps/server/src/wardrobeCore.mjs", "apps/server/src/worker.mjs", "wrangler.toml", "apps/mobile/src/providers/wardrobePhoto.ts", "apps/mobile/src/components/WardrobePhotoRegistration.tsx", "apps/mobile/src/state/persistedAppState.ts", "apps/mobile/src/screens/PolicyDocumentScreen.tsx", "docs/policy/weatheron_privacy_policy.html"],
+            "workPackages": ["승인 계약", "입력 검증", "사용량 제한", "모바일 실패-폐쇄 상태", "정책 고지", "코퍼스 테스트"],
+            "acceptanceCriteria": ["accept와 현재 policyVersion이 없는 신규 사진이 저장되지 않음.", "거절·오류 경로에서 이미지 본문이 저장소와 로그에 남지 않음."],
+            "migrationNotes": ["기존 사진은 legacy-unverified로 보존하고 재분석 시 새 정책 적용."],
+            "rollback": "서버 정책 버전과 모바일 기능 플래그를 되돌리되 수동 신규 저장 우회는 복구하지 않음."
+          }
+        },
+        {
+          "optionId": "on-device-plus-central-gate",
+          "title": "온디바이스+중앙 이중 게이트",
+          "kind": "isolation",
+          "summary": "기기에서 민감·비의류 사진을 먼저 차단하고 서버가 다시 검증함.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-photo-acceptance-before.mmd",
+            "after": "diagrams/centralize-photo-acceptance-on-device-gate-after.mmd"
+          },
+          "evidenceCoverage": [
+            { "evidenceId": "E1", "effect": "addresses", "tacticalFixRequired": true, "rationale": "원격 전송 전에 기기 판별을 추가하고 서버 재검증을 유지함." },
+            { "evidenceId": "E2", "effect": "addresses", "tacticalFixRequired": true, "rationale": "두 게이트를 통과하지 않은 신규 사진 저장을 금지함." },
+            { "evidenceId": "E3", "effect": "addresses", "tacticalFixRequired": true, "rationale": "서버 승인 계약은 옵션 2와 동일하게 유지함." },
+            { "evidenceId": "E7", "effect": "addresses", "tacticalFixRequired": true, "rationale": "온디바이스·원격 처리 구분을 고지함." }
+          ],
+          "tradeoffs": [
+            { "dimension": "security", "direction": "improves", "confidence": "medium", "basis": "hypothetical", "assessment": "일반 오선택의 민감 사진은 네트워크 전에 차단 가능하나 온디바이스 모델 미탐이 남음.", "validationPlan": "사람·문서·비의류 거절 코퍼스를 두 플랫폼에서 측정함." },
+            { "dimension": "performance", "direction": "regresses", "confidence": "high", "basis": "analogous", "assessment": "업로드 전에 기기 추론 지연이 추가됨.", "validationPlan": "지원 최저 기기에서 냉·온 시작 p50/p95를 측정함." },
+            { "dimension": "memory", "direction": "regresses", "confidence": "high", "basis": "analogous", "assessment": "모델과 런타임 메모리가 추가됨.", "validationPlan": "저사양 Android와 최저 iPhone의 피크 RSS를 측정함." },
+            { "dimension": "reliability", "direction": "regresses", "confidence": "medium", "basis": "hypothetical", "assessment": "기기별 모델 로드 실패와 정확도 편차가 추가됨.", "validationPlan": "지원 OS·ABI·메모리 압박 회귀를 수행함." },
+            { "dimension": "operability", "direction": "regresses", "confidence": "high", "basis": "source-derived", "assessment": "서버 정책 외에 모바일 모델 버전과 배포도 운영해야 함.", "validationPlan": "모델 롤백 플래그와 버전 지표를 검증함." },
+            { "dimension": "migration", "direction": "regresses", "confidence": "high", "basis": "source-derived", "assessment": "네이티브 의존성과 양 플랫폼 빌드·QA가 필요함.", "validationPlan": "개발 빌드, 스토어 빌드, 기존 사진 마이그레이션을 검증함." }
+          ],
+          "residualRisks": ["온디바이스 모델 미탐", "앱 크기·메모리 증가", "변조 클라이언트는 기기 게이트를 우회하므로 서버 게이트가 계속 필요함"],
+          "implementationReadiness": {
+            "affectedComponents": ["apps/mobile", "apps/server/src/wardrobeCore.mjs", "wrangler.toml"],
+            "workPackages": ["옵션 2 전체", "온디바이스 모델 선정·패키징", "기기별 정확도·성능 검증", "모델 기능 플래그"],
+            "acceptanceCriteria": ["대표 비의류·사람 사진이 네트워크 요청 전에 보수적으로 거절됨.", "기기 게이트 우회 요청도 서버에서 거절됨."],
+            "migrationNotes": ["옵션 2를 먼저 배포한 뒤 기기 게이트를 점진 활성화."],
+            "rollback": "온디바이스 게이트만 비활성화하고 중앙 게이트를 유지함."
+          }
+        }
+      ],
+      "recommendedOptionId": "central-policy-gate",
+      "recommendation": "현재 제약에서는 옵션 2를 우선 적용하고, 원격 전송 전 차단 요구가 확정되면 옵션 3을 추가함."
+    }
+  ],
+  "openQuestions": [
+    "사람 착용 사진의 허용 범위",
+    "허용 액세서리 범위",
+    "분당·일일 분석 한도",
+    "온디바이스 차단의 개인정보 요구 수준",
+    "로컬 파일의 OS 백업 제외와 보호 등급"
+  ]
+}

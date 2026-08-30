@@ -68,6 +68,34 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       return changed
     }
 
+    Function("protectWardrobePhoto") { (fileUri: String) -> Bool in
+      guard
+        let fileURL = URL(string: fileUri),
+        fileURL.isFileURL,
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+      else { return false }
+
+      let wardrobeDirectory = documentsURL
+        .appendingPathComponent("wardrobe-photos", isDirectory: true)
+        .standardizedFileURL
+      let protectedURL = fileURL.standardizedFileURL
+      guard protectedURL.path.hasPrefix(wardrobeDirectory.path + "/") else { return false }
+
+      do {
+        var resourceValues = URLResourceValues()
+        resourceValues.isExcludedFromBackup = true
+        var mutableURL = protectedURL
+        try mutableURL.setResourceValues(resourceValues)
+        try FileManager.default.setAttributes(
+          [.protectionKey: FileProtectionType.complete],
+          ofItemAtPath: protectedURL.path
+        )
+        return true
+      } catch {
+        return false
+      }
+    }
+
     AsyncFunction("getDepartureActivityStatus") { () async -> String in
       await self.endExpiredDepartureActivities()
       return self.departureActivityStatusJson()

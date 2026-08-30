@@ -14,4 +14,7 @@ export type WardrobeItem = {
   weatherTags: WeatherTag[];
   imageUrl: string;
   owned: boolean;
+  photoPolicyVersion?: string;
+  photoDigest?: string;
+  photoApprovedAt?: string;
 };

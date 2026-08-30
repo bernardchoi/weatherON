@@ -10,6 +10,7 @@ export const INTEGRITY_HEADERS = Object.freeze({
 
 const DEFAULT_CHALLENGE_TTL_SECONDS = 2 * 60;
 const MAX_JSON_BODY_BYTES = 96 * 1024;
+const MAX_WARDROBE_BODY_BYTES = 1_600_000;
 const PROTECTED_PURPOSES = new Set([
   "GET /auth/session",
   "POST /auth/logout",
@@ -91,7 +92,10 @@ export async function verifyAppIntegrityRequest(request, database, env, { sessio
       throw new IntegrityHttpError(401, "integrity_key_unregistered", "등록되지 않은 앱 무결성 키입니다.");
     }
 
-    const bodyText = await readBodyText(request);
+    const bodyText = await readBodyText(
+      request,
+      routeKey === "POST /wardrobe/analyze" ? MAX_WARDROBE_BODY_BYTES : MAX_JSON_BODY_BYTES,
+    );
     const clientData = JSON.stringify({
       challenge: challengeValue,
       method: request.method.toUpperCase(),
@@ -310,9 +314,9 @@ async function readJsonObject(request) {
   }
 }
 
-async function readBodyText(request) {
+async function readBodyText(request, maxBytes = MAX_JSON_BODY_BYTES) {
   const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_JSON_BODY_BYTES) {
+  if (new TextEncoder().encode(text).byteLength > maxBytes) {
     throw new IntegrityHttpError(413, "request_too_large", "요청 데이터가 너무 큽니다.");
   }
   return text;
