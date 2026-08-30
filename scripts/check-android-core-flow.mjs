@@ -217,7 +217,7 @@ async function checkOutfitLaunchFlow(page) {
   await assertBottomNav(page);
 
   await clickText(page, "코디 자세히 보기");
-  await assertText(page, "오늘 입을 세트");
+  await assertText(page, "오늘 입기 좋은 세트");
   await assertText(page, "코디 저장");
   await clickText(page, "코디 저장");
   await assertText(page, "저장 완료");
@@ -269,7 +269,7 @@ async function checkOutfitSaveGateFlow(browser) {
     await waitForApp();
     await clickAriaIncludes(page, "코디 탭");
     await clickText(page, "코디 자세히 보기");
-    await assertText(page, "오늘 입을 세트");
+    await assertText(page, "오늘 입기 좋은 세트");
     await clickText(page, "계정 연결 후 저장");
     await assertText(page, "계정 연결");
   } finally {

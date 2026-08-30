@@ -4,7 +4,6 @@ import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import { outfitImageAssets, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -31,8 +30,7 @@ export function OutfitDetailScreen({
   const layout = useResponsiveLayout();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
   const usesWrappedItemGrid = items.length > 3;
-  const signalMetrics = buildSignalMetrics(state, theme);
-  const rainSignalPct = getRainSignalPct(state);
+  const weatherReasons = buildWeatherReasons(state, theme);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
@@ -87,7 +85,7 @@ export function OutfitDetailScreen({
         </View>
       }
     >
-      <Section title="오늘 입을 세트" caption={state.outfit.decisionText} accent="clear">
+      <Section title="오늘 입기 좋은 세트" caption={state.outfit.decisionText} accent="clear">
         <View style={styles.outfitRail}>
           {items.map(([slot, item]) =>
             item ? (
@@ -128,19 +126,52 @@ export function OutfitDetailScreen({
             ) : null,
           )}
         </View>
-        <View style={styles.timeChipRow}>
-          {state.outfit.timeAdvice.slice(0, 3).map((item) => (
-            <View key={item.time} style={[styles.timeChip, { backgroundColor: theme.cardMuted }]}>
-              <Text style={[styles.timeChipTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
-              <View style={[styles.timeSignal, { backgroundColor: theme.clear }]} />
-              <Text numberOfLines={1} style={[styles.timeChipText, { color: theme.text }]}>{getTimeAdviceLabel(item.text)}</Text>
-            </View>
-          ))}
+        <View style={styles.detailHeading}>
+          <Text style={[styles.detailTitle, { color: theme.text }]}>이 시간엔 이렇게 입어요</Text>
+          <Text style={[styles.detailCaption, { color: theme.muted }]}>앞으로 3시간</Text>
         </View>
-        <View style={styles.pillRow}>
-          <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
-          <StatusPill label={formatTempLabel(state.weather.current.tempC, state.weather.current.feelsLikeC)} tone="sky" />
-          <StatusPill label={rainSignalPct > 0 ? "비 신호" : "비 없음"} tone="gold" />
+        <View style={styles.timeAdviceRow}>
+          {state.outfit.timeAdvice.slice(0, 3).map((item) => {
+            const presentation = getTimeAdvicePresentation(item.text, theme);
+            return (
+              <View
+                key={item.time}
+                accessible
+                accessibilityLabel={`${formatAdviceTime(item.time)} ${presentation.copy}`}
+                style={[styles.timeAdviceCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+              >
+                <View style={styles.timeAdviceHeader}>
+                  <Image source={presentation.icon} style={[styles.timeAdviceIcon, { tintColor: presentation.color }]} resizeMode="contain" />
+                  <Text style={[styles.timeAdviceTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+                </View>
+                <Text numberOfLines={2} style={[styles.timeAdviceCopy, { color: theme.text }]}>{presentation.copy}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={[styles.recommendationPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <View style={styles.recommendationHeader}>
+            <View style={[styles.recommendationIconWrap, { backgroundColor: theme.cardStrong }]}>
+              <Image source={uiIconAssets.check} style={[styles.recommendationIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            </View>
+            <View style={styles.recommendationCopy}>
+              <Text style={[styles.recommendationTitle, { color: theme.text }]}>오늘 날씨에 {state.outfit.matchPct}% 잘 맞아요</Text>
+              <Text style={[styles.recommendationCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
+            </View>
+          </View>
+          <View style={styles.reasonGrid}>
+            {weatherReasons.map((reason) => (
+              <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View style={styles.reasonLabelRow}>
+                  <Image source={reason.icon} style={[styles.reasonIcon, { tintColor: reason.color }]} resizeMode="contain" />
+                  <Text style={[styles.reasonLabel, { color: theme.subtle }]}>{reason.label}</Text>
+                </View>
+                <Text style={[styles.reasonValue, { color: theme.text }]} numberOfLines={1}>{reason.value}</Text>
+                <Text style={[styles.reasonDetail, { color: theme.muted }]} numberOfLines={2}>{reason.detail}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </Section>
 
@@ -153,25 +184,6 @@ export function OutfitDetailScreen({
         </Section>
       ) : null}
 
-      <Section title="추천 근거" caption="신호 압축" accent="gold">
-        <View style={[styles.signalGrid, { gap: layout.isShort || layout.isNarrow ? layout.outfitCardGap : 0 }]}>
-          {signalMetrics.map((metric) => (
-            <View
-              key={metric.label}
-              style={[
-                styles.signalTile,
-                layout.isShort || layout.isNarrow ? styles.signalTileShort : null,
-                { backgroundColor: theme.cardMuted, borderColor: theme.border },
-              ]}
-            >
-              <Image source={metric.icon} style={[styles.signalIcon, { tintColor: metric.color }]} resizeMode="contain" />
-              <Text style={[styles.signalLabel, { color: theme.subtle }]}>{metric.label}</Text>
-              <Text style={[styles.signalValue, { color: theme.text }]} numberOfLines={1}>{metric.value}</Text>
-            </View>
-          ))}
-        </View>
-      </Section>
-
       <Section title="내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear">
         <View style={styles.actions}>
           <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" />
@@ -183,32 +195,55 @@ export function OutfitDetailScreen({
 }
 
 const styles = StyleSheet.create({
-  timeChipRow: {
+  detailHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  detailTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  detailCaption: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
+  },
+  timeAdviceRow: {
     flexDirection: "row",
     gap: spacing.xs,
   },
-  timeChip: {
+  timeAdviceCard: {
+    minWidth: 0,
+    minHeight: 74,
     flex: 1,
-    minHeight: 46,
-    alignItems: "center",
     justifyContent: "center",
-    gap: 2,
-    paddingHorizontal: spacing.xs,
+    gap: 7,
+    padding: spacing.xs,
     borderRadius: radius.md,
+    borderWidth: 1,
   },
-  timeChipTime: {
+  timeAdviceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  timeAdviceIcon: {
+    width: 15,
+    height: 15,
+  },
+  timeAdviceTime: {
     fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
   },
-  timeChipText: {
-    maxWidth: "100%",
-    fontSize: 10,
-    fontWeight: "900",
-  },
-  timeSignal: {
-    width: 22,
-    height: 4,
-    borderRadius: radius.pill,
+  timeAdviceCopy: {
+    minHeight: 30,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
   },
   outfitRail: {
     flexDirection: "row",
@@ -251,10 +286,81 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: "900",
   },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  recommendationPanel: {
     gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  recommendationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  recommendationIconWrap: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  recommendationIcon: {
+    width: 19,
+    height: 19,
+  },
+  recommendationCopy: {
+    minWidth: 0,
+    flex: 1,
+    gap: 2,
+  },
+  recommendationTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  recommendationCaption: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  reasonGrid: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  reasonTile: {
+    minWidth: 0,
+    minHeight: 82,
+    flex: 1,
+    gap: 3,
+    padding: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  reasonLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  reasonIcon: {
+    width: 14,
+    height: 14,
+  },
+  reasonLabel: {
+    minWidth: 0,
+    flex: 1,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+  },
+  reasonValue: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  reasonDetail: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
   },
   resultBox: {
     gap: 4,
@@ -281,67 +387,35 @@ const styles = StyleSheet.create({
   saveActions: {
     paddingBottom: spacing.sm,
   },
-  signalGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  signalTile: {
-    width: "23.5%",
-    minHeight: 68,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  signalTileShort: {
-    width: "48%",
-  },
-  signalIcon: {
-    width: 18,
-    height: 18,
-  },
-  signalLabel: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-  },
-  signalValue: {
-    maxWidth: "100%",
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
 });
 
-function buildSignalMetrics(state: P0ScreenProps["state"], theme: ReturnType<typeof useAppTheme>) {
+function buildWeatherReasons(state: P0ScreenProps["state"], theme: ReturnType<typeof useAppTheme>) {
   const rainProbability = getRainSignalPct(state);
   const windSpeed = state.weather.current.windMs;
   const feelsLikeDelta = Math.round(state.weather.current.feelsLikeC - state.weather.current.tempC);
   return [
     {
-      label: "매칭",
-      value: `${state.outfit.matchPct}%`,
-      icon: uiIconAssets.check,
-      color: theme.clear,
-    },
-    {
-      label: "체감",
-      value: feelsLikeDelta === 0 ? "비슷" : feelsLikeDelta > 0 ? `+${feelsLikeDelta}도` : `${feelsLikeDelta}도`,
+      label: "체감 온도",
+      value: `${Math.round(state.weather.current.feelsLikeC)}도`,
+      detail: feelsLikeDelta === 0
+        ? "실제 기온과 비슷해요"
+        : feelsLikeDelta > 0
+          ? `${feelsLikeDelta}도 더 덥게 느껴져요`
+          : `${Math.abs(feelsLikeDelta)}도 더 춥게 느껴져요`,
       icon: uiIconAssets.uv,
       color: theme.gold,
     },
     {
-      label: "강수",
-      value: rainProbability > 0 ? `${Math.round(rainProbability)}%` : "없음",
+      label: "비 가능성",
+      value: rainProbability > 0 ? `최대 ${Math.round(rainProbability)}%` : "비 없음",
+      detail: rainProbability >= 50 ? "우산·방수 챙겨요" : rainProbability > 0 ? "가벼운 비에 대비해요" : "비 걱정 없이 이동해요",
       icon: uiIconAssets.rain,
       color: rainProbability >= 50 ? theme.sky : theme.clear,
     },
     {
       label: "바람",
-      value: windSpeed >= 8 ? "강함" : windSpeed >= 4 ? "보통" : "약함",
+      value: `${formatWindSpeed(windSpeed)}m/s`,
+      detail: windSpeed >= 8 ? "강한 바람에 대비해요" : windSpeed >= 4 ? "바람이 보통이에요" : "바람이 약해요",
       icon: uiIconAssets.wind,
       color: windSpeed >= 8 ? theme.gold : theme.sky,
     },
@@ -366,15 +440,19 @@ function formatAdviceTime(value: string) {
   return match ? `${match[1]}:00` : value;
 }
 
-function getTimeAdviceLabel(value: string) {
-  if (value.includes("우산") || value.includes("비")) return "비 대비";
-  if (value.includes("겉옷") || value.includes("쌀쌀")) return "겉옷";
-  if (value.includes("그대로") || value.includes("좋아요")) return "유지";
-  return "확인";
+function getTimeAdvicePresentation(value: string, theme: ReturnType<typeof useAppTheme>) {
+  if (value.includes("우산") || value.includes("비")) {
+    return { copy: "우산·방수 챙겨요", icon: uiIconAssets.rain, color: theme.sky };
+  }
+  if (value.includes("겉옷") || value.includes("쌀쌀")) {
+    return { copy: "겉옷을 더해요", icon: uiIconAssets.shirt, color: theme.gold };
+  }
+  if (value.includes("그대로") || value.includes("좋아요")) {
+    return { copy: "지금 세트 그대로", icon: uiIconAssets.check, color: theme.clear };
+  }
+  return { copy: "날씨를 확인해요", icon: uiIconAssets.check, color: theme.clear };
 }
 
-function formatTempLabel(tempC: number, feelsLikeC: number) {
-  const temp = Math.round(tempC);
-  const feelsLike = Math.round(feelsLikeC);
-  return temp === feelsLike ? `${temp}도` : `${temp}도 · 체감 ${feelsLike}도`;
+function formatWindSpeed(value: number) {
+  return value >= 10 ? Math.round(value).toString() : value.toFixed(1);
 }
