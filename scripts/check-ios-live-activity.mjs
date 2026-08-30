@@ -33,8 +33,13 @@ assert.match(nativeModule, /endExpiredDepartureActivities/u);
 
 assert.match(liveActivity, /ActivityConfiguration\(for: WeatherONDepartureActivityAttributes\.self\)/u);
 assert.match(liveActivity, /timerInterval: Date\(\)\.\.\.max\(Date\(\), departureAt\)/u);
-assert.match(liveActivity, /showsHours: !compact/u);
-assert.match(liveActivity, /maxWidth: compact \? 46 : nil/u);
+assert.match(liveActivity, /case compact/u);
+assert.match(liveActivity, /case expanded/u);
+assert.match(liveActivity, /case lockScreen/u);
+assert.match(liveActivity, /Image\(systemName: "location\.north\.fill"\)/u);
+assert.doesNotMatch(liveActivity, /Image\(systemName: "timer"\)/u);
+assert.match(liveActivity, /Text\("출발 시각"\)/u);
+assert.match(liveActivity, /minimumScaleFactor\(0\.72\)/u);
 assert.match(liveActivity, /context\.attributes\.destinationName/u);
 assert.match(liveActivity, /context\.attributes\.departureTimeLabel/u);
 assert.match(liveActivity, /context\.state\.guidance/u);

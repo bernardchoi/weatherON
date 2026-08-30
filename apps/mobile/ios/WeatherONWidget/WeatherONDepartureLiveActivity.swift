@@ -17,46 +17,86 @@ struct WeatherONDepartureLiveActivity: Widget {
     } dynamicIsland: { context in
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
-          Label("출발", systemImage: "figure.walk.departure")
-            .font(.caption.bold())
-            .foregroundStyle(departureGold)
+          WeatherONDepartureExpandedLabel()
         }
         DynamicIslandExpandedRegion(.trailing) {
-          WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, compact: true)
+          WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .expanded)
         }
         DynamicIslandExpandedRegion(.center) {
           Text(context.attributes.destinationName)
-            .font(.headline)
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.white)
             .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .layoutPriority(1)
         }
         DynamicIslandExpandedRegion(.bottom) {
-          HStack(spacing: 8) {
-            Image(systemName: "cloud.rain.fill")
-              .foregroundStyle(departureSky)
-            Text(context.state.guidance)
-              .font(.caption)
-              .lineLimit(2)
-            Spacer(minLength: 0)
-            Text(context.attributes.departureTimeLabel)
-              .font(.caption.bold())
-              .foregroundStyle(departureGold)
-          }
+          WeatherONDepartureExpandedSummary(
+            guidance: context.state.guidance,
+            departureTimeLabel: context.attributes.departureTimeLabel
+          )
           .accessibilityElement(children: .combine)
           .accessibilityLabel("날씨 안내, \(context.state.guidance), 권장 출발 시각 \(context.attributes.departureTimeLabel)")
         }
       } compactLeading: {
-        Image(systemName: "figure.walk.departure")
+        Image(systemName: "location.north.fill")
           .foregroundStyle(departureGold)
-          .accessibilityLabel("출발 카운트다운")
+          .accessibilityLabel("출발 안내")
       } compactTrailing: {
-        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, compact: true)
+        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .compact)
       } minimal: {
-        Image(systemName: "timer")
+        Image(systemName: "location.north.fill")
           .foregroundStyle(departureGold)
-          .accessibilityLabel("출발 카운트다운")
+          .accessibilityLabel("출발 안내")
       }
       .widgetURL(URL(string: context.attributes.deepLink))
       .keylineTint(departureGold)
+    }
+  }
+}
+
+private struct WeatherONDepartureExpandedLabel: View {
+  var body: some View {
+    Label("출발까지", systemImage: "location.north.fill")
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(departureGold)
+      .lineLimit(1)
+      .fixedSize(horizontal: true, vertical: false)
+  }
+}
+
+private struct WeatherONDepartureExpandedSummary: View {
+  let guidance: String
+  let departureTimeLabel: String
+
+  var body: some View {
+    HStack(alignment: .center, spacing: 10) {
+      Label {
+        Text(guidance)
+          .lineLimit(1)
+          .minimumScaleFactor(0.72)
+      } icon: {
+        Image(systemName: "cloud.rain.fill")
+          .foregroundStyle(departureSky)
+      }
+      .font(.caption.weight(.medium))
+      .foregroundStyle(.white.opacity(0.9))
+      .layoutPriority(1)
+
+      Rectangle()
+        .fill(Color.white.opacity(0.18))
+        .frame(width: 1, height: 26)
+
+      VStack(alignment: .trailing, spacing: 1) {
+        Text("출발 시각")
+          .font(.caption2)
+          .foregroundStyle(.white.opacity(0.62))
+        Text(departureTimeLabel)
+          .font(.subheadline.weight(.semibold).monospacedDigit())
+          .foregroundStyle(departureGold)
+          .lineLimit(1)
+      }
+      .fixedSize(horizontal: true, vertical: false)
     }
   }
 }
@@ -77,7 +117,7 @@ private struct WeatherONDepartureLockScreenView: View {
             .lineLimit(1)
         }
         Spacer(minLength: 8)
-        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, compact: false)
+        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .lockScreen)
       }
 
       HStack(spacing: 12) {
@@ -103,21 +143,53 @@ private struct WeatherONDepartureLockScreenView: View {
 }
 
 private struct WeatherONDepartureCountdown: View {
+  enum Style {
+    case compact
+    case expanded
+    case lockScreen
+  }
+
   let departureAt: Date
-  let compact: Bool
+  let style: Style
+
+  private var showsHours: Bool {
+    style == .lockScreen
+  }
 
   var body: some View {
     Text(
       timerInterval: Date()...max(Date(), departureAt),
       countsDown: true,
-      showsHours: !compact
+      showsHours: showsHours
     )
-      .font(compact ? .system(size: 11, weight: .bold, design: .monospaced) : .title2.monospacedDigit().bold())
+      .font(countdownFont)
       .foregroundStyle(departureGold)
       .lineLimit(1)
-      .minimumScaleFactor(0.72)
-      .frame(maxWidth: compact ? 46 : nil, alignment: .trailing)
+      .minimumScaleFactor(0.7)
+      .frame(maxWidth: maximumWidth, alignment: .trailing)
       .accessibilityLabel("출발까지 남은 시간")
+  }
+
+  private var countdownFont: Font {
+    switch style {
+    case .compact:
+      return .caption2.weight(.bold).monospacedDigit()
+    case .expanded:
+      return .title3.weight(.semibold).monospacedDigit()
+    case .lockScreen:
+      return .title2.weight(.bold).monospacedDigit()
+    }
+  }
+
+  private var maximumWidth: CGFloat? {
+    switch style {
+    case .compact:
+      return 46
+    case .expanded:
+      return 68
+    case .lockScreen:
+      return nil
+    }
   }
 }
 
@@ -142,6 +214,12 @@ private struct WeatherONDepartureLiveActivityPreviews: PreviewProvider {
     attributes
       .previewContext(state, viewKind: .dynamicIsland(.expanded))
       .previewDisplayName("다이내믹 아일랜드")
+    attributes
+      .previewContext(state, viewKind: .dynamicIsland(.compact))
+      .previewDisplayName("다이내믹 아일랜드 · 축소")
+    attributes
+      .previewContext(state, viewKind: .dynamicIsland(.minimal))
+      .previewDisplayName("다이내믹 아일랜드 · 최소")
   }
 }
 #endif
