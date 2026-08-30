@@ -4,7 +4,7 @@ import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } f
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
-import { outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -404,7 +404,7 @@ function OutfitSignal({ item, theme }: { item: DestinationCardModel; theme: AppT
     >
       <View style={styles.outfitPreviewStack}>
         {item.outfitItems.slice(0, 3).map((outfitItem, index) => {
-          const imageSource = outfitItem.imageUrl ? outfitImageAssets[outfitItem.imageUrl] : undefined;
+          const imageSource = getOutfitImageSource(outfitItem.imageUrl);
           return (
             <View
               key={outfitItem.id}

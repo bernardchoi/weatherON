@@ -1,3 +1,5 @@
+import type { ImageSourcePropType } from "react-native";
+
 export const brandAssets = {
   wordmarkDark: require("../../../assets/wordmark/wordmark-h-dark-preview.png"),
   wordmarkLight: require("../../../assets/wordmark/wordmark-h-light-v2-preview.png"),
@@ -60,6 +62,13 @@ export const outfitImageAssets: Record<string, number> = {
   "assets/outfits/weatheron-outfit-taupe-cargo-pants-v1.png": require("../../../assets/outfits/weatheron-outfit-taupe-cargo-pants-v1.png"),
   "assets/outfits/weatheron-outfit-taupe-winter-boots-v1.png": require("../../../assets/outfits/weatheron-outfit-taupe-winter-boots-v1.png"),
 };
+
+export function getOutfitImageSource(imageUrl?: string): ImageSourcePropType | undefined {
+  if (!imageUrl) return undefined;
+  const bundledSource = outfitImageAssets[imageUrl];
+  if (bundledSource) return bundledSource;
+  return /^(?:file|content|blob|data|https?):/iu.test(imageUrl) ? { uri: imageUrl } : undefined;
+}
 
 export const placeImageAssets = {
   baseball: require("../../../assets/place-categories/weatheron-place-baseball-v1.png"),

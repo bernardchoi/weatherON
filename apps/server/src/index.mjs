@@ -5,7 +5,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleProxyRoute, PROXY_TOKEN_HEADER } from "./proxyCore.mjs";
 import { handleAccountRoute, isAccountRoute, requireSession } from "./authCore.mjs";
-import { handleAppIntegrityRoute, INTEGRITY_HEADERS, isAppIntegrityRoute } from "./integrityCore.mjs";
+import { handleAppIntegrityRoute, INTEGRITY_HEADERS, isAppIntegrityRoute, verifyAppIntegrityRequest } from "./integrityCore.mjs";
+import { handleWardrobeRoute, isWardrobeRoute } from "./wardrobeCore.mjs";
 
 const SERVER_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const ROOT_DIR = resolve(SERVER_DIR, "../..");
@@ -56,6 +57,17 @@ const server = createServer(async (request, response) => {
       sendJson(response, result.status, result.payload);
       return;
     }
+    if (isWardrobeRoute(url.pathname)) {
+      const body = await readRequestBody(request, 1_600_000);
+      const webRequest = new Request(url, {
+        method: request.method,
+        headers: normalizeRequestHeaders(request.headers),
+        body,
+      });
+      const result = await handleWardrobeRoute(webRequest, process.env, { requireSession, verifyAppIntegrityRequest });
+      sendJson(response, result.status, result.payload);
+      return;
+    }
     if (request.method !== "GET") {
       sendJson(response, 405, { error: "method_not_allowed" });
       return;
@@ -103,12 +115,12 @@ function normalizeRequestHeaders(headers) {
   return normalized;
 }
 
-async function readRequestBody(request) {
+async function readRequestBody(request, maxBytes = 32 * 1024) {
   const chunks = [];
   let totalBytes = 0;
   for await (const chunk of request) {
     totalBytes += chunk.length;
-    if (totalBytes > 32 * 1024) throw new Error("request_too_large");
+    if (totalBytes > maxBytes) throw new Error("request_too_large");
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);

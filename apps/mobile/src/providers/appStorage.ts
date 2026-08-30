@@ -435,6 +435,7 @@ async function readPersistedAppState(database: SQLiteExecutor): Promise<Record<s
   if (settings.size === 0) return null;
   const selectedStyles = await readListValues(database, "selectedStyles");
   const wardrobeOwnedItemIds = await readListValues(database, "wardrobeOwnedItemIds");
+  const photoWardrobeItems = jsonSetting(settings, "photoWardrobeItems");
   const selectedDestinationPlace = await readPlace(database, "selectedDestination");
   const manualWeatherLocation = await readWeatherLocation(database, "manualWeatherLocation");
   const destinations = await readSavedDestinations(database);
@@ -457,6 +458,7 @@ async function readPersistedAppState(database: SQLiteExecutor): Promise<Record<s
     selectedStyles,
     smartCareScenario: textSetting(settings, "smartCareScenario"),
     wardrobeOwnedItemIds,
+    photoWardrobeItems,
     selectedWardrobeItemId: textSetting(settings, "selectedWardrobeItemId"),
     savedDestinations: destinations,
     selectedDestinationPlace,
@@ -494,6 +496,7 @@ async function writePersistedAppState(database: SQLiteExecutor, value: unknown) 
     ageBand: textValue(record.ageBand),
     fitPreference: textValue(record.fitPreference),
     smartCareScenario: textValue(record.smartCareScenario),
+    photoWardrobeItems: JSON.stringify(arrayValue(record.photoWardrobeItems)),
     selectedWardrobeItemId: textValue(record.selectedWardrobeItemId),
     weatherLocationMode: textValue(record.weatherLocationMode),
     temperatureUnit: textValue(record.temperatureUnit),
@@ -538,6 +541,17 @@ async function writeSettings(database: SQLiteExecutor, settings: Record<string, 
 function textSetting(settings: Map<string, AppSettingRow>, key: string): string | undefined {
   const value = settings.get(key)?.text_value;
   return value ?? undefined;
+}
+
+function jsonSetting(settings: Map<string, AppSettingRow>, key: string): unknown[] | undefined {
+  const value = textSetting(settings, key);
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function boolSetting(settings: Map<string, AppSettingRow>, key: string): boolean | undefined {

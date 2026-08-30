@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
-import { outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -209,7 +209,7 @@ function OutfitItemImage({
   imageStyle: React.ComponentProps<typeof Image>["style"];
   fallbackStyle: React.ComponentProps<typeof Image>["style"];
 }) {
-  const source = imageUrl ? outfitImageAssets[imageUrl] : undefined;
+  const source = getOutfitImageSource(imageUrl);
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {

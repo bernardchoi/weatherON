@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import { WeatherBackground } from "../components/WeatherBackground";
@@ -1062,8 +1062,9 @@ function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["officialSpecialA
 }
 
 function getHomeOutfitPreviewImage(outfit: P0ScreenProps["state"]["outfit"]) {
-  const previewItem = Object.values(outfit.items).find((item) => item?.imageUrl && outfitImageAssets[item.imageUrl]);
-  if (previewItem?.imageUrl && outfitImageAssets[previewItem.imageUrl]) return outfitImageAssets[previewItem.imageUrl];
+  const previewItem = Object.values(outfit.items).find((item) => getOutfitImageSource(item?.imageUrl));
+  const previewSource = getOutfitImageSource(previewItem?.imageUrl);
+  if (previewSource) return previewSource;
   return outfitImageAssets[HOME_OUTFIT_FALLBACK_IMAGE];
 }
 

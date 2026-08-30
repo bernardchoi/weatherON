@@ -1,6 +1,6 @@
 // 앱 상태·알림 상태·날씨 결과의 영속화(읽기/쓰기)와 저장값 정규화.
 // 저장소가 손상되거나 구버전 형식이어도 앱이 깨지지 않도록 모든 필드를 타입 가드로 걸러 읽는다.
-import { presetWardrobe, type PlaceSearchResult } from "@weatheron/shared";
+import { presetWardrobe, type PlaceSearchResult, type WardrobeItem } from "@weatheron/shared";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
 import type { OfficialSpecialAlert, WeatherProviderResult } from "../providers/weatherProvider";
 import { defaultSeoulWeatherLocation, type WeatherLocationPreset } from "../providers/weatherLocations";
@@ -53,6 +53,7 @@ export type PersistedAppState = {
   selectedStyles: string[];
   smartCareScenario: SmartCareScenario;
   wardrobeOwnedItemIds: string[];
+  photoWardrobeItems: WardrobeItem[];
   selectedWardrobeItemId: string;
   savedDestinations: SavedDestination[];
   selectedDestinationPlace: PlaceSearchResult;
@@ -268,8 +269,9 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
       : ["미니멀", "캐주얼"],
     smartCareScenario: isSmartCareScenario(record.smartCareScenario) ? record.smartCareScenario : "outing",
     wardrobeOwnedItemIds: Array.isArray(record.wardrobeOwnedItemIds)
-      ? record.wardrobeOwnedItemIds.filter((item): item is string => typeof item === "string").slice(0, 60)
+      ? record.wardrobeOwnedItemIds.filter((item): item is string => typeof item === "string").slice(0, 120)
       : [],
+    photoWardrobeItems: normalizePhotoWardrobeItems(record.photoWardrobeItems),
     selectedWardrobeItemId: typeof record.selectedWardrobeItemId === "string" ? record.selectedWardrobeItemId : presetWardrobe[0]?.id ?? "",
     savedDestinations,
     selectedDestinationPlace,
@@ -289,6 +291,49 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     notificationHistory: notificationState.notificationHistory,
     alertPreferences: normalizeAlertPreferences(record.alertPreferences),
   };
+}
+
+function normalizePhotoWardrobeItems(value: unknown): WardrobeItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => normalizePhotoWardrobeItem(item)).filter((item): item is WardrobeItem => Boolean(item)).slice(0, 120);
+}
+
+function normalizePhotoWardrobeItem(value: unknown): WardrobeItem | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Partial<WardrobeItem>;
+  const categories = ["outer", "top", "bottom", "shoes", "accessory"] as const;
+  const seasons = ["spring", "summer", "fall", "winter"] as const;
+  const purposes = ["commute", "school", "travel", "outdoor", "formal", "daily"] as const;
+  const weatherTags = ["rain", "wind", "cold", "heat", "dry"] as const;
+  if (
+    item.source !== "photo" ||
+    typeof item.id !== "string" ||
+    !item.id.startsWith("photo-") ||
+    typeof item.name !== "string" ||
+    typeof item.imageUrl !== "string" ||
+    !(categories as readonly unknown[]).includes(item.category)
+  ) return null;
+  const normalizedSeasons = filterWardrobeValues(item.seasons, seasons);
+  const normalizedPurposes = filterWardrobeValues(item.purposes, purposes);
+  const normalizedWeatherTags = filterWardrobeValues(item.weatherTags, weatherTags);
+  if (normalizedSeasons.length === 0 || normalizedPurposes.length === 0 || normalizedWeatherTags.length === 0) return null;
+  return {
+    id: item.id.slice(0, 100),
+    ownerId: typeof item.ownerId === "string" ? item.ownerId.slice(0, 100) : undefined,
+    source: "photo",
+    category: item.category!,
+    name: item.name.trim().slice(0, 30) || "내 옷",
+    seasons: normalizedSeasons,
+    purposes: normalizedPurposes,
+    weatherTags: normalizedWeatherTags,
+    imageUrl: item.imageUrl.slice(0, 2_000),
+    owned: true,
+  };
+}
+
+function filterWardrobeValues<T extends string>(value: unknown, allowed: readonly T[]): T[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item): item is T => typeof item === "string" && allowed.includes(item as T)))];
 }
 
 function normalizeSelectedDestinationPlace(

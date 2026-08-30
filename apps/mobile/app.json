@@ -30,6 +30,14 @@
           "resizeMode": "contain"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "보유한 옷 사진을 선택해 내 옷장과 코디 추천에 추가하기 위해 사진 보관함을 사용합니다.",
+          "cameraPermission": "보유한 옷을 촬영해 내 옷장과 코디 추천에 추가하기 위해 카메라를 사용합니다.",
+          "microphonePermission": false
+        }
+      ],
       "./plugins/withWeatheronAndroidDarkIcon",
       "./plugins/withWeatheronAndroidReleaseConfig"
     ],
@@ -55,6 +63,8 @@
         "CFBundleDevelopmentRegion": "ko",
         "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.",
         "NSMotionUsageDescription": "날씨 배경 효과와 화면 전환을 기기 움직임 및 접근성 설정에 맞춰 제공하기 위해 동작 정보를 사용합니다.",
+        "NSCameraUsageDescription": "보유한 옷을 촬영해 내 옷장과 코디 추천에 추가하기 위해 카메라를 사용합니다.",
+        "NSPhotoLibraryUsageDescription": "보유한 옷 사진을 선택해 내 옷장과 코디 추천에 추가하기 위해 사진 보관함을 사용합니다.",
         "NSSupportsLiveActivities": true,
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -67,6 +77,7 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "CAMERA",
         "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {

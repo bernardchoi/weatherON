@@ -218,6 +218,15 @@ export async function deleteAccountSession(): Promise<void> {
   await forgetIntegrityUser();
 }
 
+export async function requestAuthenticatedAccountJson<T>(
+  path: string,
+  body: Record<string, unknown>,
+  timeoutMs = 20_000,
+): Promise<T> {
+  const token = await requireStoredSessionToken();
+  return accountRequest<T>(path, { method: "POST", token, body, timeoutMs });
+}
+
 export async function subscribeToAppleCredentialRevocation(onRevoked: () => void): Promise<() => void> {
   if (Platform.OS !== "ios") return () => {};
   const AppleAuthentication = await import("expo-apple-authentication");
@@ -227,7 +236,7 @@ export async function subscribeToAppleCredentialRevocation(onRevoked: () => void
 
 async function accountRequest<T>(
   path: string,
-  options: { method?: "GET" | "POST"; body?: Record<string, unknown>; token?: string } = {},
+  options: { method?: "GET" | "POST"; body?: Record<string, unknown>; token?: string; timeoutMs?: number } = {},
 ): Promise<T> {
   const config = getAccountRuntimeConfig();
   if (!config.apiBaseUrl) {
@@ -240,7 +249,7 @@ async function accountRequest<T>(
     ? await createAppIntegrityHeaders({ token: options.token, method, path, bodyText })
     : {};
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? config.timeoutMs);
   try {
     const response = await expoFetch(url.toString(), {
       method,

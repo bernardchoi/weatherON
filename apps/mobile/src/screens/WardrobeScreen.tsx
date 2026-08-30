@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -24,6 +24,7 @@ export function WardrobeScreen({
   recentlyRemovedWardrobeItemId,
   onNavigate,
   onOpenWardrobeItem,
+  onOpenWardrobeAdd,
   onRemoveWardrobeItem,
   onRestoreRemovedWardrobeItem,
   accountLinked,
@@ -91,7 +92,7 @@ export function WardrobeScreen({
         {ownedItems.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>
-            <AppButton label="내 옷장에 추가" onPress={() => onNavigate("C3")} tone="warning" />
+            <AppButton label="내 옷장에 추가" onPress={onOpenWardrobeAdd} tone="warning" />
           </View>
         ) : filteredItems.length === 0 ? (
           <Text style={[styles.emptyText, { color: theme.muted }]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
@@ -108,7 +109,7 @@ export function WardrobeScreen({
             <Pressable
               accessibilityLabel="내 옷장에 추가"
               accessibilityRole="button"
-              onPress={() => onNavigate("C3")}
+              onPress={onOpenWardrobeAdd}
               style={[
                 styles.addTile,
                 {
@@ -139,7 +140,7 @@ function WardrobeItemCard({
 }) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const imageSource = item.imageUrl ? outfitImageAssets[item.imageUrl] : undefined;
+  const imageSource = getOutfitImageSource(item.imageUrl);
   const wardrobeItemWidth = layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
   return (
     <View

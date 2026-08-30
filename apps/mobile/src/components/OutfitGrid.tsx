@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
-import { outfitImageAssets } from "../assets";
+import { getOutfitImageSource } from "../assets";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
@@ -31,8 +31,9 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
     .slice(0, maxItems);
   return (
     <View style={[styles.outfitGrid, onePage ? styles.outfitGridOnePage : null, singleRow ? styles.outfitGridSingleRow : null]}>
-      {entries.map(([slot, item]) =>
-        item ? (
+      {entries.map(([slot, item]) => {
+        const imageSource = getOutfitImageSource(item?.imageUrl);
+        return item ? (
           <FeedbackPressable
             key={slot}
             accessibilityLabel={`${slotLabel[slot] ?? "아이템"} ${item.name}${onItemPress ? " 상세 보기" : ""}`}
@@ -58,9 +59,9 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                 { backgroundColor: theme.cardMuted },
               ]}
             >
-              {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
+              {imageSource ? (
                 <Image
-                  source={outfitImageAssets[item.imageUrl]}
+                  source={imageSource}
                   style={[
                     styles.itemImage,
                     compact ? styles.itemImageCompact : null,
@@ -75,8 +76,8 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
             <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
             <Text style={[styles.itemName, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
           </FeedbackPressable>
-        ) : null,
-      )}
+        ) : null;
+      })}
     </View>
   );
 }

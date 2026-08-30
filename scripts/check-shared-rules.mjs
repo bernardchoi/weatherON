@@ -81,6 +81,20 @@ await writeFile(
       ...item,
       owned: item.id === "outer-cardigan" || item.id === "top-striped-long-sleeve",
     }));
+    const wardrobeWithOwnedPhotoTop = [
+      {
+        id: "photo-test-dry-top",
+        source: "photo",
+        category: "top",
+        name: "내 반팔 티셔츠",
+        seasons: ["summer"],
+        purposes: ["commute", "daily"],
+        weatherTags: ["dry", "heat"],
+        imageUrl: "file:///wardrobe-photos/photo-test-dry-top.jpg",
+        owned: true,
+      },
+      ...presetWardrobe,
+    ];
     const hotHumidLargeSwingSnapshot = {
       ...dryCommuteSnapshot,
       id: "weather-seongsu-hot-humid-large-swing",
@@ -189,6 +203,7 @@ await writeFile(
       presetWardrobeIds: presetWardrobe.map((item) => item.id),
       outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
       ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
+      ownedPhotoOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedPhotoTop),
       hotHumidLargeSwingOutfit: recommendOutfit(
         hotHumidLargeSwingSnapshot,
         defaultPreferenceProfile,
@@ -806,6 +821,8 @@ await build({
     "expo-asset",
     "expo-blur",
     "expo-crypto",
+    "expo-image-manipulator",
+    "expo-image-picker",
     "expo-location",
     "expo-modules-core",
     "expo-navigation-bar",
@@ -848,6 +865,8 @@ assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
 assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
 assert.equal(results.ownedDryOutfit.items.bottom.name, "와이드 데님");
 assert.equal(results.ownedDryOutfit.items.bottom.owned, true);
+assert.equal(results.ownedPhotoOutfit.items.top.id, "photo-test-dry-top");
+assert.equal(results.ownedPhotoOutfit.items.top.source, "photo");
 assert.equal(results.hotHumidLargeSwingOutfit.variant, "heat");
 assert.equal(results.hotHumidLargeSwingOutfit.items.outer, undefined);
 assert.ok(results.hotHumidLargeSwingOutfit.items.top.seasons.includes("summer"));

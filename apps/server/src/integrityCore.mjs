@@ -15,6 +15,7 @@ const PROTECTED_PURPOSES = new Set([
   "POST /auth/logout",
   "POST /account/terms",
   "POST /account/delete",
+  "POST /wardrobe/analyze",
 ]);
 
 export function isAppIntegrityRoute(pathname) {

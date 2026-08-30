@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
-import type { PlaceSearchResult } from "@weatheron/shared";
+import type { PlaceSearchResult, WardrobeItem } from "@weatheron/shared";
 import { presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
 import { isLaunchHiddenRoute, isP0Route, type AppRouteId, type P0RouteId } from "../navigation/routes";
@@ -40,6 +40,7 @@ import {
   type AccountProvider,
   type AccountProfile,
 } from "../providers/accountAuth";
+import { removePersistedWardrobePhotos } from "../providers/wardrobePhoto";
 import {
   addLocalNotificationReceivedListener,
   addLocalNotificationResponseListener,
@@ -245,6 +246,7 @@ export function useWeatherOnAppState() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["미니멀", "캐주얼"]);
   const [smartCareScenario, setSmartCareScenario] = useState<SmartCareScenario>("outing");
   const [wardrobeOwnedItemIds, setWardrobeOwnedItemIds] = useState<string[]>([]);
+  const [photoWardrobeItems, setPhotoWardrobeItems] = useState<WardrobeItem[]>([]);
   const [selectedWardrobeItemId, setSelectedWardrobeItemId] = useState<string>(presetWardrobe[0]?.id ?? "");
   const [recentlyRemovedWardrobeItemId, setRecentlyRemovedWardrobeItemId] = useState<string | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
@@ -335,12 +337,19 @@ export function useWeatherOnAppState() {
     }),
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
-  const wardrobe = useMemo(() => presetWardrobe.map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })), [wardrobeOwnedItemIds]);
+  const wardrobe = useMemo(
+    () => [...photoWardrobeItems, ...presetWardrobe].map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })),
+    [photoWardrobeItems, wardrobeOwnedItemIds],
+  );
+  const recommendationWardrobe = useMemo(
+    () => wardrobe.filter((item) => item.source === "preset" || item.owned),
+    [wardrobe],
+  );
   const widgetStoreSnapshot = useMemo(() => {
     const currentWeather = weatherProviderResult.current;
     const current = createWeatheronWidgetLocationSnapshot(
       currentWeather,
-      recommendOutfit(currentWeather, userPreferenceProfile, wardrobe),
+      recommendOutfit(currentWeather, userPreferenceProfile, recommendationWardrobe),
       recommendUmbrella(currentWeather),
       {
         coordinate: activeWeatherLocation.coordinate,
@@ -365,7 +374,7 @@ export function useWeatherOnAppState() {
         : undefined;
       items.push(createWeatheronWidgetLocationSnapshot(
         weather,
-        recommendOutfit(weather, userPreferenceProfile, wardrobe),
+        recommendOutfit(weather, userPreferenceProfile, recommendationWardrobe),
         recommendUmbrella(weather),
         {
           id: destination.place.id,
@@ -396,7 +405,7 @@ export function useWeatherOnAppState() {
     savedDestinations,
     selectedDestinationPlace.id,
     userPreferenceProfile,
-    wardrobe,
+    recommendationWardrobe,
     weatherProviderResult.current,
     weatherProviderResult.destinationSnapshots,
   ]);
@@ -482,6 +491,7 @@ export function useWeatherOnAppState() {
         setSelectedStyles(persistedState.selectedStyles);
         setSmartCareScenario(persistedState.smartCareScenario);
         setWardrobeOwnedItemIds(persistedState.wardrobeOwnedItemIds);
+        setPhotoWardrobeItems(persistedState.photoWardrobeItems);
         setSelectedWardrobeItemId(persistedState.selectedWardrobeItemId);
         setSavedDestinations(persistedState.savedDestinations);
         setSelectedDestinationPlace(persistedState.selectedDestinationPlace);
@@ -548,7 +558,7 @@ export function useWeatherOnAppState() {
       return buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
         hasDestination: hasSavedDestination,
         destinationCareEnabled: hasSavedDestination ? destinationCareEnabled : false,
-        wardrobe,
+        wardrobe: recommendationWardrobe,
         preferenceProfile: userPreferenceProfile,
         destination: hasSavedDestination
           ? {
@@ -587,7 +597,7 @@ export function useWeatherOnAppState() {
       selectedDestinationTravelMinutes,
       useDestinationWeather,
       userPreferenceProfile,
-      wardrobe,
+      recommendationWardrobe,
       weatherProviderResult,
       nowMinuteTick,
     ],
@@ -862,6 +872,7 @@ export function useWeatherOnAppState() {
       selectedStyles,
       smartCareScenario,
       wardrobeOwnedItemIds,
+      photoWardrobeItems,
       selectedWardrobeItemId,
       savedDestinations,
       selectedDestinationPlace,
@@ -913,6 +924,7 @@ export function useWeatherOnAppState() {
     termsRequiredAccepted,
     themeMode,
     wardrobeOwnedItemIds,
+    photoWardrobeItems,
     weatherLocationMode,
     manualWeatherLocation,
   ]);
@@ -1089,13 +1101,15 @@ export function useWeatherOnAppState() {
       setSavedDestinations([]);
       setRecentlyRemovedDestination(null);
       setWardrobeOwnedItemIds([]);
+      removePersistedWardrobePhotos(photoWardrobeItems.map((item) => item.imageUrl));
+      setPhotoWardrobeItems([]);
       setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
       setRecentlyRemovedWardrobeItemId(null);
       setAccountGateResult(null);
       setAccountAuthStatus("idle");
       setRoute("M1");
     });
-  }, []);
+  }, [photoWardrobeItems]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1128,10 +1142,30 @@ export function useWeatherOnAppState() {
     setWardrobeOwnedItemIds((current) => current.filter((id) => id !== itemId));
   }, []);
 
+  const savePhotoWardrobeItem = useCallback((item: WardrobeItem) => {
+    if (item.source !== "photo") return;
+    setPhotoWardrobeItems((current) => {
+      const exists = current.some((currentItem) => currentItem.id === item.id);
+      const next = exists
+        ? current.map((currentItem) => currentItem.id === item.id ? { ...item, owned: true } : currentItem)
+        : [{ ...item, owned: true }, ...current];
+      return next.slice(0, 120);
+    });
+    setWardrobeOwnedItemIds((current) => current.includes(item.id) ? current : [item.id, ...current]);
+    setSelectedWardrobeItemId(item.id);
+    setRecentlyRemovedWardrobeItemId(null);
+    setRoute("C2");
+  }, []);
+
   const openWardrobeItem = useCallback((itemId: string) => {
     setSelectedWardrobeItemId(itemId);
     setRoute("C3");
   }, []);
+
+  const openWardrobeAdd = useCallback(() => {
+    setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+    navigate("C3");
+  }, [navigate]);
 
   const removeWardrobeItem = useCallback((itemId: string) => {
     setWardrobeOwnedItemIds((current) => current.filter((id) => id !== itemId));
@@ -1608,9 +1642,12 @@ export function useWeatherOnAppState() {
     setAccountAuthMessage(null);
     try {
       await deleteAccountSession();
+      removePersistedWardrobePhotos(photoWardrobeItems.map((item) => item.imageUrl));
       setAccountLinked(false);
       setAccountProfile(null);
       setTermsRequiredAccepted(false);
+      setWardrobeOwnedItemIds([]);
+      setPhotoWardrobeItems([]);
       setAccountAuthStatus("idle");
       setRoute("M1");
     } catch (error) {
@@ -1842,7 +1879,9 @@ export function useWeatherOnAppState() {
     setFitPreference,
     toggleStyleTag,
     setWardrobeItemOwned,
+    savePhotoWardrobeItem,
     openWardrobeItem,
+    openWardrobeAdd,
     removeWardrobeItem,
     restoreRemovedWardrobeItem,
     saveStyleProfile,

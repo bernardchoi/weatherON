@@ -4,7 +4,7 @@ import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
-import { outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -22,6 +22,7 @@ export function OutfitDetailScreen({
   wardrobeItems,
   accountGateResult,
   onNavigate,
+  onOpenWardrobeAdd,
   onRequireAccount,
   onDismissAccountGateResult,
   onGoBack,
@@ -87,8 +88,9 @@ export function OutfitDetailScreen({
     >
       <Section title="오늘 입기 좋은 세트" caption={state.outfit.decisionText} accent="clear">
         <View style={styles.outfitRail}>
-          {items.map(([slot, item]) =>
-            item ? (
+          {items.map(([slot, item]) => {
+            const imageSource = getOutfitImageSource(item?.imageUrl);
+            return item ? (
               <View
                 key={slot}
                 accessible
@@ -111,9 +113,9 @@ export function OutfitDetailScreen({
                     { height: layout.outfitDetailImageHeight, backgroundColor: theme.card },
                   ]}
                 >
-                  {item.imageUrl && outfitImageAssets[item.imageUrl] ? (
+                  {imageSource ? (
                     <Image
-                      source={outfitImageAssets[item.imageUrl]}
+                      source={imageSource}
                       style={[styles.outfitImage, { height: Math.max(40, layout.outfitDetailImageHeight - 4) }]}
                       resizeMode="contain"
                     />
@@ -123,8 +125,8 @@ export function OutfitDetailScreen({
                 </View>
                 <Text style={[styles.itemSlot, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
               </View>
-            ) : null,
-          )}
+            ) : null;
+          })}
         </View>
         <View style={styles.detailHeading}>
           <Text style={[styles.detailTitle, { color: theme.text }]}>이 시간엔 이렇게 입어요</Text>
@@ -187,7 +189,7 @@ export function OutfitDetailScreen({
       <Section title="내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear">
         <View style={styles.actions}>
           <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" />
-          <AppButton label="아이템 추가" onPress={() => onNavigate("C3")} tone="warning" />
+          <AppButton label="아이템 추가" onPress={onOpenWardrobeAdd} tone="warning" />
         </View>
       </Section>
     </AppScreen>

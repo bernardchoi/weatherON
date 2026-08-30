@@ -4,6 +4,7 @@ import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
+import { WardrobePhotoRegistration } from "../components/WardrobePhotoRegistration";
 import {
   WardrobeFilterControls,
   type WardrobeCategoryFilter,
@@ -32,31 +33,38 @@ export function WardrobePresetScreen({
   wardrobeItems,
   selectedWardrobeItemId,
   onSetWardrobeItemOwned,
+  onSavePhotoWardrobeItem,
+  onRequireAccount,
+  accountLinked,
   onNavigate,
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const presetItems = React.useMemo(() => wardrobeItems.filter((item) => item.source === "preset"), [wardrobeItems]);
+  const selectedItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
+  const selectedPhotoItem = selectedItem?.source === "photo" ? selectedItem : undefined;
   const [query, setQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
-  const [previewId, setPreviewId] = React.useState(selectedWardrobeItemId || wardrobeItems[0]?.id || "");
+  const [previewId, setPreviewId] = React.useState(selectedPhotoItem ? presetItems[0]?.id ?? "" : selectedWardrobeItemId || presetItems[0]?.id || "");
   const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
   const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(false);
+  const [photoMode, setPhotoMode] = React.useState(Boolean(selectedPhotoItem));
 
-  const ownedCount = wardrobeItems.filter((item) => item.owned).length;
+  const ownedCount = presetItems.filter((item) => item.owned).length;
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredItems = React.useMemo(
-    () => wardrobeItems.filter((item) => {
+    () => presetItems.filter((item) => {
       const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
       const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
       const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
       const queryMatch = normalizedQuery.length === 0 || item.name.toLowerCase().includes(normalizedQuery);
       return categoryMatch && seasonMatch && purposeMatch && queryMatch;
     }),
-    [categoryFilter, normalizedQuery, purposeFilter, seasonFilter, wardrobeItems],
+    [categoryFilter, normalizedQuery, presetItems, purposeFilter, seasonFilter],
   );
   const groupedItems = React.useMemo(
     () => Object.fromEntries(
@@ -65,7 +73,11 @@ export function WardrobePresetScreen({
     [filteredItems],
   );
 
-  const previewItem = wardrobeItems.find((item) => item.id === previewId) ?? filteredItems[0];
+  const previewItem = presetItems.find((item) => item.id === previewId) ?? filteredItems[0];
+
+  React.useEffect(() => {
+    if (selectedPhotoItem) setPhotoMode(true);
+  }, [selectedPhotoItem]);
 
   React.useEffect(() => {
     if (categoryFilter !== "all") return;
@@ -91,17 +103,50 @@ export function WardrobePresetScreen({
     setExpandedCategory((current) => current === category ? null : category);
   };
 
+  if (photoMode) {
+    return (
+      <WardrobePhotoRegistration
+        existingItem={selectedPhotoItem}
+        onSave={onSavePhotoWardrobeItem}
+        onCancel={() => {
+          if (selectedPhotoItem) onNavigate("C2");
+          else setPhotoMode(false);
+        }}
+      />
+    );
+  }
+
+  const openPhotoRegistration = () => {
+    if (!accountLinked) {
+      onRequireAccount("account-connect", "C3");
+      return;
+    }
+    setPhotoMode(true);
+  };
+
   return (
     <AppScreen
       title="아이템 추가"
       subtitle="프리셋에서 골라 내 옷장에 추가"
-      badge={`${ownedCount}/${wardrobeItems.length}`}
+      badge={`${ownedCount}/${presetItems.length}`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
       contentPaddingTop={layout.weatherTopPadding + spacing.sm}
       contentGap={layout.destinationContentGap}
     >
+      <Section title="내 옷 사진" caption="사진 한 장 · AI가 태그를 제안하고 내가 확인" accent="clear">
+        <View style={[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.text }]}>실제 가지고 있는 옷 추가</Text>
+            <Text style={[styles.copyText, { color: theme.muted }]}>
+              {accountLinked ? "분석 결과는 저장 전에 직접 수정 가능" : "AI 분석 보호를 위해 계정 연결 후 사용"}
+            </Text>
+          </View>
+          <AppButton label={accountLinked ? "사진으로 추가" : "계정 연결 후 추가"} onPress={openPhotoRegistration} tone="warning" size="sm" />
+        </View>
+      </Section>
+
       <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <TextInput
           value={query}
@@ -350,6 +395,15 @@ function PresetCard({
 }
 
 const styles = StyleSheet.create({
+  photoEntryCard: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
   searchBox: {
     minHeight: 44,
     justifyContent: "center",

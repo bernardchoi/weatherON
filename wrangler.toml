@@ -25,3 +25,6 @@ binding = "WEATHERON_DB"
 database_name = "weatheron-users"
 database_id = "36a2678b-a29d-4245-8cd9-2c997806712f"
 migrations_dir = "apps/server/migrations"
+
+[ai]
+binding = "AI"
