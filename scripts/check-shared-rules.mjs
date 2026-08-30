@@ -349,7 +349,7 @@ await writeFile(
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
     const { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } = await import("../apps/mobile/src/utils/outfitSaveCompletion.ts");
-    const { isNightAtWeatherTime } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
+    const { isNightAtForecastTime, isNightAtWeatherTime, resolveWeatherTimeZone } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
     const {
       buildUmbrellaRainSignals,
       getUmbrellaPeakIndex,
@@ -706,6 +706,11 @@ await writeFile(
         coordinate: { latitude: 37.5446, longitude: 127.0559 },
         timeZone: "Asia/Seoul",
       }, "2026-08-23T22:00"),
+      seoulZuluLabeledNight: isNightAtForecastTime("2026-08-30T22:00:00Z", {
+        coordinate: { latitude: 37.6508, longitude: 126.8889 },
+        timeZone: "Asia/Seoul",
+      }, "2026-08-30T22:29:00+09:00"),
+      seoulCountryTimeZone: resolveWeatherTimeZone("KR", "UTC"),
       mismatchedUmbrellaRecommendation: recommendUmbrella(mismatchedUmbrellaSnapshot),
       mismatchedUmbrellaSignals,
       mismatchedUmbrellaPeakIndex: getUmbrellaPeakIndex(mismatchedUmbrellaSignals),
@@ -952,6 +957,8 @@ assert.equal(demoResults.seoulSummerNight, true);
 assert.equal(demoResults.seoulSummerDay, false);
 assert.equal(demoResults.seoulWinterAfterSunset, true);
 assert.equal(demoResults.seoulMidnightRollover, true);
+assert.equal(demoResults.seoulZuluLabeledNight, true);
+assert.equal(demoResults.seoulCountryTimeZone, "Asia/Seoul");
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "umbrella" && item.active && item.scheduledAt && item.deliveryKey));
 assert.equal(demoResults.mismatchedUmbrellaRecommendation.title, "큰 3단 우산 추천");
 assert.equal(demoResults.mismatchedUmbrellaSignals[0].rainProbabilityPct, 37);

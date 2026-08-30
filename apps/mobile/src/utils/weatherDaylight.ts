@@ -1,4 +1,4 @@
-import type { GeoCoordinate } from "@weatheron/shared";
+import type { CountryCode, GeoCoordinate } from "@weatheron/shared";
 import {
   addZonedCalendarDays,
   createDateAtTimeInZone,
@@ -32,6 +32,31 @@ export function isNightAtWeatherTime(
   return localParts.hour >= 19 || localParts.hour < 6;
 }
 
+export function isNightAtForecastTime(
+  value: string,
+  context: WeatherDaylightContext,
+  referenceValue = value,
+): boolean {
+  const timeZone = context.timeZone ?? "UTC";
+  const referenceDate = resolveWeatherDate(referenceValue, timeZone, new Date());
+  const date = resolveForecastWallTime(value, timeZone, referenceDate);
+  const localParts = getZonedDateTimeParts(date, timeZone);
+  const coordinate = context.coordinate;
+
+  if (coordinate && isValidCoordinate(coordinate)) {
+    const events = getSolarEvents(date, coordinate, timeZone);
+    if (events) return date < events.sunrise || date >= events.sunset;
+  }
+
+  return localParts.hour >= 19 || localParts.hour < 6;
+}
+
+export function resolveWeatherTimeZone(countryCode: CountryCode, timeZone?: string): string | undefined {
+  if (countryCode === "KR") return "Asia/Seoul";
+  if (countryCode === "JP") return "Asia/Tokyo";
+  return timeZone;
+}
+
 function resolveWeatherDate(value: string, timeZone: string, referenceDate: Date): Date {
   const shortTime = value.match(/^(\d{2}):(\d{2})$/u);
   if (!shortTime) {
@@ -53,6 +78,18 @@ function resolveWeatherDate(value: string, timeZone: string, referenceDate: Date
     candidate = createDateAtTimeInZone(dateParts, `${shortTime[1]}:${shortTime[2]}`, timeZone);
   }
   return candidate;
+}
+
+function resolveForecastWallTime(value: string, timeZone: string, referenceDate: Date): Date {
+  const dateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/u);
+  if (dateTime) {
+    return createDateAtTimeInZone(
+      { year: Number(dateTime[1]), month: Number(dateTime[2]), day: Number(dateTime[3]) },
+      `${dateTime[4]}:${dateTime[5]}`,
+      timeZone,
+    );
+  }
+  return resolveWeatherDate(value, timeZone, referenceDate);
 }
 
 function getSolarEvents(date: Date, coordinate: GeoCoordinate, timeZone: string) {

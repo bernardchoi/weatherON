@@ -9,7 +9,12 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme, type ToneColor } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature } from "../utils/units";
-import { isNightAtWeatherTime, type WeatherDaylightContext } from "../utils/weatherDaylight";
+import {
+  isNightAtForecastTime,
+  isNightAtWeatherTime,
+  resolveWeatherTimeZone,
+  type WeatherDaylightContext,
+} from "../utils/weatherDaylight";
 import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils/weatherPresentation";
 
 export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin, onGoBack }: P0ScreenProps) {
@@ -21,7 +26,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
   const hourly = getHourlyForecast(weather);
   const daylightContext: WeatherDaylightContext = {
     coordinate: placeSearchOrigin?.coordinate,
-    timeZone: placeSearchOrigin?.timezone ?? getWeatherFallbackTimeZone(weather.countryCode),
+    timeZone: resolveWeatherTimeZone(weather.countryCode, placeSearchOrigin?.timezone),
   };
   const currentIsNight = isNightAtWeatherTime(new Date(currentTimeMs).toISOString(), daylightContext);
   const daily = getDailyForecast(weather.daily, weather.hourly);
@@ -118,7 +123,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
         >
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourlyList}>
             {hourly.slice(0, 12).map((item) => {
-              const isNight = isNightAtWeatherTime(item.time, daylightContext, weather.observedAt);
+              const isNight = isNightAtForecastTime(item.time, daylightContext, weather.observedAt);
               return <HourlyCard key={item.time} item={item} isNight={isNight} temperatureUnit={temperatureUnit} theme={theme} />;
             })}
           </ScrollView>
@@ -353,12 +358,6 @@ function getHourlyForecast(weather: P0ScreenProps["state"]["destinationCare"]["o
     windMs: weather.current.windMs,
     condition: weather.current.condition,
   }];
-}
-
-function getWeatherFallbackTimeZone(countryCode: P0ScreenProps["state"]["destinationCare"]["originWeather"]["countryCode"]) {
-  if (countryCode === "KR") return "Asia/Seoul";
-  if (countryCode === "JP") return "Asia/Tokyo";
-  return undefined;
 }
 
 function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeather[]): DailyWeather[] {
