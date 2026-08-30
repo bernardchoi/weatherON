@@ -221,6 +221,7 @@ export function AppNavigator() {
     onSendTestNotification: appState.sendTestNotification,
     onRefreshWeather: appState.refreshWeather,
     onRequireAccount: appState.requestAccountGate,
+    onDismissAccountGateResult: appState.dismissAccountGateResult,
     onRequestPermissionGate: appState.requestPermissionGate,
     onSignOutAccount: appState.signOutAccount,
     onDeleteAccount: appState.deleteAccount,

@@ -11,6 +11,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
+import { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } from "../utils/outfitSaveCompletion";
 
 const AI_RECOMPOSE_VISIBLE = false;
 
@@ -20,8 +21,10 @@ export function OutfitDetailScreen({
   termsRequiredAccepted,
   outfitSaved,
   wardrobeItems,
+  accountGateResult,
   onNavigate,
   onRequireAccount,
+  onDismissAccountGateResult,
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -33,6 +36,25 @@ export function OutfitDetailScreen({
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
+  const [saveCompletionVisible, setSaveCompletionVisible] = React.useState(false);
+  const wasSavedRef = React.useRef(outfitSaved);
+
+  React.useEffect(() => {
+    const returnedFromSaveFlow =
+      accountGateResult?.pendingAction === "save-outfit"
+      && accountGateResult.returnTo === "C4";
+    if (shouldShowOutfitSaveCompletion(wasSavedRef.current, outfitSaved, accountGateResult)) {
+      setSaveCompletionVisible(true);
+    }
+    wasSavedRef.current = outfitSaved;
+    if (returnedFromSaveFlow) onDismissAccountGateResult();
+  }, [accountGateResult, onDismissAccountGateResult, outfitSaved]);
+
+  React.useEffect(() => {
+    if (!saveCompletionVisible) return undefined;
+    const timer = setTimeout(() => setSaveCompletionVisible(false), outfitSaveCompletionDurationMs);
+    return () => clearTimeout(timer);
+  }, [saveCompletionVisible]);
 
   return (
     <AppScreen
@@ -47,7 +69,7 @@ export function OutfitDetailScreen({
       footer={
         <View style={styles.footer}>
           <CompletionStatus
-            visible={outfitSaved}
+            visible={saveCompletionVisible}
             compact
             title="코디 저장 완료"
             message="저장한 코디는 코디 탭에서 계속 확인할 수 있어요"

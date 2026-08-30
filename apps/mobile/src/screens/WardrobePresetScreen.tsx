@@ -3,24 +3,23 @@ import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressabl
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
-import { FilterRow } from "../components/FilterRow";
 import { Section } from "../components/Section";
+import {
+  WardrobeFilterControls,
+  type WardrobeCategoryFilter,
+  type WardrobePurposeFilter,
+  type WardrobeSeasonFilter,
+} from "../components/WardrobeFilterControls";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
-import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
+import { formatOutfitTags, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
 
-const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
 const wardrobeCategories = ["outer", "top", "bottom", "shoes", "accessory"] as const;
-const seasons = ["all", "spring", "summer", "fall", "winter"] as const;
-const purposes = ["all", "commute", "school", "travel", "outdoor", "formal", "daily"] as const;
 
-type CategoryFilter = (typeof categories)[number];
 type WardrobeCategory = (typeof wardrobeCategories)[number];
-type SeasonFilter = (typeof seasons)[number];
-type PurposeFilter = (typeof purposes)[number];
 
 const accordionLayout = {
   duration: 180,
@@ -39,9 +38,9 @@ export function WardrobePresetScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const [query, setQuery] = React.useState("");
-  const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>("all");
-  const [seasonFilter, setSeasonFilter] = React.useState<SeasonFilter>("all");
-  const [purposeFilter, setPurposeFilter] = React.useState<PurposeFilter>("all");
+  const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
+  const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
+  const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
   const [previewId, setPreviewId] = React.useState(selectedWardrobeItemId || wardrobeItems[0]?.id || "");
   const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
   const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(false);
@@ -116,26 +115,14 @@ export function WardrobePresetScreen({
       </View>
 
       <Section title="필터" caption="아이템·계절·목적 기준" accent="sky">
-        <View style={styles.filterStack}>
-          <FilterRow
-            values={categories}
-            activeValue={categoryFilter}
-            onSelect={(value) => setCategoryFilter(value as CategoryFilter)}
-            renderLabel={(value) => (value === "all" ? "전체" : getWardrobeCategoryLabel(value))}
-          />
-          <FilterRow
-            values={seasons}
-            activeValue={seasonFilter}
-            onSelect={(value) => setSeasonFilter(value as SeasonFilter)}
-            renderLabel={(value) => (value === "all" ? "계절 전체" : formatOutfitTags([value]))}
-          />
-          <FilterRow
-            values={purposes}
-            activeValue={purposeFilter}
-            onSelect={(value) => setPurposeFilter(value as PurposeFilter)}
-            renderLabel={(value) => (value === "all" ? "목적 전체" : getOutfitTagLabel(value))}
-          />
-        </View>
+        <WardrobeFilterControls
+          categoryFilter={categoryFilter}
+          seasonFilter={seasonFilter}
+          purposeFilter={purposeFilter}
+          onCategoryChange={setCategoryFilter}
+          onSeasonChange={setSeasonFilter}
+          onPurposeChange={setPurposeFilter}
+        />
       </Section>
 
       {previewItem ? (
@@ -375,9 +362,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     padding: 0,
-  },
-  filterStack: {
-    gap: spacing.sm,
   },
   copy: {
     flex: 1,

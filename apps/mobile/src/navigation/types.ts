@@ -150,6 +150,7 @@ export type P0ScreenProps = {
   onSendTestNotification: (route?: P0RouteId) => void;
   onRefreshWeather: () => void;
   onRequireAccount: (reason: GateReason, returnTo: AccountGateReturnRouteId) => void;
+  onDismissAccountGateResult: () => void;
   onRequestPermissionGate: (reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => void;
   onSignOutAccount: () => void;
   onDeleteAccount: () => Promise<void>;

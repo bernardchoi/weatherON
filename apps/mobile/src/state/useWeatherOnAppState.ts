@@ -1565,6 +1565,10 @@ export function useWeatherOnAppState() {
     startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined);
   };
 
+  const dismissAccountGateResult = useCallback(() => {
+    setAccountGateResult(null);
+  }, []);
+
   const completeAccountAction = (pendingGate: AccountGateState | null) => {
     if (!pendingGate) return;
     if (pendingGate.reason === "save-outfit") setOutfitSaved(true);
@@ -1816,6 +1820,7 @@ export function useWeatherOnAppState() {
     permissionReady,
     outfitSaved,
     accountGateResult,
+    dismissAccountGateResult,
     permissionGateResult,
     gate,
     permissionGate,

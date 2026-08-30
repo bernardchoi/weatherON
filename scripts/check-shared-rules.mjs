@@ -333,6 +333,7 @@ await writeFile(
     const { fallbackTravelEstimateClient } = await import("../apps/mobile/src/providers/travelEstimateClient.ts");
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
+    const { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } = await import("../apps/mobile/src/utils/outfitSaveCompletion.ts");
     const { isNightAtWeatherTime } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
     const {
       buildUmbrellaRainSignals,
@@ -666,6 +667,14 @@ await writeFile(
       hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
       staleHiroshimaMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-tokyo"),
       rainNotifications: rainDemo.notifications,
+      outfitSaveCompletionDurationMs,
+      outfitSaveCompletionOnTransition: shouldShowOutfitSaveCompletion(false, true, null),
+      outfitSaveCompletionAfterAccountFlow: shouldShowOutfitSaveCompletion(true, true, {
+        returnTo: "C4",
+        pendingAction: "save-outfit",
+        message: "코디 저장 완료",
+      }),
+      outfitSaveCompletionForPersistedSave: shouldShowOutfitSaveCompletion(true, true, null),
       seoulSummerNight: isNightAtWeatherTime("2026-08-23T22:00", {
         coordinate: { latitude: 37.5446, longitude: 127.0559 },
         timeZone: "Asia/Seoul",
@@ -916,6 +925,10 @@ assert.ok(demoResults.hiroshimaLocalMinutes >= 10 && demoResults.hiroshimaLocalM
 assert.equal(demoResults.hiroshimaToSeoulMinutes, undefined);
 assert.equal(demoResults.staleHiroshimaMinutes, undefined);
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
+assert.equal(demoResults.outfitSaveCompletionDurationMs, 3_000);
+assert.equal(demoResults.outfitSaveCompletionOnTransition, true);
+assert.equal(demoResults.outfitSaveCompletionAfterAccountFlow, true);
+assert.equal(demoResults.outfitSaveCompletionForPersistedSave, false);
 assert.equal(demoResults.seoulSummerNight, true);
 assert.equal(demoResults.seoulSummerDay, false);
 assert.equal(demoResults.seoulWinterAfterSunset, true);
