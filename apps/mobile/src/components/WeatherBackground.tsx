@@ -26,12 +26,13 @@ type Props = {
   // "scene": 그라디언트 배경 + 전체 화면 파티클(카드 뒤에 깔림).
   // "overlay": 배경 없이 옅은 파티클만 — 카드 위에 얹어 iOS 날씨앱처럼 "비가 화면 앞을 지나가는" 느낌을 준다.
   variant?: "scene" | "overlay";
+  subtle?: boolean;
 };
 
 // iOS 27 날씨앱처럼 날씨 모션이 화면 전체를 채우도록, 파티클(비·눈·별)을 상단 1/3이 아니라
 // 화면 전체 높이에 걸쳐 떨어뜨린다. 카드가 불투명이라 카드 뒤 파티클은 카드 사이 여백에서만 보이고,
 // 추가로 variant="overlay" 레이어를 카드 위에 얹으면 비가 UI 앞을 가로지르는 것처럼 보인다.
-export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, variant = "scene" }: Props) {
+export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, variant = "scene", subtle = false }: Props) {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const isNight = useIsNightHour();
   const enabled = useAnimationEnabled();
@@ -52,15 +53,15 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <GradientBackdrop colors={gradientColors} windowWidth={windowWidth} />
+      <GradientBackdrop colors={gradientColors} windowWidth={windowWidth} subtle={subtle} />
       <View style={StyleSheet.absoluteFill}>
         {motionState === "clear" ? <GlowPulseLayer color={theme.gold} enabled={enabled} /> : null}
         {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.55} enabled={enabled} /> : null}
-        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={48} enabled={enabled} /> : null}
+        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={subtle ? 16 : 48} enabled={enabled} /> : null}
         {motionState === "storm" ? (
           <>
-            <RainDropsLayer height={fullBand} color={theme.sky} count={64} enabled={enabled} intense />
-            <LightningFlashLayer enabled={enabled} />
+            <RainDropsLayer height={fullBand} color={theme.sky} count={subtle ? 24 : 64} enabled={enabled} intense />
+            {!subtle ? <LightningFlashLayer enabled={enabled} /> : null}
           </>
         ) : null}
         {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={32} enabled={enabled} /> : null}
@@ -70,14 +71,16 @@ export const WeatherBackground = React.memo(function WeatherBackground({ conditi
   );
 });
 
-function GradientBackdrop({ colors, windowWidth }: { colors: [string, string, string]; windowWidth: number }) {
+function GradientBackdrop({ colors, windowWidth, subtle }: { colors: [string, string, string]; windowWidth: number; subtle: boolean }) {
   const isNarrowScene = windowWidth <= 390;
   const largeOrbSize = isNarrowScene ? Math.max(220, Math.min(300, windowWidth * 0.76)) : 420;
   const smallOrbSize = isNarrowScene ? Math.max(190, Math.min(260, windowWidth * 0.66)) : 360;
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: colors[1] }]}>
-      <View style={[StyleSheet.absoluteFill, styles.gradientTop, { backgroundColor: colors[0] }]} />
-      <View style={[StyleSheet.absoluteFill, styles.gradientBottom, { backgroundColor: colors[2] }]} />
+      {!subtle ? <>
+        <View style={[StyleSheet.absoluteFill, styles.gradientTop, { backgroundColor: colors[0] }]} />
+        <View style={[StyleSheet.absoluteFill, styles.gradientBottom, { backgroundColor: colors[2] }]} />
+      </> : null}
       <View style={[styles.gradientOrb, styles.gradientOrbLarge, { backgroundColor: colors[0], width: largeOrbSize, height: largeOrbSize, opacity: isNarrowScene ? 0.06 : 0.16 }]} />
       <View style={[styles.gradientOrb, styles.gradientOrbSmall, { backgroundColor: colors[2], width: smallOrbSize, height: smallOrbSize, opacity: isNarrowScene ? 0.05 : 0.13 }]} />
     </View>
