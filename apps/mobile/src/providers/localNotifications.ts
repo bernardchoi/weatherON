@@ -67,7 +67,16 @@ export async function checkLocalNotificationPermission(): Promise<LocalNotificat
   };
 }
 
-export async function syncLocalWeatherNotifications(options: {
+let notificationSyncQueue: Promise<unknown> = Promise.resolve();
+
+export function syncLocalWeatherNotifications(options: Parameters<typeof syncLocalWeatherNotificationsNow>[0]): Promise<LocalNotificationSyncResult> {
+  // 기기 알림 목록 전체를 갱신하므로 켜기·끄기를 호출 순서대로 완료한다.
+  const run = notificationSyncQueue.then(() => syncLocalWeatherNotificationsNow(options));
+  notificationSyncQueue = run.catch(() => {});
+  return run;
+}
+
+async function syncLocalWeatherNotificationsNow(options: {
   enabled: boolean;
   notifications: LocalNotificationInput[];
   reducedInterruptions?: boolean;
@@ -139,7 +148,7 @@ export async function syncLocalWeatherNotifications(options: {
     return !preservedIdentifiers.has(getSmartNotificationIdentifier(item));
   });
 
-  await Promise.all(
+  const scheduledResults = await Promise.allSettled(
     notificationsToSchedule.map((item) =>
       Notifications.scheduleNotificationAsync({
         identifier: getSmartNotificationIdentifier(item),
@@ -158,6 +167,8 @@ export async function syncLocalWeatherNotifications(options: {
       }),
     ),
   );
+  const failedSchedule = scheduledResults.find((result) => result.status === "rejected");
+  if (failedSchedule?.status === "rejected") throw failedSchedule.reason;
   const newlyScheduledDeliveryRecords = Object.fromEntries(
     notificationsToSchedule.flatMap((item) => (item.deliveryKey ? [[item.deliveryKey, item.scheduledAt!]] : [])),
   );
@@ -296,7 +307,7 @@ async function configureNotifications(Notifications: ExpoNotificationsModule) {
 
 async function cancelSmartScheduledNotifications(Notifications: ExpoNotificationsModule, preservedIdentifiers = new Set<string>()) {
   const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(
+  const cancelledResults = await Promise.allSettled(
     scheduledNotifications
       .filter(
         (notification) =>
@@ -304,6 +315,8 @@ async function cancelSmartScheduledNotifications(Notifications: ExpoNotification
       )
       .map((notification) => Notifications.cancelScheduledNotificationAsync(notification.identifier)),
   );
+  const failedCancel = cancelledResults.find((result) => result.status === "rejected");
+  if (failedCancel?.status === "rejected") throw failedCancel.reason;
 }
 
 function getSmartNotificationIdentifier(item: LocalNotificationInput): string {

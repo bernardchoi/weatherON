@@ -7,10 +7,10 @@ const navigatorSource = readFileSync("apps/mobile/src/navigation/AppNavigator.ts
 const stateSource = readFileSync("apps/mobile/src/state/useWeatherOnAppState.ts", "utf8");
 
 assert.match(appSource, /SplashScreen\.preventAutoHideAsync\(\)/u);
-assert.match(navigatorSource, /if \(!appState\.appStateHydrated\) return;[\s\S]*SplashScreen\.hideAsync\(\)/u);
+assert.match(navigatorSource, /if \(!appState\.appStateHydrated && !appState\.storageLoadError\) return;[\s\S]*SplashScreen\.hideAsync\(\)/u);
 
 const localRestoreStart = stateSource.indexOf("Promise.all([\n      readPersistedWeatherProviderResult");
-const localRestoreEnd = stateSource.indexOf("  }, []);", localRestoreStart);
+const localRestoreEnd = stateSource.indexOf("  }, [storageRetryTick]);", localRestoreStart);
 assert.ok(localRestoreStart >= 0 && localRestoreEnd > localRestoreStart, "local restore effect is missing");
 const localRestoreEffect = stateSource.slice(localRestoreStart, localRestoreEnd);
 assert.doesNotMatch(localRestoreEffect, /restoreAccountSession/u);
@@ -29,7 +29,7 @@ assert.match(storyboard, /firstAttribute="centerX"/u);
 assert.match(storyboard, /firstAttribute="centerY"/u);
 const images = JSON.parse(readFileSync("apps/mobile/ios/WeatherON/Images.xcassets/SplashScreenLogo.imageset/Contents.json", "utf8")).images;
 assert.ok(images.some((image) => image.appearances?.some((appearance) => appearance.value === "dark")));
-assert.match(navigatorSource, /if \(!launchReady\) return/u);
+assert.match(navigatorSource, /if \(!launchReady && !appState\.storageLoadError\) return/u);
 
 // Run the actual launch effect to verify readiness, accessibility and cancelled transitions.
 const splashSource = ts.createSourceFile("LaunchSplash.tsx", readFileSync("apps/mobile/src/components/LaunchSplash.tsx", "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);

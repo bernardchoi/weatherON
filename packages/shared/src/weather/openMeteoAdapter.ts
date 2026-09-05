@@ -17,6 +17,7 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     locationId: options.locationId,
     locationName: options.locationName,
     countryCode: options.countryCode,
+    timezone: options.timezone,
     observedAt: options.observedAt ?? current.time ?? new Date(0).toISOString(),
     current: {
       tempC: current.temperature_2m ?? hourly[0]?.tempC ?? 0,

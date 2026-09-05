@@ -247,6 +247,7 @@ async function fetchOpenMeteoSnapshot(
     timezone: location.timezone,
   });
   return enhanceAirQuality(client, location, normalizeOpenMeteoWeather(payload, {
+    timezone: location.timezone,
     locationId: location.locationId,
     locationName: location.locationName,
     countryCode: location.countryCode,

@@ -141,6 +141,7 @@ import {
   readPersistedWeatherProviderResult,
   saveNotificationState,
   savePersistedAppState,
+  type PersistedAppState,
   savePersistedWeatherProviderResult,
   shouldKeepPersistedWeatherResult,
 } from "./persistedAppState";
@@ -192,6 +193,10 @@ function isOverlayReturnRouteId(value: AppRouteId): value is OverlayReturnRouteI
 export function useWeatherOnAppState() {
   const [route, setRoute] = useState<AppRouteId>("O1");
   const [appStateHydrated, setAppStateHydrated] = useState(false);
+  const [storageLoadError, setStorageLoadError] = useState(false);
+  const [storageRetryTick, setStorageRetryTick] = useState(0);
+  const persistedStateRef = useRef<PersistedAppState | null>(null);
+  const photoSaveInFlightRef = useRef<Promise<void> | null>(null);
   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
@@ -513,14 +518,19 @@ export function useWeatherOnAppState() {
         setManualWeatherLocation(persistedState.manualWeatherLocation);
         setRoute(persistedState.onboardingCompleted ? "H1" : "O1");
       })
-      .finally(() => {
-        if (active) setAppStateHydrated(true);
+      .then(() => {
+        if (!active) return;
+        setStorageLoadError(false);
+        setAppStateHydrated(true);
+      })
+      .catch(() => {
+        if (active) setStorageLoadError(true);
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [storageRetryTick]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -855,42 +865,46 @@ export function useWeatherOnAppState() {
     };
   }, [alertPreferences, appStateHydrated, permissionReady, smartCareEnabled, state.notifications]);
 
+  persistedStateRef.current = {
+    onboardingCompleted,
+    smartCareEnabled,
+    accountLinked,
+    termsRequiredAccepted,
+    locationReady,
+    permissionReady,
+    outfitSaved,
+    styleProfileSaved,
+    styleGender,
+    ageBand,
+    fitPreference,
+    selectedStyles,
+    smartCareScenario,
+    wardrobeOwnedItemIds,
+    photoWardrobeItems,
+    selectedWardrobeItemId,
+    savedDestinations,
+    selectedDestinationPlace,
+    previewDestinationCareEnabled,
+    previewDestinationAlertCondition,
+    previewDestinationSchedulePreference,
+    previewDestinationTravelEstimate,
+    weatherLocationMode,
+    manualWeatherLocation,
+    temperatureUnit,
+    distanceUnit,
+    themeMode,
+    reducedTransparency,
+    dynamicColorEnabled,
+    adConsentMode,
+    readNotificationIds,
+    notificationHistory,
+    alertPreferences,
+  };
+
   useEffect(() => {
-    if (!appStateHydrated) return;
-    savePersistedAppState({
-      onboardingCompleted,
-      smartCareEnabled,
-      accountLinked,
-      termsRequiredAccepted,
-      locationReady,
-      permissionReady,
-      outfitSaved,
-      styleProfileSaved,
-      styleGender,
-      ageBand,
-      fitPreference,
-      selectedStyles,
-      smartCareScenario,
-      wardrobeOwnedItemIds,
-      photoWardrobeItems,
-      selectedWardrobeItemId,
-      savedDestinations,
-      selectedDestinationPlace,
-      previewDestinationCareEnabled,
-      previewDestinationAlertCondition,
-      previewDestinationSchedulePreference,
-      previewDestinationTravelEstimate,
-      weatherLocationMode,
-      manualWeatherLocation,
-      temperatureUnit,
-      distanceUnit,
-      themeMode,
-      reducedTransparency,
-      dynamicColorEnabled,
-      adConsentMode,
-      readNotificationIds,
-      notificationHistory,
-      alertPreferences,
+    if (!appStateHydrated || photoSaveInFlightRef.current) return;
+    void savePersistedAppState(persistedStateRef.current!).catch(() => {
+      // 기존 트랜잭션은 보존하며, 다음 상태 변경 때 다시 저장한다.
     });
   }, [
     accountLinked,
@@ -1093,7 +1107,8 @@ export function useWeatherOnAppState() {
   const signOutAccount = useCallback(() => {
     setAccountAuthStatus("signing-out");
     setAccountAuthMessage(null);
-    void signOutAccountSession().finally(() => {
+    void signOutAccountSession().finally(async () => {
+      await photoSaveInFlightRef.current?.catch(() => {});
       setAccountLinked(false);
       setAccountProfile(null);
       setTermsRequiredAccepted(false);
@@ -1101,7 +1116,7 @@ export function useWeatherOnAppState() {
       setSavedDestinations([]);
       setRecentlyRemovedDestination(null);
       setWardrobeOwnedItemIds([]);
-      removePersistedWardrobePhotos(photoWardrobeItems.map((item) => item.imageUrl));
+      removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
       setPhotoWardrobeItems([]);
       setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
       setRecentlyRemovedWardrobeItemId(null);
@@ -1109,7 +1124,7 @@ export function useWeatherOnAppState() {
       setAccountAuthStatus("idle");
       setRoute("M1");
     });
-  }, [photoWardrobeItems]);
+  }, []);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1142,27 +1157,42 @@ export function useWeatherOnAppState() {
     setWardrobeOwnedItemIds((current) => current.filter((id) => id !== itemId));
   }, []);
 
-  const savePhotoWardrobeItem = useCallback((item: WardrobeItem) => {
-    if (item.source !== "photo") return;
-    const existingItem = photoWardrobeItems.find((currentItem) => currentItem.id === item.id);
+  const savePhotoWardrobeItem = useCallback(async (item: WardrobeItem) => {
+    if (item.source !== "photo" || !appStateHydrated || photoSaveInFlightRef.current) {
+      throw new Error("사진을 저장할 수 없어요. 다시 시도해 주세요.");
+    }
+    const current = persistedStateRef.current!;
+    const existingItem = current.photoWardrobeItems.find((entry) => entry.id === item.id);
     const imageChanged = !existingItem || existingItem.imageUrl !== item.imageUrl;
     if (
       Platform.OS === "ios" &&
       imageChanged &&
       !consumePersistedWardrobePhotoApproval(item.imageUrl, item.photoPolicyVersion, item.photoDigest)
-    ) return;
-    setPhotoWardrobeItems((current) => {
-      const exists = current.some((currentItem) => currentItem.id === item.id);
-      const next = exists
-        ? current.map((currentItem) => currentItem.id === item.id ? { ...item, owned: true } : currentItem)
-        : [{ ...item, owned: true }, ...current];
-      return next.slice(0, 120);
+    ) throw new Error("사진 확인을 마친 뒤 다시 저장해 주세요.");
+    const nextItems = (existingItem
+      ? current.photoWardrobeItems.map((entry) => entry.id === item.id ? { ...item, owned: true } : entry)
+      : [{ ...item, owned: true }, ...current.photoWardrobeItems]).slice(0, 120);
+    const nextOwnedIds = current.wardrobeOwnedItemIds.includes(item.id)
+      ? current.wardrobeOwnedItemIds : [item.id, ...current.wardrobeOwnedItemIds];
+    const save = savePersistedAppState({
+      ...current,
+      photoWardrobeItems: nextItems,
+      wardrobeOwnedItemIds: nextOwnedIds,
+      selectedWardrobeItemId: item.id,
     });
-    setWardrobeOwnedItemIds((current) => current.includes(item.id) ? current : [item.id, ...current]);
-    setSelectedWardrobeItemId(item.id);
-    setRecentlyRemovedWardrobeItemId(null);
-    setRoute("C2");
-  }, [photoWardrobeItems]);
+    photoSaveInFlightRef.current = save;
+    try {
+      await save;
+      persistedStateRef.current = { ...persistedStateRef.current!, photoWardrobeItems: nextItems, wardrobeOwnedItemIds: nextOwnedIds, selectedWardrobeItemId: item.id };
+      setPhotoWardrobeItems(nextItems);
+      setWardrobeOwnedItemIds((ids) => ids.includes(item.id) ? ids : [item.id, ...ids]);
+      setSelectedWardrobeItemId(item.id);
+      setRecentlyRemovedWardrobeItemId(null);
+      setRoute("C2");
+    } finally {
+      photoSaveInFlightRef.current = null;
+    }
+  }, [appStateHydrated]);
 
   const openWardrobeItem = useCallback((itemId: string) => {
     setSelectedWardrobeItemId(itemId);
@@ -1659,7 +1689,8 @@ export function useWeatherOnAppState() {
     setAccountAuthMessage(null);
     try {
       await deleteAccountSession();
-      removePersistedWardrobePhotos(photoWardrobeItems.map((item) => item.imageUrl));
+      await photoSaveInFlightRef.current?.catch(() => {});
+      removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
       setAccountLinked(false);
       setAccountProfile(null);
       setTermsRequiredAccepted(false);
@@ -1817,6 +1848,8 @@ export function useWeatherOnAppState() {
 
   return {
     appStateHydrated,
+    storageLoadError,
+    retryStorageLoad: () => setStorageRetryTick((value) => value + 1),
     route,
     styleProfileReturnRoute,
     overlayReturnRoutes,

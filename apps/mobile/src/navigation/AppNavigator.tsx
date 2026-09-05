@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
+import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
+import { AppButton } from "../components/AppButton";
 import { LaunchSplash } from "../components/LaunchSplash";
 import { ScreenTransition } from "../components/ScreenTransition";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
@@ -75,14 +76,14 @@ export function AppNavigator() {
   const appBackgroundColor = theme.background;
 
   useEffect(() => {
-    if (!appState.appStateHydrated) return;
-    if (!launchReady) return;
+    if (!appState.appStateHydrated && !appState.storageLoadError) return;
+    if (!launchReady && !appState.storageLoadError) return;
     let active = true;
     void SplashScreen.hideAsync().catch(() => {}).then(() => {
       if (active) setLaunchStarted(true);
     });
     return () => { active = false; };
-  }, [appState.appStateHydrated, launchReady]);
+  }, [appState.appStateHydrated, appState.storageLoadError, launchReady]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
@@ -239,6 +240,19 @@ export function AppNavigator() {
     onSignOutAccount: appState.signOutAccount,
     onDeleteAccount: appState.deleteAccount,
   };
+
+  if (appState.storageLoadError && !appState.appStateHydrated) {
+    return (
+      <AppThemeProvider theme={theme}>
+        <View style={{ flex: 1, justifyContent: "center", padding: 32, gap: 20, backgroundColor: theme.background }}>
+          <Text accessibilityRole="alert" style={{ color: theme.text, fontSize: 18 }}>
+            저장한 정보를 불러오지 못했어요. 기존 데이터는 유지돼요.
+          </Text>
+          <AppButton label="다시 불러오기" onPress={appState.retryStorageLoad} />
+        </View>
+      </AppThemeProvider>
+    );
+  }
 
   return (
     <AppThemeProvider theme={theme}>

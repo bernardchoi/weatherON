@@ -98,9 +98,9 @@ export function buildDemoStateFromWeatherResult(
     }),
     activeWeather,
     options.notificationNow ?? Date.now(),
-    // activeWeather가 목적지 날씨일 때(useDestinationWeather)도 그 지역 시간대를 써야
-    // 알림 예약 시각이 홈 지역 시간대로 잘못 계산되지 않는다.
-    getDefaultTimeZone(activeWeather.countryCode),
+    activeWeather.timezone
+      ?? (useDestinationWeather ? options.destination?.timezone : undefined)
+      ?? (activeWeather.countryCode === "GLOBAL" ? undefined : getDefaultTimeZone(activeWeather.countryCode)),
   );
   const destinationNotifications = hasDestination
     ? buildDestinationNotifications(activeWeather, weatherProviderResult.destination, {
@@ -393,8 +393,10 @@ function withScheduledNotificationTimes(
   notifications: NotificationRuleEvaluation[],
   weather: WeatherSnapshot,
   nowMs: number,
-  timeZone: string,
+  timeZone: string | undefined,
 ): NotificationRuleEvaluation[] {
+  // 이전 버전의 해외 캐시는 시간대가 없으므로 새 예보를 받기 전 예약을 보류한다.
+  if (!timeZone) return notifications.map((item) => ({ ...item, active: false, scheduledAt: undefined }));
   const rainEvent = getRainEvent(weather, nowMs, timeZone);
   return notifications.map((notification) => {
     if (notification.type === "routine") {

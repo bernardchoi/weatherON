@@ -102,6 +102,7 @@ type WeatherSnapshotRow = {
   location_name: string;
   country_code: string;
   observed_at: string;
+  timezone: string | null;
   temp_c: number;
   feels_like_c: number;
   condition: string;
@@ -157,21 +158,28 @@ const legacyStorageKeys = [
 let databasePromise: Promise<SQLiteDatabase | null> | null = null;
 let writeQueue: Promise<void> = Promise.resolve();
 
-export async function readAppValue<T>(key: string): Promise<T | null> {
+export async function readAppValue<T>(key: string, throwOnError = false): Promise<T | null> {
   const database = await getDatabase();
-  if (!database) return null;
+  if (!database) {
+    if (throwOnError) throw new Error("저장소를 열지 못했어요. 다시 시도해 주세요.");
+    return null;
+  }
 
   try {
     const value = await readStructuredValue(database, key);
     return value as T | null;
-  } catch {
+  } catch (error) {
+    if (throwOnError) throw error;
     return null;
   }
 }
 
-export async function writeAppValue<T>(key: string, value: T): Promise<void> {
+export async function writeAppValue<T>(key: string, value: T, throwOnError = false): Promise<void> {
   const database = await getDatabase();
-  if (!database) return;
+  if (!database) {
+    if (throwOnError) throw new Error("저장소를 열지 못했어요. 다시 시도해 주세요.");
+    return;
+  }
 
   // 저장은 DELETE 후 INSERT 다발로 이루어져, 동시 호출이 서로 끼어들면 키 충돌로 일부 행이
   // 조용히 유실될 수 있다. 큐로 직렬화하고, 중간 종료 시 부분 저장이 남지 않게 트랜잭션으로 묶는다.
@@ -183,14 +191,17 @@ export async function writeAppValue<T>(key: string, value: T): Promise<void> {
   writeQueue = run.catch(() => {});
   try {
     await run;
-  } catch {
-    // SQLite 저장 실패는 화면 상태를 막지 않는다.
+  } catch (error) {
+    if (throwOnError) throw error;
+    // 재생성 가능한 캐시 저장 실패는 화면 상태를 막지 않는다.
   }
 }
 
 async function getDatabase(): Promise<SQLiteDatabase | null> {
   databasePromise ??= openDatabase();
-  return databasePromise;
+  const database = await databasePromise;
+  if (!database) databasePromise = null;
+  return database;
 }
 
 async function openDatabase(): Promise<SQLiteDatabase | null> {
@@ -965,6 +976,7 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
     locationName: row.location_name,
     countryCode: row.country_code,
     observedAt: row.observed_at,
+    timezone: row.timezone ?? undefined,
     current: {
       tempC: row.temp_c,
       feelsLikeC: row.feels_like_c,
@@ -1006,8 +1018,8 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     `INSERT INTO weather_snapshots (
       role, seq, snapshot_id, location_id, location_name, country_code, observed_at,
       temp_c, feels_like_c, condition, precipitation_mm, rain_probability_pct, wind_ms, humidity_pct, uv_index, pm10, pm2_5,
-      source, stale, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      source, stale, updated_at, timezone
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     role,
     seq,
     textValue(snapshot.id) ?? null,
@@ -1028,6 +1040,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     textValue(snapshot.source) ?? "cache",
     boolValue(snapshot.stale) ? 1 : 0,
     now,
+    textValue(snapshot.timezone) ?? null,
   );
   for (const [index, item] of arrayValue(snapshot.hourly).entries()) {
     const hourly = objectRecord(item);
@@ -1065,6 +1078,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
 async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {
   const rows = await database.getAllAsync<TableInfoRow>("PRAGMA table_info(weather_snapshots)");
   const columns = new Set(rows.map((row) => row.name));
+  if (!columns.has("timezone")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN timezone TEXT");
   if (!columns.has("pm10")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm10 REAL");
   if (!columns.has("pm2_5")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm2_5 REAL");
 }

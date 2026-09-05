@@ -29,6 +29,7 @@ export type WeatherSnapshot = {
   locationName: string;
   countryCode: CountryCode;
   observedAt: string;
+  timezone?: string;
   current: {
     tempC: number;
     feelsLikeC: number;

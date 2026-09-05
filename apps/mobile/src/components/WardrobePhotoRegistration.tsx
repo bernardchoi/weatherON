@@ -46,7 +46,7 @@ export function WardrobePhotoRegistration({
   onCancel,
 }: {
   existingItem?: WardrobeItem;
-  onSave: (item: WardrobeItem) => void;
+  onSave: (item: WardrobeItem) => Promise<void>;
   onCancel: () => void;
 }) {
   const theme = useAppTheme();
@@ -153,7 +153,7 @@ export function WardrobePhotoRegistration({
             photoDigest: existingItem?.photoDigest,
             photoApprovedAt: existingItem?.photoApprovedAt,
           };
-      onSave({ id: itemId, source: "photo", ...draft, imageUrl, owned: true, ...approval });
+      await onSave({ id: itemId, source: "photo", ...draft, imageUrl, owned: true, ...approval });
       if (preparedPhoto && existingItem?.imageUrl && existingItem.imageUrl !== imageUrl) {
         removePersistedWardrobePhotos([existingItem.imageUrl]);
       }

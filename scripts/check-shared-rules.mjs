@@ -13,12 +13,14 @@ const providerBundle = join(outDir, "mobile-provider-check-bundle.mjs");
 const reactNativePlatformStub = {
   name: "react-native-platform-stub",
   setup(buildContext) {
-    buildContext.onResolve({ filter: /^react-native$/ }, () => ({
-      path: "react-native",
+    buildContext.onResolve({ filter: /^(react-native|expo-file-system)$/ }, (args) => ({
+      path: args.path,
       namespace: "weatheron-check",
     }));
-    buildContext.onLoad({ filter: /.*/, namespace: "weatheron-check" }, () => ({
-      contents: 'export const Platform = { OS: "android" };',
+    buildContext.onLoad({ filter: /.*/, namespace: "weatheron-check" }, (args) => ({
+      contents: args.path === "expo-file-system"
+        ? 'export const Paths = { document: { uri: "file:///check/Documents/" } };'
+        : 'export const Platform = { OS: "android" };',
       loader: "js",
     }));
   },

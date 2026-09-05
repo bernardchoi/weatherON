@@ -25,6 +25,7 @@ export function normalizeWeatherKitWeather(
     locationId: options.locationId,
     locationName: options.locationName,
     countryCode: options.countryCode,
+    timezone: options.timezone,
     observedAt,
     current: {
       tempC: current.temperature ?? hourly[0]?.tempC ?? 0,

@@ -81,12 +81,12 @@ export type PersistedNotificationState = {
 };
 
 export async function readPersistedAppState(): Promise<PersistedAppState | null> {
-  const value = await readAppValue<unknown>(appStateStorageKey);
+  const value = await readAppValue<unknown>(appStateStorageKey, true);
   return value ? normalizePersistedAppState(value) : null;
 }
 
 export function savePersistedAppState(state: PersistedAppState) {
-  void writeAppValue(appStateStorageKey, normalizePersistedAppState(state));
+  return writeAppValue(appStateStorageKey, normalizePersistedAppState(state), true);
 }
 
 export async function readPersistedWeatherProviderResult(
@@ -103,7 +103,7 @@ export function savePersistedWeatherProviderResult(result: WeatherProviderResult
 }
 
 export async function readPersistedNotificationState(): Promise<PersistedNotificationState> {
-  const value = await readAppValue<unknown>(notificationStateStorageKey);
+  const value = await readAppValue<unknown>(notificationStateStorageKey, true);
   return normalizeNotificationState(value);
 }
 
