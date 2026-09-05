@@ -93,34 +93,41 @@ private struct NavigationGlassSurface: View {
   var body: some View {
     GlassEffectContainer(spacing: 8) {
       ZStack {
+        // 겹친 glass 표면은 선택 캡슐의 경계를 흐리므로 dock은 얇은 받침만 사용함.
         Capsule()
-          .fill(Color.white.opacity(state.isDarkTheme ? 0.07 : 0.12))
-          .overlay(
-            Capsule()
-              .stroke(Color.white.opacity(state.isDarkTheme ? 0.3 : 0.58), lineWidth: 1)
-          )
-          .glassEffect(
-            .regular.tint(.white.opacity(state.isDarkTheme ? 0.11 : 0.08)),
-            in: Capsule()
-          )
+          .fill(Color.white.opacity(state.isDarkTheme ? 0.04 : 0.08))
 
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
           ForEach(0..<4, id: \.self) { index in
             Group {
               if index == state.activeIndex {
                 Capsule()
-                  .fill(Color.white.opacity(state.isDarkTheme ? 0.14 : 0.12))
-                  .overlay(
-                    Capsule()
-                      .stroke(Color.white.opacity(state.isDarkTheme ? 0.36 : 0.3), lineWidth: 1)
-                  )
+                  .fill(Color.white.opacity(state.isDarkTheme ? 0.08 : 0.04))
                   .glassEffect(
                     .regular
-                      .tint(.white.opacity(state.isDarkTheme ? 0.24 : 0.16))
+                      .tint(Color(red: 0.64, green: 0.83, blue: 1).opacity(state.isDarkTheme ? 0.2 : 0.1))
                       .interactive(),
                     in: Capsule()
                   )
                   .glassEffectID("active-tab", in: activeTabNamespace)
+                  // 반사 테두리는 glass 뒤가 아닌 앞에 놓아 밝은 단색 배경에서도 유지함.
+                  .overlay {
+                    Capsule()
+                      .strokeBorder(
+                        LinearGradient(
+                          colors: [
+                            .white.opacity(state.isDarkTheme ? 0.78 : 0.95),
+                            .white.opacity(0.16),
+                            Color(red: 0.38, green: 0.62, blue: 0.82).opacity(0.32),
+                            .white.opacity(state.isDarkTheme ? 0.4 : 0.7),
+                          ],
+                          startPoint: .topLeading,
+                          endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                      )
+                  }
+                  .shadow(color: .black.opacity(state.isDarkTheme ? 0.3 : 0.12), radius: 3, x: 0, y: 2)
               } else {
                 Color.clear
               }
@@ -134,6 +141,7 @@ private struct NavigationGlassSurface: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .environment(\.colorScheme, state.isDarkTheme ? .dark : .light)
     .animation(.spring(response: 0.42, dampingFraction: 0.82), value: state.activeIndex)
   }
 }
