@@ -6,6 +6,7 @@ import { Platform } from "react-native";
 import type { Purpose, Season, WardrobeCategory, WeatherTag } from "@weatheron/shared";
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
 import { AccountAuthError, requestAuthenticatedAccountJson } from "./accountAuth";
+import { resolveWardrobePhotoUri } from "../utils/wardrobePhotoUri";
 
 export const WARDROBE_PHOTO_POLICY_VERSION = "wardrobe-photo-ios-1";
 
@@ -161,8 +162,9 @@ export function removePersistedWardrobePhotos(imageUrls: string[]): void {
   if (Platform.OS === "web") return;
   for (const imageUrl of imageUrls) {
     try {
-      if (!imageUrl.startsWith(new Directory(Paths.document, "wardrobe-photos").uri)) continue;
-      const file = new File(imageUrl);
+      const uri = resolveWardrobePhotoUri(imageUrl, Paths.document.uri);
+      if (!uri.startsWith(`${new Directory(Paths.document, "wardrobe-photos").uri.replace(/\/$/u, "")}/`)) continue;
+      const file = new File(uri);
       if (file.exists) file.delete();
     } catch {
       // 사진 정리 실패가 로그아웃이나 화면 상태 초기화를 막지 않게 한다.

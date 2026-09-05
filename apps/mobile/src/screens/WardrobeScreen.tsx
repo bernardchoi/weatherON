@@ -38,7 +38,7 @@ export function WardrobeScreen({
 
   const ownedItems = wardrobeItems.filter((item) => item.owned);
   const removedItem = recentlyRemovedWardrobeItemId
-    ? wardrobeItems.find((item) => item.id === recentlyRemovedWardrobeItemId)
+    ? wardrobeItems.find((item) => item.id === recentlyRemovedWardrobeItemId && !item.owned)
     : undefined;
 
   const filteredItems = ownedItems.filter((item) => {

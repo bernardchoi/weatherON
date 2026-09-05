@@ -2,6 +2,7 @@
 // 저장소가 손상되거나 구버전 형식이어도 앱이 깨지지 않도록 모든 필드를 타입 가드로 걸러 읽는다.
 import { presetWardrobe, type PlaceSearchResult, type WardrobeItem } from "@weatheron/shared";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
+import { toStoredWardrobePhotoUri } from "../utils/wardrobePhotoUri";
 import type { OfficialSpecialAlert, WeatherProviderResult } from "../providers/weatherProvider";
 import { defaultSeoulWeatherLocation, type WeatherLocationPreset } from "../providers/weatherLocations";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
@@ -326,7 +327,7 @@ function normalizePhotoWardrobeItem(value: unknown): WardrobeItem | null {
     seasons: normalizedSeasons,
     purposes: normalizedPurposes,
     weatherTags: normalizedWeatherTags,
-    imageUrl: item.imageUrl.slice(0, 2_000),
+    imageUrl: toStoredWardrobePhotoUri(item.imageUrl).slice(0, 2_000),
     owned: true,
     photoPolicyVersion: typeof item.photoPolicyVersion === "string" ? item.photoPolicyVersion.slice(0, 80) : undefined,
     photoDigest: typeof item.photoDigest === "string" && /^[a-f0-9]{64}$/u.test(item.photoDigest) ? item.photoDigest : undefined,

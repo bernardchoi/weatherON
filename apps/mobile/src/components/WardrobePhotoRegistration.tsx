@@ -10,6 +10,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
+import { getOutfitImageSource } from "../assets";
 import {
   analyzeWardrobePhoto,
   isPermanentWardrobePhotoRejection,
@@ -191,7 +192,7 @@ export function WardrobePhotoRegistration({
       <Section title="옷 사진" caption="옷을 확인할 때만 사진을 보내요. WeatherON 서버에는 보관하지 않아요." accent="clear">
         {previewUri ? (
           <View style={[styles.photoFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <Image source={{ uri: previewUri }} style={styles.photo} resizeMode="contain" />
+            <Image source={getOutfitImageSource(previewUri)} style={styles.photo} resizeMode="contain" />
           </View>
         ) : (
           <View style={[styles.photoPlaceholder, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>

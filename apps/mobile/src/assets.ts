@@ -1,4 +1,6 @@
-import type { ImageSourcePropType } from "react-native";
+import { Platform, type ImageSourcePropType } from "react-native";
+import { Paths } from "expo-file-system";
+import { resolveWardrobePhotoUri } from "./utils/wardrobePhotoUri";
 
 export const brandAssets = {
   wordmarkDark: require("../../../assets/wordmark/wordmark-h-dark-preview.png"),
@@ -67,7 +69,8 @@ export function getOutfitImageSource(imageUrl?: string): ImageSourcePropType | u
   if (!imageUrl) return undefined;
   const bundledSource = outfitImageAssets[imageUrl];
   if (bundledSource) return bundledSource;
-  return /^(?:file|content|blob|data|https?):/iu.test(imageUrl) ? { uri: imageUrl } : undefined;
+  const uri = Platform.OS === "web" ? imageUrl : resolveWardrobePhotoUri(imageUrl, Paths.document.uri);
+  return /^(?:file|content|blob|data|https?):/iu.test(uri) ? { uri } : undefined;
 }
 
 export const placeImageAssets = {

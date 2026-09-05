@@ -1187,6 +1187,16 @@ export function useWeatherOnAppState() {
     setRecentlyRemovedWardrobeItemId(null);
   }, [recentlyRemovedWardrobeItemId]);
 
+  useEffect(() => {
+    if (!recentlyRemovedWardrobeItemId) return;
+    if (route !== "C2" || wardrobeOwnedItemIds.includes(recentlyRemovedWardrobeItemId)) {
+      setRecentlyRemovedWardrobeItemId(null);
+      return;
+    }
+    const timeout = setTimeout(() => setRecentlyRemovedWardrobeItemId(null), 5_000);
+    return () => clearTimeout(timeout);
+  }, [recentlyRemovedWardrobeItemId, route, wardrobeOwnedItemIds]);
+
   const saveStyleProfile = useCallback((returnTo: PermissionReturnRouteId = "O5") => {
     setStyleProfileSaved(true);
     setRoute(returnTo);
