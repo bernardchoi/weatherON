@@ -521,8 +521,13 @@ function getNotificationDeliveryCopy(
   smartCareEnabled: boolean,
   permissionReady: boolean,
 ) {
-  if (!smartCareEnabled || deliveryStatus.status === "cancelled") {
+  if (deliveryStatus.status === "cancelled") {
     return { statusLabel: "중지", countLabel: "예약 0건" };
+  }
+  if (!smartCareEnabled) {
+    return deliveryStatus.status === "verification-failed"
+      ? { statusLabel: "중지 확인 실패", countLabel: `남은 예약 ${deliveryStatus.scheduledCount}건` }
+      : { statusLabel: "중지 확인 중", countLabel: "기기 예약 확인 중" };
   }
   if (!permissionReady || deliveryStatus.status === "permission-required") {
     return { statusLabel: "권한 대기", countLabel: "예약 0건" };

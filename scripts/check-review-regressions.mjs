@@ -207,6 +207,21 @@ const offAfterFailure = local.syncLocalWeatherNotifications({ enabled: false, no
 scheduleRelease.resolve(); await rejected; await offAfterFailure;
 assert.equal(scheduled.size, 0);
 
+// A native cancellation that leaves requests behind must not be reported as zero pending.
+scheduled.set("weatheron:smart:test", { identifier: "weatheron:smart:test", content: {} });
+const cancelNotification = notifications.cancelScheduledNotificationAsync;
+notifications.cancelScheduledNotificationAsync = async () => {};
+const incompleteCancellation = await local.syncLocalWeatherNotifications({ enabled: false, notifications: [] });
+assert.equal(incompleteCancellation.status, "verification-failed");
+assert.equal(incompleteCancellation.scheduledCount, 1);
+notifications.cancelScheduledNotificationAsync = cancelNotification;
+await local.syncLocalWeatherNotifications({ enabled: false, notifications: [] });
+const deliveryCopy = callback(expression("apps/mobile/src/screens/AlertSettingsScreen.tsx", (node) => ts.isFunctionDeclaration(node)
+  && node.name?.text === "getNotificationDeliveryCopy"), {});
+assert.equal(deliveryCopy(incompleteCancellation, false, true).statusLabel, "중지 확인 실패");
+assert.equal(deliveryCopy({ status: "scheduled", scheduledCount: 2 }, false, true).statusLabel, "중지 확인 중");
+assert.equal(deliveryCopy({ status: "cancelled", scheduledCount: 0 }, false, true).countLabel, "예약 0건");
+
 // Exercise real adapters and notification rules for current/destination weather, summer/winter and persisted cache.
 const sharedModule = { exports: {} };
 const sharedCode = buildSync({ entryPoints: ["packages/shared/src/index.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text;

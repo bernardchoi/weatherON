@@ -7,6 +7,14 @@ node_modules/
 apps/*/.expo/
 apps/mobile/.npm-cache/
 apps/mobile/.tmp-check/
+.tmp-check/
+.wrangler/
+.claude/
+
+# Local credentials are supplied through EAS environment variables instead.
+.env
+.env.local
+.env.*.local
 
 # Local build outputs
 dist/

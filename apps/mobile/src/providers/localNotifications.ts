@@ -87,7 +87,9 @@ async function syncLocalWeatherNotificationsNow(options: {
 
   if (!options.enabled) {
     await cancelSmartScheduledNotifications(Notifications);
-    return { status: "cancelled", scheduledCount: 0 };
+    const remaining = await Notifications.getAllScheduledNotificationsAsync();
+    const scheduledCount = remaining.filter((item) => item.identifier.startsWith(smartNotificationIdentifierPrefix)).length;
+    return { status: scheduledCount === 0 ? "cancelled" : "verification-failed", scheduledCount };
   }
 
   const permission = await Notifications.getPermissionsAsync();

@@ -855,6 +855,7 @@ export function useWeatherOnAppState() {
       reducedInterruptions: alertPreferences.quietHours,
     })
       .then((result) => {
+        if (__DEV__) console.info("[WeatherON notification sync]", JSON.stringify(result));
         if (active) setNotificationDeliveryStatus(result);
       })
       .catch(() => {

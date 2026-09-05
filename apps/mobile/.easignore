@@ -3,6 +3,9 @@
 .git/
 node_modules/
 .expo/
+.env
+.env.local
+.env.*.local
 
 # Local web/export outputs
 dist/
