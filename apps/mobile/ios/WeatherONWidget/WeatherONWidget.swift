@@ -366,11 +366,8 @@ private extension WeatherONLocationSnapshot {
   }
 
   private func date(for hourlyTime: String, relativeTo referenceDate: Date) -> Date {
-    if let date = snapshotDateFormatter.date(from: hourlyTime)
-      ?? fallbackSnapshotDateFormatter.date(from: hourlyTime)
-    {
-      return date
-    }
+    // Hourly snapshots carry forecast wall time, including older snapshots with a Z suffix.
+    let wallTime = String(hourlyTime.prefix(19))
 
     let localDateFormats = [
       "yyyy-MM-dd'T'HH:mm:ss",
@@ -384,7 +381,7 @@ private extension WeatherONLocationSnapshot {
       formatter.calendar = Calendar(identifier: .gregorian)
       formatter.timeZone = resolvedTimeZone
       formatter.dateFormat = format
-      if let date = formatter.date(from: hourlyTime) {
+      if let date = formatter.date(from: wallTime) {
         return date
       }
     }
@@ -554,14 +551,18 @@ private enum WeatherONTimelineFactory {
 
   static func timeline(selectionID: String?) -> Timeline<WeatherONEntry> {
     let now = Date()
-    let refresh = Calendar.current.date(byAdding: .minute, value: 90, to: now) ?? now.addingTimeInterval(5_400)
+    let refresh = now.addingTimeInterval(90 * 60)
     let loaded = WeatherONStoreReader.load()
     let location = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
-    var entryDates = (0..<3).map { phase in
+    var entryDates = (0...48).map { phase in
       Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
     }
-    if let transition = location.nextSolarTransition(after: now), transition <= refresh {
+    // Keep day/night changes scheduled even when iOS delays the requested refresh.
+    var solarCursor = now
+    let horizon = now.addingTimeInterval(24 * 3_600)
+    while let transition = location.nextSolarTransition(after: solarCursor), transition <= horizon {
       entryDates.append(transition)
+      solarCursor = transition.addingTimeInterval(1)
     }
     entryDates.sort()
     let entries = entryDates.enumerated().map { phase, date in
@@ -1289,7 +1290,7 @@ private func weatherSymbol(_ condition: String, isNight: Bool = false) -> String
   case "snow": return "cloud.snow.fill"
   case "storm": return "cloud.bolt.rain.fill"
   case "dust": return "aqi.medium"
-  default: return "cloud.sun.fill"
+  default: return isNight ? "cloud.moon.fill" : "cloud.sun.fill"
   }
 }
 

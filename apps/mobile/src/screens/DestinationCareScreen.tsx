@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -121,11 +121,19 @@ export function DestinationCareScreen({
   useEffect(() => {
     if (Platform.OS !== "ios") return;
     let active = true;
-    void getDepartureLiveActivityStatus().then((status) => {
-      if (active) setDepartureActivityStatus(status);
-    });
+    const refresh = () => {
+      if (AppState.currentState !== "active") return;
+      void getDepartureLiveActivityStatus().then((status) => {
+        if (active) setDepartureActivityStatus(status);
+      });
+    };
+    refresh();
+    const timer = setInterval(refresh, 10_000);
+    const subscription = AppState.addEventListener("change", refresh);
     return () => {
       active = false;
+      clearInterval(timer);
+      subscription.remove();
     };
   }, [selectedDestinationDepartureAt, selectedDestinationPlace.id]);
 
@@ -279,7 +287,7 @@ export function DestinationCareScreen({
                   style={[styles.liveActivityBody, { color: theme.muted }]}
                 >
                   {departureActivityMatchesDestination
-                    ? `${destinationName} · ${departureTime} 출발까지 잠금 화면과 Dynamic Island에 자동 표시 중`
+                    ? `${destinationName} · ${departureTime} 출발까지 표시 중${departureActivityStatus.automaticEndScheduled ? " · 자동 종료 연결됨" : " · 자동 종료 연결 대기 중. 잠시 앱을 열어 주세요"}`
                     : destinationCareEnabled && routeTimingReady
                       ? `${departureTime} 권장 출발 ${departureLiveActivityAutoLeadMinutes}분 전 구간에 앱 활성화 시 자동 표시 · ${departureWeatherGuidance}`
                       : destinationCareEnabled

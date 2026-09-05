@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -40,7 +40,10 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
 
   React.useEffect(() => {
     const timer = setInterval(() => setCurrentTimeMs(Date.now()), 5 * 60 * 1000);
-    return () => clearInterval(timer);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setCurrentTimeMs(Date.now());
+    });
+    return () => { clearInterval(timer); subscription.remove(); };
   }, []);
 
   return (

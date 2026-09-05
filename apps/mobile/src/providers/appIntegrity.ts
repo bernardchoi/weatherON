@@ -13,6 +13,7 @@ const protectedPurposes = new Set([
   "POST /account/terms",
   "POST /account/delete",
   "POST /wardrobe/analyze",
+  "POST /live-activities/departure",
 ]);
 
 type IntegrityChallenge = {

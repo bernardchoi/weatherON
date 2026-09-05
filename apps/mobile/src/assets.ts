@@ -170,6 +170,7 @@ export const uiIconAssets = {
   depart: require("../../../assets/ui-icons/tab-depart.png"),
   clock: require("../../../assets/ui-icons/card-clock.png"),
   rain: require("../../../assets/ui-icons/card-rain.png"),
+  cloud: require("../../../assets/ui-icons/card-cloud.png"),
   clearNight: require("../../../assets/ui-icons/card-clear-night.png"),
   drop: require("../../../assets/ui-icons/card-drop.png"),
   humidity: require("../../../assets/ui-icons/card-humidity.png"),

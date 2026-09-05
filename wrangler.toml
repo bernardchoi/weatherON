@@ -37,3 +37,19 @@ namespace_id = "20260830"
 [ratelimits.simple]
 limit = 12
 period = 60
+
+[[durable_objects.bindings]]
+name = "DEPARTURE_END"
+class_name = "DepartureEndScheduler"
+
+[[migrations]]
+tag = "departure-end-v1"
+new_sqlite_classes = ["DepartureEndScheduler"]
+
+[[ratelimits]]
+name = "DEPARTURE_PUSH_RATE_LIMITER"
+namespace_id = "20260905"
+
+[ratelimits.simple]
+limit = 12
+period = 60

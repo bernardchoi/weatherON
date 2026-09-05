@@ -54,6 +54,7 @@
       "version": "1.0.0",
       "supportsTablet": false,
       "usesAppleSignIn": true,
+      "entitlements": { "aps-environment": "development" },
       "bundleIdentifier": "com.weatheron.mobile",
       "icon": {
         "light": "../../assets/icon/icon-light-v2-1024.png",

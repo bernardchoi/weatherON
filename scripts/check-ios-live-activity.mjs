@@ -26,7 +26,7 @@ for (const field of ["destinationName", "departureAt", "departureTimeLabel", "gu
 
 assert.match(nativeModule, /ActivityAuthorizationInfo\(\)\.areActivitiesEnabled/u);
 assert.match(nativeModule, /AsyncFunction\("startDepartureActivity"\)/u);
-assert.match(nativeModule, /pushType: nil/u);
+assert.match(nativeModule, /pushType: \.token/u);
 assert.match(nativeModule, /staleDate: departureAt/u);
 assert.match(nativeModule, /dismissalPolicy: \.immediate/u);
 assert.match(nativeModule, /endExpiredDepartureActivities/u);
@@ -63,7 +63,7 @@ assert.match(widgetBundle, /suggestedEntities\(\)/u);
 assert.match(widgetBundle, /store\.destinations\.map/u);
 assert.match(widgetBundle, /\.contentMarginsDisabled\(\)/u);
 assert.match(widgetBundle, /private enum WeatherONSolarClock/u);
-assert.match(widgetBundle, /nextSolarTransition\(after: now\)/u);
+assert.match(widgetBundle, /nextSolarTransition\(after: solarCursor\)/u);
 assert.match(widgetBundle, /isNight \? "moon\.stars\.fill" : "sun\.max\.fill"/u);
 assert.match(widgetBundle, /location\.isNight\(for: hour\.time, relativeTo: referenceDate\)/u);
 assert.match(widgetBundle, /WeatherONWidgetPalette\(colorScheme: colorScheme, condition: entry\.location\.condition, isNight: isNight\)/u);

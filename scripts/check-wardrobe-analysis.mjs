@@ -50,7 +50,8 @@ assert.deepEqual(accepted.result.payload.analysis, {
   reason: "얇은 겉옷으로 보임",
 });
 assert.equal(accepted.aiCalls.length, 1);
-assert.match(accepted.aiCalls[0].input.question, /Do not make the final product allow or reject decision/u);
+assert.equal(accepted.aiCalls[0].input.stream, false, "Analysis needs a complete answer, not the model's default stream");
+assert.match(accepted.aiCalls[0].input.messages[0].content[0].text, /Do not make the final product allow or reject decision/u);
 assert.equal(accepted.integrityBodies[0], JSON.stringify({ imageBase64, mimeType: "image/jpeg" }));
 
 const pairOfShoes = await run([{ ...acceptedFact, itemCount: "pair", pairKind: "shoes", category: "shoes", name: "운동화 한 켤레" }]);
@@ -120,7 +121,7 @@ const rejectedObject = await run([nonClothing, nonClothing]);
 assert.equal(rejectedObject.result.status, 422);
 assert.equal(rejectedObject.result.payload.error, "photo_not_wardrobe");
 assert.equal(rejectedObject.aiCalls.length, 2);
-assert.match(rejectedObject.aiCalls[1].input.question, /Independently verify/u);
+assert.match(rejectedObject.aiCalls[1].input.messages[0].content[0].text, /Independently verify/u);
 
 const personVisible = { ...acceptedFact, realPersonPresent: "yes", gateConfidence: 0.97 };
 const rejectedPerson = await run([personVisible, personVisible]);
@@ -252,10 +253,10 @@ function makeEnv(outputs, extras = {}) {
     ...extras,
     AI: {
       async run(model, input) {
-        assert.equal(model, "@cf/moondream/moondream3.1-9B-A2B");
+        assert.equal(model, "@cf/google/gemma-4-26b-a4b-it");
         extras.aiCalls?.push({ model, input });
         const answer = queue.shift();
-        return { answer };
+        return { choices: [{ message: { content: typeof answer === "string" ? answer : JSON.stringify(answer) } }] };
       },
     },
   };

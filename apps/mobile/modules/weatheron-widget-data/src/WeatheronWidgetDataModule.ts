@@ -1,6 +1,6 @@
 import { NativeModule, requireOptionalNativeModule } from "expo";
 
-declare class WeatheronWidgetDataModule extends NativeModule {
+declare class WeatheronWidgetDataModule extends NativeModule<{ onDeparturePushToken: (event: { status: string }) => void }> {
   saveSnapshot(snapshotJson: string): boolean;
   protectWardrobePhoto(fileUri: string): boolean;
   getDepartureActivityStatus(): Promise<string>;

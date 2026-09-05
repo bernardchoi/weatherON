@@ -135,15 +135,15 @@ export function WardrobePresetScreen({
       contentPaddingTop={layout.weatherTopPadding + spacing.sm}
       contentGap={layout.destinationContentGap}
     >
-      <Section title="내 옷 사진" caption="사진 한 장 · AI가 태그를 제안하고 내가 확인" accent="clear">
+      <Section title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
         <View style={[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.text }]}>실제 가지고 있는 옷 추가</Text>
+            <Text style={[styles.title, { color: theme.text }]}>사진 한 장으로 옷장에 쏙</Text>
             <Text style={[styles.copyText, { color: theme.muted }]}>
-              {accountLinked ? "분석 결과는 저장 전에 직접 수정 가능" : "AI 분석 보호를 위해 계정 연결 후 사용"}
+              {accountLinked ? "옷 정보는 확인하고 바꿀 수 있어요" : "로그인하고 내 옷을 추가해 보세요"}
             </Text>
           </View>
-          <AppButton label={accountLinked ? "사진으로 추가" : "계정 연결 후 추가"} onPress={openPhotoRegistration} tone="warning" size="sm" />
+          <AppButton label={accountLinked ? "사진으로 추가" : "로그인하고 추가"} onPress={openPhotoRegistration} tone="warning" size="sm" />
         </View>
       </Section>
 

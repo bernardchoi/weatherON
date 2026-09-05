@@ -11,6 +11,7 @@ const stroke = 1.8 * scale;
 const black = "#111827";
 
 const icons = {
+  "card-cloud": drawCloud,
   "card-umbrella": drawCardUmbrella,
   "card-trash": drawTrash,
   "my-permissions": drawShieldCheck,
@@ -264,4 +265,8 @@ function drawCodeDocument(ctx) {
     ["M", 13.2, 9.4],
     ["L", 11.8, 15.8],
   ]);
+}
+
+function drawCloud(ctx) {
+  strokePath(ctx, [["M", 7, 18], ["C", 1, 18, 1, 10, 6, 10], ["C", 7, 3, 17, 3, 18, 10], ["C", 24, 10, 24, 18, 18, 18], ["Z"]]);
 }

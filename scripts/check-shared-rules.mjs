@@ -349,6 +349,8 @@ await writeFile(
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
     const { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } = await import("../apps/mobile/src/utils/outfitSaveCompletion.ts");
+    const { getConditionIcon } = await import("../apps/mobile/src/utils/weatherPresentation.ts");
+    const { uiIconAssets } = await import("../apps/mobile/src/assets.ts");
     const { isNightAtForecastTime, isNightAtWeatherTime, resolveWeatherTimeZone } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
     const {
       buildUmbrellaRainSignals,
@@ -690,6 +692,10 @@ await writeFile(
         message: "코디 저장 완료",
       }),
       outfitSaveCompletionForPersistedSave: shouldShowOutfitSaveCompletion(true, true, null),
+      cloudyDayIcon: getConditionIcon("cloud") === uiIconAssets.cloud,
+      cloudyNightIcon: getConditionIcon("cloud", true) === uiIconAssets.cloud,
+      clearNightIcon: getConditionIcon("clear", true) === uiIconAssets.clearNight,
+      clearDayIcon: getConditionIcon("clear") === uiIconAssets.uv,
       seoulSummerNight: isNightAtWeatherTime("2026-08-23T22:00", {
         coordinate: { latitude: 37.5446, longitude: 127.0559 },
         timeZone: "Asia/Seoul",
@@ -848,6 +854,7 @@ await build({
   target: "node20",
   external: ["react", "react/jsx-runtime", "expo", "expo-sqlite"],
   plugins: [reactNativePlatformStub],
+  loader: { ".png": "dataurl", ".jpg": "dataurl" },
   logLevel: "silent",
 });
 
@@ -953,6 +960,7 @@ assert.equal(demoResults.outfitSaveCompletionDurationMs, 3_000);
 assert.equal(demoResults.outfitSaveCompletionOnTransition, true);
 assert.equal(demoResults.outfitSaveCompletionAfterAccountFlow, true);
 assert.equal(demoResults.outfitSaveCompletionForPersistedSave, false);
+for (const key of ["cloudyDayIcon", "cloudyNightIcon", "clearNightIcon", "clearDayIcon"]) assert.equal(demoResults[key], true, key);
 assert.equal(demoResults.seoulSummerNight, true);
 assert.equal(demoResults.seoulSummerDay, false);
 assert.equal(demoResults.seoulWinterAfterSunset, true);

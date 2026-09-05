@@ -15,6 +15,7 @@ export type DepartureLiveActivityStatus = {
   supported: boolean;
   enabled: boolean;
   active: boolean;
+  automaticEndScheduled?: boolean;
   activityId?: string;
   destinationId?: string;
   departureAt?: string;

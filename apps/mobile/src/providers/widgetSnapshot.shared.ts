@@ -4,6 +4,7 @@ import type {
   RecommendationState,
   WeatherSnapshot,
 } from "@weatheron/shared";
+import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 import { getConditionLabel } from "../utils/weatherPresentation";
 
 export const weatheronWidgetAppGroup = "group.com.weatheron.mobile";
@@ -89,7 +90,7 @@ export function createWeatheronWidgetLocationSnapshot(
     locationName: weather.locationName,
     latitude: options.coordinate?.latitude,
     longitude: options.coordinate?.longitude,
-    timeZone: options.timeZone,
+    timeZone: resolveWeatherTimeZone(weather.countryCode, options.timeZone),
     temperatureC: Math.round(weather.current.tempC),
     feelsLikeC: Math.round(weather.current.feelsLikeC),
     condition: weather.current.condition,

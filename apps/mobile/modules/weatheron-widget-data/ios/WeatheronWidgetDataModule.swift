@@ -25,11 +25,15 @@ private enum DepartureActivityError: Error {
 }
 
 public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
+  private var departureTokenTask: Task<Void, Never>?
+  private var observedActivityId: String?
   private var departureEndWorkItem: DispatchWorkItem?
   private var widgetReloadWorkItem: DispatchWorkItem?
 
   public func definition() -> ModuleDefinition {
     Name("WeatheronWidgetData")
+    Events("onDeparturePushToken")
+    OnDestroy { self.departureTokenTask?.cancel() }
 
     Function("saveSnapshot") { (snapshotJson: String) -> Bool in
       guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return false }
@@ -98,6 +102,9 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
 
     AsyncFunction("getDepartureActivityStatus") { () async -> String in
       await self.endExpiredDepartureActivities()
+      if let activity = Activity<WeatherONDepartureActivityAttributes>.activities.first(where: { $0.activityState == .active && $0.attributes.departureAt > Date() }) {
+        self.observePushToken(for: activity)
+      }
       return self.departureActivityStatusJson()
     }
 
@@ -134,8 +141,9 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       let activity = try Activity<WeatherONDepartureActivityAttributes>.request(
         attributes: attributes,
         content: content,
-        pushType: nil
+        pushType: .token
       )
+      self.observePushToken(for: activity)
       self.scheduleAutomaticEnd(for: activity)
       return self.departureActivityStatusJson(activity: activity)
     }
@@ -145,6 +153,33 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       await self.endAllDepartureActivities()
       return hadActivity
     }
+  }
+
+  private func observePushToken(for activity: Activity<WeatherONDepartureActivityAttributes>) {
+    guard observedActivityId != activity.id else { return }
+    departureTokenTask?.cancel()
+    observedActivityId = activity.id
+    departureTokenTask = Task { [weak self] in
+      for await _ in activity.pushTokenUpdates {
+        guard !Task.isCancelled, let self else { return }
+        self.sendEvent("onDeparturePushToken", ["status": self.departureActivityStatusJson(activity: activity)])
+      }
+    }
+  }
+
+  private func pushEnvironment() -> String {
+    // Distribution archives may omit the profile; development installs include their APS entitlement.
+    if let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+       let data = try? Data(contentsOf: url),
+       let text = String(data: data, encoding: .isoLatin1),
+       let start = text.range(of: "<?xml"), let end = text.range(of: "</plist>", range: start.lowerBound..<text.endIndex),
+       let xml = text[start.lowerBound..<end.upperBound].data(using: .isoLatin1),
+       let profile = try? PropertyListSerialization.propertyList(from: xml, format: nil) as? [String: Any],
+       let entitlements = profile["Entitlements"] as? [String: Any],
+       entitlements["aps-environment"] as? String == "development" {
+      return "sandbox"
+    }
+    return "production"
   }
 
   private func parseIsoDate(_ value: String) -> Date? {
@@ -183,6 +218,9 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   }
 
   private func endAllDepartureActivities() async {
+    departureTokenTask?.cancel()
+    departureTokenTask = nil
+    observedActivityId = nil
     departureEndWorkItem?.cancel()
     departureEndWorkItem = nil
     for activity in Activity<WeatherONDepartureActivityAttributes>.activities {
@@ -194,9 +232,12 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     activity: Activity<WeatherONDepartureActivityAttributes>? = nil
   ) -> String {
     let activeActivity = activity ?? Activity<WeatherONDepartureActivityAttributes>.activities
-      .filter { $0.attributes.departureAt > Date() }
+      .filter { $0.activityState == .active && $0.attributes.departureAt > Date() }
       .max { $0.attributes.departureAt < $1.attributes.departureAt }
     let payload: [String: Any] = [
+      "pushToken": activeActivity?.pushToken?.map { String(format: "%02x", $0) }.joined() ?? "",
+      "bundleId": Bundle.main.bundleIdentifier ?? "",
+      "pushEnvironment": self.pushEnvironment(),
       "supported": true,
       "enabled": ActivityAuthorizationInfo().areActivitiesEnabled,
       "active": activeActivity != nil,

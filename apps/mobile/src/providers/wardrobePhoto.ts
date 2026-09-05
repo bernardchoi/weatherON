@@ -75,7 +75,7 @@ export async function analyzeWardrobePhoto(photo: PreparedWardrobePhoto): Promis
     const result = await requestAuthenticatedAccountJson<{ analysis: unknown }>(
       "/wardrobe/analyze",
       { imageBase64: photo.imageBase64, mimeType: photo.mimeType },
-      25_000,
+      45_000,
     );
     const analysis = normalizeWardrobePhotoAnalysis(result.analysis);
     const localDigest = await localDigestPromise;
@@ -90,7 +90,12 @@ export async function analyzeWardrobePhoto(photo: PreparedWardrobePhoto): Promis
     return analysis;
   } catch (error) {
     if (error instanceof WardrobePhotoError) throw error;
-    if (error instanceof AccountAuthError) throw new WardrobePhotoError(error.code, error.message);
+    if (error instanceof AccountAuthError) {
+      const message = error.status === 405 || error.code === "wardrobe_ai_unavailable"
+        ? "사진 확인 기능에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."
+        : error.message;
+      throw new WardrobePhotoError(error.code, message);
+    }
     throw new WardrobePhotoError("wardrobe_analysis_failed", "옷 사진을 분석하지 못했습니다. 다시 시도해 주세요.");
   }
 }

@@ -4,6 +4,9 @@ import { handleAccountRoute, isAccountRoute, requireSession } from "./authCore.m
 import { handleAppIntegrityRoute, INTEGRITY_HEADERS, isAppIntegrityRoute, verifyAppIntegrityRequest } from "./integrityCore.mjs";
 import { handleWardrobeRoute, isWardrobeRoute } from "./wardrobeCore.mjs";
 
+import { DEPARTURE_PUSH_ROUTE, handleDeparturePushRoute } from "./departurePushCore.mjs";
+export { DepartureEndScheduler } from "./departurePushCore.mjs";
+
 export default {
   async fetch(request, env = {}) {
     return handleWeatherProxyRequest(request, env);
@@ -29,6 +32,10 @@ export async function handleWeatherProxyRequest(request, env = {}) {
     }
     if (isWardrobeRoute(url.pathname)) {
       const result = await handleWardrobeRoute(request, env, { requireSession, verifyAppIntegrityRequest });
+      return jsonResponse(result.payload, result.status);
+    }
+    if (url.pathname === DEPARTURE_PUSH_ROUTE) {
+      const result = await handleDeparturePushRoute(request, env, { requireSession, verifyAppIntegrityRequest });
       return jsonResponse(result.payload, result.status);
     }
     if (request.method !== "GET") return jsonResponse({ error: "method_not_allowed" }, 405);

@@ -15,6 +15,7 @@ export function getConditionLabel(condition: WeatherCondition | string): string 
 export function getConditionIcon(condition: WeatherCondition | string, isNight = false) {
   if (condition === "rain" || condition === "storm" || condition === "snow") return uiIconAssets.rain;
   if (condition === "dust") return uiIconAssets.wind;
+  if (condition === "cloud") return uiIconAssets.cloud;
   if (condition === "clear" && isNight) return uiIconAssets.clearNight;
   return uiIconAssets.uv;
 }

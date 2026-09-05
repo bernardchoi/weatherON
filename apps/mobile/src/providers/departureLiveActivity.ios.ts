@@ -1,3 +1,4 @@
+import { requestAuthenticatedAccountJson } from "./accountAuth";
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
 import {
   isDepartureLiveActivityAutoWindow,
@@ -15,10 +16,39 @@ export {
   isDepartureLiveActivityAutoWindow,
 } from "./departureLiveActivity.shared";
 
+let registeredToken = "";
+const pendingRegistrations = new Map<string, Promise<boolean>>();
+
+async function registerAutomaticEnd(raw: string): Promise<DepartureLiveActivityStatus> {
+  const status = parseDepartureLiveActivityStatus(raw);
+  if (!status.active) return status;
+  const native = JSON.parse(raw) as Record<string, unknown>;
+  const token = typeof native.pushToken === "string" ? native.pushToken : "";
+  if (!token) return { ...status, automaticEndScheduled: false };
+  const key = `${status.activityId}:${token}:${status.departureAt}`;
+  if (registeredToken === key) return { ...status, automaticEndScheduled: true };
+  let pending = pendingRegistrations.get(key);
+  if (!pending) {
+    pending = requestAuthenticatedAccountJson<{ scheduled: boolean }>("/live-activities/departure", {
+      activityId: status.activityId, departureAt: status.departureAt,
+      pushToken: token, bundleId: native.bundleId, pushEnvironment: native.pushEnvironment,
+    }).then((response) => {
+      if (response.scheduled) registeredToken = key;
+      return response.scheduled === true;
+    }).catch(() => false).finally(() => pendingRegistrations.delete(key));
+    pendingRegistrations.set(key, pending);
+  }
+  return { ...status, automaticEndScheduled: await pending };
+}
+
+WeatheronWidgetDataModule?.addListener("onDeparturePushToken", ({ status }) => {
+  void registerAutomaticEnd(status);
+});
+
 export async function getDepartureLiveActivityStatus(): Promise<DepartureLiveActivityStatus> {
   if (!WeatheronWidgetDataModule) return unavailableDepartureLiveActivityStatus;
   try {
-    return parseDepartureLiveActivityStatus(await WeatheronWidgetDataModule.getDepartureActivityStatus());
+    return await registerAutomaticEnd(await WeatheronWidgetDataModule.getDepartureActivityStatus());
   } catch {
     return unavailableDepartureLiveActivityStatus;
   }
@@ -30,7 +60,7 @@ export async function startDepartureLiveActivity(
   if (!WeatheronWidgetDataModule) throw new Error("이 빌드에서는 실시간 출발 현황을 지원하지 않음");
   try {
     const status = await WeatheronWidgetDataModule.startDepartureActivity(JSON.stringify(input));
-    return parseDepartureLiveActivityStatus(status);
+    return await registerAutomaticEnd(status);
   } catch {
     throw new Error("실시간 출발 현황을 시작하지 못했음. iOS 설정에서 Live Activity 허용 여부를 확인해야 함");
   }
