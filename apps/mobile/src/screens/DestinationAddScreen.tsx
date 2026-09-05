@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "react-native";
 import { AppButton } from "../components/AppButton";
@@ -90,12 +91,12 @@ export function DestinationAddScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={styles.header}>
+        <View style={[styles.header, iosPage && { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
           <BackButton onPress={onReturnFromDestinationAdd} />
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, { color: theme.text }]}>목적지 추가</Text>
+            <Text style={[styles.title, iosPage?.title, { color: theme.text }]}>목적지 추가</Text>
             <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 고르면 케어 기준이 맞춰짐</Text>
           </View>
         </View>
@@ -105,6 +106,7 @@ export function DestinationAddScreen({
             styles.searchField,
             { backgroundColor: theme.card, borderColor: semanticColor(theme, "accentBorder") },
             cardShadow(theme),
+            iosPage?.card,
             searchGlassSurface,
           ]}
         >
@@ -175,7 +177,7 @@ export function DestinationAddScreen({
         </View>
 
         {visibleResults.length > 0 ? (
-          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
             <View style={[styles.resultPanelHeader, { borderBottomColor: theme.border }]}>
               <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>검색 결과</Text>
               <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{resultSortLabel}</Text>
@@ -231,7 +233,7 @@ export function DestinationAddScreen({
             })}
           </View>
         ) : (
-          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
             <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus, hasQuery)}</Text>
             <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus, hasQuery)}</Text>
             <View style={styles.recoveryRow}>

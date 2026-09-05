@@ -1800,50 +1800,23 @@ export function useWeatherOnAppState() {
     setGate(null);
   };
 
+  // One return target drives both the native stack and explicit back actions.
+  const backRoute =
+    route === "A2" || route === "A3" ? gate?.returnTo ?? "H1" :
+    route === "O3" ? permissionGate?.returnTo ?? "H1" :
+    route === "R2" ? "R1" :
+    route === "R1" ? policyHubReturnRoute :
+    route === "O4" && styleProfileReturnRoute ? styleProfileReturnRoute :
+    route === "P1" ? destinationAddReturnRoute :
+    isOverlayReturnRouteId(route) ? overlayReturnRoutes[route] : getBackRoute(route);
+
   const goBack = useCallback(() => {
     if (route === "A1" || route === "H1" || route === "O1" || route === "O2") return false;
-    if (route === "A2" || route === "A3") {
-      setRoute(gate?.returnTo ?? "H1");
-      setGate(null);
-      return true;
-    }
-    if (route === "O3") {
-      setRoute(permissionGate?.returnTo ?? "H1");
-      setPermissionGate(null);
-      return true;
-    }
-    if (route === "R2") {
-      setRoute("R1");
-      return true;
-    }
-    if (route === "R1") {
-      setRoute(policyHubReturnRoute);
-      return true;
-    }
-    if (route === "O4" && styleProfileReturnRoute) {
-      setRoute(styleProfileReturnRoute);
-      return true;
-    }
-    if (route === "P1") {
-      setRoute(destinationAddReturnRoute);
-      return true;
-    }
-    if (isOverlayReturnRouteId(route)) {
-      setRoute(overlayReturnRoutes[route]);
-      return true;
-    }
-    const backRoute = getBackRoute(route);
+    if (route === "A2" || route === "A3") setGate(null);
+    if (route === "O3") setPermissionGate(null);
     setRoute(backRoute);
     return true;
-  }, [
-    destinationAddReturnRoute,
-    gate?.returnTo,
-    overlayReturnRoutes,
-    permissionGate?.returnTo,
-    policyHubReturnRoute,
-    route,
-    styleProfileReturnRoute,
-  ]);
+  }, [backRoute, route]);
 
   const canGoBack = route !== "A1" && route !== "H1" && route !== "O1" && route !== "O2";
 
@@ -1915,6 +1888,7 @@ export function useWeatherOnAppState() {
     navigate,
     goBack,
     canGoBack,
+    backRoute,
     openAlertSettings,
     returnFromAlertSettings,
     openPolicyDocument,

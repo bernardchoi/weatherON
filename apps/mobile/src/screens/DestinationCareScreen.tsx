@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { recommendOutfit } from "@weatheron/shared";
@@ -166,21 +167,21 @@ export function DestinationCareScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={styles.header}>
+        <View style={[styles.header, iosPage && { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
           <BackButton onPress={() => onNavigate("G1")} />
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
-              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
+              <Text style={[styles.title, iosPage?.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
             </View>
             <Text style={[styles.subtitle, { color: theme.subtle }]}>목적지 기준 알림 미리보기</Text>
           </View>
         </View>
 
         {justSaved ? (
-          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
+          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), iosPage?.card]}>
             <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
             <Text style={[styles.savedBannerBody, { color: theme.muted }]}>아래 출발 시간과 날씨 비교가 이 목적지 기준으로 계산됨</Text>
           </View>
@@ -191,6 +192,7 @@ export function DestinationCareScreen({
             styles.decisionPanel,
             { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.gold },
             cardShadow(theme),
+            iosPage?.card,
           ]}
         >
           <View
@@ -213,8 +215,8 @@ export function DestinationCareScreen({
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
-              <Text style={[styles.decisionTitle, { color: theme.text }]}>{routeTimingReady ? `${departureTime} 출발` : "경로 확인 전"}</Text>
-              <Text style={[styles.decisionBody, { color: theme.muted }]}>
+              <Text style={[styles.decisionTitle, iosPage?.number, { color: theme.text }]}>{routeTimingReady ? `${departureTime} 출발` : "경로 확인 전"}</Text>
+              <Text style={[styles.decisionBody, iosPage?.caption, { color: theme.muted }]}>
                 {routeTimingReady ? `${targetArrivalTime} 도착 기준으로 이동 시간과 날씨를 함께 봄` : `${targetArrivalTime} 도착 기준 날씨만 먼저 확인`}
               </Text>
             </View>
@@ -278,7 +280,7 @@ export function DestinationCareScreen({
         </View>
 
         {Platform.OS === "ios" ? (
-          <View style={[styles.liveActivityPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme)]}>
+          <View style={[styles.liveActivityPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme), iosPage?.card]}>
             <View style={styles.liveActivityHeader}>
               <View style={styles.liveActivityCopy}>
                 <Text style={[styles.sectionTitle, { color: theme.gold }]}>실시간 출발 현황</Text>
@@ -311,7 +313,7 @@ export function DestinationCareScreen({
           </View>
         ) : null}
 
-        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme)]}>
+        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme), iosPage?.card]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
@@ -337,7 +339,7 @@ export function DestinationCareScreen({
           </InfoPanel>
         ) : null}
 
-        <View style={[styles.detailPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme)]}>
+        <View style={[styles.detailPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
           <FeedbackPressable
             accessibilityLabel={detailPanelOpen ? "날씨 비교와 알림 상세 닫기" : "날씨 비교와 알림 상세 열기"}
             accessibilityRole="button"
@@ -895,7 +897,7 @@ function InfoPanel({
 }) {
   const accent = tone === "clear" ? theme.clear : theme.warm;
   return (
-    <View style={[styles.infoPanel, { backgroundColor: theme.card, borderLeftColor: accent }, cardShadow(theme)]}>
+    <View style={[styles.infoPanel, { backgroundColor: theme.card, borderLeftColor: accent }, cardShadow(theme), iosPage?.card]}>
       <View style={styles.infoHeader}>
         <Text style={[styles.infoTitle, { color: accent }]}>{title}</Text>
         {pill ? (

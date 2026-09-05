@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
 import { AppButton } from "../components/AppButton";
 import { LaunchSplash } from "../components/LaunchSplash";
-import { ScreenTransition } from "../components/ScreenTransition";
+import { NavigationStack } from "../components/NavigationStack";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
 import { HomeScreen } from "../screens/HomeScreen";
 import { LocationChangeScreen } from "../screens/LocationChangeScreen";
@@ -254,19 +254,7 @@ export function AppNavigator() {
     );
   }
 
-  return (
-    <AppThemeProvider theme={theme}>
-      <View style={{ flex: 1, backgroundColor: appBackgroundColor }}>
-      <SafeAreaView
-        accessibilityElementsHidden={launchVisible}
-        importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
-        pointerEvents={launchVisible ? "none" : "auto"}
-        edges={["top", "right", "bottom", "left"]}
-        style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}
-      >
-        <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
-        <View style={[styles.root, { backgroundColor: appBackgroundColor }]}>
-        <ScreenTransition key={route} canGoBack={appState.canGoBack} onGoBack={appState.goBack} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}>
+  const renderScreen = (route: AppRouteId) => (<>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
       {route === "H1" ? <HomeScreen {...screenProps} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
@@ -334,11 +322,25 @@ export function AppNavigator() {
           onComplete={appState.completePermissionGate}
         />
       ) : null}
-        </ScreenTransition>
-          {isLaunchVisibleP0Route(route) && route !== "G6" ? <BottomNav activeRoute={bottomNavActiveRoute} onNavigate={appState.navigate} /> : null}
-          {route === "A4" || route === "R1" || route === "R2" ? <BottomNav activeRoute="M1" onNavigate={appState.navigate} /> : null}
-          {route === "O4" && appState.styleProfileReturnRoute ? (
-            <BottomNav activeRoute={appState.styleProfileReturnRoute} onNavigate={appState.navigate} />
+  </>);
+
+  return (
+    <AppThemeProvider theme={theme}>
+      <View style={{ flex: 1, backgroundColor: appBackgroundColor }}>
+      <SafeAreaView
+        accessibilityElementsHidden={launchVisible}
+        importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
+        pointerEvents={launchVisible ? "none" : "auto"}
+        edges={["top", "right", "bottom", "left"]}
+        style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}
+      >
+        <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
+        <View style={[styles.root, { backgroundColor: appBackgroundColor }]}>
+        <NavigationStack route={route} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}
+          backRoute={appState.canGoBack && !isPrimaryTabRoute(route) ? appState.backRoute : undefined}
+          onGoBack={appState.goBack} renderScreen={renderScreen} />
+          {(isLaunchVisibleP0Route(route) && route !== "G6") || route === "A4" || route === "R1" || route === "R2" || (route === "O4" && appState.styleProfileReturnRoute) ? (
+            <BottomNav activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
           ) : null}
         </View>
       </SafeAreaView>
@@ -372,6 +374,7 @@ function SystemBars({ backgroundColor, isDarkTheme }: { backgroundColor: string;
 }
 
 function getBottomNavActiveRoute(route: AppRouteId, alertReturnTo?: P0RouteId, umbrellaReturnTo?: P0RouteId): P0RouteId {
+  if (route === "A4" || route === "R1" || route === "R2") return "M1";
   if (route === "H7") return "H1";
   if (route === "M2" && (alertReturnTo === "G1" || alertReturnTo === "G2")) return "G1";
   // 우산(H4)은 홈·코디 양쪽에서 진입 가능해 항상 홈으로 고정하면 코디에서 들어왔을 때 탭 표시가 어긋난다.

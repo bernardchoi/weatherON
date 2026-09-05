@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
@@ -66,6 +67,7 @@ export function DestinationListScreen({
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
   const resultBanner = getDestinationResultBanner(accountGateResult, permissionGateResult, hasDestinations);
+  const selectedCard = destinationCards.find((item) => item.place.id === selectedDestinationPlace.id) ?? destinationCards[0];
   const recommendedDepartureTime = getRecommendedDepartureTime(care);
 
   return (
@@ -84,9 +86,9 @@ export function DestinationListScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, !hasDestinations ? styles.atmosphereEmpty : null, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, !hasDestinations ? styles.atmosphereEmpty : null, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={styles.header}>
+        <View style={[styles.header, iosPage && { minHeight: 44, paddingTop: 0, justifyContent: "flex-start" }]}>
           <Text
             style={[
               styles.title,
@@ -95,13 +97,22 @@ export function DestinationListScreen({
                 fontSize: layout.screenTitleFontSize,
                 lineHeight: layout.screenTitleLineHeight,
               },
+              iosPage?.title,
             ]}
           >
             출발
           </Text>
         </View>
 
-        <FeedbackPressable
+        {iosPage ? (
+          <FeedbackPressable accessibilityRole="button" accessibilityLabel={selectedCard ? `${selectedCard.title} 출발 상세 보기` : "첫 목적지 추가"}
+            onPress={() => { if (selectedCard) { onSelectDestinationPlace(selectedCard.place); onNavigate("G2"); } else onNavigate("P1"); }}
+            style={{ minHeight: 80, gap: 4, paddingVertical: 8 }}>
+            <Text style={[iosPage.caption, { color: theme.subtle }]}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
+            <Text style={[iosPage.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
+            <Text style={[iosPage.caption, { color: theme.muted }]}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 날씨와 출발 시간을 함께 확인할 수 있어요"}</Text>
+          </FeedbackPressable>
+        ) : <FeedbackPressable
           accessibilityLabel={hasDestinations ? "오늘 출발 준비 상세 보기" : "첫 목적지 추가"}
           accessibilityRole="button"
           onPress={() => {
@@ -135,7 +146,7 @@ export function DestinationListScreen({
           <Text style={[styles.todayHint, { color: theme.subtle }]}>
             {hasDestinations ? "탭하면 상세 준비 확인" : "추가하면 출발·강수 자동 계산"}
           </Text>
-        </FeedbackPressable>
+        </FeedbackPressable>}
 
         <View style={styles.destinationList}>
           {hasDestinations ? (
@@ -219,6 +230,8 @@ function EmptyDestinationState({
           borderColor: theme.border,
         },
         cardShadow(theme),
+        iosPage?.card,
+        iosPage && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border, borderColor: theme.border },
       ]}
     >
       <View style={styles.emptyHeader}>
@@ -321,6 +334,8 @@ function DestinationCard({
           paddingVertical,
         },
         cardShadow(theme),
+        iosPage?.card,
+        iosPage && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: selected ? selectedAccent : theme.border, borderColor: selected ? selectedAccent : theme.border },
       ]}
     >
       <FeedbackPressable
@@ -337,9 +352,9 @@ function DestinationCard({
           <View style={styles.destinationTitleColumn}>
             <View style={styles.destinationNameRow}>
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
-              <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+              <Text style={[styles.destinationName, iosPage?.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
             </View>
-            <Text style={[styles.destinationArea, { color: theme.subtle }]} numberOfLines={2}>{item.area}</Text>
+            <Text style={[styles.destinationArea, iosPage?.caption, { color: theme.subtle }]} numberOfLines={2}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -347,6 +362,10 @@ function DestinationCard({
           <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
 
+        {iosPage ? <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+          <Text style={[iosPage.number, { color: theme.text }]}>{item.departureTime}</Text>
+          <Text style={[iosPage.caption, { color: theme.subtle }]}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
+        </View> : null}
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
             <SunGlyph color={theme.clear} />
@@ -361,11 +380,11 @@ function DestinationCard({
           </View>
         </View>
 
-        <View style={styles.destinationPrepRow}>
+        {!iosPage ? <View style={styles.destinationPrepRow}>
           <CompactSignal icon={uiIconAssets.clock} label={item.departureTime} color={theme.clear} theme={theme} />
           <CompactSignal icon={uiIconAssets.rain} label={item.rainPct} color={warningColor} theme={theme} />
           <OutfitSignal item={item} theme={theme} />
-        </View>
+        </View> : null}
 
         <View style={styles.destinationFooterRow}>
           <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>

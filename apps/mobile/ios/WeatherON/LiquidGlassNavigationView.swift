@@ -1,147 +1,122 @@
 import React
-import SwiftUI
 import UIKit
-import Combine
 
 @objc(LiquidGlassNavigationView)
 final class LiquidGlassNavigationView: RCTViewManager {
-  override func view() -> UIView! {
-    return LiquidGlassNavigationSurfaceView()
-  }
-
-  @objc override static func requiresMainQueueSetup() -> Bool {
-    return true
-  }
+  override func view() -> UIView! { LiquidGlassNavigationSurfaceView() }
+  @objc override static func requiresMainQueueSetup() -> Bool { true }
 }
 
+// Keep the glass and its touches in UIKit: an RN responder above it prevents
+// UIGlassEffect's native touch highlights and deformation from receiving input.
 final class LiquidGlassNavigationSurfaceView: UIView {
   @objc var activeIndex: NSNumber = 0 {
-    didSet {
-      updateActiveIndex()
-    }
+    didSet { if !dragging { moveSelection(animated: hasLayout) } }
   }
-
-  @objc var isDarkTheme: Bool = false {
-    didSet {
-      updateTheme()
-    }
-  }
-
-  private var glassHost: UIHostingController<AnyView>?
-  private let navigationState = NavigationGlassState()
+  @objc var isDarkTheme = false { didSet { updateTheme() } }
+  @objc var onSelect: RCTDirectEventBlock?
+  private let glass = UIVisualEffectView()
+  private let selectionView = UIView()
+  private var dragX: CGFloat = 0
+  private var dragging = false
+  private var startX: CGFloat = 0
+  private var hasLayout = false
+  private var selectionAnimator: UIViewPropertyAnimator?
+  private var tabWidth: CGFloat { bounds.width / 4 }
+  private var selectedIndex: Int { max(0, min(3, activeIndex.intValue)) }
 
   override init(frame: CGRect) {
     super.init(frame: frame)
     backgroundColor = .clear
-    isUserInteractionEnabled = false
-    layer.cornerRadius = 32
-    layer.cornerCurve = .continuous
-    clipsToBounds = true
-    installSurface()
+    clipsToBounds = false
+    addSubview(selectionView)
+    selectionView.addSubview(glass)
+    glass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    if #available(iOS 26.0, *) {
+      glass.cornerConfiguration = .capsule()
+    }
+    updateTheme()
+    let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+    let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
+    tap.cancelsTouchesInView = false
+    pan.cancelsTouchesInView = false
+    addGestureRecognizer(tap)
+    addGestureRecognizer(pan)
   }
 
-  required init?(coder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    glassHost?.view.frame = bounds
+    if !dragging {
+      selectionAnimator?.stopAnimation(true)
+      selectionView.frame = selectionFrame(selectedIndex)
+      glass.frame = selectionView.bounds
+    }
+    hasLayout = bounds.width > 0
   }
 
-  private func installSurface() {
-    if #available(iOS 26.0, *) {
-      let host = UIHostingController(
-        rootView: AnyView(NavigationGlassSurface(state: navigationState))
-      )
-      host.view.backgroundColor = .clear
-      host.view.isUserInteractionEnabled = false
-      addSubview(host.view)
-      glassHost = host
-    }
-  }
-
-  private func updateActiveIndex() {
-    if #available(iOS 26.0, *) {
-      // 호스트를 교체하면 SwiftUI가 기존 글라스 형태를 잃어 morph 전환이 끊긴다.
-      withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-        navigationState.activeIndex = activeIndex.intValue
-      }
-    }
+  private func selectionFrame(_ index: Int) -> CGRect {
+    CGRect(x: CGFloat(index) * tabWidth + 4, y: 4,
+           width: max(0, tabWidth - 8), height: max(0, bounds.height - 8))
   }
 
   private func updateTheme() {
+    overrideUserInterfaceStyle = isDarkTheme ? .dark : .light
     if #available(iOS 26.0, *) {
-      withAnimation(.easeOut(duration: 0.18)) {
-        navigationState.isDarkTheme = isDarkTheme
-      }
+      let effect = UIGlassEffect(style: .regular)
+      effect.isInteractive = true
+      effect.tintColor = UIColor(red: 0.64, green: 0.83, blue: 1, alpha: isDarkTheme ? 0.12 : 0.06)
+      glass.effect = effect
     }
   }
-}
 
-// iOS 15 지원을 유지하려고 Observation 대신 ObservableObject 사용함.
-private final class NavigationGlassState: ObservableObject {
-  @Published var activeIndex = 0
-  @Published var isDarkTheme = false
-}
+  private func moveSelection(animated: Bool) {
+    selectionAnimator?.stopAnimation(true)
+    let target = selectionFrame(selectedIndex)
+    guard animated, !UIAccessibility.isReduceMotionEnabled else { selectionView.frame = target; return }
+    let animator = UIViewPropertyAnimator(duration: 0.32, dampingRatio: 0.9) { self.selectionView.frame = target }
+    selectionAnimator = animator
+    animator.startAnimation()
+  }
 
-@available(iOS 26.0, *)
-private struct NavigationGlassSurface: View {
-  @ObservedObject var state: NavigationGlassState
-  @Namespace private var activeTabNamespace
+  private func select(_ index: Int) {
+    dragging = false
+    activeIndex = NSNumber(value: max(0, min(3, index)))
+    onSelect?(["index": selectedIndex])
+  }
 
-  var body: some View {
-    GlassEffectContainer(spacing: 8) {
-      ZStack {
-        // 겹친 glass 표면은 선택 캡슐의 경계를 흐리므로 dock은 얇은 받침만 사용함.
-        Capsule()
-          .fill(Color.white.opacity(state.isDarkTheme ? 0.04 : 0.08))
+  @objc private func tapped(_ gesture: UITapGestureRecognizer) {
+    guard tabWidth > 0 else { return }
+    select(Int(gesture.location(in: self).x / tabWidth))
+  }
 
-        HStack(spacing: 0) {
-          ForEach(0..<4, id: \.self) { index in
-            Group {
-              if index == state.activeIndex {
-                Capsule()
-                  .fill(Color.white.opacity(state.isDarkTheme ? 0.08 : 0.04))
-                  .glassEffect(
-                    .regular
-                      .tint(Color(red: 0.64, green: 0.83, blue: 1).opacity(state.isDarkTheme ? 0.2 : 0.1))
-                      .interactive(),
-                    in: Capsule()
-                  )
-                  .glassEffectID("active-tab", in: activeTabNamespace)
-                  // 반사 테두리는 glass 뒤가 아닌 앞에 놓아 밝은 단색 배경에서도 유지함.
-                  .overlay {
-                    Capsule()
-                      .strokeBorder(
-                        LinearGradient(
-                          colors: [
-                            .white.opacity(state.isDarkTheme ? 0.78 : 0.95),
-                            .white.opacity(0.16),
-                            Color(red: 0.38, green: 0.62, blue: 0.82).opacity(0.32),
-                            .white.opacity(state.isDarkTheme ? 0.4 : 0.7),
-                          ],
-                          startPoint: .topLeading,
-                          endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                      )
-                  }
-                  .shadow(color: .black.opacity(state.isDarkTheme ? 0.3 : 0.12), radius: 3, x: 0, y: 2)
-              } else {
-                Color.clear
-              }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(4)
-          }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
+  @objc private func panned(_ gesture: UIPanGestureRecognizer) {
+    guard tabWidth > 0 else { return }
+    switch gesture.state {
+    case .began:
+      let initialX = gesture.location(in: self).x - gesture.translation(in: self).x
+      guard Int(initialX / tabWidth) == selectedIndex else { return }
+      let visibleFrame = selectionView.layer.presentation()?.frame ?? selectionView.frame
+      selectionAnimator?.stopAnimation(true)
+      selectionView.frame = visibleFrame
+      startX = visibleFrame.minX
+      dragX = startX
+      dragging = true
+    case .changed:
+      guard dragging else { return }
+      dragX = max(4, min(3 * tabWidth + 4, startX + gesture.translation(in: self).x))
+      selectionView.frame.origin.x = dragX
+    case .ended:
+      guard dragging else { return }
+      // A fast gesture can move directly from began to ended without changed.
+      dragX = max(4, min(3 * tabWidth + 4, startX + gesture.translation(in: self).x))
+      select(Int(((dragX - 4) / tabWidth).rounded()))
+    case .cancelled, .failed:
+      guard dragging else { return }
+      dragging = false
+      moveSelection(animated: true)
+    default: break
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .environment(\.colorScheme, state.isDarkTheme ? .dark : .light)
-    .animation(.spring(response: 0.42, dampingFraction: 0.82), value: state.activeIndex)
   }
 }

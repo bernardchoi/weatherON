@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
@@ -18,23 +19,24 @@ export function Section({ title, caption, accent, compact = false, contentGap, c
   const accentColor = accent ? getAccentColor(theme, accent) : undefined;
   const icon = getSectionIcon(title);
   return (
-    <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme)]}>
+    <View style={[styles.shadowWrap, { backgroundColor: theme.card }, cardShadow(theme), iosPage && { shadowOpacity: 0, elevation: 0, borderRadius: 24 }]}>
       <View
         style={[
           styles.section,
           compact ? styles.sectionCompact : null,
           contentGap === undefined ? null : { gap: contentGap },
           { backgroundColor: theme.card, borderColor: theme.border },
+          iosPage?.card,
         ]}
       >
-        {accentColor ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
+        {accentColor && !iosPage ? <View style={[styles.accent, { backgroundColor: accentColor }]} /> : null}
         <View style={[styles.header, compact ? styles.headerCompact : null]}>
-          <View style={[styles.iconFrame, compact ? styles.iconFrameCompact : null, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>
+          {!iosPage ? <View style={[styles.iconFrame, compact ? styles.iconFrameCompact : null, { backgroundColor: `${accentColor ?? theme.sky}18` }]}>
             <Image source={icon} style={[styles.icon, compact ? styles.iconCompact : null, { tintColor: accentColor ?? theme.skyLite }]} resizeMode="contain" />
-          </View>
+          </View> : null}
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, compact ? styles.titleCompact : null, { color: theme.text }]}>{title}</Text>
-            {caption ? <Text style={[styles.caption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={compact ? 1 : 2}>{caption}</Text> : null}
+            <Text style={[styles.title, iosPage?.sectionTitle, compact ? styles.titleCompact : null, { color: theme.text }]}>{title}</Text>
+            {caption ? <Text style={[styles.caption, iosPage?.caption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={compact ? 1 : 2}>{caption}</Text> : null}
           </View>
         </View>
         {children}

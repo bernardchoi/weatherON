@@ -3,6 +3,7 @@ import { Platform, UIManager, requireNativeComponent, type ViewProps } from "rea
 
 type NativeSurfaceProps = ViewProps & {
   activeIndex: number;
+  onSelect: (event: { nativeEvent: { index: number } }) => void;
   isDarkTheme: boolean;
 };
 
@@ -17,20 +18,21 @@ export const hasNativeLiquidGlassNavigationSurface = NativeLiquidGlassSurface !=
 
 type LiquidGlassNavigationSurfaceProps = {
   activeIndex: number;
+  onSelect: (event: { nativeEvent: { index: number } }) => void;
   isDarkTheme: boolean;
 };
 
-// iOS 26에서는 활성 탭에만 SwiftUI glassEffect/GlassEffectContainer를 쓴다.
+// iOS 26 캡슐 재질·누름·드래그는 UIKit이 함께 처리한다.
 // 이전 iOS와 이미 배포된 바이너리에서는 BottomNav의 JS 활성 탭 캡슐을 사용한다.
-export function LiquidGlassNavigationSurface({ activeIndex, isDarkTheme }: LiquidGlassNavigationSurfaceProps) {
+export function LiquidGlassNavigationSurface({ activeIndex, onSelect, isDarkTheme }: LiquidGlassNavigationSurfaceProps) {
   if (Platform.OS !== "ios") return null;
 
   if (NativeLiquidGlassSurface) {
     return (
       <NativeLiquidGlassSurface
-        activeIndex={activeIndex}
         isDarkTheme={isDarkTheme}
-        pointerEvents="none"
+        activeIndex={activeIndex}
+        onSelect={onSelect}
         style={styles.fill}
       />
     );

@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
@@ -46,9 +47,9 @@ export function AppPermissionsScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, iosPage?.header]}>
           <BackButton onPress={() => onNavigate("M1")} />
           <Text
             style={[
@@ -58,6 +59,7 @@ export function AppPermissionsScreen({
                 fontSize: layout.screenTitleFontSize,
                 lineHeight: layout.screenTitleLineHeight,
               },
+              iosPage?.title,
             ]}
           >
             앱 권한 관리
@@ -69,6 +71,7 @@ export function AppPermissionsScreen({
             styles.permissionCard,
             { padding: layout.settingsPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border },
             cardShadow(theme),
+            iosPage && { ...iosPage.unboxed, padding: 0 },
           ]}
         >
           <Text style={[styles.sectionLabel, { color: theme.muted }]}>권한 상태</Text>
@@ -143,18 +146,18 @@ function PermissionCard({
 }) {
   const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
   return (
-    <View style={[styles.permissionPanel, { padding: panelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[styles.permissionPanel, iosPage?.card, { padding: panelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={styles.permissionHeader}>
         <View style={[styles.permissionDot, { backgroundColor: color }]} />
         <View style={styles.permissionCopy}>
-          <Text style={[styles.permissionLabel, { color: theme.text }]}>{label}</Text>
-          <Text style={[styles.permissionBody, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
+          <Text style={[styles.permissionLabel, iosPage?.sectionTitle, { color: theme.text }]}>{label}</Text>
+          <Text style={[styles.permissionBody, iosPage?.caption, { color: theme.subtle }]} numberOfLines={2}>{body}</Text>
         </View>
         <View style={[styles.permissionStatus, { backgroundColor: `${color}22` }]}>
           <Text style={[styles.permissionStatusText, { color }]}>{status}</Text>
         </View>
       </View>
-      <Text style={[styles.permissionHelper, { color: theme.muted }]}>{helper}</Text>
+      <Text style={[styles.permissionHelper, iosPage?.caption, { color: theme.muted }]}>{helper}</Text>
       <View style={[styles.permissionActions, { gap: actionGap }]}>
         <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22` }]}>
           <Text style={[styles.primaryActionText, { color }]}>{primaryLabel}</Text>

@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { brandAssets } from "../assets";
@@ -52,7 +53,7 @@ export function AppScreen({
   const layout = useResponsiveLayout();
   const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
   const inlineHeader = compactHeader && Boolean(onBack);
-  const heroGlass = compactHeader ? undefined : barGlass;
+  const heroGlass = compactHeader || iosPage ? undefined : barGlass;
   return (
     <View style={styles.shell}>
       <ScrollView
@@ -68,7 +69,7 @@ export function AppScreen({
           },
         ]}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
         <View
           style={[
             styles.hero,
@@ -76,6 +77,7 @@ export function AppScreen({
             inlineHeader ? styles.inlineHero : null,
             heroGlass ? styles.heroPlatformSurface : null,
             heroGlass,
+            iosPage?.header,
             {
               gap: inlineHeader ? spacing.xs : compactHeader ? spacing.sm : layout.screenHeaderGap,
               marginBottom: headerBottomSpacing,
@@ -89,7 +91,7 @@ export function AppScreen({
             </View>
           ) : null}
           <View style={styles.heroText}>
-            {showWordmark ? (
+            {showWordmark && !iosPage ? (
               <Image
                 source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
                 style={styles.wordmark}
@@ -104,12 +106,13 @@ export function AppScreen({
                   fontSize: layout.screenTitleFontSize,
                   lineHeight: layout.screenTitleLineHeight,
                 },
+                iosPage?.title,
               ]}
             >
               {title}
             </Text>
             {subtitle ? (
-              <Text style={[styles.subtitle, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
+              <Text style={[styles.subtitle, iosPage?.caption, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
                 {subtitle}
               </Text>
             ) : null}

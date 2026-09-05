@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React from "react";
 import { Animated, Easing, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
@@ -51,9 +52,9 @@ export function GlobalSettingsScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, opacity: theme.reducedTransparency ? 0 : 0.34 }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, opacity: theme.reducedTransparency ? 0 : 0.34 }]} /> : null}
 
-        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, iosPage?.header]}>
           <BackButton onPress={() => onNavigate("M1")} />
           <Text
             style={[
@@ -63,6 +64,7 @@ export function GlobalSettingsScreen({
                 fontSize: layout.screenTitleFontSize,
                 lineHeight: layout.screenTitleLineHeight,
               },
+              iosPage?.title,
             ]}
           >
             표시 설정
@@ -80,10 +82,11 @@ export function GlobalSettingsScreen({
               borderColor: theme.border,
             },
             androidMaterialSurface(theme, "surfaceContainerLow"),
+            iosPage?.card,
           ]}
         >
           <Text style={[styles.topSummaryLabel, { color: theme.sky }]}>현재 적용</Text>
-          <Text style={[styles.topSummaryValue, { color: theme.text }]}>{temperatureLabel} · {distanceLabel}</Text>
+          <Text style={[styles.topSummaryValue, iosPage?.sectionTitle, { color: theme.text }]}>{temperatureLabel} · {distanceLabel}</Text>
           <Text style={[styles.topSummaryMeta, { color: theme.subtle }]}>{themeLabel} 테마</Text>
         </View>
 

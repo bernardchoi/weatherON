@@ -1,3 +1,4 @@
+import { iosPage } from "../theme/iosPage";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
@@ -86,9 +87,9 @@ export function AlertSettingsScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }]}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, iosPage?.header]}>
           <BackButton onPress={goBack} />
           <View style={styles.headerCopy}>
             <Text
@@ -99,6 +100,7 @@ export function AlertSettingsScreen({
                   fontSize: layout.screenTitleFontSize,
                   lineHeight: layout.screenTitleLineHeight,
                 },
+                iosPage?.title,
               ]}
               numberOfLines={1}
             >
@@ -109,7 +111,7 @@ export function AlertSettingsScreen({
         </View>
 
         {alertSettingsRouteState ? (
-          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
             <View style={styles.contextCopy}>
               <Text style={[styles.contextKicker, { color: getToneColor(theme, focusMeta.tone) }]}>{focusMeta.caption}</Text>
               <Text style={[styles.contextTitle, { color: theme.text }]}>{focusMeta.title}</Text>
@@ -120,7 +122,7 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
         {alertSettingsRouteState ? (
-          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme)]}>
+          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme), iosPage?.card]}>
             <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>고급 알림 기준</Text>
             <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
           </View>
@@ -140,6 +142,7 @@ export function AlertSettingsScreen({
               borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border,
             },
             cardShadow(theme),
+            iosPage?.card,
           ]}
         >
           <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
@@ -156,7 +159,7 @@ export function AlertSettingsScreen({
         </Pressable>
 
         {permissionGateResult?.returnTo === "M2" ? (
-          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
+          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), iosPage?.card]}>
             <Text style={[styles.resultTitle, { color: theme.text }]}>{permissionGateResult.message}</Text>
           </View>
         ) : null}
@@ -207,7 +210,7 @@ export function AlertSettingsScreen({
         </Pressable>
 
         {advancedOpen ? (
-          <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+          <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
             <AdvancedToggleRow
               title="강수 상세"
               body={`비 시작 전·그칠 시각 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%`}
@@ -296,7 +299,7 @@ function NotificationStatusCard({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.deliveryCard, { padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={[styles.deliveryCard, { padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
       <View style={styles.deliveryHeader}>
         <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${theme.sky}55` }]}>
           <AlertIcon type="bell" color={theme.sky} />
@@ -337,7 +340,7 @@ function NotificationQaPanel({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
       <View style={styles.routeTestHeader}>
         <Text style={[styles.routeTestTitle, { color: theme.text }]}>개발용 알림 QA</Text>
         <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>

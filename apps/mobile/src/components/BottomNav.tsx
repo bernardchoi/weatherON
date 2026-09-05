@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Image,
@@ -11,6 +11,7 @@ import {
   type LayoutChangeEvent,
   View,
 } from "react-native";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -32,6 +33,23 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
+  const reducedMotion = useReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
+  const selectionX = useRef(new Animated.Value(0)).current;
+  const [dockWidth, setDockWidth] = useState(0);
+  const draggingRef = useRef(false);
+  const dragStartRef = useRef(0);
+  const snapSelection = (index: number) => {
+    selectionX.stopAnimation();
+    const toValue = index * Math.max(0, dockMetricsRef.current.width - 2) / bottomNavRoutes.length;
+    if (reducedMotionRef.current !== false) selectionX.setValue(toValue);
+    else Animated.spring(selectionX, { toValue, stiffness: 310, damping: 32, mass: 1, useNativeDriver: true }).start();
+  };
+  useEffect(() => {
+    if (isIos && !draggingRef.current) snapSelection(activeIndex);
+  }, [activeIndex, dockWidth, reducedMotion]);
+  useEffect(() => () => selectionX.stopAnimation(), [selectionX]);
   const dockRef = useRef<View>(null);
   const dockMetricsRef = useRef({ windowX: 0, width: 0, measuredInWindow: false });
   const activeIndexRef = useRef(activeIndex);
@@ -74,12 +92,34 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
         draggedIndexRef.current = touchedIndex ?? activeIndexRef.current;
         didSwitchTabRef.current = false;
+        if (isIos) {
+          draggingRef.current = true;
+          selectionX.stopAnimation((value) => {
+            if (draggingRef.current) dragStartRef.current = value;
+          });
+          dragStartRef.current = activeIndexRef.current * (dockMetricsRef.current.width - 2) / bottomNavRoutes.length;
+        }
       },
-      onPanResponderMove: (event) => {
+      onPanResponderMove: (event, gesture) => {
+        if (isIos) {
+          const tabWidth = (dockMetricsRef.current.width - 2) / bottomNavRoutes.length;
+          if (tabWidth <= 0) return;
+          const position = Math.max(0, Math.min(tabWidth * (bottomNavRoutes.length - 1), dragStartRef.current + gesture.dx));
+          selectionX.setValue(position);
+          draggedIndexRef.current = Math.round(position / tabWidth);
+          return;
+        }
         const touchedIndex = getEventTabIndex(event.nativeEvent.pageX, event.nativeEvent.locationX);
         if (touchedIndex !== null) navigateToIndex(touchedIndex);
       },
       onPanResponderRelease: () => {
+        if (isIos) {
+          draggingRef.current = false;
+          snapSelection(draggedIndexRef.current);
+          const route = bottomNavRoutes[draggedIndexRef.current];
+          if (route) navigateRef.current(route.id);
+          return;
+        }
         if (!didSwitchTabRef.current) {
           const selectedRoute = bottomNavRoutes[draggedIndexRef.current];
           if (selectedRoute) navigateRef.current(selectedRoute.id);
@@ -87,6 +127,10 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         didSwitchTabRef.current = false;
       },
       onPanResponderTerminate: () => {
+        if (isIos) {
+          draggingRef.current = false;
+          snapSelection(activeIndexRef.current);
+        }
         didSwitchTabRef.current = false;
       },
       onPanResponderTerminationRequest: () => false,
@@ -94,6 +138,11 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   }, []);
 
   const handleDockLayout = (event: LayoutChangeEvent) => {
+    // First layout has no previous selection position to animate from.
+    if (dockMetricsRef.current.width === 0) {
+      selectionX.setValue(activeIndexRef.current * Math.max(0, event.nativeEvent.layout.width - 2) / bottomNavRoutes.length);
+    }
+    setDockWidth(event.nativeEvent.layout.width);
     dockMetricsRef.current = {
       ...dockMetricsRef.current,
       width: event.nativeEvent.layout.width,
@@ -118,7 +167,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         <View
           ref={dockRef}
           onLayout={handleDockLayout}
-          {...dragResponder.panHandlers}
+          {...(hasNativeLiquidGlassNavigationSurface ? {} : dragResponder.panHandlers)}
           style={[
             styles.dock,
             isIos ? styles.iosDock : styles.androidDock,
@@ -128,7 +177,17 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           {isIos && !hasNativeLiquidGlassNavigationSurface ? (
             <IosGlassBackdrop theme={theme} role="dock" style={styles.iosDockBackdrop} />
           ) : null}
-          {isIos ? <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"} /> : null}
+          {hasNativeLiquidGlassNavigationSurface ? (
+            <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"}
+              onSelect={({ nativeEvent }) => {
+                const route = bottomNavRoutes[nativeEvent.index];
+                if (route) onNavigate(route.id);
+              }} />
+          ) : isIos && dockWidth > 2 ? (
+            <Animated.View pointerEvents="none" style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: (dockWidth - 2) / bottomNavRoutes.length - 8, transform: [{ translateX: selectionX }] }}>
+              <View style={[StyleSheet.absoluteFill, { borderRadius: 28, borderWidth: 1, backgroundColor: iosColors.activeBackground, borderColor: iosColors.activeBorder }]} />
+            </Animated.View>
+          ) : null}
           {bottomNavRoutes.map((route) => {
             const active = route.id === activeTabRoute;
             const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
@@ -140,18 +199,6 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                 active={active}
                 onPress={() => onNavigate(route.id)}
               >
-                {isIos && active && !hasNativeLiquidGlassNavigationSurface ? (
-                  <View
-                    pointerEvents="none"
-                    style={[
-                      styles.iosActivePill,
-                      {
-                        backgroundColor: iosColors.activeBackground,
-                        borderColor: iosColors.activeBorder,
-                      },
-                    ]}
-                  />
-                ) : null}
                 {isIos ? (
                   <View
                     style={[
@@ -206,9 +253,10 @@ function TabContent({
   theme: AppTheme;
 }) {
   const transition = useRef(new Animated.Value(active ? 1 : 0)).current;
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (!isIos) {
+    if (!isIos || reducedMotion !== false) {
       transition.setValue(active ? 1 : 0);
       return;
     }
@@ -220,7 +268,8 @@ function TabContent({
       mass: 0.72,
       useNativeDriver: true,
     }).start();
-  }, [active, isIos, transition]);
+    return () => transition.stopAnimation();
+  }, [active, isIos, transition, reducedMotion]);
 
   const useHighContrastIosMotion = isIos && theme.name === "dark";
   const iconMotion = {
@@ -286,6 +335,7 @@ function TabButton({
 }) {
   return (
     <Pressable
+      pointerEvents={hasNativeLiquidGlassNavigationSurface ? "none" : "auto"}
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
@@ -417,15 +467,6 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
     marginBottom: 2,
-  },
-  iosActivePill: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    bottom: 5,
-    left: 5,
-    borderWidth: 1,
-    borderRadius: 28,
   },
   label: {
     minWidth: 42,
