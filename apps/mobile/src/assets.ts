@@ -6,6 +6,8 @@ export const brandAssets = {
   wordmarkDark: require("../../../assets/wordmark/wordmark-h-dark-preview.png"),
   wordmarkLight: require("../../../assets/wordmark/wordmark-h-light-v2-preview.png"),
   iconPrimary: require("../../../assets/icon/icon-primary-512.png"),
+  iconLight: require("../../../assets/icon/icon-light-v2-512.png"),
+  iconDark: require("../../../assets/icon/icon-dark-512.png"),
 };
 
 export const outfitImageAssets: Record<string, number> = {

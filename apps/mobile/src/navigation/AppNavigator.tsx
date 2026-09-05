@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
+import { LaunchSplash } from "../components/LaunchSplash";
 import { ScreenTransition } from "../components/ScreenTransition";
 import { isLaunchHiddenRoute, isLaunchVisibleP0Route, type AppRouteId, type P0RouteId } from "./routes";
 import { HomeScreen } from "../screens/HomeScreen";
@@ -56,6 +57,11 @@ import { appColors, resolveAppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
+  const [launchVisible, setLaunchVisible] = React.useState(true);
+  const [launchReady, setLaunchReady] = React.useState(false);
+  const [launchStarted, setLaunchStarted] = React.useState(false);
+  const finishLaunch = React.useCallback(() => setLaunchVisible(false), []);
+  const readyLaunch = React.useCallback(() => setLaunchReady(true), []);
   const handledDeepLinkRef = useRef<string | null>(null);
   const systemTheme = useColorScheme();
   const theme = resolveAppTheme(
@@ -70,8 +76,13 @@ export function AppNavigator() {
 
   useEffect(() => {
     if (!appState.appStateHydrated) return;
-    void SplashScreen.hideAsync().catch(() => {});
-  }, [appState.appStateHydrated]);
+    if (!launchReady) return;
+    let active = true;
+    void SplashScreen.hideAsync().catch(() => {}).then(() => {
+      if (active) setLaunchStarted(true);
+    });
+    return () => { active = false; };
+  }, [appState.appStateHydrated, launchReady]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
@@ -231,7 +242,11 @@ export function AppNavigator() {
 
   return (
     <AppThemeProvider theme={theme}>
+      <View style={{ flex: 1, backgroundColor: appBackgroundColor }}>
       <SafeAreaView
+        accessibilityElementsHidden={launchVisible}
+        importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
+        pointerEvents={launchVisible ? "none" : "auto"}
         edges={["top", "right", "bottom", "left"]}
         style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}
       >
@@ -313,6 +328,8 @@ export function AppNavigator() {
           ) : null}
         </View>
       </SafeAreaView>
+      {launchVisible ? <LaunchSplash started={launchStarted} onReady={readyLaunch} onFinish={finishLaunch} /> : null}
+      </View>
     </AppThemeProvider>
   );
 }
