@@ -539,14 +539,6 @@ function getRepeatLabel(schedulePreference: P0ScreenProps["selectedDestinationSc
   return schedulePreference.repeatDays.map((day) => repeatDayLabels[day]).join("");
 }
 
-function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCare"]) {
-  const targetArrivalTime = care.departureAdvice?.targetArrivalTime;
-  const travelMinutes = care.departureAdvice?.travelMinutes;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
-  if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "확인 전";
-  return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
-}
-
 function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number): number {
   const [hourText, minuteText] = targetArrivalTime.split(":");
   const targetMinutes = Number(hourText) * 60 + Number(minuteText);

@@ -15,7 +15,7 @@ import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
+import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
@@ -340,11 +340,11 @@ function TabButton({
       accessibilityLabel={`${label} 탭`}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
+      android_ripple={Platform.OS === "android" ? androidMaterialRipple(theme) : undefined}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.item,
         Platform.OS === "android" ? styles.androidItem : null,
-        Platform.OS === "android" && pressed ? { backgroundColor: colorWithAlpha(theme.text, 0.08) } : null,
       ]}
     >
       {children}

@@ -5,8 +5,9 @@ import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
+import { radius, spacing, type AppTheme } from "../theme/tokens";
 
 type TermsConsentScreenProps = {
   gate: AccountGateState | null;
@@ -66,8 +67,16 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
   };
 
   return (
-    <AppScreen title="약관 동의" subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요" badge="필수">
-      <View style={[styles.progressCard, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+    <AppScreen
+      title="약관 동의"
+      subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요"
+      badge="필수"
+      onBack={onCancel}
+      compactHeader
+      contentGap={layout.accountContentGap}
+      contentPaddingTop={layout.weatherTopPadding}
+    >
+      <View style={[styles.progressCard, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         <View style={styles.copy}>
           <Text style={[styles.kicker, { color: theme.clear }]}>약관 상태</Text>
           <Text style={[styles.headline, { color: theme.text }]}>{statusLabel}</Text>
@@ -86,7 +95,7 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
         accessibilityRole="checkbox"
         accessibilityState={{ checked: allAccepted }}
         onPress={toggleAll}
-        style={[styles.allRow, { minHeight: layout.accountConsentRowMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+        style={({ pressed }) => [styles.allRow, pageStyles.card, { minHeight: layout.accountConsentRowMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]}
       >
         <CheckBox checked={allAccepted} theme={theme} />
         <View style={styles.copy}>
@@ -95,33 +104,7 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
         </View>
       </Pressable>
 
-      <View style={[styles.actionPanel, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }, cardShadow(theme)]}>
-        <View style={styles.actionCopy}>
-          <Text style={[styles.gateTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>
-            {gate?.selectedDestinationName ? `${gate.selectedDestinationName} 저장 후 ${returnLabel} 화면으로 돌아가요` : `${returnLabel} 화면으로 돌아가요`}
-          </Text>
-        </View>
-        <Pressable
-          accessibilityLabel={requiredAccepted ? "동의하고 계정 연결 계속" : "필수 동의 필요"}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !requiredAccepted || isSaving }}
-          onPress={() => {
-            if (requiredAccepted && !isSaving) void onComplete({ marketingAccepted: accepted.marketing });
-          }}
-          style={[styles.primaryButton, { backgroundColor: requiredAccepted ? theme.gold : theme.cardMuted, borderColor: requiredAccepted ? theme.gold : theme.border }]}
-        >
-          <Text style={[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }]}>
-            {isSaving ? "동의 저장 중" : requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
-          </Text>
-        </Pressable>
-        {authMessage ? <Text style={[styles.body, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
-        <Pressable accessibilityLabel="계정 연결 취소" accessibilityRole="button" onPress={onCancel} style={styles.cancelButton}>
-          <Text style={[styles.cancelText, { color: theme.subtle }]}>취소</Text>
-        </Pressable>
-      </View>
-
-      <View style={[styles.listPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+      <View style={[styles.listPanel, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
         {consentItems.map((item, index) => (
           <ConsentRow
             key={item.key}
@@ -134,6 +117,32 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
             withDivider={index < consentItems.length - 1}
           />
         ))}
+      </View>
+
+      <View style={[styles.actionPanel, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }]}>
+        <View style={styles.actionCopy}>
+          <Text style={[styles.gateTitle, pageStyles.sectionTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
+          <Text style={[styles.body, pageStyles.caption, { color: theme.muted }]}>
+            {gate?.selectedDestinationName ? `${gate.selectedDestinationName} 저장 후 ${returnLabel} 화면으로 돌아가요` : `${returnLabel} 화면으로 돌아가요`}
+          </Text>
+        </View>
+        <Pressable
+          accessibilityLabel={requiredAccepted ? "동의하고 계정 연결 계속" : "필수 동의 필요"}
+          accessibilityRole="button"
+          accessibilityState={{ busy: isSaving, disabled: !requiredAccepted || isSaving }}
+          onPress={() => {
+            if (requiredAccepted && !isSaving) void onComplete({ marketingAccepted: accepted.marketing });
+          }}
+          style={({ pressed }) => [styles.primaryButton, pageStyles.card, { borderWidth: 1, backgroundColor: requiredAccepted ? theme.gold : theme.cardMuted, borderColor: requiredAccepted ? theme.gold : theme.border, opacity: pressed ? 0.78 : 1 }]}
+        >
+          <Text style={[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }]}>
+            {isSaving ? "동의 저장 중" : requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
+          </Text>
+        </Pressable>
+        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[styles.body, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
+        <Pressable accessibilityLabel="계정 연결 취소" accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.cancelButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }]}>
+          <Text style={[styles.cancelText, { color: theme.subtle }]}>취소</Text>
+        </Pressable>
       </View>
     </AppScreen>
   );
@@ -162,9 +171,9 @@ function ConsentRow({
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       onPress={onPress}
-      style={[
+      style={({ pressed }) => [
         styles.consentRow,
-        { minHeight, paddingHorizontal: horizontalPadding },
+        { minHeight, paddingHorizontal: horizontalPadding, opacity: pressed ? 0.72 : 1 },
         withDivider ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
       ]}
     >

@@ -94,7 +94,7 @@ assertSourceIncludes("apps/mobile/src/providers/weatherLocations.ts", [
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", ["BackHandler", "goBack"]);
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", [
   'route === "O4" && appState.styleProfileReturnRoute',
-  "activeRoute={appState.styleProfileReturnRoute}",
+  'activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute}',
 ]);
 assertSourceIncludes("apps/mobile/src/config/weatherEnv.ts", [
   '"fixture" | "proxy" | "openmeteo"',
@@ -270,7 +270,7 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "getDestinationActionText",
   "getDestinationSchedule",
   "알림 켬",
-  "탭하면 상세 준비 확인",
+  "목적지를 추가하면 출발 날씨까지 챙겨드려요",
   "onRestoreRemovedDestination",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
@@ -389,8 +389,8 @@ assertSourceIncludes("apps/mobile/src/screens/PermissionGateScreen.tsx", [
 assertSourceExcludes("apps/mobile/src/screens/PermissionGateScreen.tsx", ["거부 상태", "readyCount", "${readyCount}/2"]);
 assertSourceIncludes("apps/mobile/src/screens/AccountConnectScreen.tsx", [
   "다음 단계",
-  "약관 확인 후 원래 화면으로 돌아감",
-  "위치·알림 권한은 계정과 별도",
+  "약관을 확인하면 원래 화면으로 돌아가요",
+  "위치·알림 권한은 계정과 별도로 선택해요",
   "사용할 계정 방식을 선택",
 ]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
@@ -402,7 +402,7 @@ assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
 ]);
 assertSourceIncludes("apps/mobile/src/providers/travelEstimateClient.ts", [
   "getInternationalFallbackTravelMinutes",
-  "해외 목적지 기본 이동시간",
+  "국가 간 경로 확인 필요",
 ]);
 assertSourceIncludes("packages/shared/src/fixtures/placeSearchFixtures.ts", [
   "도쿄 역",
@@ -489,13 +489,13 @@ assertSourceIncludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   "accountReady",
   "needsTerms",
   "profileTitle",
-  "연결된 계정",
-  "저장·동기화 사용 가능",
+  "getProviderConnectedTitle",
+  "저장한 목적지와 코디",
   "약관 동의",
   "필수 약관 동의 이어가기",
-  "약관 동의 완료",
+  "연결 완료",
   'onRequireAccount("account-connect", "A4")',
-  "로그아웃 확인",
+  "로그아웃 확정",
   "계정 작업 취소",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
@@ -503,9 +503,7 @@ assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   ">마이페이지<",
   "구독 관리",
   "데이터 내보내기",
-  "연결 상태",
   "계정 준비 완료",
-  "게스트 모드",
   "저장 · 동기화 사용 가능",
   "savedDestinationCount",
   "목적지 관리",
@@ -516,7 +514,7 @@ assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   "내보낼 데이터",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
-  "MY로 돌아가기",
+  "이전 화면으로 돌아가기",
   "`${item.title}, ${item.body}`",
   "개인정보처리방침",
   "오픈소스 라이선스",
@@ -533,7 +531,7 @@ assertSourceExcludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
   "상단 정책 목록으로 돌아가기",
-  "약관 동의 화면의 개인정보 수집·이용 동의 항목과 같은 기준임",
+  "옷장 사진에서는 사람 존재 여부만 등록 안전성 확인에 사용하며 신원은 추론하지 않음",
   "위치 변경, 권한 요청, 목적지 케어 화면과 같은 위치 기준을 사용함",
   "약관 동의와 동일 기준",
   "MY에서 위치·알림 설정 확인",
@@ -718,28 +716,27 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "buildHomeDecision",
   "buildDestinationDiff",
   "buildRainWindow",
-  "decisionHero",
+  'testID="home-decision-stack"',
+  'testID="home-plan-card"',
   "HomeDecisionHero",
+  "DestinationSelectorCard",
+  "HomeValueTransition",
   "VisualDecisionCard",
   "HomeOutfitPreviewCard",
   "const HOME_OUTFIT_CARD_VISIBLE = true;",
   "HOME_OUTFIT_FALLBACK_IMAGE",
   "outfitImageAssets",
   "getTodayMinMax",
-  "FeelsLikeCard",
-  "DecisionMetric",
   "WeatherStatusPanel",
   "destinationReady",
   "목적지 추가",
-  "언제 나갈까",
-  "비가 잦아들 때",
+  "추천 출발 시간",
+  "목적지 강수",
   "오늘 챙길 것",
   "오늘 입기 좋은 코디",
   "getHomeOutfitCopy(outfit.decisionText, packTitle)",
-  "weatherOrbIcon",
   "getHeroTemperatureRange",
   "최고 ",
-  "showcaseMetaSub",
   "onNavigate(\"C1\")",
   "onNavigate(\"H6\")",
   "state.weatherProvider.status",
@@ -830,7 +827,7 @@ assertSourceExcludes("apps/mobile/src/screens/NotificationCenterScreen.tsx", [
 assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "destinationWeatherById",
   "buildDestinationWarning",
-  "getRecommendedDepartureTime(care)",
+  "getDestinationSchedule(destination, care)",
   "originWeather.current.tempC",
   "destinationWeather.current.tempC",
   "destination.alertCondition.rainThresholdPct",
@@ -842,7 +839,7 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "getRepeatLabel",
   "도착",
   "강수",
-  "{item.departureTime} → {item.arrivalTime}",
+  "{item.arrivalTime} 도착 목표",
 ]);
 assertSourceIncludes("apps/mobile/src/data/demoState.ts", [
   "destinationWeatherById",

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { BackButton } from "../components/BackButton";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppScreen } from "../components/AppScreen";
 import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { radius, spacing } from "../theme/tokens";
 
 export function AccountManagementScreen({
   accountLinked,
@@ -43,31 +44,18 @@ export function AccountManagementScreen({
   };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          {
-            width: "100%",
-            maxWidth: layout.contentMaxWidth,
-            gap: layout.accountContentGap,
-            paddingHorizontal: layout.screenHorizontalPadding,
-            paddingTop: layout.weatherTopPadding,
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-
-        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
-          <BackButton onPress={() => onNavigate("M1")} />
-          <Text style={[styles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>계정 관리</Text>
-        </View>
-
+    <AppScreen
+      title="계정 관리"
+      subtitle="연결 상태와 계정 데이터를 관리해요"
+      onBack={() => onNavigate("M1")}
+      compactHeader
+      contentGap={layout.accountContentGap}
+      contentPaddingTop={layout.weatherTopPadding}
+    >
         <View
           style={[
             styles.profileCard,
+            pageStyles.card,
             {
               minHeight: layout.accountProfileMinHeight,
               paddingHorizontal: layout.accountPanelPadding,
@@ -75,7 +63,6 @@ export function AccountManagementScreen({
               backgroundColor: theme.card,
               borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border,
             },
-            cardShadow(theme),
           ]}
         >
           <View style={[styles.profileVisual, { backgroundColor: provider === "apple" ? "#FFFFFF" : theme.cardStrong }]}>
@@ -84,13 +71,13 @@ export function AccountManagementScreen({
           </View>
           <View style={styles.profileCopy}>
             <View style={styles.profileTitleRow}>
-              <Text style={[styles.profileTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
+              <Text style={[styles.profileTitle, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
               <View style={[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }]}>
                 <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
               </View>
             </View>
-            <Text style={[styles.profileMeta, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
-            {accountAuthMessage ? <Text style={[styles.profileMeta, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }]} numberOfLines={2}>{accountAuthMessage}</Text> : null}
+            <Text style={[styles.profileMeta, pageStyles.caption, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
+            {accountAuthMessage ? <Text accessibilityLiveRegion="polite" selectable style={[styles.profileMeta, pageStyles.caption, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }]} numberOfLines={2}>{accountAuthMessage}</Text> : null}
           </View>
         </View>
 
@@ -99,12 +86,12 @@ export function AccountManagementScreen({
             accessibilityLabel={primaryAccessibilityLabel}
             accessibilityRole="button"
             onPress={handlePrimaryAccountAction}
-            style={[styles.primaryRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+            style={({ pressed }) => [styles.primaryRow, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]}
           >
             <View style={styles.actionIcon}>
               <DoorGlyph color={primaryTone} />
             </View>
-            <Text style={[styles.primaryText, { color: theme.text }]}>{primaryLabel}</Text>
+            <Text style={[styles.primaryText, pageStyles.sectionTitle, { color: theme.text }]}>{primaryLabel}</Text>
             <ChevronRight color={theme.subtle} />
           </Pressable>
         ) : null}
@@ -119,7 +106,7 @@ export function AccountManagementScreen({
                   if (dangerConfirm === "logout") onSignOutAccount();
                   else setDangerConfirm("logout");
                 }}
-                style={[styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border }]}
+                style={({ pressed }) => [styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border, opacity: pressed ? 0.72 : 1 }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "logout" ? theme.alert : theme.text }]}>
                   {dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
@@ -132,7 +119,7 @@ export function AccountManagementScreen({
                   if (dangerConfirm === "delete") void onDeleteAccount();
                   else setDangerConfirm("delete");
                 }}
-                style={[styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : "transparent", borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }]}
+                style={({ pressed }) => [styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : "transparent", borderColor: dangerConfirm === "delete" ? theme.alert : theme.border, opacity: pressed ? 0.72 : 1 }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>{dangerConfirm === "delete" ? "탈퇴 확정" : "회원 탈퇴"}</Text>
               </Pressable>
@@ -147,8 +134,7 @@ export function AccountManagementScreen({
         ) : null}
 
         <View style={styles.bottomSpacer} />
-      </ScrollView>
-    </View>
+    </AppScreen>
   );
 }
 
@@ -186,37 +172,6 @@ function ChevronRight({ color }: { color: string }) {
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    minHeight: "100%",
-    paddingBottom: spacing.xl,
-    alignSelf: "center",
-  },
-  atmosphere: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 280,
-    height: 500,
-    opacity: 0.34,
-    borderRadius: 78,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  title: {
-    fontSize: 20,
-    lineHeight: 25,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
