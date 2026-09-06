@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
 import type { WeatherCondition } from "@weatheron/shared";
 import type { AppTheme } from "../theme/tokens";
-import { useIsNightHour } from "../utils/useIsNightHour";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 // docs/planning/WeatherON_planning_v5.html §20 "날씨 다이나믹 배경 애니메이션 — 홈(H1)"
-// 네이티브 gradient 모듈 없이 RN View 레이어로 6종 배경색 + 상태별 모션을 구성한다.
+// RN View의 transform·opacity로 날씨별 모션을 구성함.
 // 라이트 모드는 동일 모티프를 유지하되 각 색상을 흰색 쪽으로 리틴트한다(스펙 "색·opacity만 리틴트" 지침).
-type MotionState = "clear" | "cloud" | "rain" | "snow" | "storm" | "night";
+type MotionState = "clear" | "cloud" | "rain" | "snow" | "storm" | "night" | "dust";
 
 const DARK_GRADIENTS: Record<Exclude<MotionState, "night">, [string, string, string]> = {
   clear: ["#071E33", "#0D3D62", "#176B9E"],
@@ -15,6 +15,7 @@ const DARK_GRADIENTS: Record<Exclude<MotionState, "night">, [string, string, str
   rain: ["#071B2A", "#10354B", "#1D5872"],
   snow: ["#102C43", "#2A5871", "#5B91A9"],
   storm: ["#160D2E", "#2C1A4A", "#51386F"],
+  dust: ["#302A24", "#544839", "#827056"],
 };
 const NIGHT_GRADIENT: [string, string, string] = ["#030B18", "#07182B", "#0D2D49"];
 
@@ -23,49 +24,35 @@ const LIGHT_RETINT_RATIO = 0.8;
 type Props = {
   condition: WeatherCondition | string;
   theme: AppTheme;
-  // "scene": 그라디언트 배경 + 전체 화면 파티클(카드 뒤에 깔림).
-  // "overlay": 배경 없이 옅은 파티클만 — 카드 위에 얹어 iOS 날씨앱처럼 "비가 화면 앞을 지나가는" 느낌을 준다.
-  variant?: "scene" | "overlay";
+  isNight: boolean;
   subtle?: boolean;
 };
 
-// iOS 27 날씨앱처럼 날씨 모션이 화면 전체를 채우도록, 파티클(비·눈·별)을 상단 1/3이 아니라
-// 화면 전체 높이에 걸쳐 떨어뜨린다. 카드가 불투명이라 카드 뒤 파티클은 카드 사이 여백에서만 보이고,
-// 추가로 variant="overlay" 레이어를 카드 위에 얹으면 비가 UI 앞을 가로지르는 것처럼 보인다.
-export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, variant = "scene", subtle = false }: Props) {
+// 정보 카드 뒤에서만 움직이며 터치·스크린리더 탐색에 참여하지 않음.
+export const WeatherBackground = React.memo(function WeatherBackground({ condition, theme, isNight, subtle = false }: Props) {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const isNight = useIsNightHour();
   const enabled = useAnimationEnabled();
   const motionState = resolveMotionState(condition, isNight);
   const gradientColors = useMemo(() => resolveGradient(motionState, theme.name), [motionState, theme.name]);
   const fullBand = Math.max(windowHeight, 320);
 
-  if (variant === "overlay") {
-    // 카드 위에 얹히는 전경 레이어: 비/폭풍/눈에만, 성긴 밀도·낮은 대비로 가독성을 해치지 않게.
-    return (
-      <View pointerEvents="none" style={styles.wrap}>
-        {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={12} enabled={enabled} foreground /> : null}
-        {motionState === "storm" ? <RainDropsLayer height={fullBand} color={theme.sky} count={16} enabled={enabled} intense foreground /> : null}
-        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={12} enabled={enabled} foreground /> : null}
-      </View>
-    );
-  }
-
   return (
-    <View pointerEvents="none" style={styles.wrap}>
-      <GradientBackdrop colors={gradientColors} windowWidth={windowWidth} subtle={subtle} />
+    <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.wrap}>
+      <View style={[StyleSheet.absoluteFill, { opacity: subtle ? (theme.name === "dark" ? 0.32 : 0.24) : 1 }]}><GradientBackdrop colors={gradientColors} windowWidth={windowWidth} subtle={subtle} /></View>
       <View style={StyleSheet.absoluteFill}>
         {motionState === "clear" ? <GlowPulseLayer color={theme.gold} enabled={enabled} /> : null}
-        {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.55} enabled={enabled} /> : null}
+        {motionState === "cloud" ? <CloudDriftLayer height={windowHeight * 0.65} color={theme.name === "dark" ? "#FFFFFF" : theme.sky} enabled={enabled} /> : null}
+        {motionState === "dust" ? <CloudDriftLayer height={windowHeight} color={theme.gold} enabled={enabled} haze /> : null}
         {motionState === "rain" ? <RainDropsLayer height={fullBand} color={theme.sky} count={subtle ? 16 : 48} enabled={enabled} /> : null}
         {motionState === "storm" ? (
           <>
             <RainDropsLayer height={fullBand} color={theme.sky} count={subtle ? 24 : 64} enabled={enabled} intense />
-            {!subtle ? <LightningFlashLayer enabled={enabled} /> : null}
+            <CloudDriftLayer height={windowHeight * 0.55} color={theme.sky} enabled={enabled} />
+            <LightningFlashLayer enabled={enabled} />
           </>
         ) : null}
-        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={32} enabled={enabled} /> : null}
-        {motionState === "night" ? <StarTwinkleLayer height={windowHeight} count={20} enabled={enabled} /> : null}
+        {motionState === "snow" ? <SnowFlakesLayer height={fullBand} count={subtle ? 20 : 32} color={theme.name === "dark" ? "#FFFFFF" : theme.sky} enabled={enabled} /> : null}
+        {motionState === "night" ? <><GlowPulseLayer color={theme.skyLite} enabled={enabled} night /><StarTwinkleLayer height={windowHeight} count={20} color={theme.name === "dark" ? "#FFFFFF" : theme.sky} enabled={enabled} /></> : null}
       </View>
     </View>
   );
@@ -87,11 +74,12 @@ function GradientBackdrop({ colors, windowWidth, subtle }: { colors: [string, st
   );
 }
 
-function resolveMotionState(condition: WeatherCondition | string, isNight: boolean): MotionState {
+export function resolveMotionState(condition: WeatherCondition | string, isNight: boolean): MotionState {
   if (condition === "clear") return isNight ? "night" : "clear";
   if (condition === "rain") return "rain";
   if (condition === "storm") return "storm";
   if (condition === "snow") return "snow";
+  if (condition === "dust" || condition === "fog" || condition === "haze") return "dust";
   return "cloud";
 }
 
@@ -131,32 +119,18 @@ function startRepeating(getAnimation: () => Animated.CompositeAnimation, onItera
 
 // Reduce Motion 접근성 설정과 앱 포그라운드 상태를 함께 반영해 애니메이션 on/off를 결정한다.
 function useAnimationEnabled(): boolean {
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const reduceMotion = useReducedMotion();
   const [active, setActive] = useState(AppState.currentState === "active");
-
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled?.()
-      .then((value) => {
-        if (mounted) setReduceMotion(value);
-      })
-      .catch(() => {});
-    const subscription = AccessibilityInfo.addEventListener?.("reduceMotionChanged", (value) => setReduceMotion(value));
-    return () => {
-      mounted = false;
-      subscription?.remove?.();
-    };
-  }, []);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => setActive(state === "active"));
     return () => subscription.remove();
   }, []);
 
-  return active && !reduceMotion;
+  return active && reduceMotion === false;
 }
 
-function GlowPulseLayer({ color, enabled }: { color: string; enabled: boolean }) {
+function GlowPulseLayer({ color, enabled, night = false }: { color: string; enabled: boolean; night?: boolean }) {
   const opacity = useRef(new Animated.Value(0.1)).current;
 
   useEffect(() => {
@@ -167,8 +141,8 @@ function GlowPulseLayer({ color, enabled }: { color: string; enabled: boolean })
     }
     const cancel = startRepeating(() =>
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.16, duration: 5000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.1, duration: 5000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.24, duration: 4500, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(opacity, { toValue: 0.1, duration: 4500, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
       ]),
     );
     return () => {
@@ -177,26 +151,48 @@ function GlowPulseLayer({ color, enabled }: { color: string; enabled: boolean })
     };
   }, [enabled, opacity]);
 
+  const size = night ? 130 : 220;
   return (
     <Animated.View
-      style={[styles.glow, { backgroundColor: color, opacity }]}
-    />
+      style={[styles.glow, {
+        width: size, height: size, marginLeft: -size / 2, opacity,
+        transform: [
+          { scale: opacity.interpolate({ inputRange: [0.1, 0.24], outputRange: [0.9, 1.15] }) },
+          { rotate: opacity.interpolate({ inputRange: [0.1, 0.24], outputRange: ["-8deg", "8deg"] }) },
+        ],
+      }]}
+    >
+      {[0, 0.12, 0.24].map((inset, index) => <View key={inset} style={{
+        position: "absolute", left: size * inset, top: size * inset,
+        width: size * (1 - inset * 2), height: size * (1 - inset * 2),
+        borderRadius: size, backgroundColor: color, opacity: [0.16, 0.28, 0.6][index],
+      }} />)}
+      {!night ? Array.from({ length: 8 }, (_, index) => {
+        const angle = index * Math.PI / 4;
+        return <View key={index} style={{
+          position: "absolute", left: size / 2 + Math.cos(angle) * 88 - 15,
+          top: size / 2 + Math.sin(angle) * 88 - 1,
+          width: 30, height: 2, borderRadius: 1, backgroundColor: color,
+          transform: [{ rotate: `${index * 45}deg` }],
+        }} />;
+      }) : null}
+    </Animated.View>
   );
 }
 
-function CloudDriftLayer({ height, enabled }: { height: number; enabled: boolean }) {
+function CloudDriftLayer({ height, enabled, color, haze = false }: { height: number; enabled: boolean; color: string; haze?: boolean }) {
   const layers = useMemo(
     () => [
-      { top: height * 0.14, width: 220, opacity: 0.09, duration: 72000 },
-      { top: height * 0.32, width: 170, opacity: 0.06, duration: 88000 },
-      { top: height * 0.5, width: 260, opacity: 0.07, duration: 64000 },
+      { top: height * 0.14, width: 220, opacity: 0.1, duration: 24000 },
+      { top: height * 0.32, width: 170, opacity: 0.07, duration: 30000 },
+      { top: height * 0.5, width: 260, opacity: 0.08, duration: 20000 },
     ],
     [height],
   );
   return (
     <>
       {layers.map((layer, index) => (
-        <CloudDriftShape key={index} {...layer} enabled={enabled} reverse={index % 2 === 1} />
+        <CloudDriftShape key={index} {...layer} color={color} haze={haze} enabled={enabled} reverse={index % 2 === 1} />
       ))}
     </>
   );
@@ -209,6 +205,8 @@ function CloudDriftShape({
   duration,
   enabled,
   reverse,
+  color,
+  haze,
 }: {
   top: number;
   width: number;
@@ -216,6 +214,8 @@ function CloudDriftShape({
   duration: number;
   enabled: boolean;
   reverse: boolean;
+  color: string;
+  haze: boolean;
 }) {
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -226,8 +226,10 @@ function CloudDriftShape({
     }
     progress.setValue(0);
     const cancel = startRepeating(
-      () => Animated.timing(progress, { toValue: 1, duration, easing: Easing.linear, useNativeDriver: true }),
-      () => progress.setValue(0),
+      () => Animated.sequence([
+        Animated.timing(progress, { toValue: 1, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(progress, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+      ]),
     );
     return () => {
       cancel();
@@ -235,16 +237,22 @@ function CloudDriftShape({
     };
   }, [duration, enabled, progress]);
 
-  const outputRange = reverse ? [width, -width] : [-width, width];
+  const outputRange = reverse ? [60, -60] : [-60, 60];
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange });
 
   return (
     <Animated.View
       style={[
         styles.cloud,
-        { top, width, height: width * 0.42, borderRadius: width * 0.21, opacity, transform: [{ translateX }] },
+        { top, left: reverse ? "30%" : "5%", width: haze ? width * 2 : width, height: width * (haze ? 0.12 : 0.42), opacity, transform: [{ translateX }] },
       ]}
-    />
+    >
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: color, borderRadius: width }]} />
+      {!haze ? <>
+        <View style={{ position: "absolute", backgroundColor: color, width: width * 0.48, height: width * 0.48, borderRadius: width, top: -width * 0.18, left: width * 0.16 }} />
+        <View style={{ position: "absolute", backgroundColor: color, width: width * 0.36, height: width * 0.36, borderRadius: width, top: -width * 0.09, right: width * 0.12 }} />
+      </> : null}
+    </Animated.View>
   );
 }
 
@@ -256,14 +264,12 @@ function RainDropsLayer({
   count,
   enabled,
   intense = false,
-  foreground = false,
 }: {
   height: number;
   color: string;
   count: number;
   enabled: boolean;
   intense?: boolean;
-  foreground?: boolean;
 }) {
   const dropBand = Math.max(height, 220);
   const particles = useMemo<RainParticleSpec[]>(
@@ -276,8 +282,7 @@ function RainDropsLayer({
       })),
     [count, intense],
   );
-  // 카드 위에 얹히는 전경 레이어는 가독성을 위해 더 옅게.
-  const dropOpacity = foreground ? 0.1 : intense ? 0.2 : 0.15;
+  const dropOpacity = intense ? 0.2 : 0.15;
   return (
     <>
       {particles.map((particle, index) => (
@@ -308,7 +313,7 @@ function RainDrop({
       return;
     }
     const cancel = startRepeating(
-      () => Animated.timing(progress, { toValue: 1, duration: particle.duration, easing: Easing.linear, useNativeDriver: true }),
+      () => Animated.timing(progress, { toValue: 1, duration: particle.duration, easing: Easing.linear, useNativeDriver: true, isInteraction: false }),
       () => progress.setValue(0),
     );
     return () => {
@@ -337,7 +342,7 @@ function RainDrop({
 
 type SnowParticleSpec = { left: number; startPhase: number; duration: number; size: number; sway: number };
 
-function SnowFlakesLayer({ height, count, enabled, foreground = false }: { height: number; count: number; enabled: boolean; foreground?: boolean }) {
+function SnowFlakesLayer({ height, count, enabled, color }: { height: number; count: number; enabled: boolean; color: string }) {
   const band = Math.max(height, 220);
   const particles = useMemo<SnowParticleSpec[]>(
     () =>
@@ -350,17 +355,17 @@ function SnowFlakesLayer({ height, count, enabled, foreground = false }: { heigh
       })),
     [count],
   );
-  const peakOpacity = foreground ? 0.14 : 0.22;
+  const peakOpacity = 0.3;
   return (
     <>
       {particles.map((particle, index) => (
-        <SnowFlake key={index} band={band} particle={particle} enabled={enabled} peakOpacity={peakOpacity} />
+        <SnowFlake key={index} band={band} particle={particle} enabled={enabled} peakOpacity={peakOpacity} color={color} />
       ))}
     </>
   );
 }
 
-function SnowFlake({ band, particle, enabled, peakOpacity }: { band: number; particle: SnowParticleSpec; enabled: boolean; peakOpacity: number }) {
+function SnowFlake({ band, particle, enabled, peakOpacity, color }: { band: number; particle: SnowParticleSpec; enabled: boolean; peakOpacity: number; color: string }) {
   const fall = useRef(new Animated.Value(particle.startPhase)).current;
   const sway = useRef(new Animated.Value(0)).current;
 
@@ -371,13 +376,13 @@ function SnowFlake({ band, particle, enabled, peakOpacity }: { band: number; par
       return;
     }
     const cancelFall = startRepeating(
-      () => Animated.timing(fall, { toValue: 1, duration: particle.duration, easing: Easing.linear, useNativeDriver: true }),
+      () => Animated.timing(fall, { toValue: 1, duration: particle.duration, easing: Easing.linear, useNativeDriver: true, isInteraction: false }),
       () => fall.setValue(0),
     );
     const cancelSway = startRepeating(() =>
       Animated.sequence([
-        Animated.timing(sway, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(sway, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(sway, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(sway, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
       ]),
     );
     return () => {
@@ -402,6 +407,7 @@ function SnowFlake({ band, particle, enabled, peakOpacity }: { band: number; par
           height: particle.size,
           borderRadius: particle.size / 2,
           opacity: flakeOpacity,
+          backgroundColor: color,
           transform: [{ translateY }, { translateX }],
         },
       ]}
@@ -411,7 +417,7 @@ function SnowFlake({ band, particle, enabled, peakOpacity }: { band: number; par
 
 type StarSpec = { left: number; top: number; startPhase: number; duration: number; size: number };
 
-function StarTwinkleLayer({ height, count, enabled }: { height: number; count: number; enabled: boolean }) {
+function StarTwinkleLayer({ height, count, enabled, color }: { height: number; count: number; enabled: boolean; color: string }) {
   const stars = useMemo<StarSpec[]>(
     () =>
       Array.from({ length: count }, () => ({
@@ -426,13 +432,13 @@ function StarTwinkleLayer({ height, count, enabled }: { height: number; count: n
   return (
     <>
       {stars.map((star, index) => (
-        <Star key={index} star={star} enabled={enabled} />
+        <Star key={index} star={star} enabled={enabled} color={color} />
       ))}
     </>
   );
 }
 
-function Star({ star, enabled }: { star: StarSpec; enabled: boolean }) {
+function Star({ star, enabled, color }: { star: StarSpec; enabled: boolean; color: string }) {
   const twinkle = useRef(new Animated.Value(star.startPhase)).current;
 
   useEffect(() => {
@@ -442,8 +448,8 @@ function Star({ star, enabled }: { star: StarSpec; enabled: boolean }) {
     }
     const cancel = startRepeating(() =>
       Animated.sequence([
-        Animated.timing(twinkle, { toValue: 1, duration: star.duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(twinkle, { toValue: 0, duration: star.duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(twinkle, { toValue: 1, duration: star.duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(twinkle, { toValue: 0, duration: star.duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
       ]),
     );
     return () => {
@@ -458,7 +464,7 @@ function Star({ star, enabled }: { star: StarSpec; enabled: boolean }) {
     <Animated.View
       style={[
         styles.star,
-        { left: `${star.left}%`, top: star.top, width: star.size, height: star.size, borderRadius: star.size / 2, opacity },
+        { backgroundColor: color, left: `${star.left}%`, top: star.top, width: star.size, height: star.size, borderRadius: star.size / 2, opacity },
       ]}
     />
   );
@@ -477,8 +483,8 @@ function LightningFlashLayer({ enabled }: { enabled: boolean }) {
       timeoutId = setTimeout(() => {
         if (cancelled) return;
         Animated.sequence([
-          Animated.timing(opacity, { toValue: 0.06, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.035, duration: 900, easing: Easing.out(Easing.quad), useNativeDriver: true, isInteraction: false }),
+          Animated.timing(opacity, { toValue: 0, duration: 1600, easing: Easing.in(Easing.quad), useNativeDriver: true, isInteraction: false }),
         ]).start(() => {
           if (!cancelled) scheduleFlash();
         });
@@ -535,7 +541,6 @@ const styles = StyleSheet.create({
   },
   cloud: {
     position: "absolute",
-    backgroundColor: "#FFFFFF",
   },
   rainDrop: {
     position: "absolute",

@@ -1,4 +1,4 @@
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
@@ -68,7 +68,6 @@ export function DestinationListScreen({
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
   const resultBanner = getDestinationResultBanner(accountGateResult, permissionGateResult, hasDestinations);
   const selectedCard = destinationCards.find((item) => item.place.id === selectedDestinationPlace.id) ?? destinationCards[0];
-  const recommendedDepartureTime = getRecommendedDepartureTime(care);
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -86,9 +85,8 @@ export function DestinationListScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {!iosPage ? <View style={[styles.atmosphere, !hasDestinations ? styles.atmosphereEmpty : null, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={[styles.header, iosPage && { minHeight: 44, paddingTop: 0, justifyContent: "flex-start" }]}>
+        <View style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "flex-start" }]}>
           <Text
             style={[
               styles.title,
@@ -97,56 +95,22 @@ export function DestinationListScreen({
                 fontSize: layout.screenTitleFontSize,
                 lineHeight: layout.screenTitleLineHeight,
               },
-              iosPage?.title,
+              pageStyles.title,
             ]}
           >
             출발
           </Text>
         </View>
 
-        {iosPage ? (
+        {(
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={selectedCard ? `${selectedCard.title} 출발 상세 보기` : "첫 목적지 추가"}
             onPress={() => { if (selectedCard) { onSelectDestinationPlace(selectedCard.place); onNavigate("G2"); } else onNavigate("P1"); }}
             style={{ minHeight: 80, gap: 4, paddingVertical: 8 }}>
-            <Text style={[iosPage.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
-            <Text style={[iosPage.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
-            <Text style={[iosPage.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
+            <Text style={[pageStyles.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
           </FeedbackPressable>
-        ) : <FeedbackPressable
-          accessibilityLabel={hasDestinations ? "오늘 출발 준비 상세 보기" : "첫 목적지 추가"}
-          accessibilityRole="button"
-          onPress={() => {
-            if (hasDestinations) {
-              onSelectDestinationPlace(destinationCards[0].place);
-              onNavigate("G2");
-              return;
-            }
-            onNavigate("P1");
-          }}
-          style={[
-            styles.todayCard,
-            { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderLeftColor: theme.clear },
-            cardShadow(theme),
-          ]}
-        >
-          <View style={styles.todayTop}>
-            <View>
-              <Text style={[styles.todayLabel, { color: theme.subtle }]}>오늘 준비</Text>
-              <Text style={[styles.todayTitle, { color: theme.text }]}>{hasDestinations ? "알아서 챙기는 중" : "목적지 추가 대기"}</Text>
-            </View>
-            <View style={[styles.alertPill, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.alertPillText, { color: theme.clear }]}>{alertLabel}</Text>
-            </View>
-          </View>
-          <View style={[styles.prepMetricStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <PrepMetric label="날씨 비교" value={hasDestinations ? `${destinationCards.length}곳` : "대기"} icon={uiIconAssets.check} theme={theme} />
-            <PrepMetric label="출발" value={hasDestinations ? recommendedDepartureTime : "필요"} icon={uiIconAssets.clock} theme={theme} />
-            <PrepMetric label="비 완화" value={hasDestinations ? "확인" : "대기"} icon={uiIconAssets.rain} theme={theme} />
-          </View>
-          <Text style={[styles.todayHint, { color: theme.subtle }]}>
-            {hasDestinations ? "탭하면 상세 준비 확인" : "추가하면 출발·강수 자동 계산"}
-          </Text>
-        </FeedbackPressable>}
+        )}
 
         <View style={styles.destinationList}>
           {hasDestinations ? (
@@ -230,8 +194,8 @@ function EmptyDestinationState({
           borderColor: theme.border,
         },
         cardShadow(theme),
-        iosPage?.card,
-        iosPage && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border, borderColor: theme.border },
+        pageStyles.card,
+        { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border, borderColor: theme.border },
       ]}
     >
       <View style={styles.emptyHeader}>
@@ -334,8 +298,8 @@ function DestinationCard({
           paddingVertical,
         },
         cardShadow(theme),
-        iosPage?.card,
-        iosPage && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: selected ? selectedAccent : theme.border, borderColor: selected ? selectedAccent : theme.border },
+        pageStyles.card,
+        { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: selected ? selectedAccent : theme.border, borderColor: selected ? selectedAccent : theme.border },
       ]}
     >
       <FeedbackPressable
@@ -352,9 +316,9 @@ function DestinationCard({
           <View style={styles.destinationTitleColumn}>
             <View style={styles.destinationNameRow}>
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
-              <Text style={[styles.destinationName, iosPage?.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+              <Text style={[styles.destinationName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
             </View>
-            <Text style={[styles.destinationArea, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
+            <Text style={[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -362,10 +326,10 @@ function DestinationCard({
           <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
         </View>
 
-        {iosPage ? <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-          <Text style={[iosPage.number, { color: theme.text }]}>{item.departureTime}</Text>
-          <Text style={[iosPage.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
-        </View> : null}
+        {<View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+          <Text style={[pageStyles.number, { color: theme.text }]}>{item.departureTime}</Text>
+          <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
+        </View>}
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
             <SunGlyph color={theme.clear} />
@@ -380,72 +344,12 @@ function DestinationCard({
           </View>
         </View>
 
-        {!iosPage ? <View style={styles.destinationPrepRow}>
-          <CompactSignal icon={uiIconAssets.clock} label={item.departureTime} color={theme.clear} theme={theme} />
-          <CompactSignal icon={uiIconAssets.rain} label={item.rainPct} color={warningColor} theme={theme} />
-          <OutfitSignal item={item} theme={theme} />
-        </View> : null}
-
         <View style={styles.destinationFooterRow}>
           <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
           <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>{item.repeatLabel}</Text>
         </View>
       </FeedbackPressable>
 
-    </View>
-  );
-}
-
-function CompactSignal({
-  icon,
-  label,
-  color,
-  theme,
-}: {
-  icon: number;
-  label: string;
-  color: string;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.compactSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <Image source={icon} style={[styles.compactSignalIcon, { tintColor: color }]} resizeMode="contain" />
-      <Text style={[styles.compactSignalText, { color: theme.text }]} numberOfLines={1}>{label}</Text>
-    </View>
-  );
-}
-
-function OutfitSignal({ item, theme }: { item: DestinationCardModel; theme: AppTheme }) {
-  return (
-    <View
-      accessibilityLabel={`목적지 코디 ${item.outfitTitle}, 매치 ${item.outfitMatchPct}%`}
-      style={[styles.outfitSignal, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
-    >
-      <View style={styles.outfitPreviewStack}>
-        {item.outfitItems.slice(0, 3).map((outfitItem, index) => {
-          const imageSource = getOutfitImageSource(outfitItem.imageUrl);
-          return (
-            <View
-              key={outfitItem.id}
-              style={[
-                styles.outfitPreviewBubble,
-                index > 0 ? styles.outfitPreviewBubbleOverlap : null,
-                { backgroundColor: theme.card, borderColor: theme.cardStrong },
-              ]}
-            >
-              {imageSource ? (
-                <Image source={imageSource} style={styles.outfitPreviewImage} resizeMode="contain" />
-              ) : (
-                <Image source={uiIconAssets.shirt} style={[styles.outfitPreviewFallback, { tintColor: theme.clear }]} resizeMode="contain" />
-              )}
-            </View>
-          );
-        })}
-      </View>
-      <View style={styles.outfitSignalCopy}>
-        <Text style={[styles.outfitSignalTitle, { color: theme.text }]} numberOfLines={1}>{item.outfitTitle}</Text>
-        <Text style={[styles.outfitSignalMeta, { color: theme.clear }]} numberOfLines={1}>{item.outfitMatchPct}%</Text>
-      </View>
     </View>
   );
 }
@@ -459,19 +363,6 @@ function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: A
   if (!permissionReady) return theme.warm;
   if (careEnabled) return theme.clear;
   return theme.subtle;
-}
-
-function PrepMetric({ label, value, icon, theme }: { label: string; value: string; icon: number; theme: AppTheme }) {
-  const color = theme.clear;
-  return (
-    <View style={styles.prepMetric}>
-      <View style={styles.prepMetricLabelRow}>
-        <Image source={icon} style={[styles.prepMetricIcon, { tintColor: color }]} resizeMode="contain" />
-        <Text style={[styles.prepMetricLabel, { color: theme.subtle }]} numberOfLines={1}>{label}</Text>
-      </View>
-      <Text style={[styles.prepMetricValue, { color }]} numberOfLines={1}>{value}</Text>
-    </View>
-  );
 }
 
 function buildDestinationCards(
@@ -712,20 +603,6 @@ const styles = StyleSheet.create({
     minHeight: "100%",
     alignSelf: "center",
   },
-  atmosphere: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: -110,
-    height: 300,
-    opacity: 0.72,
-    borderTopLeftRadius: 160,
-    borderTopRightRadius: 160,
-  },
-  atmosphereEmpty: {
-    bottom: -190,
-    opacity: 0.26,
-  },
   header: {
     minHeight: 40,
     flexDirection: "row",
@@ -738,80 +615,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     fontWeight: "900",
     letterSpacing: 0,
-  },
-  todayCard: {
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    borderLeftWidth: 2,
-  },
-  todayTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: spacing.md,
-  },
-  todayLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  todayTitle: {
-    marginTop: 2,
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
-  },
-  alertPill: {
-    minWidth: 60,
-    height: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  alertPillText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  prepMetricStrip: {
-    flexDirection: "row",
-    gap: spacing.xs,
-    padding: 6,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  prepMetric: {
-    flex: 1,
-    minHeight: 42,
-    justifyContent: "center",
-    gap: 2,
-    paddingHorizontal: spacing.xs,
-  },
-  prepMetricLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-    letterSpacing: 0,
-  },
-  prepMetricLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  prepMetricIcon: {
-    width: 14,
-    height: 14,
-  },
-  prepMetricValue: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  todayHint: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
   },
   destinationList: {
     gap: spacing.sm,
@@ -924,13 +727,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
     borderRadius: radius.pill,
   },
-  destinationTitleRow: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
   destinationTitleColumn: {
     flex: 1,
     minWidth: 0,
@@ -1023,63 +819,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "900",
   },
-  weatherLine: {
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  tempText: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
-  arrowText: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
   diffText: {
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "900",
-  },
-  destinationBottom: {
-    minHeight: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.xs,
-  },
-  destinationBottomShort: {
-    alignItems: "flex-start",
-    flexDirection: "column",
-  },
-  timeLine: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  timeIcon: {
-    width: 13,
-    height: 13,
-  },
-  repeatLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  repeatIcon: {
-    width: 11,
-    height: 11,
-  },
-  timeText: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 13,
-    lineHeight: 17,
     fontWeight: "900",
   },
   repeatText: {
@@ -1088,117 +830,12 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "800",
   },
-  destinationPrepRow: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: spacing.xs,
-  },
-  compactSignal: {
-    width: 68,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingHorizontal: 5,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  compactSignalIcon: {
-    width: 15,
-    height: 15,
-  },
-  compactSignalText: {
-    maxWidth: "100%",
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  outfitSignal: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 7,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  outfitPreviewStack: {
-    width: 70,
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  outfitPreviewBubble: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 2,
-  },
-  outfitPreviewBubbleOverlap: {
-    marginLeft: -16,
-  },
-  outfitPreviewImage: {
-    width: 30,
-    height: 30,
-  },
-  outfitPreviewFallback: {
-    width: 18,
-    height: 18,
-  },
-  outfitSignalCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
-  },
-  outfitSignalTitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  outfitSignalMeta: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
   destinationFooterRow: {
     minHeight: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
-  },
-  destinationOutfitLine: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 7,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  destinationOutfitIcon: {
-    width: 16,
-    height: 16,
-    flexShrink: 0,
-  },
-  destinationOutfitCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  destinationOutfitLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  destinationOutfitText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
   },
   warningText: {
     flexShrink: 1,

@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
+import { AppState } from "react-native";
+import { isNightAtWeatherTime, type WeatherDaylightContext } from "./weatherDaylight";
 
-// 위치 컨텍스트를 받지 않는 홈 배경은 로컬 시각 기준(19시~6시)으로 근사한다.
 export function isNightHour(date: Date): boolean {
   const hour = date.getHours();
   return hour >= 19 || hour < 6;
 }
 
-export function useIsNightHour(): boolean {
-  const [isNight, setIsNight] = useState(() => isNightHour(new Date()));
+export function useIsNightHour(context?: WeatherDaylightContext): boolean {
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const timer = setInterval(() => setIsNight(isNightHour(new Date())), 5 * 60 * 1000);
-    return () => clearInterval(timer);
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setNow(Date.now());
+    });
+    return () => { clearInterval(timer); subscription.remove(); };
   }, []);
-  return isNight;
+  return context ? isNightAtWeatherTime(new Date(now).toISOString(), context) : isNightHour(new Date(now));
 }

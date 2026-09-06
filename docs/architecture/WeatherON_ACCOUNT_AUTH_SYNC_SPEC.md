@@ -1,7 +1,7 @@
 # WeatherON 계정·인증·동기화 기준
 
-기준일: 2026-08-22
-상태: 다중 OAuth Worker·D1 반영 완료, 공급자 콘솔·운영 시크릿 개통 전
+기준일: 2026-09-06
+상태: 다중 OAuth Worker·D1 구현 및 Android OAuth 경로 적용. 운영 공급자 목록 4종 활성 응답 확인, 실제 계정 인증 완료 검증은 별도 필요
 
 ## 1. 목적
 
@@ -74,7 +74,7 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - Apple Developer의 Sign in with Apple capability 활성 상태 확인
 - EAS iOS 실기기 빌드에서 Apple 및 활성화한 OAuth Provider 실제 로그인 검증
 - 로그인 이후 사용자 데이터 동기화 API
-- Android에서 사용할 공통 로그인 수단
+- Android 실제 계정 로그인·약관·세션 복원 종단 검증
 - 계정 연결 추가, 전체 세션 종료, 데이터 내보내기
 - Rate Limiting, App Attest/Play Integrity, 운영 감사 로그
 
@@ -93,6 +93,16 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - 한국: 카카오·네이버·Apple·Google·LINE
 - 일본: LINE·Apple·Google·카카오·네이버
 - 일반 해외: Google·Apple·LINE·카카오·네이버
+
+Android는 Apple을 제외하고 같은 지역 우선순위를 사용한다.
+
+- 한국: 카카오·네이버·Google·LINE
+- 일본: LINE·Google·카카오·네이버
+- 일반 해외: Google·LINE·카카오·네이버
+
+Android도 기존 `expo-web-browser` 인증 세션과 `weatheron://oauth/callback` 복귀 경로를 사용한다. 네이티브 Manifest의 `weatheron` scheme·singleTask 설정을 재사용하며, 세션은 SecureStore에 보관한다. Apple 인증 API는 iOS에서만 호출한다. 웹 로그인은 활성화하지 않는다.
+
+2026-09-06 운영 `GET /auth/providers`에서 카카오·네이버·LINE·Google 모두 available=true를 확인했다. 이는 서버 설정 상태의 확인이며 각 공급자의 실제 사용자 인증·동의·토큰 교환 성공을 보증하지 않는다. 기존의 콘솔·시크릿 미개통 기록은 당시 상태이며 현재 개별 콘솔 검증 결과로 해석하지 않는다.
 
 실제 구현은 현재 GPS가 아닌 OS locale의 국가 코드를 우선 사용하고, 국가 코드가 없을 때 언어와 타임존을 보조 신호로 사용한다. 따라서 한국 계정 환경 사용자가 해외여행 중이어도 로그인 추천 순서가 현재 위치 때문에 바뀌지 않는다. 공급자 콘솔과 운영 Secret이 모두 준비된 Provider만 `GET /auth/providers`에서 활성화하고 앱에 노출한다.
 

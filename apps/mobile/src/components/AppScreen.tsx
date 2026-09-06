@@ -1,7 +1,6 @@
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { brandAssets } from "../assets";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "./BackButton";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { StatusPill } from "./StatusPill";
@@ -45,7 +44,6 @@ export function AppScreen({
   contentPaddingTop,
   contentPaddingBottom,
   headerBottomSpacing,
-  showWordmark = true,
   compactHeader = false,
   children,
 }: AppScreenProps) {
@@ -53,7 +51,6 @@ export function AppScreen({
   const layout = useResponsiveLayout();
   const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
   const inlineHeader = compactHeader && Boolean(onBack);
-  const heroGlass = compactHeader || iosPage ? undefined : barGlass;
   return (
     <View style={styles.shell}>
       <ScrollView
@@ -69,35 +66,25 @@ export function AppScreen({
           },
         ]}
       >
-        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
+
         <View
           style={[
             styles.hero,
             compactHeader ? styles.compactHero : null,
             inlineHeader ? styles.inlineHero : null,
-            heroGlass ? styles.heroPlatformSurface : null,
-            heroGlass,
-            iosPage?.header,
+            pageStyles.header,
             {
               gap: inlineHeader ? spacing.xs : compactHeader ? spacing.sm : layout.screenHeaderGap,
               marginBottom: headerBottomSpacing,
             },
           ]}
         >
-          {heroGlass ? <IosGlassBackdrop theme={theme} role="bar" style={styles.heroGlassBackdrop} /> : null}
           {onBack ? (
             <View style={compactHeader ? styles.compactBackButtonSlot : styles.backButtonSlot}>
               <BackButton onPress={onBack} />
             </View>
           ) : null}
           <View style={styles.heroText}>
-            {showWordmark && !iosPage ? (
-              <Image
-                source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
-                style={styles.wordmark}
-                resizeMode="contain"
-              />
-            ) : null}
             <Text
               style={[
                 styles.title,
@@ -106,13 +93,13 @@ export function AppScreen({
                   fontSize: layout.screenTitleFontSize,
                   lineHeight: layout.screenTitleLineHeight,
                 },
-                iosPage?.title,
+                pageStyles.title,
               ]}
             >
               {title}
             </Text>
             {subtitle ? (
-              <Text style={[styles.subtitle, iosPage?.caption, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
+              <Text style={[styles.subtitle, pageStyles.caption, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
                 {subtitle}
               </Text>
             ) : null}

@@ -1,4 +1,4 @@
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -36,7 +36,7 @@ export function AppListGroup({ children }: AppListGroupProps) {
         { backgroundColor: theme.cardStrong, borderColor: theme.border },
         cardShadow(theme),
         androidMaterialSurface(theme, "surfaceContainer"),
-        iosPage?.card,
+        pageStyles.card,
       ]}
     >
       {children}
@@ -62,14 +62,14 @@ export function AppListRow({
   const content = (
     <>
       {divider ? <View style={[styles.divider, { backgroundColor: theme.border }]} /> : null}
-      <View style={[styles.iconFrame, { backgroundColor: `${color}16` }, iosPage?.quietIcon]}>
+      <View style={[styles.iconFrame, { backgroundColor: `${color}16` }, pageStyles.quietIcon]}>
         <Image source={icon} style={[styles.icon, { tintColor: color }]} resizeMode="contain" />
       </View>
       <View style={styles.copy}>
-        <Text style={[styles.title, iosPage?.body, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
+        <Text style={[styles.title, pageStyles.body, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
-      {right ?? (value ? <Text style={[styles.value, iosPage && { fontWeight: "500" }, { color }]} numberOfLines={1}>{value}</Text> : null)}
+      {right ?? (value ? <Text style={[styles.value, { fontWeight: "500" }, { color }]} numberOfLines={1}>{value}</Text> : null)}
       {onPress && accessibilityRole !== "switch" ? <Chevron color={theme.subtle} /> : null}
     </>
   );

@@ -126,8 +126,8 @@ export async function listAvailableAccountProviders(): Promise<AccountProviderAv
 export async function signInWithOAuthAccount(
   provider: Exclude<AccountProvider, "apple">,
 ): Promise<AccountSessionResult> {
-  if (Platform.OS !== "ios") {
-    throw new AccountAuthError("oauth_unavailable", "이 로그인 방식은 현재 iOS 앱에서 사용할 수 있습니다.");
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    throw new AccountAuthError("oauth_unavailable", "간편 로그인은 iOS와 Android 앱에서 사용할 수 있습니다.");
   }
   const redirectUri = "weatheron://oauth/callback";
   const challenge = await accountRequest<OAuthChallenge>("/auth/oauth/challenge", {
@@ -145,6 +145,10 @@ export async function signInWithOAuthAccount(
     throw new AccountAuthError("oauth_response_invalid", "로그인 응답을 확인할 수 없습니다.");
   }
   const callback = new URL(browserResult.url);
+  const expectedCallback = new URL(redirectUri);
+  if (callback.protocol !== expectedCallback.protocol || callback.host !== expectedCallback.host || callback.pathname !== expectedCallback.pathname) {
+    throw new AccountAuthError("oauth_response_invalid", "로그인 응답을 확인할 수 없습니다.");
+  }
   const responseState = callback.searchParams.get("state");
   const code = callback.searchParams.get("code");
   if (callback.searchParams.has("error")) {

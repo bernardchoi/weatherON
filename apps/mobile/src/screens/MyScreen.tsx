@@ -1,4 +1,4 @@
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
@@ -71,9 +71,8 @@ export function MyScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={[styles.header, iosPage && { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
+        <View style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
           <Text
             style={[
               styles.title,
@@ -82,7 +81,7 @@ export function MyScreen({
                 fontSize: layout.screenTitleFontSize,
                 lineHeight: layout.screenTitleLineHeight,
               },
-              iosPage?.title,
+              pageStyles.title,
             ]}
           >
             마이
@@ -103,7 +102,7 @@ export function MyScreen({
               borderColor: isAccountReady ? theme.clear : theme.border,
             },
             cardShadow(theme),
-        iosPage?.card,
+        pageStyles.card,
           ]}
         >
           <View
@@ -111,17 +110,17 @@ export function MyScreen({
               styles.avatar,
               layout.isShort ? styles.avatarShort : null,
               { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky },
-              iosPage?.quietIcon,
+              pageStyles.quietIcon,
             ]}
           >
             <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />
           </View>
           <View style={styles.profileCopy}>
-            <Text style={[styles.profileName, iosPage?.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
-            <Text style={[styles.profileEmail, iosPage?.caption, { color: theme.subtle }]} numberOfLines={1}>{profileBody}</Text>
+            <Text style={[styles.profileName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
+            <Text style={[styles.profileEmail, pageStyles.caption, { color: theme.subtle }]} numberOfLines={1}>{profileBody}</Text>
           </View>
           <View style={[styles.profilePill, { backgroundColor: "transparent", borderColor: theme.border }]}>
-            <Text style={[styles.profilePillText, iosPage?.caption, { color: theme.text }]}>{profileAction}</Text>
+            <Text style={[styles.profilePillText, pageStyles.caption, { color: theme.text }]}>{profileAction}</Text>
           </View>
           <Chevron color={theme.subtle} />
         </FeedbackPressable>
@@ -289,14 +288,14 @@ function ReadinessSummary({
         styles.readinessCard,
         { minHeight, padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border },
         cardShadow(theme),
-        iosPage?.card,
-        iosPage && { minHeight: 76 },
+        pageStyles.card,
+        { minHeight: 76 },
       ]}
     >
       <View style={styles.readinessCopy}>
-        {!iosPage ? <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text> : null}
-        <Text style={[styles.readinessTitle, iosPage?.sectionTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
-        <Text style={[styles.readinessMeta, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>
+
+        <Text style={[styles.readinessTitle, pageStyles.sectionTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
+        <Text style={[styles.readinessMeta, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>
           {destinationSummary} · {locationSummary} · {alertSummary}
         </Text>
       </View>

@@ -40,8 +40,10 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 
   useEffect(() => {
     let active = true;
-    if (Platform.OS !== "ios") return;
-    void Promise.all([AppleAuthentication.isAvailableAsync().catch(() => false), listAvailableAccountProviders()]).then(([apple, providers]) => {
+    void Promise.all([
+      Platform.OS === "ios" ? AppleAuthentication.isAvailableAsync().catch(() => false) : Promise.resolve(false),
+      listAvailableAccountProviders(),
+    ]).then(([apple, providers]) => {
       if (!active) return;
       setAppleAvailable(apple);
       setAvailability(providers);

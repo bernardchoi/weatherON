@@ -25,7 +25,7 @@ assert.match(departure({ departureAdvice: { ...care.departureAdvice, travelStatu
 assert.match(departure({ departureAdvice: { ...care.departureAdvice, travelStatus: "fallback" } }, true).body, /예상/);
 assert.match(departure({ departureAdvice: { ...care.departureAdvice, recommendedDepartureTime: "25:90" } }, true).value, /확인/);
 
-console.log("iOS home: weather guidance, unavailable routes, schedule dates and timezone checks passed");
+console.log("Shared home: weather guidance, unavailable routes, schedule dates and timezone checks passed");
 
 const homeSource = readFileSync('apps/mobile/src/screens/HomeScreen.tsx', 'utf8');
 const homeAst = ts.createSourceFile('HomeScreen.tsx', homeSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -45,18 +45,16 @@ assert.ok(motionEffect);
 let started = 0, stopped = 0, current = 1;
 const progress = {stopAnimation() {}, setValue(value) {current = value;}};
 const Animated = {timing: () => ({start() {started++;}, stop() {stopped++;}})};
-const runMotion = new Function('IS_IOS_HOME', 'reducedMotion', 'progress', 'Animated', 'Easing', `return (${motionEffect})();`);
-for (const reduced of [true, null]) runMotion(true, reduced, progress, Animated, {});
+const runMotion = new Function('reducedMotion', 'progress', 'Animated', 'Easing', `return (${motionEffect})();`);
+for (const reduced of [true, null]) runMotion(reduced, progress, Animated, {});
 assert.equal(started, 0, 'reduced or unknown motion preference must stay static');
 assert.equal(current, 1);
-runMotion(false, false, progress, Animated, {});
-assert.equal(started, 0, 'Android must not animate the iOS transition');
-const stop = runMotion(true, false, progress, Animated, {out: () => {}, cubic: {}});
+const stop = runMotion(false, progress, Animated, {out: () => {}, cubic: {}});
 assert.equal(started, 1);
 assert.equal(current, 0);
 stop();
 assert.equal(stopped, 1, 'changing content or unmounting must stop the prior animation');
-console.log('iOS home: reduced motion and transition cancellation passed');
+console.log('Shared home: reduced motion and transition cancellation passed');
 let refreshEffect;
 function findRefresh(node) {
   if (ts.isCallExpression(node) && node.expression.getText(homeAst) === 'useEffect' && node.arguments[1]?.getText(homeAst) === '[isPullRefreshing, isWeatherLoading, reliableWeather]') refreshEffect = node.arguments[0].getText(homeAst);
@@ -79,4 +77,4 @@ observed.current=false;
 refresh(true,true,true);
 refresh(true,false,true);
 assert.equal(acknowledgements,1);
-console.log('iOS home: refresh completion and failure acknowledgement passed');
+console.log('Shared home: refresh completion and failure acknowledgement passed');

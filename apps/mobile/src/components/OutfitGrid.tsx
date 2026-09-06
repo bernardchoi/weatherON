@@ -4,7 +4,7 @@ import type { OutfitRecommendation } from "@weatheron/shared";
 import { getOutfitImageSource } from "../assets";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import { radius, spacing } from "../theme/tokens";
 
 type OutfitGridProps = {
@@ -48,7 +48,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
               onePage ? styles.itemCellOnePage : null,
               singleRow ? styles.itemCellSingleRow : null,
               { backgroundColor: theme.cardMuted, borderColor: theme.border },
-              iosPage && { ...iosPage.unboxed, padding: 0, minHeight: singleRow ? 102 : 142 },
+              { ...pageStyles.unboxed, borderRadius: 0, padding: 0, minHeight: singleRow ? 102 : 142 },
             ]}
           >
             <View
@@ -59,7 +59,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                 onePage ? styles.imageWellOnePage : null,
                 singleRow ? styles.imageWellSingleRow : null,
                 { backgroundColor: theme.cardMuted },
-                iosPage && { height: singleRow ? 54 : 100, borderRadius: 18 },
+                { height: singleRow ? 54 : 100, borderRadius: 18 },
               ]}
             >
               {imageSource ? (
@@ -71,15 +71,15 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                     dense ? styles.itemImageDense : null,
                     onePage ? styles.itemImageOnePage : null,
                     singleRow ? styles.itemImageSingleRow : null,
-                    iosPage && { height: singleRow ? 50 : 94 },
+                    { height: singleRow ? 50 : 94 },
                   ]}
                   resizeMode="contain"
                 />
               ) : null}
             </View>
-            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, iosPage?.compactCaption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
+            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
             <Text style={[styles.itemName,
-                iosPage && { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</Text>
           </FeedbackPressable>
         ) : null;
       })}

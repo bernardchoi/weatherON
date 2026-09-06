@@ -1,23 +1,18 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
-import { uiIconAssets } from "../assets";
+import { StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { OutfitGrid } from "../components/OutfitGrid";
-import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { iosPage } from "../theme/iosPage";
-import { cardShadow, radius, spacing } from "../theme/tokens";
-import { getOutfitVariantLabel } from "../utils/outfitLabels";
+import { pageStyles } from "../theme/pageStyles";
+import { radius, spacing } from "../theme/tokens";
 import { getConditionLabel } from "../utils/weatherPresentation";
 
 export function OutfitScreen({
   state,
-  outfitSaved,
   styleProfileSaved,
   selectedStyles,
   wardrobeItems,
@@ -25,8 +20,6 @@ export function OutfitScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const ultraCompactLayout = layout.isShort || layout.height <= 812 || layout.width <= 360;
-  const onePageLayout = !layout.isTablet || layout.height <= 900;
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -34,18 +27,17 @@ export function OutfitScreen({
     ownedItemCount > 0
       ? `내 옷장 ${ownedItemCount}개 반영 · 오늘 추천 중 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
       : "기본 옷장으로 먼저 골랐어요 · 내 옷을 더하면 추천이 더 나다워져요";
-  if (iosPage) {
-    return (
-      <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} showWordmark={false} compactHeader contentGap={layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding} contentPaddingBottom={8}>
+  return (
+      <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} showWordmark={false} compactHeader contentGap={layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={8}>
         <View style={{ gap: 12 }}>
-          <Text style={[iosPage.body, { color: theme.text }]}>{state.outfit.decisionText}</Text>
+          <Text style={[pageStyles.body, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           <OutfitGrid outfit={state.outfit} maxItems={4} dense singleRow={layout.isShort} onItemPress={() => onNavigate("C4")} />
-          <Text style={[iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
+          <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
             <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => onNavigate("C4")} style={[styles.advicePreview, { minHeight: 44, backgroundColor: theme.card }]}>
               <View style={styles.advicePreviewRow}>
-                <Text style={[iosPage?.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
-                <Text style={[iosPage?.compactCaption, { color: theme.text, flex: 1 }]} numberOfLines={1}>{item.text}</Text>
+                <Text style={[pageStyles.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
+                <Text style={[pageStyles.compactCaption, { color: theme.text, flex: 1 }]}>{item.text}</Text>
               </View>
             </FeedbackPressable>
           ))}
@@ -56,146 +48,16 @@ export function OutfitScreen({
         </View>
         <View style={[styles.criteriaStats, { gap: 8 }]}>
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: theme.card, minHeight: 52 }]}>
-            <Text style={[iosPage.body, { color: theme.text }]}>내 옷장</Text>
-            <Text style={[iosPage?.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
+            <Text style={[pageStyles.body, { color: theme.text }]}>내 옷장</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
           </FeedbackPressable>
           <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: theme.card, minHeight: 52 }]}>
-            <Text style={[iosPage.body, { color: theme.text }]}>스타일 기준</Text>
-            <Text style={[iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
+            <Text style={[pageStyles.body, { color: theme.text }]}>스타일 기준</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>
         </View>
       </AppScreen>
     );
-  }
-  return (
-    <AppScreen
-      title="코디"
-      subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)}
-      badge={`${state.outfit.matchPct}%`}
-      showWordmark={false}
-      compactHeader
-      contentGap={layout.destinationContentGap}
-      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
-      contentPaddingBottom={ultraCompactLayout ? 0 : onePageLayout ? 8 : undefined}
-    >
-      <View
-        style={[
-          styles.criteriaCard,
-          onePageLayout ? styles.criteriaCardOnePage : null,
-          {
-            gap: onePageLayout ? 6 : layout.outfitCardGap,
-            padding: onePageLayout ? 10 : layout.outfitPanelPadding,
-            backgroundColor: theme.card,
-            borderColor: theme.border,
-          },
-          cardShadow(theme),
-        ]}
-      >
-        <View style={styles.criteriaHeader}>
-          <View style={styles.criteriaCopy}>
-            <Text style={[styles.criteriaLabel, { color: theme.subtle }]}>나만의 코디 기준</Text>
-            <Text style={[styles.criteriaTitle, { color: theme.text }]}>오늘 날씨에 맞춰 골랐어요</Text>
-          </View>
-          <FeedbackPressable
-            accessibilityLabel="코디 스타일 기준 수정"
-            accessibilityRole="button"
-            onPress={() => onNavigate("O4")}
-            style={[styles.criteriaEditButton, { backgroundColor: `${theme.gold}14`, borderColor: `${theme.gold}36` }]}
-          >
-            <Image source={uiIconAssets.settings} style={[styles.criteriaEditIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-            <Text style={[styles.criteriaEditText, { color: theme.gold }]}>기준 수정</Text>
-          </FeedbackPressable>
-        </View>
-        {ultraCompactLayout ? null : (
-          <Text style={[styles.criteriaBody, onePageLayout ? styles.criteriaBodyOnePage : null, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
-        )}
-        <View style={[styles.criteriaStats, { gap: onePageLayout ? 5 : 7 }]}>
-          <FeedbackPressable
-            accessibilityLabel={`내 옷장 ${ownedItemCount}개 반영, 내 옷장 보기`}
-            accessibilityRole="button"
-            onPress={() => onNavigate("C2")}
-            style={[styles.criteriaStat, onePageLayout ? styles.criteriaStatOnePage : null, { backgroundColor: theme.cardMuted }]}
-          >
-            <Image source={uiIconAssets.shirt} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, onePageLayout ? styles.criteriaStatValueOnePage : null, { color: theme.text }]} numberOfLines={1}>{ownedItemCount}개 반영</Text>
-          </FeedbackPressable>
-          <FeedbackPressable
-            accessibilityLabel={`스타일 기준 ${styleProfileSaved ? "수정" : "설정"}`}
-            accessibilityRole="button"
-            onPress={() => onNavigate("O4")}
-            style={[styles.criteriaStat, onePageLayout ? styles.criteriaStatOnePage : null, { backgroundColor: theme.cardMuted }]}
-          >
-            <Image source={uiIconAssets.settings} style={[styles.criteriaStatIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, onePageLayout ? styles.criteriaStatValueOnePage : null, { color: theme.text }]} numberOfLines={1}>{styleProfileSaved ? selectedStyles[0] ?? "저장됨" : "미설정"}</Text>
-          </FeedbackPressable>
-          <FeedbackPressable
-            accessibilityLabel={outfitSaved ? "저장한 코디 상세 보기" : "코디 상세에서 저장하기"}
-            accessibilityRole="button"
-            onPress={() => onNavigate("C4")}
-            style={[styles.criteriaStat, onePageLayout ? styles.criteriaStatOnePage : null, { backgroundColor: theme.cardMuted }]}
-          >
-            <Image source={uiIconAssets.check} style={[styles.criteriaStatIcon, { tintColor: outfitSaved ? theme.clear : theme.subtle }]} resizeMode="contain" />
-            <Text style={[styles.criteriaStatValue, onePageLayout ? styles.criteriaStatValueOnePage : null, { color: theme.text }]} numberOfLines={1}>{outfitSaved ? "완료" : "계정 필요"}</Text>
-          </FeedbackPressable>
-        </View>
-      </View>
-
-      <Section
-        title="오늘 입기 좋은 조합"
-        caption={state.outfit.decisionText}
-        accent="clear"
-        compact={onePageLayout}
-        contentGap={onePageLayout ? 10 : spacing.md}
-      >
-        <OutfitGrid outfit={state.outfit} maxItems={4} dense onePage={onePageLayout} singleRow={ultraCompactLayout} onItemPress={() => onNavigate("C4")} />
-        <View style={styles.pillRow}>
-          <StatusPill
-            label={getOutfitVariantLabel(state.outfit.variant)}
-            tone="clear"
-            accessibilityLabel="코디 스타일 기준 수정"
-            onPress={ultraCompactLayout ? undefined : () => onNavigate("O4")}
-          />
-          <StatusPill
-            label={state.weather.current.rainProbabilityPct > 0 ? "비 신호" : "비 없음"}
-            tone="clear"
-            accessibilityLabel="강수 타임라인 보기"
-            onPress={ultraCompactLayout ? undefined : () => onNavigate("H5")}
-          />
-          {ultraCompactLayout ? null : (
-            <StatusPill
-              label={outfitSaved ? "내 코디에 담김" : "마음에 들면 저장"}
-              tone="clear"
-              accessibilityLabel={outfitSaved ? "저장한 코디 상세 보기" : "코디 저장으로 이동"}
-              onPress={() => onNavigate("C4")}
-            />
-          )}
-        </View>
-        {ultraCompactLayout ? null : state.outfit.reasons.slice(0, 1).map((reason) => (
-          <View key={reason} style={styles.reasonRow}>
-            <Image source={uiIconAssets.check} style={[styles.reasonIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.reason, { color: theme.muted }]} numberOfLines={1}>{reason}</Text>
-          </View>
-        ))}
-        <FeedbackPressable
-          accessibilityLabel="시간별 코디 조언 상세 보기"
-          accessibilityRole="button"
-          onPress={() => onNavigate("C4")}
-          style={[styles.advicePreview, ultraCompactLayout ? styles.advicePreviewUltraCompact : null, { backgroundColor: theme.cardMuted }]}
-        >
-          {state.outfit.timeAdvice.slice(0, 1).map((item) => (
-            <View key={item.time} style={styles.advicePreviewRow}>
-              <Text style={[styles.advicePreviewTime, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
-              <Text style={[styles.advicePreviewText, { color: theme.text }]} numberOfLines={1}>{item.text}</Text>
-            </View>
-          ))}
-        </FeedbackPressable>
-        <View style={[styles.actions, layout.isShort || layout.isNarrow ? styles.actionsShort : null]}>
-          <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} size={onePageLayout ? "sm" : "md"} />
-          <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" size={onePageLayout ? "sm" : "md"} />
-        </View>
-      </Section>
-    </AppScreen>
-  );
 }
 
 function getWeatherLine(feelsLikeC: number, condition: string) {
@@ -212,45 +74,6 @@ function formatAdviceTime(value: string) {
 }
 
 const styles = StyleSheet.create({
-  criteriaCard: {
-    gap: 12,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  criteriaCardOnePage: {
-    borderRadius: radius.md,
-  },
-  criteriaHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  criteriaCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  criteriaLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
-  criteriaTitle: {
-    marginTop: 2,
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
-  },
-  criteriaBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
-  },
-  criteriaBodyOnePage: {
-    fontSize: 10,
-    lineHeight: 14,
-  },
   criteriaStats: {
     flexDirection: "row",
     gap: 7,
@@ -260,64 +83,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 10,
-    borderRadius: radius.md,
-  },
-  criteriaStatOnePage: {
-    minHeight: 44,
-    gap: 2,
-    paddingHorizontal: 8,
-    borderRadius: radius.sm,
-  },
-  criteriaStatIcon: {
-    width: 16,
-    height: 16,
-  },
-  criteriaStatValue: {
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  criteriaStatValueOnePage: {
-    fontSize: 11,
-  },
-  criteriaEditButton: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
     paddingHorizontal: 12,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  criteriaEditIcon: {
-    width: 16,
-    height: 16,
-  },
-  criteriaEditText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  reason: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  reasonRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  reasonIcon: {
-    width: 15,
-    height: 15,
+    paddingVertical: 10,
+    borderRadius: radius.md,
   },
   advicePreview: {
     minHeight: 44,
@@ -327,33 +95,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: radius.md,
   },
-  advicePreviewUltraCompact: {
-    minHeight: 44,
-    paddingVertical: 3,
-  },
   advicePreviewRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
-  advicePreviewTime: {
-    width: 44,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  advicePreviewText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "800",
-  },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
-  },
-  actionsShort: {
-    flexWrap: "nowrap",
   },
 });

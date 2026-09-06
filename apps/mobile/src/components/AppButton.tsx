@@ -3,7 +3,7 @@ import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable,
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import { radius, spacing } from "../theme/tokens";
 
 type AppButtonProps = {
@@ -85,7 +85,7 @@ export function AppButton({
         {resolvedVariant !== "text" ? (
           <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
         ) : null}
-        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? iosPage?.caption : null, { color }]}>{label}</Text>
+        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? pageStyles.caption : null, { color }]}>{label}</Text>
       </Animated.View>
     </Pressable>
   );

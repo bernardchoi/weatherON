@@ -1,4 +1,4 @@
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
@@ -87,9 +87,8 @@ export function AlertSettingsScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {!iosPage ? <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} /> : null}
 
-        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, iosPage?.header]}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, pageStyles.header]}>
           <BackButton onPress={goBack} />
           <View style={styles.headerCopy}>
             <Text
@@ -100,18 +99,18 @@ export function AlertSettingsScreen({
                   fontSize: layout.screenTitleFontSize,
                   lineHeight: layout.screenTitleLineHeight,
                 },
-                iosPage?.title,
+                pageStyles.title,
               ]}
               numberOfLines={1}
             >
               스마트 알림 설정
             </Text>
-            <Text style={[styles.subtitle, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>필요한 순간만 알아서 챙겨드려요</Text>
+            <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>필요한 순간만 알아서 챙겨드려요</Text>
           </View>
         </View>
 
         {alertSettingsRouteState ? (
-          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
+          <View style={[styles.contextStrip, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
             <View style={styles.contextCopy}>
               <Text style={[styles.contextKicker, { color: getToneColor(theme, focusMeta.tone) }]}>{focusMeta.caption}</Text>
               <Text style={[styles.contextTitle, { color: theme.text }]}>{focusMeta.title}</Text>
@@ -122,7 +121,7 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
         {alertSettingsRouteState ? (
-          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme), iosPage?.card]}>
+          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme), pageStyles.card]}>
             <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>고급 알림 기준</Text>
             <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
           </View>
@@ -136,7 +135,7 @@ export function AlertSettingsScreen({
               borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border,
             },
             cardShadow(theme),
-            iosPage?.card,
+            pageStyles.card,
           ]}
         >
           <Pressable
@@ -152,7 +151,7 @@ export function AlertSettingsScreen({
             <View style={styles.heroCopy}>
               <Text style={[styles.heroKicker, { color: theme.gold }]}>내 일상에 맞춰</Text>
               <Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={1}>{alertReadiness.title}</Text>
-              <Text style={[styles.heroBody, iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{alertReadiness.body}</Text>
+              <Text style={[styles.heroBody, pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{alertReadiness.body}</Text>
             </View>
             <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
               <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
@@ -170,12 +169,12 @@ export function AlertSettingsScreen({
         </View>
 
         {permissionGateResult?.returnTo === "M2" ? (
-          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), iosPage?.card]}>
+          <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
             <Text style={[styles.resultTitle, { color: theme.text }]}>{permissionGateResult.message}</Text>
           </View>
         ) : null}
 
-        <View style={[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
+        <View style={[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
           <Text style={[styles.groupLabel, { color: theme.subtle }]}>어떤 순간을 챙길까요?</Text>
           <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
           <AlertSummaryRow
@@ -207,7 +206,7 @@ export function AlertSettingsScreen({
 
           <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }]}>
             <Text style={[styles.advancedTitle, { color: theme.text }]}>세부 알림 맞추기</Text>
-            <Text style={[styles.advancedCount, iosPage?.compactCaption, { color: theme.subtle }]}>{advancedEnabledCount}/6 사용 중</Text>
+            <Text style={[styles.advancedCount, pageStyles.compactCaption, { color: theme.subtle }]}>{advancedEnabledCount}/6 사용 중</Text>
             <ChevronDown color={theme.subtle} open={advancedOpen} />
           </Pressable>
 
@@ -274,7 +273,7 @@ export function AlertSettingsScreen({
             ) : null}
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
-              <Text style={[styles.advancedLineBody, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
+              <Text style={[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
             </View>
             </View>
           ) : null}
@@ -304,7 +303,7 @@ function NotificationQaPanel({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
+    <View style={[styles.routeTestPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
       <View style={styles.routeTestHeader}>
         <Text style={[styles.routeTestTitle, { color: theme.text }]}>개발용 알림 QA</Text>
         <Text style={[styles.routeTestMeta, { color: enabled ? theme.sky : theme.warm }]}>{enabled ? "발송 가능" : "권한 필요"}</Text>
@@ -412,7 +411,7 @@ function AdvancedToggleRow({
     >
       <View style={styles.advancedCopy}>
         <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.advancedLineBody, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+        <Text style={[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
       </View>
       <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
         <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />

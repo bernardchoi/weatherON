@@ -31,7 +31,7 @@ export function isAndroidDynamicColorAvailable() {
 }
 
 export function androidMaterialColor(theme: AppTheme, role: AndroidMaterialColorRole): ColorValue {
-  if (Platform.OS !== "android") return getLegacyColor(theme, role);
+  if (Platform.OS === "ios") return getLegacyColor(theme, role);
 
   if (isAndroidDynamicColorAvailable() && theme.dynamicColorEnabled && isDynamicAccentRole(role)) {
     return getDynamicColor(theme, role);
@@ -62,7 +62,7 @@ function getLegacyColor(theme: AppTheme, role: AndroidMaterialColorRole): string
 }
 
 export function androidMaterialSurface(theme: AppTheme, role: AndroidMaterialRole): ViewStyle | null {
-  if (Platform.OS !== "android") return null;
+  if (Platform.OS === "ios") return null;
 
   return {
     backgroundColor: getSurfaceColor(theme, role),

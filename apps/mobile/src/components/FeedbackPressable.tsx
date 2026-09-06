@@ -11,6 +11,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { androidMaterialRipple } from "../theme/androidMaterial";
 
 type FeedbackPressableProps = PressableProps & {
   feedbackColor?: string;
@@ -30,7 +31,8 @@ export function FeedbackPressable({
 }: FeedbackPressableProps) {
   const theme = useAppTheme();
   const feedback = useRef(new Animated.Value(0)).current;
-  const usesNativeRipple = Platform.OS === "android" && Boolean(android_ripple);
+  const ripple = android_ripple ?? androidMaterialRipple(theme);
+  const usesNativeRipple = Platform.OS === "android" && Boolean(ripple);
 
   const animateTo = (toValue: number) => {
     feedback.stopAnimation();
@@ -55,11 +57,11 @@ export function FeedbackPressable({
   return (
     <Pressable
       {...props}
-      android_ripple={android_ripple}
+      android_ripple={ripple}
       disabled={disabled}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={style}
+      style={(state) => [typeof style === "function" ? style(state) : style, Platform.OS === "android" && { minHeight: 48, overflow: "hidden" }]}
     >
       {(state) => {
         const resolvedStyle = typeof style === "function" ? style(state) : style;

@@ -167,7 +167,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         <View
           ref={dockRef}
           onLayout={handleDockLayout}
-          {...(hasNativeLiquidGlassNavigationSurface ? {} : dragResponder.panHandlers)}
+          {...(hasNativeLiquidGlassNavigationSurface || !isIos ? {} : dragResponder.panHandlers)}
           style={[
             styles.dock,
             isIos ? styles.iosDock : styles.androidDock,
@@ -256,7 +256,7 @@ function TabContent({
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (!isIos || reducedMotion !== false) {
+    if (reducedMotion !== false) {
       transition.setValue(active ? 1 : 0);
       return;
     }
@@ -333,14 +333,19 @@ function TabButton({
   onPress: () => void;
   children: React.ReactNode;
 }) {
+  const theme = useAppTheme();
   return (
     <Pressable
       pointerEvents={hasNativeLiquidGlassNavigationSurface ? "none" : "auto"}
       accessibilityLabel={`${label} 탭`}
-      accessibilityRole="button"
+      accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={styles.item}
+      style={({ pressed }) => [
+        styles.item,
+        Platform.OS === "android" ? styles.androidItem : null,
+        Platform.OS === "android" && pressed ? { backgroundColor: colorWithAlpha(theme.text, 0.08) } : null,
+      ]}
     >
       {children}
     </Pressable>
@@ -450,6 +455,10 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  androidItem: {
+    borderRadius: 29,
+    overflow: "hidden",
   },
   androidIconContainer: {
     width: 64,

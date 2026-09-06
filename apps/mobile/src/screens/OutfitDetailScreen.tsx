@@ -7,7 +7,7 @@ import { Section } from "../components/Section";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { iosPage } from "../theme/iosPage";
+import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
@@ -124,14 +124,14 @@ export function OutfitDetailScreen({
                     <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
                 </View>
-                <Text style={[styles.itemSlot, iosPage?.compactCaption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
+                <Text style={[styles.itemSlot, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
               </View>
             ) : null;
           })}
         </View>
         <View style={styles.detailHeading}>
           <Text style={[styles.detailTitle, { color: theme.text }]}>이 시간엔 이렇게 입어요</Text>
-          <Text style={[styles.detailCaption, iosPage?.compactCaption, { color: theme.muted }]}>앞으로 3시간</Text>
+          <Text style={[styles.detailCaption, pageStyles.compactCaption, { color: theme.muted }]}>앞으로 3시간</Text>
         </View>
         <View style={styles.timeAdviceRow}>
           {state.outfit.timeAdvice.slice(0, 3).map((item) => {
@@ -145,9 +145,9 @@ export function OutfitDetailScreen({
               >
                 <View style={styles.timeAdviceHeader}>
                   <Image source={presentation.icon} style={[styles.timeAdviceIcon, { tintColor: presentation.color }]} resizeMode="contain" />
-                  <Text style={[styles.timeAdviceTime, iosPage?.compactCaption, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+                  <Text style={[styles.timeAdviceTime, pageStyles.compactCaption, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
                 </View>
-                <Text numberOfLines={1} style={[styles.timeAdviceCopy, iosPage?.compactCaption, { color: theme.text }]}>{presentation.copy}</Text>
+                <Text style={[pageStyles.compactCaption, styles.timeAdviceCopy, { color: theme.text }]}>{presentation.copy}</Text>
               </View>
             );
           })}
@@ -160,7 +160,7 @@ export function OutfitDetailScreen({
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }]}>오늘 날씨에 {state.outfit.matchPct}% 잘 맞아요</Text>
-              <Text numberOfLines={1} style={[styles.recommendationCaption, iosPage?.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
+              <Text numberOfLines={1} style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
             </View>
           </View>
           <View style={styles.reasonGrid}>
@@ -168,10 +168,10 @@ export function OutfitDetailScreen({
               <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.reasonLabelRow}>
                   <Image source={reason.icon} style={[styles.reasonIcon, { tintColor: reason.color }]} resizeMode="contain" />
-                  <Text numberOfLines={1} style={[styles.reasonLabel, iosPage?.compactCaption, { color: theme.subtle }]}>{reason.label}</Text>
+                  <Text numberOfLines={1} style={[styles.reasonLabel, pageStyles.compactCaption, { color: theme.subtle }]}>{reason.label}</Text>
                 </View>
                 <Text style={[styles.reasonValue, { color: theme.text }]} numberOfLines={1}>{reason.value}</Text>
-                <Text style={[styles.reasonDetail, iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{reason.detail}</Text>
+                <Text style={[pageStyles.compactCaption, styles.reasonDetail, { color: theme.muted }]}>{reason.detail}</Text>
               </View>
             ))}
           </View>
@@ -200,6 +200,7 @@ export function OutfitDetailScreen({
 const styles = StyleSheet.create({
   detailHeading: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
@@ -216,10 +217,11 @@ const styles = StyleSheet.create({
   },
   timeAdviceRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
   },
   timeAdviceCard: {
-    minWidth: 0,
+    minWidth: 88,
     minHeight: 74,
     flex: 1,
     justifyContent: "center",
@@ -243,9 +245,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   timeAdviceCopy: {
-    minHeight: 30,
-    fontSize: 11,
-    lineHeight: 15,
+    minHeight: 34,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "800",
   },
   outfitRail: {
@@ -328,10 +330,11 @@ const styles = StyleSheet.create({
   },
   reasonGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
   },
   reasonTile: {
-    minWidth: 0,
+    minWidth: 88,
     minHeight: 82,
     flex: 1,
     gap: 3,
@@ -361,8 +364,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   reasonDetail: {
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "700",
   },
   resultBox: {
