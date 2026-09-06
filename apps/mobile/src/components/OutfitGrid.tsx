@@ -77,7 +77,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                 />
               ) : null}
             </View>
-            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, iosPage?.caption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
+            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, iosPage?.compactCaption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
             <Text style={[styles.itemName,
                 iosPage && { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
           </FeedbackPressable>

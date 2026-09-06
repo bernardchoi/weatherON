@@ -106,7 +106,7 @@ export function AlertSettingsScreen({
             >
               스마트 알림 설정
             </Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>기본은 자동, 필요한 경우만 세부 조정</Text>
+            <Text style={[styles.subtitle, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>필요한 순간만 알아서 챙겨드려요</Text>
           </View>
         </View>
 
@@ -128,16 +128,10 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <Pressable
-          accessibilityLabel={smartCareEnabled ? "스마트 알림 끄기" : "스마트 알림 켜기"}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: smartCareEnabled }}
-          onPress={onToggleSmartCare}
+        <View
           style={[
             styles.heroCard,
             {
-              minHeight: layout.alertSettingsHeroMinHeight,
-              padding: layout.settingsPanelPadding,
               backgroundColor: theme.cardStrong,
               borderColor: smartCareEnabled ? semanticColor(theme, "accentBorder") : theme.border,
             },
@@ -145,18 +139,35 @@ export function AlertSettingsScreen({
             iosPage?.card,
           ]}
         >
-          <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
-            <BellGlyph color={theme.gold} />
+          <Pressable
+            accessibilityLabel={smartCareEnabled ? "스마트 알림 끄기" : "스마트 알림 켜기"}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: smartCareEnabled }}
+            onPress={onToggleSmartCare}
+            style={[styles.heroToggleRow, { padding: layout.settingsPanelPadding }]}
+          >
+            <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
+              <BellGlyph color={theme.gold} />
+            </View>
+            <View style={styles.heroCopy}>
+              <Text style={[styles.heroKicker, { color: theme.gold }]}>내 일상에 맞춰</Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={1}>{alertReadiness.title}</Text>
+              <Text style={[styles.heroBody, iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{alertReadiness.body}</Text>
+            </View>
+            <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
+              <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
+            </View>
+          </Pressable>
+          <View style={[styles.heroStatus, { borderTopColor: theme.border }]}>
+            <DeliveryLine label="권한" value={permissionReady ? "알림 받을 준비 완료" : "권한 켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
+            <DeliveryLine label="예약" value={`${deliveryStatus.statusLabel} · ${deliveryStatus.countLabel}`} tone={deliveryStatus.statusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
+            {!permissionReady ? (
+              <Pressable accessibilityLabel="알림 권한 켜기" accessibilityRole="button" onPress={() => onRequestPermissionGate("notification", "M2", "general")} style={[styles.deliveryAction, { backgroundColor: `${theme.warm}22` }]}>
+                <Text style={[styles.deliveryActionText, { color: theme.warm }]}>알림 권한 켜기</Text>
+              </Pressable>
+            ) : null}
           </View>
-          <View style={styles.heroCopy}>
-            <Text style={[styles.heroKicker, { color: theme.gold }]}>알아서 챙기기</Text>
-            <Text style={[styles.heroTitle, { color: theme.text }]}>{alertReadiness.title}</Text>
-            <Text style={[styles.heroBody, { color: theme.muted }]}>{alertReadiness.body}</Text>
-          </View>
-          <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
-            <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
-          </View>
-        </Pressable>
+        </View>
 
         {permissionGateResult?.returnTo === "M2" ? (
           <View style={[styles.resultStrip, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), iosPage?.card]}>
@@ -164,56 +175,47 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <NotificationStatusCard
-          deliveryCountLabel={deliveryStatus.countLabel}
-          deliveryStatusLabel={deliveryStatus.statusLabel}
-          onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
-          permissionReady={permissionReady}
-          panelPadding={layout.settingsPanelPadding}
-          theme={theme}
-        />
-
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>알림 종류</Text>
-
-        <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
+        <View style={[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
+          <Text style={[styles.groupLabel, { color: theme.subtle }]}>어떤 순간을 챙길까요?</Text>
+          <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
           <AlertSummaryRow
             icon="rain"
-            title="필수 날씨"
-            body={permissionReady ? "강수·특보 기준 도달 예상" : "푸시만 대기"}
+            title="비·특보 미리보기"
+            body={permissionReady ? "비와 위험 날씨를 미리 알려드려요" : "권한을 켜면 바로 알려드려요"}
             status={permissionReady ? "항상" : "권한 필요"}
             tone={permissionReady ? "sky" : "clear"}
             theme={theme}
           />
           <AlertSummaryRow
             icon="sun"
-            title="생활 루틴"
-            body={smartCareEnabled ? "출발 준비·내일 체크" : "스마트 알림 꺼짐"}
+            title="하루 준비"
+            body={smartCareEnabled ? "외출 전과 자기 전에 챙겨드려요" : "스마트 알림이 쉬고 있어요"}
             status={deliveryReady ? "자동" : smartCareEnabled ? "권한 필요" : "중지"}
             tone="gold"
             theme={theme}
           />
           <AlertSummaryRow
             icon="route"
-            title="목적지 출발"
-            body={destinationReady ? `${savedDestinations.length}개 목적지` : "목적지 추가 필요"}
+            title="출발 타이밍"
+            body={destinationReady ? `${savedDestinations.length}곳의 출발 시간을 챙겨드려요` : "목적지를 추가하면 출발을 챙겨요"}
             onPress={destinationReady ? undefined : () => onNavigate("P1")}
             status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
             tone="clear"
             theme={theme}
           />
-        </View>
+          </View>
 
-        <Pressable accessibilityLabel={advancedOpen ? "고급 설정 닫기" : "고급 설정 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { backgroundColor: theme.cardStrong }]}>
-          <Text style={[styles.advancedTitle, { color: theme.text }]}>고급 설정</Text>
-          <Text style={[styles.advancedCount, { color: theme.subtle }]}>{advancedEnabledCount}/6 적용</Text>
-          <ChevronDown color={theme.subtle} open={advancedOpen} />
-        </Pressable>
+          <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }]}>
+            <Text style={[styles.advancedTitle, { color: theme.text }]}>세부 알림 맞추기</Text>
+            <Text style={[styles.advancedCount, iosPage?.compactCaption, { color: theme.subtle }]}>{advancedEnabledCount}/6 사용 중</Text>
+            <ChevronDown color={theme.subtle} open={advancedOpen} />
+          </Pressable>
 
-        {advancedOpen ? (
-          <View style={[styles.advancedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
+          {advancedOpen ? (
+            <View style={styles.advancedPanel}>
             <AdvancedToggleRow
               title="강수 상세"
-              body={`비 시작 전·그칠 시각 · 강수 ${selectedDestinationAlertCondition.rainThresholdPct}%`}
+              body={`비 오기 전과 그칠 때 알려드려요 · ${selectedDestinationAlertCondition.rainThresholdPct}%`}
               enabled={alertPreferences.rainDetail}
               disabled={!permissionReady}
               onToggle={() => onToggleAlertPreference("rainDetail")}
@@ -221,7 +223,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="기상특보 기준"
-              body="폭염·호우 주의보와 경보 기준 도달 예상 알림"
+              body="위험한 날씨가 오기 전에 알려드려요"
               enabled={alertPreferences.weatherAlerts}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("weatherAlerts")}
@@ -229,7 +231,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="아침 준비"
-              body="매일 오전 날씨·우산·신발 확인"
+              body="우산과 옷차림을 아침에 챙겨드려요"
               enabled={alertPreferences.routine}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("routine")}
@@ -237,7 +239,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="자기 전 체크"
-              body="매일 저녁 9시 전후, 내일 날씨·코디 브리핑 알림"
+              body="내일 날씨와 코디를 밤 9시쯤 알려드려요"
               enabled={alertPreferences.bedtime}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("bedtime")}
@@ -245,7 +247,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="목적지 출발"
-              body={`출발 ${selectedDestinationAlertCondition.leadTimeMinutes}분 전 · 바람 ${selectedDestinationAlertCondition.windThresholdMs}m/s`}
+              body={`늦지 않도록 ${selectedDestinationAlertCondition.leadTimeMinutes}분 전에 알려드려요`}
               enabled={alertPreferences.destination}
               disabled={!deliveryReady || !destinationReady}
               onToggle={() => onToggleAlertPreference("destination")}
@@ -253,7 +255,7 @@ export function AlertSettingsScreen({
             />
             <AdvancedToggleRow
               title="방해 줄이기"
-              body="하루 최대 3건 · 수면 시간대 제한"
+              body="꼭 필요한 알림만 하루 3번까지 보내요"
               enabled={alertPreferences.quietHours}
               disabled={!deliveryReady}
               onToggle={() => onToggleAlertPreference("quietHours")}
@@ -272,52 +274,14 @@ export function AlertSettingsScreen({
             ) : null}
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
-              <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{notificationHistory[0]?.title ?? "아직 읽은 알림 없음"}</Text>
+              <Text style={[styles.advancedLineBody, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
             </View>
-          </View>
-        ) : null}
+            </View>
+          ) : null}
+        </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-    </View>
-  );
-}
-
-function NotificationStatusCard({
-  deliveryCountLabel,
-  deliveryStatusLabel,
-  onRequestPermission,
-  permissionReady,
-  panelPadding,
-  theme,
-}: {
-  deliveryCountLabel: string;
-  deliveryStatusLabel: string;
-  onRequestPermission: () => void;
-  permissionReady: boolean;
-  panelPadding: number;
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.deliveryCard, { padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), iosPage?.card]}>
-      <View style={styles.deliveryHeader}>
-        <View style={[styles.rowIcon, { backgroundColor: theme.cardMuted, borderColor: `${theme.sky}55` }]}>
-          <AlertIcon type="bell" color={theme.sky} />
-        </View>
-        <View style={styles.deliveryTitleCopy}>
-          <Text style={[styles.deliveryTitle, { color: theme.text }]}>알림 상태</Text>
-          <Text style={[styles.deliveryBody, { color: theme.subtle }]}>권한과 예약 상태를 확인함</Text>
-        </View>
-      </View>
-      <View style={styles.deliveryLines}>
-        <DeliveryLine label="권한" value={permissionReady ? "허용됨" : "켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
-        <DeliveryLine label="예약" value={`${deliveryStatusLabel} · ${deliveryCountLabel}`} tone={deliveryStatusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
-      </View>
-      {!permissionReady ? (
-        <Pressable accessibilityLabel="권한 켜기" accessibilityRole="button" onPress={onRequestPermission} style={[styles.deliveryAction, { backgroundColor: `${theme.warm}22` }]}>
-          <Text style={[styles.deliveryActionText, { color: theme.warm }]}>권한 켜기</Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -448,7 +412,7 @@ function AdvancedToggleRow({
     >
       <View style={styles.advancedCopy}>
         <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.advancedLineBody, { color: theme.subtle }]}>{body}</Text>
+        <Text style={[styles.advancedLineBody, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
       </View>
       <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
         <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />
@@ -565,55 +529,55 @@ function getAlertReadinessCopy(
 ) {
   if (!smartCareEnabled) {
     return {
-      title: "스마트 알림 일시 중지",
-      body: "푸시 없이 앱 안 판단만 유지",
-      resultBody: "스마트 알림이 꺼져 있어 권한 상태와 무관하게 푸시는 발송되지 않음",
-      gateTitle: "스마트 알림 꺼짐",
-      gateBody: "켜면 다시 적용",
+      title: "알림이 잠시 쉬고 있어요",
+      body: "다시 켜면 필요한 순간부터 챙겨드려요",
+      resultBody: "스마트 알림을 켜면 필요한 날씨와 일정을 다시 알려드려요",
+      gateTitle: "알림 쉬는 중",
+      gateBody: "언제든 다시 켤 수 있어요",
     };
   }
   if (permissionReady) {
     if (!notificationQaEnabled) {
       return {
-        title: "스마트 알림 준비됨",
-        body: "필요한 날씨와 생활 알림을 자동 적용",
-        resultBody: "권한과 예약 상태에 맞춰 스마트 알림을 자동 적용함",
-        gateTitle: "알림 권한 정상",
-        gateBody: "예약 상태 확인 가능",
+        title: "알림 준비 끝",
+        body: "필요한 때만 가볍게 알려드려요",
+        resultBody: "날씨와 일정에 맞춰 필요한 순간만 알려드려요",
+        gateTitle: "알림 준비 완료",
+        gateBody: "필요한 순간을 챙겨드려요",
       };
     }
     if (testNotificationVerified) {
       return {
-        title: "스마트 알림 확인됨",
-        body: testNotificationOpened ? "확인 알림 수신·탭 확인됨" : "확인 알림 수신 확인됨",
-        resultBody: testNotificationOpened ? "권한과 실제 수신, 설정 화면 이동까지 확인됨" : "권한과 실제 수신까지 확인됨",
-        gateTitle: "알림 권한 정상",
-        gateBody: "확인 알림 수신됨",
+        title: "알림이 잘 도착하고 있어요",
+        body: testNotificationOpened ? "수신과 화면 이동까지 확인했어요" : "알림 수신을 확인했어요",
+        resultBody: testNotificationOpened ? "알림 수신과 설정 화면 이동까지 확인했어요" : "알림이 정상적으로 도착했어요",
+        gateTitle: "알림 준비 완료",
+        gateBody: "정상적으로 도착하고 있어요",
       };
     }
     return {
-      title: "스마트 알림 확인 중",
-      body: "확인 알림을 보내 실제 도착을 확인",
-      resultBody: "권한은 켜짐. 확인 알림 수신 전이면 확인 알림으로 실제 도착을 확인해야 함",
-      gateTitle: "알림 권한 정상",
-      gateBody: "확인 알림 발송",
+      title: "알림 도착을 확인해볼까요?",
+      body: "확인 알림으로 한 번 점검해요",
+      resultBody: "권한은 준비됐어요. 확인 알림으로 실제 도착을 점검해요",
+      gateTitle: "알림 준비 완료",
+      gateBody: "확인 알림으로 점검해요",
     };
   }
   return {
-    title: skippedPermission ? "푸시 알림은 나중에" : "알림 권한 확인 필요",
-    body: skippedPermission ? "앱 판단 유지 · 푸시 대기" : "권한 필요",
-    resultBody: skippedPermission ? "푸시는 대기 상태이며 홈·출발 판단은 계속 사용할 수 있음" : "권한 확인 후 알림 설정으로 복귀함",
-    gateTitle: skippedPermission ? "알림 권한 나중에 설정" : "알림 권한 확인 필요",
-    gateBody: skippedPermission ? "푸시만 대기" : "권한 켜기 필요",
+    title: skippedPermission ? "알림은 나중에 받아도 돼요" : "알림 받을 준비가 필요해요",
+    body: skippedPermission ? "앱 안의 날씨 판단은 계속돼요" : "권한만 켜면 바로 시작할 수 있어요",
+    resultBody: skippedPermission ? "푸시 없이도 홈과 출발 판단은 계속 이용할 수 있어요" : "권한을 켜면 설정 화면으로 돌아와요",
+    gateTitle: skippedPermission ? "알림은 나중에" : "알림 권한이 필요해요",
+    gateBody: skippedPermission ? "앱 기능은 계속 이용할 수 있어요" : "권한을 켜면 바로 시작해요",
   };
 }
 
 function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteState"]>["focus"], returnTo?: P0RouteId) {
   const returnLabel = getRouteLabel(returnTo);
-  if (focus === "umbrella") return { title: "우산 알림 기준", caption: "우산 추천에서 이동", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 조건과 출발 준비 알림 적용 상태를 확인함" };
-  if (focus === "rain") return { title: "강수 알림 기준", caption: "강수 타임라인에서 이동", returnLabel, tone: "clear" as const, editBody: "비 시작·완화 알림 적용 상태를 확인함" };
-  if (focus === "destination") return { title: "목적지 알림 기준", caption: "목적지 케어에서 이동", returnLabel, tone: "gold" as const, editBody: "목적지 출발 알림과 자동 강수 기준을 확인함" };
-  return { title: "알림 기준", caption: "홈 알림에서 이동", returnLabel, tone: "warm" as const, editBody: "선택한 알림의 적용 상태를 확인함" };
+  if (focus === "umbrella") return { title: "우산 알림 맞추기", caption: "우산 추천에서 왔어요", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 순간을 놓치지 않게 챙겨드려요" };
+  if (focus === "rain") return { title: "비 알림 맞추기", caption: "강수 화면에서 왔어요", returnLabel, tone: "clear" as const, editBody: "비가 오기 전과 그칠 때를 골라 알려드려요" };
+  if (focus === "destination") return { title: "출발 알림 맞추기", caption: "목적지 케어에서 왔어요", returnLabel, tone: "gold" as const, editBody: "늦지 않도록 날씨와 이동 시간을 함께 챙겨드려요" };
+  return { title: "알림 맞추기", caption: "홈 알림에서 왔어요", returnLabel, tone: "warm" as const, editBody: "원하는 알림만 편하게 골라보세요" };
 }
 
 function getRouteLabel(route?: P0RouteId) {
@@ -700,12 +664,21 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   heroCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
     borderRadius: radius.xl,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  heroToggleRow: {
+    minHeight: 92,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  heroStatus: {
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   heroIcon: {
     width: 44,
@@ -721,8 +694,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heroKicker: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
   },
   heroTitle: {
@@ -783,49 +756,27 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "700",
   },
-  deliveryCard: {
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  deliveryHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  deliveryTitleCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  deliveryTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
   deliveryBody: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "700",
   },
-  deliveryLines: {
-    gap: 7,
-  },
   deliveryLine: {
-    minHeight: 26,
+    minHeight: 28,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
   },
   deliveryLineLabel: {
     width: 50,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
   },
   deliveryLineValue: {
     flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "800",
   },
   deliveryDot: {
@@ -886,14 +837,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textAlign: "center",
   },
-  rowIcon: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
   alertSummaryIcon: {
     width: 30,
     height: 30,
@@ -906,30 +849,38 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   alertSummaryTitle: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
   },
   alertSummaryBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
   },
   groupLabel: {
-    marginBottom: -6,
-    fontSize: 11,
-    lineHeight: 14,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
+  },
+  settingsCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    overflow: "hidden",
   },
   alertList: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
   },
   alertSummaryRow: {
-    minHeight: 52,
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    paddingHorizontal: 16,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -946,17 +897,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   statusPillText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
   },
   advancedButton: {
-    minHeight: 52,
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    borderRadius: radius.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   advancedTitle: {
     flex: 1,
@@ -965,14 +916,12 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   advancedCount: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "900",
   },
   advancedPanel: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
   },
   advancedLine: {
     minHeight: 58,
@@ -987,14 +936,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   advancedLineTitle: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
   },
   advancedLineBody: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
   },
   smallSwitchTrack: {
     width: 42,

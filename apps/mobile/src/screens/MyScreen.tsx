@@ -296,7 +296,7 @@ function ReadinessSummary({
       <View style={styles.readinessCopy}>
         {!iosPage ? <Text style={[styles.readinessEyebrow, { color: theme.subtle }]}>오늘 준비</Text> : null}
         <Text style={[styles.readinessTitle, iosPage?.sectionTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
-        <Text style={[styles.readinessMeta, iosPage?.caption, { color: theme.subtle }]} numberOfLines={2}>
+        <Text style={[styles.readinessMeta, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>
           {destinationSummary} · {locationSummary} · {alertSummary}
         </Text>
       </View>

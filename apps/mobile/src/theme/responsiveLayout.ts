@@ -70,7 +70,6 @@ export type ResponsiveLayout = {
   settingsHeaderMinHeight: number;
   myProfileMinHeight: number;
   myReadinessMinHeight: number;
-  alertSettingsHeroMinHeight: number;
   settingsTopSummaryMinHeight: number;
   settingsActionGap: number;
   accountContentGap: number;
@@ -193,7 +192,6 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     settingsHeaderMinHeight: isShort ? 58 : isTablet ? 88 : isRegular ? 82 : 72,
     myProfileMinHeight: isShort ? 74 : isTablet ? 100 : isRegular ? 92 : 84,
     myReadinessMinHeight: isShort ? 82 : isTablet ? 108 : isRegular ? 98 : 90,
-    alertSettingsHeroMinHeight: isShort ? 118 : isTablet ? 164 : isRegular ? 150 : 138,
     settingsTopSummaryMinHeight: isShort ? 102 : isTablet ? 148 : isRegular ? 134 : 124,
     settingsActionGap: isShort ? 8 : isTablet ? 12 : 10,
     accountContentGap: isShort ? 8 : isTablet ? 16 : isRegular ? 14 : isNarrow ? 10 : 12,

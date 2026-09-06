@@ -18,7 +18,7 @@ export function StatusPill({ label, tone = "clear", onPress, accessibilityLabel 
   const content = (
     <View style={[styles.pill, { borderColor: `${color}55`, backgroundColor: theme.cardMuted }]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
-      <Text style={[styles.label, iosPage?.caption, { color }]}>{label}</Text>
+      <Text style={[styles.label, iosPage?.compactCaption, { color }]}>{label}</Text>
     </View>
   );
 

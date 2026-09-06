@@ -67,7 +67,7 @@ export function AppListRow({
       </View>
       <View style={styles.copy}>
         <Text style={[styles.title, iosPage?.body, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, iosPage?.caption, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={[styles.subtitle, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
       {right ?? (value ? <Text style={[styles.value, iosPage && { fontWeight: "500" }, { color }]} numberOfLines={1}>{value}</Text> : null)}
       {onPress && accessibilityRole !== "switch" ? <Chevron color={theme.subtle} /> : null}

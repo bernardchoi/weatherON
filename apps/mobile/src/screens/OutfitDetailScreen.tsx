@@ -124,14 +124,14 @@ export function OutfitDetailScreen({
                     <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
                 </View>
-                <Text style={[styles.itemSlot, iosPage?.caption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
+                <Text style={[styles.itemSlot, iosPage?.compactCaption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
               </View>
             ) : null;
           })}
         </View>
         <View style={styles.detailHeading}>
           <Text style={[styles.detailTitle, { color: theme.text }]}>이 시간엔 이렇게 입어요</Text>
-          <Text style={[styles.detailCaption, iosPage?.caption, { color: theme.muted }]}>앞으로 3시간</Text>
+          <Text style={[styles.detailCaption, iosPage?.compactCaption, { color: theme.muted }]}>앞으로 3시간</Text>
         </View>
         <View style={styles.timeAdviceRow}>
           {state.outfit.timeAdvice.slice(0, 3).map((item) => {
@@ -145,9 +145,9 @@ export function OutfitDetailScreen({
               >
                 <View style={styles.timeAdviceHeader}>
                   <Image source={presentation.icon} style={[styles.timeAdviceIcon, { tintColor: presentation.color }]} resizeMode="contain" />
-                  <Text style={[styles.timeAdviceTime, iosPage?.caption, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+                  <Text style={[styles.timeAdviceTime, iosPage?.compactCaption, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
                 </View>
-                <Text numberOfLines={2} style={[styles.timeAdviceCopy, iosPage?.caption, { color: theme.text }]}>{presentation.copy}</Text>
+                <Text numberOfLines={1} style={[styles.timeAdviceCopy, iosPage?.compactCaption, { color: theme.text }]}>{presentation.copy}</Text>
               </View>
             );
           })}
@@ -160,7 +160,7 @@ export function OutfitDetailScreen({
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }]}>오늘 날씨에 {state.outfit.matchPct}% 잘 맞아요</Text>
-              <Text style={[styles.recommendationCaption, iosPage?.caption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
+              <Text numberOfLines={1} style={[styles.recommendationCaption, iosPage?.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
             </View>
           </View>
           <View style={styles.reasonGrid}>
@@ -168,10 +168,10 @@ export function OutfitDetailScreen({
               <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.reasonLabelRow}>
                   <Image source={reason.icon} style={[styles.reasonIcon, { tintColor: reason.color }]} resizeMode="contain" />
-                  <Text style={[styles.reasonLabel, iosPage?.caption, { color: theme.subtle }]}>{reason.label}</Text>
+                  <Text numberOfLines={1} style={[styles.reasonLabel, iosPage?.compactCaption, { color: theme.subtle }]}>{reason.label}</Text>
                 </View>
                 <Text style={[styles.reasonValue, { color: theme.text }]} numberOfLines={1}>{reason.value}</Text>
-                <Text style={[styles.reasonDetail, iosPage?.caption, { color: theme.muted }]} numberOfLines={2}>{reason.detail}</Text>
+                <Text style={[styles.reasonDetail, iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{reason.detail}</Text>
               </View>
             ))}
           </View>
@@ -401,24 +401,24 @@ function buildWeatherReasons(state: P0ScreenProps["state"], theme: ReturnType<ty
       label: "체감 온도",
       value: `${Math.round(state.weather.current.feelsLikeC)}도`,
       detail: feelsLikeDelta === 0
-        ? "실제 기온과 비슷해요"
+        ? "딱 쾌적해요"
         : feelsLikeDelta > 0
-          ? `${feelsLikeDelta}도 더 덥게 느껴져요`
-          : `${Math.abs(feelsLikeDelta)}도 더 춥게 느껴져요`,
+          ? `${feelsLikeDelta}도 더 더워요`
+          : `${Math.abs(feelsLikeDelta)}도 더 선선해요`,
       icon: uiIconAssets.uv,
       color: theme.gold,
     },
     {
       label: "비 가능성",
       value: rainProbability > 0 ? `최대 ${Math.round(rainProbability)}%` : "비 없음",
-      detail: rainProbability >= 50 ? "우산·방수 챙겨요" : rainProbability > 0 ? "가벼운 비에 대비해요" : "비 걱정 없이 이동해요",
+      detail: rainProbability >= 50 ? "우산 챙겨요" : rainProbability > 0 ? "가벼운 비예요" : "비 걱정 없어요",
       icon: uiIconAssets.rain,
       color: rainProbability >= 50 ? theme.sky : theme.clear,
     },
     {
       label: "바람",
       value: `${formatWindSpeed(windSpeed)}m/s`,
-      detail: windSpeed >= 8 ? "강한 바람에 대비해요" : windSpeed >= 4 ? "바람이 보통이에요" : "바람이 약해요",
+      detail: windSpeed >= 8 ? "바람이 세요" : windSpeed >= 4 ? "산들바람이에요" : "바람이 잔잔해요",
       icon: uiIconAssets.wind,
       color: windSpeed >= 8 ? theme.gold : theme.sky,
     },

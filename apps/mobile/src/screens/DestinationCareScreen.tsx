@@ -544,9 +544,9 @@ function SummaryChip({
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
-      <Text numberOfLines={1} style={[styles.summaryLabel, iosPage?.caption, { color: theme.subtle }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.summaryLabel, iosPage?.compactCaption, { color: theme.subtle }]}>{label}</Text>
       <Text numberOfLines={1} style={[styles.summaryValue, iosPage?.body, { color: theme.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.summaryMeta, iosPage?.caption, { color }]}>{meta}</Text>
+      <Text numberOfLines={1} style={[styles.summaryMeta, iosPage?.compactCaption, { color }]}>{meta}</Text>
     </FeedbackPressable>
   );
 }
@@ -570,7 +570,7 @@ function ArrivalInputControl({
   return (
     <View style={[styles.arrivalControl, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.arrivalControlCopy}>
-        <Text style={[styles.arrivalControlLabel, iosPage?.caption, { color: theme.subtle }]}>{label}</Text>
+        <Text style={[styles.arrivalControlLabel, iosPage?.compactCaption, { color: theme.subtle }]}>{label}</Text>
         <View style={styles.arrivalWheelRow}>
           <TimeWheel
             accessibilityLabel={`${label} 시 입력`}
@@ -591,7 +591,7 @@ function ArrivalInputControl({
           />
         </View>
       </View>
-      <Text style={[styles.arrivalControlCaption, iosPage?.caption, { color: theme.gold }]}>{caption}</Text>
+      <Text numberOfLines={1} style={[styles.arrivalControlCaption, iosPage?.compactCaption, { color: theme.gold }]}>{caption}</Text>
     </View>
   );
 }

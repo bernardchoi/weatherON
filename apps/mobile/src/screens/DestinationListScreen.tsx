@@ -108,9 +108,9 @@ export function DestinationListScreen({
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={selectedCard ? `${selectedCard.title} 출발 상세 보기` : "첫 목적지 추가"}
             onPress={() => { if (selectedCard) { onSelectDestinationPlace(selectedCard.place); onNavigate("G2"); } else onNavigate("P1"); }}
             style={{ minHeight: 80, gap: 4, paddingVertical: 8 }}>
-            <Text style={[iosPage.caption, { color: theme.subtle }]}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
+            <Text style={[iosPage.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
             <Text style={[iosPage.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
-            <Text style={[iosPage.caption, { color: theme.muted }]}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 날씨와 출발 시간을 함께 확인할 수 있어요"}</Text>
+            <Text style={[iosPage.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
           </FeedbackPressable>
         ) : <FeedbackPressable
           accessibilityLabel={hasDestinations ? "오늘 출발 준비 상세 보기" : "첫 목적지 추가"}
@@ -354,7 +354,7 @@ function DestinationCard({
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
               <Text style={[styles.destinationName, iosPage?.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
             </View>
-            <Text style={[styles.destinationArea, iosPage?.caption, { color: theme.subtle }]} numberOfLines={2}>{item.area}</Text>
+            <Text style={[styles.destinationArea, iosPage?.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -364,7 +364,7 @@ function DestinationCard({
 
         {iosPage ? <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
           <Text style={[iosPage.number, { color: theme.text }]}>{item.departureTime}</Text>
-          <Text style={[iosPage.caption, { color: theme.subtle }]}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
+          <Text style={[iosPage.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
         </View> : null}
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>

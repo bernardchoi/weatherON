@@ -36,7 +36,7 @@ export function Section({ title, caption, accent, compact = false, contentGap, c
           </View> : null}
           <View style={styles.headerCopy}>
             <Text style={[styles.title, iosPage?.sectionTitle, compact ? styles.titleCompact : null, { color: theme.text }]}>{title}</Text>
-            {caption ? <Text style={[styles.caption, iosPage?.caption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={compact ? 1 : 2}>{caption}</Text> : null}
+            {caption ? <Text style={[styles.caption, iosPage?.compactCaption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={1}>{caption}</Text> : null}
           </View>
         </View>
         {children}

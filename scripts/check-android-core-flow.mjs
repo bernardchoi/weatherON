@@ -491,14 +491,14 @@ async function checkAlertSettingsDestinationEmptyFlow(browser) {
 
     await clickText(page, "MY");
     await clickText(page, "스마트 알림 설정");
-    await clickText(page, "고급 설정");
+    await clickText(page, "세부 알림 맞추기");
     await assertAnyText(page, ["5초 뒤 확인 알림 발송", "기기 확인 필요"]);
     await assertText(page, "목적지 출발");
-    await assertText(page, "목적지 추가 필요");
+    await assertText(page, "목적지를 추가하면 출발을 챙겨요");
     await assertText(page, "목적지 필요");
     await assertNoText(page, "계정 연결 후 목적지 알림 저장");
     await assertNoText(page, "알림 저장은 계정 연결 후 적용");
-    await clickText(page, "목적지 추가 필요");
+    await clickText(page, "목적지를 추가하면 출발을 챙겨요");
     await assertText(page, "장소를 검색해 주세요");
     await assertText(page, "장소 선택 필요");
     await fillAriaInput(page, "목적지 검색어", "x");
@@ -648,10 +648,10 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "강수 50% 이상이면 우산/강수 알림");
     await clickAriaIncludes(page, "목적지 알림 고급 설정으로 이동");
     await assertText(page, "고급 알림 기준");
-    await assertText(page, "목적지 출발 알림과 자동 강수 기준을 확인함");
-    await clickText(page, "고급 설정");
+    await assertText(page, "늦지 않도록 날씨와 이동 시간을 함께 챙겨드려요");
+    await clickText(page, "세부 알림 맞추기");
     await assertText(page, "목적지 출발");
-    await assertText(page, "출발 60분 전 · 바람 8m/s");
+    await assertText(page, "늦지 않도록 60분 전에 알려드려요");
     await clickAriaIncludes(page, "뒤로");
 
     console.log("core-flow: destination add reload");
@@ -765,9 +765,9 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "수신 확인");
   await assertText(page, "스마트 알림 설정");
   await assertText(page, "확인");
-  await clickAriaIncludes(page, "고급 설정 열기");
+  await clickAriaIncludes(page, "세부 알림 열기");
   await assertText(page, "강수 상세");
-  await assertText(page, "비 시작 전·그칠 시각");
+  await assertText(page, "비 오기 전과 그칠 때 알려드려요");
   await clickAriaIncludes(page, "강수 상세, 켜짐");
   await waitForAlertPreference(page, "rainDetail", false);
   await page.reload({ waitUntil: "networkidle0", timeout: 25000 });
@@ -775,7 +775,7 @@ async function checkMySettingsFlow(page) {
   await clickText(page, "MY");
   await clickText(page, "앱 권한 관리");
   await clickText(page, "수신 확인");
-  await clickAriaIncludes(page, "고급 설정 열기");
+  await clickAriaIncludes(page, "세부 알림 열기");
   await assertAriaIncludes(page, "강수 상세, 꺼짐");
   await clickAriaIncludes(page, "강수 상세, 꺼짐");
   await waitForAlertPreference(page, "rainDetail", true);

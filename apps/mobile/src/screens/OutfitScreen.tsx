@@ -40,12 +40,12 @@ export function OutfitScreen({
         <View style={{ gap: 12 }}>
           <Text style={[iosPage.body, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           <OutfitGrid outfit={state.outfit} maxItems={4} dense singleRow={layout.isShort} onItemPress={() => onNavigate("C4")} />
-          <Text style={[iosPage?.caption, { color: theme.muted }]}>{wardrobeCaption}</Text>
+          <Text style={[iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{wardrobeCaption}</Text>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
             <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => onNavigate("C4")} style={[styles.advicePreview, { minHeight: 44, backgroundColor: theme.card }]}>
               <View style={styles.advicePreviewRow}>
-                <Text style={[iosPage?.caption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
-                <Text style={[iosPage?.caption, { color: theme.text, flex: 1 }]}>{item.text}</Text>
+                <Text style={[iosPage?.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
+                <Text style={[iosPage?.compactCaption, { color: theme.text, flex: 1 }]} numberOfLines={1}>{item.text}</Text>
               </View>
             </FeedbackPressable>
           ))}
@@ -57,11 +57,11 @@ export function OutfitScreen({
         <View style={[styles.criteriaStats, { gap: 8 }]}>
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: theme.card, minHeight: 52 }]}>
             <Text style={[iosPage.body, { color: theme.text }]}>내 옷장</Text>
-            <Text style={[iosPage?.caption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
+            <Text style={[iosPage?.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
           </FeedbackPressable>
           <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: theme.card, minHeight: 52 }]}>
             <Text style={[iosPage.body, { color: theme.text }]}>스타일 기준</Text>
-            <Text style={[iosPage?.caption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
+            <Text style={[iosPage?.compactCaption, { color: theme.muted }]} numberOfLines={1}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>
         </View>
       </AppScreen>
