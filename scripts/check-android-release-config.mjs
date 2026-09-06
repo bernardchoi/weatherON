@@ -12,6 +12,7 @@ const mobileEasIgnorePath = join(mobileDir, ".easignore");
 const packageJsonPath = join(rootDir, "package.json");
 const mobilePackageJsonPath = join(mobileDir, "package.json");
 const androidAppBuildGradlePath = join(mobileDir, "android/app/build.gradle");
+const androidManifestPath = join(mobileDir, "android/app/src/main/AndroidManifest.xml");
 const releaseDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_출시_준비_프로세스.md");
 const apkQaDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_APK_QA_체크리스트.md");
 const storeListingDocPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_STORE_등록자료.md");
@@ -86,6 +87,9 @@ assertDocIncludes(androidAppBuildGradlePath, [
 ]);
 assert.ok(appConfig.android.permissions.includes("ACCESS_COARSE_LOCATION"));
 assert.ok(appConfig.android.permissions.includes("ACCESS_FINE_LOCATION"));
+assertDocIncludes(androidManifestPath, [
+  '<uses-feature android:name="android.hardware.camera" android:required="false"/>',
+]);
 assertAssetExists(appConfig.icon, "expo.icon");
 assertAssetExists(splashPluginConfig?.image, "expo-splash-screen image");
 assertAssetExists(appConfig.android.adaptiveIcon?.foregroundImage, "android.adaptiveIcon.foregroundImage");

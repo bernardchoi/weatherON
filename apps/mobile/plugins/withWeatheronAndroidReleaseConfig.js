@@ -11,6 +11,7 @@ const SIGNING_DEFINITIONS_MARKER = "// WeatherON release signing environment";
 const SIGNING_CONFIG_MARKER = "// WeatherON release signing config";
 const PROGUARD_MARKER = "# WeatherON release keep rules";
 const FIREBASE_PROVIDER = "com.google.firebase.provider.FirebaseInitProvider";
+const CAMERA_FEATURE = "android.hardware.camera";
 
 const releaseProperties = [
   ["android.compileSdkVersion", "36"],
@@ -123,13 +124,19 @@ function withWeatheronGradleProperties(config) {
   });
 }
 
-function withWeatheronFirebaseAutoInitDisabled(config) {
+function withWeatheronAndroidManifest(config) {
   return withAndroidManifest(config, (modConfig) => {
     const manifest = modConfig.modResults.manifest;
     manifest.$ = {
       ...(manifest.$ ?? {}),
       "xmlns:tools": "http://schemas.android.com/tools",
     };
+    manifest["uses-feature"] = (manifest["uses-feature"] ?? []).filter(
+      (feature) => feature.$?.["android:name"] !== CAMERA_FEATURE,
+    );
+    manifest["uses-feature"].push({
+      $: { "android:name": CAMERA_FEATURE, "android:required": "false" },
+    });
 
     const application = manifest.application?.[0];
     if (!application) {
@@ -174,7 +181,7 @@ function withWeatheronProguardRules(config) {
 module.exports = function withWeatheronAndroidReleaseConfig(config) {
   config = withWeatheronAppBuildGradle(config);
   config = withWeatheronGradleProperties(config);
-  config = withWeatheronFirebaseAutoInitDisabled(config);
+  config = withWeatheronAndroidManifest(config);
   config = withWeatheronProguardRules(config);
   return config;
 };
