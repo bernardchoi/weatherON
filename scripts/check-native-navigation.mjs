@@ -9,6 +9,11 @@ function sourceFunction(path, name) {
   return ts.transpileModule(node.getText(ast).replace('export ', ''), {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 }
 const path = 'apps/mobile/src/components/NavigationStack.tsx';
+const stackSource = readFileSync(path, 'utf8');
+assert.match(stackSource, /<View style=\{styles\.fill\}>[\s\S]*<ScreenStack style=\{StyleSheet\.absoluteFill\}>/,
+  'native stack must fill a flex-sized wrapper');
+assert.match(stackSource, /<ScreenStackItem[\s\S]*style=\{StyleSheet\.absoluteFill\}/,
+  'native screen items must fill the stack viewport');
 const reconcile = new Function(`${sourceFunction(path,'reconcileScreenStack')} return reconcileScreenStack;`)();
 let stack = ['M1'];
 stack = reconcile(stack, 'A4', 'M1');

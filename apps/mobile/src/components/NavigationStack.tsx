@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { ScreenStack, ScreenStackItem } from "react-native-screens";
 import type { AppRouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -38,17 +38,19 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
   if (next !== stack) setStack(next);
   const routeRef = useRef(route);
   routeRef.current = route;
-  return <ScreenStack style={styles.fill}>
-    {next.map((id, index) => <ScreenStackItem
-      key={id} screenId={id} activityState={2}
-      style={styles.fill} contentStyle={{ backgroundColor: theme.background }}
-      headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
-      stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
-      gestureEnabled={index > 0}
-      onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
-      {renderScreen(id)}
-    </ScreenStackItem>)}
-  </ScreenStack>;
+  return <View style={styles.fill}>
+    <ScreenStack style={StyleSheet.absoluteFill}>
+      {next.map((id, index) => <ScreenStackItem
+        key={id} screenId={id} activityState={2}
+        style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: theme.background }}
+        headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
+        stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
+        gestureEnabled={index > 0}
+        onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
+        {renderScreen(id)}
+      </ScreenStackItem>)}
+    </ScreenStack>
+  </View>;
 }
 
 const styles = StyleSheet.create({ fill: { flex: 1 } });

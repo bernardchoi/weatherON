@@ -176,7 +176,7 @@ export function DestinationCareScreen({
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
               <Text style={[styles.title, iosPage?.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
             </View>
-            <Text style={[styles.subtitle, { color: theme.subtle }]}>목적지 기준 알림 미리보기</Text>
+            <Text style={[styles.subtitle, iosPage?.caption, { color: theme.subtle }]}>목적지 기준 알림 미리보기</Text>
           </View>
         </View>
 
@@ -209,19 +209,19 @@ export function DestinationCareScreen({
           >
             <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
             <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.generatedImageBadgeText, { color: theme.subtle }]}>AI 이미지</Text>
+              <Text style={[styles.generatedImageBadgeText, iosPage?.caption, { color: theme.subtle }]}>AI 이미지</Text>
             </View>
           </View>
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
-              <Text style={[styles.decisionEyebrow, { color: theme.gold }]}>출발시간 역산</Text>
+              <Text style={[styles.decisionEyebrow, iosPage?.caption, { color: theme.gold }]}>출발시간 역산</Text>
               <Text style={[styles.decisionTitle, iosPage?.number, { color: theme.text }]}>{routeTimingReady ? `${departureTime} 출발` : "경로 확인 전"}</Text>
               <Text style={[styles.decisionBody, iosPage?.caption, { color: theme.muted }]}>
                 {routeTimingReady ? `${targetArrivalTime} 도착 기준으로 이동 시간과 날씨를 함께 봄` : `${targetArrivalTime} 도착 기준 날씨만 먼저 확인`}
               </Text>
             </View>
             <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? semanticColor(theme, "successTint") : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
-              <Text style={[styles.careStateText, { color: destinationCareEnabled ? theme.clear : theme.subtle }]}>
+              <Text style={[styles.careStateText, iosPage?.caption, { color: destinationCareEnabled ? theme.clear : theme.subtle }]}>
                 {destinationCareEnabled ? "케어 ON" : "케어 OFF"}
               </Text>
             </View>
@@ -544,9 +544,9 @@ function SummaryChip({
       <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
         <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
       </View>
-      <Text numberOfLines={1} style={[styles.summaryLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text numberOfLines={1} style={[styles.summaryValue, { color: theme.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.summaryMeta, { color }]}>{meta}</Text>
+      <Text numberOfLines={1} style={[styles.summaryLabel, iosPage?.caption, { color: theme.subtle }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.summaryValue, iosPage?.body, { color: theme.text }]}>{value}</Text>
+      <Text numberOfLines={1} style={[styles.summaryMeta, iosPage?.caption, { color }]}>{meta}</Text>
     </FeedbackPressable>
   );
 }
@@ -570,7 +570,7 @@ function ArrivalInputControl({
   return (
     <View style={[styles.arrivalControl, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
       <View style={styles.arrivalControlCopy}>
-        <Text style={[styles.arrivalControlLabel, { color: theme.subtle }]}>{label}</Text>
+        <Text style={[styles.arrivalControlLabel, iosPage?.caption, { color: theme.subtle }]}>{label}</Text>
         <View style={styles.arrivalWheelRow}>
           <TimeWheel
             accessibilityLabel={`${label} 시 입력`}
@@ -591,7 +591,7 @@ function ArrivalInputControl({
           />
         </View>
       </View>
-      <Text style={[styles.arrivalControlCaption, { color: theme.gold }]}>{caption}</Text>
+      <Text style={[styles.arrivalControlCaption, iosPage?.caption, { color: theme.gold }]}>{caption}</Text>
     </View>
   );
 }

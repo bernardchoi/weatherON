@@ -7,6 +7,7 @@ import { Section } from "../components/Section";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { iosPage } from "../theme/iosPage";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
@@ -123,14 +124,14 @@ export function OutfitDetailScreen({
                     <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
                 </View>
-                <Text style={[styles.itemSlot, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
+                <Text style={[styles.itemSlot, iosPage?.caption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
               </View>
             ) : null;
           })}
         </View>
         <View style={styles.detailHeading}>
           <Text style={[styles.detailTitle, { color: theme.text }]}>이 시간엔 이렇게 입어요</Text>
-          <Text style={[styles.detailCaption, { color: theme.muted }]}>앞으로 3시간</Text>
+          <Text style={[styles.detailCaption, iosPage?.caption, { color: theme.muted }]}>앞으로 3시간</Text>
         </View>
         <View style={styles.timeAdviceRow}>
           {state.outfit.timeAdvice.slice(0, 3).map((item) => {
@@ -144,9 +145,9 @@ export function OutfitDetailScreen({
               >
                 <View style={styles.timeAdviceHeader}>
                   <Image source={presentation.icon} style={[styles.timeAdviceIcon, { tintColor: presentation.color }]} resizeMode="contain" />
-                  <Text style={[styles.timeAdviceTime, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
+                  <Text style={[styles.timeAdviceTime, iosPage?.caption, { color: theme.gold }]}>{formatAdviceTime(item.time)}</Text>
                 </View>
-                <Text numberOfLines={2} style={[styles.timeAdviceCopy, { color: theme.text }]}>{presentation.copy}</Text>
+                <Text numberOfLines={2} style={[styles.timeAdviceCopy, iosPage?.caption, { color: theme.text }]}>{presentation.copy}</Text>
               </View>
             );
           })}
@@ -159,7 +160,7 @@ export function OutfitDetailScreen({
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }]}>오늘 날씨에 {state.outfit.matchPct}% 잘 맞아요</Text>
-              <Text style={[styles.recommendationCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
+              <Text style={[styles.recommendationCaption, iosPage?.caption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
             </View>
           </View>
           <View style={styles.reasonGrid}>
@@ -167,10 +168,10 @@ export function OutfitDetailScreen({
               <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.reasonLabelRow}>
                   <Image source={reason.icon} style={[styles.reasonIcon, { tintColor: reason.color }]} resizeMode="contain" />
-                  <Text style={[styles.reasonLabel, { color: theme.subtle }]}>{reason.label}</Text>
+                  <Text style={[styles.reasonLabel, iosPage?.caption, { color: theme.subtle }]}>{reason.label}</Text>
                 </View>
                 <Text style={[styles.reasonValue, { color: theme.text }]} numberOfLines={1}>{reason.value}</Text>
-                <Text style={[styles.reasonDetail, { color: theme.muted }]} numberOfLines={2}>{reason.detail}</Text>
+                <Text style={[styles.reasonDetail, iosPage?.caption, { color: theme.muted }]} numberOfLines={2}>{reason.detail}</Text>
               </View>
             ))}
           </View>
