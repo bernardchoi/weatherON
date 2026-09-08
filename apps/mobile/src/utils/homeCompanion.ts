@@ -15,7 +15,13 @@ export function getHomeCompanionMessage(weather: WeatherSnapshot, reliable: bool
   return "오늘 날씨에 맞춰, 나갈 준비를 함께해요.";
 }
 
-export function getHomeDepartureSummary(care: DestinationCare, ready: boolean, departureAt?: string, now = Date.now()) {
+export function getHomeDepartureSummary(
+  care: DestinationCare,
+  ready: boolean,
+  departureAt?: string,
+  now = Date.now(),
+  timeBasis: "arrival" | "departure" = "arrival",
+) {
   if (!ready) return { value: "어디로 갈까요?", body: "목적지를 고르면 출발 시간을 알려드려요.", soon: false };
   const advice = care.departureAdvice;
   const time = advice?.recommendedDepartureTime;
@@ -23,10 +29,18 @@ export function getHomeDepartureSummary(care: DestinationCare, ready: boolean, d
     return { value: advice?.travelStatus === "loading" ? "경로 확인 중" : "경로 확인 필요", body: "이동 시간을 확인한 뒤 출발 시간을 안내해요.", soon: false };
   }
   const remaining = departureAt ? Date.parse(departureAt) - now : NaN;
-  const soon = advice?.travelStatus === "ready" && remaining >= 0 && remaining <= 30 * 60_000;
+  if (!Number.isFinite(remaining)) {
+    return { value: "경로 확인 필요", body: "출발지와 도착 시간을 확인해 주세요.", soon: false };
+  }
+  if (remaining < 0) {
+    return { value: "도착 시간 변경 필요", body: "지난 출발 시간이라 새 도착 시간을 골라 주세요.", soon: false };
+  }
+  const soon = (timeBasis === "departure" || advice?.travelStatus === "ready") && remaining <= 30 * 60_000;
   return {
     value: time,
-    body: advice?.travelStatus === "fallback"
+    body: timeBasis === "departure"
+      ? "선택한 출발 시간이에요. 실제 도착은 지도에서 확인해 주세요."
+      : advice?.travelStatus === "fallback"
       ? "예상 출발 시간이에요. 경로를 다시 확인해 주세요."
       : soon ? "출발이 가까워졌어요. 챙길 것 확인해 볼까요?" : `${advice?.targetArrivalTime ?? "예정 시각"} 도착에 맞춘 출발 시간이에요.`,
     soon,

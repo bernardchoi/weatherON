@@ -1917,6 +1917,17 @@
     </div>
   </div>
 
+  <!-- 2026-09-08: 일상 이동 경로 화면 기획 -->
+  <div class="section" id="daily-route-plan">
+    <div class="section-label">일상 이동 · 경로 화면 기획</div>
+    <div class="section-title">목적지 설정에서 경로 선택과 이동 날씨로</div>
+    <div class="note">2026-09-08 외부 길찾기와 G2 요약 1차 구현 기준이며 실기기 검증·출시 완료가 아니다. 국내는 카카오, 해외는 Google을 사용하고 신규 경로 공급자는 도입하지 않는다. 상세 기준: <a href="WeatherON_일상_이동_경로_화면_기획.md">일상 이동 경로 화면 기획</a>, 출시 판단: <a href="WeatherON_기능_출시_로드맵.md">기능 출시 로드맵</a>.</div>
+    <p>G1 목적지 목록은 3줄 요약을 유지한다. G2는 기존 입력으로 기본 경로를 표시하고 출발 시각·이동 요약·준비 안내와 주요 길찾기 버튼 하나를 우선한다. 새 경로 선택을 필수 단계로 추가하지 않는다.</p>
+    <p>현재 단일 시간 계약에서는 API 값과 거리 기반 예상값을 구분한다. 기존 카카오맵 REST 국내 상세 응답 계약을 확장한 뒤 다른 경로를 원할 때만 선택 시트에서 최대 3개를 비교·적용하고 버스·지하철·혼합 필터를 제공한다. Google 경로 API는 해외에만 사용한다. 구간 날씨는 실제 도보 단계 좌표·시각이 있을 때만 같은 화면의 자세히에 제공한다.</p>
+    <p>외부 연결만 가능한 단계에는 노선 필터·가상 경로·구간 예보를 노출하지 않는다. 로딩·빈 결과·실패·예보 대기·앱 미설치 대안을 제공한다. 도보시간을 비 노출시간으로 표시하지 않으며, 외부 앱에서 선택 경로가 달라질 수 있음을 알린다.</p>
+    <p>하단 탭 추가, 음성 안내, 상시 위치 추적, 자동 재탐색은 제외한다. 조회·현재 선택 적용·외부 연결은 로그인이나 구독 없이 제공하고, 지속 저장은 계정 연결·알림 신청은 계정과 알림 권한 기준을 따른다. Guest 경로 적용은 현재 화면에만 반영한다. 저장·예약 실패와 실제 알림 기준은 미리보기와 구분해 표시하며, 반복 알림은 앱 미실행 시 다음 일정 경로 재검증까지 검증한 뒤 활성화한다. 여행 코스·GPX·WCI와 별개인 일상 이동 흐름이다.</p>
+  </div>
+
   <!-- 11-2 · 도보여행 주요 서비스 -->
   <div class="section" id="s11b">
     <div class="section-label">11-2 · Walking Travel — Primary Service <span class="new-badge">NEW</span></div>
@@ -1937,7 +1948,7 @@
       <div style="background:var(--cloud); border-radius:14px; padding:20px 18px; border-top:3px solid var(--rain);">
         <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--rain); letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px;">Scenario 1 · 일상 이동</div>
         <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px;">대중교통 + 도보 혼합</div>
-        <div style="font-size:12.5px; color:var(--text-sub); line-height:1.7;">지하철·버스 이동도 출발지→역, 역→목적지 사이 도보 구간 포함. 기본 출발 기능에서 알아서 챙기기 — 우산·코디·날씨 알림이 도보 구간 기준으로 제공.</div>
+        <div style="font-size:12.5px; color:var(--text-sub); line-height:1.7;">지하철·버스 이동도 출발지→역, 역→목적지 사이 도보 구간 포함. 일상 이동 경로 확장 설계안: 실제 경로 API 검증 후 도보 구간 예상 날씨를 제공한다. 현재 기본 출발 기능의 구현 완료를 의미하지 않으며, 상세 흐름은 일상 이동 경로 화면 기획을 따른다.</div>
       </div>
       <div style="background:rgba(78,203,163,0.07); border-radius:14px; padding:20px 18px; border-top:3px solid var(--fresh);">
         <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--fresh-dark); letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px;">Scenario 2 · 당일·단기</div>
@@ -3024,7 +3035,7 @@
         <div style="flex:1; min-width:0;">
           <div style="background:#E8F5EC; border-radius:10px; padding:12px 14px; margin-bottom:8px; border:1px solid rgba(58,191,160,0.3);">
             <div style="font-size:11px; font-weight:700; color:var(--fresh-darker); margin-bottom:4px;">🇰🇷 국내</div>
-            <div style="font-size:11px; color:var(--fresh-darker); line-height:1.6;">카카오 Local API 장소 검색<br>카카오 Directions API 소요시간<br>T-map API (Phase 4+ 전환)<br>iOS WeatherKit · Android KMA</div>
+            <div style="font-size:11px; color:var(--fresh-darker); line-height:1.6;">카카오 Local API 장소 검색<br>카카오 Directions API 소요시간<br>카카오 Map 대중교통·도보 상세<br>iOS WeatherKit · Android KMA</div>
           </div>
           <div style="background:#E8EEFF; border-radius:10px; padding:12px 14px; border:1px solid rgba(74,143,212,0.3);">
             <div style="font-size:11px; font-weight:700; color:var(--sky-strong); margin-bottom:4px;">🌍 해외</div>
@@ -3056,8 +3067,8 @@
             <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">소요시간 역산 — 일 1만건 무료 · 초과 건당 8원</div>
           </div>
           <div style="background:#FEF8ED; border-radius:8px; padding:10px 13px; border:1px dashed rgba(232,133,74,0.4);">
-            <div style="font-size:12px; font-weight:700; color:var(--warm);">T-map API <span style="font-size:11px; font-family:'DM Mono',monospace; padding:2px 7px; background:rgba(232,133,74,0.15); border-radius:6px; margin-left:6px;">Phase 4~</span></div>
-            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">실주행 기반 소요시간 — 일 1,000건 무료 · 초과 건당 10원 · 프리미엄 차별화 포인트</div>
+            <div style="font-size:12px; font-weight:700; color:var(--warm);">카카오 Map 경로 상세 <span style="font-size:11px; font-family:'DM Mono',monospace; padding:2px 7px; background:rgba(232,133,74,0.15); border-radius:6px; margin-left:6px;">검증 후</span></div>
+            <div style="font-size:11.5px; color:var(--mist); margin-top:2px;">국내 대중교통·도보 단계 — 쿼터·상업 이용·캐시 조건 확인 후 확장</div>
           </div>
           <div style="background:#F0FBF7; border-radius:8px; padding:10px 13px;">
             <div style="font-size:12px; font-weight:700; color:var(--ink);">WeatherKit + KMA</div>
@@ -3121,11 +3132,11 @@
             <td style="padding:10px 14px; text-align:center;"><span style="background:#D4F5EC; color:var(--fresh-darker); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">P2~</span></td>
           </tr>
           <tr style="background:var(--cloud);">
-            <td style="padding:10px 16px; font-weight:600; color:var(--warm);">T-map API</td>
-            <td style="padding:10px 14px; color:var(--mist);">국내 정밀 소요시간</td>
-            <td style="padding:10px 14px; text-align:center; color:var(--warm); font-weight:700;">일 1,000건</td>
-            <td style="padding:10px 14px; text-align:center; color:var(--mist);">건당 10원</td>
-            <td style="padding:10px 14px; text-align:center;"><span style="background:#FEF0E0; color:var(--warm-dark); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">P4~</span></td>
+            <td style="padding:10px 16px; font-weight:600; color:var(--warm);">카카오 Map 경로 상세</td>
+            <td style="padding:10px 14px; color:var(--mist);">국내 대중교통·도보 단계</td>
+            <td style="padding:10px 14px; text-align:center; color:var(--warm); font-weight:700;">쿼터 확인</td>
+            <td style="padding:10px 14px; text-align:center; color:var(--mist);">조건 확인</td>
+            <td style="padding:10px 14px; text-align:center;"><span style="background:#FEF0E0; color:var(--warm-dark); padding:2px 8px; border-radius:6px; font-size:11px; font-family:'DM Mono',monospace;">검증 후</span></td>
           </tr>
           <tr>
             <td style="padding:10px 16px; font-weight:600; color:var(--sky);">Google Maps Geocoding</td>
@@ -3172,12 +3183,12 @@
           <div style="color:var(--mist); line-height:1.7;">Google Maps Geocoding 중심으로 해외 검색 커버 · Mapbox는 비용 절감 대안으로만 보관<br>→ <strong style="color:var(--dawn);">월 USD 100 초과 시 재검토</strong></div>
         </div>
         <div>
-          <strong style="color:var(--warm); display:block; margin-bottom:4px;">Phase 4~ (MAU 3만↑ · T-map 전환)</strong>
-          <div style="color:var(--mist); line-height:1.7;">T-map 일 1,000건 초과분 발생 · Google Maps 사용량 증가분 반영<br>→ <strong style="color:var(--warm);">월 ₩5~15만 수준 재검토</strong></div>
+          <strong style="color:var(--warm); display:block; margin-bottom:4px;">Phase 4~ (MAU 3만↑ · 상세 경로 확장)</strong>
+          <div style="color:var(--mist); line-height:1.7;">카카오 상세 경로 호출량 · 해외 Google Maps 사용량 증가분 반영<br>→ <strong style="color:var(--warm);">월 ₩5~15만 수준 재검토</strong></div>
         </div>
       </div>
       <div style="margin-top:14px; font-size:11.5px; color:var(--mist); line-height:1.7;">
-        기준 문서: <strong style="color:var(--sky);">WeatherON_MAP_PROVIDER_COST_COMPARISON.md</strong> · 국내 Kakao/T-map, 해외 Google을 기본 스택으로 유지. Mapbox는 Google Maps 비용 압박이 실제 발생할 때만 PoC 검토.
+        기준 문서: <strong style="color:var(--sky);">WeatherON_MAP_PROVIDER_COST_COMPARISON.md</strong> · 국내 Kakao, 해외 Google을 기본 스택으로 유지. 신규 경로 공급자는 임의 도입하지 않으며 Mapbox는 해외 검색 비용 압박이 실제 발생할 때만 PoC 검토.
         2026-06-29 이후 기능 출시 비용 판단은 <strong style="color:var(--sky);">WeatherON_기능_출시_로드맵.md</strong>의 MVP 0~1, Beta, v1.0, v1.1+ 기준을 우선한다.
       </div>
     </div>
@@ -3441,7 +3452,7 @@
         <div class="rm-title">검증 후 확장</div>
         <div class="rm-tasks">
           코디/신발 고도화 · 도보/해외여행 플래너 · AI 장소 추천 ·
-          ON Square · 광고/구독/CP 경제 · T-map 정밀 소요시간은 MVP 핵심 지표 충족 후 별도 결정
+          ON Square · 광고/구독/CP 경제 · 카카오 상세 경로 확장은 MVP 핵심 지표 충족 후 별도 결정
         </div>
       </div>
     </div>

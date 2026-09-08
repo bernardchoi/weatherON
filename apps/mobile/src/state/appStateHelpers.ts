@@ -9,7 +9,13 @@ import {
   type KmaWeatherLocationPreset,
   type WeatherLocationPreset,
 } from "../providers/weatherLocations";
-import { getMinutesUntilTimeInZone } from "../utils/zonedDateTime";
+import {
+  addZonedCalendarDays,
+  createDateAtTimeInZone,
+  getMinutesUntilTimeInZone,
+  getWeekdayForZonedDate,
+  getZonedDateTimeParts,
+} from "../utils/zonedDateTime";
 import type {
   AccountGateResultState,
   AccountGateReturnRouteId,
@@ -263,6 +269,7 @@ export function getDefaultDestinationPlace(): PlaceSearchResult {
 export function getDefaultDestinationSchedulePreference(place: PlaceSearchResult): DestinationSchedulePreference {
   const normalizedName = place.name.toLowerCase();
   return {
+    timeBasis: "arrival",
     targetArrivalTime:
       place.category === "beach" || normalizedName.includes("강릉")
         ? "13:00"
@@ -319,6 +326,25 @@ export function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: n
   if (freeWindow <= 180) return 10;
   if (freeWindow <= 360) return 15;
   return 20;
+}
+
+export function getRouteArrivalTimeIso(
+  targetArrivalTime: string,
+  timeZone: string,
+  nowMs: number,
+  repeatEnabled: boolean,
+  repeatDays: DestinationRepeatDay[],
+): string | undefined {
+  if (!isValidTimeText(targetArrivalTime)) return undefined;
+  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
+  const maxOffset = repeatEnabled ? 7 : 0;
+  for (let offset = 0; offset <= maxOffset; offset += 1) {
+    const arrivalDate = addZonedCalendarDays(nowParts, offset);
+    if (repeatEnabled && !repeatDays.includes(getWeekdayForZonedDate(arrivalDate))) continue;
+    const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
+    if (arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
+  }
+  return undefined;
 }
 
 export function isValidTimeText(value: string): boolean {

@@ -18,11 +18,13 @@ const now = Date.parse("2026-09-06T08:00:00+09:00");
 assert.equal(departure(care, true, "2026-09-06T08:20:00+09:00", now).soon, true);
 assert.equal(departure(care, true, "2026-09-07T08:20:00+09:00", now).soon, false, "tomorrow must not be urgent");
 assert.equal(departure(care, true, "2026-09-06T07:50:00+09:00", now).soon, false);
+assert.match(departure(care, true, "2026-09-06T07:50:00+09:00", now).value, /변경/);
 assert.equal(departure(care, true, "invalid", now).soon, false);
 assert.equal(departure(care, true, "2026-09-05T23:20:00Z", now).soon, true, "equivalent timezone offsets must agree");
 assert.match(departure(care, false).value, /어디/);
+assert.match(departure(care, true).value, /확인/);
 assert.match(departure({ departureAdvice: { ...care.departureAdvice, travelStatus: "loading" } }, true).value, /확인/);
-assert.match(departure({ departureAdvice: { ...care.departureAdvice, travelStatus: "fallback" } }, true).body, /예상/);
+assert.match(departure({ departureAdvice: { ...care.departureAdvice, travelStatus: "fallback" } }, true, "2026-09-06T08:20:00+09:00", now).body, /예상/);
 assert.match(departure({ departureAdvice: { ...care.departureAdvice, recommendedDepartureTime: "25:90" } }, true).value, /확인/);
 
 console.log("Shared home: weather guidance, unavailable routes, schedule dates and timezone checks passed");

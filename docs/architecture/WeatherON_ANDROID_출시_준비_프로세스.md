@@ -217,13 +217,13 @@ npm run check:eas-production-build-status -- <eas-build-id>
 - AdMob
 - Kakao Directions API
 - Google Routes API
-- T-map API
+- Kakao Map 대중교통·도보 상세 경로 계약
 
 운영 원칙:
 - `EXPO_PUBLIC_*`에 외부 provider 키를 넣지 않는다.
 - 앱은 `/weather/*`, `/places/search` 내부 adapter만 호출한다.
 - 운영 배포 전 `apps/server/.env.local` 기반 로컬 키를 Cloudflare Worker Secrets로 이관한다.
-- 국내는 Kakao/T-map, 해외는 Google Maps를 기준으로 한다. Mapbox는 Google Maps 월 비용이 커질 때만 대안 PoC로 검토한다.
+- 국내는 Kakao, 해외는 Google Maps를 기준으로 한다. 신규 경로 공급자는 임의 도입하지 않으며 Mapbox는 해외 검색 비용이 커질 때만 별도 PoC로 검토한다.
 
 ### Phase E. Android QA
 

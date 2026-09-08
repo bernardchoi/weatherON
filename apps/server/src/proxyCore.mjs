@@ -526,9 +526,10 @@ async function estimateKakaoTransitRoute(origin, destination, originName, destin
   if (payload.status && payload.status !== "OK") {
     throw new Error(`kakao transit failed: ${payload.status}`);
   }
-  const route = getFastestKakaoTransitRoute(payload);
-  const durationSeconds = Number(route?.properties?.totalTime);
-  const distanceMeters = Number(route?.properties?.totalDistance);
+  const routeOptions = getKakaoTransitRouteOptions(payload);
+  const route = routeOptions[0];
+  const durationSeconds = Number(route?.totalTime);
+  const distanceMeters = Number(route?.totalDistance);
   if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceMeters)) {
     throw new Error("kakao transit response is empty");
   }
@@ -538,14 +539,35 @@ async function estimateKakaoTransitRoute(origin, destination, originName, destin
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
     message: "Kakao 대중교통 기준",
+    routeOptions,
   };
 }
 
-function getFastestKakaoTransitRoute(payload) {
+function getKakaoTransitRouteOptions(payload) {
   const routes = Array.isArray(payload.routes) ? payload.routes : [];
   return routes
     .filter((route) => Number.isFinite(Number(route?.properties?.totalTime)))
-    .sort((a, b) => Number(a.properties.totalTime) - Number(b.properties.totalTime))[0];
+    .sort((a, b) => Number(a.properties.totalTime) - Number(b.properties.totalTime))
+    .slice(0, 3)
+    .map((route) => ({
+      type: route.properties?.type,
+      totalTime: Number(route.properties?.totalTime),
+      totalDistance: Number(route.properties?.totalDistance),
+      transfers: Number(route.properties?.transfers),
+      fare: Number.isFinite(Number(route.properties?.fare?.value)) ? Number(route.properties.fare.value) : undefined,
+      steps: (Array.isArray(route.steps) ? route.steps : []).map((step) => ({
+        type: step.properties?.type,
+        guidance: step.properties?.guidance,
+        time: Number(step.properties?.time),
+        distance: Number(step.properties?.distance),
+        stops: (Array.isArray(step.properties?.stops) ? step.properties.stops : [])
+          .map((stop) => stop?.name)
+          .filter(Boolean),
+        vehicles: (Array.isArray(step.properties?.vehicles) ? step.properties.vehicles : [])
+          .map((vehicle) => [vehicle?.type, vehicle?.name].filter(Boolean).join(" "))
+          .filter(Boolean),
+      })),
+    }));
 }
 
 async function estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, readEnvValue) {

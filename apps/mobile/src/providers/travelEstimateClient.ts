@@ -25,6 +25,24 @@ export type TravelEstimateParams = {
   arrivalTime?: string;
 };
 
+export type TravelRouteStep = {
+  type?: "BUS" | "SUBWAY" | "WALKING";
+  guidance?: string;
+  time: number;
+  distance: number;
+  stops: string[];
+  vehicles: string[];
+};
+
+export type TravelRouteOption = {
+  type?: "BUS" | "SUBWAY" | "BUS_AND_SUBWAY";
+  totalTime: number;
+  totalDistance: number;
+  transfers: number;
+  fare?: number;
+  steps: TravelRouteStep[];
+};
+
 export type TravelEstimateResult = {
   provider: TravelEstimateProvider;
   status: TravelEstimateStatus;
@@ -32,6 +50,7 @@ export type TravelEstimateResult = {
   distanceMeters: number;
   message: string;
   updatedAt: string;
+  routeOptions?: TravelRouteOption[];
 };
 
 export type TravelEstimateClient = {

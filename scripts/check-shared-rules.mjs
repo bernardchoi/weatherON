@@ -13,14 +13,16 @@ const providerBundle = join(outDir, "mobile-provider-check-bundle.mjs");
 const reactNativePlatformStub = {
   name: "react-native-platform-stub",
   setup(buildContext) {
-    buildContext.onResolve({ filter: /^(react-native|expo-file-system)$/ }, (args) => ({
+    buildContext.onResolve({ filter: /^(react-native|expo-file-system|expo-clipboard)$/ }, (args) => ({
       path: args.path,
       namespace: "weatheron-check",
     }));
     buildContext.onLoad({ filter: /.*/, namespace: "weatheron-check" }, (args) => ({
       contents: args.path === "expo-file-system"
         ? 'export const Paths = { document: { uri: "file:///check/Documents/" } };'
-        : 'export const Platform = { OS: "android" };',
+        : args.path === "expo-clipboard"
+          ? 'export async function setStringAsync() {}'
+          : 'export const Platform = { OS: "android" }; export const Linking = { openURL: async () => {} };',
       loader: "js",
     }));
   },
@@ -361,6 +363,8 @@ await writeFile(
       getUmbrellaPeakWindSpeed,
     } = await import("../apps/mobile/src/utils/umbrellaRainSignals.ts");
     const { getTravelMinutesForTransport } = await import("../apps/mobile/src/utils/travelEstimate.ts");
+    const { getDestinationDirectionsUrl } = await import("../apps/mobile/src/utils/destinationDirections.ts");
+    const { getRouteArrivalTimeIso } = await import("../apps/mobile/src/state/appStateHelpers.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
     const { kmaForecastFixture, openMeteoFixture, recommendUmbrella, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
@@ -685,6 +689,33 @@ await writeFile(
       hiroshimaLocalMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-hiroshima"),
       hiroshimaToSeoulMinutes: getTravelMinutesForTransport(hiroshimaToSeoulFallback, "auto", "JP", "KR"),
       staleHiroshimaMinutes: getTravelMinutesForTransport(hiroshimaEstimate, "auto", "JP", "JP", "jp-device-tokyo"),
+      unavailableFallbackMinutes: getTravelMinutesForTransport({ travelMinutes: 35, distanceMeters: 0, provider: "fallback", status: "fallback" }, "auto", "KR", "KR"),
+      loadingTravelMinutes: getTravelMinutesForTransport({ travelMinutes: 35, distanceMeters: 12000, provider: "fallback", status: "loading" }, "auto", "KR", "KR"),
+      pastOneTimeArrival: getRouteArrivalTimeIso("09:00", "Asia/Seoul", Date.parse("2026-09-08T01:00:00Z"), false, []),
+      futureOneTimeArrival: getRouteArrivalTimeIso("11:00", "Asia/Seoul", Date.parse("2026-09-08T01:00:00Z"), false, []),
+      transitDirectionsUrl: getDestinationDirectionsUrl({
+        origin: { latitude: 37.5446, longitude: 127.0559 },
+        originName: "성수",
+        destination: { latitude: 37.5665, longitude: 126.978 },
+        destinationAddress: "서울특별시 중구",
+        destinationName: "서울시청",
+        destinationCountryCode: "KR",
+        transportMode: "transit",
+      }),
+      automaticDirectionsUrl: getDestinationDirectionsUrl({
+        destination: { latitude: 37.5665, longitude: 126.978 },
+        destinationAddress: "서울특별시 중구",
+        destinationName: "서울시청",
+        destinationCountryCode: "KR",
+        transportMode: "auto",
+      }),
+      overseasDirectionsUrl: getDestinationDirectionsUrl({
+        destination: { latitude: 35.6812, longitude: 139.7671 },
+        destinationAddress: "Tokyo Station",
+        destinationName: "Tokyo Station",
+        destinationCountryCode: "JP",
+        transportMode: "transit",
+      }),
       rainNotifications: rainDemo.notifications,
       outfitSaveCompletionDurationMs,
       outfitSaveCompletionOnTransition: shouldShowOutfitSaveCompletion(false, true, null),
@@ -730,6 +761,16 @@ await writeFile(
       quietHoursNotifications,
       current: await buildDemoState(false),
       destination: await buildDemoState(true),
+      departureBasis: await buildDemoState(false, "ready", {
+        notificationNow: new Date("2026-06-26T06:00:00+09:00").getTime(),
+        savedDestinations: [{
+          place: jamsilPlace,
+          careEnabled: true,
+          alertCondition: { rainThresholdPct: 10, leadTimeMinutes: 30, windThresholdMs: 5 },
+          schedulePreference: { timeBasis: "departure", targetArrivalTime: "09:00", transportMode: "auto", repeatEnabled: false, repeatDays: [] },
+          travelEstimate: { travelMinutes: 45, travelProvider: "fallback", travelStatus: "ready" },
+        }],
+      }),
       multiDestination: await buildDemoState(false, "ready", {
         notificationNow: new Date("2026-06-26T06:00:00+09:00").getTime(),
         savedDestinations: [
@@ -828,11 +869,13 @@ await build({
     "react",
     "react/jsx-runtime",
     "react-native",
+    "react-native-screens",
     "react-native-safe-area-context",
     "expo",
     "expo-apple-authentication",
     "expo-asset",
     "expo-blur",
+    "expo-clipboard",
     "expo-crypto",
     "expo-image-manipulator",
     "expo-image-picker",
@@ -957,6 +1000,15 @@ assert.ok(demoResults.hiroshimaLocalFallback.distanceMeters > 0);
 assert.ok(demoResults.hiroshimaLocalMinutes >= 10 && demoResults.hiroshimaLocalMinutes < 60);
 assert.equal(demoResults.hiroshimaToSeoulMinutes, undefined);
 assert.equal(demoResults.staleHiroshimaMinutes, undefined);
+assert.equal(demoResults.unavailableFallbackMinutes, undefined);
+assert.equal(demoResults.loadingTravelMinutes, undefined);
+assert.equal(demoResults.pastOneTimeArrival, undefined);
+assert.equal(demoResults.futureOneTimeArrival, "2026-09-08T02:00:00.000Z");
+assert.ok(demoResults.transitDirectionsUrl.includes("map.kakao.com/link/by/traffic"));
+assert.ok(demoResults.transitDirectionsUrl.includes("%EC%84%B1%EC%88%98,37.5446,127.0559"));
+assert.ok(demoResults.automaticDirectionsUrl.includes("map.kakao.com/link/to/"));
+assert.ok(demoResults.overseasDirectionsUrl.includes("google.com/maps/dir"));
+assert.ok(demoResults.overseasDirectionsUrl.includes("travelmode=transit"));
 assert.ok(demoResults.rainNotifications.some((item) => item.type === "rain" && item.active && item.scheduledAt && item.deliveryKey));
 assert.equal(demoResults.outfitSaveCompletionDurationMs, 3_000);
 assert.equal(demoResults.outfitSaveCompletionOnTransition, true);
@@ -1007,6 +1059,7 @@ assert.equal(demoResults.httpProvider.officialSpecialAlert.title, "호우경보"
 assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.active, true);
 assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.title, "호우경보");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
+assert.ok(demoResults.departureBasis.notifications.some((item) => item.type === "destination" && item.active && item.scheduledAt === "2026-06-25T23:30:00.000Z"));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.pushTitle.includes("가는 길") && item.pushBody.includes("우산")));

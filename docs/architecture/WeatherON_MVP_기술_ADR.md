@@ -19,7 +19,7 @@ WeatherON MVP 구현 착수 전 모바일 앱 기술스택, 날씨/위치 API, �
 | 앱 프레임워크 | React Native + Expo Dev Client + TypeScript | 채택 |
 | 1차 출시 플랫폼 | Android 우선, Google Play 기준 | 채택 |
 | 날씨 API | iOS WeatherKit 전용, Android 한국 KMA, Android 해외 Open-Meteo | 채택 |
-| 위치/장소 API | 한국 Kakao Local + T-map 전환 검토, 글로벌 Google Maps Platform | 채택 |
+| 위치/장소·경로 API | 한국 Kakao Local·Kakao Map, 해외 Google Maps Platform | 채택 |
 | 룰엔진 | TypeScript deterministic rule engine | 채택 |
 | 백엔드 | Cloudflare Workers + D1 + R2 | 채택 |
 | 계정 | Workers auth broker + 내부 WeatherON 세션 + OAuth2/OIDC | 채택 |

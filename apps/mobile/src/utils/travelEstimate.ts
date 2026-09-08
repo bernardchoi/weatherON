@@ -41,6 +41,8 @@ export function getTravelMinutesForTransport(
   currentOriginPlaceId?: string,
 ): number | undefined {
   if (isUnverifiedInternationalRoute(estimate, originCountryCode, destinationCountryCode, currentOriginPlaceId)) return undefined;
+  if (estimate.status === "idle" || estimate.status === "loading" || estimate.status === "error") return undefined;
+  if (estimate.status === "fallback" && estimate.distanceMeters <= 0) return undefined;
   const baseMinutes = estimate.travelMinutes || 35;
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   if (transportMode === "walk") {

@@ -395,6 +395,7 @@ export function normalizeDestinationSchedulePreference(value: unknown, place: Pl
     ? record.repeatDays.filter(isDestinationRepeatDay).sort(compareRepeatDays)
     : [];
   return {
+    timeBasis: record.timeBasis === "departure" ? "departure" : "arrival",
     targetArrivalTime: typeof record.targetArrivalTime === "string" && isValidTimeText(record.targetArrivalTime)
       ? record.targetArrivalTime
       : getDefaultDestinationSchedulePreference(place).targetArrivalTime,
@@ -420,7 +421,17 @@ export function normalizeDestinationTravelEstimate(value: unknown, origin: Weath
     distanceMeters: typeof record.distanceMeters === "number" ? record.distanceMeters : 0,
     message: typeof record.message === "string" ? record.message : "기본 이동시간",
     updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString(),
+    routeOptions: Array.isArray(record.routeOptions) ? record.routeOptions.filter(isTravelRouteOption) : undefined,
   };
+}
+
+function isTravelRouteOption(value: unknown): value is NonNullable<DestinationTravelEstimate["routeOptions"]>[number] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as NonNullable<DestinationTravelEstimate["routeOptions"]>[number];
+  return typeof record.totalTime === "number"
+    && typeof record.totalDistance === "number"
+    && typeof record.transfers === "number"
+    && Array.isArray(record.steps);
 }
 
 function isTravelEstimateStatus(value: unknown): value is DestinationTravelEstimate["status"] {

@@ -170,7 +170,7 @@ async function loadSeededApp(page) {
   await waitForApp();
 
   await assertText(page, "최고 ");
-  await assertText(page, "비가 잦아들 때");
+  await assertText(page, "자주 가는 곳 추가");
   await assertBottomNav(page);
 }
 
@@ -184,22 +184,14 @@ async function checkHomeDecisionFlow(page) {
   await clickText(page, "홈");
   await clickAriaIncludes(page, "날씨 상세 보기");
   await assertText(page, "날씨 상세");
-  await assertText(page, "생활 지수");
+  await assertText(page, "대기질");
   await assertText(page, "주간 예보");
   await assertBottomNav(page);
   await clickAriaIncludes(page, "뒤로");
   await assertText(page, "최고 ");
 
   await clickText(page, "홈");
-  await assertText(page, "목적지 추가");
-  await clickText(page, "언제 나갈까");
-  await assertText(page, "목적지 추가");
-  await assertText(page, "장소 선택");
-  await assertBottomNav(page);
-  await assertClearOfBottomNav(page, "장소 선택 필요");
-
-  await clickText(page, "홈");
-  await clickText(page, "비가 잦아들 때");
+  await clickText(page, "자주 가는 곳 추가");
   await assertText(page, "목적지 추가");
   await assertText(page, "장소 선택");
   await assertBottomNav(page);
@@ -529,8 +521,9 @@ async function checkDestinationPersistenceFlow(page) {
   await assertText(page, "알림 1/1");
   await assertNoText(page, "첫 목적지 추가");
   await clickAriaIncludes(page, "잠실종합운동장 목적지 상세 보기");
-  await assertText(page, "목적지 기준 알림 미리보기");
-  await assertText(page, "자동 알림 기준");
+  await assertText(page, "출발 판단 · 이동 · 준비");
+  await clickAriaIncludes(page, "계산 근거와 알림 상세 열기");
+  await assertText(page, "기존 알림 기준");
   await clickAriaIncludes(page, "뒤로");
   await assertText(page, "잠실종합운동장");
 }
@@ -623,9 +616,8 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "목적지 저장하고 비교");
     console.log("core-flow: destination add save");
     await clickText(page, "목적지 저장하고 비교");
-    await assertText(page, "목적지 기준 알림 미리보기");
-    await assertText(page, "이동");
-    await assertText(page, "자동 여유");
+    await assertText(page, "출발 판단 · 이동 · 준비");
+    await assertText(page, "목적지 현재 날씨 · 준비 안내");
     await clickAriaIncludes(page, "이동수단 자동");
     await assertText(page, "도보");
     await assertText(page, "자차");
@@ -669,7 +661,7 @@ async function checkDestinationAddUiPersistenceFlow(browser) {
     await assertText(page, "강수 50% 이상이면 우산/강수 알림");
     await clickText(page, "출발");
     await clickText(page, "홈");
-    await clickText(page, "비가 잦아들 때");
+    await clickAriaIncludes(page, "목적지 강수");
     await assertText(page, "강수 타임라인");
     await assertText(page, "외출 가이드");
     await assertText(page, "우산 추천");

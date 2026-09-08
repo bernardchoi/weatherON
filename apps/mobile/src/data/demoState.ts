@@ -22,6 +22,7 @@ import { runtimeWeatherProvider } from "../providers/weatherProvider";
 import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
 import {
   addZonedCalendarDays,
+  addMinutesToTime,
   createDateAtTimeInZone,
   getWeekdayForZonedDate,
   getZonedDateTimeParts,
@@ -44,6 +45,7 @@ export type DemoStateOptions = {
 };
 
 export type DestinationScheduleInput = {
+  timeBasis?: "arrival" | "departure";
   targetArrivalTime: string;
   originPlaceId?: string;
   travelMinutes?: number;
@@ -60,7 +62,7 @@ export type DestinationNotificationInput = {
   place: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode" | "timezone">;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
-  schedulePreference?: Pick<DestinationScheduleInput, "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
+  schedulePreference?: Pick<DestinationScheduleInput, "timeBasis" | "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
   // 저장된 목적지는 실제 TravelEstimateResult(provider/status 필드명)를, 미저장 임시 목적지는
   // DestinationScheduleInput(travelProvider/travelStatus 필드명)을 그대로 재사용해 넘기므로 두 필드명을 모두 허용한다.
   travelEstimate?: Pick<DestinationScheduleInput, "originPlaceId" | "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
@@ -114,6 +116,14 @@ export function buildDemoStateFromWeatherResult(
         nowMs: options.notificationNow ?? Date.now(),
       })
     : [];
+  const destinationTravelMinutes = getTravelMinutes(
+    options.destinationSchedule?.transportMode,
+    options.destinationSchedule,
+    weatherProviderResult.current.countryCode,
+    options.destination?.countryCode,
+    weatherProviderResult.current.locationId,
+  );
+  const selectedTargetTime = options.destinationSchedule?.targetArrivalTime ?? "13:00";
   const destinationCare = buildDestinationCare({
     destinationId: options.destination?.id ?? "destination-empty",
     name: options.destination?.name ?? "목적지 미등록",
@@ -122,15 +132,11 @@ export function buildDemoStateFromWeatherResult(
     destinationWeather,
     careOn: hasDestination ? options.destinationCareEnabled ?? true : false,
     alertCondition: options.destinationAlertCondition,
-    travelMinutes: getTravelMinutes(
-      options.destinationSchedule?.transportMode,
-      options.destinationSchedule,
-      weatherProviderResult.current.countryCode,
-      options.destination?.countryCode,
-      weatherProviderResult.current.locationId,
-    ),
-    targetArrivalTime: options.destinationSchedule?.targetArrivalTime ?? "13:00",
-    bufferMinutes: options.destinationSchedule?.bufferMinutes,
+    travelMinutes: destinationTravelMinutes,
+    targetArrivalTime: options.destinationSchedule?.timeBasis === "departure" && typeof destinationTravelMinutes === "number"
+      ? addMinutesToTime(selectedTargetTime, destinationTravelMinutes)
+      : selectedTargetTime,
+    bufferMinutes: options.destinationSchedule?.timeBasis === "departure" ? 0 : options.destinationSchedule?.bufferMinutes,
     transportMode: options.destinationSchedule?.transportMode ?? "auto",
     travelProvider: options.destinationSchedule?.travelProvider,
     travelStatus: options.destinationSchedule?.travelStatus,
@@ -250,6 +256,22 @@ function getDestinationNotificationTiming(
   const targetArrivalTime = schedule?.targetArrivalTime;
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
+  if (schedule?.timeBasis === "departure") {
+    const departureAt = getNextDepartureAt(
+      targetArrivalTime,
+      schedule.repeatEnabled ?? false,
+      schedule.repeatDays ?? [],
+      nowMs,
+      destination.alertCondition.leadTimeMinutes,
+      destination.place.timezone,
+    );
+    if (!departureAt || !getWeatherAtDeparture(weather, departureAt, destination.place.timezone)) return null;
+    return {
+      departureAt,
+      scheduledAt: new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60_000),
+    };
+  }
+
   const travelMinutes = getTravelMinutes(
     schedule?.transportMode,
     destination.travelEstimate,
@@ -276,6 +298,25 @@ function getDestinationNotificationTiming(
   return { departureAt, scheduledAt };
 }
 
+function getNextDepartureAt(
+  targetDepartureTime: string,
+  repeatEnabled: boolean,
+  repeatDays: DestinationScheduleInput["repeatDays"],
+  nowMs: number,
+  leadTimeMinutes: number,
+  timeZone: string,
+): Date | null {
+  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
+  const maxOffset = repeatEnabled ? 7 : 0;
+  for (let offset = 0; offset <= maxOffset; offset += 1) {
+    const departureDate = addZonedCalendarDays(nowParts, offset);
+    if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(departureDate))) continue;
+    const departureAt = createDateAtTimeInZone(departureDate, targetDepartureTime, timeZone);
+    if (departureAt.getTime() - leadTimeMinutes * 60_000 > nowMs) return departureAt;
+  }
+  return null;
+}
+
 function getNextArrivalAt(
   targetArrivalTime: string,
   repeatEnabled: boolean,
@@ -286,7 +327,8 @@ function getNextArrivalAt(
   timeZone: string,
 ): Date | null {
   const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
-  for (let offset = 0; offset <= 7; offset += 1) {
+  const maxOffset = repeatEnabled ? 7 : 0;
+  for (let offset = 0; offset <= maxOffset; offset += 1) {
     const arrivalDate = addZonedCalendarDays(nowParts, offset);
     const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
     if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(arrivalDate))) continue;

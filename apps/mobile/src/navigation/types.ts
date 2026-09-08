@@ -134,6 +134,7 @@ export type P0ScreenProps = {
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
   onSetDestinationTargetArrivalTime: (targetArrivalTime: string) => void;
+  onSetDestinationTimeBasis: (timeBasis: DestinationSchedulePreference["timeBasis"]) => void;
   onSetDestinationTransportMode: (transportMode: DestinationTransportMode) => void;
   onToggleDestinationRepeat: () => void;
   onToggleDestinationRepeatDay: (day: DestinationRepeatDay) => void;

@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   button: {
-    minHeight: 44,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",

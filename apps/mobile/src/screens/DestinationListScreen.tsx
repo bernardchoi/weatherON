@@ -7,6 +7,7 @@ import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
+import { getAutoBufferMinutes, getRouteArrivalTimeIso } from "../state/appStateHelpers";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -14,6 +15,7 @@ import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { getTravelMinutesForTransport } from "../utils/travelEstimate";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
+import { addMinutesToTime } from "../utils/zonedDateTime";
 
 type DestinationCardModel = {
   id: string;
@@ -26,6 +28,7 @@ type DestinationCardModel = {
   rainPct: string;
   departureTime: string;
   arrivalTime: string;
+  arrivalLabel: string;
   repeatLabel: string;
   warning: string;
   outfitTitle: string;
@@ -41,6 +44,7 @@ type DestinationCardModel = {
 export function DestinationListScreen({
   state,
   savedDestinations,
+  placeSearchOrigin,
   recentlyRemovedDestination,
   selectedDestinationPlace,
   accountGateResult,
@@ -62,7 +66,7 @@ export function DestinationListScreen({
   const layout = useResponsiveLayout();
   const care = state.destinationCare;
   const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
-  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile);
+  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile, Boolean(placeSearchOrigin));
   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
@@ -108,7 +112,7 @@ export function DestinationListScreen({
             style={{ minHeight: 80, gap: 4, paddingVertical: 8 }}>
             <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
             <Text style={[pageStyles.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
-            <Text style={[pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} 도착 예정 · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} ${selectedCard.arrivalLabel} · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
           </FeedbackPressable>
         )}
 
@@ -328,7 +332,7 @@ function DestinationCard({
 
         {<View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
           <Text style={[pageStyles.number, { color: theme.text }]}>{item.departureTime}</Text>
-          <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} 도착 목표</Text>
+          <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} {item.arrivalLabel}</Text>
         </View>}
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
@@ -372,6 +376,7 @@ function buildDestinationCards(
   temperatureUnit: P0ScreenProps["temperatureUnit"],
   wardrobeItems: P0ScreenProps["wardrobeItems"],
   preferenceProfile: UserPreferenceProfile,
+  originAvailable: boolean,
 ): DestinationCardModel[] {
   if (!savedDestinations.length) return [];
   const originWeather = care.originWeather;
@@ -382,7 +387,7 @@ function buildDestinationCards(
     const destinationWind = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
     const warning = buildDestinationWarning(destination.place.name, destinationRain, destinationWind, destination.alertCondition);
     const tone = destinationRain >= destination.alertCondition.rainThresholdPct || destinationWind >= destination.alertCondition.windThresholdMs ? "warm" : "clear";
-    const schedule = getDestinationSchedule(destination, care);
+    const schedule = getDestinationSchedule(destination, care, originAvailable);
     const outfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
     const outfitItems = Object.values(outfit.items).filter(Boolean);
 
@@ -397,6 +402,7 @@ function buildDestinationCards(
       rainPct: `${Math.round(destinationRain)}%`,
       departureTime: schedule.departureTime,
       arrivalTime: schedule.arrivalTime,
+      arrivalLabel: schedule.arrivalLabel,
       repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
       outfitTitle: getOutfitVariantLabel(outfit.variant),
@@ -501,24 +507,59 @@ function getDestinationActionText(item: DestinationCardModel) {
   return "출발 시간 확인";
 }
 
-function getDestinationSchedule(destination: P0ScreenProps["savedDestinations"][number], care: P0ScreenProps["state"]["destinationCare"]) {
+function getDestinationSchedule(
+  destination: P0ScreenProps["savedDestinations"][number],
+  care: P0ScreenProps["state"]["destinationCare"],
+  originAvailable: boolean,
+) {
   const targetArrivalTime = destination.schedulePreference.targetArrivalTime;
-  const travelMinutes = getTravelMinutesForTransport(
+  const travelMinutes = originAvailable ? getTravelMinutesForTransport(
     destination.travelEstimate,
     destination.schedulePreference.transportMode,
     care.originWeather.countryCode,
     destination.place.countryCode,
     care.originWeather.locationId,
+  ) : undefined;
+  const nowMs = Date.now();
+  const targetAt = getRouteArrivalTimeIso(
+    targetArrivalTime,
+    destination.place.timezone,
+    nowMs,
+    destination.schedulePreference.repeatEnabled,
+    destination.schedulePreference.repeatDays,
   );
+  if (destination.schedulePreference.timeBasis === "departure") {
+    return {
+      arrivalTime: typeof travelMinutes === "number" ? addMinutesToTime(targetArrivalTime, travelMinutes) : "경로 확인 전",
+      arrivalLabel: typeof travelMinutes === "number" ? "예상 도착" : "도착",
+      departureTime: targetAt ? targetArrivalTime : "출발 시간 변경 필요",
+    };
+  }
   if (typeof travelMinutes !== "number") {
     return {
       arrivalTime: targetArrivalTime,
+      arrivalLabel: "도착 목표",
       departureTime: "경로 확인 전",
     };
   }
-  const bufferMinutes = getAutoBufferMinutes(targetArrivalTime, travelMinutes);
+  if (!targetAt) {
+    return {
+      arrivalTime: targetArrivalTime,
+      arrivalLabel: "도착 목표",
+      departureTime: "도착 시간 변경 필요",
+    };
+  }
+  const bufferMinutes = getAutoBufferMinutes(targetArrivalTime, travelMinutes, nowMs, destination.place.timezone);
+  if (new Date(targetAt).getTime() - (travelMinutes + bufferMinutes) * 60_000 <= nowMs) {
+    return {
+      arrivalTime: targetArrivalTime,
+      arrivalLabel: "도착 목표",
+      departureTime: "도착 시간 변경 필요",
+    };
+  }
   return {
     arrivalTime: targetArrivalTime,
+    arrivalLabel: "도착 목표",
     departureTime: subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes),
   };
 }
@@ -537,21 +578,6 @@ function getRepeatLabel(schedulePreference: P0ScreenProps["selectedDestinationSc
   if (!schedulePreference.repeatEnabled || schedulePreference.repeatDays.length === 0) return "없음";
   if (schedulePreference.repeatDays.length >= 5) return "주중";
   return schedulePreference.repeatDays.map((day) => repeatDayLabels[day]).join("");
-}
-
-function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number): number {
-  const [hourText, minuteText] = targetArrivalTime.split(":");
-  const targetMinutes = Number(hourText) * 60 + Number(minuteText);
-  if (!Number.isFinite(targetMinutes)) return 10;
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const dayMinutes = 24 * 60;
-  const freeWindow = (((targetMinutes - currentMinutes) % dayMinutes + dayMinutes) % dayMinutes) - travelMinutes;
-  if (freeWindow <= 30) return 0;
-  if (freeWindow <= 90) return 5;
-  if (freeWindow <= 180) return 10;
-  if (freeWindow <= 360) return 15;
-  return 20;
 }
 
 function subtractMinutes(time: string, minutes: number) {

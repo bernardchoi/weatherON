@@ -217,6 +217,7 @@ export function AppNavigator() {
     onToggleDestinationCare: appState.toggleDestinationCare,
     onToggleSavedDestinationCare: appState.toggleSavedDestinationCare,
     onSetDestinationTargetArrivalTime: appState.setSelectedDestinationTargetArrivalTime,
+    onSetDestinationTimeBasis: appState.setSelectedDestinationTimeBasis,
     onSetDestinationTransportMode: appState.setSelectedDestinationTransportMode,
     onToggleDestinationRepeat: appState.toggleSelectedDestinationRepeat,
     onToggleDestinationRepeatDay: appState.toggleSelectedDestinationRepeatDay,

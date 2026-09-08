@@ -72,6 +72,12 @@ export function getMinutesUntilTimeInZone(time: string, nowMs: number, timeZone:
   return ((targetMinutes - currentMinutes) % dayMinutes + dayMinutes) % dayMinutes;
 }
 
+export function addMinutesToTime(time: string, minutes: number): string {
+  const [hourText, minuteText] = time.split(":");
+  const total = (Number(hourText) * 60 + Number(minuteText) + minutes + 24 * 60) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 export function getWeekdayForZonedDate(parts: Pick<ZonedDateParts, "year" | "month" | "day">) {
   const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
   return weekdayIds[weekday];

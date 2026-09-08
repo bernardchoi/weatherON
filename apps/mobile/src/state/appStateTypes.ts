@@ -33,6 +33,8 @@ export type AlertPreferenceKey = "rainDetail" | "weatherAlerts" | "routine" | "b
 export type AlertPreferences = Record<AlertPreferenceKey, boolean>;
 export type NotificationDeliveryStatus = LocalNotificationSyncResult;
 export type DestinationSchedulePreference = {
+  timeBasis: "arrival" | "departure";
+  // 기존 저장 호환을 위해 필드명은 유지하며, departure면 선택한 출발 시각으로 사용함.
   targetArrivalTime: string;
   transportMode: DestinationTransportMode;
   repeatEnabled: boolean;

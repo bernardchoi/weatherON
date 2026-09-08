@@ -25,6 +25,7 @@ type DestinationRow = {
   alert_rain_threshold_pct: number;
   alert_lead_time_minutes: number;
   alert_wind_threshold_ms: number;
+  schedule_time_basis: string;
   schedule_target_arrival_time: string;
   schedule_transport_mode: string;
   schedule_repeat_enabled: number;
@@ -36,6 +37,7 @@ type DestinationRow = {
   travel_distance_meters: number;
   travel_message: string;
   travel_updated_at: string;
+  travel_route_options_json: string;
   saved_at_label: string;
 };
 type PlaceRow = {
@@ -65,6 +67,7 @@ type DestinationPreviewRow = {
   alert_rain_threshold_pct: number;
   alert_lead_time_minutes: number;
   alert_wind_threshold_ms: number;
+  schedule_time_basis: string;
   schedule_target_arrival_time: string;
   schedule_transport_mode: string;
   schedule_repeat_enabled: number;
@@ -76,6 +79,7 @@ type DestinationPreviewRow = {
   travel_distance_meters: number;
   travel_message: string;
   travel_updated_at: string;
+  travel_route_options_json: string;
 };
 type NotificationHistoryRow = {
   seq: number;
@@ -272,6 +276,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         alert_rain_threshold_pct REAL NOT NULL,
         alert_lead_time_minutes REAL NOT NULL,
         alert_wind_threshold_ms REAL NOT NULL,
+        schedule_time_basis TEXT NOT NULL DEFAULT 'arrival',
         schedule_target_arrival_time TEXT NOT NULL,
         schedule_transport_mode TEXT NOT NULL,
         schedule_repeat_enabled INTEGER NOT NULL,
@@ -283,6 +288,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         travel_distance_meters REAL NOT NULL,
         travel_message TEXT NOT NULL,
         travel_updated_at TEXT NOT NULL,
+        travel_route_options_json TEXT NOT NULL DEFAULT '[]',
         saved_at_label TEXT NOT NULL,
         updated_at INTEGER NOT NULL
       );
@@ -300,6 +306,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         alert_rain_threshold_pct REAL NOT NULL,
         alert_lead_time_minutes REAL NOT NULL,
         alert_wind_threshold_ms REAL NOT NULL,
+        schedule_time_basis TEXT NOT NULL DEFAULT 'arrival',
         schedule_target_arrival_time TEXT NOT NULL,
         schedule_transport_mode TEXT NOT NULL,
         schedule_repeat_enabled INTEGER NOT NULL,
@@ -311,6 +318,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         travel_distance_meters REAL NOT NULL,
         travel_message TEXT NOT NULL,
         travel_updated_at TEXT NOT NULL,
+        travel_route_options_json TEXT NOT NULL DEFAULT '[]',
         updated_at INTEGER NOT NULL
       );
 
@@ -407,6 +415,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         PRIMARY KEY (role, snapshot_seq, seq)
       );
     `);
+    await ensureDestinationScheduleColumns(database);
     await ensureWeatherSnapshotColumns(database);
     await migrateLegacyStorage(database);
     return database;
@@ -592,6 +601,7 @@ async function readSavedDestinations(database: SQLiteExecutor): Promise<unknown[
     careEnabled: row.care_enabled === 1,
     alertCondition: alertConditionFromRow(row),
     schedulePreference: {
+      timeBasis: row.schedule_time_basis,
       targetArrivalTime: row.schedule_target_arrival_time,
       transportMode: row.schedule_transport_mode,
       repeatEnabled: row.schedule_repeat_enabled === 1,
@@ -618,10 +628,10 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       `INSERT INTO destinations (
         place_id, seq, name, address, category, country_code, latitude, longitude, timezone, provider,
         care_enabled, alert_rain_threshold_pct, alert_lead_time_minutes, alert_wind_threshold_ms,
-        schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
-        travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at,
+        schedule_time_basis, schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
+        travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at, travel_route_options_json,
         saved_at_label, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       placeId,
       index,
       textValue(place.name) ?? "",
@@ -636,6 +646,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       numberValue(alertCondition.rainThresholdPct),
       numberValue(alertCondition.leadTimeMinutes),
       numberValue(alertCondition.windThresholdMs),
+      textValue(schedulePreference.timeBasis) ?? "arrival",
       textValue(schedulePreference.targetArrivalTime) ?? "10:00",
       textValue(schedulePreference.transportMode) ?? "auto",
       boolValue(schedulePreference.repeatEnabled) ? 1 : 0,
@@ -647,6 +658,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       numberValue(travelEstimate.distanceMeters),
       textValue(travelEstimate.message) ?? "",
       textValue(travelEstimate.updatedAt) ?? "",
+      JSON.stringify(arrayValue(travelEstimate.routeOptions)),
       textValue(destination.savedAtLabel) ?? "저장됨",
       now,
     );
@@ -676,6 +688,7 @@ async function readDestinationPreview(database: SQLiteExecutor): Promise<Record<
     careEnabled: row.care_enabled === 1,
     alertCondition: alertConditionFromRow(row),
     schedulePreference: {
+      timeBasis: row.schedule_time_basis,
       targetArrivalTime: row.schedule_target_arrival_time,
       transportMode: row.schedule_transport_mode,
       repeatEnabled: row.schedule_repeat_enabled === 1,
@@ -692,15 +705,16 @@ async function writeDestinationPreview(database: SQLiteExecutor, record: Record<
   await database.runAsync(
     `INSERT INTO destination_preview (
       id, care_enabled, alert_rain_threshold_pct, alert_lead_time_minutes, alert_wind_threshold_ms,
-      schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
-      travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at,
+      schedule_time_basis, schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
+      travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at, travel_route_options_json,
       updated_at
-    ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       care_enabled = excluded.care_enabled,
       alert_rain_threshold_pct = excluded.alert_rain_threshold_pct,
       alert_lead_time_minutes = excluded.alert_lead_time_minutes,
       alert_wind_threshold_ms = excluded.alert_wind_threshold_ms,
+      schedule_time_basis = excluded.schedule_time_basis,
       schedule_target_arrival_time = excluded.schedule_target_arrival_time,
       schedule_transport_mode = excluded.schedule_transport_mode,
       schedule_repeat_enabled = excluded.schedule_repeat_enabled,
@@ -712,11 +726,13 @@ async function writeDestinationPreview(database: SQLiteExecutor, record: Record<
       travel_distance_meters = excluded.travel_distance_meters,
       travel_message = excluded.travel_message,
       travel_updated_at = excluded.travel_updated_at,
+      travel_route_options_json = excluded.travel_route_options_json,
       updated_at = excluded.updated_at`,
     boolValue(record.previewDestinationCareEnabled) ? 1 : 0,
     numberValue(alertCondition.rainThresholdPct),
     numberValue(alertCondition.leadTimeMinutes),
     numberValue(alertCondition.windThresholdMs),
+    textValue(schedulePreference.timeBasis) ?? "arrival",
     textValue(schedulePreference.targetArrivalTime) ?? "10:00",
     textValue(schedulePreference.transportMode) ?? "auto",
     boolValue(schedulePreference.repeatEnabled) ? 1 : 0,
@@ -728,6 +744,7 @@ async function writeDestinationPreview(database: SQLiteExecutor, record: Record<
     numberValue(travelEstimate.distanceMeters),
     textValue(travelEstimate.message) ?? "",
     textValue(travelEstimate.updatedAt) ?? "",
+    JSON.stringify(arrayValue(travelEstimate.routeOptions)),
     now,
   );
   await database.runAsync("DELETE FROM preview_repeat_days");
@@ -1083,6 +1100,18 @@ async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {
   if (!columns.has("pm2_5")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm2_5 REAL");
 }
 
+async function ensureDestinationScheduleColumns(database: SQLiteDatabase) {
+  for (const table of ["destinations", "destination_preview"] as const) {
+    const rows = await database.getAllAsync<TableInfoRow>(`PRAGMA table_info(${table})`);
+    if (!rows.some((row) => row.name === "schedule_time_basis")) {
+      await database.runAsync(`ALTER TABLE ${table} ADD COLUMN schedule_time_basis TEXT NOT NULL DEFAULT 'arrival'`);
+    }
+    if (!rows.some((row) => row.name === "travel_route_options_json")) {
+      await database.runAsync(`ALTER TABLE ${table} ADD COLUMN travel_route_options_json TEXT NOT NULL DEFAULT '[]'`);
+    }
+  }
+}
+
 async function migrateLegacyStorage(database: SQLiteDatabase) {
   const migrated = await database.getFirstAsync<TextRow>("SELECT value FROM app_meta WHERE key = ?", schemaVersionKey);
   if (migrated) return;
@@ -1191,7 +1220,17 @@ function travelEstimateFromRow(row: DestinationRow | DestinationPreviewRow): Rec
     distanceMeters: row.travel_distance_meters,
     message: row.travel_message,
     updatedAt: row.travel_updated_at,
+    routeOptions: parseJsonArray(row.travel_route_options_json),
   };
+}
+
+function parseJsonArray(value: string): unknown[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 function objectRecord(value: unknown): Record<string, unknown> {

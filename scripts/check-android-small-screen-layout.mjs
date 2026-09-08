@@ -133,7 +133,7 @@ try {
     console.log(`small-screen: ${viewport.name}/home loaded`);
 
     await assertText(page, "최고 ", viewport, "home");
-    await assertText(page, "비 완화", viewport, "home");
+    await assertText(page, "목적지 강수", viewport, "home");
     console.log(`small-screen: ${viewport.name}/home text`);
     await checkLayout(page, viewport, "home");
     console.log(`small-screen: ${viewport.name}/home layout`);
@@ -141,7 +141,7 @@ try {
     console.log(`small-screen: ${viewport.name}/home screenshot`);
 
     console.log(`small-screen: ${viewport.name}/destination-list`);
-    await clickText(page, "출발");
+    await clickAriaIncludes(page, "출발 탭");
     await assertText(page, "출발", viewport, "destination-list");
     await assertText(page, "잠실종합운동장", viewport, "destination-list");
     await assertText(page, "서울역", viewport, "destination-list");
@@ -151,22 +151,24 @@ try {
     await screenshot(page, viewport, "destination-list");
 
     console.log(`small-screen: ${viewport.name}/destination-care`);
-    await clickText(page, "잠실종합운동장");
-    await assertText(page, "목적지 기준 알림 미리보기", viewport, "destination-care");
-    await assertText(page, "출발시간 역산", viewport, "destination-care");
-    await assertText(page, "자동 여유", viewport, "destination-care");
-    await clickText(page, "이동수단");
+    await clickAriaIncludes(page, "출발 상세 보기");
+    await assertText(page, "출발 판단 · 이동 · 준비", viewport, "destination-care");
+    await assertText(page, "목적지 현재 날씨 · 준비 안내", viewport, "destination-care");
+    await assertText(page, "카카오맵에서 상세 경로 보기", viewport, "destination-care");
+    await clickAriaIncludes(page, "이동수단");
     await assertText(page, "대중교통", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
     await clickAriaIncludes(page, "대중교통 이동수단 선택");
     await clickAriaIncludes(page, "도착 희망 시각");
+    await assertText(page, "도착 시간", viewport, "destination-care");
+    await assertText(page, "출발 시간", viewport, "destination-care");
     await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
+    await clickAriaIncludes(page, "희망 시각 확인");
+    await clickAriaIncludes(page, "계산 근거와 알림 상세 열기");
     await assertText(page, "반복 알림", viewport, "destination-care");
     await assertText(page, "ON", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
     await screenshot(page, viewport, "destination-care");
-    await clickAriaIncludes(page, "도착 희망 시각 확인");
-
     console.log(`small-screen: ${viewport.name}/notification-sidebar`);
     await clickText(page, "홈");
     console.log(`small-screen: ${viewport.name}/notification-sidebar home`);

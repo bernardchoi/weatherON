@@ -60,7 +60,13 @@ const upstream = createServer((request, response) => {
     sendJson(response, 200, {
       status: "OK",
       routes: [
-        { properties: { totalTime: 3300, totalDistance: 18500, type: "SUBWAY", transfers: 1 } },
+        {
+          properties: { totalTime: 3300, totalDistance: 18500, type: "SUBWAY", transfers: 1, fare: { value: 1550 } },
+          steps: [
+            { properties: { type: "WALKING", guidance: "성수역까지 도보", time: 420, distance: 510, stops: [], vehicles: [] } },
+            { properties: { type: "SUBWAY", guidance: "2호선 성수역 > 을지로입구역", time: 1980, distance: 14200, stops: [{ name: "성수역" }, { name: "을지로입구역" }], vehicles: [{ name: "2호선" }] } },
+          ],
+        },
         { properties: { totalTime: 3900, totalDistance: 21000, type: "BUS_AND_SUBWAY", transfers: 2 } },
       ],
     });
@@ -140,6 +146,12 @@ try {
   );
   assert.equal(kakaoTransit.provider, "kakao-transit");
   assert.equal(kakaoTransit.travelMinutes, 55);
+  assert.equal(kakaoTransit.routeOptions.length, 2);
+  assert.equal(kakaoTransit.routeOptions[0].transfers, 1);
+  assert.equal(kakaoTransit.routeOptions[0].fare, 1550);
+  assert.equal(kakaoTransit.routeOptions[0].steps[0].type, "WALKING");
+  assert.deepEqual(kakaoTransit.routeOptions[0].steps[1].vehicles, ["2호선"]);
+  assert.deepEqual(kakaoTransit.routeOptions[0].steps[1].stops, ["성수역", "을지로입구역"]);
   assert.equal(kakaoTransitRequestCount, 1);
   const googleTransit = await fetchJson(
     `http://${proxyHost}:${proxyPort}/routes/estimate?origin=35.6812,139.7671&destination=35.6580,139.7016&originCountryCode=JP&destinationCountryCode=JP&transportMode=transit&arrivalTime=${encodeURIComponent(futureTransitArrivalTime)}`,

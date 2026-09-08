@@ -74,6 +74,17 @@ const savePersisted = callback(expression(persistencePath, (node) => ts.isFuncti
 const oldItem = { id: "photo-test", source: "photo", imageUrl: "wardrobe-photos/photo-old.jpg", owned: true };
 const savedState = { onboardingCompleted: true, photoWardrobeItems: [oldItem], wardrobeOwnedItemIds: [oldItem.id] };
 await storage.writeAppValue(key, savedState, true);
+const routeOptions = [{ type: "SUBWAY", totalTime: 1800, totalDistance: 12000, transfers: 1, fare: 1550, steps: [] }];
+await storage.writeAppValue(key, { ...savedState, savedDestinations: [{
+  place: { id: "route-test", name: "목적지", address: "서울", category: "custom", countryCode: "KR", coordinate: { latitude: 37.5, longitude: 127 }, timezone: "Asia/Seoul", provider: "kakao" },
+  careEnabled: true,
+  alertCondition: { rainThresholdPct: 50, leadTimeMinutes: 60, windThresholdMs: 8 },
+  schedulePreference: { timeBasis: "arrival", targetArrivalTime: "10:00", transportMode: "transit", repeatEnabled: false, repeatDays: [] },
+  travelEstimate: { originPlaceId: "origin", destinationPlaceId: "route-test", provider: "kakao-transit", status: "ready", travelMinutes: 30, distanceMeters: 12000, message: "Kakao 대중교통 기준", updatedAt: new Date().toISOString(), routeOptions },
+  savedAtLabel: "저장됨",
+}] }, true);
+assert.deepEqual((await storage.readAppValue(key, true)).savedDestinations[0].travelEstimate.routeOptions, routeOptions);
+await storage.writeAppValue(key, savedState, true);
 failRead = true;
 await assert.rejects(storage.readAppValue(key, true), /locked/);
 assert.equal(await storage.readAppValue(key), null, "optional cache reads can still fail softly");

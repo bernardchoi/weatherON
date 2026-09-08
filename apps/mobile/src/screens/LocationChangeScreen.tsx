@@ -20,6 +20,7 @@ export function LocationChangeScreen({
   isPlaceSearchLoading,
   placeSearchStatus,
   onNavigate,
+  onGoBack,
   onRequireAccount,
   onRequestCurrentLocation,
   onSearchPlaces,
@@ -45,12 +46,12 @@ export function LocationChangeScreen({
 
   const selectPlace = (place: typeof selectedDestinationPlace) => {
     onSelectWeatherLocation(place);
-    onNavigate("H1");
+    onGoBack();
   };
   const applySelectedPlace = () => {
     if (!activeWeatherPlace) return;
     onSelectWeatherLocation(activeWeatherPlace);
-    onNavigate("H1");
+    onGoBack();
   };
 
   return (

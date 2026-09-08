@@ -31,6 +31,7 @@ export function HomeScreen({
   savedDestinations,
   selectedDestinationPlace,
   selectedDestinationDepartureAt,
+  selectedDestinationSchedulePreference,
   readNotificationIds,
   notificationHistory,
   smartCareEnabled,
@@ -71,7 +72,13 @@ export function HomeScreen({
   });
   const reliableWeather = state.weatherProvider.status === "ready" && !state.weatherProvider.fallbackUsed && !currentWeather.stale;
   const companionMessage = getHomeCompanionMessage(currentWeather, reliableWeather);
-  const departureSummary = getHomeDepartureSummary(state.destinationCare, destinationReady, selectedDestinationDepartureAt);
+  const departureSummary = getHomeDepartureSummary(
+    state.destinationCare,
+    destinationReady,
+    selectedDestinationDepartureAt,
+    Date.now(),
+    selectedDestinationSchedulePreference.timeBasis,
+  );
   const refreshMessage = isWeatherLoading ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;

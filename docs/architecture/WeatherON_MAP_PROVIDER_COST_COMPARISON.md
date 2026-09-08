@@ -1,13 +1,13 @@
 # WeatherON Map Provider Cost Comparison
 
-> 기준일: 2026-06-28
+> 기준일: 2026-09-08
 > 목적: 해외 장소 검색/지도 provider 선택 시 Google Maps와 Mapbox 비용 차이, 적용 원칙, 추후 재검토 기준을 남긴다.
 
 ## 1. 결론
 
 | 항목 | 결정 |
 |---|---|
-| 국내 장소 검색 | Kakao Local 우선, T-map은 Phase 4 이후 이동/경로 고도화 후보 |
+| 국내 장소·경로 | Kakao Local·Kakao Map 경로 API 유지. 신규 경로 공급자 전환 없음 |
 | 해외 장소 검색 | Google Maps Geocoding 우선 |
 | 해외 POI 고도화 | Google Places API는 필요 시 선택 도입 |
 | Mapbox | 현재 기본 provider로 쓰지 않음. 비용 절감 대안으로 보관 |
@@ -58,7 +58,7 @@ Geocoding 단순 비교용 예시다. Places API, 지도 표시, 자동완성, D
 
 ## 6. 문서 반영 기준
 
-- 기획/제안 문서에는 “국내 Kakao/T-map, 해외 Google”을 기준으로 쓴다.
+- 기획/제안 문서에는 “국내 Kakao, 해외 Google”을 기준으로 쓴다.
 - Mapbox는 기본 스택으로 쓰지 않고 “비용 절감 대안”으로만 표기한다.
 - Google Maps 키는 해외 장소 검색 개발 착수 시 발급한다.
 - Mapbox 키는 대안 PoC가 확정되기 전까지 발급하지 않는다.
@@ -73,4 +73,5 @@ Geocoding 단순 비교용 예시다. Places API, 지도 표시, 자동완성, D
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-09-08 | TMAP 전환 계획 제외. 국내 Kakao·해외 Google 원칙으로 정리 |
 | 2026-06-28 | Google Maps vs Mapbox 비용 비교와 WeatherON provider 결정 기준 최초 정리 |
