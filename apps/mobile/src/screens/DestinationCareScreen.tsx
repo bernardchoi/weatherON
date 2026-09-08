@@ -18,7 +18,6 @@ import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../th
 import { openDestinationDirections } from "../utils/destinationDirections";
 import type { TravelRouteOption } from "../providers/travelEstimateClient";
 import { getDestinationImageAsset } from "../utils/destinationImage";
-import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { addMinutesToTime } from "../utils/zonedDateTime";
 import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
@@ -87,7 +86,6 @@ export function DestinationCareScreen({
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
-  const [repeatDaysOpen, setRepeatDaysOpen] = useState(false);
   const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
   const [directionsMessage, setDirectionsMessage] = useState<string | null>(null);
   const [departureActivityStatus, setDepartureActivityStatus] = useState<DepartureLiveActivityStatus>({
@@ -113,7 +111,7 @@ export function DestinationCareScreen({
     distanceUnit,
   );
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
-  const directionsLabel = selectedDestinationPlace.countryCode === "KR" ? "카카오맵에서 상세 경로 보기" : "Google Maps에서 상세 경로 보기";
+  const directionsLabel = selectedDestinationPlace.countryCode === "KR" ? "카카오맵 길찾기" : "Google 지도 길찾기";
   const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode, timeBasis);
   const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
   const departureWeatherGuidance = getDepartureWeatherGuidance(
@@ -137,6 +135,13 @@ export function DestinationCareScreen({
       : selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${departureTime} 출발` : `${departureTime} 출발 권장`
     : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const preparationCopy = getPreparationCopy(destinationRain, destinationWeather.current.windMs, departureWeatherGuidance);
+  const liveActivityMeta = departureActivityMatchesDestination
+    ? `${departureTime}까지 표시 중`
+    : destinationCareEnabled && departureActivityStatus.supported && !departureActivityStatus.enabled
+      ? "설정에서 허용 필요"
+      : destinationCareEnabled && departureReady
+        ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 자동`
+        : destinationCareEnabled ? "시간 계산 후 자동" : "케어 꺼짐";
 
   const openDirections = async () => {
     setDirectionsMessage(null);
@@ -201,7 +206,7 @@ export function DestinationCareScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.destinationContentGap,
+            gap: layout.isShort ? spacing.md : spacing.lg,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -220,6 +225,13 @@ export function DestinationCareScreen({
           </View>
         </View>
 
+        <View accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.placeImageFrame, { borderColor: theme.border }]}>
+          <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
+          <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
+            <Text style={[styles.generatedImageBadgeText, pageStyles.caption, { color: theme.subtle }]}>장소 이미지</Text>
+          </View>
+        </View>
+
         {justSaved ? (
           <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
             <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
@@ -229,12 +241,13 @@ export function DestinationCareScreen({
 
         <View
           style={[
-            styles.decisionPanel,
+            styles.carePanel,
             { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.gold },
             cardShadow(theme),
             pageStyles.card,
           ]}
         >
+        <View style={[styles.decisionPanel, pageStyles.unboxed]}>
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>출발 판단</Text>
@@ -303,7 +316,7 @@ export function DestinationCareScreen({
           </View>
         </View>
 
-        <View style={[styles.detailPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+        <View style={[styles.detailPanel, pageStyles.unboxed, styles.embeddedSection, { borderColor: theme.border }]}>
           <FeedbackPressable
             accessibilityLabel={detailPanelOpen ? "계산 근거와 알림 상세 닫기" : "계산 근거와 알림 상세 열기"}
             accessibilityRole="button"
@@ -379,10 +392,8 @@ export function DestinationCareScreen({
               <RepeatSchedulePanel
                 repeatEnabled={repeatEnabled}
                 repeatDays={repeatDays}
-                repeatDaysOpen={repeatDaysOpen}
                 repeatSummary={repeatSummary}
                 onToggleRepeat={onToggleDestinationRepeat}
-                onToggleRepeatDays={() => setRepeatDaysOpen((current) => !current)}
                 onToggleRepeatDay={onToggleDestinationRepeatDay}
                 theme={theme}
               />
@@ -411,46 +422,39 @@ export function DestinationCareScreen({
           </DropdownMotion>
         </View>
 
-        <View style={styles.directionsAction}>
-          <AppButton label={directionsLabel} accessibilityLabel={`${destinationName} ${directionsLabel}`} onPress={() => void openDirections()} tone="secondary" variant="outlined" />
-          <Text style={[styles.directionsCaption, pageStyles.compactCaption, { color: theme.subtle }]}>
-            {transportMode === "auto" ? "외부 앱/웹에서 이동수단을 선택해야 함" : `${transportLabel}으로 전달 · 외부 앱/웹에서 실제 경로 확인`}
-          </Text>
-        </View>
+        <View style={[styles.quickActionRow, { borderColor: theme.border }]}>
+          <FeedbackPressable
+            accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
+            accessibilityRole="button"
+            onPress={() => void openDirections()}
+            style={[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }]}
+          >
+            <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }]}>
+              <Image source={uiIconAssets.depart} style={[styles.quickActionIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            </View>
+            <View style={styles.quickActionCopy}>
+              <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>{directionsLabel}</Text>
+              <Text style={[styles.quickActionMeta, { color: theme.subtle }]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
+            </View>
+            <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
+          </FeedbackPressable>
 
-        {Platform.OS === "ios" ? (
-          <View style={[styles.liveActivityPanel, { backgroundColor: theme.card, borderColor: theme.gold }, cardShadow(theme), pageStyles.card]}>
-            <View style={styles.liveActivityHeader}>
-              <View style={styles.liveActivityCopy}>
-                <Text style={[styles.sectionTitle, { color: theme.gold }]}>실시간 출발 현황</Text>
-                <Text style={[styles.liveActivityTitle, { color: theme.text }]}>스마트케어 자동 카운트다운</Text>
-                <Text
-                  style={[styles.liveActivityBody, { color: theme.muted }]}
-                >
-                  {departureActivityMatchesDestination
-                    ? `${destinationName} · ${departureTime} 출발까지 표시 중${departureActivityStatus.automaticEndScheduled ? " · 자동 종료 연결됨" : " · 자동 종료 연결 대기 중. 잠시 앱을 열어 주세요"}`
-                    : destinationCareEnabled && departureReady
-                      ? `${departureTime} 권장 출발 ${departureLiveActivityAutoLeadMinutes}분 전 구간에 앱 활성화 시 자동 표시 · ${departureWeatherGuidance}`
-                      : destinationCareEnabled
-                        ? "경로와 권장 출발 시각이 계산되면 자동으로 준비함"
-                        : "목적지 케어를 켜면 출발 시각에 맞춰 자동으로 준비함"}
-                </Text>
+          {Platform.OS === "ios" ? (
+            <View
+              accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
+              style={[styles.quickAction, { backgroundColor: theme.cardMuted }]}
+            >
+              <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }]}>
+                <Image source={uiIconAssets.clock} style={[styles.quickActionIcon, { tintColor: theme.gold }]} resizeMode="contain" />
               </View>
-              <View
-                style={[styles.liveActivityStatePill, { backgroundColor: departureActivityMatchesDestination ? theme.cardStrong : theme.cardMuted }]}
-              >
-                <Text
-                  style={[styles.liveActivityStateText, { color: departureActivityMatchesDestination ? theme.clear : theme.subtle }]}
-                >
-                  {departureActivityMatchesDestination ? "자동 표시 중" : destinationCareEnabled ? "자동 대기" : "케어 꺼짐"}
-                </Text>
+              <View style={styles.quickActionCopy}>
+                <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>자동 카운트다운</Text>
+                <Text style={[styles.quickActionMeta, { color: liveActivityMeta === "설정에서 허용 필요" ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
               </View>
             </View>
-            {destinationCareEnabled && departureActivityStatus.supported && !departureActivityStatus.enabled ? (
-              <Text style={[styles.liveActivityMessage, { color: theme.warm }]}>iOS 설정에서 WeatherON Live Activity 허용이 필요함</Text>
-            ) : null}
-          </View>
-        ) : null}
+          ) : null}
+        </View>
+        </View>
 
         <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
           <View style={styles.outfitHeader}>
@@ -463,20 +467,7 @@ export function DestinationCareScreen({
               <Text style={[styles.outfitMatchText, { color: theme.clear }]}>{destinationOutfit.matchPct}%</Text>
             </View>
           </View>
-          <OutfitGrid outfit={destinationOutfit} maxItems={4} compact dense={layout.isShort} />
-          <View style={[styles.outfitMetaRow, { backgroundColor: theme.cardMuted }]}>
-            <Image source={uiIconAssets.pin} style={[styles.outfitMetaIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            <Text style={[styles.outfitMetaText, { color: theme.text }]} numberOfLines={1}>
-              {destinationName} · {getOutfitVariantLabel(destinationOutfit.variant)}
-            </Text>
-          </View>
-        </View>
-
-        <View accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.placeImageFrame, { borderColor: theme.border }]}>
-          <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
-          <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.generatedImageBadgeText, pageStyles.caption, { color: theme.subtle }]}>장소 이미지</Text>
-          </View>
+          <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow />
         </View>
 
         {destinationSaved ? (
@@ -800,26 +791,22 @@ function TransportDropdown({
 function RepeatSchedulePanel({
   repeatEnabled,
   repeatDays,
-  repeatDaysOpen,
   repeatSummary,
   onToggleRepeat,
-  onToggleRepeatDays,
   onToggleRepeatDay,
   theme,
 }: {
   repeatEnabled: boolean;
   repeatDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
-  repeatDaysOpen: boolean;
   repeatSummary: string;
   onToggleRepeat: () => void;
-  onToggleRepeatDays: () => void;
   onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
   const layout = useResponsiveLayout();
   const repeatDayHorizontalHitSlop = Math.max(0, (48 - layout.destinationRepeatDaySize) / 2);
   return (
-    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: "transparent" }]}>
+    <View style={[styles.settingsPanel, { borderColor: theme.border }]}>
       <View style={styles.settingsRow}>
         <View style={styles.settingsRowMain}>
           <View style={[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }]}>
@@ -842,19 +829,6 @@ function RepeatSchedulePanel({
       </View>
 
       <DropdownMotion visible={repeatEnabled} maxHeight={58}>
-        <FeedbackPressable
-          accessibilityLabel={repeatDaysOpen ? "반복 요일 선택 닫기" : "반복 요일 선택 열기"}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: repeatDaysOpen }}
-          onPress={onToggleRepeatDays}
-          style={[styles.repeatDayToggle, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
-        >
-          <Text style={[styles.repeatDayToggleText, { color: theme.text }]}>요일 선택</Text>
-          <Text style={[styles.repeatDayToggleMeta, { color: theme.clear }]}>{repeatDaysOpen ? "닫기" : repeatSummary}</Text>
-        </FeedbackPressable>
-      </DropdownMotion>
-
-      <DropdownMotion visible={repeatEnabled && repeatDaysOpen} maxHeight={96}>
         <View style={styles.repeatDayRow}>
           {repeatDayOptions.map((option) => {
             const selected = repeatDays.includes(option.day);
@@ -1238,9 +1212,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   decisionPanel: {
-    gap: spacing.sm,
+    gap: spacing.md,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
+  },
+  carePanel: {
+    gap: spacing.lg,
+    borderRadius: radius.lg,
+    borderLeftWidth: 2,
+    borderWidth: 1,
   },
   decisionHeader: {
     flexDirection: "row",
@@ -1259,7 +1239,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   placeImageFrame: {
-    height: 96,
+    height: 112,
     overflow: "hidden",
     borderRadius: radius.md,
     borderWidth: 1,
@@ -1344,12 +1324,57 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: "900",
   },
-  directionsAction: {
-    gap: spacing.xs,
+  quickActionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  directionsCaption: {
-    paddingHorizontal: spacing.xs,
-    textAlign: "center",
+  quickAction: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  directionsQuickAction: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: "62%",
+  },
+  quickActionIconFrame: {
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  quickActionIcon: {
+    width: 16,
+    height: 16,
+  },
+  quickActionCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  quickActionTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+  quickActionMeta: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+  },
+  quickActionChevron: {
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: "800",
   },
   summaryChip: {
     flex: 1,
@@ -1514,8 +1539,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   outfitPanel: {
-    gap: spacing.sm,
-    padding: 14,
+    gap: spacing.md,
+    padding: spacing.md,
     borderRadius: radius.lg,
     borderLeftWidth: 2,
     borderWidth: 1,
@@ -1555,72 +1580,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "900",
   },
-  outfitMetaRow: {
-    minHeight: 36,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
-  },
-  outfitMetaIcon: {
-    width: 14,
-    height: 14,
-  },
-  outfitMetaText: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
   comparePanel: {
     gap: spacing.sm,
     padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
-  },
-  liveActivityPanel: {
-    gap: spacing.sm,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  liveActivityHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-  },
-  liveActivityCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  liveActivityTitle: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
-  liveActivityBody: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "700",
-  },
-  liveActivityStatePill: {
-    minHeight: 26,
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  liveActivityStateText: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
-  liveActivityMessage: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
   },
   compareGrid: {
     flexDirection: "row",
@@ -1708,9 +1672,9 @@ const styles = StyleSheet.create({
   },
   settingsPanel: {
     gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 0,
+    paddingVertical: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   settingsRow: {
     minHeight: 54,
@@ -1821,28 +1785,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
   },
-  repeatDayToggle: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  repeatDayToggleText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  repeatDayToggleMeta: {
-    flexShrink: 1,
-    textAlign: "right",
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-  },
   repeatDayRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1877,6 +1819,13 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  embeddedSection: {
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    paddingTop: spacing.md,
+    borderRadius: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   detailPanelHeader: {
     minHeight: 50,

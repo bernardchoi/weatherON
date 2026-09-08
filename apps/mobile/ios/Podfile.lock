@@ -35,6 +35,8 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (57.0.2):
     - ExpoModulesCore
+  - ExpoClipboard (57.0.1):
+    - ExpoModulesCore
   - ExpoCrypto (57.0.1):
     - ExpoModulesCore
   - ExpoDomWebView (57.0.1):
@@ -2063,6 +2065,7 @@ DEPENDENCIES:
   - ExpoAppleAuthentication (from `../../../node_modules/expo-apple-authentication/ios`)
   - ExpoAsset (from `../../../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../../../node_modules/expo-blur/ios`)
+  - ExpoClipboard (from `../../../node_modules/expo-clipboard/ios`)
   - ExpoCrypto (from `../../../node_modules/expo-crypto/ios`)
   - "ExpoDomWebView (from `../../../node_modules/@expo/dom-webview/ios`)"
   - ExpoFileSystem (from `../../../node_modules/expo-file-system/ios`)
@@ -2180,6 +2183,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-asset/ios"
   ExpoBlur:
     :path: "../../../node_modules/expo-blur/ios"
+  ExpoClipboard:
+    :path: "../../../node_modules/expo-clipboard/ios"
   ExpoCrypto:
     :path: "../../../node_modules/expo-crypto/ios"
   ExpoDomWebView:
@@ -2381,6 +2386,7 @@ SPEC CHECKSUMS:
   ExpoAppleAuthentication: 26483d4d22c799e5adfb2de6ab47a5debd796476
   ExpoAsset: 016142e2ad35df49e73aeca75bd2d7b377061758
   ExpoBlur: 0f2c616d5422a2b1a31e622d2add98784eed1ceb
+  ExpoClipboard: 42aa5588bc38bb74923cf0033bd01002c10f58e9
   ExpoCrypto: 4272c8712a133905a00059ef6e109759fbda2cee
   ExpoDomWebView: fa9c72fe29dd4649197a7ecb07ddd870d55c4eda
   ExpoFileSystem: 3030d5166d05eb90b8f40d433f6007797310861f

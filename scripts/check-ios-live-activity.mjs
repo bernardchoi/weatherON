@@ -10,6 +10,7 @@ const liveActivity = read("apps/mobile/ios/WeatherONWidget/WeatherONDepartureLiv
 const widgetBundle = read("apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift");
 const destinationScreen = read("apps/mobile/src/screens/DestinationCareScreen.tsx");
 const appState = read("apps/mobile/src/state/useWeatherOnAppState.ts");
+const appStateHelpers = read("apps/mobile/src/state/appStateHelpers.ts");
 const liveActivityProvider = read("apps/mobile/src/providers/departureLiveActivity.ios.ts");
 const liveActivityShared = read("apps/mobile/src/providers/departureLiveActivity.shared.ts");
 const iosWidgetSnapshot = read("apps/mobile/src/providers/widgetSnapshot.ios.ts");
@@ -85,7 +86,7 @@ assert.ok(
   "Expo and native iOS build versions must match",
 );
 
-assert.match(destinationScreen, /실시간 출발 현황/u);
+assert.match(destinationScreen, /자동 카운트다운/u);
 assert.match(destinationScreen, /getDepartureWeatherGuidance/u);
 assert.match(destinationScreen, /endDepartureLiveActivity\(\)/u);
 assert.doesNotMatch(destinationScreen, /카운트다운 시작/u);
@@ -93,7 +94,7 @@ assert.match(appState, /syncAutomaticDepartureLiveActivity\(automaticDepartureAc
 assert.match(appState, /getDepartureLiveActivityActivationDelay\(automaticDepartureActivityInput\.departureAt\)/u);
 assert.match(appState, /widgetSnapshotContentKeyRef\.current === widgetSnapshotContentKey/u);
 assert.doesNotMatch(appState, /new Date\(selectedDestinationDepartureAt\)\.getTime\(\) <= nowMinuteTick/u);
-assert.match(appState, /repeatDays\.includes\(getWeekdayForZonedDate\(arrivalDate\)\)/u);
+assert.match(appStateHelpers, /repeatDays\.includes\(getWeekdayForZonedDate\(arrivalDate\)\)/u);
 assert.match(liveActivityProvider, /isDepartureLiveActivityAutoWindow\(input\.departureAt\)/u);
 assert.match(liveActivityShared, /departureLiveActivityAutoLeadMinutes = 60/u);
 assert.match(liveActivityShared, /getDepartureLiveActivityActivationDelay/u);
