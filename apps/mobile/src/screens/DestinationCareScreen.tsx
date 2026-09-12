@@ -24,7 +24,6 @@ import { formatDistance, formatTemperature, formatTemperatureDelta } from "../ut
 import {
   departureLiveActivityAutoLeadMinutes,
   endDepartureLiveActivity,
-  getDepartureWeatherGuidance,
   getDepartureLiveActivityStatus,
   type DepartureLiveActivityStatus,
 } from "../providers/departureLiveActivity";
@@ -114,11 +113,6 @@ export function DestinationCareScreen({
   const directionsLabel = selectedDestinationPlace.countryCode === "KR" ? "카카오맵 길찾기" : "Google 지도 길찾기";
   const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode, timeBasis);
   const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
-  const departureWeatherGuidance = getDepartureWeatherGuidance(
-    destinationWeather,
-    selectedDestinationAlertCondition.rainThresholdPct,
-    selectedDestinationAlertCondition.windThresholdMs,
-  );
   const departureActivityMatchesDestination =
     (departureActivityStatus.active || departureActivityStatus.scheduled) &&
     departureActivityStatus.destinationId === selectedDestinationPlace.id;
@@ -136,7 +130,6 @@ export function DestinationCareScreen({
       ? targetArrivalTime ? `${targetArrivalTime} 도착 예정` : "도착 시간 확인 전"
       : selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${departureTime} 출발` : `${departureTime} 출발 권장`
     : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
-  const preparationCopy = getPreparationCopy(destinationRain, destinationWeather.current.windMs, departureWeatherGuidance);
   const liveActivityMeta = departureActivityMatchesDestination
     ? departureActivityStatus.automaticEndScheduled === false
       ? "종료 연결 재시도 중"
@@ -322,10 +315,14 @@ export function DestinationCareScreen({
               minHeight={layout.destinationCareSummaryMinHeight}
             />
           </View>
-          <View style={[styles.preparationPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <Text style={[styles.preparationLabel, { color: theme.subtle }]}>목적지 현재 날씨 · 준비 안내</Text>
-            <Text style={[styles.preparationTitle, { color: theme.text }]}>{preparationCopy}</Text>
-          </View>
+          <RepeatSchedulePanel
+            repeatEnabled={repeatEnabled}
+            repeatDays={repeatDays}
+            repeatSummary={repeatSummary}
+            onToggleRepeat={onToggleDestinationRepeat}
+            onToggleRepeatDay={onToggleDestinationRepeatDay}
+            theme={theme}
+          />
         </View>
 
         <View style={[styles.detailPanel, pageStyles.unboxed, styles.embeddedSection, { borderColor: theme.border }]}>
@@ -400,15 +397,6 @@ export function DestinationCareScreen({
                   <TimelineItem time={departureTime} label="출발 시각 알림" icon={uiIconAssets.depart} color={theme.gold} active theme={theme} />
                 </View>
               ) : null}
-
-              <RepeatSchedulePanel
-                repeatEnabled={repeatEnabled}
-                repeatDays={repeatDays}
-                repeatSummary={repeatSummary}
-                onToggleRepeat={onToggleDestinationRepeat}
-                onToggleRepeatDay={onToggleDestinationRepeatDay}
-                theme={theme}
-              />
 
               <View style={styles.conditionHeader}>
                 <View style={styles.conditionCopy}>
@@ -818,14 +806,14 @@ function RepeatSchedulePanel({
   const layout = useResponsiveLayout();
   const repeatDayHorizontalHitSlop = Math.max(0, (48 - layout.destinationRepeatDaySize) / 2);
   return (
-    <View style={[styles.settingsPanel, { borderColor: theme.border }]}>
+    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <View style={styles.settingsRow}>
         <View style={styles.settingsRowMain}>
           <View style={[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }]}>
             <Image source={uiIconAssets.clock} style={[styles.settingsIcon, { tintColor: repeatEnabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
           </View>
           <View style={styles.settingsCopy}>
-            <Text style={[styles.settingsLabel, { color: repeatEnabled ? theme.clear : theme.subtle }]}>반복 알림</Text>
+            <Text style={[styles.settingsLabel, { color: repeatEnabled ? theme.clear : theme.subtle }]}>반복 요일</Text>
             <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{repeatSummary}</Text>
           </View>
         </View>
@@ -840,33 +828,31 @@ function RepeatSchedulePanel({
         </FeedbackPressable>
       </View>
 
-      <DropdownMotion visible={repeatEnabled} maxHeight={58}>
-        <View style={styles.repeatDayRow}>
-          {repeatDayOptions.map((option) => {
-            const selected = repeatDays.includes(option.day);
-            return (
-              <FeedbackPressable
-                key={option.day}
-                accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                hitSlop={{ left: repeatDayHorizontalHitSlop, right: repeatDayHorizontalHitSlop }}
-                onPress={() => onToggleRepeatDay(option.day)}
-                style={[
-                  styles.repeatDayChip,
-                  {
-                    width: layout.destinationRepeatDaySize,
-                    backgroundColor: selected ? `${theme.clear}22` : theme.cardMuted,
-                    borderColor: selected ? theme.clear : theme.border,
-                  },
-                ]}
-              >
-                <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
-              </FeedbackPressable>
-            );
-          })}
-        </View>
-      </DropdownMotion>
+      <View style={styles.repeatDayRow}>
+        {repeatDayOptions.map((option) => {
+          const selected = repeatDays.includes(option.day);
+          return (
+            <FeedbackPressable
+              key={option.day}
+              accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              hitSlop={{ left: repeatDayHorizontalHitSlop, right: repeatDayHorizontalHitSlop }}
+              onPress={() => onToggleRepeatDay(option.day)}
+              style={[
+                styles.repeatDayChip,
+                {
+                  width: layout.destinationRepeatDaySize,
+                  backgroundColor: selected ? `${theme.clear}22` : theme.cardStrong,
+                  borderColor: selected ? theme.clear : theme.border,
+                },
+              ]}
+            >
+              <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
+            </FeedbackPressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -1048,12 +1034,6 @@ function getRouteVariationCopy(
     ? "표시 경로는 조회 시점 기준임. 선택한 출발 시각의 배차에 따라 달라질 수 있음"
     : "API가 반환한 실제 경로 후보임. 배차 상황에 따라 달라질 수 있음";
   return "API가 반환한 이동시간임. 실제 교통 상황에 따라 달라질 수 있음";
-}
-
-function getPreparationCopy(rainPct: number, windMs: number, guidance: string) {
-  if (rainPct >= 50) return `강수 ${rainPct}% · 우산 챙기기`;
-  if (windMs >= 8) return `바람 ${windMs.toFixed(1)}m/s · 바람막이 확인`;
-  return guidance;
 }
 
 function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
@@ -1317,22 +1297,6 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 0,
-  },
-  preparationPanel: {
-    gap: 4,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  preparationLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-  preparationTitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "900",
   },
   quickActionRow: {
     flexDirection: "row",
@@ -1681,9 +1645,9 @@ const styles = StyleSheet.create({
   },
   settingsPanel: {
     gap: spacing.sm,
-    paddingVertical: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
   },
   settingsRow: {
     minHeight: 54,

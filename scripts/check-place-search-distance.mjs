@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import worker from "../apps/server/src/worker.mjs";
-import { sortPlaceSearchResults } from "../apps/mobile/src/utils/placeSearchRanking.ts";
+import { getNearbyPlaceRecommendations, sortPlaceSearchResults } from "../apps/mobile/src/utils/placeSearchRanking.ts";
 
 const originalFetch = globalThis.fetch;
 const upstreamUrls = [];
@@ -19,6 +19,14 @@ try {
     coordinate: { latitude: 37.5446, longitude: 127.0559 },
   });
   assert.equal(rankedClinics[0].name, "성수 가까운 한의원", "app ranking should prefer distance over name prefix relevance");
+  assert.deepEqual(
+    getNearbyPlaceRecommendations(buildRecommendationResults(), {
+      coordinate: { latitude: 37.5665, longitude: 126.9780 },
+      countryCode: "KR",
+    }).map((place) => place.name),
+    ["가까운 명소"],
+    "recommendations should keep only same-country places within 30km",
+  );
 
   const env = {
     KAKAO_REST_API_KEY: "test-key",
@@ -110,5 +118,19 @@ function buildAppClinicResults() {
       timezone: "Asia/Seoul",
       provider: "kakao",
     },
+  ];
+}
+
+function buildRecommendationResults() {
+  const base = {
+    address: "",
+    category: "culture",
+    timezone: "Asia/Seoul",
+    provider: "kakao",
+  };
+  return [
+    { ...base, id: "near", name: "가까운 명소", countryCode: "KR", coordinate: { latitude: 37.57, longitude: 126.98 } },
+    { ...base, id: "far", name: "먼 명소", countryCode: "KR", coordinate: { latitude: 37.20, longitude: 127.50 } },
+    { ...base, id: "overseas", name: "해외 명소", countryCode: "JP", coordinate: { latitude: 37.57, longitude: 126.98 } },
   ];
 }

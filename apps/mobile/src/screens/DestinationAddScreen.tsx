@@ -10,7 +10,8 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
-import { getCoordinateDistanceMeters, sortPlaceSearchResults } from "../utils/placeSearchRanking";
+import { getDeviceSearchLocale, runtimePlaceSearchClient } from "../providers/placeSearchClient";
+import { getCoordinateDistanceMeters, getNearbyPlaceRecommendations, sortPlaceSearchResults } from "../utils/placeSearchRanking";
 import { formatDistance } from "../utils/units";
 
 export function DestinationAddScreen({
@@ -33,22 +34,25 @@ export function DestinationAddScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const [keyboardVisible, setKeyboardVisible] = React.useState(false);
-  const selectedCategory = getCategoryLabel(selectedDestinationPlace.category);
+  const [nearbyPlaces, setNearbyPlaces] = React.useState<P0ScreenProps["placeSearchResults"]>([]);
+  const hasInput = placeSearchQuery.trim().length > 0;
   const hasQuery = placeSearchQuery.trim().length >= 2;
   const selectedFromResults = placeSearchResults.some((place) => place.id === selectedDestinationPlace.id);
-  const canUseSavedDestination = destinationSaved && (!hasQuery || selectedFromResults);
-  const canUseSelectedDestination = canUseSavedDestination || selectedFromResults;
+  const selectedFromNearbyPlaces = !hasInput && nearbyPlaces.some((place) => place.id === selectedDestinationPlace.id);
+  const canUseSavedDestination = destinationSaved && (selectedFromResults || selectedFromNearbyPlaces);
+  const canUseSelectedDestination = selectedFromResults || selectedFromNearbyPlaces;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
   const searchGlassSurface = iosGlassSurface(theme, "input", { nativeBackdrop: true });
   const searchControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
-  const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, selectedFromResults, hasQuery);
+  const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, canUseSelectedDestination, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
   const visibleResults = React.useMemo(
     () => sortPlaceSearchResults(placeSearchResults, placeSearchQuery, placeSearchOrigin),
     [placeSearchOrigin, placeSearchQuery, placeSearchResults],
   );
+  const displayedPlaces = hasInput ? visibleResults : nearbyPlaces;
   const searchSuggestions = React.useMemo(
     () => getSearchSuggestions(placeSearchQuery, visibleResults),
     [placeSearchQuery, visibleResults],
@@ -62,6 +66,29 @@ export function DestinationAddScreen({
       hideSubscription.remove();
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!placeSearchOrigin) {
+      setNearbyPlaces([]);
+      return;
+    }
+    let active = true;
+    const origin = placeSearchOrigin;
+    void runtimePlaceSearchClient.searchPlaces({
+      query: getNearbyRecommendationQuery(origin.countryCode),
+      countryCode: origin.countryCode,
+      locale: getDeviceSearchLocale(),
+      origin: origin.coordinate,
+    }).then((places) => {
+      if (!active) return;
+      setNearbyPlaces(getNearbyPlaceRecommendations(places, origin));
+    }).catch(() => {
+      if (active) setNearbyPlaces([]);
+    });
+    return () => {
+      active = false;
+    };
+  }, [placeSearchOrigin]);
 
   const handlePrimaryAction = () => {
     if (!canUseSelectedDestination) return;
@@ -152,36 +179,13 @@ export function DestinationAddScreen({
           </View>
         ) : null}
 
-        <View
-          style={[
-            styles.stateCard,
-            {
-              backgroundColor: theme.cardStrong,
-              borderColor: canUseSelectedDestination ? semanticColor(theme, "accentBorder") : theme.border,
-            },
-          ]}
-        >
-          <View style={styles.stateCopy}>
-            <Text style={[styles.stateLabel, { color: canUseSelectedDestination ? theme.gold : theme.sky }]}>선택 상태</Text>
-            <Text style={[styles.stateTitle, { color: theme.text }]} numberOfLines={1}>
-              {getSelectionCopy(canUseSelectedDestination, selectedDestinationPlace.name, hasQuery)}
-            </Text>
-            <Text style={[styles.stateBody, { color: theme.subtle }]} numberOfLines={2}>
-              {getSelectionBody(canUseSelectedDestination, selectedCategory, hasQuery)}
-            </Text>
-          </View>
-          <View style={[styles.countPill, { backgroundColor: theme.cardMuted }]}>
-            <Text style={[styles.countText, { color: theme.sky }]}>{resultCount}</Text>
-          </View>
-        </View>
-
-        {visibleResults.length > 0 ? (
+        {displayedPlaces.length > 0 ? (
           <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
             <View style={[styles.resultPanelHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>검색 결과</Text>
-              <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{resultSortLabel}</Text>
+              <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>{hasInput ? "검색 결과" : "주변에서 가볼 만한 곳"}</Text>
+              <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{hasInput ? `${resultCount} · ${resultSortLabel}` : resultSortLabel}</Text>
             </View>
-            {visibleResults.slice(0, 5).map((place, index) => {
+            {displayedPlaces.map((place, index) => {
               const selected = selectedDestinationPlace.id === place.id;
               const duplicate = (duplicateNameCounts.get(place.name) ?? 0) > 1;
               return (
@@ -231,10 +235,10 @@ export function DestinationAddScreen({
               );
             })}
           </View>
-        ) : (
+        ) : hasQuery ? (
           <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
-            <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus, hasQuery)}</Text>
-            <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus, hasQuery)}</Text>
+            <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus)}</Text>
+            <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus)}</Text>
             <View style={styles.recoveryRow}>
               {placeSearchStatus === "error" ? (
                 <SearchRecoveryButton label="다시 시도" accessibilityLabel="목적지 검색 다시 시도" onPress={() => onSearchPlaces(placeSearchQuery)} />
@@ -244,7 +248,7 @@ export function DestinationAddScreen({
               ) : null}
             </View>
           </View>
-        )}
+        ) : null}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -300,34 +304,22 @@ function getResultCountLabel(status: P0ScreenProps["placeSearchStatus"], count: 
   return "검색 전";
 }
 
-function getPrimaryActionLabel(canUseSavedDestination: boolean, selectedFromResults: boolean, hasQuery: boolean) {
+function getPrimaryActionLabel(canUseSavedDestination: boolean, selectionReady: boolean, hasQuery: boolean) {
   if (canUseSavedDestination) return "목적지 비교 보기";
-  if (selectedFromResults) return "목적지 저장하고 비교";
+  if (selectionReady) return "목적지 저장하고 비교";
   return hasQuery ? "검색 결과 선택 필요" : "장소 선택 필요";
 }
 
-function getSelectionCopy(canUseSelectedDestination: boolean, selectedName: string, hasQuery: boolean) {
-  if (canUseSelectedDestination) return `${selectedName} 선택됨`;
-  return hasQuery ? "검색 결과에서 목적지 선택" : "장소명 2글자 이상 입력";
-}
-
-function getSelectionBody(canUseSelectedDestination: boolean, selectedCategory: string, hasQuery: boolean) {
-  if (canUseSelectedDestination) return `${selectedCategory} · 출발 탭에 저장 가능`;
-  return hasQuery ? "주소와 거리 확인 후 선택" : "검색 결과에서 주소와 국가를 확인 후 선택";
-}
-
-function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
+function getEmptyTitle(status: P0ScreenProps["placeSearchStatus"]) {
   if (status === "loading") return "검색 중";
   if (status === "error") return "검색 연결 실패";
-  if (hasQuery) return "검색 결과 없음";
-  return "장소를 검색해 주세요";
+  return "검색 결과 없음";
 }
 
-function getEmptyBody(status: P0ScreenProps["placeSearchStatus"], hasQuery: boolean) {
+function getEmptyBody(status: P0ScreenProps["placeSearchStatus"]) {
   if (status === "loading") return "장소 목록을 불러오는 중";
   if (status === "error") return "다시 시도하거나 검색어를 지워 주세요";
-  if (hasQuery) return "다른 이름이나 더 넓은 지역명으로 검색";
-  return "검색 결과에서 주소와 국가를 확인 후 선택";
+  return "다른 이름이나 더 넓은 지역명으로 검색";
 }
 
 function getDuplicateNameCounts(results: P0ScreenProps["placeSearchResults"]) {
@@ -379,23 +371,6 @@ function QueryMatchedText({
   );
 }
 
-function getCategoryLabel(category: string) {
-  if (category === "sports") return "야구장";
-  if (category === "mountain") return "등산";
-  if (category === "beach") return "해변";
-  if (category === "residential") return "주거지";
-  if (category === "transit") return "교통";
-  if (category === "medical") return "의료";
-  if (category === "culture") return "문화";
-  if (category === "religious") return "종교시설";
-  if (category === "shopping") return "쇼핑";
-  if (category === "leisure") return "여가";
-  if (category === "dining") return "식음";
-  if (category === "airport") return "공항";
-  if (category === "hotel") return "숙소";
-  return "장소";
-}
-
 function getCategoryDetail(category: string) {
   if (category === "sports") return "스포츠";
   if (category === "mountain") return "산";
@@ -410,13 +385,19 @@ function getCategoryDetail(category: string) {
   if (category === "dining") return "식사";
   if (category === "airport") return "이동";
   if (category === "hotel") return "여행";
-  return "카테고리";
+  return "";
 }
 
 function getCountryLabel(countryCode: string) {
   if (countryCode === "KR") return "한국";
   if (countryCode === "JP") return "일본";
   return "해외";
+}
+
+function getNearbyRecommendationQuery(countryCode: NonNullable<P0ScreenProps["placeSearchOrigin"]>["countryCode"]) {
+  if (countryCode === "KR") return "관광명소";
+  if (countryCode === "JP") return "観光スポット";
+  return "tourist attractions";
 }
 
 function getResultSortLabel(
@@ -608,52 +589,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "800",
-  },
-  stateCard: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  stateCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  stateLabel: {
-    marginBottom: 4,
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    letterSpacing: 0,
-  },
-  stateTitle: {
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "900",
-  },
-  stateBody: {
-    marginTop: 3,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "700",
-  },
-  countPill: {
-    minWidth: 44,
-    minHeight: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-  },
-  countText: {
-    fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "900",
   },
   categoryIcon: {
     width: 13,

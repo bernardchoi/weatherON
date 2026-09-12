@@ -40,6 +40,16 @@ export function getCoordinateDistanceMeters(
   return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+export function getNearbyPlaceRecommendations(
+  places: PlaceSearchResult[],
+  origin: SearchOrigin & { countryCode: PlaceSearchResult["countryCode"] },
+) {
+  return sortPlaceSearchResults(places, "", origin)
+    .filter((place) => place.countryCode === origin.countryCode)
+    .filter((place) => getCoordinateDistanceMeters(origin.coordinate, place.coordinate) <= 30_000)
+    .slice(0, 5);
+}
+
 function getTextMatchRank(place: PlaceSearchResult, query: string) {
   const normalizedQuery = normalizeText(query);
   const normalizedName = normalizeText(place.name);
