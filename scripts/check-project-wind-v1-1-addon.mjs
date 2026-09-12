@@ -86,6 +86,20 @@ for (const file of manifest.files ?? []) {
   check(sha256(content) === file.sha256, `hash mismatch: ${file.path}`);
 }
 
+// Combined docs live one level above docs/: preserve local link destinations when building.
+const combinedDocs = await read("perfora_air_v1_1_experimental_all_docs.md");
+check(combinedDocs.includes("](docs/05_usability_test_plan.md)"), "combined docs must rebase sibling document links");
+check(combinedDocs.includes("](../../../brand/WeatherON_디자인_정체성_가이드.md)"), "combined docs must rebase parent document links");
+for (const [, target] of combinedDocs.matchAll(/\]\(([^)]+)\)/g)) {
+  if (/^(?:[a-z][a-z\d+.-]*:|\/|#)/i.test(target)) continue;
+  const file = decodeURIComponent(target.split("#")[0]);
+  check(existsSync(path.resolve(packageDir, file)), `broken combined-doc link: ${target}`);
+}
+
+const scorecard = JSON.parse(await read("tests/perfora-air.experimental-usability.scorecard.v1.1.json"));
+check(scorecard.$metadata?.status === "experimental-test-template-not-run", "scorecard must not imply completed user testing");
+check(scorecard.tasks?.find((task) => task.id === "T1")?.exposureSeconds === 5, "WeatherON readiness test must use a 5-second exposure");
+
 if (failures.length) {
   console.error("PROJECT WIND V1.1 ADD-ON CHECK FAILED");
   for (const failure of failures) console.error(`- ${failure}`);

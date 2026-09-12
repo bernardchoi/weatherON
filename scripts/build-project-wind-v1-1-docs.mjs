@@ -38,7 +38,10 @@ const sections = [
   "docs/09_static_validation_report.md",
 ];
 const combined = (await Promise.all(sections.map((file) => readText(path.join(packageDir, file)))))
-  .map((value) => value.trimEnd())
+  .map((value, index) => value.trimEnd().replace(/\]\(([^)]+)\)/g, (link, target) => {
+    if (/^(?:[a-z][a-z\d+.-]*:|\/|#)/i.test(target)) return link;
+    return `](${path.posix.normalize(path.posix.join(path.posix.dirname(sections[index]), target))})`;
+  }))
   .join("\n\n---\n\n");
 await writeText(path.join(packageDir, "perfora_air_v1_1_experimental_all_docs.md"), combined);
 

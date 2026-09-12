@@ -1,6 +1,6 @@
 # Ambient Surface v1.1 Experimental Add-on
 
-**Date:** 2026-07-15
+**Date:** 2026-09-12 (WeatherON design review; package version unchanged)
 **Purpose:** Experimental add-on package for Ambient Surface after the v1.0 stable internal design-system release.
 
 ## Package contents
@@ -28,23 +28,12 @@
 
 ## Recommended execution order
 
-```txt
-1. Review Direction Brief
-2. Lock Data Mapping
-3. Update Components from Mapping
-4. Build Figma Kit
-5. Run Usability Test
-6. Decide WeatherON scope
-7. Move React/SwiftUI starter into target repo
-8. Run formal trademark clearance for shortlisted names
-```
+1. Read the WeatherON direction and adoption scope (01, 06).
+2. Check stable contracts and the documented gaps in the legacy mapping (02).
+3. Make matched home/detail/departure mockups with supported WeatherON data.
+4. Compare the internal prototype using the updated plan and scorecard (05).
+5. Validate native accessibility and performance, then record the adoption ADR.
 
-## Key v1.1 experimental decision
+## Current decision — 2026-09-12
 
-Ambient Surface's main differentiator is **not visual polish**. It is this chain:
-
-```txt
-invisible data → atmosphere score → surface density → quiet signal → text-first decision
-```
-
-If a visual element cannot be traced back to that chain, remove it or demote it.
+Translate invisible weather changes into preparation decisions. Keep the Tower of Winds response principle and Quiet Horizon identity together through horizontal structure, a focused ON accent, and a bounded data surface. Generic indoor/schedule mapping and starter code remain research references, not the current WeatherON implementation.

@@ -57,7 +57,7 @@ export function WardrobeScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentPaddingTop={layout.weatherTopPadding}
       contentGap={layout.destinationContentGap}
     >
       {removedItem ? (

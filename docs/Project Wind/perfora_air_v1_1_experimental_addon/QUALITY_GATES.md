@@ -17,6 +17,15 @@
 - alert/critical은 action copy와 text-first fallback을 가져야 함
 - 사용성 테스트 전에는 WeatherON 현행 MVP UI를 대체하지 않음
 
+## WeatherON 설계 게이트 — 2026-09-12
+
+- 현재 제품 기준은 `docs/01_experimental_direction_brief.md`와 `docs/06_weatheron_adoption_scope.md`임.
+- 실제 공급 데이터로만 날씨를 표현함. 현재 없는 풍향·AQI·실내 센서 값을 생성하지 않음.
+- 현재 날씨/미래 예보, 테마/지역 낮밤, 결측/정상을 구분함.
+- 5초 준비 판단과 로고·모션 없는 화면군 인식은 `docs/05_usability_test_plan.md`로 검증함.
+- 중요 정보의 접근성 모드 손실은 0이어야 함. 정적 검사 통과는 사용자·기기 검증을 대신하지 않음.
+- 7월 범용 mapper와 새 WeatherON 설계의 차이가 해소되기 전 제품 연결을 보류함.
+
 ## 수동 검증 필요
 
 - React starter 실제 빌드

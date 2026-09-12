@@ -10,6 +10,10 @@
 **핵심 원칙:** Soft Density · Quiet Signal · Text First
 **명칭 결정:** 2026-07-16
 
+## 2026-09-12 WeatherON 설계 갱신
+
+[디자인 방향과 개선 검토](docs/01_experimental_direction_brief.md)를 먼저 읽음. 컨셉 출발점과 Quiet Horizon을 연결하고, 홈 → 날씨 상세 → 출발의 시각 문법·데이터 계약·5초 준비 판단 검증을 갱신함. 기존 범용 매핑과 React/SwiftUI starter는 연구 이력이며 이번 제품 설계를 구현한 상태가 아님.
+
 ## 목적
 
 이 패키지는 v1.0 stable 디자인 시스템을 대체하지 않는다. v1.0의 토큰·컴포넌트·접근성 계약을 유지한 상태에서, 데이터 매핑, WeatherON 실험 레이어, 사용성 테스트, React/SwiftUI starter를 v1.1 실험 확장으로 분리한다.
@@ -44,8 +48,8 @@
 
 ## 추천 실행 순서
 
-1. v1.0 stable 계약 확인: `../perfora_air_v1_0_package/README.md`
-2. 데이터 매핑 검토: `docs/02_experimental_data_to_atmosphere_mapping.md`
-3. WeatherON 채택 범위 결정: `docs/06_weatheron_adoption_scope.md`
-4. React starter로 내부 prototype 구성
-5. `docs/05_usability_test_plan.md` 기준으로 사용성 테스트 진행
+1. WeatherON 방향·채택 범위 확인: `docs/01_experimental_direction_brief.md`, `docs/06_weatheron_adoption_scope.md`
+2. v1.0 stable 계약 및 범용 매핑과의 차이 확인
+3. 실제 제공 데이터로 홈·상세·출발 목업 구성
+4. 기존 WeatherON 프리뷰에서 내부 프로토타입 비교
+5. `docs/05_usability_test_plan.md` 기준 검증 후 네이티브 채택 범위 결정

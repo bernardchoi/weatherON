@@ -1,176 +1,46 @@
-# Ambient Surface Usability Test Plan v0.1
+# Ambient Surface — WeatherON 사용성 검증 계획 v1.1
 
-**Date:** 2026-07-15
-**Status:** Ready for lightweight moderated test
-**Prototype target:** Ambient Dashboard v1.1 experimental path path
+**갱신일:** 2026-09-12
+**상태:** 테스트 설계 완료, 실행·결과 없음
+**대상:** 홈 → 날씨 상세 → 출발의 내부 프로토타입
 
-## 0. Objective
+## 1. 목적과 참가자
 
-Validate the core Ambient Surface assumption:
+환경 표현이 WeatherON의 준비 판단을 돕는지, 정적 상태에도 고유 디자인이 유지되는지 확인함. 초기 5–8명은 탐색 표본임. 날씨를 보고 옷차림·우산·출발을 정하는 사용자를 모집하고, 큰 글자·동작 감소·화면 읽기를 사용하는 참가자를 포함함. 이 표본으로 전체 사용자 접근성을 대표하지 않음.
 
-> Users can make faster and more confident decisions when invisible context is translated into surface density, concise text, and clear action.
+## 2. 비교 방식
 
-## 1. Participants
+- A는 현재 WeatherON UI, B는 Ambient Surface 후보임. 기능·문구·데이터·지역·시각·기기 크기를 같게 유지함.
+- 참가자 절반은 A→B, 나머지는 B→A 순서로 제시함. 동등 난도의 시나리오를 교차 배정해 정답 학습을 줄임.
+- T1의 5초 노출 동안 설명·발화 요청을 하지 않음. 화면을 가린 뒤 준비 행동과 근거를 물음. 이유 설명은 시간 측정 종료 후 받음.
+- 태스크 전에 패턴 의미나 브랜드 컨셉을 가르치지 않음. ‘바람의 탑’ 설명을 이해해야 쓸 수 있다면 실패임.
+- 데이터·기대 행동·정답 근거를 시나리오 시트에 먼저 적음. 답이 여러 개면 허용 답을 사전 정의함. 출처·시각·단위가 없는 테스트 데이터는 사용하지 않음.
 
-Recommended sample:
+## 3. 과제와 목표
 
-- 5–8 participants for first directional test.
-- Mix of weather-app users, smart-home users, and productivity/calendar users.
-- Include at least 1 participant who commonly uses accessibility settings such as larger text, reduced motion, high contrast, or screen reader.
+| ID | 과제 | 성공 조건 | 탐색 목표 |
+|---|---|---|---|
+| T1 | 홈을 5초 보고 오늘 준비할 것 말하기 | 행동과 화면 속 근거 1개를 올바르게 말함 | 80% 이상, 현재 UI보다 정답률이 낮지 않음 |
+| T2 | 현재 맑음·오후 강수 예보 구분하기 | 현재 비로 오해하지 않고 해당 예보 시각·확률을 찾음 | 80% 이상 |
+| T3 | 출발 화면에서 다음 행동 찾기 | 출발 시각·준비 이유를 읽고 지도 앱에서 길찾기 선택 | 80% 이상, 허구 경로를 읽었다는 오해 없음 |
+| T4 | 정보 없음·오래된 값·특보 구분하기 | 미확인을 좋음으로 해석하지 않고 시각/특보 이유와 가능한 행동을 찾음 | 80% 이상, 샘플·결측을 실시간 정상으로 오인한 사례 0 |
+| T5 | 정적·동작 감소·투명도 감소·큰 글자에서 반복하기 | 상태·근거·행동이 보존되고 조작 가능 | 참가자 판단 일치 80% 이상, 구현의 중요 정보 손실 0 |
+| T6 | 로고·제품명·모션 없이 화면군 묶기 | 같은 WeatherON 후보의 홈·상세·출발을 묶고 공통 형태·위계 이유 설명 | 80% 이상, 단순 색상 일치만 성공 근거로 인정하지 않음 |
 
-## 2. Test format
+T6는 같은 데이터로 만든 일반 무광 카드 비교군도 함께 섞어 수행함. 기본 테마를 맞춘 뒤 흑백 보조 비교로 색상 암기 영향을 확인함. ‘네온이 아니다’, ‘차분하다’만으로 WeatherON 독자성을 통과 처리하지 않음. 대표 이유는 수평 구조·ON 포인트·준비 위계·환경 표현과의 연결인지 기록함. 이는 프로젝트 내 일관성 검증이며 시장 전체의 독창성 증명은 아님.
 
-| Item | Recommendation |
-|---|---|
-| Format | 30–40 minute moderated remote or in-person test |
-| Prototype | v1.1 experimental clickable prototype or local HTML app |
-| Recording | Screen + audio + task timing |
-| Think-aloud | Encouraged, but do not over-explain visual system first |
-| Comparison | Optional: plain card baseline for two tasks |
+## 4. 기록과 판정
 
-## 3. Hypotheses
+[점수표](../tests/perfora-air.experimental-usability.scorecard.v1.1.json)에 맞춰 참가자별 순서·태스크·성공 여부·결정 시간·오해·확신도·피로도를 기록함. 결과는 `성공 인원/전체 인원`과 중앙값을 함께 제시함. 80% 조건의 최소 인원은 올림 처리함(5명 중 4명, 8명 중 7명).
 
-| ID | Hypothesis | Pass condition |
-|---|---|---|
-| H1 | AtmospherePanel helps users judge current state quickly | 80% correct within 8 seconds |
-| H2 | Recommendation priority is clear | 80% choose intended action |
-| H3 | Density is understood as meaningful, not decoration | 65% mention density/pressure/context in explanation |
-| H4 | Reduced modes preserve the same decision | 80% decision parity |
-| H5 | Visual tone is calm, not glossy or overdesigned | Average visual fatigue ≤ 2.5/5 |
+- T1–T4 실패: 정보 위계·문장·근거 노출부터 수정함.
+- T5 실패: 정보 손실·읽기 순서·터치 영역을 수정함. 패턴을 강화하지 않음.
+- T6 실패: 수평 구조·ON 포인트·화면 간 연결을 수정함. 블러·글로우 추가로 대응하지 않음.
+- 시각 피로도 평균 목표는 5점 중 2.5 이하임. 심한 불편 사례는 평균에 묻지 않고 개별 원인을 기록함.
+- 색/패턴만으로 정답을 유도했거나 중요한 정보가 사라졌으면 전체 평균과 무관하게 해당 변형의 채택을 보류함.
 
-## 4. Tasks
+## 5. 별도 필수 QA
 
-### T1 — Morning readiness
+사용성 테스트와 별도로 라이트/다크 × 지역 낮/밤, 부분 결측·오프라인·새 지역 로딩, 큰 글자, VoiceOver/TalkBack, 저전력 상태를 검사함. 모션·투명도를 꺼도 문장·단위·선택 시각이 같아야 함. 스크린샷으로 화면 읽기 동작이나 접근성 적합성을 확정하지 않음.
 
-Prompt:
-
-```txt
-지금 외출하기 좋은 상태인지 판단해 주세요. 어떤 근거로 그렇게 생각했나요?
-```
-
-Success:
-
-- User identifies weather/air comfort correctly.
-- User can point to at least one reason: humidity, AQI, wind, recommendation, or state sentence.
-
-### T2 — Air decision
-
-Prompt:
-
-```txt
-지금 환기, 제습, 공기청정 중 무엇을 먼저 해야 할까요?
-```
-
-Success:
-
-- User chooses the intended priority action.
-- User can explain why.
-
-### T3 — Day pressure
-
-Prompt:
-
-```txt
-오늘 가장 바쁜 시간대는 언제로 보이나요?
-```
-
-Success:
-
-- User identifies peak timeline block.
-- User understands that density means schedule/attention pressure.
-
-### T4 — Alert comprehension
-
-Prompt:
-
-```txt
-이 화면에서 확인해야 할 문제는 무엇이고, 다음 행동은 무엇인가요?
-```
-
-Success:
-
-- User explains alert reason.
-- User identifies next action.
-- User does not rely only on color interpretation.
-
-### T5 — Reduced mode parity
-
-Prompt:
-
-```txt
-시각 효과가 줄어든 화면에서도 같은 판단을 할 수 있나요?
-```
-
-Success:
-
-- User makes the same decision.
-- User can locate text summary or raw data.
-
-### T6 — Differentiation check
-
-Prompt:
-
-```txt
-이 UI는 기존 날씨 앱이나 일반적인 유리/카드 UI와 무엇이 달라 보이나요?
-```
-
-Success:
-
-- User describes context, atmosphere, air, density, calm signal, or decision guidance.
-
-## 5. Metrics
-
-| Metric | How to measure |
-|---|---|
-| Decision time | Seconds from screen exposure to answer |
-| Accuracy | Correct/incorrect against scenario expected action |
-| Confidence | 1–5 self-rating |
-| Visual fatigue | 1–5 self-rating; lower is better |
-| Differentiation | Qualitative coding |
-| Accessibility parity | Same decision before/after reduced mode |
-
-## 6. Moderator script
-
-### Intro
-
-```txt
-오늘은 새로운 날씨/공기 상태 대시보드 프로토타입을 보실 거예요. 정답을 맞히는 테스트가 아니라, 화면이 얼마나 빠르고 명확하게 상태를 전달하는지 확인하는 테스트입니다.
-```
-
-### Before each task
-
-```txt
-화면을 보고 자연스럽게 판단해 주세요. 생각나는 근거를 말해 주시면 됩니다.
-```
-
-### After each task
-
-```txt
-확신도는 1점부터 5점 중 몇 점인가요? 화면이 과하게 느껴졌는지도 1점부터 5점으로 말해 주세요.
-```
-
-## 7. Analysis plan
-
-1. Calculate task accuracy and median decision time.
-2. Compare normal vs reduced mode decisions.
-3. Code qualitative comments into themes:
-   - atmosphere/context understood
-   - density understood
-   - visual effect distracting
-   - copy/action clear
-   - generic UI impression
-4. Decide v0.3 changes.
-
-## 8. Decision rules after test
-
-| Result | Action |
-|---|---|
-| T1/T2 fail | Rewrite AtmospherePanel hierarchy before visual polish |
-| Density misunderstood | Add legend or reduce pattern prominence |
-| Visual fatigue high | Lower density opacity and animation count |
-| Reduced mode parity fail | Strengthen textual summaries and raw data disclosure |
-| Differentiation weak | Increase data-driven surface behavior, not gloss |
-
-## 9. Included file
-
-- `tests/perfora-air.experimental-usability.scorecard.v1.1.json`
+프로토타입 UI 검증은 In-app browser 우선임. React Native 후보는 실제 iOS/Android에서 별도 확인함. 웹·iOS 결과로 Android 통과를 대신하지 않음.

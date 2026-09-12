@@ -48,6 +48,10 @@ OS 디자인 언어가 바뀔 때 받아들여도 되는 영역과, 받아들이
 
 ## 4. 현재 적용 사례 (수시 교체되는 섹션)
 
+- **Project Wind 제품 설계 갱신 (2026-09-12):** [WeatherON 전용 방향서](../docs/Project%20Wind/perfora_air_v1_1_experimental_addon/docs/01_experimental_direction_brief.md)를 차기 UI 설계 기준으로 연결함. Quiet Horizon의 수평 구조·ON 포인트와 바람의 탑의 환경 반응 원리를 결합함. 현재 앱 교체 완료를 뜻하지 않음.
+- **문서와 구현 차이 (2026-09-12 확인):** 현재 앱 `apps/mobile/src/theme/fonts.ts`는 Pretendard를 등록하고, `tokens.ts`의 일부 색 값은 아래 날짜별 사례와 다름. 2장의 브랜드 의도와 현재 구현을 구분하며, Project Wind의 본문 서체·최종 색 값은 동일 화면 비교 후 결정함. 이번 문서 갱신으로 폰트나 앱 토큰을 교체하지 않음.
+
+
 > 아래는 "현재 시점의 구현"이며, 이 섹션만 OS 트렌드 전환 시 교체된다. 위 1~3장은 그대로 유지.
 
 - **2026년 기준 적용 트렌드**: iOS 26 Liquid Glass — 구체적 블러/투명도/그라디언트 스펙은 기획서 `WeatherON_planning_v5.html` 20장에 정의.

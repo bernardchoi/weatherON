@@ -1,45 +1,41 @@
 {
-  "metadata": {
-    "name": "Ambient Surface Usability Test Scorecard",
-    "version": "0.1",
-    "date": "2026-07-13"
-  },
   "tasks": [
     {
       "id": "T1",
-      "name": "Morning readiness",
-      "successMetric": "Correctly judges whether it is comfortable to go outside within 8 seconds",
-      "targetAccuracy": 0.8
+      "name": "Five-second readiness",
+      "successMetric": "After a 5-second home exposure, identifies preparation and one valid reason; accuracy is no lower than the current UI",
+      "targetAccuracy": 0.8,
+      "exposureSeconds": 5
     },
     {
       "id": "T2",
-      "name": "Air decision",
-      "successMetric": "Chooses ventilate/dehumidify/purify as intended",
+      "name": "Current weather versus forecast",
+      "successMetric": "Distinguishes current clear weather from future rain and locates the forecast time and probability",
       "targetAccuracy": 0.8
     },
     {
       "id": "T3",
-      "name": "Day pressure",
-      "successMetric": "Identifies peak pressure time block",
-      "targetAccuracy": 0.75
+      "name": "Departure action",
+      "successMetric": "Reads departure time and preparation reason, then selects map directions without inferring unsupported routes",
+      "targetAccuracy": 0.8
     },
     {
       "id": "T4",
-      "name": "Alert comprehension",
-      "successMetric": "Understands alert reason and next action",
-      "targetAccuracy": 0.85
+      "name": "Data availability and alerts",
+      "successMetric": "Distinguishes missing or stale data from normal weather and explains an alert and available action; zero false-live interpretations",
+      "targetAccuracy": 0.8
     },
     {
       "id": "T5",
       "name": "Reduced mode parity",
-      "successMetric": "Makes the same decision in reduced motion/transparency",
+      "successMetric": "Makes the same decision in static, reduced motion/transparency and large-text variants; zero important information loss",
       "targetAccuracy": 0.8
     },
     {
       "id": "T6",
-      "name": "Differentiation",
-      "successMetric": "Describes the system as context/atmosphere/density based, not glassy or generic",
-      "targetAccuracy": 0.65
+      "name": "WeatherON identity",
+      "successMetric": "Groups candidate home/detail/departure screens without logo, product name or motion and explains shared form/hierarchy beyond color alone",
+      "targetAccuracy": 0.8
     }
   ],
   "ratings": [
@@ -51,8 +47,20 @@
   "$metadata": {
     "name": "Ambient Surface Experimental Usability Scorecard",
     "version": "1.1.0-experimental",
-    "date": "2026-07-15",
-    "status": "experimental-test-template",
+    "date": "2026-09-12",
+    "status": "experimental-test-template-not-run",
     "promotedFrom": "perfora-air.usability.scorecard.v0.1.json"
-  }
+  },
+  "comparison": {
+    "baseline": "Current WeatherON UI with identical content and data",
+    "order": "Counterbalanced A/B with matched scenarios",
+    "sampleSize": "5–8, exploratory only",
+    "report": "Success counts and median time; round required success count up",
+    "identityControl": "Generic matte cards with matched theme; supplementary grayscale comparison"
+  },
+  "blockingFailures": [
+    "Missing or sample data interpreted as live normal weather",
+    "Important information lost in an accessibility variant"
+  ],
+  "visualFatigueMeanMax": 2.5
 }

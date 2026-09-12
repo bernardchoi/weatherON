@@ -22,15 +22,15 @@
   "files": [
     {
       "path": "CHANGELOG.md",
-      "sha256": "2ee41307089a22db3577e49be9a0ea23636c718c7fd790cf2475b1c7c4393f0c"
+      "sha256": "e06681283f046bf2033a7b1fb8fff0d2d94c47b7f0b82a5852d8a60a5f3c24e3"
     },
     {
       "path": "QUALITY_GATES.md",
-      "sha256": "5fa0e25cd589b7fb167a80d919f36222bc7f2387a6c8af7c2a6e0c486cda4589"
+      "sha256": "860c42bc35e972b538dd1980755f5ba2df770c3e58dfc025a6edf1c12997bc6f"
     },
     {
       "path": "README.md",
-      "sha256": "f5a23e14a76c4041c8a1b71b092d4ee104e22c7e27551c85fabee7cbb8f6a2a8"
+      "sha256": "68de1827a340ee2155f651fa1a303e3cdf1bc474efbf9a4cf6583f940d7c2c24"
     },
     {
       "path": "data/perfora-air.experimental-brand-candidates.v1.1.json",
@@ -58,19 +58,19 @@
     },
     {
       "path": "docs/00_perfora_air_v1_1_experimental_index.md",
-      "sha256": "99e4c2650b82b64f445581e237ce993a57b435b918565ab4b56179b9e6b9eba0"
+      "sha256": "c29a37e6fa33fd25bfbb01eaece52af3f567f6fc7dc3f81528e217a279897c57"
     },
     {
       "path": "docs/01_experimental_direction_brief.md",
-      "sha256": "aac29df830fc5a02c4fc83006e6569da972d4c9d78412140c50577d20423b0f1"
+      "sha256": "74fc7b4bc03a76fde7fa8320e71b386751f1ce50a09ea9cbbfb6617df0797aef"
     },
     {
       "path": "docs/02_experimental_data_to_atmosphere_mapping.md",
-      "sha256": "38c1ad0a1c96cdedfb819b4dedcf02791ee72f570cd34006c08a1c2bdad4f163"
+      "sha256": "ba25004b643bb82084d4a2b6827a94b458227fab5354d08ecf97509c77db6dd0"
     },
     {
       "path": "docs/03_experimental_components.md",
-      "sha256": "99c9903b35a2663e85abca6f7c26df8292c1e2f430466cc872460af0bd40668c"
+      "sha256": "1cc3c56cc466b83cc74095de360a6a0fc7e935c660f6254cc0344e71c83e6a3f"
     },
     {
       "path": "docs/04_experimental_figma_design_kit.md",
@@ -78,15 +78,15 @@
     },
     {
       "path": "docs/05_usability_test_plan.md",
-      "sha256": "110efa2e9f26e9fdcef5e9ab1fcba042a976ecf3ef72263e60705076f4754ef5"
+      "sha256": "6df3671ded05bc3ee133fd43080e2f066233a333215a1efdba106200efcd84e3"
     },
     {
       "path": "docs/06_weatheron_adoption_scope.md",
-      "sha256": "6b76f6d097e6599392f44ff6f3b566f6dcdf9d0b9b9e21a6d8c00c40060b4dc9"
+      "sha256": "2fb56a9e5178315608ec71d6aa23bbba8f19320fab478294f400646276889d9a"
     },
     {
       "path": "docs/07_implementation_package.md",
-      "sha256": "305587dd07340a11548fe750c0fdf3fec01bf58d27e6404a4dc8675712b72aed"
+      "sha256": "b3bcb5877e0f6327857401c4d8d1f715e2f6827a40afd444685f02781ada59cd"
     },
     {
       "path": "docs/08_brand_trademark_reexploration.md",
@@ -162,7 +162,7 @@
     },
     {
       "path": "perfora_air_v1_1_experimental_all_docs.md",
-      "sha256": "2b14979e8ec325c656ce4c3196b6e3bcc4cc99f47035c759d4a55e0ad475c84b"
+      "sha256": "4709fd2fb6b24ad485b44c4bd126ab24e42baba10d55dc54cd8debb1b064cc96"
     },
     {
       "path": "reference_v1_0/QUALITY_GATES.md",
@@ -190,7 +190,7 @@
     },
     {
       "path": "tests/perfora-air.experimental-usability.scorecard.v1.1.json",
-      "sha256": "292f02b617f27a97aaa5ae977dde1afbb53eb25d0406907a51bb24592b045f6c"
+      "sha256": "e1bbadb8be8dd4e6fe01ca5ca9b21ce05e155a64b7ab1da8e2282d85760d3cce"
     }
   ],
   "namingDecisionDate": "2026-07-16",

@@ -63,7 +63,7 @@ export function OutfitDetailScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentPaddingTop={layout.weatherTopPadding}
       contentGap={layout.destinationContentGap}
       contentPaddingBottom={0}
     >
@@ -79,7 +79,7 @@ export function OutfitDetailScreen({
                 style={[
                   styles.outfitMiniTile,
                   usesWrappedItemGrid
-                    ? [styles.outfitMiniTileGrid, { width: layout.wardrobeGridItemWidth }]
+                    ? styles.outfitMiniTileGrid
                     : styles.outfitMiniTileFlexible,
                   {
                     minHeight: layout.outfitDetailCardMinHeight,
@@ -167,7 +167,7 @@ export function OutfitDetailScreen({
         </Section>
       ) : null}
 
-      <Section title="저장 및 내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear">
+      <Section title="저장 및 내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear" compact contentGap={spacing.xs}>
         <CompletionStatus
           visible={saveCompletionVisible}
           compact
@@ -179,10 +179,11 @@ export function OutfitDetailScreen({
           onPress={() => onRequireAccount("save-outfit", "C4")}
           tone={outfitSaved ? "secondary" : "warning"}
           disabled={outfitSaved}
+          size="sm"
         />
         <View style={styles.actions}>
-          <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" variant="outlined" />
-          <AppButton label="아이템 추가" onPress={onOpenWardrobeAdd} tone="secondary" variant="outlined" />
+          <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" variant="outlined" size="sm" />
+          <AppButton label="아이템 추가" onPress={onOpenWardrobeAdd} tone="secondary" variant="outlined" size="sm" />
         </View>
       </Section>
     </AppScreen>
@@ -245,8 +246,8 @@ const styles = StyleSheet.create({
   outfitRail: {
     flexDirection: "row",
     flexWrap: "wrap",
-    columnGap: spacing.sm,
-    rowGap: spacing.sm,
+    columnGap: spacing.xs,
+    rowGap: spacing.xs,
   },
   outfitMiniTile: {
     minWidth: 0,
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   outfitMiniTileGrid: {
-    width: "30.8%",
+    width: "23.5%",
   },
   outfitImageFrame: {
     width: "100%",
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
     flexWrap: "wrap",
   },
 });

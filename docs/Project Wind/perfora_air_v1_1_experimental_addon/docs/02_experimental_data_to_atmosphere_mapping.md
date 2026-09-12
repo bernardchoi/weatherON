@@ -1,5 +1,11 @@
 # Ambient Surface Experimental Data-to-Atmosphere Mapping v1.1
 
+> **2026-09-12 적용 상태:** 아래 내용과 `data/*.json`, `data/*.ts`는 7월의 **범용 연구 매핑 이력**임. WeatherON 제품 매핑에는 [방향서 5장](01_experimental_direction_brief.md#5-weatheron-전용-데이터--표현-계약)을 우선함. 원시 습도/AQI/PM2.5/CO₂ 임계값은 검증된 건강·기상 경고 기준이 아니며 이번 갱신에서 제품 기준으로 승인하지 않음.
+>
+> **구현 차이:** TS의 `flowEnergy`는 출력되지만 `flow`는 `actionUrgency` 상태에서 정해짐. `pickRecommendation`은 실외 습도를 실내 대체값으로 사용하고, 누락 CO₂는 기본값으로 보완됨. 날씨·일정·실내 압력을 합친 단일 상태, 고정 환기 우선순위, 풍향·AQI 필수 입력은 현재 WeatherON에 적용하지 않음. 코드 변경은 이번 문서 작업에 포함하지 않았음.
+>
+> **제품화 조건:** 위치·시각·출처·가용성 검증 → 기존 추천 규칙 → 동일 근거의 문장과 표현 순으로 재설계해야 함. 신규 데이터 어댑터는 이 차이를 해소하기 전까지 제품에 연결하지 않음.
+
 **Date:** 2026-07-15
 **Status:** Experimental add-on
 **Output files:** `perfora-air.experimental-data-map.v1.1.json`, `perfora-air.experimental-data-map.v1.1.ts`

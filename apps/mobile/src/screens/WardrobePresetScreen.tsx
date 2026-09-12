@@ -132,7 +132,7 @@ export function WardrobePresetScreen({
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentPaddingTop={layout.weatherTopPadding}
       contentGap={layout.destinationContentGap}
     >
       <Section title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">

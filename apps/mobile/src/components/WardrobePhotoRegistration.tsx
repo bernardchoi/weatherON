@@ -183,7 +183,7 @@ export function WardrobePhotoRegistration({
       onBack={cancel}
       showWordmark={false}
       compactHeader
-      contentPaddingTop={layout.weatherTopPadding + spacing.sm}
+      contentPaddingTop={layout.weatherTopPadding}
       contentGap={layout.destinationContentGap}
       footer={previewUri ? (
         <AppButton label={status === "analyzing" ? "사진 확인 중" : status === "saving" ? "저장 중" : needsPhotoCheck ? "사진 확인 다시 시도" : existingItem ? "변경 내용 저장" : "내 옷장에 추가"} onPress={() => needsPhotoCheck && preparedPhoto ? void runAnalysis(preparedPhoto) : void save()} tone="warning" disabled={!canSave} />

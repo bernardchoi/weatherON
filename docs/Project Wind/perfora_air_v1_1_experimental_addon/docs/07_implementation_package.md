@@ -1,5 +1,7 @@
 # Ambient Surface Implementation Package v1.1 experimental
 
+> **2026-09-12 적용 제한:** 아래 예제는 7월 범용 연구 starter의 사용 이력임. `evaluateAtmosphere()`와 SwiftUI mapper를 WeatherON 제품 규칙으로 직접 채택하지 않음. [데이터 매핑의 알려진 차이](02_experimental_data_to_atmosphere_mapping.md)와 [현재 제품 설계](01_experimental_direction_brief.md)를 먼저 확인함. 현재 앱은 React Native이며 기존 WeatherSnapshot·provider·추천 로직을 재사용하는 연결 설계가 필요함. 새 방향의 네이티브 구현 완료를 의미하지 않음.
+
 **Date:** 2026-07-15
 **Status:** Experimental starter implementation
 **Targets:** React + SwiftUI

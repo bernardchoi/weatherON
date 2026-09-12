@@ -1,136 +1,140 @@
-# Ambient Surface v1.1 Experimental Direction Brief
+# Ambient Surface v1.1 — WeatherON 디자인 방향과 개선 검토
 
-**Date:** 2026-07-15
-**Status:** Experimental add-on for v1.1 experimental build/review
-**Previous baseline:** Ambient Dashboard MVP v0.1, Ambient Surface v1.0 stable tokens, Ambient Surface v1.0 stable components, Visual Summary Alt Text v0.1
+**갱신일:** 2026-09-12
+**상태:** WeatherON 전용 설계 기준 갱신. 구현·목업·사용자 검증 미완료
+**명칭:** Project Wind / Ambient Surface / Matte Air
+**원칙:** Soft Density · Quiet Signal · Text First
 
-## 0. Purpose
+## 1. 판단과 컨셉 출발점
 
-Ambient Surface v1.1 experimental moves the project from **visual concept validation** into **product-usable system validation**.
+Project Wind의 자산은 무광 카드가 아니라 **환경을 읽어 표면으로 드러내는 작동 원리**임. 기존 연구의 바람의 탑 해석인 “보이지 않는 도시의 상태를 빛·투명도·밀도·리듬으로 번역”을 유지함. 탑의 원통, 금속 구멍, 야경을 그대로 앱 장식으로 옮기는 방식은 채택하지 않음.
 
-v1.0 stabilized that the Tower of Winds reference can become a coherent UI language: matte surfaces, soft density fields, quiet signal feedback, and text-first accessibility. v1.1 experimental must prove that the language can survive real product constraints: noisy weather data, accessibility modes, component reuse, WeatherON integration, and implementation across React/SwiftUI.
+WeatherON에서는 이를 **“보이지 않는 날씨의 변화를 드러내, 오늘 준비할 행동을 빠르게 정하게 함”**으로 좁힘. 범용 스마트홈·일정 대시보드로의 확장보다 WeatherON의 외출·옷차림·출발 판단을 먼저 완성함.
 
-## 1. North Star
+브랜드 관계는 다음과 같음.
 
-> Translate invisible context into calm, decision-ready surfaces.
-
-The system should not feel like glassmorphism, neon dashboards, or decorative ambient art. It should feel like a quiet instrument panel that makes air, weather, schedule pressure, and indoor conditions easier to judge.
-
-## 2. Fixed principles from v0.1
-
-| Principle | v1.1 experimental interpretation | Non-negotiable rule |
+| 층 | 역할 | 화면에서 확인할 것 |
 |---|---|---|
-| **Matte Air** | Soft atmospheric surface, not glossy glass | No strong specular highlight; gloss is capped and optional |
-| **Soft Density** | Pattern density reflects context or urgency | No decorative dot field without a data source |
-| **Quiet Signal** | Feedback uses small light, rhythm, and text | No oversized glow or alarm-like visual unless critical |
-| **Text First** | Every important state has a sentence and an action | Alert/critical states cannot rely on color, ring, or pattern alone |
-| **Accessibility Native** | Reduced motion/transparency/high contrast are not afterthoughts | Every component variant must have an accessible fallback |
+| Quiet Horizon | 하루를 켜는 조용한 첫 신호라는 브랜드 태도 | 넓은 여백, 수평 구조, 한곳에 집중된 Warm Sun |
+| 바람의 탑 | 환경 입력에 따라 달라지는 표면이라는 작동 원리 | 같은 화면에서 데이터가 바뀌면 해당 표현만 달라짐 |
+| Ambient Surface | 이를 반복 가능한 규칙으로 고정하는 시스템 | 데이터·문장·표면·접근성 대체 표현의 일치 |
+| Matte Air | 읽기 좋은 재질 | 선명한 글자, 불투명 본문, 낮은 광택 |
+| WeatherON | 사용자가 얻는 결과 | 현재 상태와 준비할 행동을 5초 안에 파악하는 것이 목표 |
 
-## 3. What changes in v1.1 experimental
+‘분위기를 먼저 감지’는 애니메이션을 기다리거나 패턴을 해독하라는 뜻이 아님. **첫 프레임부터 상태 문장과 수치가 읽히고**, 분위기가 같은 판단을 주변에서 보조해야 함. Text First는 온도를 무조건 작게 만들라는 규칙도 아님.
 
-### 3.1 From mood to rules
+## 2. 검토 결과와 우선순위
 
-v0.1 established visual tone. v1.1 experimental defines the rule engine behind that tone.
+이번 검토는 원전 문서·무드보드·stable 토큰·experimental 매핑 및 앱 계약의 대조임. 새로운 화면 QA나 사용자 조사 결과가 아님.
+
+| 우선 | 발견과 근거 | 개선 결정 |
+|---|---|---|
+| P0 | 기존 방향서·채택서가 환기, 실내 기기, 일정 압력 중심임 | 첫 검증 흐름을 홈 → 날씨 상세 → 출발로 변경함 |
+| P0 | 무드보드에는 큰 기온·공극·흐름이 있으나 WeatherON 공유 글리프와 준비 행동의 결합 규칙이 없음 | 아래 3장의 수평 구조·ON 포인트·환경 영역을 공통 문법으로 지정함 |
+| P0 | `data/perfora-air.experimental-data-map.v1.1.ts`와 React `src/dataMap.ts`에서 `flowEnergy`를 계산하지만 `flow`는 종합 긴급도에서 선택됨 | 바람 표현과 경고 신호를 분리함. 일정·습도 증가로 바람이 강해 보이면 실패임 |
+| P0 | 같은 두 매핑의 `pickRecommendation`이 실외 습도를 실내 습도 대체값으로 쓰고, `scoreAirPurity`는 누락 CO₂를 650으로 채움 | 실외→실내 추론 및 측정값 기본 생성 금지. 기존 helper는 제품 채택 대상에서 제외함 |
+| P0 | 앱 `WeatherSnapshot`에 풍향·AQI·시간별 습도가 없는데 기존 채택서는 이를 필수처럼 요구함 | 현재 제공 필드로 검증함. 풍향 링은 공급 계약 확보 전 보류함 |
+| P1 | 기존 성공 기준 8초, 범용 테스트 참가자, 비교 화면 선택 사항 | 5초 준비 판단, WeatherON 사용 맥락, 동일 정보 비교와 교차 순서를 기준으로 변경함 |
+| P1 | 브랜드 가이드 서체, stable의 Inter/Pretendard, 앱의 Pretendard가 다름. 색상값도 문서와 앱 간 차이 있음 | 역할 기반 매핑 후 한 화면에서 비교함. 문서만으로 최종 폰트·색상을 확정하거나 앱을 교체하지 않음 |
+| P1 | day/night 재료와 라이트/다크 설정을 혼동할 여지 있음 | 지역의 실제 낮/밤, 앱 표시 테마, 데이터 신선도를 독립 축으로 고정함 |
+| P1 | ‘유리 같지 않다’가 독자성 판단의 큰 부분임 | 로고·모션을 제거해도 같은 제품으로 묶이는 형태·위계 검증을 추가함 |
+| P2 | 컴포넌트 수·토큰 수·정적 검증 통과가 제품 완성도로 읽힐 수 있음 | stable은 패키지 호환 기준임을 유지하고, WeatherON 채택 검증은 별도로 기록함 |
+
+## 3. WeatherON 고유 시각 문법
+
+다음은 **목업으로 검증할 설계 결정**임. 독자성이 입증됐다는 선언이 아님. 새 로고나 별도 서브브랜드를 만들지 않음.
+
+### 3.1 수평 구조 + ON 포인트 + 환경 영역
+
+- **수평 구조:** 현재 상태와 다음 행동 사이에 여백과 짧은 수평 경계를 둠. Quiet Horizon의 수평선에서 가져온 고정 구성 요소임. 숫자·눈금 없는 장식 선을 예보 그래프나 진행률처럼 표시하지 않음.
+- **ON 포인트:** 기존 토글+태양노브 글리프는 브랜드 표시에 유지함. 선택한 시간은 타임라인의 점 하나, 준비 행동은 주 CTA 하나로 강조함. 태양·골드 원을 모든 카드에 반복하지 않음. 선택점이 인터랙션이면 실제 선택 시각을 가리켜야 함.
+- **환경 영역:** 히어로 우측 또는 하단의 제한된 영역에 공극·흐름을 배치함. 글자 뒤에는 패턴을 깔지 않음. 정상 날씨에서도 유효한 예보 변화가 있으면 정적인 밀도 차이를 허용함. 근거가 없으면 매끈한 무광 여백으로 남김.
+- **연속성:** 홈의 선택 시간·변화 이유가 상세와 출발에서도 같은 문장·시각 신호로 이어져야 함. 화면마다 다른 링·입자·글로우를 새로 고안하지 않음.
+
+공극·흐름을 모두 없앤 기본 화면에서도 수평 구조, 숫자와 준비 문장의 위계, 절제된 ON 포인트로 제품 인상이 유지되어야 함. 반대로 무광 카드에 색만 바꾼 화면이면 개발 방향을 다시 검토함.
+
+### 3.2 형태·레이아웃 기준
+
+| 항목 | 첫 목업 기준 | 이유 |
+|---|---|---|
+| 히어로 | 큰 상태 영역 1개, 내부 소형 카드 중첩 최소화 | 하나의 환경을 읽는 인상 유지 |
+| 나머지 정보 | 구분선과 정렬된 행 우선, 독립 행동만 카드 | 모든 수치를 같은 둥근 카드로 분해하지 않음 |
+| 반경 | stable `xl=30`, `lg=22`, `md=16` 중 히어로·카드·컨트롤 역할로 선택 | 새로운 반경 팔레트 추가 방지 |
+| 여백 | stable spacing 사용, 본문 좌측 기준선 공유 | 건축적 질서와 읽기 속도 확보 |
+| 축약 정보 | 현재 기온·상태 + 준비 한 문장 + 판단 근거 2개 이내 | 첫 화면이 센서 대시보드로 변하지 않게 함 |
+| 터치 영역 | iOS 최소 44pt, Android 최소 48dp를 프로젝트 목표로 사용 | 작은 신호도 조작 면적은 확보 |
+| 큰 글자 | 고정 높이 해제, 세로 재배치·스크롤 허용 | 모든 정보를 한 화면에 넣으려고 글자를 줄이지 않음 |
+
+본문은 blur 0, 불투명 표면을 기본으로 함. 겹침을 설명하는 시트에서만 기존 blur 토큰 사용 가능함. Soft Density의 밀도는 **패턴 내부** 속성임. 날씨가 바뀔 때 카드 간격·버튼 위치·글자 대비가 바뀌면 안 됨.
+
+### 3.3 컬러·타이포·일러스트
+
+- Clear Navy는 글자·구조·브랜드 신뢰, Warm Sun/Dawn Orange는 준비 행동과 선택 포인트에 사용함. 기능색은 강수·주의 등 의미를 가짐. 위험색을 주 CTA 기본색처럼 재사용하지 않음.
+- 라이트 화면은 맑은 백색/청백색과 Navy 글자로, 다크 화면은 Navy 표면의 명도 단계로 구성함. Matte Air를 베이지 필터나 흐린 글자로 해석하지 않음.
+- 색 값은 `apps/mobile/src/theme/tokens.ts`와 stable 토큰을 역할별로 대조한 뒤 합성 배경에서 대비 확인함. 기존 브랜드 가이드의 날짜별 hex를 최신 구현값으로 간주하지 않음.
+- 앱 본문 첫 비교안은 이미 등록된 Pretendard로 제작함. 브랜드 가이드의 Plus Jakarta Sans/Noto Sans KR/DM Mono 및 워드마크용 Manrope는 기존 의도·자산으로 보존함. 최종 본문 서체 채택은 한글·숫자·큰 글자 비교 후 결정하고, 그 전 새 폰트 의존성을 추가하지 않음.
+- 기온은 화면의 숫자 기준점으로 크게 두되 준비 문장은 그 아래 첫 읽기 순서에 둠. 소수·단위·시간은 정렬하며 한글 본문을 자간으로 억지 확장하지 않음.
+- ON Square는 친근함을 담당하는 별도 일러스트 영역임. 환경 표면의 주역이나 경고 전달 수단으로 쓰지 않음. ‘도시적 UI’가 기존 캐릭터를 삭제하라는 뜻은 아니며, 공극 패턴을 캐릭터 몸에 덧씌우지도 않음.
+
+## 4. 화면별 적용 기획
+
+기존 홈·코디·출발·MY 구조와 화면 기능을 유지함. 내부 명칭 Project Wind, Matte Air, AtmospherePanel은 사용자 UI에 노출하지 않음.
+
+| 화면 | 첫 판단 | 적용 | 보존·실패 처리 |
+|---|---|---|---|
+| 홈 H1 | 지금 상태와 준비할 것 | AtmospherePanel 1개, 기온·상태·준비 문장, 짧은 시간별 변화 | 위치·갱신 정보, 목적지 준비·코디 요약을 밀어내지 않음. 긴 본문은 스크롤 |
+| 날씨 상세 H6 | 언제 무엇이 변하는지 | AmbientTimeline의 한 가지 선택 지표와 실제 값, 필요한 SignalCard | 현재·체감·강수·UV·주간 예보 유지. 없는 UV는 정보 없음 |
+| 출발 G2 | 언제 출발하고 무엇을 준비할지 | 출발 시각과 준비 문장을 같은 수평 구조로 연결 | `지도 앱에서 길찾기` 주 행동 1개. 경로 후보·도보 구간·구간별 날씨 생성 금지 |
+| 코디 | 날씨에 맞는 옷차림 | 이유 문장·사진·선택 상태를 공통 표면으로 정리 | 옷 사진은 패턴 없이 읽힘. 날씨 대시보드를 복제하지 않음 |
+| MY·설정 | 상태 확인과 설정 변경 | 정적 무광 행, 공통 타입·선택 포인트 | 환경 애니메이션 없음. 플랫폼 접근성·기본 컨트롤 사용 |
+
+주 CTA 1개는 다른 화면으로 가는 링크를 없애라는 뜻이 아님. 현재 판단을 실행하는 행동에만 가장 높은 시각 무게를 부여함. 이상 없음 상태에 불필요한 ‘유지하기’ 버튼을 만들지 않음.
+
+## 5. WeatherON 전용 데이터 → 표현 계약
+
+아래는 기존 범용 매핑보다 우선하는 **제품 설계 계약**임. `data/*.ts`, React/SwiftUI starter에 구현됐다는 뜻이 아님.
 
 ```txt
-data → derived atmosphere metrics → token state → component variant → visual summary text
+위치·시각·출처·가용성 확인
+→ 기존 WeatherON 날씨/추천 규칙
+→ 상태 문장 + 준비 행동 + 근거
+→ 같은 근거에 한해 밀도·흐름·빛 적용
 ```
 
-### 3.2 From broad demo to focused scenarios
-
-v0.1 showed five screens. v1.1 experimental should prioritize three high-confidence scenarios:
-
-1. **Morning readiness** — Can I go out comfortably?
-2. **Air decision** — Should I ventilate, dehumidify, or run purifier?
-3. **Day pressure** — When is the day most dense or interruptive?
-
-### 3.3 From static prototype to implementable components
-
-v1.1 experimental defines React and SwiftUI component contracts for:
-
-- `AtmospherePanel`
-- `SignalCard`
-- `LumenRing`
-- `AmbientTimeline`
-- `VisualSummaryText`
-
-## 4. Product hypothesis
-
-### Primary hypothesis
-
-Users can understand the current outdoor/indoor/day state faster when key data is translated into **surface density + short sentence + action**, rather than presented only as isolated numbers.
-
-### Secondary hypotheses
-
-| Hypothesis | What to test |
-|---|---|
-| Density helps prioritization | Users identify the most pressured time block faster than with a plain list |
-| Matte signal feels calmer | Users perceive alerts as useful, not stressful |
-| Text-first does not weaken identity | Reduced visual modes still feel recognizably Ambient Surface |
-| Data mapping prevents decoration drift | Designers can explain why each pattern, ring, or surface state appears |
-
-## 5. Target screens for v1.1 experimental
-
-| Screen | Keep from v0.1 | v1.1 experimental addition |
+| 입력 | 표현 규칙 | 금지·결측 처리 |
 |---|---|---|
-| Home / Ambient Dashboard | Large `AtmospherePanel`, signal cards, flow dock | Real data mapping, recommendation priority, scenario audit |
-| Weather Detail / Air Flow | Wind ring, hourly flow | Wind comfort score, ventilation suitability, raw data fallback |
-| Smart Home Air | Indoor status cards | CO₂/humidity/device decision tree |
-| Day Flow | Timeline density | Schedule pressure score, peak explanation, focus suggestion |
-| Modes & Accessibility | Toggles | Explicit parity checks for visual summary text |
+| `current.condition` | 현재 날씨 아이콘·상태 문장 | 미래 강수확률로 현재 비 아이콘을 만들지 않음 |
+| `current.windMs` | 풍속 숫자. 풍속 전용 흐름 강도만 변화 | `actionUrgency`·습도·일정으로 바람을 움직이지 않음 |
+| 시간별 `rainProbabilityPct` | 강수확률을 선택했을 때 고정 0–100% 척도와 값에 맞춘 점밀도 | 강수량과 합산하지 않음. 80%를 폭우 강도로 표현하지 않음 |
+| 시간별 `precipitationMm` | 강수량 선택 시 mm와 별도 척도 명시 | 확률·바람을 하나의 출처 불명 ‘압력 점수’로 합치지 않음 |
+| 현재 습도·체감 | 실제 수치와 기존 준비 조언의 근거 | 실내 상태·환기·제습으로 추론하지 않음. 텍스트 명도는 고정 |
+| 선택한 예보 시각 | 타임라인 ON 포인트의 위치 | 로딩·데이터 부족을 임의 진행률로 표시하지 않음 |
+| 유효한 공식 특보·기존 추천 | 경고 문장과 관련 SignalCard의 한정된 신호 | 높은 습도나 임의 AQI 점수만으로 공식 위험처럼 표현하지 않음 |
+| `observedAt`, `source`, `stale`, provider status | 출처·갱신 시각·이전 정보 표시 | fallback/샘플을 현재 위치 실시간 관측처럼 표시하지 않음 |
 
-## 6. Visual direction guardrails
+**현재 공급 범위:** `packages/shared/src/types/weather.ts`의 WeatherSnapshot은 풍속·습도·시간별 강수 등을 제공하지만 풍향·AQI·시간별 습도는 정의하지 않음. `pm25`는 선택 필드임. 첫 목업의 실제 데이터 경로에서는 풍향 화살표·방향성 흐름·AQI 등급을 만들지 않음. 풍향 공급 계약이 확보되면 유입 방향과 화면 이동 방향의 의미부터 정의한 뒤 LumenRing을 검증함. 단위가 다른 지표의 원시값을 `max()`로 비교하지 않음.
 
-Ambient Surface v1.1 experimental must sit between two failure modes:
+**시간과 테마:** 라이트/다크는 사용자 표시 설정, 낮/밤은 해당 위치의 시간·좌표 문맥임. 낮+다크에서도 현재 맑음 아이콘을 달로 바꾸지 않음. 기존 `weatherDaylight.ts`를 재사용하며 별도 고정 19시 판정을 새로 만들지 않음. 시각/좌표 근거가 없으면 낮/밤을 확정하는 표현을 유보함.
 
-```txt
-Too strong  → glossy Liquid Glass clone / neon weather dashboard
-Too weak    → generic pale card UI / Material-like neutral dashboard
-Target zone → matte atmospheric dashboard with meaningful density
-```
+**가용성 우선순위:** 로딩은 중립 표면, 부분 결측은 해당 지표만 정보 없음, 오래된 값은 시각을 명시한 정적 표시, 오류/오프라인은 읽을 수 있는 이전 정보와 재시도임. 알 수 없음을 ‘좋음/잔잔함’으로 바꾸지 않음. 새 위치 로딩 중 이전 위치 값을 새 지역 제목 아래 보여주지 않음.
 
-### 6.1 Visual caps
+**움직임:** WeatherON 첫 실험은 한 뷰포트에서 환경 애니메이션 최대 1개로 제한함(stable 상한 2개보다 보수적). 초기에는 정적 점밀도·짧은 상태 전환으로 검증함. 경고는 반복 점멸하지 않으며 백그라운드·저전력·동작 줄이기에서는 정지함. 모션을 꺼도 상태·행동·선택 시각이 같아야 함.
 
-| Visual property | Recommended cap |
-|---|---:|
-| Surface blur | 0–8px default, 16px max only for overlays |
-| Specular highlight | 0.00–0.04 |
-| Lumen opacity | 0.10–0.28 default, 0.32 max for alert |
-| Active ambient animations per viewport | 1 primary, 1 secondary max |
-| Density field opacity | 0.08–0.32 default, 0.38 max for alert |
-| Alert copy length | 1 short state sentence + 1 action sentence |
+## 6. 구현 전 비교안과 완료 조건
 
-## 7. Success criteria
+1. **동일 데이터의 홈 라이트/다크 쌍:** 현재 상태·예보·선택·줄바꿈을 동일하게 두고 표시 테마만 바꿈.
+2. **같은 홈의 상태 세트:** 정상, 현재 맑음+오후 강수, 강풍 정보, 부분 결측, 오래된 값, 특보를 비교함. 예제 데이터는 문서에 시각·출처·단위를 적고 실제 관측처럼 주장하지 않음.
+3. **날씨 상세·출발 연결:** 홈 준비 문장의 근거가 상세에서 확인되고, G2의 실제 행동으로 이어지는지 검증함.
+4. **정적·큰 글자·투명도 감소:** 같은 판단이 유지되는지, 첫 행동과 마지막 콘텐츠가 내비게이션에 가리지 않는지 확인함.
+5. **사용자 비교:** 같은 정보·기능의 현재 UI와 후보를 교차 순서로 비교함. 과제와 수치는 [사용성 계획](05_usability_test_plan.md), 채택 절차는 [채택 범위](06_weatheron_adoption_scope.md)를 따름.
 
-| Area | v1.1 experimental success condition |
-|---|---|
-| Comprehension | 80% of test users correctly identify current state within 8 seconds |
-| Actionability | 80% choose the intended action for air/ventilation tasks |
-| Differentiation | Majority describe the UI as atmosphere/context-based, not glassy or generic |
-| Accessibility | No critical info disappears in reduced motion/transparency/high contrast modes |
-| Reuse | Components work with at least weather, smart home, and schedule data |
-| Implementation | React and SwiftUI starter components render the same state model |
+5초 준비 판단과 로고 없이 화면군을 알아보는 결과는 **검증 목표**임. 5–8명 탐색 테스트로 출시 성과나 시장 전체 독창성을 입증했다고 쓰지 않음. 조작·보조공학·성능은 실제 iOS/Android 검증 결과로만 완료 처리함.
 
-## 8. v1.1 experimental review gates
+## 7. 기준 문서와 유지 범위
 
-| Gate | Question | Pass condition |
-|---|---|---|
-| Data gate | Is every visual state traceable to data or user context? | Yes/no audit per component |
-| Visual gate | Does the screen avoid gloss, sparkle, and excessive glow? | Specular and lumen caps pass |
-| Accessibility gate | Is equivalent meaning available without motion/transparency? | Visual summary text + raw data pass |
-| Product gate | Does the UI lead to a clear action? | Recommendation or next step is visible |
-| Brand gate | Is Ambient Surface distinguishable from Liquid Glass/Material 3? | Difference is visible and explainable |
+- [컨셉 원전](../../yokohama_tower_of_winds_ui_design_system.md), [무드보드](../../mood_board.png): 출발점·형태 연구 이력.
+- [브랜드 정체성](../../../../brand/WeatherON_디자인_정체성_가이드.md), [Quiet Horizon](../../../../brand/WeatherON_로고_디자인철학.md), [ON Square](../../../../brand/WeatherON_ONSquare_캐릭터_아트바이블.md): 브랜드 축과 역할.
+- [v1.0 stable](../../perfora_air_v1_0_package/README.md): 토큰 경로·컴포넌트 호환 기준. 이번 검토에서 변경하지 않음.
+- [기존 범용 매핑과 차이](02_experimental_data_to_atmosphere_mapping.md): 연구 코드의 적용 제한.
 
-## 9. Recommended v1.1 experimental scope
-
-Build one polished path before expanding:
-
-```txt
-Home → Air Flow Detail → Smart Home Air → Modes
-```
-
-Do not expand beyond the WeatherON experimental layer until the weather/air use case is validated.
-
-## 10. Decision
-
-Proceed to v1.1 experimental by locking the **Data-to-Atmosphere Mapping** first. The mapping is the core differentiator. Without it, Ambient Surface risks becoming only a visual skin.
+이번 갱신은 문서·기획·검증 기준에 한정함. 네이밍 재탐색, 신규 컴포넌트 라이브러리, 공개 실험모드 설정, 앱 전체 재테마는 추가하지 않음.

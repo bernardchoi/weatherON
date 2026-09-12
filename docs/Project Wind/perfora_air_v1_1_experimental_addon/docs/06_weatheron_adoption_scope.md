@@ -1,137 +1,56 @@
 # WeatherON Adoption Scope Decision
 
-**Date:** 2026-07-15
-**Status:** Experimental recommendation
-**Design system:** Ambient Surface / Project Wind
+**갱신일:** 2026-09-12
+**상태:** 실험 설계 기준. 제품 채택·앱 적용은 미완료
+**기준:** [WeatherON 디자인 방향](01_experimental_direction_brief.md)
 
-## 0. Decision summary
+## 1. 결정
 
 Do **not** replace the current WeatherON MVP/launch UI wholesale.
 
-Recommended adoption strategy:
+Project Wind는 WeatherON 고유 디자인을 만드는 트랙임. 첫 실험은 **홈 → 날씨 상세 → 출발**에서 환경 변화가 준비 행동으로 이어지는지 확인함. 스마트홈·실내 공기·일정 관리 확장은 보류함.
 
 ```txt
-Data Visualization Kit first
-→ Experimental Mode second
-→ Full redesign only after usability validation
+기존 데이터·기능 확인 → 동일 정보 목업 비교 → 내부 프로토타입
+→ 사용성·접근성·기기 검증 → 채택 ADR → 제품 적용
 ```
 
-Ambient Surface should enter WeatherON as a targeted layer for weather/air comprehension, not as an immediate full product redesign.
+사용자 설정에 새 디자인 실험 토글을 추가하지 않음. 내부 프리뷰에서 비교하며, 이후 제한 배포가 필요할 때만 배포 수단을 결정함.
 
-## 1. Why not full redesign now
+## 2. 단계와 산출물
 
-| Risk | Explanation |
-|---|---|
-| Launch risk | Full redesign could delay the current WeatherON MVP |
-| Brand risk | Ambient Surface is still a draft design language |
-| Data risk | Mapping rules need real weather data validation |
-| Accessibility risk | Visual summaries need screen-reader/manual testing |
-| Performance risk | Ambient visuals may need low-end device optimization |
-
-## 2. Recommended integration layers
-
-### Layer 1 — Data Visualization Kit
-
-Adopt only the components that directly improve weather comprehension:
-
-- `AtmospherePanel`
-- `LumenRing` for wind
-- `AmbientTimeline` for hourly flow
-- `SignalCard` for AQI / humidity / precipitation
-- `VisualSummaryText` helper
-
-This layer can coexist with the current WeatherON UI.
-
-### Layer 2 — Experimental Mode
-
-Add a user-facing or internal feature flag:
-
-```txt
-weatheron.features.perforaAir = true
-```
-
-The user can test a Ambient Surface home variant while the stable UI remains intact.
-
-### Layer 3 — Full redesign candidate
-
-Only consider this after:
-
-- Usability test passes.
-- Accessibility parity is manually verified.
-- Performance is acceptable on target devices.
-- Brand/trademark direction is clarified.
-
-## 3. Suggested rollout
-
-| Phase | Scope | Success metric |
+| 단계 | 작업 | 다음 단계 진입 기준 |
 |---|---|---|
-| Phase 0 | Keep current WeatherON UI | No disruption |
-| Phase 1 | Add Ambient Surface `AtmospherePanel` to internal build | Decision accuracy in tests |
-| Phase 2 | Add Air Flow Detail with `LumenRing` | Users understand wind/humidity action |
-| Phase 3 | Add `AmbientTimeline` to hourly forecast | Peak/pressure comprehension improves |
-| Phase 4 | Experimental mode toggle | Retention and satisfaction monitored |
-| Phase 5 | Wider redesign decision | Data-backed decision |
+| 0 | 이번 문서·기획 갱신 | 컨셉·브랜드·데이터 제한을 하나의 기준으로 연결 |
+| 1 | 홈 라이트/다크, 동일 상태의 상세·출발 목업 | 고유 문법과 실제 기능 보존, 정상·결측·오래된 값 상태 포함 |
+| 2 | 기존 WeatherON 프리뷰에 내부 프로토타입 구성 | 기존 provider/추천 결과 재사용, 별도 범용 압력 점수 배제 |
+| 3 | 비교 사용성·정적/동작 감소·큰 글자 검증 | 사용성 계획의 준비 판단·독자성 목표 확인, 정보 손실 0 |
+| 4 | React Native 적용 후보를 iOS/Android에서 검증 | 화면 읽기·VoiceOver/TalkBack·성능·데이터 일치 기록 |
+| 5 | 채택 ADR로 범위 확정 | 통과·미통과 항목과 남은 범위를 명시 후 제품 적용 결정 |
 
-## 4. WeatherON screens and fit
+2026-09-12 현재 완료 범위는 단계 0임. 목업 승인과 기기 검증을 이번 문서 변경으로 대체하지 않음.
 
-| WeatherON area | Ambient Surface fit | Recommendation |
+## 3. 화면별 채택 범위
+
+| 영역 | 첫 적용 후보 | 경계 |
 |---|---|---|
-| Home current weather | Very high | Use `AtmospherePanel` |
-| Hourly forecast | High | Use `AmbientTimeline` |
-| Wind detail | Very high | Use `LumenRing` |
-| Air quality | High | Use `SignalCard` with text-first alerts |
-| Settings | Medium | Use reduced mode controls |
-| Onboarding | Low-medium | Use only conceptual illustration, not dense UI |
-| Widget | Medium | Use simplified text-first atmosphere |
+| 홈 | AtmospherePanel의 상태·기온·준비 문장 | 홈 기능과 목적지·코디 진입 보존 |
+| 날씨 상세 | AmbientTimeline, 필요한 SignalCard | 현재·시간별·주간 예보 보존. 단일 지표와 단위 명시 |
+| 바람 | 풍속 수치와 정적 변화 표현 | 풍향 계약 없는 동안 LumenRing·방향 화살표 보류 |
+| 출발 | 준비 문장과 출발 시각의 공통 위계 | 지도 앱에서 길찾기 주 행동 하나. 실제 추정 계약 이상 정보 생성 금지 |
+| 코디·MY | 검증 후 표면·타입·선택 상태 확장 | 첫 단계에서 새 기능이나 전용 환경 그래프 추가 없음 |
+| ON Square | 기존 아트 바이블의 일러스트 | 공극·경고·날씨 수치 대신 캐릭터를 쓰지 않음 |
 
-## 5. Data requirements
+## 4. 데이터와 구현 경계
 
-WeatherON needs stable fields:
+- `WeatherSnapshot` + `WeatherProviderResult` + 기존 추천 결과를 입력으로 삼음. 필요한 표현별 필드·단위·시각·지역·가용성을 [방향서 5장](01_experimental_direction_brief.md#5-weatheron-전용-데이터--표현-계약)에 정의함.
+- 현재 없는 풍향·AQI·시간별 습도·실내 센서를 필수로 요구하지 않음. 대체값을 만들어 채우지 않음.
+- `data/*.ts`, React `src/dataMap.ts`, SwiftUI starter는 이전 범용 실험임. 이번 WeatherON 설계의 완성 구현으로 가져오지 않음.
+- 토큰 경로·컴포넌트 계약은 v1.0 stable 기준을 유지함. WeatherON 색·타입 매핑은 목업 비교 후 확정함.
+- 네이밍은 Ambient Surface로 결정된 상태임. 이번 디자인 개선에서 명칭 변경을 채택 조건으로 다시 열지 않음.
 
-```ts
-type WeatherONPerforaInput = {
-  temperatureC: number;
-  feelsLikeC: number;
-  humidityPct: number;
-  windSpeedMs: number;
-  windDirectionDeg: number;
-  precipitationProbabilityPct: number;
-  aqi?: number;
-  pm25?: number;
-  hourly?: Array<{ hour: string; humidityPct: number; windSpeedMs: number; precipProbabilityPct: number }>;
-};
-```
+## 5. 검증·계측
 
-Missing AQI/PM2.5 should not create fake density. Use `insufficientData` state for unavailable air quality.
+첫 검증은 [사용성 계획](05_usability_test_plan.md)과 [점수표](../tests/perfora-air.experimental-usability.scorecard.v1.1.json)로 기록함. 신규 분석 이벤트·원격 수집은 이번 범위에 추가하지 않음. 실제 제한 배포가 결정되면 기존 계측의 재사용 여부부터 확인함.
 
-## 6. Instrumentation
-
-Track events:
-
-| Event | Purpose |
-|---|---|
-| `perfora_panel_viewed` | Exposure |
-| `perfora_recommendation_clicked` | Action usefulness |
-| `perfora_mode_toggled` | User interest in experimental mode |
-| `perfora_reduced_mode_enabled` | Accessibility/comfort usage |
-| `weather_detail_opened_from_perfora` | Whether atmosphere summary drives exploration |
-
-## 7. Engineering impact
-
-| Area | Impact |
-|---|---|
-| Design tokens | Low-medium, can map to existing color system |
-| Components | Medium, 4–5 new components |
-| Data adapter | Medium-high, needs reliable mapping |
-| Accessibility | Medium-high, visual summary text required |
-| Performance | Medium, avoid heavy shaders/particles |
-
-## 8. Final recommendation
-
-Proceed with **WeatherON Ambient Surface Experimental Layer**:
-
-```txt
-Home AtmospherePanel + Air Flow Detail + VisualSummaryText
-```
-
-Do not re-theme the entire app until usability and accessibility tests confirm that Ambient Surface improves comprehension rather than only changing the look.
+실험 통과는 전면 교체 승인을 뜻하지 않음. 검증된 화면·상태 범위만 채택 ADR에 기록함.

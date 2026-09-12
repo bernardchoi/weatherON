@@ -1,5 +1,7 @@
 # Ambient Surface Experimental Components v1.1
 
+> **2026-09-12 WeatherON 적용 프로필:** 아래는 범용 컴포넌트 계약임. WeatherON 화면 구성은 [전용 방향 3–5장](01_experimental_direction_brief.md), 적용 순서는 [채택 범위](06_weatheron_adoption_scope.md)를 우선함. 홈은 기온·상태·준비 문장과 근거 2개 이내, 같은 목적의 주 CTA 최대 1개로 축약함. `LumenRing`은 현재 풍향 공급 계약 부재로 보류하고 `AmbientTimeline`은 단일 지표·단위·시간을 표시함. 정상 상태의 권장 행동은 문장으로 충분하면 버튼을 만들지 않음. 결측·오래된 값은 해당 지표를 중립·정적으로 표시함. 이 프로필은 아직 JSON/React/SwiftUI 구현에 반영되지 않았음.
+
 **Date:** 2026-07-15
 **Status:** Experimental add-on
 **Depends on:** Ambient Surface v1.0 stable package + Experimental Data-to-Atmosphere Mapping v1.1
