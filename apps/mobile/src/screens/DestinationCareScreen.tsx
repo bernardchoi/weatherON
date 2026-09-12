@@ -129,9 +129,10 @@ export function DestinationCareScreen({
   const movementTimeLabel = routeTimingReady
     ? selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${travelMinutes}분` : `${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
+  const decisionEyebrow = timeBasis === "departure" ? "도착 판단" : "출발 판단";
   const departureDecision = departureReady
     ? timeBasis === "departure"
-      ? `${departureTime} 출발 예정`
+      ? targetArrivalTime ? `${targetArrivalTime} 도착 예정` : "도착 시간 확인 전"
       : selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${departureTime} 출발` : `${departureTime} 출발 권장`
     : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const preparationCopy = getPreparationCopy(destinationRain, destinationWeather.current.windMs, departureWeatherGuidance);
@@ -221,7 +222,9 @@ export function DestinationCareScreen({
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
               <Text style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
             </View>
-            <Text style={[styles.subtitle, pageStyles.caption, { color: theme.subtle }]}>출발 판단 · 이동 · 준비</Text>
+            <Text style={[styles.subtitle, pageStyles.caption, { color: theme.subtle }]}>
+              {timeBasis === "departure" ? "출발 시각 · 이동 · 도착 판단" : "도착 목표 · 이동 · 출발 판단"}
+            </Text>
           </View>
         </View>
 
@@ -242,7 +245,7 @@ export function DestinationCareScreen({
         <View
           style={[
             styles.carePanel,
-            { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.gold },
+            { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.border },
             cardShadow(theme),
             pageStyles.card,
           ]}
@@ -250,15 +253,17 @@ export function DestinationCareScreen({
         <View style={[styles.decisionPanel, pageStyles.unboxed]}>
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
-              <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>출발 판단</Text>
+              <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
                 {departureReady
                   ? timeBasis === "departure"
-                    ? targetArrivalTime ? `예상 ${targetArrivalTime} 도착 · ${movementTimeLabel}` : "도착 시간은 경로 확인 후 안내"
+                    ? targetArrivalTime ? `${selectedTargetTime} 출발 · ${movementTimeLabel}` : `${selectedTargetTime} 출발 · 이동 시간 확인 뒤 도착 시간을 안내`
                     : `${targetArrivalTime} 도착 목표 · ${movementTimeLabel} · 여유 ${bufferMinutes}분`
                   : targetTimeReady
-                    ? `${selectedTargetTime} 출발 예정 · 도착 시간은 경로 확인 후 안내`
+                    ? timeBasis === "departure"
+                      ? `${selectedTargetTime} 출발 예정 · 이동 시간 확인 뒤 도착 시간을 안내`
+                      : `${selectedTargetTime} 도착 목표 · 이동 시간 확인 뒤 출발 시간을 안내`
                     : `${selectedTargetTime} ${timeBasis === "departure" ? "출발" : "도착"} 목표를 다시 선택해야 함`}
               </Text>
             </View>
@@ -290,7 +295,7 @@ export function DestinationCareScreen({
               label={timeBasis === "departure" ? "출발 시간" : "도착 목표"}
               value={selectedTargetTime}
               meta={departureReady
-                ? timeBasis === "departure" ? targetArrivalTime ? `예상 ${targetArrivalTime} 도착` : "도착 확인 전" : `${departureTime} 출발`
+                ? timeBasis === "departure" ? targetArrivalTime ? `도착 예정 ${targetArrivalTime}` : "도착 확인 전" : `${departureTime} 출발`
                 : "시간 변경"}
               color={theme.sky}
               theme={theme}
@@ -456,7 +461,7 @@ export function DestinationCareScreen({
         </View>
         </View>
 
-        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
+        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
@@ -520,7 +525,7 @@ export function DestinationCareScreen({
         <ArrivalInputControl
           label={timeBasis === "arrival" ? "도착 희망" : "출발 희망"}
           value={selectedTargetTime}
-          caption="5분 단위 스크롤 선택"
+          caption={timeBasis === "arrival" ? "5분 단위 스크롤 선택" : "이동 시간 기준 도착 예정 시간 계산"}
           onSelectTime={onSetDestinationTargetArrivalTime}
           theme={theme}
         />
@@ -1214,12 +1219,10 @@ const styles = StyleSheet.create({
   decisionPanel: {
     gap: spacing.md,
     borderRadius: radius.lg,
-    borderLeftWidth: 2,
   },
   carePanel: {
     gap: spacing.lg,
     borderRadius: radius.lg,
-    borderLeftWidth: 2,
     borderWidth: 1,
   },
   decisionHeader: {
@@ -1241,7 +1244,7 @@ const styles = StyleSheet.create({
   placeImageFrame: {
     height: 112,
     overflow: "hidden",
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
   },
   decisionImage: {
@@ -1542,7 +1545,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderLeftWidth: 2,
     borderWidth: 1,
   },
   outfitHeader: {

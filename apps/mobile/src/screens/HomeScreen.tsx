@@ -79,6 +79,9 @@ export function HomeScreen({
     Date.now(),
     selectedDestinationSchedulePreference.timeBasis,
   );
+  const departureSummaryLabel = selectedDestinationSchedulePreference.timeBasis === "departure"
+    ? "도착 예정 시간"
+    : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
   const refreshMessage = isWeatherLoading ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
@@ -195,19 +198,19 @@ export function HomeScreen({
             <HomeValueTransition value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureSummary.body}`}>
               <FeedbackPressable
                 accessibilityRole="button"
-                accessibilityLabel={`출발 안내 ${departureSummary.value}. ${departureSummary.body}`}
+                accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureSummary.body}`}
                 onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
                 style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact]}
               >
                 {isHomeTightLayout(layout) ? <>
                   <View style={{ flex: 1, gap: 3 }}>
-                    <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간"}</Text>
+                    <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
                     <Text style={[styles.iosSecondaryText, { color: theme.muted }]} numberOfLines={2}>{departureSummary.body}</Text>
                   </View>
                   <Text style={[styles.iosCompactDepartureTime, { color: theme.text }]}>{departureSummary.value}</Text>
                 </> : <>
                 <View style={styles.iosDepartureHeading}>
-                  <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간"}</Text>
+                  <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
                   <Text style={{ color: theme.muted }}>›</Text>
                 </View>
                 <Text style={[styles.iosDepartureTime, { color: theme.text }]}>{departureSummary.value}</Text>

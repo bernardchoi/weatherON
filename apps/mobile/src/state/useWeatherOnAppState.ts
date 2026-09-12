@@ -123,6 +123,7 @@ import {
   getNotificationHistoryTitle,
   getNotificationOpenResultLabel,
   getP0RouteFromNotificationPayload,
+  getPlaceSearchOrigin,
   getRouteArrivalTimeIso,
   getTestNotificationBody,
   getTestNotificationTitle,
@@ -308,9 +309,12 @@ export function useWeatherOnAppState() {
     () => savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id),
     [savedDestinations, selectedDestinationPlace.id],
   );
-  const placeSearchOrigin = deviceLocationState.location
-    ?? deviceWeatherLocation
-    ?? (weatherLocationMode === "manual" ? manualWeatherLocation : null);
+  const placeSearchOrigin = getPlaceSearchOrigin(
+    weatherLocationMode,
+    manualWeatherLocation,
+    deviceLocationState.location,
+    deviceWeatherLocation,
+  );
   const destinationSaved = Boolean(selectedSavedDestination);
   const destinationCareEnabled = selectedSavedDestination?.careEnabled ?? previewDestinationCareEnabled;
   const selectedDestinationAlertCondition = selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition;

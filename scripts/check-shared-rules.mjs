@@ -10,6 +10,8 @@ const bundled = join(outDir, "shared-check-bundle.mjs");
 const mobileBundle = join(outDir, "mobile-app-bundle.mjs");
 const providerEntry = join(outDir, "mobile-provider-check-entry.ts");
 const providerBundle = join(outDir, "mobile-provider-check-bundle.mjs");
+const companionEntry = join(outDir, "mobile-companion-check-entry.ts");
+const companionBundle = join(outDir, "mobile-companion-check-bundle.mjs");
 const reactNativePlatformStub = {
   name: "react-native-platform-stub",
   setup(buildContext) {
@@ -364,7 +366,7 @@ await writeFile(
     } = await import("../apps/mobile/src/utils/umbrellaRainSignals.ts");
     const { getTravelMinutesForTransport } = await import("../apps/mobile/src/utils/travelEstimate.ts");
     const { getDestinationDirectionsUrl } = await import("../apps/mobile/src/utils/destinationDirections.ts");
-    const { getRouteArrivalTimeIso } = await import("../apps/mobile/src/state/appStateHelpers.ts");
+    const { getPlaceSearchOrigin, getRouteArrivalTimeIso } = await import("../apps/mobile/src/state/appStateHelpers.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
     const { kmaForecastFixture, openMeteoFixture, recommendUmbrella, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
@@ -842,6 +844,12 @@ await writeFile(
       seoulWallTime: createDateAtTimeInZone({ year: 2026, month: 6, day: 26 }, "10:00", "Asia/Seoul").toISOString(),
       newYorkWallTime: createDateAtTimeInZone({ year: 2026, month: 6, day: 26 }, "10:00", "America/New_York").toISOString(),
       newYorkMinutesUntil: getMinutesUntilTimeInZone("10:00", new Date("2026-06-26T12:00:00Z").getTime(), "America/New_York"),
+      manualDepartureOrigin: getPlaceSearchOrigin(
+        "manual",
+        createKmaWeatherLocationFromCoordinate({ latitude: 37.529, longitude: 126.963 }, "지피클럽", "manual-gp-club"),
+        createKmaWeatherLocationFromCoordinate({ latitude: 37.653, longitude: 126.897 }, "고양시 삼송동", "device-samsong"),
+        null,
+      ),
     };
   `,
 );
@@ -903,8 +911,49 @@ await build({
   logLevel: "silent",
 });
 
+await writeFile(
+  companionEntry,
+  `
+    import { getHomeDepartureSummary } from "../apps/mobile/src/utils/homeCompanion.ts";
+
+    const care = {
+      departureAdvice: {
+        targetArrivalTime: "09:45",
+        recommendedDepartureTime: "09:00",
+        travelStatus: "ready",
+      },
+    };
+
+    export const departureSummary = getHomeDepartureSummary(
+      care,
+      true,
+      "2026-06-26T00:00:00.000Z",
+      new Date("2026-06-25T23:00:00.000Z").getTime(),
+      "departure",
+    );
+    export const departureWaitingSummary = getHomeDepartureSummary(
+      { departureAdvice: { targetArrivalTime: "09:00", travelStatus: "loading" } },
+      true,
+      "2026-06-26T00:00:00.000Z",
+      new Date("2026-06-25T23:00:00.000Z").getTime(),
+      "departure",
+    );
+  `,
+);
+
+await build({
+  entryPoints: [companionEntry],
+  outfile: companionBundle,
+  bundle: true,
+  platform: "node",
+  format: "esm",
+  target: "node20",
+  logLevel: "silent",
+});
+
 const { results } = await import(pathToFileURL(bundled).href);
 const { demoResults } = await import(pathToFileURL(providerBundle).href);
+const { departureSummary, departureWaitingSummary } = await import(pathToFileURL(companionBundle).href);
 const assetRegistrySource = await readFile("apps/mobile/src/assets.ts", "utf8");
 
 assert.equal(results.presetWardrobeIds.length, 54);
@@ -1060,6 +1109,10 @@ assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert
 assert.equal(demoResults.httpProviderGenericCurrentLocation.officialSpecialAlert.title, "호우경보");
 assert.equal(demoResults.multiDestination.notifications.filter((item) => item.type === "destination").length, 2);
 assert.ok(demoResults.departureBasis.notifications.some((item) => item.type === "destination" && item.active && item.scheduledAt === "2026-06-25T23:30:00.000Z"));
+assert.equal(departureSummary.value, "09:45");
+assert.ok(departureSummary.body.includes("도착 예정"));
+assert.equal(departureWaitingSummary.value, "경로 확인 중");
+assert.ok(departureWaitingSummary.body.includes("도착 시간을 안내"));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.pushTitle.includes("가는 길") && item.pushBody.includes("우산")));
@@ -1119,6 +1172,7 @@ assert.deepEqual(demoResults.kmaBaseMorning, { baseDate: "20260626", baseTime: "
 assert.equal(demoResults.seoulWallTime, "2026-06-26T01:00:00.000Z");
 assert.equal(demoResults.newYorkWallTime, "2026-06-26T14:00:00.000Z");
 assert.equal(demoResults.newYorkMinutesUntil, 120);
+assert.equal(demoResults.manualDepartureOrigin?.locationId, "manual-gp-club");
 
 await rm(outDir, { recursive: true, force: true });
 

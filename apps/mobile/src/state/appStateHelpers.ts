@@ -363,6 +363,15 @@ export function getActiveWeatherLocation(
   return mode === "manual" ? manualLocation : deviceLocation ?? seongsuWeatherLocation;
 }
 
+export function getPlaceSearchOrigin(
+  mode: WeatherLocationMode,
+  manualLocation: WeatherLocationPreset,
+  deviceLocation: KmaWeatherLocationPreset | null | undefined,
+  weatherLocation: KmaWeatherLocationPreset | null | undefined,
+): WeatherLocationPreset | null {
+  return mode === "manual" ? manualLocation : deviceLocation ?? weatherLocation ?? null;
+}
+
 export const repeatDayOrder: DestinationRepeatDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 export function compareRepeatDays(a: DestinationRepeatDay, b: DestinationRepeatDay) {
