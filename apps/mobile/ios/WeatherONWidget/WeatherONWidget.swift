@@ -1204,52 +1204,75 @@ private struct WeatherONWidgetPalette {
   let cardBackground: Color
   let cardBorder: Color
   let highlightedCard: Color
+  let highlightedCardBorder: Color
   let backgroundColors: [Color]
 
   init(colorScheme: ColorScheme, condition: String, isNight: Bool) {
     let isDark = colorScheme == .dark
-    primaryText = isDark ? .white : Color(red: 0.04, green: 0.10, blue: 0.18)
-    secondaryText = isDark ? Color.white.opacity(0.70) : Color(red: 0.24, green: 0.32, blue: 0.41)
-    rain = isDark ? Color(red: 0.38, green: 0.78, blue: 1.0) : Color(red: 0.05, green: 0.42, blue: 0.86)
-    cardBackground = isDark ? Color.white.opacity(0.09) : Color.white.opacity(0.70)
-    cardBorder = isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.06)
+    // React Native theme/tokens.ts와 같은 브랜드 팔레트. WidgetKit 확장에서는 TS 토큰을 직접 가져올 수 없음.
+    let darkBackground = Color(red: 7 / 255, green: 30 / 255, blue: 51 / 255)
+    let darkBackgroundAlt = Color(red: 14 / 255, green: 74 / 255, blue: 117 / 255)
+    let darkCard = Color(red: 16 / 255, green: 61 / 255, blue: 95 / 255)
+    let darkCardStrong = Color(red: 11 / 255, green: 46 / 255, blue: 73 / 255)
+    let darkCardSoft = Color(red: 22 / 255, green: 85 / 255, blue: 127 / 255)
+    let darkGold = Color(red: 1, green: 199 / 255, blue: 88 / 255)
+    let darkSky = Color(red: 88 / 255, green: 191 / 255, blue: 1)
+    let darkSkyLite = Color(red: 216 / 255, green: 243 / 255, blue: 1)
+    let darkWarm = Color(red: 1, green: 154 / 255, blue: 102 / 255)
+    let darkText = Color(red: 246 / 255, green: 251 / 255, blue: 1)
+
+    let lightBackground = Color(red: 245 / 255, green: 249 / 255, blue: 252 / 255)
+    let lightBackgroundAlt = Color(red: 215 / 255, green: 234 / 255, blue: 247 / 255)
+    let lightCard = Color.white
+    let lightCardSoft = Color(red: 234 / 255, green: 243 / 255, blue: 250 / 255)
+    let lightGold = Color(red: 194 / 255, green: 65 / 255, blue: 12 / 255)
+    let lightSky = Color(red: 29 / 255, green: 109 / 255, blue: 168 / 255)
+    let lightWarm = Color(red: 200 / 255, green: 74 / 255, blue: 47 / 255)
+    let lightText = Color(red: 20 / 255, green: 32 / 255, blue: 51 / 255)
+
+    primaryText = isDark ? darkText : lightText
+    secondaryText = isDark ? darkSkyLite.opacity(0.90) : lightText.opacity(0.80)
+    rain = isDark ? darkSky : lightSky
+    cardBackground = isDark ? darkCard.opacity(0.78) : lightCard.opacity(0.76)
+    cardBorder = isDark ? darkSkyLite.opacity(0.16) : lightText.opacity(0.12)
 
     switch condition {
     case "clear":
       if isNight {
-        accent = isDark ? Color(red: 0.70, green: 0.86, blue: 1.0) : Color(red: 0.27, green: 0.48, blue: 0.82)
+        accent = isDark ? darkSkyLite : lightSky
         backgroundColors = isDark
-          ? [Color(red: 0.02, green: 0.05, blue: 0.13), Color(red: 0.07, green: 0.14, blue: 0.29)]
-          : [Color(red: 0.82, green: 0.89, blue: 0.98), Color(red: 0.66, green: 0.77, blue: 0.93)]
+          ? [darkBackground, darkCardStrong]
+          : [lightBackgroundAlt, lightCardSoft]
       } else {
-        accent = isDark ? Color(red: 1.0, green: 0.74, blue: 0.25) : Color(red: 0.95, green: 0.48, blue: 0.05)
+        accent = isDark ? darkGold : lightGold
         backgroundColors = isDark
-          ? [Color(red: 0.04, green: 0.08, blue: 0.16), Color(red: 0.10, green: 0.19, blue: 0.30)]
-          : [Color(red: 0.98, green: 0.93, blue: 0.78), Color(red: 0.89, green: 0.96, blue: 1.0)]
+          ? [darkBackground, darkBackgroundAlt]
+          : [lightBackground, lightBackgroundAlt]
       }
     case "rain", "storm":
       accent = rain
       backgroundColors = isDark
-        ? [Color(red: 0.03, green: 0.09, blue: 0.16), Color(red: 0.07, green: 0.23, blue: 0.34)]
-        : [Color(red: 0.82, green: 0.91, blue: 0.98), Color(red: 0.67, green: 0.80, blue: 0.91)]
+        ? [darkBackground, darkCard]
+        : [lightBackgroundAlt, lightCardSoft]
     case "snow":
-      accent = isDark ? Color(red: 0.60, green: 0.91, blue: 1.0) : Color(red: 0.12, green: 0.54, blue: 0.76)
+      accent = isDark ? darkSkyLite : lightSky
       backgroundColors = isDark
-        ? [Color(red: 0.06, green: 0.13, blue: 0.22), Color(red: 0.17, green: 0.28, blue: 0.39)]
-        : [Color(red: 0.92, green: 0.97, blue: 1.0), Color(red: 0.80, green: 0.89, blue: 0.96)]
+        ? [darkCardStrong, darkCardSoft]
+        : [lightCardSoft, lightBackgroundAlt]
     case "dust":
-      accent = isDark ? Color(red: 1.0, green: 0.72, blue: 0.32) : Color(red: 0.74, green: 0.39, blue: 0.08)
+      accent = isDark ? darkWarm : lightWarm
       backgroundColors = isDark
-        ? [Color(red: 0.15, green: 0.11, blue: 0.07), Color(red: 0.28, green: 0.20, blue: 0.11)]
-        : [Color(red: 0.97, green: 0.91, blue: 0.78), Color(red: 0.90, green: 0.83, blue: 0.70)]
+        ? [darkCardStrong, darkBackgroundAlt]
+        : [lightBackground, lightCardSoft]
     default:
-      accent = isDark ? Color(red: 0.48, green: 0.77, blue: 1.0) : Color(red: 0.12, green: 0.42, blue: 0.75)
+      accent = isDark ? darkSky : lightSky
       backgroundColors = isDark
-        ? [Color(red: 0.04, green: 0.10, blue: 0.18), Color(red: 0.08, green: 0.21, blue: 0.32)]
-        : [Color(red: 0.91, green: 0.96, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)]
+        ? [darkBackground, darkCard]
+        : [lightBackground, lightCardSoft]
     }
 
     highlightedCard = accent.opacity(isDark ? 0.16 : 0.12)
+    highlightedCardBorder = accent.opacity(isDark ? 0.40 : 0.32)
   }
 }
 
@@ -1277,7 +1300,7 @@ private extension View {
     )
     .overlay {
       RoundedRectangle(cornerRadius: 11, style: .continuous)
-        .stroke(palette.cardBorder, lineWidth: 0.5)
+        .stroke(highlighted ? palette.highlightedCardBorder : palette.cardBorder, lineWidth: 0.5)
     }
   }
 }
