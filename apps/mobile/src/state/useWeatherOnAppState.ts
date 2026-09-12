@@ -1287,35 +1287,41 @@ export function useWeatherOnAppState() {
   };
 
   const markNotificationRead = useCallback((id: string) => {
+    const wasObserved = notificationHistory.some((item) => item.notificationId === id && (item.action === "received" || item.action === "open"));
+    if (!wasObserved) return;
     setReadNotificationIds((current) => (current.includes(id) ? current : [...current, id]));
-    const notification = state.notifications.find((item) => item.id === id);
     setNotificationHistory((current) =>
       addNotificationHistoryItem(current, {
         id: createNotificationHistoryId(id, "read"),
         notificationId: id,
-        title: notification?.title ?? "알림",
+        title: current.find((item) => item.notificationId === id)?.title ?? "알림",
         action: "read",
         statusLabel: "읽음 처리",
         occurredAt: new Date().toISOString(),
       }),
     );
-  }, [state.notifications]);
+  }, [notificationHistory]);
 
   const markAllNotificationsRead = useCallback(() => {
-    const activeNotificationIds = state.notifications.filter((item) => item.active).map((item) => item.id);
+    const activeNotificationIds = [...new Set(notificationHistory
+      .filter((item) => item.action === "received" || item.action === "open")
+      .map((item) => item.notificationId))];
     if (activeNotificationIds.length === 0) return;
     setReadNotificationIds((current) => [...new Set([...current, ...activeNotificationIds])]);
-    setNotificationHistory((current) =>
-      addNotificationHistoryItem(current, {
-        id: createNotificationHistoryId("all-active", "read"),
-        notificationId: "all-active",
-        title: "오늘 알림",
+    const occurredAt = new Date().toISOString();
+    setNotificationHistory((current) => activeNotificationIds.reduce((items, id) => {
+      const notification = items.find((item) => item.notificationId === id);
+      return addNotificationHistoryItem(items, {
+        id: createNotificationHistoryId(id, "read", notification?.route),
+        notificationId: id,
+        title: notification?.title ?? "알림",
         action: "read",
-        statusLabel: `${activeNotificationIds.length}개 전체 읽음 처리`,
-        occurredAt: new Date().toISOString(),
-      }),
-    );
-  }, [state.notifications]);
+        route: notification?.route,
+        statusLabel: "읽음 처리",
+        occurredAt,
+      });
+    }, current));
+  }, [notificationHistory]);
 
   const clearNotificationHistory = useCallback(() => {
     setNotificationHistory([]);
@@ -1354,33 +1360,35 @@ export function useWeatherOnAppState() {
     setRoute("M2");
   }, [focusSavedDestination, savedDestinations]);
 
-  const openNotificationDeepLink = useCallback((id: string, route: P0RouteId) => {
+  const openNotificationDeepLink = useCallback((id: string, route: P0RouteId, title?: string) => {
     setReadNotificationIds((current) => (current.includes(id) ? current : [...current, id]));
-    const notification = state.notifications.find((item) => item.id === id);
-    setNotificationHistory((current) =>
-      addNotificationHistoryItem(current, {
+    const destinationPlaceId = getNotificationDestinationPlaceId(id);
+    const missingDestination = destinationPlaceId && route === "G2" && !savedDestinations.some((item) => item.place.id === destinationPlaceId);
+    const resolvedRoute = missingDestination ? "G1" : route;
+    setNotificationHistory((current) => {
+      const existingOpen = current.find((item) => item.notificationId === id && item.action === "open");
+      return addNotificationHistoryItem(current, {
         id: createNotificationHistoryId(id, "open", route),
         notificationId: id,
-        title: getNotificationHistoryTitle(id, notification?.title),
+        title: title ?? notificationHistory.find((item) => item.notificationId === id)?.title ?? getNotificationHistoryTitle(id),
         action: "open",
-        route,
-        statusLabel: getNotificationOpenResultLabel(id, route),
-        occurredAt: new Date().toISOString(),
-      }),
-    );
-    const destinationPlaceId = getNotificationDestinationPlaceId(id);
-    if (destinationPlaceId && route === "G2") {
+        route: resolvedRoute,
+        statusLabel: missingDestination ? "목적지 없음 · 목록 이동" : getNotificationOpenResultLabel(id, resolvedRoute),
+        occurredAt: existingOpen?.occurredAt ?? new Date().toISOString(),
+      });
+    });
+    if (destinationPlaceId && resolvedRoute === "G2") {
       const matchedDestination = savedDestinations.find((destination) => destination.place.id === destinationPlaceId);
       if (matchedDestination) focusSavedDestination(matchedDestination);
     }
-    if (route === "M2") {
+    if (resolvedRoute === "M2") {
       setAlertSettingsRouteState({ returnTo: "H1", focus: "general" });
     }
-    if (route === "H3") {
+    if (resolvedRoute === "H3") {
       setOverlayReturnRoutes((current) => ({ ...current, H3: "H1" }));
     }
-    setRoute(route);
-  }, [focusSavedDestination, savedDestinations, state.notifications]);
+    setRoute(resolvedRoute);
+  }, [focusSavedDestination, notificationHistory, savedDestinations]);
 
   const sendTestNotification = useCallback(async (route: P0RouteId = "M2") => {
     if (!permissionReady) {
@@ -1438,7 +1446,7 @@ export function useWeatherOnAppState() {
       if (!active) return;
       const routeFromPayload = getP0RouteFromNotificationPayload(payload.route);
       if (!routeFromPayload) return;
-      openNotificationDeepLink(payload.ruleId ?? "local-notification", routeFromPayload);
+      openNotificationDeepLink(payload.ruleId ?? "local-notification", routeFromPayload, payload.title);
     }).then((remove) => {
       if (active) {
         removeResponseListener = remove;
