@@ -175,7 +175,7 @@ try {
     await clickBell(page);
     console.log(`small-screen: ${viewport.name}/notification-center bell`);
     await assertText(page, "알림 센터", viewport, "notification-center");
-    await assertText(page, "확인할 알림 없음", viewport, "notification-center");
+    await assertText(page, "아직 받은 알림이 없어요", viewport, "notification-center");
     console.log(`small-screen: ${viewport.name}/notification-center text`);
     await checkLayout(page, viewport, "notification-center");
     console.log(`small-screen: ${viewport.name}/notification-center layout`);
