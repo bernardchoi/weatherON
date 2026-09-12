@@ -130,13 +130,16 @@ export function DestinationAddScreen({
         <View
           style={[
             styles.searchField,
-            { backgroundColor: theme.card, borderColor: semanticColor(theme, "accentBorder") },
+            {
+              backgroundColor: theme.name === "light" ? theme.cardSoft : theme.card,
+              borderColor: theme.name === "light" ? semanticColor(theme, "outlineStrong") : semanticColor(theme, "accentBorder"),
+            },
             cardShadow(theme),
             pageStyles.card,
             searchGlassSurface,
           ]}
         >
-          {searchGlassSurface ? <IosGlassBackdrop theme={theme} role="input" style={styles.searchGlassBackdrop} /> : null}
+          {searchGlassSurface ? <IosGlassBackdrop theme={theme} role="input" overlayColor={theme.name === "light" ? theme.cardSoft : undefined} style={styles.searchGlassBackdrop} /> : null}
           <SearchGlyph color={theme.sky} />
           <TextInput
             accessibilityLabel="목적지 검색어"
