@@ -70,3 +70,58 @@ state:
 - [x] 타입 검사, 공용 규칙 검사, 서버 문법 검사, 웹 export, diff 검사
 
 final result: passed
+
+---
+
+# WeatherON C4 하단 행동 통합 디자인 QA
+
+source visual truth path:
+- `/Users/daehyeonchoi/Downloads/IMG_6761.PNG`
+
+implementation screenshot paths:
+- `/private/tmp/weatheron-c4-actions-after.png`
+- `/private/tmp/weatheron-c4-actions-after-bottom.png`
+
+comparison image path:
+- `/private/tmp/weatheron-c4-design-comparison.png`
+
+viewport: 390x844 CSS px, deviceScaleFactor 2
+
+source pixels: 1320x2868
+
+implementation pixels: 780x1688
+
+state note:
+- 원본과 현재 미리보기의 추천 아이템, 일치율, 보유 개수는 다름. 이번 비교는 C4 하단 행동 구조와 카드 위계에 한정함.
+
+## Required fidelity surfaces
+
+- Fonts and typography: 기존 Pretendard 계층과 버튼 굵기를 유지함. 통합 카드 제목과 보조 문구 줄바꿈 없음.
+- Spacing and layout rhythm: 분리된 고정 푸터를 제거하고 저장 행동을 마지막 카드 안에 배치함. 내부 스크롤 최하단에서 카드와 하단 내비게이션이 겹치지 않음.
+- Colors and visual tokens: 저장만 기존 gold 강조를 유지하고 옷장 이동·추가는 outlined 보조 행동으로 낮춤.
+- Image quality: 기존 코디 이미지 소스와 크기·비율을 변경하지 않았고 캡처에서 잘림 없음.
+- Copy and content: `코디로 돌아가기`를 제거하고 제목을 `저장 및 내 옷장`으로 명확히 변경함. 저장 상태·계정 연결·약관 분기 문구 유지함.
+
+## Findings
+
+- P0/P1/P2 잔여 이슈 없음.
+- 원본의 동일 비중 4개 버튼보다 변경안의 1개 주 행동 + 2개 보조 행동이 목적 우선순위를 명확히 함.
+- React Native Web `BackHandler` 경고만 확인됐으며 이번 변경과 무관한 기존 웹 전용 경고임.
+- `check:android-core-flow`는 기존 `코디 탭` aria 탐색에서 실패함. 이번 C4 버튼 변경 전 구간이며 인앱 브라우저의 실제 코디 탭·상세 진입은 통과함.
+
+## Interaction and responsive checks
+
+- 390x844에서 가로 넘침 없음: scrollWidth 390, innerWidth 390.
+- C4 버튼은 저장, 내 옷장 보기, 아이템 추가만 노출되며 `코디로 돌아가기` 없음.
+- 저장 버튼 선택 시 `계정 연결` 흐름으로 이동하고 뒤로 가기 시 C4 통합 카드로 복귀함.
+- 인앱 브라우저와 반복 캡처에서 상단·하단 스크롤 상태 확인함.
+
+## Implementation checklist
+
+- [x] `코디로 돌아가기` 삭제
+- [x] 저장 완료 피드백과 저장 CTA를 내 옷장 카드에 통합
+- [x] 옷장 관련 행동을 outlined 보조 CTA로 정리
+- [x] TypeScript, web export, diff 검사
+- [x] 390x844 레이아웃, 내부 스크롤, 저장 진입 동작 확인
+
+final result: passed
