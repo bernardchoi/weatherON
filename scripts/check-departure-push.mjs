@@ -7,7 +7,8 @@ const now = Date.now();
 const input = { activityId: 'activity-1', pushToken: 'ab'.repeat(32), departureAt: new Date(now + 60000).toISOString(), bundleId: 'com.weatheron.mobile', pushEnvironment: 'production' };
 const job = normalizeDeparturePush(input, env, now);
 assert.ok(job);
-for (const bad of [{ pushToken: 'bad' }, { bundleId: 'other.app' }, { departureAt: 'bad' }, { departureAt: new Date(now+66*60000).toISOString() }, { pushEnvironment: 'other' }]) assert.equal(normalizeDeparturePush({ ...input, ...bad }, env, now), null);
+assert.ok(normalizeDeparturePush({ ...input, departureAt: new Date(now + 7 * 24 * 60 * 60_000).toISOString() }, env, now));
+for (const bad of [{ pushToken: 'bad' }, { bundleId: 'other.app' }, { departureAt: 'bad' }, { departureAt: new Date(now + 9 * 24 * 60 * 60_000).toISOString() }, { pushEnvironment: 'other' }]) assert.equal(normalizeDeparturePush({ ...input, ...bad }, env, now), null);
 const jwt = getApnsProviderToken(env, now).split('.');
 assert.deepEqual(JSON.parse(Buffer.from(jwt[0], 'base64url')), { alg: 'ES256', kid: env.APNS_KEY_ID });
 assert.equal(verify('sha256', Buffer.from(jwt.slice(0,2).join('.')), { key: publicKey, dsaEncoding: 'ieee-p1363' }, Buffer.from(jwt[2], 'base64url')), true);
@@ -18,6 +19,8 @@ await sendDepartureEndPush(job, env, async (url, options) => {
   const aps = JSON.parse(options.body).aps;
   assert.equal(aps.event, 'end');
   assert.equal(aps['content-state'].isCompleted, true);
+  assert.equal(aps['content-state'].phase, 'completed');
+  assert.equal(aps['content-state'].guidanceSymbol, 'location.north.fill');
   assert.ok(aps['dismissal-date'] < job.departureMs/1000);
   return new Response(null, { status: 200 });
 });
@@ -58,9 +61,22 @@ const ts = (await import('typescript')).default;
 const compile = path => ts.transpileModule(readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
 const shared = {};
 new Function('exports',compile('apps/mobile/src/providers/departureLiveActivity.shared.ts'))(shared);
-let nativeStatus={supported:true,enabled:true,active:true,...input};
+assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now + 60 * 60_000).toISOString(), now), true);
+assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now + 60 * 60_000 + 1).toISOString(), now), false);
+assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now + 59_999).toISOString(), now), true);
+assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now).toISOString(), now), false);
+assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now - 1).toISOString(), now), false);
+assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now + 60 * 60_000).toISOString(), now), 0);
+assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now + 60 * 60_000 + 1).toISOString(), now), 1);
+assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now).toISOString(), now), null);
+assert.equal(shared.getDepartureGuidanceSymbol('우산 챙겨요'),'umbrella.fill');
+assert.equal(shared.getDepartureGuidanceSymbol('바람이 강해요'),'wind');
+assert.equal(shared.getDepartureGuidanceSymbol('가볍게 출발해요'),'figure.walk.departure');
+let nativeStatus={supported:true,enabled:true,active:true,automaticStartSupported:true,guidance:'우산 챙겨요',...input};
 let listener;
 let requests=0;
+let starts=0;
+let ends=0;
 let fail=true;
 const bridge={};
 new Function('exports','require',compile('apps/mobile/src/providers/departureLiveActivity.ios.ts'))(bridge,name=>{
@@ -69,7 +85,17 @@ new Function('exports','require',compile('apps/mobile/src/providers/departureLiv
     requests++; assert.equal(path,'/live-activities/departure');assert.equal(body.pushToken,nativeStatus.pushToken);assert.equal(body.method,undefined);
     if(fail)throw Error('offline');return {scheduled:true};
   }};
-  return {__esModule:true,default:{addListener:(_,callback)=>{listener=callback;},getDepartureActivityStatus:async()=>JSON.stringify(nativeStatus)}};
+  return {__esModule:true,default:{
+    addListener:(_,callback)=>{listener=callback;},
+    getDepartureActivityStatus:async()=>JSON.stringify(nativeStatus),
+    startDepartureActivity:async payloadJson=>{
+      starts++;
+      const payload=JSON.parse(payloadJson);
+      nativeStatus={...nativeStatus,...payload,active:true,scheduled:false};
+      return JSON.stringify(nativeStatus);
+    },
+    endDepartureActivity:async()=>{ends++;nativeStatus={supported:true,enabled:true,active:false,automaticStartSupported:true};return true;},
+  }};
 });
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false);
 fail=false;
@@ -79,6 +105,20 @@ nativeStatus={...nativeStatus,pushToken:'ef'.repeat(32)};
 listener({status:JSON.stringify(nativeStatus)});
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,true);
 assert.equal(requests,3);
+const activityInput={destinationId:'destination-1',destinationName:'서울역',departureAt:input.departureAt,departureTimeLabel:'15:00',guidance:'우산 챙겨요',guidanceSymbol:'umbrella.fill',deepLink:'weatheron://destination?id=destination-1'};
+nativeStatus={...nativeStatus,...activityInput};
+await bridge.syncAutomaticDepartureLiveActivity(activityInput);
+assert.equal(starts,0,'unchanged content must not restart the activity');
+await Promise.all([
+  bridge.syncAutomaticDepartureLiveActivity({...activityInput,guidance:'바람이 강해요',guidanceSymbol:'wind'}),
+  bridge.syncAutomaticDepartureLiveActivity({...activityInput,guidance:'가볍게 출발해요',guidanceSymbol:'figure.walk.departure'}),
+]);
+assert.equal(starts,1,'rapid changes must apply only the latest content');
+assert.equal(nativeStatus.guidance,'가볍게 출발해요');
+await bridge.syncAutomaticDepartureLiveActivity({...activityInput,departureAt:new Date(now+2*60_000).toISOString()});
+assert.equal(starts,2,'schedule changes must replace the current activity');
+await bridge.syncAutomaticDepartureLiveActivity(null);
+assert.equal(ends,1,'turning destination care off must end the current activity');
 console.log('iOS registration: actual request body, retry, deduplication and token event passed');
 
 env.APNS_SANDBOX_KEY_ID = 'SANDBOXKEY';

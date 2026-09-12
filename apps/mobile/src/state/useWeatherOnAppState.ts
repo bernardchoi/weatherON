@@ -52,6 +52,7 @@ import {
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
 import {
   getDepartureLiveActivityActivationDelay,
+  getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
   syncAutomaticDepartureLiveActivity,
   type DepartureLiveActivityInput,
@@ -810,6 +811,7 @@ export function useWeatherOnAppState() {
       departureAt: selectedDestinationDepartureAt,
       departureTimeLabel: `${String(departureParts.hour).padStart(2, "0")}:${String(departureParts.minute).padStart(2, "0")}`,
       guidance: automaticDepartureGuidance,
+      guidanceSymbol: getDepartureGuidanceSymbol(automaticDepartureGuidance),
       deepLink: `weatheron://destination?id=${encodeURIComponent(selectedDestinationPlace.id)}`,
     };
   }, [
@@ -843,23 +845,25 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated) return;
+    let active = true;
     let activationTimer: ReturnType<typeof setTimeout> | null = null;
-    const syncActivity = () => {
-      void syncAutomaticDepartureLiveActivity(automaticDepartureActivityInput);
-    };
-    syncActivity();
-
-    if (automaticDepartureActivityInput) {
+    const syncActivity = async () => {
+      if (activationTimer) clearTimeout(activationTimer);
+      activationTimer = null;
+      const status = await syncAutomaticDepartureLiveActivity(automaticDepartureActivityInput);
+      if (!active || status.automaticStartSupported || !automaticDepartureActivityInput) return;
       const delay = getDepartureLiveActivityActivationDelay(automaticDepartureActivityInput.departureAt);
       if (delay !== null && delay > 0) {
-        activationTimer = setTimeout(syncActivity, Math.min(delay + 500, 2_147_483_647));
+        activationTimer = setTimeout(() => void syncActivity(), Math.min(delay + 500, 2_147_483_647));
       }
-    }
+    };
+    void syncActivity();
 
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") syncActivity();
+      if (nextState === "active") void syncActivity();
     });
     return () => {
+      active = false;
       subscription.remove();
       if (activationTimer) clearTimeout(activationTimer);
     };

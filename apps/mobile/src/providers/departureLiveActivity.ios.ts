@@ -12,16 +12,40 @@ export type { DepartureLiveActivityInput, DepartureLiveActivityStatus } from "./
 export {
   departureLiveActivityAutoLeadMinutes,
   getDepartureLiveActivityActivationDelay,
+  getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
   isDepartureLiveActivityAutoWindow,
 } from "./departureLiveActivity.shared";
 
 let registeredToken = "";
 const pendingRegistrations = new Map<string, Promise<boolean>>();
+const registrationRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const registrationRetryAttempts = new Map<string, number>();
+
+function clearRegistrationRetry(key: string) {
+  const timer = registrationRetryTimers.get(key);
+  if (timer) clearTimeout(timer);
+  registrationRetryTimers.delete(key);
+  registrationRetryAttempts.delete(key);
+}
+
+function scheduleRegistrationRetry(key: string) {
+  if (registrationRetryTimers.has(key) || !WeatheronWidgetDataModule) return;
+  const nativeModule = WeatheronWidgetDataModule;
+  const attempt = registrationRetryAttempts.get(key) ?? 0;
+  const delay = Math.min(15_000 * 2 ** attempt, 5 * 60_000);
+  registrationRetryAttempts.set(key, attempt + 1);
+  registrationRetryTimers.set(key, setTimeout(() => {
+    registrationRetryTimers.delete(key);
+    void nativeModule.getDepartureActivityStatus()
+      .then(registerAutomaticEnd)
+      .catch(() => scheduleRegistrationRetry(key));
+  }, delay));
+}
 
 async function registerAutomaticEnd(raw: string): Promise<DepartureLiveActivityStatus> {
   const status = parseDepartureLiveActivityStatus(raw);
-  if (!status.active) return status;
+  if (!status.active && !status.scheduled) return status;
   const native = JSON.parse(raw) as Record<string, unknown>;
   const token = typeof native.pushToken === "string" ? native.pushToken : "";
   if (!token) return { ...status, automaticEndScheduled: false };
@@ -33,9 +57,15 @@ async function registerAutomaticEnd(raw: string): Promise<DepartureLiveActivityS
       activityId: status.activityId, departureAt: status.departureAt,
       pushToken: token, bundleId: native.bundleId, pushEnvironment: native.pushEnvironment,
     }).then((response) => {
-      if (response.scheduled) registeredToken = key;
+      if (response.scheduled) {
+        registeredToken = key;
+        clearRegistrationRetry(key);
+      }
       return response.scheduled === true;
-    }).catch(() => false).finally(() => pendingRegistrations.delete(key));
+    }).catch(() => {
+      scheduleRegistrationRetry(key);
+      return false;
+    }).finally(() => pendingRegistrations.delete(key));
     pendingRegistrations.set(key, pending);
   }
   return { ...status, automaticEndScheduled: await pending };
@@ -78,11 +108,35 @@ export async function endDepartureLiveActivity(): Promise<boolean> {
 export async function syncAutomaticDepartureLiveActivity(
   input: DepartureLiveActivityInput | null,
 ): Promise<DepartureLiveActivityStatus> {
+  const revision = ++automaticSyncRevision;
+  automaticSyncQueue = automaticSyncQueue
+    .catch(() => unavailableDepartureLiveActivityStatus)
+    .then(() => revision === automaticSyncRevision
+      ? performAutomaticDepartureLiveActivitySync(input)
+      : getDepartureLiveActivityStatus());
+  return automaticSyncQueue;
+}
+
+let automaticSyncRevision = 0;
+let automaticSyncQueue = Promise.resolve<DepartureLiveActivityStatus>(unavailableDepartureLiveActivityStatus);
+
+async function performAutomaticDepartureLiveActivitySync(
+  input: DepartureLiveActivityInput | null,
+): Promise<DepartureLiveActivityStatus> {
   const status = await getDepartureLiveActivityStatus();
   if (!status.supported || !status.enabled) return status;
 
-  if (!input || !isDepartureLiveActivityAutoWindow(input.departureAt)) {
-    if (status.active) {
+  const departureMs = input ? new Date(input.departureAt).getTime() : Number.NaN;
+  if (!input || !Number.isFinite(departureMs) || departureMs <= Date.now()) {
+    if (status.active || status.scheduled || status.lifecycle === "stale") {
+      await endDepartureLiveActivity();
+      return getDepartureLiveActivityStatus();
+    }
+    return status;
+  }
+
+  if (!status.automaticStartSupported && !isDepartureLiveActivityAutoWindow(input.departureAt)) {
+    if (status.active || status.scheduled) {
       await endDepartureLiveActivity();
       return getDepartureLiveActivityStatus();
     }
@@ -90,10 +144,11 @@ export async function syncAutomaticDepartureLiveActivity(
   }
 
   if (
-    status.active &&
+    (status.active || status.scheduled) &&
     status.destinationId === input.destinationId &&
     status.departureAt &&
-    Math.abs(new Date(status.departureAt).getTime() - new Date(input.departureAt).getTime()) < 1_000
+    Math.abs(new Date(status.departureAt).getTime() - departureMs) < 1_000 &&
+    status.guidance === input.guidance
   ) {
     return status;
   }

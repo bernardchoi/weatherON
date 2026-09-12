@@ -120,7 +120,8 @@ export function DestinationCareScreen({
     selectedDestinationAlertCondition.windThresholdMs,
   );
   const departureActivityMatchesDestination =
-    departureActivityStatus.active && departureActivityStatus.destinationId === selectedDestinationPlace.id;
+    (departureActivityStatus.active || departureActivityStatus.scheduled) &&
+    departureActivityStatus.destinationId === selectedDestinationPlace.id;
   const departureActivityMatchesCurrentPlan = departureActivityMatchesDestination && Boolean(
     departureActivityStatus.departureAt &&
     selectedDestinationDepartureAt &&
@@ -137,11 +138,17 @@ export function DestinationCareScreen({
     : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const preparationCopy = getPreparationCopy(destinationRain, destinationWeather.current.windMs, departureWeatherGuidance);
   const liveActivityMeta = departureActivityMatchesDestination
-    ? `${departureTime}까지 표시 중`
+    ? departureActivityStatus.automaticEndScheduled === false
+      ? "종료 연결 재시도 중"
+      : departureActivityStatus.scheduled
+        ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 시작 예약됨`
+        : `${departureTime}까지 표시 중`
     : destinationCareEnabled && departureActivityStatus.supported && !departureActivityStatus.enabled
       ? "설정에서 허용 필요"
       : destinationCareEnabled && departureReady
-        ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 자동`
+        ? departureActivityStatus.automaticStartSupported
+          ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 자동 시작`
+          : `앱 실행 중 ${departureLiveActivityAutoLeadMinutes}분 전 시작`
         : destinationCareEnabled ? "시간 계산 후 자동" : "케어 꺼짐";
 
   const openDirections = async () => {

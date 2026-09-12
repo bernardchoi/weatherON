@@ -4,11 +4,15 @@ import Foundation
 public struct WeatherONDepartureActivityAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
     public let guidance: String
+    public let guidanceSymbol: String?
     public let isCompleted: Bool
+    public let phase: String?
 
-    public init(guidance: String, isCompleted: Bool) {
+    public init(guidance: String, guidanceSymbol: String? = nil, isCompleted: Bool, phase: String? = nil) {
       self.guidance = guidance
+      self.guidanceSymbol = guidanceSymbol
       self.isCompleted = isCompleted
+      self.phase = phase
     }
   }
 

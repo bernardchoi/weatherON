@@ -7,6 +7,8 @@ private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetSnapshotKey = "weatheron.widget.store.v2"
 private let widgetSnapshotRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
 private let widgetKind = "WeatherONLocationWidgetV4"
+private let departureActivityLeadTime: TimeInterval = 60 * 60
+private let departureActivityRecoveryGrace: TimeInterval = 2 * 60
 
 private struct DepartureActivityPayload: Decodable {
   let destinationId: String
@@ -14,6 +16,7 @@ private struct DepartureActivityPayload: Decodable {
   let departureAt: String
   let departureTimeLabel: String
   let guidance: String
+  let guidanceSymbol: String
   let deepLink: String
 }
 
@@ -101,8 +104,8 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     }
 
     AsyncFunction("getDepartureActivityStatus") { () async -> String in
-      await self.endExpiredDepartureActivities()
-      if let activity = Activity<WeatherONDepartureActivityAttributes>.activities.first(where: { $0.activityState == .active && $0.attributes.departureAt > Date() }) {
+      await self.recoverLongExpiredDepartureActivities()
+      if let activity = self.currentDepartureActivity() {
         self.observePushToken(for: activity)
       }
       return self.departureActivityStatusJson()
@@ -125,7 +128,6 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
         throw DepartureActivityError.departureDatePassed
       }
 
-      await self.endAllDepartureActivities()
       let attributes = WeatherONDepartureActivityAttributes(
         destinationId: payload.destinationId,
         destinationName: payload.destinationName,
@@ -135,14 +137,44 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       )
       let state = WeatherONDepartureActivityAttributes.ContentState(
         guidance: payload.guidance,
-        isCompleted: false
+        guidanceSymbol: payload.guidanceSymbol,
+        isCompleted: false,
+        phase: "upcoming"
       )
       let content = ActivityContent(state: state, staleDate: departureAt, relevanceScore: 80)
-      let activity = try Activity<WeatherONDepartureActivityAttributes>.request(
-        attributes: attributes,
-        content: content,
-        pushType: .token
-      )
+
+      if let activity = self.matchingDepartureActivity(attributes: attributes) {
+        await self.endOtherDepartureActivities(keeping: activity.id)
+        await activity.update(content)
+        self.observePushToken(for: activity)
+        self.scheduleAutomaticEnd(for: activity)
+        return self.departureActivityStatusJson(activity: activity)
+      }
+
+      await self.endAllDepartureActivities()
+      let startAt = departureAt.addingTimeInterval(-departureActivityLeadTime)
+      let activity: Activity<WeatherONDepartureActivityAttributes>
+      if #available(iOS 26.0, *), startAt > Date() {
+        let alert = AlertConfiguration(
+          title: "출발 준비 시작",
+          body: "\(payload.destinationName) 출발까지 60분 남았어요",
+          sound: .default
+        )
+        activity = try Activity<WeatherONDepartureActivityAttributes>.request(
+          attributes: attributes,
+          content: content,
+          pushType: .token,
+          style: .standard,
+          alertConfiguration: alert,
+          start: startAt
+        )
+      } else {
+        activity = try Activity<WeatherONDepartureActivityAttributes>.request(
+          attributes: attributes,
+          content: content,
+          pushType: .token
+        )
+      }
       self.observePushToken(for: activity)
       self.scheduleAutomaticEnd(for: activity)
       return self.departureActivityStatusJson(activity: activity)
@@ -195,7 +227,9 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       Task {
         let finalState = WeatherONDepartureActivityAttributes.ContentState(
           guidance: "출발 시각이 되었어요",
-          isCompleted: true
+          guidanceSymbol: "location.north.fill",
+          isCompleted: true,
+          phase: "completed"
         )
         let finalContent = ActivityContent(state: finalState, staleDate: nil, relevanceScore: 0)
         await activity.end(finalContent, dismissalPolicy: .immediate)
@@ -205,12 +239,15 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
   }
 
-  private func endExpiredDepartureActivities() async {
+  private func recoverLongExpiredDepartureActivities() async {
     let now = Date()
-    for activity in Activity<WeatherONDepartureActivityAttributes>.activities where activity.attributes.departureAt <= now {
+    for activity in Activity<WeatherONDepartureActivityAttributes>.activities
+      where activity.attributes.departureAt.addingTimeInterval(departureActivityRecoveryGrace) <= now {
       let finalState = WeatherONDepartureActivityAttributes.ContentState(
-        guidance: "출발 시각이 되었어요",
-        isCompleted: true
+        guidance: "출발 정보가 만료됐어요",
+        guidanceSymbol: "exclamationmark.clock.fill",
+        isCompleted: true,
+        phase: "expired"
       )
       let finalContent = ActivityContent(state: finalState, staleDate: nil, relevanceScore: 0)
       await activity.end(finalContent, dismissalPolicy: .immediate)
@@ -228,22 +265,63 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     }
   }
 
+  private func endOtherDepartureActivities(keeping activityId: String) async {
+    for activity in Activity<WeatherONDepartureActivityAttributes>.activities where activity.id != activityId {
+      await activity.end(nil, dismissalPolicy: .immediate)
+    }
+  }
+
+  private func matchingDepartureActivity(
+    attributes: WeatherONDepartureActivityAttributes
+  ) -> Activity<WeatherONDepartureActivityAttributes>? {
+    Activity<WeatherONDepartureActivityAttributes>.activities.first {
+      self.isTrackedDepartureActivity($0) &&
+      $0.attributes.destinationId == attributes.destinationId &&
+      abs($0.attributes.departureAt.timeIntervalSince(attributes.departureAt)) < 1 &&
+      $0.attributes.destinationName == attributes.destinationName &&
+      $0.attributes.departureTimeLabel == attributes.departureTimeLabel &&
+      $0.attributes.deepLink == attributes.deepLink
+    }
+  }
+
+  private func currentDepartureActivity() -> Activity<WeatherONDepartureActivityAttributes>? {
+    Activity<WeatherONDepartureActivityAttributes>.activities
+      .filter(self.isTrackedDepartureActivity)
+      .max { $0.attributes.departureAt < $1.attributes.departureAt }
+  }
+
+  private func isTrackedDepartureActivity(_ activity: Activity<WeatherONDepartureActivityAttributes>) -> Bool {
+    if activity.activityState == .active || activity.activityState == .stale { return true }
+    if #available(iOS 26.0, *), activity.activityState == .pending { return true }
+    return false
+  }
+
+  private func departureActivityLifecycle(_ activity: Activity<WeatherONDepartureActivityAttributes>?) -> String {
+    guard let activity else { return "inactive" }
+    if activity.activityState == .stale { return "stale" }
+    if #available(iOS 26.0, *), activity.activityState == .pending { return "scheduled" }
+    return activity.activityState == .active ? "active" : "inactive"
+  }
+
   private func departureActivityStatusJson(
     activity: Activity<WeatherONDepartureActivityAttributes>? = nil
   ) -> String {
-    let activeActivity = activity ?? Activity<WeatherONDepartureActivityAttributes>.activities
-      .filter { $0.activityState == .active && $0.attributes.departureAt > Date() }
-      .max { $0.attributes.departureAt < $1.attributes.departureAt }
+    let activeActivity = activity ?? self.currentDepartureActivity()
+    let lifecycle = self.departureActivityLifecycle(activeActivity)
     let payload: [String: Any] = [
       "pushToken": activeActivity?.pushToken?.map { String(format: "%02x", $0) }.joined() ?? "",
       "bundleId": Bundle.main.bundleIdentifier ?? "",
       "pushEnvironment": self.pushEnvironment(),
       "supported": true,
       "enabled": ActivityAuthorizationInfo().areActivitiesEnabled,
-      "active": activeActivity != nil,
+      "active": lifecycle == "active",
+      "scheduled": lifecycle == "scheduled",
+      "automaticStartSupported": ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 26,
+      "lifecycle": lifecycle,
       "activityId": activeActivity?.id ?? "",
       "destinationId": activeActivity?.attributes.destinationId ?? "",
       "departureAt": activeActivity.map { ISO8601DateFormatter().string(from: $0.attributes.departureAt) } ?? "",
+      "guidance": activeActivity?.content.state.guidance ?? "",
     ]
     guard
       let data = try? JSONSerialization.data(withJSONObject: payload),

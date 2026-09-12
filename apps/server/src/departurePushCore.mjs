@@ -2,7 +2,7 @@ import { sign } from "node:crypto";
 
 export const DEPARTURE_PUSH_ROUTE = "/live-activities/departure";
 const MAX_BODY_BYTES = 4096;
-const MAX_LEAD_MS = 65 * 60_000;
+const MAX_LEAD_MS = 8 * 24 * 60 * 60_000;
 const RETRY_WINDOW_MS = 60 * 60_000;
 const providerTokenCache = new Map();
 
@@ -110,7 +110,12 @@ export function departureEndPayload(departureMs, now = Date.now()) {
   return { aps: {
     timestamp: Math.floor(now / 1000),
     event: "end",
-    "content-state": { guidance: "출발 시각이 되었어요", isCompleted: true },
+    "content-state": {
+      guidance: "출발 시각이 되었어요",
+      guidanceSymbol: "location.north.fill",
+      isCompleted: true,
+      phase: "completed",
+    },
     "dismissal-date": Math.floor(departureMs / 1000) - 1,
   } };
 }

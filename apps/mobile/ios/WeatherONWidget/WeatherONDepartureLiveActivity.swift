@@ -20,7 +20,12 @@ struct WeatherONDepartureLiveActivity: Widget {
           WeatherONDepartureExpandedLabel()
         }
         DynamicIslandExpandedRegion(.trailing) {
-          WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .expanded)
+          WeatherONDepartureCountdown(
+            departureAt: context.attributes.departureAt,
+            isStale: context.isStale,
+            isCompleted: context.state.isCompleted,
+            style: .expanded
+          )
         }
         DynamicIslandExpandedRegion(.center) {
           Text(context.attributes.destinationName)
@@ -32,7 +37,8 @@ struct WeatherONDepartureLiveActivity: Widget {
         }
         DynamicIslandExpandedRegion(.bottom) {
           WeatherONDepartureExpandedSummary(
-            guidance: context.state.guidance,
+            guidance: context.isStale ? "출발 정보가 만료됐어요" : context.state.guidance,
+            guidanceSymbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol,
             departureTimeLabel: context.attributes.departureTimeLabel
           )
           .accessibilityElement(children: .combine)
@@ -43,7 +49,12 @@ struct WeatherONDepartureLiveActivity: Widget {
           .foregroundStyle(departureGold)
           .accessibilityLabel("출발 안내")
       } compactTrailing: {
-        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .compact)
+        WeatherONDepartureCountdown(
+          departureAt: context.attributes.departureAt,
+          isStale: context.isStale,
+          isCompleted: context.state.isCompleted,
+          style: .compact
+        )
       } minimal: {
         Image(systemName: "location.north.fill")
           .foregroundStyle(departureGold)
@@ -67,6 +78,7 @@ private struct WeatherONDepartureExpandedLabel: View {
 
 private struct WeatherONDepartureExpandedSummary: View {
   let guidance: String
+  let guidanceSymbol: String?
   let departureTimeLabel: String
 
   var body: some View {
@@ -76,7 +88,7 @@ private struct WeatherONDepartureExpandedSummary: View {
           .lineLimit(1)
           .minimumScaleFactor(0.72)
       } icon: {
-        Image(systemName: "cloud.rain.fill")
+        Image(systemName: guidanceSymbol ?? "figure.walk.departure")
           .foregroundStyle(departureSky)
       }
       .font(.caption.weight(.medium))
@@ -104,6 +116,14 @@ private struct WeatherONDepartureExpandedSummary: View {
 private struct WeatherONDepartureLockScreenView: View {
   let context: ActivityViewContext<WeatherONDepartureActivityAttributes>
 
+  private var displayedGuidance: String {
+    context.isStale ? "출발 정보가 만료됐어요" : context.state.guidance
+  }
+
+  private var displayedGuidanceSymbol: String {
+    context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol ?? "figure.walk.departure"
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -115,9 +135,16 @@ private struct WeatherONDepartureLockScreenView: View {
             .font(.title3.bold())
             .foregroundStyle(.white)
             .lineLimit(1)
+            .minimumScaleFactor(0.68)
+            .allowsTightening(true)
         }
         Spacer(minLength: 8)
-        WeatherONDepartureCountdown(departureAt: context.attributes.departureAt, style: .lockScreen)
+        WeatherONDepartureCountdown(
+          departureAt: context.attributes.departureAt,
+          isStale: context.isStale,
+          isCompleted: context.state.isCompleted,
+          style: .lockScreen
+        )
       }
 
       HStack(spacing: 12) {
@@ -127,7 +154,10 @@ private struct WeatherONDepartureLockScreenView: View {
         Rectangle()
           .fill(Color.white.opacity(0.18))
           .frame(width: 1, height: 18)
-        Label(context.state.guidance, systemImage: "cloud.rain.fill")
+        Label(
+          displayedGuidance,
+          systemImage: displayedGuidanceSymbol
+        )
           .font(.caption)
           .foregroundStyle(.white.opacity(0.88))
           .lineLimit(2)
@@ -137,7 +167,7 @@ private struct WeatherONDepartureLockScreenView: View {
     .background(departureCard.opacity(0.34))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
-      "\(context.attributes.destinationName), 권장 출발 시각 \(context.attributes.departureTimeLabel), \(context.state.guidance)"
+      "\(context.attributes.destinationName), \(context.isStale ? "출발 정보 만료" : "출발까지 남은 시간"), 권장 출발 시각 \(context.attributes.departureTimeLabel), \(displayedGuidance)"
     )
   }
 }
@@ -150,6 +180,8 @@ private struct WeatherONDepartureCountdown: View {
   }
 
   let departureAt: Date
+  let isStale: Bool
+  let isCompleted: Bool
   let style: Style
 
   private var showsHours: Bool {
@@ -157,17 +189,31 @@ private struct WeatherONDepartureCountdown: View {
   }
 
   var body: some View {
-    Text(
-      timerInterval: Date()...max(Date(), departureAt),
-      countsDown: true,
-      showsHours: showsHours
-    )
+    Group {
+      if isCompleted {
+        statusText(compact: "출발", regular: "출발 시각")
+      } else if isStale {
+        statusText(compact: "지남", regular: "출발 시각 지남")
+      } else {
+        Text(
+          timerInterval: Date()...max(Date(), departureAt),
+          countsDown: true,
+          showsHours: showsHours
+        )
+      }
+    }
       .font(countdownFont)
       .foregroundStyle(departureGold)
       .lineLimit(1)
       .minimumScaleFactor(0.7)
       .frame(maxWidth: maximumWidth, alignment: .trailing)
-      .accessibilityLabel("출발까지 남은 시간")
+      .accessibilityLabel(
+        isCompleted ? "출발 시각 도달" : isStale ? "출발 시각 지남, 정보 만료" : "출발까지 남은 시간"
+      )
+  }
+
+  private func statusText(compact: String, regular: String) -> Text {
+    Text(style == .compact ? compact : regular)
   }
 
   private var countdownFont: Font {
@@ -203,8 +249,10 @@ private struct WeatherONDepartureLiveActivityPreviews: PreviewProvider {
     deepLink: "weatheron://destination?id=preview-seongsu"
   )
   static let state = WeatherONDepartureActivityAttributes.ContentState(
-    guidance: "비 대비 우산 필요 · 강풍 위험 낮음",
-    isCompleted: false
+    guidance: "우산 챙겨요",
+    guidanceSymbol: "umbrella.fill",
+    isCompleted: false,
+    phase: "upcoming"
   )
 
   static var previews: some View {

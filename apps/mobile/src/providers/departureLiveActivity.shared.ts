@@ -8,6 +8,7 @@ export type DepartureLiveActivityInput = {
   departureAt: string;
   departureTimeLabel: string;
   guidance: string;
+  guidanceSymbol: string;
   deepLink: string;
 };
 
@@ -15,10 +16,14 @@ export type DepartureLiveActivityStatus = {
   supported: boolean;
   enabled: boolean;
   active: boolean;
+  scheduled?: boolean;
+  automaticStartSupported?: boolean;
   automaticEndScheduled?: boolean;
   activityId?: string;
   destinationId?: string;
   departureAt?: string;
+  guidance?: string;
+  lifecycle?: "inactive" | "scheduled" | "active" | "stale";
 };
 
 export const unavailableDepartureLiveActivityStatus: DepartureLiveActivityStatus = {
@@ -58,10 +63,16 @@ export function getDepartureWeatherGuidance(
   const maxWindMs = Math.max(weather.current.windMs, ...upcoming.map((item) => item.windMs));
   const rainRisk = maxRainProbabilityPct >= rainThresholdPct;
   const windRisk = maxWindMs >= windThresholdMs;
-  if (rainRisk && windRisk) return "비·강풍 대비 필요";
-  if (rainRisk) return "비 대비 필요 · 강풍 위험 낮음";
-  if (windRisk) return "비 위험 낮음 · 강풍 대비 필요";
-  return "비·강풍 위험 낮음";
+  if (rainRisk && windRisk) return "우산 챙기고 강풍 조심해요";
+  if (rainRisk) return "우산 챙겨요";
+  if (windRisk) return "바람이 강해요";
+  return "가볍게 출발해요";
+}
+
+export function getDepartureGuidanceSymbol(guidance: string): string {
+  if (guidance.includes("우산")) return "umbrella.fill";
+  if (guidance.includes("바람")) return "wind";
+  return "figure.walk.departure";
 }
 
 export function parseDepartureLiveActivityStatus(value: string): DepartureLiveActivityStatus {
@@ -71,9 +82,15 @@ export function parseDepartureLiveActivityStatus(value: string): DepartureLiveAc
       supported: parsed.supported === true,
       enabled: parsed.enabled === true,
       active: parsed.active === true,
+      scheduled: parsed.scheduled === true,
+      automaticStartSupported: parsed.automaticStartSupported === true,
       activityId: typeof parsed.activityId === "string" && parsed.activityId ? parsed.activityId : undefined,
       destinationId: typeof parsed.destinationId === "string" && parsed.destinationId ? parsed.destinationId : undefined,
       departureAt: typeof parsed.departureAt === "string" && parsed.departureAt ? parsed.departureAt : undefined,
+      guidance: typeof parsed.guidance === "string" && parsed.guidance ? parsed.guidance : undefined,
+      lifecycle: ["inactive", "scheduled", "active", "stale"].includes(String(parsed.lifecycle))
+        ? parsed.lifecycle as DepartureLiveActivityStatus["lifecycle"]
+        : undefined,
     };
   } catch {
     return unavailableDepartureLiveActivityStatus;

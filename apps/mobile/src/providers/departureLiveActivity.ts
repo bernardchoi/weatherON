@@ -8,6 +8,7 @@ export type { DepartureLiveActivityInput, DepartureLiveActivityStatus } from "./
 export {
   departureLiveActivityAutoLeadMinutes,
   getDepartureLiveActivityActivationDelay,
+  getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
   isDepartureLiveActivityAutoWindow,
 } from "./departureLiveActivity.shared";
