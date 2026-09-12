@@ -30,6 +30,10 @@ assert.match(departure({ departureAdvice: { ...care.departureAdvice, recommended
 console.log("Shared home: weather guidance, unavailable routes, schedule dates and timezone checks passed");
 
 const homeSource = readFileSync('apps/mobile/src/screens/HomeScreen.tsx', 'utf8');
+assert.match(homeSource, /getDestinationVisualKind\(place\)/, 'destination button must use the shared place-type classifier');
+assert.match(homeSource, /kind === "church".*uiIconAssets\.placeChurch/, 'church destinations must use the church icon');
+assert.match(homeSource, /iosDepartureStatus/, 'non-clock departure states must use the smaller status style');
+assert.doesNotMatch(homeSource, /destinationSelectChevron/, 'destination selector arrow must stay removed');
 const homeAst = ts.createSourceFile('HomeScreen.tsx', homeSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 let motionEffect;
 function findEffect(node) {

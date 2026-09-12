@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Modal, PanResponder, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
+import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
 import { WeatherBackground } from "../components/WeatherBackground";
@@ -14,6 +15,7 @@ import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout, type ResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
+import { getDestinationVisualKind } from "../utils/destination-visual-resolver";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 import { useIsNightHour } from "../utils/useIsNightHour";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
@@ -207,20 +209,20 @@ export function HomeScreen({
                     <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
                     <Text style={[styles.iosSecondaryText, { color: theme.muted }]} numberOfLines={2}>{departureSummary.body}</Text>
                   </View>
-                  <Text style={[styles.iosCompactDepartureTime, { color: theme.text }]}>{departureSummary.value}</Text>
+                  <Text style={[styles.iosCompactDepartureTime, !/^\d{1,2}:\d{2}$/u.test(departureSummary.value) && styles.iosDepartureStatus, { color: theme.text }]}>{departureSummary.value}</Text>
                 </> : <>
                 <View style={styles.iosDepartureHeading}>
                   <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
                   <Text style={{ color: theme.muted }}>›</Text>
                 </View>
-                <Text style={[styles.iosDepartureTime, { color: theme.text }]}>{departureSummary.value}</Text>
+                <Text style={[styles.iosDepartureTime, !/^\d{1,2}:\d{2}$/u.test(departureSummary.value) && styles.iosDepartureStatus, { color: theme.text }]}>{departureSummary.value}</Text>
                 <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text>
                 </>}
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
           {destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
-          <View style={styles.visualDecisionGrid}>
+          <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
             <VisualDecisionCard
               label={"목적지 강수"}
               value={destinationReady ? `${state.destinationCare.destinationWeather.current.rainProbabilityPct}%` : "목적지 선택"}
@@ -320,9 +322,10 @@ function DestinationSelectorCard({
 }) {
   const layout = useResponsiveLayout();
   const hasDestinations = savedDestinations.length > 0;
+  const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationId) ?? savedDestinations[0];
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const tightLayout = isHomeTightLayout(layout);
   const reducedMotion = useReducedMotion();
-  const addControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
   const destinationChipGlass = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   const headerCaption = hasDestinations
     ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
@@ -338,19 +341,6 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>오늘의 목적지</Text>
           {tightLayout ? null : <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>}
         </View>
-        <FeedbackPressable
-          accessibilityLabel="새 목적지 추가"
-          accessibilityRole="button"
-          onPress={onAdd}
-          style={[
-            styles.destinationSelectorAddButton,
-            { backgroundColor: addControlGlass ? theme.cardStrong : "transparent", borderColor: theme.border },
-            addControlGlass,
-          ]}
-        >
-          {addControlGlass ? <IosGlassBackdrop theme={theme} role="control" style={styles.destinationAddBackdrop} /> : null}
-          <Text style={[styles.destinationSelectorAddText, { color: theme.gold }]}>추가</Text>
-        </FeedbackPressable>
       </View> : null}
 
       {!hasDestinations ? (
@@ -364,45 +354,78 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationEmptyBody, { color: theme.subtle }]}>날씨와 출발 시간을 맞춰드림</Text>
         </FeedbackPressable>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationChipRow}>
-          {savedDestinations.map((destination) => {
-            const selected = destination.place.id === selectedDestinationId;
+        <FeedbackPressable
+          accessibilityLabel={`오늘의 목적지 ${selectedDestination.place.name}. 저장한 목적지 목록 열기`}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: selectorOpen }}
+          onPress={() => setSelectorOpen(true)}
+          style={({ pressed }) => [
+            styles.destinationSelectButton,
+            { backgroundColor: theme.cardStrong, borderColor: theme.border },
+            destinationChipGlass,
+            { transform: [{ scale: pressed && reducedMotion === false ? 0.98 : 1 }] },
+            androidMaterialSurface(theme, "surfaceContainerHigh"),
+          ]}
+        >
+          {destinationChipGlass ? <IosGlassBackdrop theme={theme} role="chip" style={styles.destinationChipBackdrop} /> : null}
+          <View style={[styles.destinationSelectIconFrame, { backgroundColor: `${theme.clear}18` }]} accessibilityElementsHidden>
+            <Image source={getDestinationTypeIcon(selectedDestination.place)} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.clear }]} />
+          </View>
+          <View style={styles.destinationSelectCopy}>
+            <Text style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</Text>
+            <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(selectedDestination.place)}</Text>
+          </View>
+        </FeedbackPressable>
+      )}
+
+      <BottomSheet visible={selectorOpen} onClose={() => setSelectorOpen(false)} accessibilityLabel="저장한 목적지 선택 시트">
+        <View style={styles.destinationSheetHeader}>
+          <Text style={[styles.destinationSheetTitle, { color: theme.text }]}>목적지 선택</Text>
+          <Text style={[styles.destinationSheetCaption, { color: theme.muted }]}>저장한 {savedDestinations.length}곳 중 오늘 갈 곳을 선택</Text>
+        </View>
+        <View style={[styles.destinationSheetList, { borderColor: theme.border }]}>
+          {savedDestinations.map((destination, index) => {
+            const selected = destination.place.id === selectedDestination.place.id;
             return (
               <FeedbackPressable
                 key={destination.place.id}
-                accessibilityLabel={`${destination.place.name} 목적지${selected ? " 선택됨" : "로 전환"}`}
+                accessibilityLabel={`${destination.place.name} 목적지${selected ? ", 현재 선택됨" : " 선택"}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => onSelect(destination.place)}
-                style={({ pressed }) => [
-                  styles.destinationChip,
-                  {
-                    backgroundColor: selected ? `${theme.gold}1F` : theme.cardStrong,
-                    borderColor: selected ? theme.gold : theme.border,
-                  },
-                  destinationChipGlass,
-                  { borderColor: selected ? theme.clear : theme.border, backgroundColor: selected ? `${theme.clear}18` : theme.cardStrong, transform: [{ scale: pressed && reducedMotion === false ? 0.96 : 1 }] },
-                  androidMaterialSurface(theme, selected ? "secondaryContainer" : "surfaceContainerHigh"),
+                onPress={() => {
+                  setSelectorOpen(false);
+                  onSelect(destination.place);
+                }}
+                style={[
+                  styles.destinationSheetOption,
+                  index < savedDestinations.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
+                  selected ? { backgroundColor: theme.cardMuted } : null,
                 ]}
               >
-                {destinationChipGlass ? <IosGlassBackdrop theme={theme} role="chip" style={styles.destinationChipBackdrop} /> : null}
-                <View style={styles.destinationChipTitleRow}>
-                  {selected ? <View style={[styles.destinationChipDot, { backgroundColor: theme.clear }]} /> : null}
-                  <Text style={[styles.destinationChipTitle, { color: selected ? (Platform.OS === "android" ? androidMaterialColor(theme, "onSecondaryContainer") : theme.clear) : theme.text }]} numberOfLines={1}>
-                    {destination.place.name}
-                  </Text>
+                <View style={[styles.destinationSheetIconFrame, { backgroundColor: `${theme.clear}18` }]} accessibilityElementsHidden>
+                  <Image source={getDestinationTypeIcon(destination.place)} resizeMode="contain" style={[styles.destinationSheetIcon, { tintColor: theme.clear }]} />
                 </View>
-                <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>
-                  {getDestinationSelectorMeta(destination.place)}
-                </Text>
+                <View style={styles.destinationSelectCopy}>
+                  <Text style={[styles.destinationSheetOptionTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
+                  <Text style={[styles.destinationSheetOptionMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
+                </View>
+                {selected ? <Image source={uiIconAssets.check} resizeMode="contain" style={[styles.destinationSheetCheck, { tintColor: theme.clear }]} /> : null}
               </FeedbackPressable>
             );
           })}
-          {tightLayout ? <FeedbackPressable accessibilityRole="button" accessibilityLabel="새 목적지 추가" onPress={onAdd} style={[styles.destinationSelectorAddButton, { borderColor: theme.border }]}>
-            <Text style={[styles.destinationSelectorAddText, { color: theme.clear }]}>추가</Text>
-          </FeedbackPressable> : null}
-        </ScrollView>
-      )}
+        </View>
+        <FeedbackPressable
+          accessibilityLabel="새 목적지 추가"
+          accessibilityRole="button"
+          onPress={() => {
+            setSelectorOpen(false);
+            onAdd();
+          }}
+          style={[styles.destinationSheetAddButton, { backgroundColor: `${theme.gold}18`, borderColor: theme.gold }]}
+        >
+          <Text style={[styles.destinationSheetAddText, { color: theme.gold }]}>새 목적지 추가</Text>
+        </FeedbackPressable>
+      </BottomSheet>
     </View>
   );
 }
@@ -441,6 +464,19 @@ function getDestinationCategoryLabel(category: string) {
   if (category === "airport") return "공항";
   if (category === "hotel") return "숙소";
   return "목적지";
+}
+
+function getDestinationTypeIcon(place: P0ScreenProps["selectedDestinationPlace"]) {
+  const kind = getDestinationVisualKind(place);
+  if (kind === "church") return uiIconAssets.placeChurch;
+  if (kind === "temple") return uiIconAssets.placeTemple;
+  if (kind === "hospital") return uiIconAssets.placeMedical;
+  if (["airport", "bus", "ferry", "metro", "rail", "transit"].includes(kind)) return uiIconAssets.placeTransit;
+  if (kind === "residential") return uiIconAssets.placeHome;
+  if (["office", "school", "museum", "convention", "shopping", "hotel", "culture", "work"].includes(kind)) return uiIconAssets.placeBuilding;
+  if (["baseball", "football", "arena", "mountain", "beach", "park", "amusement", "camping", "ski", "leisure", "sports"].includes(kind)) return uiIconAssets.placeOutdoors;
+  if (kind === "dining") return uiIconAssets.placeDining;
+  return uiIconAssets.pin;
 }
 
 function buildHomeDecision(
@@ -657,11 +693,19 @@ function VisualDecisionCard({
   onPress: () => void;
 }) {
   return (
-      <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${label} ${value}. ${helper}`} onPress={onPress} style={[styles.iosSupportingAction, { backgroundColor: theme.cardStrong }, androidMaterialSurface(theme, "surfaceContainerHigh")]}>
-        <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{label}</Text>
-        <View style={styles.iosSupportingValue}>
-          <Image source={icon} resizeMode="contain" style={{ width: 18, height: 18, tintColor: accent }} />
-          <Text style={[styles.iosSupportingTitle, { color: theme.text }]} numberOfLines={2}>{value}</Text>
+      <FeedbackPressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label} ${value}. ${helper}`}
+        onPress={onPress}
+        style={[styles.iosSupportingAction, { backgroundColor: theme.cardStrong }, androidMaterialSurface(theme, "surfaceContainerHigh")]}
+      >
+        <View style={[styles.iosSupportingIconFrame, { backgroundColor: `${accent}18` }]} accessibilityElementsHidden>
+          <Image source={icon} resizeMode="contain" style={[styles.iosSupportingIcon, { tintColor: accent }]} />
+        </View>
+        <View style={styles.iosSupportingCopy}>
+          <Text style={[styles.iosSupportingLabel, { color: theme.muted }]}>{label}</Text>
+          <Text style={[styles.iosSupportingTitle, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+          <Text style={[styles.iosSupportingHelper, { color: theme.subtle }]} numberOfLines={2}>{helper}</Text>
         </View>
       </FeedbackPressable>
     );
@@ -1472,9 +1516,14 @@ const styles = StyleSheet.create({
   iosCompactDepartureTime: { maxWidth: "48%", fontSize: 27, lineHeight: 33, fontWeight: "600", fontVariant: ["tabular-nums"] },
   iosDepartureHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   iosDepartureTime: { fontSize: 32, lineHeight: 38, fontWeight: "600", fontVariant: ["tabular-nums"] },
-  iosSupportingAction: { flex: 1, minWidth: 0, minHeight: 56, justifyContent: "center", padding: 8, gap: 4, borderRadius: 14 },
-  iosSupportingValue: { flexDirection: "row", alignItems: "center", gap: 6 },
-  iosSupportingTitle: { flexShrink: 1, fontSize: 15, lineHeight: 20, fontWeight: "600" },
+  iosDepartureStatus: { fontSize: 24, lineHeight: 30, fontWeight: "700" },
+  iosSupportingAction: { flex: 1, minWidth: 0, minHeight: 88, flexDirection: "row", alignItems: "center", padding: 12, gap: 10, borderRadius: 16 },
+  iosSupportingIconFrame: { width: 38, height: 38, alignItems: "center", justifyContent: "center", borderRadius: radius.md },
+  iosSupportingIcon: { width: 24, height: 24 },
+  iosSupportingCopy: { flex: 1, minWidth: 0, gap: 1 },
+  iosSupportingLabel: { fontSize: 12, lineHeight: 16, fontWeight: "800" },
+  iosSupportingTitle: { fontSize: 17, lineHeight: 22, fontWeight: "900" },
+  iosSupportingHelper: { fontSize: 11, lineHeight: 15, fontWeight: "700" },
   screenWrap: {
     flex: 1,
   },
@@ -1500,102 +1549,148 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   homePlanCard: {
-    gap: spacing.sm,
+    gap: spacing.md,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
   destinationSelectorCard: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
   destinationSelectorHeader: {
-    minHeight: 36,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
   },
   destinationSelectorIconFrame: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
   },
   destinationSelectorIcon: {
-    width: 18,
-    height: 18,
+    width: 21,
+    height: 21,
   },
   destinationSelectorCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 1,
   },
   destinationSelectorLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "900",
   },
   destinationSelectorMeta: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  destinationSelectorAddButton: {
-    minWidth: 48,
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  destinationSelectorAddText: {
     fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
+    lineHeight: 17,
+    fontWeight: "700",
   },
-  destinationChipRow: {
-    gap: spacing.xs,
-    paddingRight: spacing.sm,
-  },
-  destinationChip: {
-    width: 118,
-    minHeight: 48,
-    justifyContent: "center",
-    gap: 2,
-    paddingHorizontal: spacing.sm,
+  destinationSelectButton: {
+    width: "100%",
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
     overflow: "hidden",
-  },
-  destinationAddBackdrop: {
-    borderRadius: radius.md,
   },
   destinationChipBackdrop: {
     borderRadius: radius.md,
   },
-  destinationChipTitleRow: {
-    flexDirection: "row",
+  destinationSelectIconFrame: {
+    width: 36,
+    height: 36,
     alignItems: "center",
-    gap: 4,
-  },
-  destinationChipDot: {
-    width: 6,
-    height: 6,
+    justifyContent: "center",
     borderRadius: radius.pill,
   },
+  destinationSelectIcon: {
+    width: 19,
+    height: 19,
+  },
+  destinationSelectCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
   destinationChipTitle: {
-    flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "900",
   },
   destinationChipMeta: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "800",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  destinationSheetHeader: {
+    gap: 4,
+  },
+  destinationSheetTitle: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "900",
+  },
+  destinationSheetCaption: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  destinationSheetList: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  destinationSheetOption: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  destinationSheetIconFrame: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  destinationSheetIcon: {
+    width: 20,
+    height: 20,
+  },
+  destinationSheetOptionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+  destinationSheetOptionMeta: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  destinationSheetCheck: {
+    width: 20,
+    height: 20,
+  },
+  destinationSheetAddButton: {
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  destinationSheetAddText: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
   },
   destinationEmptySelector: {
     minHeight: 58,
@@ -1618,6 +1713,9 @@ const styles = StyleSheet.create({
   visualDecisionGrid: {
     flexDirection: "row",
     gap: spacing.xs,
+  },
+  visualDecisionGridCompact: {
+    flexDirection: "column",
   },
   homeOutfitCard: {
     minHeight: 106,

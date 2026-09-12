@@ -22,6 +22,14 @@ const icons = {
   "policy-terms": drawDocumentCheck,
   "policy-location": drawLocationDocument,
   "policy-oss": drawCodeDocument,
+  "place-church": drawChurch,
+  "place-temple": drawTemple,
+  "place-medical": drawMedical,
+  "place-transit": drawTransit,
+  "place-home": drawHome,
+  "place-building": drawBuilding,
+  "place-outdoors": drawOutdoors,
+  "place-dining": drawDining,
 };
 
 for (const [name, draw] of Object.entries(icons)) {
@@ -269,4 +277,39 @@ function drawCodeDocument(ctx) {
 
 function drawCloud(ctx) {
   strokePath(ctx, [["M", 7, 18], ["C", 1, 18, 1, 10, 6, 10], ["C", 7, 3, 17, 3, 18, 10], ["C", 24, 10, 24, 18, 18, 18], ["Z"]]);
+}
+
+function drawChurch(ctx) {
+  strokePath(ctx, [["M", 5, 21], ["L", 5, 10], ["L", 12, 5], ["L", 19, 10], ["L", 19, 21], ["Z"], ["M", 9.5, 21], ["L", 9.5, 15], ["L", 14.5, 15], ["L", 14.5, 21], ["M", 12, 2], ["L", 12, 8], ["M", 9.5, 4.5], ["L", 14.5, 4.5]]);
+}
+
+function drawTemple(ctx) {
+  strokePath(ctx, [["M", 3, 9], ["L", 12, 4], ["L", 21, 9], ["M", 5, 9], ["L", 19, 9], ["M", 6, 12], ["L", 18, 12], ["M", 7, 12], ["L", 7, 20], ["M", 12, 12], ["L", 12, 20], ["M", 17, 12], ["L", 17, 20], ["M", 4, 21], ["L", 20, 21]]);
+}
+
+function drawMedical(ctx) {
+  strokePath(ctx, [["M", 5, 5], ["L", 19, 5], ["L", 19, 19], ["L", 5, 19], ["Z"], ["M", 12, 8], ["L", 12, 16], ["M", 8, 12], ["L", 16, 12]]);
+}
+
+function drawTransit(ctx) {
+  strokePath(ctx, [["M", 6, 4], ["L", 18, 4], ["Q", 20, 4, 20, 6], ["L", 20, 16], ["Q", 20, 18, 18, 18], ["L", 6, 18], ["Q", 4, 18, 4, 16], ["L", 4, 6], ["Q", 4, 4, 6, 4], ["Z"], ["M", 7, 8], ["L", 17, 8], ["M", 8, 18], ["L", 6, 21], ["M", 16, 18], ["L", 18, 21]]);
+  fillCircle(ctx, 8, 14, 1.2);
+  fillCircle(ctx, 16, 14, 1.2);
+}
+
+function drawHome(ctx) {
+  strokePath(ctx, [["M", 3, 11], ["L", 12, 4], ["L", 21, 11], ["M", 5, 10], ["L", 5, 21], ["L", 19, 21], ["L", 19, 10], ["M", 10, 21], ["L", 10, 15], ["L", 14, 15], ["L", 14, 21]]);
+}
+
+function drawBuilding(ctx) {
+  strokePath(ctx, [["M", 5, 21], ["L", 5, 4], ["L", 19, 4], ["L", 19, 21], ["Z"], ["M", 9, 8], ["L", 10, 8], ["M", 14, 8], ["L", 15, 8], ["M", 9, 12], ["L", 10, 12], ["M", 14, 12], ["L", 15, 12], ["M", 10, 21], ["L", 10, 16], ["L", 14, 16], ["L", 14, 21]]);
+}
+
+function drawOutdoors(ctx) {
+  strokePath(ctx, [["M", 3, 20], ["L", 9, 11], ["L", 13, 16], ["L", 16, 12], ["L", 21, 20], ["M", 4, 20], ["L", 20, 20]]);
+  strokeCircle(ctx, 17.5, 6.5, 2.5);
+}
+
+function drawDining(ctx) {
+  strokePath(ctx, [["M", 7, 3], ["L", 7, 21], ["M", 4, 3], ["L", 4, 9], ["Q", 4, 12, 7, 12], ["Q", 10, 12, 10, 9], ["L", 10, 3], ["M", 4, 7], ["L", 10, 7], ["M", 16, 3], ["Q", 20, 6, 20, 12], ["L", 16, 12], ["Z"], ["M", 18, 12], ["L", 18, 21]]);
 }

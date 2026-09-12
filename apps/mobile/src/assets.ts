@@ -193,4 +193,12 @@ export const uiIconAssets = {
   policyTerms: require("../../../assets/ui-icons/policy-terms.png"),
   policyLocation: require("../../../assets/ui-icons/policy-location.png"),
   policyOss: require("../../../assets/ui-icons/policy-oss.png"),
+  placeChurch: require("../../../assets/ui-icons/place-church.png"),
+  placeTemple: require("../../../assets/ui-icons/place-temple.png"),
+  placeMedical: require("../../../assets/ui-icons/place-medical.png"),
+  placeTransit: require("../../../assets/ui-icons/place-transit.png"),
+  placeHome: require("../../../assets/ui-icons/place-home.png"),
+  placeBuilding: require("../../../assets/ui-icons/place-building.png"),
+  placeOutdoors: require("../../../assets/ui-icons/place-outdoors.png"),
+  placeDining: require("../../../assets/ui-icons/place-dining.png"),
 };
