@@ -62,7 +62,6 @@ export type ResponsiveLayout = {
   destinationCardPaddingVertical: number;
   destinationCareImageHeight: number;
   destinationCareSummaryMinHeight: number;
-  destinationRepeatDaySize: number;
   destinationAddScrollBottomPadding: number;
   destinationResultRowMinHeight: number;
   settingsContentGap: number;
@@ -184,7 +183,6 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     destinationCardPaddingVertical: isShort ? 11 : isTablet ? 16 : isRegular ? 14 : 13,
     destinationCareImageHeight: isShort ? 104 : isTablet ? 176 : isRegular ? 148 : 126,
     destinationCareSummaryMinHeight: isShort ? 64 : isTablet ? 82 : isRegular ? 72 : 66,
-    destinationRepeatDaySize: isShort ? 36 : isTablet ? 44 : isRegular ? 42 : 38,
     destinationAddScrollBottomPadding: isShort ? 96 : isTablet ? 124 : isRegular ? 116 : 108,
     destinationResultRowMinHeight: isShort ? 70 : isTablet ? 88 : isRegular ? 82 : 78,
     settingsContentGap: isShort ? 8 : isTablet ? 16 : isRegular ? 14 : 12,

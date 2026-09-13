@@ -27,16 +27,9 @@ struct WeatherONDepartureLiveActivity: Widget {
             style: .expanded
           )
         }
-        DynamicIslandExpandedRegion(.center) {
-          Text(context.attributes.destinationName)
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .minimumScaleFactor(0.78)
-            .layoutPriority(1)
-        }
         DynamicIslandExpandedRegion(.bottom) {
           WeatherONDepartureExpandedSummary(
+            destinationName: context.attributes.destinationName,
             guidance: context.isStale ? "출발 정보가 만료됐어요" : context.state.guidance,
             guidanceSymbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol,
             departureTimeLabel: context.attributes.departureTimeLabel
@@ -45,9 +38,9 @@ struct WeatherONDepartureLiveActivity: Widget {
           .accessibilityLabel("날씨 안내, \(context.state.guidance), 권장 출발 시각 \(context.attributes.departureTimeLabel)")
         }
       } compactLeading: {
-        Image(systemName: "location.north.fill")
-          .foregroundStyle(departureGold)
-          .accessibilityLabel("출발 안내")
+        WeatherONDepartureGuidanceIcon(
+          symbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol
+        )
       } compactTrailing: {
         WeatherONDepartureCountdown(
           departureAt: context.attributes.departureAt,
@@ -56,9 +49,9 @@ struct WeatherONDepartureLiveActivity: Widget {
           style: .compact
         )
       } minimal: {
-        Image(systemName: "location.north.fill")
-          .foregroundStyle(departureGold)
-          .accessibilityLabel("출발 안내")
+        WeatherONDepartureGuidanceIcon(
+          symbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol
+        )
       }
       .widgetURL(URL(string: context.attributes.deepLink))
       .keylineTint(departureGold)
@@ -68,7 +61,7 @@ struct WeatherONDepartureLiveActivity: Widget {
 
 private struct WeatherONDepartureExpandedLabel: View {
   var body: some View {
-    Label("출발까지", systemImage: "location.north.fill")
+    Label("출발까지", systemImage: "clock.fill")
       .font(.caption2.weight(.semibold))
       .foregroundStyle(departureGold)
       .lineLimit(1)
@@ -77,39 +70,46 @@ private struct WeatherONDepartureExpandedLabel: View {
 }
 
 private struct WeatherONDepartureExpandedSummary: View {
+  let destinationName: String
   let guidance: String
   let guidanceSymbol: String?
   let departureTimeLabel: String
 
   var body: some View {
-    HStack(alignment: .center, spacing: 10) {
-      Label {
-        Text(guidance)
+    VStack(alignment: .leading, spacing: 7) {
+      Text(destinationName)
+        .font(.headline.weight(.semibold))
+        .foregroundStyle(.white)
+        .lineLimit(1)
+        .minimumScaleFactor(0.78)
+
+      HStack(spacing: 10) {
+        Label(guidance, systemImage: guidanceSymbol ?? "figure.walk.departure")
+          .font(.caption.weight(.medium))
+          .foregroundStyle(departureSky)
           .lineLimit(1)
           .minimumScaleFactor(0.72)
-      } icon: {
-        Image(systemName: guidanceSymbol ?? "figure.walk.departure")
-          .foregroundStyle(departureSky)
-      }
-      .font(.caption.weight(.medium))
-      .foregroundStyle(.white.opacity(0.9))
-      .layoutPriority(1)
+          .layoutPriority(1)
 
-      Rectangle()
-        .fill(Color.white.opacity(0.18))
-        .frame(width: 1, height: 26)
+        Spacer(minLength: 6)
 
-      VStack(alignment: .trailing, spacing: 1) {
-        Text("출발 시각")
-          .font(.caption2)
-          .foregroundStyle(.white.opacity(0.62))
-        Text(departureTimeLabel)
+        Label(departureTimeLabel, systemImage: "clock.fill")
           .font(.subheadline.weight(.semibold).monospacedDigit())
           .foregroundStyle(departureGold)
           .lineLimit(1)
+          .fixedSize(horizontal: true, vertical: false)
       }
-      .fixedSize(horizontal: true, vertical: false)
     }
+  }
+}
+
+private struct WeatherONDepartureGuidanceIcon: View {
+  let symbol: String?
+
+  var body: some View {
+    Image(systemName: symbol ?? "figure.walk.departure")
+      .foregroundStyle(departureGold)
+      .accessibilityLabel("출발 날씨 안내")
   }
 }
 

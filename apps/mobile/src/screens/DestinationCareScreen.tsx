@@ -16,11 +16,10 @@ import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { openDestinationDirections } from "../utils/destinationDirections";
-import type { TravelRouteOption } from "../providers/travelEstimateClient";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { addMinutesToTime } from "../utils/zonedDateTime";
-import { formatDistance, formatTemperature, formatTemperatureDelta } from "../utils/units";
+import { formatTemperature } from "../utils/units";
 import {
   departureLiveActivityAutoLeadMinutes,
   endDepartureLiveActivity,
@@ -40,7 +39,6 @@ export function DestinationCareScreen({
   selectedDestinationPlace,
   placeSearchOrigin,
   temperatureUnit,
-  distanceUnit,
   wardrobeItems,
   styleGender,
   ageBand,
@@ -61,7 +59,6 @@ export function DestinationCareScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const care = state.destinationCare;
-  const originWeather = care.originWeather;
   const destinationWeather = state.destinationWeatherById[selectedDestinationPlace.id] ?? care.destinationWeather;
   const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
   const destinationOutfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
@@ -94,8 +91,7 @@ export function DestinationCareScreen({
   });
   const prepAlertTime = subtractMinutes(departureTime, 40);
   const rainAlertTime = subtractMinutes(departureTime, 10);
-  const alertTimingCopy = departureReady ? `${prepAlertTime}/${rainAlertTime}/${departureTime}` : "출발 알림 보류";
-  const originRain = originWeather.current.rainProbabilityPct;
+  const alertTimingCopy = departureReady ? `${prepAlertTime} · ${rainAlertTime} · ${departureTime}` : "출발 시간을 정하면 계산함";
   const destinationRain = destinationWeather.current.rainProbabilityPct;
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
   const transportLabel = getTransportModeLabel(transportMode);
@@ -103,15 +99,8 @@ export function DestinationCareScreen({
   const repeatEnabled = selectedDestinationSchedulePreference.repeatEnabled;
   const repeatDays = selectedDestinationSchedulePreference.repeatDays;
   const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
-  const routeMeta = getTravelEstimateCopy(
-    selectedDestinationTravelEstimate.status,
-    selectedDestinationTravelEstimate.provider,
-    selectedDestinationTravelEstimate.distanceMeters,
-    distanceUnit,
-  );
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const directionsLabel = selectedDestinationPlace.countryCode === "KR" ? "카카오맵 길찾기" : "Google 지도 길찾기";
-  const bufferReason = getBufferReasonCopy(bufferMinutes, transportMode, timeBasis);
   const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
   const departureActivityMatchesDestination =
     (departureActivityStatus.active || departureActivityStatus.scheduled) &&
@@ -327,81 +316,25 @@ export function DestinationCareScreen({
 
         <View style={[styles.detailPanel, pageStyles.unboxed, styles.embeddedSection, { borderColor: theme.border }]}>
           <FeedbackPressable
-            accessibilityLabel={detailPanelOpen ? "계산 근거와 알림 상세 닫기" : "계산 근거와 알림 상세 열기"}
+            accessibilityLabel={detailPanelOpen ? "알림 일정 닫기" : "알림 일정 열기"}
             accessibilityRole="button"
             accessibilityState={{ expanded: detailPanelOpen }}
             onPress={() => setDetailPanelOpen((current) => !current)}
             style={styles.detailPanelHeader}
           >
             <View style={styles.conditionCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.muted }]}>자세히</Text>
-              <Text style={[styles.conditionSummary, { color: theme.text }]}>{movementTimeLabel} · 목적지 현재 강수 {destinationRain}%</Text>
+              <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 일정</Text>
+              <Text style={[styles.conditionSummary, { color: theme.text }]}>{alertTimingCopy}</Text>
             </View>
             <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "열기"}</Text>
           </FeedbackPressable>
 
-          <DropdownMotion visible={detailPanelOpen} maxHeight={980}>
+          <DropdownMotion visible={detailPanelOpen} maxHeight={260}>
             <>
-              <View style={styles.compareGrid}>
-                <CompareMetric
-                  label="현재 기온"
-                  value={`${formatTemperature(originWeather.current.tempC, temperatureUnit)} → ${formatTemperature(destinationWeather.current.tempC, temperatureUnit)}`}
-                  meta={formatTemperatureDelta(destinationWeather.current.tempC - originWeather.current.tempC, temperatureUnit)}
-                  accent={theme.text}
-                  theme={theme}
-                />
-                <CompareMetric
-                  label="현재 강수"
-                  value={`${originRain}% → ${destinationRain}%`}
-                  meta={destinationRain > originRain ? "목적지 높음" : "차이 작음"}
-                  accent={destinationRain > originRain ? theme.warm : theme.clear}
-                  theme={theme}
-                />
-                <CompareMetric
-                  label={selectedDestinationTravelEstimate.status === "fallback" ? "예상 이동시간" : "이동시간"}
-                  value={movementTimeLabel}
-                  meta={routeMeta}
-                  accent={theme.gold}
-                  theme={theme}
-                />
-                <CompareMetric
-                  label="준비 여유"
-                  value={timeBasis === "departure" ? "직접 지정" : routeTimingReady ? `${bufferMinutes}분` : "보류"}
-                  meta={bufferReason}
-                  accent={theme.sky}
-                  theme={theme}
-                />
-              </View>
-
-              <Text style={[styles.routeNotice, { color: theme.subtle }]}>{getRouteVariationCopy(selectedDestinationTravelEstimate.status, transportMode, timeBasis)}</Text>
-
-              {selectedDestinationTravelEstimate.routeOptions?.length ? (
-                <View style={styles.routeOptions}>
-                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>실제 대중교통 경로</Text>
-                  {selectedDestinationTravelEstimate.routeOptions.map((option, index) => (
-                    <TransitRouteOption
-                      key={`${option.type ?? "transit"}-${option.totalTime}-${index}`}
-                      option={option}
-                      index={index}
-                      distanceUnit={distanceUnit}
-                      theme={theme}
-                    />
-                  ))}
-                </View>
-              ) : null}
-
-              {departureReady ? (
-                <View style={styles.timelineCompact}>
-                  <TimelineItem time={prepAlertTime} label="출발 준비 확인" icon={uiIconAssets.clock} color={theme.sky} active={false} theme={theme} />
-                  <TimelineItem time={rainAlertTime} label="목적지 날씨 확인" icon={uiIconAssets.rain} color={theme.clear} active={false} theme={theme} />
-                  <TimelineItem time={departureTime} label="출발 시각 알림" icon={uiIconAssets.depart} color={theme.gold} active theme={theme} />
-                </View>
-              ) : null}
-
               <View style={styles.conditionHeader}>
                 <View style={styles.conditionCopy}>
-                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>기존 알림 기준</Text>
-                  <Text style={[styles.conditionSummary, { color: theme.text }]}>강수 {selectedDestinationAlertCondition.rainThresholdPct}% · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전 · {alertTimingCopy}</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 기준</Text>
+                  <Text style={[styles.conditionSummary, { color: theme.text }]}>강수 {selectedDestinationAlertCondition.rainThresholdPct}% 이상 · 출발 {selectedDestinationAlertCondition.leadTimeMinutes}분 전</Text>
                 </View>
                 <FeedbackPressable
                   accessibilityLabel="목적지 알림 고급 설정으로 이동"
@@ -803,8 +736,6 @@ function RepeatSchedulePanel({
   onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
   theme: AppTheme;
 }) {
-  const layout = useResponsiveLayout();
-  const repeatDayHorizontalHitSlop = Math.max(0, (48 - layout.destinationRepeatDaySize) / 2);
   return (
     <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <View style={styles.settingsRow}>
@@ -837,12 +768,10 @@ function RepeatSchedulePanel({
               accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              hitSlop={{ left: repeatDayHorizontalHitSlop, right: repeatDayHorizontalHitSlop }}
               onPress={() => onToggleRepeatDay(option.day)}
               style={[
                 styles.repeatDayChip,
                 {
-                  width: layout.destinationRepeatDaySize,
                   backgroundColor: selected ? `${theme.clear}22` : theme.cardStrong,
                   borderColor: selected ? theme.clear : theme.border,
                 },
@@ -889,151 +818,12 @@ function DropdownMotion({ visible, maxHeight, children }: { visible: boolean; ma
   );
 }
 
-function CompareMetric({ label, value, meta, accent, theme }: { label: string; value: string; meta: string; accent: string; theme: AppTheme }) {
-  return (
-    <View style={[styles.compareMetric, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <Text numberOfLines={1} style={[styles.compareLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text numberOfLines={1} style={[styles.compareValue, { color: accent }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.compareMeta, { color: theme.muted }]}>{meta}</Text>
-    </View>
-  );
-}
-
-function TransitRouteOption({
-  option,
-  index,
-  distanceUnit,
-  theme,
-}: {
-  option: TravelRouteOption;
-  index: number;
-  distanceUnit: P0ScreenProps["distanceUnit"];
-  theme: AppTheme;
-}) {
-  return (
-    <View style={[styles.transitRouteCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-      <View style={styles.transitRouteHeader}>
-        <Text style={[styles.transitRouteTitle, { color: index === 0 ? theme.gold : theme.text }]}>
-          {index === 0 ? "가장 빠른 경로" : `대안 ${index + 1}`}
-        </Text>
-        <Text style={[styles.transitRouteSummary, { color: theme.text }]}>
-          {Math.ceil(option.totalTime / 60)}분 · 환승 {option.transfers}회
-        </Text>
-      </View>
-      <Text style={[styles.transitRouteMeta, { color: theme.muted }]}>
-        {getTransitTypeLabel(option.type)} · {formatDistance(option.totalDistance, distanceUnit)}{typeof option.fare === "number" ? ` · ${option.fare.toLocaleString("ko-KR")}원` : ""}
-      </Text>
-      <View style={styles.transitSteps}>
-        {option.steps.map((step, stepIndex) => {
-          const stopSummary = step.stops.length > 1
-            ? `${step.stops[0]} → ${step.stops[step.stops.length - 1]} · ${step.stops.length}개 정류장`
-            : step.stops[0];
-          return (
-            <View key={`${step.type ?? "step"}-${stepIndex}`} style={styles.transitStep}>
-              <Text style={[styles.transitStepType, { color: theme.sky }]}>{getTransitStepLabel(step.type)}</Text>
-              <View style={styles.transitStepCopy}>
-                <Text style={[styles.transitStepGuidance, { color: theme.text }]}>{step.vehicles.join(" · ") || step.guidance || getTransitStepLabel(step.type)}</Text>
-                <Text style={[styles.transitStepMeta, { color: theme.subtle }]}>
-                  {Math.ceil(step.time / 60)}분 · {formatDistance(step.distance, distanceUnit)}{stopSummary ? ` · ${stopSummary}` : ""}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-function getTransitTypeLabel(type: TravelRouteOption["type"]) {
-  if (type === "BUS") return "버스";
-  if (type === "SUBWAY") return "지하철";
-  if (type === "BUS_AND_SUBWAY") return "버스+지하철";
-  return "대중교통";
-}
-
-function getTransitStepLabel(type: TravelRouteOption["steps"][number]["type"]) {
-  if (type === "BUS") return "버스";
-  if (type === "SUBWAY") return "지하철";
-  if (type === "WALKING") return "도보";
-  return "이동";
-}
-
-function TimelineItem({
-  time,
-  label,
-  icon,
-  color,
-  active,
-  theme,
-}: {
-  time: string;
-  label: string;
-  icon: number;
-  color: string;
-  active: boolean;
-  theme: AppTheme;
-}) {
-  const resolvedColor = active ? theme.gold : color;
-  return (
-    <View style={styles.timelineItem}>
-      <View style={[styles.timelineIcon, { backgroundColor: active ? theme.gold : theme.cardStrong, borderColor: resolvedColor }]}>
-        <Image source={icon} style={[styles.timelineIconImage, { tintColor: active ? theme.onAccent : resolvedColor }]} resizeMode="contain" />
-      </View>
-      <Text style={[styles.timelineTime, { color: resolvedColor }]}>{time}</Text>
-      <Text style={[styles.timelineLabel, { color: theme.text }]}>{label}</Text>
-    </View>
-  );
-}
-
 function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCare"]) {
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "확인 전";
   return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
-}
-
-function getTravelEstimateCopy(
-  status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"],
-  provider: P0ScreenProps["selectedDestinationTravelEstimate"]["provider"],
-  distanceMeters: number,
-  distanceUnit: P0ScreenProps["distanceUnit"],
-) {
-  if (status === "loading") return "이동시간 확인 중";
-  if (status === "error") return "조회 실패 · 지도에서 확인";
-  if (status === "fallback") {
-    const distanceText = formatDistance(distanceMeters, distanceUnit);
-    return distanceText ? `거리 기반 예상 · ${distanceText}` : "경로 확인 전";
-  }
-  const source = provider === "kakao" && status === "ready"
-    ? "Kakao Directions API"
-    : provider === "kakao-transit" && status === "ready"
-      ? "Kakao 대중교통 API"
-    : provider === "google" && status === "ready"
-      ? "Google Distance Matrix API"
-      : provider === "google-transit" && status === "ready"
-        ? "Google 대중교통 API"
-        : "경로 확인 전";
-  const distanceText = formatDistance(distanceMeters, distanceUnit);
-  if (!distanceText) return source;
-  return `${source} · ${distanceText}`;
-}
-
-function getRouteVariationCopy(
-  status: P0ScreenProps["selectedDestinationTravelEstimate"]["status"],
-  mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
-  timeBasis: P0ScreenProps["selectedDestinationSchedulePreference"]["timeBasis"],
-) {
-  if (status === "fallback") return mode === "transit"
-    ? "거리 기반 예상값임. 배차·환승·대기시간에 따라 달라질 수 있음"
-    : "거리 기반 예상값임. 실제 경로와 교통 상황에 따라 달라질 수 있음";
-  if (status === "loading") return "최신 입력 기준으로 다시 확인 중임";
-  if (status === "error") return "이동시간을 확인하지 못했음. 지도 앱에서 실제 경로를 확인할 수 있음";
-  if (mode === "transit") return timeBasis === "departure"
-    ? "표시 경로는 조회 시점 기준임. 선택한 출발 시각의 배차에 따라 달라질 수 있음"
-    : "API가 반환한 실제 경로 후보임. 배차 상황에 따라 달라질 수 있음";
-  return "API가 반환한 이동시간임. 실제 교통 상황에 따라 달라질 수 있음";
 }
 
 function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {
@@ -1055,19 +845,6 @@ function getTransportOptionCaption(
     return mode === "auto" ? "경로 확인 전 · 직접 선택 가능" : "선택해도 외부 경로 확인 필요";
   }
   return transportOptions.find((option) => option.mode === mode)?.caption ?? "기본 경로";
-}
-
-function getBufferReasonCopy(
-  bufferMinutes: number | undefined,
-  transportMode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"],
-  timeBasis: P0ScreenProps["selectedDestinationSchedulePreference"]["timeBasis"],
-): string {
-  if (timeBasis === "departure") return "선택한 출발 시간 기준";
-  if (typeof bufferMinutes !== "number") return "경로 확인 필요";
-  if (transportMode === "transit") return "배차/환승 변동";
-  if (transportMode === "walk") return "도보 이동 여유";
-  if (transportMode === "drive") return "도로 이동 여유";
-  return "기본 경로 여유";
 }
 
 function getRepeatSummary(enabled: boolean, days: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"]) {
@@ -1553,58 +1330,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "900",
   },
-  comparePanel: {
-    gap: spacing.sm,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  compareGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
   sectionTitle: {
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "900",
     letterSpacing: 0,
-  },
-  compareRow: {
-    minHeight: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  compareLabel: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  compareValue: {
-    minWidth: 42,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  compareArrow: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  compareMetric: {
-    width: "48.7%",
-    minHeight: 76,
-    justifyContent: "center",
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  compareMeta: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "800",
   },
   departurePanel: {
     gap: spacing.sm,
@@ -1760,11 +1490,14 @@ const styles = StyleSheet.create({
   },
   repeatDayRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 5,
+    justifyContent: "space-between",
+    gap: 4,
   },
   repeatDayChip: {
-    minHeight: 44,
+    flex: 1,
+    minWidth: 0,
+    maxWidth: 48,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -1807,10 +1540,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.md,
   },
-  timelineCompact: {
-    gap: spacing.xs,
-    paddingTop: 2,
-  },
   conditionHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1831,67 +1560,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
   },
-  routeOptions: {
-    gap: spacing.sm,
-  },
-  transitRouteCard: {
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  transitRouteHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  transitRouteTitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  transitRouteSummary: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  transitRouteMeta: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "800",
-  },
-  transitSteps: {
-    gap: spacing.xs,
-  },
-  transitStep: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-  },
-  transitStepType: {
-    width: 38,
-    paddingTop: 2,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  transitStepCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  transitStepGuidance: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  transitStepMeta: {
-    fontSize: 10,
-    lineHeight: 15,
-    fontWeight: "700",
-  },
   detailButton: {
     minWidth: 54,
     minHeight: 48,
@@ -1905,36 +1573,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
-  },
-  timelineItem: {
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  timelineIcon: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  timelineIconImage: {
-    width: 17,
-    height: 17,
-  },
-  timelineTime: {
-    width: 46,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  timelineLabel: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "800",
   },
   deleteDestinationButton: {
     minHeight: 62,

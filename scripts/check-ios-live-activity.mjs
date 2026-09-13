@@ -43,9 +43,10 @@ assert.match(liveActivity, /timerInterval: Date\(\)\.\.\.max\(Date\(\), departur
 assert.match(liveActivity, /case compact/u);
 assert.match(liveActivity, /case expanded/u);
 assert.match(liveActivity, /case lockScreen/u);
-assert.match(liveActivity, /Image\(systemName: "location\.north\.fill"\)/u);
+assert.match(liveActivity, /WeatherONDepartureGuidanceIcon/u);
+assert.doesNotMatch(liveActivity, /location\.north\.fill/u);
 assert.doesNotMatch(liveActivity, /Image\(systemName: "timer"\)/u);
-assert.match(liveActivity, /Text\("출발 시각"\)/u);
+assert.match(liveActivity, /systemImage: "clock\.fill"/u);
 assert.match(liveActivity, /minimumScaleFactor\(0\.72\)/u);
 assert.match(liveActivity, /context\.attributes\.destinationName/u);
 assert.match(liveActivity, /context\.attributes\.departureTimeLabel/u);
@@ -96,7 +97,10 @@ assert.ok(
 );
 
 assert.match(destinationScreen, /자동 카운트다운/u);
-assert.match(destinationScreen, /getDepartureWeatherGuidance/u);
+assert.match(destinationScreen, /repeatDayChip:\s*\{[\s\S]*?flex: 1,[\s\S]*?maxWidth: 48/u);
+assert.match(destinationScreen, /알림 일정/u);
+assert.doesNotMatch(destinationScreen, /CompareMetric/u);
+assert.match(appState, /getDepartureWeatherGuidance/u);
 assert.match(destinationScreen, /endDepartureLiveActivity\(\)/u);
 assert.doesNotMatch(destinationScreen, /카운트다운 시작/u);
 assert.match(appState, /syncAutomaticDepartureLiveActivity\(automaticDepartureActivityInput\)/u);
