@@ -77,7 +77,7 @@
     },
     "android": {
       "package": "com.weatheron.mobile",
-      "versionCode": 18,
+      "versionCode": 19,
       "icon": "../../assets/icon/icon-light-v2-1024.png",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
