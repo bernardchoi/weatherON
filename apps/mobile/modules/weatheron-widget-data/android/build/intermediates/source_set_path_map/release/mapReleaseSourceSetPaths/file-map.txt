@@ -1,0 +1,7 @@
+com.weatheron.widgetdata.weatheron-widget-data-pngs-0 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/build/generated/res/pngs/release
+com.weatheron.widgetdata.weatheron-widget-data-resValues-1 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/build/generated/res/resValues/release
+com.weatheron.widgetdata.weatheron-widget-data-mergeReleaseResources-2 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
+com.weatheron.widgetdata.weatheron-widget-data-mergeReleaseResources-3 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+com.weatheron.widgetdata.weatheron-widget-data-release-4 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/build/intermediates/merged_res/release/mergeReleaseResources
+com.weatheron.widgetdata.weatheron-widget-data-main-5 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/res
+com.weatheron.widgetdata.weatheron-widget-data-release-6 /Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/release/res

@@ -1,6 +1,9 @@
 {
-  "platforms": ["apple"],
+  "platforms": ["apple", "android"],
   "apple": {
     "modules": ["WeatheronWidgetDataModule"]
+  },
+  "android": {
+    "modules": ["com.weatheron.widgetdata.WeatheronWidgetDataModule"]
   }
 }

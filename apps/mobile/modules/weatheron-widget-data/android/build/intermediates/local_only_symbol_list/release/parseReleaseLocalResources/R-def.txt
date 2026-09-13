@@ -1,0 +1,19 @@
+R_DEF: Internal format may change without notice
+local
+color weatheron_widget_accent
+color weatheron_widget_background
+color weatheron_widget_subtle
+color weatheron_widget_text
+drawable weatheron_widget_background
+id weatheron_widget_condition
+id weatheron_widget_detail
+id weatheron_widget_location
+id weatheron_widget_outfit
+id weatheron_widget_preparation
+id weatheron_widget_root
+id weatheron_widget_temperature
+id weatheron_widget_updated
+layout weatheron_widget
+string weatheron_widget_description
+string weatheron_widget_name
+xml weatheron_widget_info

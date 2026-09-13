@@ -31,7 +31,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
   const currentIsNight = isNightAtWeatherTime(new Date(currentTimeMs).toISOString(), daylightContext);
   const daily = getDailyForecast(weather.daily, weather.hourly);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
-  const uvIndex = getUvIndexSummary(current.uvIndex);
+  const uvIndex = Platform.OS === "android" ? null : getUvIndexSummary(current.uvIndex);
   const airQualityIndices = getAirQualityIndices(current, Platform.OS);
   const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
     if (!peak) return item;
@@ -96,7 +96,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
                 {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
               </Text>
             </View>
-            <UvSummaryBadge item={uvIndex} theme={theme} />
+            {uvIndex ? <UvSummaryBadge item={uvIndex} theme={theme} /> : null}
           </View>
           <View style={styles.factGrid}>
             <WeatherFact icon={uiIconAssets.drop} label="강수" value={`${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />

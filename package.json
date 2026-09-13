@@ -46,6 +46,8 @@
     "check:wardrobe-analysis": "node scripts/check-wardrobe-analysis.mjs",
     "check:ios-launch-state": "node scripts/check-ios-launch-state.mjs",
     "check:ios-live-activity": "node scripts/check-ios-live-activity.mjs",
+    "check:android-widget": "node scripts/check-android-widget.mjs",
+    "check:android-live-update": "node scripts/check-android-live-update.mjs",
     "migrate:account-db:local": "npx --yes --cache ./.npm-cache wrangler d1 migrations apply WEATHERON_DB --local",
     "migrate:account-db:remote": "npx --yes --cache ./.npm-cache wrangler d1 migrations apply weatheron-users --remote",
     "prepare:proxy-access-token": "node scripts/prepare-proxy-access-token.mjs",

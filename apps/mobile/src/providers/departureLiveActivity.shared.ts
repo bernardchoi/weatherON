@@ -84,6 +84,7 @@ export function parseDepartureLiveActivityStatus(value: string): DepartureLiveAc
       active: parsed.active === true,
       scheduled: parsed.scheduled === true,
       automaticStartSupported: parsed.automaticStartSupported === true,
+      automaticEndScheduled: typeof parsed.automaticEndScheduled === "boolean" ? parsed.automaticEndScheduled : undefined,
       activityId: typeof parsed.activityId === "string" && parsed.activityId ? parsed.activityId : undefined,
       destinationId: typeof parsed.destinationId === "string" && parsed.destinationId ? parsed.destinationId : undefined,
       departureAt: typeof parsed.departureAt === "string" && parsed.departureAt ? parsed.departureAt : undefined,

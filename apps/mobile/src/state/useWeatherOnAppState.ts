@@ -639,7 +639,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   useEffect(() => {
-    if (!appStateHydrated || isWeatherLoading || Platform.OS !== "ios") return;
+    if (!appStateHydrated || isWeatherLoading || (Platform.OS !== "ios" && Platform.OS !== "android")) return;
     if (widgetSnapshotContentKeyRef.current === widgetSnapshotContentKey) return;
     if (saveWeatheronWidgetSnapshot(widgetStoreSnapshot)) {
       widgetSnapshotContentKeyRef.current = widgetSnapshotContentKey;
@@ -795,7 +795,7 @@ export function useWeatherOnAppState() {
   );
   const automaticDepartureActivityInput = useMemo<DepartureLiveActivityInput | null>(() => {
     if (
-      Platform.OS !== "ios" ||
+      (Platform.OS !== "ios" && Platform.OS !== "android") ||
       !smartCareEnabled ||
       !destinationCareEnabled ||
       !selectedDestinationDepartureAt ||

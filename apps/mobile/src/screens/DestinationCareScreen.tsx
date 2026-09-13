@@ -85,7 +85,7 @@ export function DestinationCareScreen({
   const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
   const [directionsMessage, setDirectionsMessage] = useState<string | null>(null);
   const [departureActivityStatus, setDepartureActivityStatus] = useState<DepartureLiveActivityStatus>({
-    supported: Platform.OS === "ios",
+    supported: Platform.OS === "ios" || Platform.OS === "android",
     enabled: false,
     active: false,
   });
@@ -156,7 +156,7 @@ export function DestinationCareScreen({
   }, [onSetDestinationTransportMode, transportMode, walkUnavailable]);
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" && Platform.OS !== "android") return;
     let active = true;
     const refresh = () => {
       if (AppState.currentState !== "active") return;
@@ -372,7 +372,7 @@ export function DestinationCareScreen({
             <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
           </FeedbackPressable>
 
-          {Platform.OS === "ios" ? (
+          {Platform.OS === "ios" || Platform.OS === "android" ? (
             <View
               accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
               style={[styles.quickAction, { backgroundColor: theme.cardMuted }]}

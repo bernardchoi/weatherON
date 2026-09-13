@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="weatheron_widget_background">#F5F9FC</color>
+  <color name="weatheron_widget_text">#071E33</color>
+  <color name="weatheron_widget_subtle">#5D7183</color>
+  <color name="weatheron_widget_accent">#1676B8</color>
+</resources>

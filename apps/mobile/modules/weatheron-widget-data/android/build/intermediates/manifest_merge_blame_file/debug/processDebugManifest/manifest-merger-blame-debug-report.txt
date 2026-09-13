@@ -1,0 +1,65 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.weatheron.widgetdata" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+6
+7    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+7-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:2:3-79
+7-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:2:20-76
+8    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+8-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:3:3-84
+8-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:3:20-81
+9
+10    <application>
+10-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:4:3-27:17
+11        <receiver
+11-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:5:5-15:16
+12            android:name="com.weatheron.widgetdata.WeatherONDepartureReceiver"
+12-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:6:7-49
+13            android:exported="false" >
+13-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:7:7-31
+14            <intent-filter>
+14-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:8:7-14:23
+15                <action android:name="com.weatheron.DEPARTURE_START" />
+15-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:9:9-64
+15-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:9:17-61
+16                <action android:name="com.weatheron.DEPARTURE_END" />
+16-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:10:9-62
+16-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:10:17-59
+17                <action android:name="com.weatheron.DEPARTURE_STOP" />
+17-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:11:9-63
+17-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:11:17-60
+18                <action android:name="android.intent.action.BOOT_COMPLETED" />
+18-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:12:9-71
+18-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:12:17-68
+19                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+19-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:13:9-76
+19-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:13:17-73
+20            </intent-filter>
+21        </receiver>
+22        <receiver
+22-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:16:5-26:16
+23            android:name="com.weatheron.widgetdata.WeatherONWidgetProvider"
+23-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:17:7-46
+24            android:exported="false"
+24-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:19:7-31
+25            android:label="@string/weatheron_widget_name" >
+25-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:18:7-52
+26            <intent-filter>
+26-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:20:7-22:23
+27                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+27-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:21:9-76
+27-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:21:17-73
+28            </intent-filter>
+29
+30            <meta-data
+30-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:23:7-25:57
+31                android:name="android.appwidget.provider"
+31-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:24:9-50
+32                android:resource="@xml/weatheron_widget_info" />
+32-->/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱/apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml:25:9-54
+33        </receiver>
+34    </application>
+35
+36</manifest>
