@@ -72,14 +72,8 @@ export function androidMaterialSurface(theme: AppTheme, role: AndroidMaterialRol
   };
 }
 
-export function androidMaterialRipple(theme: AppTheme, tone: "primary" | "surface" = "surface") {
-  if (Platform.OS !== "android") return undefined;
-
-  const color = tone === "primary" ? theme.onAccent : theme.text;
-  return {
-    color: colorWithAlpha(color, 0.12),
-    borderless: false,
-  };
+export function androidMaterialRipple(_theme: AppTheme, _tone: "primary" | "surface" = "surface"): undefined {
+  return undefined;
 }
 
 function getSurfaceColor(theme: AppTheme, role: AndroidMaterialRole): ColorValue {

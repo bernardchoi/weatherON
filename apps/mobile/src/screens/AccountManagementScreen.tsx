@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "../components/AppScreen";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AccountProvider } from "../providers/accountAuth";
@@ -99,30 +100,30 @@ export function AccountManagementScreen({
         {accountLinked ? (
           <View style={styles.accountActions}>
             <View style={styles.dangerActions}>
-              <Pressable
+              <FeedbackPressable
                 accessibilityLabel={dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
                 accessibilityRole="button"
                 onPress={() => {
                   if (dangerConfirm === "logout") onSignOutAccount();
                   else setDangerConfirm("logout");
                 }}
-                style={({ pressed }) => [styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border, opacity: pressed ? 0.72 : 1 }]}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "logout" ? `${theme.alert}22` : theme.cardMuted, borderColor: dangerConfirm === "logout" ? theme.alert : theme.border }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "logout" ? theme.alert : theme.text }]}>
                   {dangerConfirm === "logout" ? "로그아웃 확정" : "로그아웃"}
                 </Text>
-              </Pressable>
-              <Pressable
+              </FeedbackPressable>
+              <FeedbackPressable
                 accessibilityLabel={dangerConfirm === "delete" ? "회원 탈퇴 확정" : "회원 탈퇴"}
                 accessibilityRole="button"
                 onPress={() => {
                   if (dangerConfirm === "delete") void onDeleteAccount();
                   else setDangerConfirm("delete");
                 }}
-                style={({ pressed }) => [styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : "transparent", borderColor: dangerConfirm === "delete" ? theme.alert : theme.border, opacity: pressed ? 0.72 : 1 }]}
+                style={[styles.smallButton, { backgroundColor: dangerConfirm === "delete" ? `${theme.alert}22` : "transparent", borderColor: dangerConfirm === "delete" ? theme.alert : theme.border }]}
               >
                 <Text style={[styles.smallButtonText, { color: dangerConfirm === "delete" ? theme.alert : theme.text }]}>{dangerConfirm === "delete" ? "탈퇴 확정" : "회원 탈퇴"}</Text>
-              </Pressable>
+              </FeedbackPressable>
             </View>
             {dangerConfirm !== "none" ? (
               <Pressable accessibilityLabel="계정 작업 취소" accessibilityRole="button" onPress={() => setDangerConfirm("none")} style={styles.cancelButton}>

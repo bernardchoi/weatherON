@@ -5,6 +5,7 @@ import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 
 type FilterId = "all" | "sports" | "outdoor" | "season" | "culture";
 
@@ -110,7 +111,8 @@ export function DestinationHubScreen({
           {filters.map((filter) => {
             const active = activeFilter === filter.id;
             return (
-              <Pressable
+              <FeedbackPressable
+                accessibilityLabel={`${filter.label} 목적지 필터`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 key={filter.id}
@@ -119,7 +121,7 @@ export function DestinationHubScreen({
               >
                 <FilterIcon type={filter.icon} color={active ? theme.onAccent : theme.subtle} />
                 <Text style={[styles.filterText, { color: active ? theme.onAccent : theme.text }]}>{filter.label}</Text>
-              </Pressable>
+              </FeedbackPressable>
             );
           })}
         </View>
@@ -147,7 +149,8 @@ export function DestinationHubScreen({
         <View style={styles.destinationList}>
           {visibleDestinations.length ? (
             visibleDestinations.map((card) => (
-              <Pressable
+              <FeedbackPressable
+                accessibilityLabel={`${card.place.name} 목적지 상세 보기`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: selectedDestinationPlace.id === card.place.id }}
                 key={card.place.id}
@@ -173,7 +176,7 @@ export function DestinationHubScreen({
                   </Text>
                 </View>
                 <Chevron color={theme.subtle} />
-              </Pressable>
+              </FeedbackPressable>
             ))
           ) : (
             <View style={[styles.emptyCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>

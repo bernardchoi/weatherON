@@ -1,100 +1,61 @@
 import React, { useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Platform,
-  Pressable,
-  StyleSheet,
-  type GestureResponderEvent,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
-import { useAppTheme } from "../theme/AppThemeContext";
-import { androidMaterialRipple } from "../theme/androidMaterial";
+import { Animated, Easing, Pressable, type GestureResponderEvent, type PressableProps } from "react-native";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+import { triggerImportantActionHaptic } from "../utils/interactionFeedback";
 
 type FeedbackPressableProps = PressableProps & {
   feedbackColor?: string;
 };
 
-// 목업 BrandCard의 120ms state layer를 네이티브 화면 전반에서 공유한다.
-// 기존 Pressable의 레이아웃·접근성 계약은 그대로 유지하고 시각 피드백만 얹는다.
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function FeedbackPressable({
-  children,
-  disabled,
   feedbackColor,
   android_ripple,
+  accessibilityLabel,
+  onPress,
   onPressIn,
   onPressOut,
   style,
   ...props
 }: FeedbackPressableProps) {
-  const theme = useAppTheme();
-  const feedback = useRef(new Animated.Value(0)).current;
-  const ripple = android_ripple ?? androidMaterialRipple(theme);
-  const usesNativeRipple = Platform.OS === "android" && Boolean(ripple);
+  const reducedMotion = useReducedMotion();
+  const scale = useRef(new Animated.Value(1)).current;
+  void feedbackColor;
+  void android_ripple;
 
-  const animateTo = (toValue: number) => {
-    feedback.stopAnimation();
-    Animated.timing(feedback, {
-      toValue,
-      duration: 120,
+  const animateTo = (value: number, duration: number) => {
+    scale.stopAnimation();
+    if (reducedMotion !== false) return scale.setValue(1);
+    Animated.timing(scale, {
+      toValue: value,
+      duration,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   };
-
   const handlePressIn = (event: GestureResponderEvent) => {
-    if (!disabled && !usesNativeRipple) animateTo(0.12);
+    animateTo(0.985, 80);
     onPressIn?.(event);
   };
-
   const handlePressOut = (event: GestureResponderEvent) => {
-    if (!usesNativeRipple) animateTo(0);
+    animateTo(1, 140);
     onPressOut?.(event);
+  };
+  const handlePress = (event: GestureResponderEvent) => {
+    triggerImportantActionHaptic(accessibilityLabel);
+    onPress?.(event);
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
       {...props}
-      android_ripple={ripple}
-      disabled={disabled}
+      accessibilityLabel={accessibilityLabel}
+      android_ripple={undefined}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={(state) => [typeof style === "function" ? style(state) : style, Platform.OS === "android" && { minHeight: 48, overflow: "hidden" }]}
-    >
-      {(state) => {
-        const resolvedStyle = typeof style === "function" ? style(state) : style;
-        const flattenedStyle = StyleSheet.flatten(resolvedStyle as StyleProp<ViewStyle>);
-        const feedbackRadius = {
-          borderRadius: flattenedStyle?.borderRadius,
-          borderTopLeftRadius: flattenedStyle?.borderTopLeftRadius,
-          borderTopRightRadius: flattenedStyle?.borderTopRightRadius,
-          borderBottomRightRadius: flattenedStyle?.borderBottomRightRadius,
-          borderBottomLeftRadius: flattenedStyle?.borderBottomLeftRadius,
-        };
-
-        return (
-          <>
-            {typeof children === "function" ? children(state) : children}
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                styles.feedback,
-                feedbackRadius,
-                { backgroundColor: feedbackColor ?? theme.text, opacity: disabled || usesNativeRipple ? 0 : feedback },
-              ]}
-            />
-          </>
-        );
-      }}
-    </Pressable>
+      style={(state) => [typeof style === "function" ? style(state) : style, { transform: [{ scale }] }]}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  feedback: {
-    zIndex: 20,
-  },
-});

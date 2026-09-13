@@ -154,13 +154,13 @@ function WardrobeItemCard({
         },
       ]}
     >
-      <Pressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
+      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
         </View>
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
         <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
-      </Pressable>
+      </FeedbackPressable>
       <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
         accessibilityRole="button"

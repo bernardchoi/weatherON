@@ -181,7 +181,17 @@ assertSourceIncludes("apps/mobile/src/components/MaterialSnackbar.tsx", [
   "minHeight: 56",
   "minHeight: 48",
 ]);
-assertSourceIncludes("apps/mobile/src/components/FeedbackPressable.tsx", ["usesNativeRipple", "disabled || usesNativeRipple ? 0 : feedback"]);
+assertSourceIncludes("apps/mobile/src/components/FeedbackPressable.tsx", [
+  "android_ripple={undefined}",
+  "animateTo(0.985, 80)",
+  "animateTo(1, 140)",
+  "triggerImportantActionHaptic(accessibilityLabel)",
+]);
+assertSourceExcludes("apps/mobile/src/components/FeedbackPressable.tsx", ["Animated.View", "usesNativeRipple"]);
+assertSourceIncludes("apps/mobile/src/utils/interactionFeedback.ts", [
+  "NotificationFeedbackType.Warning",
+  "ImpactFeedbackStyle.Medium",
+]);
 assertSourceExcludes("apps/mobile/src/components/AppScreen.tsx", ["androidMaterialSurface"]);
 assertSourceIncludes("scripts/check-android-core-flow.mjs", [
   "assertClearOfBottomNav",

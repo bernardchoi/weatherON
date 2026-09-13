@@ -10,6 +10,7 @@ import type { TemperatureUnit } from "../state/useWeatherOnAppState";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { getConditionLabel } from "../utils/weatherPresentation";
+import { FeedbackPressable } from "./FeedbackPressable";
 
 type WeatherSummaryProps = {
   originWeather: WeatherSnapshot;
@@ -86,7 +87,7 @@ export function WeatherSummary({
 function DestinationEmptyMiniCard({ onPress }: { onPress: () => void }) {
   const theme = useAppTheme();
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityLabel="목적지 추가하기"
       accessibilityRole="button"
       android_ripple={androidMaterialRipple(theme)}
@@ -104,7 +105,7 @@ function DestinationEmptyMiniCard({ onPress }: { onPress: () => void }) {
       <Text style={[styles.miniMeta, { color: theme.subtle }]} numberOfLines={2}>
         가는 곳을 더하면 출발 시간까지 챙겨드림
       </Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }
 

@@ -3,6 +3,7 @@ import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressabl
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
+import { FeedbackPressable } from "../components/FeedbackPressable";
 import { Section } from "../components/Section";
 import { WardrobePhotoRegistration } from "../components/WardrobePhotoRegistration";
 import {
@@ -376,13 +377,13 @@ function PresetCard({
         },
       ]}
     >
-      <Pressable accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
+      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
         <View style={[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }]}>
           {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
         <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
         <Text style={[styles.presetMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
-      </Pressable>
+      </FeedbackPressable>
       <AppButton
         label={item.owned ? "해제" : "추가"}
         accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}

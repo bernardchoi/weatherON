@@ -5,6 +5,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { pageStyles } from "../theme/pageStyles";
 import { radius, spacing } from "../theme/tokens";
+import { triggerImportantActionHaptic } from "../utils/interactionFeedback";
 
 type AppButtonProps = {
   label: string;
@@ -57,8 +58,6 @@ export function AppButton({
       useNativeDriver: true,
     }).start();
   };
-  const pressOpacity = scale.interpolate({ inputRange: [0.97, 1], outputRange: [0.88, 1] });
-
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel ?? label}
@@ -67,7 +66,10 @@ export function AppButton({
       android_ripple={androidMaterialRipple(theme, resolvedVariant === "filled" ? "primary" : "surface")}
       disabled={disabled}
       hitSlop={size === "sm" ? 5 : undefined}
-      onPress={onPress}
+      onPress={() => {
+        triggerImportantActionHaptic(accessibilityLabel ?? label);
+        onPress();
+      }}
       onPressIn={() => animateTo(0.97)}
       onPressOut={() => animateTo(1)}
       style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null]}
@@ -79,7 +81,7 @@ export function AppButton({
           Platform.OS === "android" ? styles.buttonAndroid : null,
           Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
           resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
-          { backgroundColor, borderColor, opacity: disabled ? 0.48 : pressOpacity, transform: [{ scale }] },
+          { backgroundColor, borderColor, opacity: disabled ? 0.48 : 1, transform: [{ scale }] },
         ]}
       >
         {resolvedVariant !== "text" ? (
