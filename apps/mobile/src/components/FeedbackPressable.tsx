@@ -1,5 +1,15 @@
-import React, { useRef } from "react";
-import { Animated, Easing, Pressable, type GestureResponderEvent, type PressableProps } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  type GestureResponderEvent,
+  type PressableProps,
+  type PressableStateCallbackType,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { triggerImportantActionHaptic } from "../utils/interactionFeedback";
 
@@ -8,6 +18,16 @@ type FeedbackPressableProps = PressableProps & {
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function resolveFeedbackPressableStyle(
+  style: PressableProps["style"],
+  state: PressableStateCallbackType,
+  scale: Animated.Value,
+) {
+  const resolvedStyle = typeof style === "function" ? style(state) : style;
+  const transform = StyleSheet.flatten(resolvedStyle as StyleProp<ViewStyle>)?.transform ?? [];
+  return [resolvedStyle, { transform: [...transform, { scale }] }];
+}
 
 export function FeedbackPressable({
   feedbackColor,
@@ -21,6 +41,7 @@ export function FeedbackPressable({
 }: FeedbackPressableProps) {
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
+  const [pressed, setPressed] = useState(false);
   void feedbackColor;
   void android_ripple;
 
@@ -35,10 +56,12 @@ export function FeedbackPressable({
     }).start();
   };
   const handlePressIn = (event: GestureResponderEvent) => {
+    setPressed(true);
     animateTo(0.985, 80);
     onPressIn?.(event);
   };
   const handlePressOut = (event: GestureResponderEvent) => {
+    setPressed(false);
     animateTo(1, 140);
     onPressOut?.(event);
   };
@@ -46,6 +69,7 @@ export function FeedbackPressable({
     triggerImportantActionHaptic(accessibilityLabel);
     onPress?.(event);
   };
+  const resolvedStyle = resolveFeedbackPressableStyle(style, { pressed }, scale);
 
   return (
     <AnimatedPressable
@@ -55,7 +79,7 @@ export function FeedbackPressable({
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={(state) => [typeof style === "function" ? style(state) : style, { transform: [{ scale }] }]}
+      style={resolvedStyle as Animated.AnimatedProps<PressableProps>["style"]}
     />
   );
 }
