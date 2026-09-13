@@ -885,6 +885,7 @@ await build({
     "expo-blur",
     "expo-clipboard",
     "expo-crypto",
+    "expo-haptics",
     "expo-image-manipulator",
     "expo-image-picker",
     "expo-location",
