@@ -1,6 +1,7 @@
 import type { WeatherSnapshot } from "@weatheron/shared";
 
 export const departureLiveActivityAutoLeadMinutes = 60;
+export type DepartureGuidanceKind = "rain-wind" | "rain" | "wind" | "clear";
 
 export type DepartureLiveActivityInput = {
   destinationId: string;
@@ -8,6 +9,7 @@ export type DepartureLiveActivityInput = {
   departureAt: string;
   departureTimeLabel: string;
   guidance: string;
+  guidanceKind?: DepartureGuidanceKind;
   guidanceSymbol: string;
   deepLink: string;
 };
@@ -58,20 +60,35 @@ export function getDepartureWeatherGuidance(
   rainThresholdPct: number,
   windThresholdMs: number,
 ): string {
+  return getDepartureWeatherGuidanceLabel(getDepartureWeatherGuidanceKind(weather, rainThresholdPct, windThresholdMs));
+}
+
+export function getDepartureWeatherGuidanceKind(
+  weather: WeatherSnapshot,
+  rainThresholdPct: number,
+  windThresholdMs: number,
+): DepartureGuidanceKind {
   const upcoming = weather.hourly.slice(0, 6);
   const maxRainProbabilityPct = Math.max(weather.current.rainProbabilityPct, ...upcoming.map((item) => item.rainProbabilityPct));
   const maxWindMs = Math.max(weather.current.windMs, ...upcoming.map((item) => item.windMs));
   const rainRisk = maxRainProbabilityPct >= rainThresholdPct;
   const windRisk = maxWindMs >= windThresholdMs;
-  if (rainRisk && windRisk) return "우산 챙기고 강풍 조심해요";
-  if (rainRisk) return "우산 챙겨요";
-  if (windRisk) return "바람이 강해요";
+  if (rainRisk && windRisk) return "rain-wind";
+  if (rainRisk) return "rain";
+  if (windRisk) return "wind";
+  return "clear";
+}
+
+export function getDepartureWeatherGuidanceLabel(kind: DepartureGuidanceKind): string {
+  if (kind === "rain-wind") return "우산 챙기고 강풍 조심해요";
+  if (kind === "rain") return "우산 챙겨요";
+  if (kind === "wind") return "바람이 강해요";
   return "가볍게 출발해요";
 }
 
-export function getDepartureGuidanceSymbol(guidance: string): string {
-  if (guidance.includes("우산")) return "umbrella.fill";
-  if (guidance.includes("바람")) return "wind";
+export function getDepartureGuidanceSymbol(kind: DepartureGuidanceKind): string {
+  if (kind === "rain" || kind === "rain-wind") return "umbrella.fill";
+  if (kind === "wind") return "wind";
   return "figure.walk.departure";
 }
 

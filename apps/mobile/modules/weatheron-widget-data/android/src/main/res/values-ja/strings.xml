@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="weatheron_widget_name">WeatherON 天気</string><string name="weatheron_widget_description">現在の天気と外出準備を表示します。</string>
+  <string name="weatheron_widget_checking">天気を確認中</string><string name="weatheron_widget_feels_rain">体感 %1$s・降水 %2$d%%</string>
+  <string name="weatheron_widget_umbrella">傘</string><string name="weatheron_widget_outer">上着</string><string name="weatheron_widget_mask">マスク</string>
+  <string name="weatheron_widget_prep_low">追加の準備は不要</string><string name="weatheron_widget_pack">%1$sを持っていく</string><string name="weatheron_widget_outfit_empty">コーデを確認しましょう</string>
+  <string name="weatheron_widget_placeholder_location">現在地</string><string name="weatheron_widget_placeholder_detail">体感 22°・降水 10%</string><string name="weatheron_widget_placeholder_outfit">Tシャツ・スラックス・スニーカー</string>
+  <string name="weatheron_widget_updated">WeatherON・%1$s更新</string><string name="weatheron_widget_open_app">アプリで天気を確認してください</string><string name="weatheron_widget_open_prep">外出前の準備を確認しましょう</string><string name="weatheron_widget_outfit_latest">最新のコーデがここに表示されます</string>
+  <string name="weatheron_condition_clear">晴れ</string><string name="weatheron_condition_cloud">くもり</string><string name="weatheron_condition_rain">雨</string><string name="weatheron_condition_snow">雪</string><string name="weatheron_condition_storm">強い雨</string><string name="weatheron_condition_dust">ほこり</string>
+  <string name="weatheron_departure_channel">出発ライブ状況</string><string name="weatheron_departure_channel_description">出発前のカウントダウンと天気の準備案内</string><string name="weatheron_departure_title">%1$sへの出発準備</string><string name="weatheron_departure_subtext">%1$s出発</string><string name="weatheron_departure_stop">終了</string><string name="weatheron_departure_big_text">%1$s\n%2$s出発予定</string>
+  <string name="weatheron_guidance_rain_wind">傘を持って強風に注意しましょう</string><string name="weatheron_guidance_rain">傘を持ちましょう</string><string name="weatheron_guidance_wind">風が強いです</string><string name="weatheron_guidance_clear">身軽に出発しましょう</string>
+</resources>

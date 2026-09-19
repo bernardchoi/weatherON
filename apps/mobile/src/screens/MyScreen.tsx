@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -197,7 +197,7 @@ function getAlertState(
 ): { summary: string; meta: string; status: string; tone: MenuTone } {
   const skippedPermission =
     permissionGateResult?.reason === "notification" &&
-    (permissionGateResult.denied || permissionGateResult.message.includes("나중에"));
+    permissionGateResult.outcome !== "allowed";
   if (!smartCareEnabled) {
     return {
       summary: "알림 일시 중지",

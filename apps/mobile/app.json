@@ -37,8 +37,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "보유한 옷 사진을 선택해 내 옷장과 코디 추천에 추가하기 위해 사진 보관함을 사용합니다.",
-          "cameraPermission": "보유한 옷을 촬영해 내 옷장과 코디 추천에 추가하기 위해 카메라를 사용합니다.",
+          "photosPermission": "WeatherON uses your photo library so you can add photos of clothes you own to your wardrobe and outfit recommendations.",
+          "cameraPermission": "WeatherON uses the camera so you can photograph clothes you own and add them to your wardrobe and outfit recommendations.",
           "microphonePermission": false
         }
       ],
@@ -65,11 +65,12 @@
         "dark": "../../assets/icon/icon-dark-1024.png"
       },
       "infoPlist": {
-        "CFBundleDevelopmentRegion": "ko",
-        "NSLocationWhenInUseUsageDescription": "현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.",
-        "NSMotionUsageDescription": "날씨 배경 효과와 화면 전환을 기기 움직임 및 접근성 설정에 맞춰 제공하기 위해 동작 정보를 사용합니다.",
-        "NSCameraUsageDescription": "보유한 옷을 촬영해 내 옷장과 코디 추천에 추가하기 위해 카메라를 사용합니다.",
-        "NSPhotoLibraryUsageDescription": "보유한 옷 사진을 선택해 내 옷장과 코디 추천에 추가하기 위해 사진 보관함을 사용합니다.",
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["ko", "en", "ja"],
+        "NSLocationWhenInUseUsageDescription": "WeatherON uses your location to provide local weather and recommendations for getting ready to go out.",
+        "NSMotionUsageDescription": "WeatherON uses motion data to adapt weather effects and transitions to your device and accessibility settings.",
+        "NSCameraUsageDescription": "WeatherON uses the camera so you can photograph clothes you own and add them to your wardrobe and outfit recommendations.",
+        "NSPhotoLibraryUsageDescription": "WeatherON uses your photo library so you can add photos of clothes you own to your wardrobe and outfit recommendations.",
         "NSSupportsLiveActivities": true,
         "ITSAppUsesNonExemptEncryption": false
       },

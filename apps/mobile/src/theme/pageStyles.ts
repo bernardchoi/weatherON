@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "../localization/react-native";
 
 // 공통 정보 계층. Android는 Material 타입 스케일·형태, 색상은 androidMaterial 사용.
 const isAndroid = Platform.OS !== "ios";

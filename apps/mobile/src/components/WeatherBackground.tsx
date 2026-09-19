@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Animated, AppState, Easing, StyleSheet, View, useWindowDimensions } from "../localization/react-native";
 import type { WeatherCondition } from "@weatheron/shared";
 import type { AppTheme } from "../theme/tokens";
 import { useReducedMotion } from "../hooks/useReducedMotion";

@@ -763,17 +763,17 @@ function inferPlaceSearchCountryCode(query) {
 }
 
 function normalizeSearchLanguage(value) {
-  const language = String(value || "ko").split("-")[0].toLowerCase();
+  const language = String(value || "en").split("-")[0].toLowerCase();
   if (language === "ja") return "ja";
   if (language === "en") return "en";
-  return "ko";
+  return language === "ko" ? "ko" : "en";
 }
 
 function normalizeWeatherKitLanguage(value) {
-  const language = String(value || "ko").split("-")[0].toLowerCase();
+  const language = String(value || "en").split("-")[0].toLowerCase();
   if (language === "ja") return "ja";
   if (language === "en") return "en";
-  return "ko";
+  return language === "ko" ? "ko" : "en";
 }
 
 function normalizeWeatherKitCountryCode(value) {
@@ -939,10 +939,10 @@ function localizePlaceSearchResults(places, language) {
   return places.map((place) => localizePlaceSearchResult(place, language));
 }
 
-function localizePlaceSearchResult(place, language = "ko") {
+function localizePlaceSearchResult(place, language = "en") {
   const key = getKnownStationKey(place);
   if (!key) return place;
-  const label = localizedStationLabels[key][language] ?? localizedStationLabels[key].ko;
+  const label = localizedStationLabels[key][language] ?? localizedStationLabels[key].en;
   return {
     ...place,
     name: label.name,

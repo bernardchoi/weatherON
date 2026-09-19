@@ -1,0 +1,4 @@
+"departure.alert.title" = "출발 준비 시작";
+"departure.alert.body" = "%@ 출발까지 60분 남았어요";
+"departure.completed" = "출발 시각이 되었어요";
+"departure.expired" = "출발 정보가 만료됐어요";

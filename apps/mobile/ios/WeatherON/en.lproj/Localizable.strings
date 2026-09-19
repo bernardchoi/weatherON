@@ -1,0 +1,4 @@
+"departure.alert.title" = "Departure preparation started";
+"departure.alert.body" = "60 minutes until departure for %@";
+"departure.completed" = "It is time to leave";
+"departure.expired" = "Departure information has expired";

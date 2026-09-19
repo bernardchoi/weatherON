@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { Image, LocalizedView, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "../localization/react-native";
 import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -7,6 +7,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
+import { formatDisplayClockTime, formatDisplayDate, translateText } from "../localization/localization";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { formatTemperature } from "../utils/units";
@@ -111,11 +112,11 @@ export function TomorrowBriefScreen({
             <Text style={[styles.rainLabel, { color: theme.subtle }]}>비 올 확률</Text>
           </View>
         </View>
-        <View style={styles.factRow} accessibilityLabel="내일 핵심 예보">
+        <LocalizedView style={styles.factRow} accessibilityLabel="내일 핵심 예보">
           <BriefFact icon={uiIconAssets.rain} label="예상 강수" value={tomorrow.summary.precipitationMm > 0 ? `${tomorrow.summary.precipitationMm.toFixed(1)}mm` : "비 없음"} color={theme.sky} theme={theme} />
           <BriefFact icon={uiIconAssets.wind} label="최대 바람" value={`${tomorrow.summary.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
           <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time) : "강수 없음"} color={theme.gold} theme={theme} />
-        </View>
+        </LocalizedView>
       </View>
 
       <View
@@ -170,7 +171,7 @@ export function TomorrowBriefScreen({
             <Text style={[styles.outfitReason, { color: theme.muted }]} numberOfLines={1}>{outfitReason}</Text>
           </View>
         </View>
-        <View style={styles.outfitItems} accessibilityLabel="추천 코디 구성">
+        <LocalizedView style={styles.outfitItems} accessibilityLabel="추천 코디 구성">
           {outfitItems.slice(0, 4).map(([slot, item]) => (
             <View key={`${slot}:${item.id}`} style={[styles.outfitItem, { backgroundColor: theme.cardMuted }]}>
               <View style={[styles.outfitMiniImageFrame, { backgroundColor: theme.card }]}>
@@ -183,7 +184,7 @@ export function TomorrowBriefScreen({
               <Text style={[styles.outfitSlot, { color: theme.gold }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
             </View>
           ))}
-        </View>
+        </LocalizedView>
       </View>
 
       <View style={[styles.readyStrip, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
@@ -233,10 +234,10 @@ function OutfitItemImage({
 
 function BriefFact({ icon, label, value, color, theme }: { icon: ImageSourcePropType; label: string; value: string; color: string; theme: ReturnType<typeof useAppTheme> }) {
   return (
-    <View style={[styles.fact, { backgroundColor: theme.cardMuted }]} accessibilityLabel={`${label} ${value}`}>
+    <LocalizedView style={[styles.fact, { backgroundColor: theme.cardMuted }]} accessibilityLabel={`${label} ${value}`}>
       <Image source={icon} style={[styles.factIcon, { tintColor: color }]} resizeMode="contain" />
       <Text style={[styles.factValue, { color }]} numberOfLines={1}>{value}</Text>
-    </View>
+    </LocalizedView>
   );
 }
 
@@ -304,13 +305,12 @@ function getDateKey(value: string) {
 
 function formatTomorrowDate(value: string) {
   const parsed = new Date(`${value}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return "내일";
-  return new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(parsed);
+  if (Number.isNaN(parsed.getTime())) return translateText("내일");
+  return formatDisplayDate(parsed, { month: "long", day: "numeric", weekday: "short" });
 }
 
 function formatHour(value: string) {
-  const match = value.match(/T?(\d{2}):(\d{2})/);
-  return match ? `${match[1]}:${match[2]}` : "확인 중";
+  return formatDisplayClockTime(value);
 }
 
 function toCondition(value: string): WeatherSnapshot["current"]["condition"] {

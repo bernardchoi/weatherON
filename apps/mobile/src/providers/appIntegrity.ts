@@ -1,6 +1,6 @@
 import { fetch as expoFetch } from "expo/fetch";
 import * as Crypto from "expo-crypto";
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 import { getAccountRuntimeConfig } from "../config/accountEnv";
 import { normalizeBaseUrl } from "../utils/httpJson";
 

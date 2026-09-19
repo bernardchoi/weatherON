@@ -117,10 +117,10 @@ internal object WeatherONDepartureNotification {
     val manager = context.getSystemService(NotificationManager::class.java)
     manager.createNotificationChannel(NotificationChannel(
       CHANNEL_ID,
-      "출발 실시간 현황",
+      context.getString(R.string.weatheron_departure_channel),
       NotificationManager.IMPORTANCE_DEFAULT,
     ).apply {
-      description = "출발 전 카운트다운과 날씨 준비 안내"
+      description = context.getString(R.string.weatheron_departure_channel_description)
       setSound(null, null)
       enableVibration(false)
     })
@@ -129,11 +129,11 @@ internal object WeatherONDepartureNotification {
     val stopIntent = Intent(context, WeatherONDepartureReceiver::class.java).setAction(ACTION_STOP)
     val builder = Notification.Builder(context, CHANNEL_ID)
       .setSmallIcon(context.applicationInfo.icon)
-      .setContentTitle("${payload.destinationName} 출발 준비")
-      .setContentText(payload.guidance)
-      .setSubText("${payload.departureTimeLabel} 출발")
+      .setContentTitle(context.getString(R.string.weatheron_departure_title, payload.destinationName))
+      .setContentText(payload.localizedGuidance(context))
+      .setSubText(context.getString(R.string.weatheron_departure_subtext, payload.departureTimeLabel))
       .setContentIntent(PendingIntent.getActivity(context, OPEN_REQUEST_CODE, openIntent, immutableFlags()))
-      .addAction(Notification.Action.Builder(null, "종료", pendingBroadcast(context, STOP_REQUEST_CODE, stopIntent)).build())
+      .addAction(Notification.Action.Builder(null, context.getString(R.string.weatheron_departure_stop), pendingBroadcast(context, STOP_REQUEST_CODE, stopIntent)).build())
       .setCategory(Notification.CATEGORY_NAVIGATION)
       .setOngoing(true)
       .setOnlyAlertOnce(true)
@@ -152,7 +152,7 @@ internal object WeatherONDepartureNotification {
           .setStyledByProgress(true))
         .addExtras(Bundle().apply { putBoolean(PROMOTED_EXTRA, true) })
     } else {
-      builder.setStyle(Notification.BigTextStyle().bigText("${payload.guidance}\n${payload.departureTimeLabel} 출발 예정"))
+      builder.setStyle(Notification.BigTextStyle().bigText(context.getString(R.string.weatheron_departure_big_text, payload.localizedGuidance(context), payload.departureTimeLabel)))
     }
     manager.notify(NOTIFICATION_ID, builder.build())
   }
@@ -226,9 +226,21 @@ private data class DeparturePayload(
   val departureAtMs: Long,
   val departureTimeLabel: String,
   val guidance: String,
+  val guidanceKind: String?,
   val deepLink: String,
 ) {
   val planKey = "$destinationId:$departureAt"
+
+  fun localizedGuidance(context: Context): String {
+    val resource = when (guidanceKind) {
+      "rain-wind" -> R.string.weatheron_guidance_rain_wind
+      "rain" -> R.string.weatheron_guidance_rain
+      "wind" -> R.string.weatheron_guidance_wind
+      "clear" -> R.string.weatheron_guidance_clear
+      else -> return guidance
+    }
+    return context.getString(resource)
+  }
 
   companion object {
     fun parse(raw: String): DeparturePayload? = runCatching {
@@ -241,6 +253,7 @@ private data class DeparturePayload(
         departureAtMs = Instant.parse(departureAt).toEpochMilli(),
         departureTimeLabel = json.getString("departureTimeLabel"),
         guidance = json.getString("guidance"),
+        guidanceKind = json.optString("guidanceKind").ifBlank { null },
         deepLink = json.getString("deepLink"),
       ).also {
         require(it.destinationId.isNotBlank() && it.destinationName.isNotBlank() && it.deepLink.startsWith("weatheron://"))

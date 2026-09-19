@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "react-native";
+import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "../localization/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNav } from "../components/BottomNav";
 import { AppButton } from "../components/AppButton";

@@ -1,0 +1,4 @@
+"NSLocationWhenInUseUsageDescription" = "WeatherON uses your location to provide local weather and recommendations for getting ready to go out.";
+"NSMotionUsageDescription" = "WeatherON uses motion data to adapt weather effects and transitions to your device and accessibility settings.";
+"NSCameraUsageDescription" = "WeatherON uses the camera so you can photograph clothes you own and add them to your wardrobe and outfit recommendations.";
+"NSPhotoLibraryUsageDescription" = "WeatherON uses your photo library so you can add photos of clothes you own to your wardrobe and outfit recommendations.";

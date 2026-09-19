@@ -251,7 +251,7 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       url.searchParams.set("latitude", String(params.latitude));
       url.searchParams.set("longitude", String(params.longitude));
       url.searchParams.set("timezone", params.timezone);
-      url.searchParams.set("language", params.language ?? "ko");
+      url.searchParams.set("language", params.language ?? "en");
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
       const payload = await fetchJson<WeatherKitResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.currentWeather) throw new Error("WeatherKit forecast response is empty");

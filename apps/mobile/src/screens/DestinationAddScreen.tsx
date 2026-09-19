@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "react-native";
+import { Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -225,7 +225,7 @@ export function DestinationAddScreen({
                         </View>
                       ) : null}
                     </View>
-                    <Text style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</Text>
+                    <RawText style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</RawText>
                     <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
                       {[
                         getPlaceDistanceLabel(place, placeSearchOrigin, state.weather.countryCode, distanceUnit),
@@ -362,15 +362,15 @@ function QueryMatchedText({
 }) {
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const start = normalizedQuery ? value.toLocaleLowerCase().indexOf(normalizedQuery) : -1;
-  if (start < 0) return <Text style={style} numberOfLines={1}>{value}</Text>;
+  if (start < 0) return <RawText style={style} numberOfLines={1}>{value}</RawText>;
 
   const end = start + normalizedQuery.length;
   return (
-    <Text style={style} numberOfLines={1}>
+    <RawText style={style} numberOfLines={1}>
       {value.slice(0, start)}
-      <Text style={{ color: matchColor }}>{value.slice(start, end)}</Text>
+      <RawText style={{ color: matchColor }}>{value.slice(start, end)}</RawText>
       {value.slice(end)}
-    </Text>
+    </RawText>
   );
 }
 
@@ -429,8 +429,8 @@ function getPlaceDistanceLabel(
 }
 
 function getOverseasDistanceLabel(countryCode: string) {
-  const countryLabel = getCountryLabel(countryCode);
-  return countryLabel === "해외" ? "해외" : `해외 · ${countryLabel}`;
+  if (countryCode === "GLOBAL") return "해외";
+  return `해외 · ${getCountryLabel(countryCode)}`;
 }
 
 function getProviderLabel(provider: string) {

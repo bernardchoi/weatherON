@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, RawText, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { StatusPill } from "../components/StatusPill";
@@ -117,10 +117,10 @@ export function LocationChangeScreen({
                 </View>
                 <View style={styles.copy}>
                   <View style={styles.inline}>
-                    <Text style={[styles.title, { color: theme.text }]}>{place.name}</Text>
+                    <RawText style={[styles.title, { color: theme.text }]}>{place.name}</RawText>
                     {place.id === state.weather.locationId ? <StatusPill label="현재" tone="clear" /> : null}
                   </View>
-                  <Text style={[styles.meta, { color: theme.muted }]}>{place.address}</Text>
+                  <RawText style={[styles.meta, { color: theme.muted }]}>{place.address}</RawText>
                 </View>
                 <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
               </Pressable>

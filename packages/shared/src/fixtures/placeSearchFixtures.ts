@@ -99,7 +99,7 @@ export function localizePlaceSearchResult(place: PlaceSearchResult, localeOrLang
   const language = getPlaceSearchLanguage(localeOrLanguage);
   const key = getKnownStationKey(place);
   if (!key) return place;
-  const label = localizedStationLabels[key][language] ?? localizedStationLabels[key].ko;
+  const label = localizedStationLabels[key][language] ?? localizedStationLabels[key].en;
   return {
     ...place,
     name: label.name,
@@ -119,10 +119,10 @@ function normalizeSearchText(value: string): string {
 }
 
 function getPlaceSearchLanguage(value?: string): "ko" | "en" | "ja" {
-  const language = String(value || "ko").split("-")[0]?.toLowerCase();
+  const language = String(value || "en").split("-")[0]?.toLowerCase();
   if (language === "ja") return "ja";
   if (language === "en") return "en";
-  return "ko";
+  return language === "ko" ? "ko" : "en";
 }
 
 function getKnownStationKey(place: PlaceSearchResult): KnownStationKey | null {

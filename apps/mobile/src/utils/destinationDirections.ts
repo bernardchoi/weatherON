@@ -1,6 +1,6 @@
 import type { CountryCode, DestinationTransportMode, GeoCoordinate } from "@weatheron/shared";
 import * as Clipboard from "expo-clipboard";
-import { Linking } from "react-native";
+import { Linking } from "../localization/react-native";
 
 type DestinationDirectionsInput = {
   origin?: GeoCoordinate;

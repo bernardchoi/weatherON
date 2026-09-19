@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type TextStyle } from "react-native";
+import { StyleSheet, Text, type TextStyle } from "../localization/react-native";
 
 // Pretendard 정적 웨이트 파일을 expo-font에 등록할 맵. 앱에서 실제로 쓰는 웨이트만 담는다
 // (fontWeight 분포: 900 다수, 800, 700, 소수 600·300). 각 파일은 자기 웨이트 그대로의 페이스라

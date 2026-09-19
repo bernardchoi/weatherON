@@ -69,9 +69,9 @@ assert.equal(shared.isDepartureLiveActivityAutoWindow(new Date(now - 1).toISOStr
 assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now + 60 * 60_000).toISOString(), now), 0);
 assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now + 60 * 60_000 + 1).toISOString(), now), 1);
 assert.equal(shared.getDepartureLiveActivityActivationDelay(new Date(now).toISOString(), now), null);
-assert.equal(shared.getDepartureGuidanceSymbol('우산 챙겨요'),'umbrella.fill');
-assert.equal(shared.getDepartureGuidanceSymbol('바람이 강해요'),'wind');
-assert.equal(shared.getDepartureGuidanceSymbol('가볍게 출발해요'),'figure.walk.departure');
+assert.equal(shared.getDepartureGuidanceSymbol('rain'),'umbrella.fill');
+assert.equal(shared.getDepartureGuidanceSymbol('wind'),'wind');
+assert.equal(shared.getDepartureGuidanceSymbol('clear'),'figure.walk.departure');
 let nativeStatus={supported:true,enabled:true,active:true,automaticStartSupported:true,guidance:'우산 챙겨요',...input};
 let listener;
 let requests=0;

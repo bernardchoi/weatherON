@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -306,7 +306,7 @@ function getPermissionResultCopy(
   permissionGateResult: P0ScreenProps["permissionGateResult"],
 ): { title: string; body: string; tone: "clear" | "warm" } | null {
   if (!permissionGateResult || permissionGateResult.returnTo !== "M4") return null;
-  const skipped = permissionGateResult.denied || permissionGateResult.message.includes("나중에");
+  const skipped = permissionGateResult.outcome !== "allowed";
   if (permissionGateResult.reason === "notification") {
     return {
       title: skipped ? (permissionGateResult.denied ? "알림 권한이 거부됐어요" : "알림을 나중에 설정했어요") : "알림 권한을 허용했어요",

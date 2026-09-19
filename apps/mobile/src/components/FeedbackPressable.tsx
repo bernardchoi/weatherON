@@ -9,7 +9,7 @@ import {
   type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
-} from "react-native";
+} from "../localization/react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { triggerImportantActionHaptic } from "../utils/interactionFeedback";
 

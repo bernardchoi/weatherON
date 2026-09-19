@@ -5,7 +5,9 @@
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
-    <string>ko</string>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array><string>ko</string><string>en</string><string>ja</string></array>
     <key>CFBundleAllowMixedLocalizations</key>
     <true/>
     <key>CFBundleDisplayName</key>
@@ -50,13 +52,13 @@
       <true/>
     </dict>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>현재 위치 기준 날씨와 외출 준비 추천을 제공하기 위해 위치 권한을 사용합니다.</string>
+    <string>WeatherON uses your location to provide local weather and recommendations for getting ready to go out.</string>
     <key>NSCameraUsageDescription</key>
-    <string>보유한 옷을 촬영해 내 옷장과 코디 추천에 추가하기 위해 카메라를 사용합니다.</string>
+    <string>WeatherON uses the camera so you can photograph clothes you own and add them to your wardrobe and outfit recommendations.</string>
     <key>NSMotionUsageDescription</key>
-    <string>날씨 배경 효과와 화면 전환을 기기 움직임 및 접근성 설정에 맞춰 제공하기 위해 동작 정보를 사용합니다.</string>
+    <string>WeatherON uses motion data to adapt weather effects and transitions to your device and accessibility settings.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>보유한 옷 사진을 선택해 내 옷장과 코디 추천에 추가하기 위해 사진 보관함을 사용합니다.</string>
+    <string>WeatherON uses your photo library so you can add photos of clothes you own to your wardrobe and outfit recommendations.</string>
     <key>NSSupportsLiveActivities</key>
     <true/>
     <key>UILaunchStoryboardName</key>

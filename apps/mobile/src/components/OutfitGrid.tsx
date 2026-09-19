@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
 import { getOutfitImageSource } from "../assets";
 import { FeedbackPressable } from "./FeedbackPressable";
@@ -78,8 +78,9 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
               ) : null}
             </View>
             <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
-            <Text style={[styles.itemName,
-                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</Text>
+            {item.source === "photo" ? <RawText style={[styles.itemName,
+                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</RawText> : <Text style={[styles.itemName,
+                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</Text>}
           </FeedbackPressable>
         ) : null;
       })}

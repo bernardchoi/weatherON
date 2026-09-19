@@ -5,12 +5,16 @@ public struct WeatherONDepartureActivityAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
     public let guidance: String
     public let guidanceSymbol: String?
+    public let guidanceKind: String?
+    public let departureTimeLabel: String?
     public let isCompleted: Bool
     public let phase: String?
 
-    public init(guidance: String, guidanceSymbol: String? = nil, isCompleted: Bool, phase: String? = nil) {
+    public init(guidance: String, guidanceSymbol: String? = nil, guidanceKind: String? = nil, departureTimeLabel: String? = nil, isCompleted: Bool, phase: String? = nil) {
       self.guidance = guidance
       self.guidanceSymbol = guidanceSymbol
+      self.guidanceKind = guidanceKind
+      self.departureTimeLabel = departureTimeLabel
       self.isCompleted = isCompleted
       self.phase = phase
     }

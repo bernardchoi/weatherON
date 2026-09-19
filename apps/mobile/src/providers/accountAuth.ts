@@ -1,6 +1,6 @@
 import { fetch as expoFetch } from "expo/fetch";
 import * as Crypto from "expo-crypto";
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 import { getAccountRuntimeConfig } from "../config/accountEnv";
 import { normalizeBaseUrl } from "../utils/httpJson";
 import {
@@ -370,4 +370,23 @@ export class AccountAuthError extends Error {
     super(message);
     this.name = "AccountAuthError";
   }
+}
+
+export function isAccountAuthCancellation(error: unknown): boolean {
+  return error instanceof AccountAuthError && (error.code === "apple_canceled" || error.code === "oauth_canceled");
+}
+
+export function getAccountAuthDisplayMessage(error: unknown): string {
+  if (!(error instanceof AccountAuthError)) return "계정 요청에 실패했습니다.";
+  if (error.code === "apple_canceled") return "Apple 로그인을 취소했습니다.";
+  if (error.code === "oauth_canceled") return "로그인을 취소했습니다.";
+  if (error.code === "apple_unavailable") return "Apple 로그인은 현재 iOS 앱에서 사용할 수 있습니다.";
+  if (error.code === "oauth_unavailable") return "간편 로그인은 iOS와 Android 앱에서 사용할 수 있습니다.";
+  if (error.code === "account_api_missing") return "계정 서버 주소가 설정되지 않았습니다.";
+  if (error.code === "account_timeout") return "계정 서버 응답이 지연되고 있습니다.";
+  if (error.code === "account_network_error") return "계정 서버에 연결할 수 없습니다.";
+  if (error.code === "session_required") return "다시 로그인해 주세요.";
+  if (error.code.includes("response_invalid")) return "로그인 응답을 확인할 수 없습니다.";
+  if (error.code === "oauth_denied") return "로그인이 완료되지 않았습니다.";
+  return "계정 요청에 실패했습니다.";
 }

@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
@@ -65,7 +65,7 @@ export function DestinationCareScreen({
   const destinationOutfitReason = destinationOutfit.reasons[0] ?? "목적지 날씨 기준으로 다시 고름";
   const headerTitle = selectedDestinationPlace?.name ?? care.name;
   const justSaved = Boolean(
-    selectedDestinationPlace && savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id)?.savedAtLabel === "방금 저장",
+    selectedDestinationPlace && savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id)?.changeStatus === "saved",
   );
   const timeBasis = selectedDestinationSchedulePreference.timeBasis;
   const selectedTargetTime = selectedDestinationSchedulePreference.targetArrivalTime;
@@ -132,6 +132,7 @@ export function DestinationCareScreen({
           ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 자동 시작`
           : `앱 실행 중 ${departureLiveActivityAutoLeadMinutes}분 전 시작`
         : destinationCareEnabled ? "시간 계산 후 자동" : "케어 꺼짐";
+  const liveActivityNeedsPermission = destinationCareEnabled && departureActivityStatus.supported && !departureActivityStatus.enabled;
 
   const openDirections = async () => {
     setDirectionsMessage(null);
@@ -209,7 +210,7 @@ export function DestinationCareScreen({
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
               <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
-              <Text style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</Text>
+              <RawText style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</RawText>
             </View>
             <Text style={[styles.subtitle, pageStyles.caption, { color: theme.subtle }]}>
               {timeBasis === "departure" ? "출발 시각 · 이동 · 도착 판단" : "도착 목표 · 이동 · 출발 판단"}
@@ -217,12 +218,12 @@ export function DestinationCareScreen({
           </View>
         </View>
 
-        <View accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.placeImageFrame, { borderColor: theme.border }]}>
+        <LocalizedView accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.placeImageFrame, { borderColor: theme.border }]}>
           <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
           <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.generatedImageBadgeText, pageStyles.caption, { color: theme.subtle }]}>장소 이미지</Text>
           </View>
-        </View>
+        </LocalizedView>
 
         {justSaved ? (
           <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
@@ -382,7 +383,7 @@ export function DestinationCareScreen({
               </View>
               <View style={styles.quickActionCopy}>
                 <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>자동 카운트다운</Text>
-                <Text style={[styles.quickActionMeta, { color: liveActivityMeta === "설정에서 허용 필요" ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
+                <Text style={[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
               </View>
             </View>
           ) : null}

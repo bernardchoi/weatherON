@@ -6,6 +6,7 @@ import type {
 } from "@weatheron/shared";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 import { getConditionLabel } from "../utils/weatherPresentation";
+import { getLocalePolicy, translateText } from "../localization/localization";
 
 export const weatheronWidgetAppGroup = "group.com.weatheron.mobile";
 export const weatheronWidgetDeepLink = "weatheron://home";
@@ -57,6 +58,12 @@ export type WeatheronWidgetStoreSnapshot = {
   selectedDestinationId?: string;
   current: WeatheronWidgetLocationSnapshot;
   destinations: WeatheronWidgetLocationSnapshot[];
+  localization?: {
+    languageTag: string;
+    temperatureUnit: "celsius" | "fahrenheit";
+    distanceUnit: "meter" | "mile";
+    uses24HourClock: boolean;
+  };
 };
 
 // v1 이름은 플랫폼 래퍼 호환을 위해 유지한다.
@@ -94,7 +101,7 @@ export function createWeatheronWidgetLocationSnapshot(
     temperatureC: Math.round(weather.current.tempC),
     feelsLikeC: Math.round(weather.current.feelsLikeC),
     condition: weather.current.condition,
-    conditionLabel: getConditionLabel(weather.current.condition),
+    conditionLabel: translateText(getConditionLabel(weather.current.condition)),
     rainProbabilityPct: Math.round(weather.current.rainProbabilityPct),
     humidityPct: Math.round(weather.current.humidityPct),
     windMs: Math.round(weather.current.windMs * 10) / 10,
@@ -123,6 +130,7 @@ export function createWeatheronWidgetStoreSnapshot(
   current: WeatheronWidgetLocationSnapshot,
   destinations: WeatheronWidgetLocationSnapshot[],
   selectedDestinationId?: string,
+  localization = getLocalePolicy(),
 ): WeatheronWidgetStoreSnapshot {
   return {
     schemaVersion: 2,
@@ -130,6 +138,12 @@ export function createWeatheronWidgetStoreSnapshot(
     selectedDestinationId,
     current,
     destinations,
+    localization: {
+      languageTag: localization.languageTag,
+      temperatureUnit: localization.temperatureUnit,
+      distanceUnit: localization.distanceUnit,
+      uses24HourClock: localization.uses24HourClock,
+    },
   };
 }
 
@@ -164,9 +178,13 @@ function getOutfitSummary(outfit: OutfitRecommendation): string {
 
 function getOutfitItems(outfit: OutfitRecommendation): WeatheronWidgetOutfitItem[] {
   return [
-    outfit.items.outer ? { category: "outer", name: outfit.items.outer.name } : undefined,
-    { category: "top", name: outfit.items.top.name },
-    { category: "bottom", name: outfit.items.bottom.name },
-    { category: "shoes", name: outfit.items.shoes.name },
+    outfit.items.outer ? { category: "outer", name: localizeWardrobeName(outfit.items.outer) } : undefined,
+    { category: "top", name: localizeWardrobeName(outfit.items.top) },
+    { category: "bottom", name: localizeWardrobeName(outfit.items.bottom) },
+    { category: "shoes", name: localizeWardrobeName(outfit.items.shoes) },
   ].filter((item): item is WeatheronWidgetOutfitItem => Boolean(item));
+}
+
+function localizeWardrobeName(item: OutfitRecommendation["items"]["top"]): string {
+  return item.source === "preset" ? translateText(item.name) : item.name;
 }

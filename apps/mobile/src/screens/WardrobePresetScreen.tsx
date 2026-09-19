@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, View } from "react-native";
+import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, View } from "../localization/react-native";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";

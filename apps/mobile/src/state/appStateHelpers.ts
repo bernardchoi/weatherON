@@ -227,6 +227,7 @@ export function createPermissionGateResult(reason: PermissionGateReason, returnT
     returnTo,
     message: `${getPermissionResumeLabel(reason)} 허용 완료`,
     denied: false,
+    outcome: "allowed",
   };
 }
 
@@ -243,6 +244,7 @@ export function createPermissionGateSkipResult(
     returnTo,
     message: denied ? `${getPermissionResumeLabel(reason)} 거부됨` : `${getPermissionResumeLabel(reason)} 나중에 설정`,
     denied,
+    outcome: denied ? "denied" : "skipped",
   };
 }
 
@@ -267,13 +269,12 @@ export function getDefaultDestinationPlace(): PlaceSearchResult {
 }
 
 export function getDefaultDestinationSchedulePreference(place: PlaceSearchResult): DestinationSchedulePreference {
-  const normalizedName = place.name.toLowerCase();
   return {
     timeBasis: "arrival",
     targetArrivalTime:
-      place.category === "beach" || normalizedName.includes("강릉")
+      place.category === "beach"
         ? "13:00"
-        : place.category === "sports" || normalizedName.includes("잠실")
+        : place.category === "sports"
           ? "10:20"
           : place.countryCode === "JP"
           ? "15:30"
@@ -285,9 +286,8 @@ export function getDefaultDestinationSchedulePreference(place: PlaceSearchResult
 }
 
 export function getDefaultTravelMinutes(place: PlaceSearchResult): number {
-  const normalizedName = place.name.toLowerCase();
-  if (place.category === "beach" || normalizedName.includes("강릉")) return 180;
-  if (place.category === "sports" || normalizedName.includes("잠실")) return 45;
+  if (place.category === "beach") return 180;
+  if (place.category === "sports") return 45;
   if (place.countryCode === "JP") return 150;
   return 35;
 }

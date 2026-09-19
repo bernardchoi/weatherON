@@ -39,6 +39,7 @@ type DestinationRow = {
   travel_updated_at: string;
   travel_route_options_json: string;
   saved_at_label: string;
+  change_status: string;
 };
 type PlaceRow = {
   kind: string;
@@ -290,6 +291,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         travel_updated_at TEXT NOT NULL,
         travel_route_options_json TEXT NOT NULL DEFAULT '[]',
         saved_at_label TEXT NOT NULL,
+        change_status TEXT NOT NULL DEFAULT 'saved',
         updated_at INTEGER NOT NULL
       );
 
@@ -416,6 +418,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
       );
     `);
     await ensureDestinationScheduleColumns(database);
+    await ensureDestinationStatusColumn(database);
     await ensureWeatherSnapshotColumns(database);
     await migrateLegacyStorage(database);
     return database;
@@ -609,6 +612,7 @@ async function readSavedDestinations(database: SQLiteExecutor): Promise<unknown[
     },
     travelEstimate: travelEstimateFromRow(row),
     savedAtLabel: row.saved_at_label,
+    changeStatus: row.change_status,
   })));
 }
 
@@ -630,8 +634,8 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
         care_enabled, alert_rain_threshold_pct, alert_lead_time_minutes, alert_wind_threshold_ms,
         schedule_time_basis, schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
         travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at, travel_route_options_json,
-        saved_at_label, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        saved_at_label, change_status, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       placeId,
       index,
       textValue(place.name) ?? "",
@@ -660,6 +664,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       textValue(travelEstimate.updatedAt) ?? "",
       JSON.stringify(arrayValue(travelEstimate.routeOptions)),
       textValue(destination.savedAtLabel) ?? "저장됨",
+      textValue(destination.changeStatus) ?? "saved",
       now,
     );
     await replaceDestinationRepeatDays(database, placeId, stringArray(schedulePreference.repeatDays));
@@ -1109,6 +1114,19 @@ async function ensureDestinationScheduleColumns(database: SQLiteDatabase) {
     if (!rows.some((row) => row.name === "travel_route_options_json")) {
       await database.runAsync(`ALTER TABLE ${table} ADD COLUMN travel_route_options_json TEXT NOT NULL DEFAULT '[]'`);
     }
+  }
+}
+
+async function ensureDestinationStatusColumn(database: SQLiteDatabase) {
+  const columns = new Set((await database.getAllAsync<{ name: string }>("PRAGMA table_info(destinations)")).map((row) => row.name));
+  if (!columns.has("change_status")) {
+    await database.runAsync("ALTER TABLE destinations ADD COLUMN change_status TEXT NOT NULL DEFAULT 'saved'");
+    await database.runAsync(
+      "UPDATE destinations SET change_status = CASE WHEN saved_at_label = ? THEN 'restored' WHEN saved_at_label IN (?, ?) THEN 'saved' ELSE 'updated' END",
+      "복구됨",
+      "방금 저장",
+      "저장됨",
+    );
   }
 }
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
@@ -12,6 +12,7 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
 import { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } from "../utils/outfitSaveCompletion";
+import { formatDisplayClockTime } from "../localization/localization";
 
 const AI_RECOMPOSE_VISIBLE = false;
 
@@ -115,7 +116,8 @@ export function OutfitDetailScreen({
         </View>
         <View style={styles.timeAdviceRow}>
           {state.outfit.timeAdvice.slice(0, 3).map((item) => {
-            const presentation = getTimeAdvicePresentation(item.text, theme);
+            const weatherHour = state.weather.hourly.find((hour) => hour.time === item.time);
+            const presentation = getTimeAdvicePresentation(weatherHour?.rainProbabilityPct ?? 0, weatherHour?.tempC ?? state.weather.current.tempC, theme);
             return (
               <View
                 key={item.time}
@@ -425,25 +427,17 @@ function getRainSignalPct(state: P0ScreenProps["state"]) {
 }
 
 function formatAdviceTime(value: string) {
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) {
-    return `${String(parsed.getHours()).padStart(2, "0")}:00`;
-  }
-  const match = value.match(/T(\d{2})/);
-  return match ? `${match[1]}:00` : value;
+  return formatDisplayClockTime(value);
 }
 
-function getTimeAdvicePresentation(value: string, theme: ReturnType<typeof useAppTheme>) {
-  if (value.includes("우산") || value.includes("비")) {
+function getTimeAdvicePresentation(rainProbabilityPct: number, tempC: number, theme: ReturnType<typeof useAppTheme>) {
+  if (rainProbabilityPct >= 60) {
     return { copy: "우산·방수 챙겨요", icon: uiIconAssets.rain, color: theme.sky };
   }
-  if (value.includes("겉옷") || value.includes("쌀쌀")) {
+  if (tempC < 18) {
     return { copy: "겉옷을 더해요", icon: uiIconAssets.shirt, color: theme.gold };
   }
-  if (value.includes("그대로") || value.includes("좋아요")) {
-    return { copy: "지금 세트 그대로", icon: uiIconAssets.check, color: theme.clear };
-  }
-  return { copy: "날씨를 확인해요", icon: uiIconAssets.check, color: theme.clear };
+  return { copy: "지금 세트 그대로", icon: uiIconAssets.check, color: theme.clear };
 }
 
 function formatWindSpeed(value: number) {

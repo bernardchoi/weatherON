@@ -21,6 +21,7 @@ module.exports = ({ config }) => {
       "expo-secure-store",
       "expo-sqlite",
       "expo-status-bar",
+      ["expo-localization", { supportedLocales: ["ko", "en", "ja"] }],
     ]),
   ];
   expo.ios = {

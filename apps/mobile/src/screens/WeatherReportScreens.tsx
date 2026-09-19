@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -20,9 +20,9 @@ const weatherOptions = [
 ] as const;
 
 const reportRows = [
-  { weather: "비", place: "합정동", time: "오후 2:41", status: "확정" },
-  { weather: "맑음", place: "홍대입구", time: "오전 11:05", status: "확정" },
-  { weather: "흐림", place: "신촌", time: "오전 9:30", status: "만료" },
+  { weather: "비", place: "합정동", time: "오후 2:41", status: "확정", statusCode: "confirmed" },
+  { weather: "맑음", place: "홍대입구", time: "오전 11:05", status: "확정", statusCode: "confirmed" },
+  { weather: "흐림", place: "신촌", time: "오전 9:30", status: "만료", statusCode: "expired" },
 ];
 
 export function WeatherReportHomeScreen({ state, onNavigate }: P0ScreenProps) {
@@ -160,7 +160,7 @@ export function WeatherReportHistoryScreen({ onNavigate }: P0ScreenProps) {
               <Text style={styles.historyWeather}>{row.weather}</Text>
               <Text style={styles.historyPlace}>{row.place}</Text>
               <Text style={styles.historyTime}>{row.time}</Text>
-              <Text style={[styles.historyStatus, row.status === "확정" ? styles.historyGood : null]}>{row.status}</Text>
+              <Text style={[styles.historyStatus, row.statusCode === "confirmed" ? styles.historyGood : null]}>{row.status}</Text>
             </View>
           ))}
         </View>

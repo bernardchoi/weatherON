@@ -7,7 +7,7 @@ import {
   openMeteoFixture,
   type WeatherSnapshot,
 } from "@weatheron/shared";
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 import { getWeatherRuntimeConfig } from "../config/weatherEnv";
 import { fixtureWeatherClient, runtimeWeatherClient, type WeatherClient } from "./weatherClient";
 import {
@@ -51,6 +51,7 @@ export type WeatherProviderOptions = {
   currentSnapshot?: WeatherSnapshot;
   destinationLocation?: WeatherLocationPreset;
   destinationLocations?: WeatherLocationPreset[];
+  language?: "ko" | "en" | "ja";
 };
 
 export type WeatherProvider = {
@@ -87,8 +88,8 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
             : options.currentSnapshot;
         const [weatherSnapshots, officialSpecialAlert] = await Promise.all([
           Promise.all([
-            resolveCurrentWeatherSnapshot(client, currentLocation, currentSnapshot, stale, createOptions),
-            ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions)),
+            resolveCurrentWeatherSnapshot(client, currentLocation, currentSnapshot, stale, createOptions, options.language),
+            ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions, options.language)),
           ]),
           fetchOfficialSpecialAlert(client, currentLocation),
         ]);
@@ -156,6 +157,7 @@ async function fetchWeatherSnapshot(
   location: WeatherLocationPreset,
   stale: boolean,
   options: WeatherProviderCreateOptions,
+  language: WeatherProviderOptions["language"] = "en",
 ): Promise<WeatherSnapshot> {
   if (!isValidIanaTimeZone(location.timezone) || (location.countryCode === "GLOBAL" && location.timezone === "UTC")) {
     throw new Error("Weather location requires a resolved IANA timezone");
@@ -169,7 +171,7 @@ async function fetchWeatherSnapshot(
       longitude: location.coordinate.longitude,
       timezone: location.timezone,
       countryCode: location.countryCode === "GLOBAL" ? undefined : location.countryCode,
-      language: "ko",
+      language,
     });
     return normalizeWeatherKitWeather(payload, {
       locationId: location.locationId,
@@ -205,9 +207,10 @@ async function resolveCurrentWeatherSnapshot(
   currentSnapshot: WeatherSnapshot | undefined,
   stale: boolean,
   options: WeatherProviderCreateOptions,
+  language?: WeatherProviderOptions["language"],
 ): Promise<WeatherSnapshot> {
-  if (!currentSnapshot) return fetchWeatherSnapshot(client, location, stale, options);
-  if (currentSnapshot.locationId !== location.locationId) return fetchWeatherSnapshot(client, location, stale, options);
+  if (!currentSnapshot) return fetchWeatherSnapshot(client, location, stale, options, language);
+  if (currentSnapshot.locationId !== location.locationId) return fetchWeatherSnapshot(client, location, stale, options, language);
   if (shouldRefreshLifestyleIndex(currentSnapshot, location, options)) {
     return enhanceAirQuality(client, location, currentSnapshot);
   }

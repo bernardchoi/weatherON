@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React, { useState } from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "../components/BackButton";
 import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
@@ -63,7 +63,7 @@ export function AlertSettingsScreen({
   );
   const deliveryStatus = getNotificationDeliveryCopy(notificationDeliveryStatus, smartCareEnabled, permissionReady);
   const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 확인 전") : "푸시 대기";
-  const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel, testNotificationReceived, testNotificationOpened);
+  const testNotificationBody = getTestNotificationBody(permissionReady, notificationDeliveryStatus, testNotificationReceived, testNotificationOpened);
   const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "테스트 다시 보내기" : "테스트 알림 보내기") : "권한 켜기";
   const notificationDenied = permissionGateResult?.returnTo === "M2" && permissionGateResult.reason === "notification" && permissionGateResult.denied;
   const openNotificationPermission = () => {
@@ -167,7 +167,7 @@ export function AlertSettingsScreen({
           </Pressable>
           <View style={[styles.heroStatus, { borderTopColor: theme.border }]}>
             <DeliveryLine label="권한" value={permissionReady ? "알림 받을 준비 완료" : "권한 켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
-            <DeliveryLine label="예약" value={`${deliveryStatus.statusLabel} · ${deliveryStatus.countLabel}`} tone={deliveryStatus.statusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
+            <DeliveryLine label="예약" value={`${deliveryStatus.statusLabel} · ${deliveryStatus.countLabel}`} tone={notificationDeliveryStatus.status === "scheduled" && notificationDeliveryStatus.scheduledCount > 0 ? "clear" : "gold"} theme={theme} />
           </View>
         </View>
 
@@ -493,7 +493,7 @@ function ChevronDown({ color, open }: { color: string; open: boolean }) {
 
 function getNotificationPermissionResult(permissionGateResult: P0ScreenProps["permissionGateResult"]) {
   if (permissionGateResult?.returnTo !== "M2" || permissionGateResult.reason !== "notification") return "none";
-  return permissionGateResult.denied || permissionGateResult.message.includes("나중에") ? "skipped" : "allowed";
+  return permissionGateResult.outcome === "allowed" ? "allowed" : "skipped";
 }
 
 function getNotificationDeliveryCopy(
@@ -522,13 +522,12 @@ function getNotificationDeliveryCopy(
   return { statusLabel: "기기 확인 필요", countLabel: "기기 확인 전" };
 }
 
-function getTestNotificationBody(permissionReady: boolean, statusLabel?: string, received?: boolean, opened?: boolean) {
+function getTestNotificationBody(permissionReady: boolean, deliveryStatus: P0ScreenProps["notificationDeliveryStatus"], received?: boolean, opened?: boolean) {
   if (!permissionReady) return "권한 켜고 수신 확인";
   if (opened) return "수신·탭 확인됨";
   if (received) return "수신 확인됨";
-  if (statusLabel === "예약 확인 실패") return "예약 확인 실패 · 기기 확인 필요";
-  if (statusLabel === "5초 뒤 발송 예약됨") return "발송 예약됨 · 잠시 뒤 도착";
-  if (statusLabel) return `최근 ${statusLabel}`;
+  if (deliveryStatus.status === "verification-failed") return "예약 확인 실패 · 기기 확인 필요";
+  if (deliveryStatus.status === "scheduled" && deliveryStatus.scheduledCount > 0) return "발송 예약됨 · 잠시 뒤 도착";
   return "5초 뒤 확인 알림 발송";
 }
 

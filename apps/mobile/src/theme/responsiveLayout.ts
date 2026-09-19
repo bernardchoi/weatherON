@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
+import { useWindowDimensions } from "../localization/react-native";
 
 export type AppWidthClass = "narrow" | "compact" | "regular";
 export type AppHeightClass = "short" | "standard";

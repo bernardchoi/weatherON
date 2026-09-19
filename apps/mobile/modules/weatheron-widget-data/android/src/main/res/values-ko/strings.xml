@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="weatheron_widget_name">WeatherON 날씨</string><string name="weatheron_widget_description">현재 날씨와 외출 준비를 보여줍니다.</string>
+  <string name="weatheron_widget_checking">날씨 확인 중</string><string name="weatheron_widget_feels_rain">체감 %1$s · 강수 %2$d%%</string>
+  <string name="weatheron_widget_umbrella">우산</string><string name="weatheron_widget_outer">겉옷</string><string name="weatheron_widget_mask">마스크</string>
+  <string name="weatheron_widget_prep_low">준비 부담 낮음</string><string name="weatheron_widget_pack">%1$s 챙기기</string><string name="weatheron_widget_outfit_empty">코디를 확인해 보세요</string>
+  <string name="weatheron_widget_placeholder_location">현재 위치</string><string name="weatheron_widget_placeholder_detail">체감 22° · 강수 10%</string><string name="weatheron_widget_placeholder_outfit">반팔 티셔츠 · 슬랙스 · 운동화</string>
+  <string name="weatheron_widget_updated">WeatherON · %1$s 갱신</string><string name="weatheron_widget_open_app">앱에서 날씨를 확인해 주세요</string><string name="weatheron_widget_open_prep">외출 준비를 확인해 보세요</string><string name="weatheron_widget_outfit_latest">최신 코디가 여기에 표시됨</string>
+  <string name="weatheron_condition_clear">맑음</string><string name="weatheron_condition_cloud">흐림</string><string name="weatheron_condition_rain">비</string><string name="weatheron_condition_snow">눈</string><string name="weatheron_condition_storm">강한 비</string><string name="weatheron_condition_dust">먼지</string>
+  <string name="weatheron_departure_channel">출발 실시간 현황</string><string name="weatheron_departure_channel_description">출발 전 카운트다운과 날씨 준비 안내</string><string name="weatheron_departure_title">%1$s 출발 준비</string><string name="weatheron_departure_subtext">%1$s 출발</string><string name="weatheron_departure_stop">종료</string><string name="weatheron_departure_big_text">%1$s\n%2$s 출발 예정</string>
+  <string name="weatheron_guidance_rain_wind">우산 챙기고 강풍 조심해요</string><string name="weatheron_guidance_rain">우산 챙겨요</string><string name="weatheron_guidance_wind">바람이 강해요</string><string name="weatheron_guidance_clear">가볍게 출발해요</string>
+</resources>

@@ -1,6 +1,6 @@
 import React from "react";
 import { BlurView, type BlurTint } from "expo-blur";
-import { Platform, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, StyleSheet, type StyleProp, type ViewStyle } from "../localization/react-native";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import type { IosGlassRole } from "../theme/iosGlass";
 

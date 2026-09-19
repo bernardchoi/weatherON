@@ -3,9 +3,10 @@ import { readFile } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
-const [native, manifest, platform, appState, screen] = await Promise.all([
+const [native, manifest, strings, platform, appState, screen] = await Promise.all([
   read("apps/mobile/modules/weatheron-widget-data/android/src/main/java/com/weatheron/widgetdata/WeatherONDepartureNotification.kt"),
   read("apps/mobile/modules/weatheron-widget-data/android/src/main/AndroidManifest.xml"),
+  read("apps/mobile/modules/weatheron-widget-data/android/src/main/res/values-ko/strings.xml"),
   read("apps/mobile/src/providers/departureLiveActivity.android.ts"),
   read("apps/mobile/src/state/useWeatherOnAppState.ts"),
   read("apps/mobile/src/screens/DestinationCareScreen.tsx"),
@@ -15,7 +16,8 @@ assert.match(native, /Notification\.ProgressStyle/);
 assert.match(native, /android\.requestPromotedOngoing/);
 assert.match(native, /Notification\.BigTextStyle/);
 assert.match(native, /setAndAllowWhileIdle/);
-assert.match(native, /"종료"/);
+assert.match(native, /R\.string\.weatheron_departure_stop/);
+assert.match(strings, />종료</);
 assert.doesNotMatch(native, /RemoteViews/);
 assert.match(manifest, /POST_PROMOTED_NOTIFICATIONS/);
 assert.match(manifest, /WeatherONDepartureReceiver/);

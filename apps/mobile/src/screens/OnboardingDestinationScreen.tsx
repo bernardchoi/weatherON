@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
@@ -85,7 +85,7 @@ export function OnboardingDestinationScreen({
         ]}
       >
         <View style={styles.copy}>
-          <Text style={[styles.title, { color: theme.text }]}>{canUseSelection ? selectedDestinationPlace.name : "장소 검색 후 선택"}</Text>
+          {canUseSelection ? <RawText style={[styles.title, { color: theme.text }]}>{selectedDestinationPlace.name}</RawText> : <Text style={[styles.title, { color: theme.text }]}>장소 검색 후 선택</Text>}
           <Text style={[styles.body, { color: theme.muted }]} numberOfLines={1}>
             {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만 골라보세요"}
           </Text>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, UIManager, requireNativeComponent, type ViewProps } from "react-native";
+import { Platform, UIManager, requireNativeComponent, type ViewProps } from "../localization/react-native";
 
 type NativeSurfaceProps = ViewProps & {
   activeIndex: number;

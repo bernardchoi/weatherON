@@ -8,6 +8,7 @@ import {
 } from "../config/weatherEnv";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
+import { getLocalePolicy } from "../localization/localization";
 
 export type SearchPlacesParams = {
   query: string;
@@ -187,18 +188,14 @@ function fetchJson<T>(url: URL, timeoutMs: number, fetchImpl?: typeof fetch, hea
 }
 
 export function getDeviceSearchLocale(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().locale || "ko-KR";
-  } catch {
-    return "ko-KR";
-  }
+  return getLocalePolicy().languageTag;
 }
 
 function getSearchLanguage(locale?: string): string {
   const language = (locale || getDeviceSearchLocale()).split("-")[0]?.toLowerCase();
   if (language === "ja") return "ja";
   if (language === "en") return "en";
-  return "ko";
+  return "en";
 }
 
 function getCuratedPlaceMatches(query: string, countryCode?: SearchPlacesParams["countryCode"], localeOrLanguage?: string): PlaceSearchResult[] {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Platform } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AppState, Platform } from "../localization/react-native";
 import type { PlaceSearchResult, WardrobeItem } from "@weatheron/shared";
 import { presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
@@ -33,6 +33,8 @@ import {
   acceptAccountTerms,
   deleteAccountSession,
   restoreAccountSession,
+  getAccountAuthDisplayMessage,
+  isAccountAuthCancellation,
   signInWithAppleAccount,
   signInWithOAuthAccount,
   signOutAccountSession,
@@ -54,6 +56,7 @@ import {
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
+  getDepartureWeatherGuidanceKind,
   syncAutomaticDepartureLiveActivity,
   type DepartureLiveActivityInput,
 } from "../providers/departureLiveActivity";
@@ -98,6 +101,7 @@ import type {
   StyleGender,
   TemperatureUnit,
   ThemeMode,
+  UnitPreferenceSource,
   WeatherLocationMode,
 } from "./appStateTypes";
 import {
@@ -143,6 +147,7 @@ import {
   savePersistedWeatherProviderResult,
   shouldKeepPersistedWeatherResult,
 } from "./persistedAppState";
+import { formatDisplayTime, getLocalePolicy, subscribeLocalePolicy, translateText } from "../localization/localization";
 
 // 화면들이 이 모듈에서 타입을 임포트하던 기존 경로를 유지하기 위해 재노출한다.
 export type {
@@ -179,6 +184,7 @@ export type {
   StyleGender,
   TemperatureUnit,
   ThemeMode,
+  UnitPreferenceSource,
   WeatherLocationMode,
 };
 
@@ -189,6 +195,7 @@ function isOverlayReturnRouteId(value: AppRouteId): value is OverlayReturnRouteI
 }
 
 export function useWeatherOnAppState() {
+  const localePolicy = useSyncExternalStore(subscribeLocalePolicy, getLocalePolicy, getLocalePolicy);
   const [route, setRoute] = useState<AppRouteId>("O1");
   const [appStateHydrated, setAppStateHydrated] = useState(false);
   const [storageLoadError, setStorageLoadError] = useState(false);
@@ -240,8 +247,10 @@ export function useWeatherOnAppState() {
   const [policyHubReturnRoute, setPolicyHubReturnRoute] = useState<"M1" | "A4">("M1");
   const [policyDocumentReturnRoute, setPolicyDocumentReturnRoute] = useState<"R1" | "A3">("R1");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
-  const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("celsius");
-  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
+  const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>(() => localePolicy.temperatureUnit);
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>(() => localePolicy.distanceUnit);
+  const [temperatureUnitSource, setTemperatureUnitSource] = useState<UnitPreferenceSource>("device");
+  const [distanceUnitSource, setDistanceUnitSource] = useState<UnitPreferenceSource>("device");
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [reducedTransparency, setReducedTransparency] = useState(false);
   const [dynamicColorEnabled, setDynamicColorEnabled] = useState(false);
@@ -422,6 +431,7 @@ export function useWeatherOnAppState() {
       current,
       destinations,
       destinations.some((destination) => destination.id === selectedDestinationPlace.id) ? selectedDestinationPlace.id : undefined,
+      { ...localePolicy, temperatureUnit, distanceUnit },
     );
   }, [
     activeWeatherLocation.countryCode,
@@ -436,10 +446,16 @@ export function useWeatherOnAppState() {
     recommendationWardrobe,
     weatherProviderResult.current,
     weatherProviderResult.destinationSnapshots,
+    localePolicy.language,
+    localePolicy.languageTag,
+    localePolicy.uses24HourClock,
+    temperatureUnit,
+    distanceUnit,
   ]);
   const widgetSnapshotContentKey = useMemo(
     () => JSON.stringify({
       schemaVersion: widgetStoreSnapshot.schemaVersion,
+      localization: widgetStoreSnapshot.localization,
       selectedDestinationId: widgetStoreSnapshot.selectedDestinationId,
       current: widgetStoreSnapshot.current,
       destinations: widgetStoreSnapshot.destinations,
@@ -527,6 +543,8 @@ export function useWeatherOnAppState() {
         setWeatherLocationMode(persistedState.weatherLocationMode);
         setTemperatureUnit(persistedState.temperatureUnit);
         setDistanceUnit(persistedState.distanceUnit);
+        setTemperatureUnitSource(persistedState.temperatureUnitSource);
+        setDistanceUnitSource(persistedState.distanceUnitSource);
         setThemeMode(persistedState.themeMode);
         setReducedTransparency(persistedState.reducedTransparency);
         setDynamicColorEnabled(persistedState.dynamicColorEnabled);
@@ -551,6 +569,12 @@ export function useWeatherOnAppState() {
       active = false;
     };
   }, [storageRetryTick]);
+
+  useEffect(() => {
+    if (!appStateHydrated) return;
+    if (temperatureUnitSource === "device") setTemperatureUnit(localePolicy.temperatureUnit);
+    if (distanceUnitSource === "device") setDistanceUnit(localePolicy.distanceUnit);
+  }, [appStateHydrated, distanceUnitSource, localePolicy.distanceUnit, localePolicy.temperatureUnit, temperatureUnitSource]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -668,6 +692,7 @@ export function useWeatherOnAppState() {
         currentSnapshot,
         destinationLocation,
         destinationLocations: savedDestinationWeatherLocations,
+        language: localePolicy.language,
       })
       .then((result) => {
         if (active) {
@@ -694,7 +719,7 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [appStateHydrated, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinationWeatherLocations, fallbackDestinationWeatherLocation]);
+  }, [appStateHydrated, localePolicy.language, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinationWeatherLocations, fallbackDestinationWeatherLocation]);
 
   // 다음 출발/도착 목표의 ISO 값은 목표 시각을 지난 시점(보통 하루 한 번)에만 바뀐다.
   // nowMinuteTick을 이 계산에만 쓰고, 아래 요청 effect는 계산된 문자열에만 의존시켜야
@@ -760,7 +785,7 @@ export function useWeatherOnAppState() {
         setSavedDestinations((current) =>
           current.map((destination) =>
             destination.place.id === destinationPlace.id
-              ? { ...destination, travelEstimate: estimate, savedAtLabel: destination.savedAtLabel === "방금 저장" ? "방금 저장" : "업데이트됨" }
+              ? { ...destination, travelEstimate: estimate, savedAtLabel: destination.changeStatus === "saved" ? "방금 저장" : "업데이트됨", changeStatus: destination.changeStatus === "saved" ? "saved" : "updated" }
               : destination,
           ),
         );
@@ -794,6 +819,11 @@ export function useWeatherOnAppState() {
     selectedDestinationAlertCondition.rainThresholdPct,
     selectedDestinationAlertCondition.windThresholdMs,
   );
+  const automaticDepartureGuidanceKind = getDepartureWeatherGuidanceKind(
+    state.destinationCare.destinationWeather,
+    selectedDestinationAlertCondition.rainThresholdPct,
+    selectedDestinationAlertCondition.windThresholdMs,
+  );
   const automaticDepartureActivityInput = useMemo<DepartureLiveActivityInput | null>(() => {
     if (
       (Platform.OS !== "ios" && Platform.OS !== "android") ||
@@ -805,18 +835,21 @@ export function useWeatherOnAppState() {
       return null;
     }
 
-    const departureParts = getZonedDateTimeParts(new Date(selectedDestinationDepartureAt), selectedDestinationPlace.timezone);
     return {
       destinationId: selectedDestinationPlace.id,
       destinationName: selectedDestinationPlace.name,
       departureAt: selectedDestinationDepartureAt,
-      departureTimeLabel: `${String(departureParts.hour).padStart(2, "0")}:${String(departureParts.minute).padStart(2, "0")}`,
-      guidance: automaticDepartureGuidance,
-      guidanceSymbol: getDepartureGuidanceSymbol(automaticDepartureGuidance),
+      departureTimeLabel: formatDisplayTime(selectedDestinationDepartureAt, selectedDestinationPlace.timezone),
+      guidance: translateText(automaticDepartureGuidance, localePolicy.language),
+      guidanceKind: automaticDepartureGuidanceKind,
+      guidanceSymbol: getDepartureGuidanceSymbol(automaticDepartureGuidanceKind),
       deepLink: `weatheron://destination?id=${encodeURIComponent(selectedDestinationPlace.id)}`,
     };
   }, [
     automaticDepartureGuidance,
+    automaticDepartureGuidanceKind,
+    localePolicy.language,
+    localePolicy.uses24HourClock,
     destinationCareEnabled,
     selectedDestinationDepartureAt,
     selectedDestinationPlace.id,
@@ -873,11 +906,14 @@ export function useWeatherOnAppState() {
   useEffect(() => {
     if (!appStateHydrated) return;
     let active = true;
-    const notifications = state.notifications.filter((item) => shouldScheduleLocalNotification(item, alertPreferences));
+    const notifications = state.notifications
+      .filter((item) => shouldScheduleLocalNotification(item, alertPreferences))
+      .map((item) => ({ ...item, pushTitle: translateText(item.pushTitle, localePolicy.language), pushBody: translateText(item.pushBody, localePolicy.language) }));
     const syncKey = JSON.stringify({
       permissionReady,
       smartCareEnabled,
       preferences: alertPreferences,
+      language: localePolicy.language,
       ids: notifications.map((item) => `${item.id}:${item.active}:${item.reason}:${item.scheduledAt ?? ""}`),
     });
     if (localNotificationSyncKeyRef.current === syncKey) return;
@@ -886,6 +922,7 @@ export function useWeatherOnAppState() {
       enabled: permissionReady && smartCareEnabled,
       notifications,
       reducedInterruptions: alertPreferences.quietHours,
+      contentRevision: localePolicy.language,
     })
       .then((result) => {
         if (__DEV__) console.info("[WeatherON notification sync]", JSON.stringify(result));
@@ -897,7 +934,7 @@ export function useWeatherOnAppState() {
     return () => {
       active = false;
     };
-  }, [alertPreferences, appStateHydrated, permissionReady, smartCareEnabled, state.notifications]);
+  }, [alertPreferences, appStateHydrated, localePolicy.language, permissionReady, smartCareEnabled, state.notifications]);
 
   persistedStateRef.current = {
     onboardingCompleted,
@@ -926,6 +963,8 @@ export function useWeatherOnAppState() {
     manualWeatherLocation,
     temperatureUnit,
     distanceUnit,
+    temperatureUnitSource,
+    distanceUnitSource,
     themeMode,
     reducedTransparency,
     dynamicColorEnabled,
@@ -969,6 +1008,8 @@ export function useWeatherOnAppState() {
     styleProfileSaved,
     temperatureUnit,
     distanceUnit,
+    temperatureUnitSource,
+    distanceUnitSource,
     termsRequiredAccepted,
     themeMode,
     wardrobeOwnedItemIds,
@@ -1042,7 +1083,7 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated || weatherLocationMode !== "auto") return;
-    if (deviceWeatherLocation && deviceWeatherLocation.locationName !== "현재 위치") return;
+    if (deviceWeatherLocation) return;
     // 현재 위치 요청(권한 다이얼로그 포함)이 진행 중이면 동기화 결과가 요청 상태와 모드를 덮어쓰므로 건너뛴다.
     if (deviceLocationRequestInFlightRef.current) return;
     let active = true;
@@ -1524,6 +1565,7 @@ export function useWeatherOnAppState() {
         schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
         travelEstimate: selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate,
         savedAtLabel: exists ? "업데이트됨" : "방금 저장",
+        changeStatus: exists ? "updated" : "saved",
       };
       return exists
         ? current.map((destination) => (destination.place.id === selectedDestinationPlace.id ? nextDestination : destination))
@@ -1564,7 +1606,7 @@ export function useWeatherOnAppState() {
     if (destinationSaved) {
       setSavedDestinations((current) =>
         current.map((destination) =>
-          destination.place.id === selectedDestinationPlace.id ? { ...destination, careEnabled: nextCareEnabled, savedAtLabel: "업데이트됨" } : destination,
+          destination.place.id === selectedDestinationPlace.id ? { ...destination, careEnabled: nextCareEnabled, savedAtLabel: "업데이트됨", changeStatus: "updated" } : destination,
         ),
       );
     } else {
@@ -1583,7 +1625,7 @@ export function useWeatherOnAppState() {
     }
     setSavedDestinations((current) =>
       current.map((destination) =>
-        destination.place.id === placeId ? { ...destination, careEnabled: !destination.careEnabled, savedAtLabel: "업데이트됨" } : destination,
+        destination.place.id === placeId ? { ...destination, careEnabled: !destination.careEnabled, savedAtLabel: "업데이트됨", changeStatus: "updated" } : destination,
       ),
     );
   }, [permissionReady, savedDestinations]);
@@ -1594,7 +1636,7 @@ export function useWeatherOnAppState() {
       setSavedDestinations((current) =>
         current.map((destination) =>
           destination.place.id === selectedDestinationPlace.id
-            ? { ...destination, schedulePreference: nextPreference, savedAtLabel: "업데이트됨" }
+            ? { ...destination, schedulePreference: nextPreference, savedAtLabel: "업데이트됨", changeStatus: "updated" }
             : destination,
         ),
       );
@@ -1647,7 +1689,7 @@ export function useWeatherOnAppState() {
     const nextDestinations = savedDestinations.filter((destination) => destination.place.id !== placeId);
     setSavedDestinations(nextDestinations);
     if (recentlyRemovedDestinationTimerRef.current) clearTimeout(recentlyRemovedDestinationTimerRef.current);
-    setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제" });
+    setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제", changeStatus: "removed" });
     recentlyRemovedDestinationTimerRef.current = setTimeout(() => {
       recentlyRemovedDestinationTimerRef.current = null;
       setRecentlyRemovedDestination(null);
@@ -1665,7 +1707,7 @@ export function useWeatherOnAppState() {
 
   const restoreRemovedDestination = useCallback(() => {
     if (!recentlyRemovedDestination) return;
-    const restoredDestination: SavedDestination = { ...recentlyRemovedDestination, savedAtLabel: "복구됨" };
+    const restoredDestination: SavedDestination = { ...recentlyRemovedDestination, savedAtLabel: "복구됨", changeStatus: "restored" };
     setSavedDestinations((current) => {
       const exists = current.some((destination) => destination.place.id === restoredDestination.place.id);
       return exists
@@ -1732,8 +1774,8 @@ export function useWeatherOnAppState() {
       setRoute(returnTo);
       setGate(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "로그인에 실패했습니다.";
-      setAccountAuthStatus(message.includes("취소") ? "idle" : "error");
+      const message = getAccountAuthDisplayMessage(error);
+      setAccountAuthStatus(isAccountAuthCancellation(error) ? "idle" : "error");
       setAccountAuthMessage(message);
     }
   };
@@ -1906,6 +1948,8 @@ export function useWeatherOnAppState() {
     adConsentMode,
     temperatureUnit,
     distanceUnit,
+    temperatureUnitSource,
+    distanceUnitSource,
     themeMode,
     reducedTransparency,
     dynamicColorEnabled,
@@ -1942,8 +1986,14 @@ export function useWeatherOnAppState() {
     openPolicyDocument,
     returnFromPolicyDocument,
     setAdConsentMode,
-    setTemperatureUnit,
-    setDistanceUnit,
+    setTemperatureUnit: (unit: TemperatureUnit) => {
+      setTemperatureUnitSource("explicit");
+      setTemperatureUnit(unit);
+    },
+    setDistanceUnit: (unit: DistanceUnit) => {
+      setDistanceUnitSource("explicit");
+      setDistanceUnit(unit);
+    },
     setThemeMode,
     toggleReducedTransparency: () => setReducedTransparency((value) => !value),
     toggleDynamicColor: () => setDynamicColorEnabled((value) => !value),

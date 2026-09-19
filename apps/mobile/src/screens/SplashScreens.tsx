@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "../localization/react-native";
 import { brandAssets } from "../assets";
 import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { OnboardingFooter } from "../components/OnboardingFooter";

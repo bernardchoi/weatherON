@@ -10,7 +10,7 @@ import {
   type ColorValue,
   type LayoutChangeEvent,
   View,
-} from "react-native";
+} from "../localization/react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
@@ -21,6 +21,8 @@ import { iosGlassSurface } from "../theme/iosGlass";
 import { colorWithAlpha, type AppTheme } from "../theme/tokens";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { hasNativeLiquidGlassNavigationSurface, LiquidGlassNavigationSurface } from "./LiquidGlassNavigationSurface";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
 
 type BottomNavProps = {
   activeRoute: P0RouteId;
@@ -29,6 +31,7 @@ type BottomNavProps = {
 
 export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const theme = useAppTheme();
+  const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
   const isIos = Platform.OS === "ios";
   const activeTabRoute = getActiveTabRoute(activeRoute);
@@ -190,12 +193,14 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
           ) : null}
           {bottomNavRoutes.map((route) => {
             const active = route.id === activeTabRoute;
+            const label = translateText(route.label, language);
             const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
             const labelColor = isIos ? (active ? iosColors.activeLabel : iosColors.inactiveLabel) : active ? activeColor : theme.subtle;
             return (
               <TabButton
                 key={route.id}
-                label={route.label}
+                label={label}
+                accessibilityLabel={translateText(`${route.label} 탭`, language)}
                 active={active}
                 onPress={() => onNavigate(route.id)}
               >
@@ -215,6 +220,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
                   iconColor={iconColor}
                   labelColor={labelColor}
                   theme={theme}
+                  label={label}
                 />
               </TabButton>
             );
@@ -244,6 +250,7 @@ function TabContent({
   iconColor,
   labelColor,
   theme,
+  label,
 }: {
   route: P0RouteId;
   active: boolean;
@@ -251,6 +258,7 @@ function TabContent({
   iconColor: ColorValue;
   labelColor: ColorValue;
   theme: AppTheme;
+  label: string;
 }) {
   const transition = useRef(new Animated.Value(active ? 1 : 0)).current;
   const reducedMotion = useReducedMotion();
@@ -316,7 +324,7 @@ function TabContent({
         minimumFontScale={0.9}
         allowFontScaling={false}
       >
-        {bottomNavRoutes.find((item) => item.id === route)?.label}
+        {label}
       </Animated.Text>
     </>
   );
@@ -324,11 +332,13 @@ function TabContent({
 
 function TabButton({
   label,
+  accessibilityLabel,
   active,
   onPress,
   children,
 }: {
   label: string;
+  accessibilityLabel: string;
   active: boolean;
   onPress: () => void;
   children: React.ReactNode;
@@ -337,7 +347,7 @@ function TabButton({
   return (
     <Pressable
       pointerEvents={hasNativeLiquidGlassNavigationSurface ? "none" : "auto"}
-      accessibilityLabel={`${label} 탭`}
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       android_ripple={Platform.OS === "android" ? androidMaterialRipple(theme) : undefined}

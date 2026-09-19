@@ -2,7 +2,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as Crypto from "expo-crypto";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 import type { Purpose, Season, WardrobeCategory, WeatherTag } from "@weatheron/shared";
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
 import { AccountAuthError, requestAuthenticatedAccountJson } from "./accountAuth";

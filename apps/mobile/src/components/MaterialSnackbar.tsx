@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, PanResponder, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, PanResponder, StyleSheet, Text, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple } from "../theme/androidMaterial";
 import { radius, spacing } from "../theme/tokens";

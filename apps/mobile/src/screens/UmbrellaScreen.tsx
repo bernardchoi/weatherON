@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -23,7 +23,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
   const peakWindow = getPeakRainWindow(rainBars);
   const peakRainProbability = getUmbrellaPeakRainProbability(rainBars);
   const windSpeed = getUmbrellaPeakWindSpeed(rainBars);
-  const umbrellaOptions = getUmbrellaOptions(umbrella.title, umbrella.level);
+  const umbrellaOptions = getUmbrellaOptions(umbrella.level, windSpeed);
   const recommendedOption = umbrellaOptions.find((item) => item.recommended) ?? umbrellaOptions[0];
 
   useEffect(() => {
@@ -221,8 +221,8 @@ function getUmbrellaLevelLabel(level: P0ScreenProps["state"]["umbrella"]["level"
   return "불필요";
 }
 
-function getUmbrellaOptions(title: string, level: P0ScreenProps["state"]["umbrella"]["level"]) {
-  const recommendedTitle = getRecommendedOptionTitle(title, level);
+function getUmbrellaOptions(level: P0ScreenProps["state"]["umbrella"]["level"], windSpeed: number) {
+  const recommendedKey = getRecommendedOptionKey(level, windSpeed);
   const options = [
     { title: "우산 없이 이동", meta: "강수 낮음", key: "none" },
     { title: "소형 우산", meta: "약한 비·휴대성", key: "small" },
@@ -233,19 +233,17 @@ function getUmbrellaOptions(title: string, level: P0ScreenProps["state"]["umbrel
   ];
   return options.map((item) => ({
     title: item.title,
-    meta: item.title === recommendedTitle ? `추천 · ${item.meta}` : item.meta,
-    recommended: item.title === recommendedTitle,
+    meta: item.key === recommendedKey ? `추천 · ${item.meta}` : item.meta,
+    recommended: item.key === recommendedKey,
   }));
 }
 
-function getRecommendedOptionTitle(title: string, level: P0ScreenProps["state"]["umbrella"]["level"]) {
-  if (level === "none") return "우산 없이 이동";
-  if (title.includes("우비") || title.includes("방수")) return "우비/방수 아우터";
-  if (title.includes("장우산")) return "장우산";
-  if (title.includes("큰 3단")) return "큰 3단 우산";
-  if (title.includes("3단")) return "3단 우산";
-  if (title.includes("소형")) return "소형 우산";
-  return level === "required" ? "장우산" : "소형 우산";
+function getRecommendedOptionKey(level: P0ScreenProps["state"]["umbrella"]["level"], windSpeed: number) {
+  if (level === "none") return "none";
+  if (windSpeed >= 8) return "rainwear";
+  if (level === "required") return "long";
+  if (level === "recommended") return "compact";
+  return "small";
 }
 
 function getUmbrellaTone(level: P0ScreenProps["state"]["umbrella"]["level"], theme: AppTheme) {

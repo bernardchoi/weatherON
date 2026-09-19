@@ -30,12 +30,12 @@ struct WeatherONDepartureLiveActivity: Widget {
         DynamicIslandExpandedRegion(.bottom) {
           WeatherONDepartureExpandedSummary(
             destinationName: context.attributes.destinationName,
-            guidance: context.isStale ? "출발 정보가 만료됐어요" : context.state.guidance,
+            guidance: context.isStale ? weatherONDepartureLocalized("출발 정보가 만료됐어요") : weatherONDepartureGuidance(kind: context.state.guidanceKind, fallback: context.state.guidance),
             guidanceSymbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol,
-            departureTimeLabel: context.attributes.departureTimeLabel
+            departureTimeLabel: context.state.departureTimeLabel ?? context.attributes.departureTimeLabel
           )
           .accessibilityElement(children: .combine)
-          .accessibilityLabel("날씨 안내, \(context.state.guidance), 권장 출발 시각 \(context.attributes.departureTimeLabel)")
+          .accessibilityLabel(String(format: weatherONDepartureLocalized("activity.accessibility.summary"), context.state.guidance, context.state.departureTimeLabel ?? context.attributes.departureTimeLabel))
         }
       } compactLeading: {
         WeatherONDepartureGuidanceIcon(
@@ -117,7 +117,7 @@ private struct WeatherONDepartureLockScreenView: View {
   let context: ActivityViewContext<WeatherONDepartureActivityAttributes>
 
   private var displayedGuidance: String {
-    context.isStale ? "출발 정보가 만료됐어요" : context.state.guidance
+    context.isStale ? weatherONDepartureLocalized("출발 정보가 만료됐어요") : weatherONDepartureGuidance(kind: context.state.guidanceKind, fallback: context.state.guidance)
   }
 
   private var displayedGuidanceSymbol: String {
@@ -148,7 +148,7 @@ private struct WeatherONDepartureLockScreenView: View {
       }
 
       HStack(spacing: 12) {
-        Label(context.attributes.departureTimeLabel, systemImage: "clock.fill")
+        Label(context.state.departureTimeLabel ?? context.attributes.departureTimeLabel, systemImage: "clock.fill")
           .font(.subheadline.bold())
           .foregroundStyle(departureGold)
         Rectangle()
@@ -167,7 +167,7 @@ private struct WeatherONDepartureLockScreenView: View {
     .background(departureCard.opacity(0.34))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
-      "\(context.attributes.destinationName), \(context.isStale ? "출발 정보 만료" : "출발까지 남은 시간"), 권장 출발 시각 \(context.attributes.departureTimeLabel), \(displayedGuidance)"
+      String(format: weatherONDepartureLocalized("activity.accessibility.lock"), context.attributes.destinationName, context.isStale ? weatherONDepartureLocalized("출발 정보 만료") : weatherONDepartureLocalized("출발까지 남은 시간"), context.state.departureTimeLabel ?? context.attributes.departureTimeLabel, displayedGuidance)
     )
   }
 }
@@ -213,7 +213,7 @@ private struct WeatherONDepartureCountdown: View {
   }
 
   private func statusText(compact: String, regular: String) -> Text {
-    Text(style == .compact ? compact : regular)
+    Text(LocalizedStringKey(style == .compact ? compact : regular))
   }
 
   private var countdownFont: Font {
@@ -237,6 +237,17 @@ private struct WeatherONDepartureCountdown: View {
       return nil
     }
   }
+}
+
+private func weatherONDepartureLocalized(_ key: String) -> String {
+  NSLocalizedString(key, bundle: .main, value: key, comment: "")
+}
+
+private func weatherONDepartureGuidance(kind: String?, fallback: String) -> String {
+  guard let kind else { return fallback }
+  let key = "guidance.\(kind)"
+  let localized = weatherONDepartureLocalized(key)
+  return localized == key ? fallback : localized
 }
 
 #if DEBUG

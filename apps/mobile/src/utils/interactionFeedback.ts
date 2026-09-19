@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 
 const destructiveAction = /(삭제|제거|해제|지우기|로그아웃|탈퇴)/u;
 const confirmAction = /(저장|등록|적용|내 옷장에 추가)/u;

@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { AppNavigator } from "./src/navigation/AppNavigator";
+import { LocalizationProvider } from "./src/localization/LocalizationProvider";
 import { applyPretendardToText, pretendardFontMap } from "./src/theme/fonts";
 
 // 폰트 로드 전에 Text 렌더 패치를 걸어 두면, 폰트가 준비되는 즉시 모든 텍스트가 Pretendard로 렌더된다.
@@ -18,7 +19,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <AppNavigator />
+      <LocalizationProvider>
+        <AppNavigator />
+      </LocalizationProvider>
     </SafeAreaProvider>
   );
 }

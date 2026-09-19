@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Image, StyleSheet } from "react-native";
+import { Animated, Easing, Image, StyleSheet } from "../localization/react-native";
 import { brandAssets } from "../assets";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useAppTheme } from "../theme/AppThemeContext";

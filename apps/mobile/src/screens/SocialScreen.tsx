@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "../localization/react-native";
 import { brandAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -21,9 +21,9 @@ export function SocialOnboardingScreen({ onNavigate }: P0ScreenProps) {
     <AppScreen title="온스퀘어 입장" subtitle="대표 마스코트와 원소 컴패니언을 만나보세요" badge="입장">
       <Section title="원소 컴패니언을 만나보세요" caption="날씨 체크인으로 작은 친구를 수집할 수 있음" accent="gold">
         <View style={styles.elementGrid}>
-          {["태양", "비", "폭풍", "바람", "서리", "안개"].map((item) => (
-            <View key={item} style={[styles.elementCard, { backgroundColor: item === "안개" ? theme.card : theme.cardMuted, borderColor: item === "안개" ? theme.muted : theme.border }]}>
-              <Text style={[styles.elementIcon, { color: item === "안개" ? theme.text : theme.gold }]}>{item.slice(0, 1)}</Text>
+          {["태양", "비", "폭풍", "바람", "서리", "안개"].map((item, index) => (
+            <View key={item} style={[styles.elementCard, { backgroundColor: index === 5 ? theme.card : theme.cardMuted, borderColor: index === 5 ? theme.muted : theme.border }]}>
+              <Text style={[styles.elementIcon, { color: index === 5 ? theme.text : theme.gold }]}>{item.slice(0, 1)}</Text>
               <Text style={[styles.elementText, { color: theme.text }]}>{item}</Text>
             </View>
           ))}
@@ -163,10 +163,10 @@ export function WeatherReactionScreen({ accountLinked, onNavigate, onRequireAcco
           ["서울", "1,247명"],
           ["부산", "532명"],
           ["대구", "188명"],
-        ].map(([city, count]) => (
+        ].map(([city, count], index) => (
           <View key={city} style={[styles.cityRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.cityName, { color: city === "서울" ? theme.text : theme.muted }]}>{city}</Text>
-            <Text style={[styles.cityCount, { color: city === "서울" ? theme.sky : theme.subtle }]}>{count}</Text>
+            <Text style={[styles.cityName, { color: index === 0 ? theme.text : theme.muted }]}>{city}</Text>
+            <Text style={[styles.cityCount, { color: index === 0 ? theme.sky : theme.subtle }]}>{count}</Text>
           </View>
         ))}
       </Section>

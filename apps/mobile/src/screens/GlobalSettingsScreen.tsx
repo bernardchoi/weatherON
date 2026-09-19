@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { BackButton } from "../components/BackButton";

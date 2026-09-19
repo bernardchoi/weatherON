@@ -3,24 +3,18 @@ import type { AccountProvider } from "./accountAuth";
 export type AccountRegion = "KR" | "JP" | "GLOBAL";
 export type AccountButtonLanguage = "ko" | "ja" | "en";
 
-export function resolveAccountButtonLanguage(locale = Intl.DateTimeFormat().resolvedOptions().locale ?? ""): AccountButtonLanguage {
+export function resolveAccountButtonLanguage(locale = "en"): AccountButtonLanguage {
   const language = locale.replace("_", "-").split("-")[0]?.toLowerCase();
   if (language === "ko" || language === "ja") return language;
   return "en";
 }
 
-export function resolveAccountRegion(options: { locale?: string; timeZone?: string } = {}): AccountRegion {
-  const locale = (options.locale ?? Intl.DateTimeFormat().resolvedOptions().locale ?? "").replace("_", "-");
-  const timeZone = options.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-  const parts = locale.split("-");
-  const language = parts[0]?.toLowerCase();
-  const region = parts.find((part, index) => index > 0 && /^[A-Za-z]{2}$/.test(part))?.toUpperCase();
+export function resolveAccountRegion(options: { regionCode?: string | null; locale?: string } = {}): AccountRegion {
+  const locale = (options.locale ?? "").replace("_", "-");
+  const localeRegion = locale.split("-").find((part, index) => index > 0 && /^[A-Za-z]{2}$/u.test(part));
+  const region = (options.regionCode ?? localeRegion)?.toUpperCase();
   if (region === "KR") return "KR";
   if (region === "JP") return "JP";
-  if (language === "ko") return "KR";
-  if (language === "ja") return "JP";
-  if (timeZone === "Asia/Seoul") return "KR";
-  if (timeZone === "Asia/Tokyo") return "JP";
   return "GLOBAL";
 }
 

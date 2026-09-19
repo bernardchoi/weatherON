@@ -20,6 +20,7 @@ export type PolicyDocumentType = "privacy" | "terms" | "location" | "open-source
 export type AdConsentMode = "pending" | "personalized" | "non-personalized";
 export type TemperatureUnit = "celsius" | "fahrenheit";
 export type DistanceUnit = "meter" | "mile";
+export type UnitPreferenceSource = "device" | "explicit";
 export type ThemeMode = "system" | "light" | "dark";
 export type StyleGender = "all" | "women" | "men";
 export type AgeBand = "10-20" | "20-30" | "30-40" | "40-50" | "50+";
@@ -81,6 +82,7 @@ export type PermissionGateResultState = {
   // 사용자가 "나중에"를 직접 선택했는지, 허용을 시도했지만 OS가 거부했는지 구분한다.
   // message 문자열만으로는 두 경우가 똑같아 화면들이 거부를 스킵으로 오인했다.
   denied: boolean;
+  outcome: "allowed" | "skipped" | "denied";
 };
 
 export type SavedDestination = {
@@ -90,6 +92,7 @@ export type SavedDestination = {
   schedulePreference: DestinationSchedulePreference;
   travelEstimate: DestinationTravelEstimate;
   savedAtLabel: string;
+  changeStatus: "saved" | "updated" | "removed" | "restored";
 };
 
 export type NotificationHistoryItem = {

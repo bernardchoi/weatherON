@@ -1,5 +1,5 @@
 import React from "react";
-import { AppState, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Image, Platform, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -67,7 +67,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           <BackButton onPress={onGoBack} />
           <View style={styles.headerCopy}>
             <Text style={[styles.title, { color: theme.text }]}>날씨 상세</Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>{getDisplayLocationName(weather.locationName)}</Text>
+            <RawText style={[styles.subtitle, { color: theme.subtle }]} numberOfLines={1}>{getDisplayLocationName(weather.locationName)}</RawText>
           </View>
         </View>
 
@@ -366,7 +366,7 @@ function getHourlyForecast(weather: P0ScreenProps["state"]["destinationCare"]["o
 function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeather[]): DailyWeather[] {
   if (daily && daily.length > 0) return daily;
   const grouped = hourly.reduce<Record<string, HourlyWeather[]>>((acc, item) => {
-    const date = item.time.includes("T") ? item.time.slice(0, 10) : "오늘";
+    const date = item.time.includes("T") ? item.time.slice(0, 10) : "__today__";
     acc[date] = acc[date] ?? [];
     acc[date].push(item);
     return acc;
@@ -394,7 +394,7 @@ function formatTimeLabel(value: string) {
 }
 
 function formatDateLabel(value: string) {
-  if (value === "오늘") return value;
+  if (value === "__today__") return "오늘";
   const match = value.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return value;
   return `${Number(match[2])}/${Number(match[3])}`;

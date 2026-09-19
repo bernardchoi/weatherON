@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "react-native";
+import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, semanticColor, spacing } from "../theme/tokens";

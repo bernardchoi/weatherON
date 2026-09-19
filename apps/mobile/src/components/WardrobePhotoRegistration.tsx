@@ -1,6 +1,6 @@
 import React from "react";
 import * as Crypto from "expo-crypto";
-import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import type { Purpose, Season, WardrobeCategory, WardrobeItem, WeatherTag } from "@weatheron/shared";
 import { BottomSheet } from "./BottomSheet";
 import { AppButton } from "./AppButton";

@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } from "react-native";
+import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";

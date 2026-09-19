@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "../localization/react-native";
 import { ScreenStack, ScreenStackItem } from "react-native-screens";
 import type { AppRouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";

@@ -17,6 +17,20 @@ private let snapshotDateFormatter: ISO8601DateFormatter = {
 
 private let fallbackSnapshotDateFormatter = ISO8601DateFormatter()
 
+private struct WeatherONWidgetLocalization: Codable {
+  let languageTag: String
+  let temperatureUnit: String
+  let distanceUnit: String
+  let uses24HourClock: Bool
+
+  static let fallback = WeatherONWidgetLocalization(
+    languageTag: "en-US",
+    temperatureUnit: "celsius",
+    distanceUnit: "meter",
+    uses24HourClock: false
+  )
+}
+
 private struct WeatherONHourlySnapshot: Codable, Hashable, Identifiable {
   let time: String
   let temperatureC: Int
@@ -445,6 +459,7 @@ private struct WeatherONWidgetStore: Codable {
   let selectedDestinationId: String?
   let current: WeatherONLocationSnapshot
   let destinations: [WeatherONLocationSnapshot]
+  let localization: WeatherONWidgetLocalization
 
   private enum CodingKeys: String, CodingKey {
     case schemaVersion
@@ -452,6 +467,7 @@ private struct WeatherONWidgetStore: Codable {
     case selectedDestinationId
     case current
     case destinations
+    case localization
   }
 
   init(
@@ -459,13 +475,15 @@ private struct WeatherONWidgetStore: Codable {
     updatedAt: String,
     selectedDestinationId: String?,
     current: WeatherONLocationSnapshot,
-    destinations: [WeatherONLocationSnapshot]
+    destinations: [WeatherONLocationSnapshot],
+    localization: WeatherONWidgetLocalization = .fallback
   ) {
     self.schemaVersion = schemaVersion
     self.updatedAt = updatedAt
     self.selectedDestinationId = selectedDestinationId
     self.current = current
     self.destinations = destinations
+    self.localization = localization
   }
 
   init(from decoder: Decoder) throws {
@@ -475,6 +493,7 @@ private struct WeatherONWidgetStore: Codable {
     selectedDestinationId = try values.decodeIfPresent(String.self, forKey: .selectedDestinationId)
     current = try values.decodeIfPresent(WeatherONLocationSnapshot.self, forKey: .current) ?? .currentPlaceholder
     destinations = try values.decodeIfPresent([WeatherONLocationSnapshot].self, forKey: .destinations) ?? []
+    localization = try values.decodeIfPresent(WeatherONWidgetLocalization.self, forKey: .localization) ?? .fallback
   }
 }
 
@@ -529,12 +548,14 @@ private struct WeatherONEntry: TimelineEntry {
   let location: WeatherONLocationSnapshot
   let hasSharedSnapshot: Bool
   let visualPhase: Int
+  let localization: WeatherONWidgetLocalization
 
   static let placeholder = WeatherONEntry(
     date: Date(),
     location: .currentPlaceholder,
     hasSharedSnapshot: true,
-    visualPhase: 0
+    visualPhase: 0,
+    localization: .fallback
   )
 }
 
@@ -545,7 +566,8 @@ private enum WeatherONTimelineFactory {
       date: date,
       location: WeatherONStoreReader.location(for: selectionID, in: loaded.store),
       hasSharedSnapshot: loaded.hasSharedSnapshot,
-      visualPhase: phase
+      visualPhase: phase,
+      localization: loaded.store.localization
     )
   }
 
@@ -570,7 +592,8 @@ private enum WeatherONTimelineFactory {
         date: date,
         location: location,
         hasSharedSnapshot: loaded.hasSharedSnapshot,
-        visualPhase: phase
+        visualPhase: phase,
+        localization: loaded.store.localization
       )
     }
     return Timeline(entries: entries, policy: .after(refresh))
@@ -699,10 +722,10 @@ private struct WeatherONSmallView: View {
 
       HStack(alignment: .center, spacing: 6) {
         VStack(alignment: .leading, spacing: 0) {
-          Text("\(entry.location.temperatureC)°")
+          Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
             .font(.system(size: 40, weight: .bold, design: .rounded))
             .tracking(-2)
-          Text(entry.location.conditionLabel)
+          Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
             .font(.system(size: 12, weight: .bold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
         }
@@ -722,7 +745,7 @@ private struct WeatherONSmallView: View {
       Spacer(minLength: 3)
 
       if entry.location.isDestination {
-        WeatherONSmallDestinationStrip(location: entry.location, palette: palette)
+          WeatherONSmallDestinationStrip(location: entry.location, localization: entry.localization, palette: palette)
       } else {
         WeatherONPreparationStrip(location: entry.location, palette: palette, compact: true)
       }
@@ -741,7 +764,7 @@ private struct WeatherONMediumView: View {
         WeatherONHeader(entry: entry, palette: palette, compact: false)
         Spacer(minLength: 4)
         HStack(alignment: .center, spacing: 8) {
-          Text("\(entry.location.temperatureC)°")
+          Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
             .font(.system(size: 44, weight: .bold, design: .rounded))
             .tracking(-2)
           WeatherONConditionGlyph(
@@ -751,7 +774,7 @@ private struct WeatherONMediumView: View {
             size: 44
           )
         }
-        Text("체감 \(entry.location.feelsLikeC)° · \(entry.location.conditionLabel)")
+        Text(String(format: weatherONLocalized("widget.feels.condition"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit), weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel)))
           .font(.system(size: 11, weight: .semibold, design: .rounded))
           .foregroundStyle(palette.secondaryText)
           .lineLimit(1)
@@ -762,10 +785,10 @@ private struct WeatherONMediumView: View {
 
       VStack(spacing: 8) {
         if entry.location.isDestination {
-          WeatherONScheduleCard(location: entry.location, palette: palette, compact: true)
+          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         } else {
-          WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 3, referenceDate: entry.date)
+          WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 3, referenceDate: entry.date)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         }
       }
@@ -786,7 +809,7 @@ private struct WeatherONLargeView: View {
 
       HStack(spacing: 12) {
         HStack(spacing: 10) {
-          Text("\(entry.location.temperatureC)°")
+          Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
             .font(.system(size: 48, weight: .bold, design: .rounded))
             .tracking(-2)
             .lineLimit(1)
@@ -795,11 +818,11 @@ private struct WeatherONLargeView: View {
             .fixedSize(horizontal: true, vertical: false)
             .layoutPriority(2)
           VStack(alignment: .leading, spacing: 3) {
-            Text(entry.location.conditionLabel)
+            Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
               .font(.system(size: 16, weight: .bold, design: .rounded))
               .lineLimit(1)
               .minimumScaleFactor(0.8)
-            Text("체감 \(entry.location.feelsLikeC)°")
+            Text(String(format: weatherONLocalized("widget.feels"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit)))
               .font(.system(size: 11, weight: .semibold, design: .rounded))
               .foregroundStyle(palette.secondaryText)
           }
@@ -814,12 +837,12 @@ private struct WeatherONLargeView: View {
         .frame(maxWidth: .infinity)
 
         if entry.location.isDestination {
-          WeatherONScheduleCard(location: entry.location, palette: palette, compact: false)
+          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: false)
             .frame(maxWidth: .infinity)
         }
       }
 
-      WeatherONHourlyStrip(location: entry.location, palette: palette, limit: 5, referenceDate: entry.date)
+      WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 5, referenceDate: entry.date)
 
       HStack(spacing: 10) {
         WeatherONOutfitCard(location: entry.location, palette: palette, compact: false)
@@ -866,7 +889,7 @@ private struct WeatherONHeader: View {
     }
     let minutes = max(0, Int(entry.date.timeIntervalSince(observedAt) / 60))
     if minutes < 1 { return "방금 전" }
-    if minutes < 60 { return "\(minutes)분 전" }
+    if minutes < 60 { return String(format: weatherONLocalized("%lld분 전"), Int64(minutes)) }
     return "최근 업데이트"
   }
 }
@@ -931,11 +954,12 @@ private struct WeatherONPreparationTile: View {
 
 private struct WeatherONSmallDestinationStrip: View {
   let location: WeatherONLocationSnapshot
+  let localization: WeatherONWidgetLocalization
   let palette: WeatherONWidgetPalette
 
   var body: some View {
     HStack(spacing: 4) {
-      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: location.departureTime ?? "--:--", label: "출발", palette: palette)
+      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: weatherONClock(location.departureTime, localization: localization), label: weatherONLocalized("departure"), palette: palette)
       WeatherONCompactFact(symbol: outfitSymbol(location.outfitVariant), value: "코디", label: "추천", palette: palette)
       WeatherONCompactFact(symbol: "umbrella.fill", value: location.umbrellaNeeded ? "O" : "X", label: "우산", palette: palette)
     }
@@ -962,6 +986,7 @@ private struct WeatherONCompactFact: View {
 
 private struct WeatherONScheduleCard: View {
   let location: WeatherONLocationSnapshot
+  let localization: WeatherONWidgetLocalization
   let palette: WeatherONWidgetPalette
   let compact: Bool
 
@@ -972,7 +997,7 @@ private struct WeatherONScheduleCard: View {
           .font(.system(size: compact ? 9 : 11, weight: .bold, design: .rounded))
         Spacer(minLength: 2)
         if let travelMinutes = location.travelMinutes {
-          Text("\(travelMinutes)분")
+          Text(String(format: weatherONLocalized("%lld분"), Int64(travelMinutes)))
             .font(.system(size: compact ? 8 : 10, weight: .semibold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
         }
@@ -980,7 +1005,7 @@ private struct WeatherONScheduleCard: View {
 
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         VStack(alignment: .leading, spacing: 1) {
-          Text(location.departureTime ?? "--:--")
+          Text(weatherONClock(location.departureTime, localization: localization))
             .font(.system(size: compact ? 18 : 23, weight: .bold, design: .rounded))
           Text("출발")
             .font(.system(size: 8, weight: .semibold, design: .rounded))
@@ -990,7 +1015,7 @@ private struct WeatherONScheduleCard: View {
           .font(.system(size: 9, weight: .bold))
           .foregroundStyle(palette.accent)
         VStack(alignment: .leading, spacing: 1) {
-          Text(location.arrivalTime ?? "--:--")
+          Text(weatherONClock(location.arrivalTime, localization: localization))
             .font(.system(size: compact ? 14 : 18, weight: .bold, design: .rounded))
           Text("도착")
             .font(.system(size: 8, weight: .semibold, design: .rounded))
@@ -1015,7 +1040,7 @@ private struct WeatherONOutfitCard: View {
         Label("추천 코디", systemImage: outfitSymbol(location.outfitVariant))
           .font(.system(size: compact ? 9 : 11, weight: .bold, design: .rounded))
         Spacer(minLength: 2)
-        Text("\(location.outfitItems.count)개")
+        Text(String(format: weatherONLocalized("%lld개"), Int64(location.outfitItems.count)))
           .font(.system(size: 8, weight: .semibold, design: .rounded))
           .foregroundStyle(palette.secondaryText)
       }
@@ -1052,6 +1077,7 @@ private struct WeatherONOutfitCard: View {
 
 private struct WeatherONHourlyStrip: View {
   let location: WeatherONLocationSnapshot
+  let localization: WeatherONWidgetLocalization
   let palette: WeatherONWidgetPalette
   let limit: Int
   let referenceDate: Date
@@ -1071,7 +1097,7 @@ private struct WeatherONHourlyStrip: View {
           )
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(palette.accent)
-          Text("\(hour.temperatureC)°")
+          Text(weatherONTemperature(hour.temperatureC, unit: localization.temperatureUnit))
             .font(.system(size: 10, weight: .bold, design: .rounded))
           if hour.rainProbabilityPct > 0 {
             Text("\(hour.rainProbabilityPct)%")
@@ -1114,6 +1140,40 @@ private struct WeatherONMetric: View {
     .foregroundStyle(palette.secondaryText)
     .frame(maxWidth: .infinity)
   }
+}
+
+private func weatherONLocalized(_ key: String) -> String {
+  NSLocalizedString(key, bundle: .main, value: key, comment: "")
+}
+
+private func weatherONTemperature(_ valueC: Int, unit: String) -> String {
+  if unit == "fahrenheit" {
+    return "\(Int((Double(valueC) * 9 / 5 + 32).rounded()))°F"
+  }
+  return "\(valueC)°C"
+}
+
+private func weatherONConditionLabel(_ condition: String, fallback: String) -> String {
+  let key = "condition.\(condition)"
+  let localized = weatherONLocalized(key)
+  return localized == key ? fallback : localized
+}
+
+private func weatherONClock(_ value: String?, localization: WeatherONWidgetLocalization) -> String {
+  guard
+    let value,
+    let match = value.range(of: #"^\d{2}:\d{2}$"#, options: .regularExpression)
+  else { return "--:--" }
+  let parts = value[match].split(separator: ":")
+  guard parts.count == 2, let hour = Int(parts[0]), let minute = Int(parts[1]) else { return value }
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+  guard let date = calendar.date(from: DateComponents(year: 2020, month: 1, day: 1, hour: hour, minute: minute)) else { return value }
+  let formatter = DateFormatter()
+  formatter.locale = Locale(identifier: localization.languageTag)
+  formatter.timeZone = calendar.timeZone
+  formatter.dateFormat = localization.uses24HourClock ? "HH:mm" : "h:mm a"
+  return formatter.string(from: date)
 }
 
 private struct WeatherONWeatherBackdrop: View {
@@ -1520,14 +1580,14 @@ private struct WeatherONWidgetViewPreviews: PreviewProvider {
         .previewDisplayName("현재 위치 · 소형 · 라이트")
 
       WeatherONWidgetView(
-        entry: WeatherONEntry(date: Date(), location: .destinationPlaceholder, hasSharedSnapshot: true, visualPhase: 1)
+        entry: WeatherONEntry(date: Date(), location: .destinationPlaceholder, hasSharedSnapshot: true, visualPhase: 1, localization: .fallback)
       )
       .previewContext(WidgetPreviewContext(family: .systemMedium))
       .preferredColorScheme(.dark)
       .previewDisplayName("목적지 · 중형 · 다크")
 
       WeatherONWidgetView(
-        entry: WeatherONEntry(date: Date(), location: .destinationPlaceholder, hasSharedSnapshot: true, visualPhase: 2)
+        entry: WeatherONEntry(date: Date(), location: .destinationPlaceholder, hasSharedSnapshot: true, visualPhase: 2, localization: .fallback)
       )
       .previewContext(WidgetPreviewContext(family: .systemLarge))
       .preferredColorScheme(.light)

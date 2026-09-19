@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo } from "../localization/react-native";
 
 export function useReducedMotion() {
   const [enabled, setEnabled] = useState<boolean | null>(null);

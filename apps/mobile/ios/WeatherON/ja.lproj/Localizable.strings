@@ -1,0 +1,4 @@
+"departure.alert.title" = "出発準備を開始";
+"departure.alert.body" = "%@への出発まで60分です";
+"departure.completed" = "出発時刻です";
+"departure.expired" = "出発情報の有効期限が切れました";

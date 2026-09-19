@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -12,7 +12,7 @@ const contentCards = [
   { label: "출발 판단", title: "10:50 출발", body: "목적지 13:00 도착 · 여유 10분" },
   { label: "비 완화", title: "21:00 완화", body: "강수 타임라인에서 알림 조정" },
   { label: "챙길 것", title: "우산 · 방수 신발", body: "비 신호 기준 준비" },
-  { label: "확장 예정", title: "여행·AI·소셜", body: "MVP 검증 이후 노출 확대" },
+  { label: "확장 예정", title: "여행·AI·소셜", body: "MVP 검증 이후 노출 확대", muted: true },
 ];
 
 export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
@@ -37,7 +37,7 @@ export function AdPlacementScreen({ onNavigate }: P0ScreenProps) {
         {contentCards.slice(1).map((item) => (
           <View key={item.label} style={[styles.contentCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
             <View style={styles.copy}>
-              <Text style={[styles.smallLabel, { color: item.label === "확장 예정" ? theme.subtle : theme.gold }]}>{item.label}</Text>
+              <Text style={[styles.smallLabel, { color: item.muted ? theme.subtle : theme.gold }]}>{item.label}</Text>
               <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>
               <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
             </View>

@@ -14,6 +14,7 @@ export {
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
+  getDepartureWeatherGuidanceKind,
   isDepartureLiveActivityAutoWindow,
 } from "./departureLiveActivity.shared";
 

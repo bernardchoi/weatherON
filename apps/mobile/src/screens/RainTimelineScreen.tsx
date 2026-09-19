@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -126,7 +126,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
             </View>
           </View>
           ) : (
-            <View style={styles.dryTimeline} accessibilityLabel={`향후 ${rainBars.length}시간 예상 강수 없음`}>
+            <LocalizedView style={styles.dryTimeline} accessibilityLabel={`향후 ${rainBars.length}시간 예상 강수 없음`}>
               <Text style={[styles.dryTimelineText, { color: theme.text }]}>향후 {rainBars.length}시간 예상 강수 없음</Text>
               <View style={[styles.dryTimelineLine, { backgroundColor: theme.border }]} />
               <View style={styles.timeAxis}>
@@ -134,13 +134,13 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
                   <Text key={label} style={[styles.axisText, { color: theme.subtle }]}>{label}</Text>
                 ))}
               </View>
-            </View>
+            </LocalizedView>
           )}
         </Panel>
 
         <Panel title="외출 가이드" theme={theme} accentColor={theme.clear}>
-          <GuideRow icon={uiIconAssets.check} text={getDepartureGuideText(rainStart, umbrella)} color={theme.clear} theme={theme} />
-          <GuideRow icon={uiIconAssets.umbrella} text={getUmbrellaGuideText(rainStart, umbrella)} color={theme.sky} theme={theme} />
+          <GuideRow icon={uiIconAssets.check} text={getDepartureGuideText(rainStart, hasRain, umbrella)} color={theme.clear} theme={theme} />
+          <GuideRow icon={uiIconAssets.umbrella} text={getUmbrellaGuideText(rainStart, hasRain, umbrella)} color={theme.sky} theme={theme} />
           <GuideRow
             icon={uiIconAssets.clock}
             text={hasRain ? getRainEndGuideText(rainEnd) : `향후 ${rainBars.length}시간 강수 가능성 낮음`}
@@ -315,7 +315,7 @@ function getRainWindow(items: RainBar[]) {
     start,
     end,
     title: start === end ? `${start} 비 시작·완화` : `${start} 시작, ${end} 완화`,
-    body: end === "대기" ? "강수 신호 낮음" : `${end} 이후 외출 부담 낮음`,
+    body: `${end} 이후 외출 부담 낮음`,
   };
 }
 
@@ -342,20 +342,19 @@ function getUmbrellaCardColor(level: P0ScreenProps["state"]["umbrella"]["level"]
   return theme.clear;
 }
 
-function getUmbrellaGuideText(start: string, umbrella: P0ScreenProps["state"]["umbrella"]) {
+function getUmbrellaGuideText(start: string, hasRain: boolean, umbrella: P0ScreenProps["state"]["umbrella"]) {
   if (umbrella.level === "none") return "우산 없이 이동 가능";
-  if (start === "대기") return umbrella.title;
+  if (!hasRain) return umbrella.title;
   return `${start} 이후 외출 시 ${umbrella.title}`;
 }
 
-function getDepartureGuideText(start: string, umbrella: P0ScreenProps["state"]["umbrella"]) {
+function getDepartureGuideText(start: string, hasRain: boolean, umbrella: P0ScreenProps["state"]["umbrella"]) {
   if (umbrella.level === "none") return "현재 강수 신호 낮음";
-  if (start === "대기") return "외출 전 최신 강수 확인";
+  if (!hasRain) return "외출 전 최신 강수 확인";
   return `${start} 전 이동 여유 확인`;
 }
 
 function getRainEndGuideText(end: string) {
-  if (end === "대기") return "강수 신호 낮음";
   return `${end} 이후 강수 완화 예상`;
 }
 

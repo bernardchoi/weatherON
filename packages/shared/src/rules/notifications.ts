@@ -330,7 +330,7 @@ function getHeavyRainSignal(weather: WeatherSnapshot): WeatherAlertSignal | unde
     return {
       level: "warning",
       label: "호우경보",
-      reason: formatHeavyRainReason(totals, "경보"),
+      reason: formatHeavyRainReason(totals, "warning"),
       eventDate,
     };
   }
@@ -338,7 +338,7 @@ function getHeavyRainSignal(weather: WeatherSnapshot): WeatherAlertSignal | unde
     return {
       level: "advisory",
       label: "호우주의보",
-      reason: formatHeavyRainReason(totals, "주의보"),
+      reason: formatHeavyRainReason(totals, "advisory"),
       eventDate,
     };
   }
@@ -407,8 +407,9 @@ function getRollingPrecipitation(amounts: number[], windowSize: number): number 
   return max;
 }
 
-function formatHeavyRainReason(totals: { max3hMm: number; max12hMm: number }, levelLabel: string): string {
-  const window = totals.max3hMm >= (levelLabel === "경보" ? 90 : 60)
+function formatHeavyRainReason(totals: { max3hMm: number; max12hMm: number }, level: WeatherAlertLevel): string {
+  const levelLabel = level === "warning" ? "경보" : "주의보";
+  const window = totals.max3hMm >= (level === "warning" ? 90 : 60)
     ? `3시간 ${totals.max3hMm.toFixed(0)}mm`
     : `12시간 ${totals.max12hMm.toFixed(0)}mm`;
   return `${window} 예상 · 호우${levelLabel} 기준 도달 예상, 저지대·하천 주변 접근 주의`;

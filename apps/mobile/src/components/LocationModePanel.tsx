@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import type { DeviceLocationState } from "../providers/deviceLocation";
 import type { WeatherLocationMode } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -156,9 +156,9 @@ function WardrobeItemCard({
     >
       <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }]}>
-          {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
+          {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[styles.itemName, { color: theme.text }]}>{item.name}</RawText> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
         </View>
-        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
+        {item.source === "photo" ? <RawText style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</RawText> : <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>}
         <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </FeedbackPressable>
       <FeedbackPressable

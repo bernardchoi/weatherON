@@ -15,16 +15,18 @@ const companionBundle = join(outDir, "mobile-companion-check-bundle.mjs");
 const reactNativePlatformStub = {
   name: "react-native-platform-stub",
   setup(buildContext) {
-    buildContext.onResolve({ filter: /^(react-native|expo-file-system|expo-clipboard)$/ }, (args) => ({
+    buildContext.onResolve({ filter: /^(react-native|expo-file-system|expo-clipboard|expo-localization)$/ }, (args) => ({
       path: args.path,
       namespace: "weatheron-check",
     }));
     buildContext.onLoad({ filter: /.*/, namespace: "weatheron-check" }, (args) => ({
-      contents: args.path === "expo-file-system"
+      contents: args.path === "expo-localization"
+        ? 'export const getLocales = () => [{ languageTag: "en-US", languageCode: "en", regionCode: "US" }]; export const getCalendars = () => [{ uses24hourClock: false, timeZone: "UTC" }];'
+        : args.path === "expo-file-system"
         ? 'export const Paths = { document: { uri: "file:///check/Documents/" } };'
         : args.path === "expo-clipboard"
           ? 'export async function setStringAsync() {}'
-          : 'export const Platform = { OS: "android" }; export const Linking = { openURL: async () => {} };',
+          : 'export const Platform = { OS: "android" }; export const Linking = { openURL: async () => {} }; export const AppState = { addEventListener: () => ({ remove() {} }) }; export const Pressable = () => null; export const Text = () => null; export const TextInput = () => null; export const View = () => null;',
       loader: "js",
     }));
   },
@@ -889,6 +891,7 @@ await build({
     "expo-image-manipulator",
     "expo-image-picker",
     "expo-location",
+    "expo-localization",
     "expo-modules-core",
     "expo-navigation-bar",
     "expo-secure-store",

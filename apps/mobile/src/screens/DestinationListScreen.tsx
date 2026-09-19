@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -31,6 +31,7 @@ type DestinationCardModel = {
   arrivalLabel: string;
   repeatLabel: string;
   warning: string;
+  warningKind: "rain" | "wind" | "none";
   outfitTitle: string;
   outfitMatchPct: number;
   outfitItems: Array<{ id: string; name: string; imageUrl?: string }>;
@@ -39,6 +40,7 @@ type DestinationCardModel = {
   saved: boolean;
   careEnabled: boolean;
   savedAtLabel: string;
+  changeStatus: P0ScreenProps["savedDestinations"][number]["changeStatus"];
 };
 
 export function DestinationListScreen({
@@ -320,9 +322,9 @@ function DestinationCard({
           <View style={styles.destinationTitleColumn}>
             <View style={styles.destinationNameRow}>
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
-              <Text style={[styles.destinationName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+              <RawText style={[styles.destinationName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</RawText>
             </View>
-            <Text style={[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</Text>
+            <RawText style={[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</RawText>
           </View>
           <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
@@ -386,6 +388,9 @@ function buildDestinationCards(
     const destinationRain = Math.max(destinationWeather.current.rainProbabilityPct, ...destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
     const destinationWind = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
     const warning = buildDestinationWarning(destination.place.name, destinationRain, destinationWind, destination.alertCondition);
+    const warningKind = destinationRain >= destination.alertCondition.rainThresholdPct
+      ? "rain"
+      : destinationWind >= destination.alertCondition.windThresholdMs ? "wind" : "none";
     const tone = destinationRain >= destination.alertCondition.rainThresholdPct || destinationWind >= destination.alertCondition.windThresholdMs ? "warm" : "clear";
     const schedule = getDestinationSchedule(destination, care, originAvailable);
     const outfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
@@ -405,6 +410,7 @@ function buildDestinationCards(
       arrivalLabel: schedule.arrivalLabel,
       repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
+      warningKind,
       outfitTitle: getOutfitVariantLabel(outfit.variant),
       outfitMatchPct: outfit.matchPct,
       outfitItems: outfitItems.slice(0, 3).map((item) => ({
@@ -417,6 +423,7 @@ function buildDestinationCards(
       saved: true,
       careEnabled: destination.careEnabled,
       savedAtLabel: destination.savedAtLabel,
+      changeStatus: destination.changeStatus,
     };
   });
 }
@@ -438,7 +445,7 @@ function getDestinationResultBanner(
   hasDestinations: boolean,
 ): { title: string; body: string; tone: "clear" | "warm" } | null {
   if (permissionGateResult?.returnTo === "G1" && permissionGateResult.reason === "destination-care") {
-    const skipped = permissionGateResult.denied || permissionGateResult.message.includes("나중에");
+    const skipped = permissionGateResult.outcome !== "allowed";
     return {
       title: skipped ? "목적지 저장 완료" : "목적지 알림 준비 완료",
       body: skipped ? "권한은 나중에 켜도 비교 가능" : "출발·강수 알림 자동 계산",
@@ -499,11 +506,11 @@ function trimAdministrativeSuffix(value: string) {
 }
 
 function getDestinationActionText(item: DestinationCardModel) {
-  if (item.tone === "warm" && item.warning.includes("강수")) return `우산 준비 · ${item.rainPct}`;
-  if (item.tone === "warm" && item.warning.includes("바람")) return "바람막이 확인";
+  if (item.warningKind === "rain") return `우산 준비 · ${item.rainPct}`;
+  if (item.warningKind === "wind") return "바람막이 확인";
   if (!item.careEnabled) return "알림 켜기";
-  if (item.savedAtLabel === "방금 저장") return "출발·강수 기준 확인";
-  if (item.savedAtLabel === "복구됨") return "복구 알림 확인";
+  if (item.changeStatus === "saved") return "출발·강수 기준 확인";
+  if (item.changeStatus === "restored") return "복구 알림 확인";
   return "출발 시간 확인";
 }
 

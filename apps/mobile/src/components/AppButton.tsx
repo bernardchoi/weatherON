@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, StyleSheet, Text } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";

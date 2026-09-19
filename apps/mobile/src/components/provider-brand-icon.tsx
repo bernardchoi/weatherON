@@ -1,5 +1,5 @@
 import React from "react";
-import { Image } from "react-native";
+import { Image } from "../localization/react-native";
 import type { AccountProvider } from "../providers/accountAuth";
 
 const providerAssets = {

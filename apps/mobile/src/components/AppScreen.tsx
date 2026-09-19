@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "./BackButton";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { StatusPill } from "./StatusPill";

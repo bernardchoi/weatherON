@@ -16,6 +16,7 @@ private struct DepartureActivityPayload: Decodable {
   let departureAt: String
   let departureTimeLabel: String
   let guidance: String
+  let guidanceKind: String?
   let guidanceSymbol: String
   let deepLink: String
 }
@@ -138,6 +139,8 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       let state = WeatherONDepartureActivityAttributes.ContentState(
         guidance: payload.guidance,
         guidanceSymbol: payload.guidanceSymbol,
+        guidanceKind: payload.guidanceKind,
+        departureTimeLabel: payload.departureTimeLabel,
         isCompleted: false,
         phase: "upcoming"
       )
@@ -156,8 +159,8 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       let activity: Activity<WeatherONDepartureActivityAttributes>
       if #available(iOS 26.0, *), startAt > Date() {
         let alert = AlertConfiguration(
-          title: "출발 준비 시작",
-          body: "\(payload.destinationName) 출발까지 60분 남았어요",
+          title: LocalizedStringResource("departure.alert.title", defaultValue: "출발 준비 시작"),
+          body: LocalizedStringResource("departure.alert.body", defaultValue: "\(payload.destinationName) 출발까지 60분 남았어요"),
           sound: .default
         )
         activity = try Activity<WeatherONDepartureActivityAttributes>.request(
@@ -220,13 +223,17 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     return fractional.date(from: value) ?? ISO8601DateFormatter().date(from: value)
   }
 
+  private func localized(_ key: String) -> String {
+    NSLocalizedString(key, bundle: .main, value: key, comment: "")
+  }
+
   private func scheduleAutomaticEnd(for activity: Activity<WeatherONDepartureActivityAttributes>) {
     departureEndWorkItem?.cancel()
     let delay = max(0, activity.attributes.departureAt.timeIntervalSinceNow)
     let workItem = DispatchWorkItem {
       Task {
         let finalState = WeatherONDepartureActivityAttributes.ContentState(
-          guidance: "출발 시각이 되었어요",
+          guidance: self.localized("departure.completed"),
           guidanceSymbol: "location.north.fill",
           isCompleted: true,
           phase: "completed"
@@ -244,7 +251,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     for activity in Activity<WeatherONDepartureActivityAttributes>.activities
       where activity.attributes.departureAt.addingTimeInterval(departureActivityRecoveryGrace) <= now {
       let finalState = WeatherONDepartureActivityAttributes.ContentState(
-        guidance: "출발 정보가 만료됐어요",
+        guidance: self.localized("departure.expired"),
         guidanceSymbol: "exclamationmark.clock.fill",
         isCompleted: true,
         phase: "expired"
@@ -279,7 +286,6 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       $0.attributes.destinationId == attributes.destinationId &&
       abs($0.attributes.departureAt.timeIntervalSince(attributes.departureAt)) < 1 &&
       $0.attributes.destinationName == attributes.destinationName &&
-      $0.attributes.departureTimeLabel == attributes.departureTimeLabel &&
       $0.attributes.deepLink == attributes.deepLink
     }
   }

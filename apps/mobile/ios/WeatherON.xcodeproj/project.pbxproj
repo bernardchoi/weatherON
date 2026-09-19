@@ -23,6 +23,9 @@
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F11748462D0307B40044C1D9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748452D0307B40044C1D9 /* SceneDelegate.swift */; };
 		F99F200AC2D68A41DE85F81B /* WeatherONWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */; };
+		A11C27010000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000021 /* InfoPlist.strings */; };
+		A11C27010000000000000002 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000022 /* Localizable.strings */; };
+		A11C27010000000000000003 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000023 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +75,15 @@
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WeatherON/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* WeatherON-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WeatherON-Bridging-Header.h"; path = "WeatherON/WeatherON-Bridging-Header.h"; sourceTree = "<group>"; };
 		F11748452D0307B40044C1D9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = WeatherON/SceneDelegate.swift; sourceTree = "<group>"; };
+		A11C27010000000000000011 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = WeatherON/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A11C27010000000000000012 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = WeatherON/ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A11C27010000000000000013 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = WeatherON/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A11C27010000000000000014 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = WeatherON/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A11C27010000000000000015 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = WeatherON/ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A11C27010000000000000016 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = WeatherON/ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A11C27010000000000000017 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A11C27010000000000000018 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A11C27010000000000000019 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +120,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				B4C434B9F6E7D57F92E80710 /* PrivacyInfo.xcprivacy */,
+				A11C27010000000000000021 /* InfoPlist.strings */,
+				A11C27010000000000000022 /* Localizable.strings */,
 			);
 			name = WeatherON;
 			sourceTree = "<group>";
@@ -128,6 +142,7 @@
 				66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */,
 				A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */,
 				A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */,
+				A11C27010000000000000023 /* Localizable.strings */,
 			);
 			name = WeatherONWidget;
 			path = WeatherONWidget;
@@ -276,6 +291,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ko,
+				ja,
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
@@ -294,6 +311,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11C27010000000000000003 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +319,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11C27010000000000000001 /* InfoPlist.strings in Resources */,
+				A11C27010000000000000002 /* Localizable.strings in Resources */,
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				A11C26010000000000000005 /* WeatherON-App-Icon.icon in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
@@ -310,6 +330,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A11C27010000000000000021 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (A11C27010000000000000011 /* en */, A11C27010000000000000012 /* ko */, A11C27010000000000000013 /* ja */);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		A11C27010000000000000022 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (A11C27010000000000000014 /* en */, A11C27010000000000000015 /* ko */, A11C27010000000000000016 /* ja */);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		A11C27010000000000000023 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (A11C27010000000000000017 /* en */, A11C27010000000000000018 /* ko */, A11C27010000000000000019 /* ja */);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Animated, Easing, PanResponder, Platform, StyleSheet, useWindowDimensions } from "../localization/react-native";
 
 const EDGE_ACTIVATION_WIDTH = 28;
 const SWIPE_COMPLETE_DISTANCE_RATIO = 0.3;

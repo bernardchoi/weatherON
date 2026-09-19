@@ -3,7 +3,9 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleDevelopmentRegion</key>
-  <string>ko</string>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array><string>ko</string><string>en</string><string>ja</string></array>
   <key>CFBundleDisplayName</key>
   <string>WeatherON</string>
   <key>CFBundleExecutable</key>

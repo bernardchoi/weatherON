@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
@@ -131,9 +131,9 @@ function WeatherMiniCard({
         <View style={[styles.dot, { backgroundColor: toneColor }]} />
         <Text style={[styles.miniLabel, { color: theme.subtle }]}>{label}</Text>
       </View>
-      <Text style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
+      <RawText style={[styles.miniLocation, { color: theme.text }]} numberOfLines={1}>
         {locationName ?? getDisplayLocationName(weather.locationName)}
-      </Text>
+      </RawText>
       <View style={styles.miniMain}>
         <Text style={[styles.miniTemp, { color: theme.text }]}>{formatTemperature(weather.current.feelsLikeC, temperatureUnit, { suffix: true })}</Text>
         <Text style={[styles.miniCondition, { color: themeName === "light" ? toneColor : theme.muted }]}>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -22,6 +22,9 @@ import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { getHomeCompanionMessage, getHomeDepartureSummary } from "../utils/homeCompanion";
 import { getConditionIcon, getConditionColor, getConditionLabel } from "../utils/weatherPresentation";
+import { defaultSeoulWeatherLocation } from "../providers/weatherLocations";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
 
 // 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
 const HOME_OUTFIT_CARD_VISIBLE = true;
@@ -47,17 +50,21 @@ export function HomeScreen({
   onSelectDestinationPlace,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [refreshCompletedAt, setRefreshCompletedAt] = useState(0);
   const pullRefreshObservedLoadingRef = useRef(false);
   const activeWeatherAlert = state.officialSpecialAlert.active ? state.officialSpecialAlert : null;
   const unreadNotificationCount = notificationHistoryUnreadCount(notificationHistory, readNotificationIds);
-  const destinationReady = state.hasDestination && state.destinationCare.name !== "목적지 미등록";
+  const destinationReady = state.hasDestination;
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
   const currentWeather = state.destinationCare.originWeather;
   const todayMinMax = getTodayMinMax(currentWeather);
-  const currentLocationName = getDisplayLocationName(currentWeather.locationName);
+  const rawCurrentLocationName = getDisplayLocationName(currentWeather.locationName);
+  const currentLocationName = currentWeather.locationId === defaultSeoulWeatherLocation.locationId
+    ? translateText(rawCurrentLocationName, language)
+    : rawCurrentLocationName;
   const current = currentWeather.current;
   const isNight = useIsNightHour({
     coordinate: placeSearchOrigin?.coordinate,
@@ -136,7 +143,7 @@ export function HomeScreen({
         <View style={styles.topBar}>
           {(
             <View style={styles.iosLocationHeader}>
-              <Text style={[styles.iosLocationName, { color: theme.text }]} numberOfLines={1}>{currentLocationName}</Text>
+              <RawText style={[styles.iosLocationName, { color: theme.text }]} numberOfLines={1}>{currentLocationName}</RawText>
               <Text accessibilityLiveRegion="polite" style={[styles.iosSecondaryText, { color: theme.muted }]}>{refreshMessage || locationStatus.value}</Text>
             </View>
           )}
@@ -336,7 +343,7 @@ function DestinationSelectorCard({
             <Image source={getDestinationTypeIcon(selectedDestination.place)} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.clear }]} />
           </View>
           <View style={styles.destinationSelectCopy}>
-            <Text style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</Text>
+            <RawText style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
             <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(selectedDestination.place)}</Text>
           </View>
         </FeedbackPressable>
@@ -370,7 +377,7 @@ function DestinationSelectorCard({
                   <Image source={getDestinationTypeIcon(destination.place)} resizeMode="contain" style={[styles.destinationSheetIcon, { tintColor: theme.clear }]} />
                 </View>
                 <View style={styles.destinationSelectCopy}>
-                  <Text style={[styles.destinationSheetOptionTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</Text>
+                  <RawText style={[styles.destinationSheetOptionTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</RawText>
                   <Text style={[styles.destinationSheetOptionMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
                 </View>
                 {selected ? <Image source={uiIconAssets.check} resizeMode="contain" style={[styles.destinationSheetCheck, { tintColor: theme.clear }]} /> : null}
@@ -689,7 +696,7 @@ function HomeOutfitPreviewCard({
   const layout = useResponsiveLayout();
   const tightLayout = isHomeTightLayout(layout);
   const imageSource = getHomeOutfitPreviewImage(outfit);
-  const compactCopy = getHomeOutfitCopy(outfit.decisionText, packTitle);
+  const compactCopy = getHomeOutfitCopy(outfit.variant, packTitle);
   const title = getHomeOutfitTitle(compactCopy.title);
   return (
     <FeedbackPressable
@@ -749,13 +756,11 @@ function HomeOutfitPreviewCard({
   );
 }
 
-function getHomeOutfitCopy(decisionText: string, fallback: string) {
-  if (decisionText.includes("비가 세요")) return { title: "비가 세요 · 방수 차림", body: "우산도 함께 챙겨요" };
-  if (decisionText.includes("비 소식")) return { title: "비 소식 있어요.\n우산과 방수 신발 챙겨요", body: "방수 신발이면 더 좋아요" };
-  if (decisionText.includes("더운 날")) return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
-  if (decisionText.includes("쌀쌀해요")) return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
-  if (decisionText.includes("기온차")) return { title: "일교차 커요 · 겹옷", body: "아침저녁에 걸칠 옷이 좋아요" };
-  return { title: fallback === "가볍게" ? "오늘은 가볍게 나가요" : fallback, body: "편한 차림이면 충분해요" };
+function getHomeOutfitCopy(variant: P0ScreenProps["state"]["outfit"]["variant"], fallback: string) {
+  if (variant === "rain") return { title: "비 소식 있어요.\n우산과 방수 신발 챙겨요", body: "방수 신발이면 더 좋아요" };
+  if (variant === "heat") return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
+  if (variant === "cold") return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
+  return { title: variant === "formal" ? fallback : "오늘은 가볍게 나가요", body: "편한 차림이면 충분해요" };
 }
 
 function getHomeOutfitTitle(copy: string) {
@@ -851,7 +856,7 @@ function SpecialWeatherAlertCard({
 }
 
 function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["officialSpecialAlert"]) {
-  const isWarning = alert.level === "warning" || alert.title?.includes("경보") === true;
+  const isWarning = alert.level === "warning";
   const reason = alert.reason ?? "";
   const tempMatch = reason.match(/(\d+)℃/u)?.[1];
   const rainWindowMatch = reason.match(/((?:3|12)시간\s+\d+mm)/u)?.[1];

@@ -1,7 +1,8 @@
-import { Platform } from "react-native";
+import { Platform } from "../localization/react-native";
 import type { NotificationRuleEvaluation } from "@weatheron/shared";
 import { readAppValue, writeAppValue } from "./appStorage";
 import { applyLocalNotificationPolicy } from "./notificationPolicy";
+import { translateText } from "../localization/localization";
 
 type ExpoNotificationsModule = typeof import("expo-notifications");
 
@@ -80,6 +81,7 @@ async function syncLocalWeatherNotificationsNow(options: {
   enabled: boolean;
   notifications: LocalNotificationInput[];
   reducedInterruptions?: boolean;
+  contentRevision?: string;
 }): Promise<LocalNotificationSyncResult> {
   const Notifications = await loadNotificationsModule();
   if (!Notifications) return { status: "unavailable", scheduledCount: 0 };
@@ -138,6 +140,7 @@ async function syncLocalWeatherNotificationsNow(options: {
         const identifier = getSmartNotificationIdentifier(item);
         const scheduled = scheduledNotificationsByIdentifier.get(identifier);
         if (!scheduled) return false;
+        if (scheduled.content.data?.contentRevision !== options.contentRevision) return false;
         if (item.type === "routine" || item.type === "bedtime") return true;
         const scheduledDeliveryKey = scheduled.content.data?.deliveryKey;
         return Boolean(item.deliveryKey && scheduledDeliveryKey === item.deliveryKey);
@@ -161,6 +164,7 @@ async function syncLocalWeatherNotificationsNow(options: {
             route: item.deepLink,
             ruleId: item.id,
             deliveryKey: item.deliveryKey,
+            contentRevision: options.contentRevision,
           },
           sound: "default",
           badge: 1,
@@ -216,8 +220,8 @@ export async function scheduleLocalNotificationTest(options: {
   await Notifications.scheduleNotificationAsync({
     identifier,
     content: {
-      title: options.title ?? "WeatherON이 필요한 순간 알려드릴게요",
-      body: options.body ?? "나가기 전 필요한 준비를 한 번 확인해봐요",
+      title: translateText(options.title ?? "WeatherON이 필요한 순간 알려드릴게요"),
+      body: translateText(options.body ?? "나가기 전 필요한 준비를 한 번 확인해봐요"),
       data: {
         route,
         ruleId: "local-test",
@@ -298,7 +302,7 @@ async function configureNotifications(Notifications: ExpoNotificationsModule) {
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync(notificationChannelId, {
-      name: "WeatherON 스마트 알림",
+      name: translateText("WeatherON 스마트 알림"),
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#8CCFFF",

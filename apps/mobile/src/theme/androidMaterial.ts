@@ -1,4 +1,4 @@
-import { Platform, PlatformColor, type ColorValue, type ViewStyle } from "react-native";
+import { Platform, PlatformColor, type ColorValue, type ViewStyle } from "../localization/react-native";
 import { colorWithAlpha, semanticColor, type AppTheme } from "./tokens";
 
 export type AndroidMaterialColorRole =

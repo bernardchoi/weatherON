@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="weatheron_widget_name">WeatherON 날씨</string>
-  <string name="weatheron_widget_description">현재 날씨와 외출 준비를 보여줍니다.</string>
+  <string name="weatheron_widget_name">WeatherON Weather</string>
+  <string name="weatheron_widget_description">Shows current weather and what to bring.</string>
+  <string name="weatheron_widget_checking">Checking weather</string>
+  <string name="weatheron_widget_feels_rain">Feels like %1$s · Rain %2$d%%</string>
+  <string name="weatheron_widget_umbrella">Umbrella</string>
+  <string name="weatheron_widget_outer">Jacket</string>
+  <string name="weatheron_widget_mask">Mask</string>
+  <string name="weatheron_widget_prep_low">Nothing extra needed</string>
+  <string name="weatheron_widget_pack">Bring %1$s</string>
+  <string name="weatheron_widget_outfit_empty">Check your outfit</string>
+  <string name="weatheron_widget_placeholder_location">Current location</string>
+  <string name="weatheron_widget_placeholder_detail">Feels like 22° · Rain 10%</string>
+  <string name="weatheron_widget_placeholder_outfit">T-shirt · Slacks · Sneakers</string>
+  <string name="weatheron_widget_updated">WeatherON · Updated %1$s</string>
+  <string name="weatheron_widget_open_app">Open WeatherON to check the weather</string>
+  <string name="weatheron_widget_open_prep">Check what you need before going out</string>
+  <string name="weatheron_widget_outfit_latest">Your latest outfit will appear here</string>
+  <string name="weatheron_condition_clear">Clear</string>
+  <string name="weatheron_condition_cloud">Cloudy</string>
+  <string name="weatheron_condition_rain">Rain</string>
+  <string name="weatheron_condition_snow">Snow</string>
+  <string name="weatheron_condition_storm">Heavy rain</string>
+  <string name="weatheron_condition_dust">Dusty</string>
+  <string name="weatheron_departure_channel">Live departure status</string>
+  <string name="weatheron_departure_channel_description">Countdown and weather guidance before departure</string>
+  <string name="weatheron_departure_title">Prepare to leave for %1$s</string>
+  <string name="weatheron_departure_subtext">Depart at %1$s</string>
+  <string name="weatheron_departure_stop">Stop</string>
+  <string name="weatheron_departure_big_text">%1$s\nDeparture scheduled for %2$s</string>
+  <string name="weatheron_guidance_rain_wind">Bring an umbrella and watch for strong winds</string><string name="weatheron_guidance_rain">Bring an umbrella</string><string name="weatheron_guidance_wind">Strong winds expected</string><string name="weatheron_guidance_clear">You’re ready to go</string>
 </resources>

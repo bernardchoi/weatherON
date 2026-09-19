@@ -1,0 +1,4 @@
+"NSLocationWhenInUseUsageDescription" = "現在地の天気と外出準備のおすすめを提供するために位置情報を使用します。";
+"NSMotionUsageDescription" = "天気の背景効果や画面遷移を端末の動きとアクセシビリティ設定に合わせるためにモーション情報を使用します。";
+"NSCameraUsageDescription" = "お持ちの服を撮影し、ワードローブとコーデのおすすめに追加するためにカメラを使用します。";
+"NSPhotoLibraryUsageDescription" = "お持ちの服の写真を選び、ワードローブとコーデのおすすめに追加するために写真ライブラリを使用します。";

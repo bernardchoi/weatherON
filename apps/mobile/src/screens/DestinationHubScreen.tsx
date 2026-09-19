@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import type { PlaceSearchResult } from "@weatheron/shared";
 import { placeImageAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
@@ -169,7 +169,7 @@ export function DestinationHubScreen({
                 <View style={styles.destinationCopy}>
                   <View style={styles.destinationTitleRow}>
                     <CategoryMiniIcon category={card.place.category} color={card.accent === "warm" ? theme.warm : theme.clear} />
-                    <Text style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{card.place.name}</Text>
+                <RawText style={[styles.destinationName, { color: theme.text }]} numberOfLines={1}>{card.place.name}</RawText>
                   </View>
                   <Text style={[styles.destinationMeta, { color: card.accent === "warm" ? theme.warm : theme.clear }]} numberOfLines={1}>
                     {card.metric} · {card.recommendation}

@@ -1,4 +1,4 @@
-import { Platform, type ViewStyle } from "react-native";
+import { Platform, type ViewStyle } from "../localization/react-native";
 import { colorWithAlpha, semanticColor, type AppTheme } from "./tokens";
 
 export type IosGlassRole =

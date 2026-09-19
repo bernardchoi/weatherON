@@ -10,8 +10,8 @@ import android.net.Uri
 import android.widget.RemoteViews
 import org.json.JSONObject
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class WeatherONWidgetProvider : AppWidgetProvider() {
@@ -20,8 +20,6 @@ class WeatherONWidgetProvider : AppWidgetProvider() {
   }
 
   companion object {
-    private val updateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
     fun updateAll(context: Context) {
       val manager = AppWidgetManager.getInstance(context)
       val widgetIds = manager.getAppWidgetIds(ComponentName(context, WeatherONWidgetProvider::class.java))
@@ -33,11 +31,11 @@ class WeatherONWidgetProvider : AppWidgetProvider() {
       val views = RemoteViews(context.packageName, R.layout.weatheron_widget)
       views.setTextViewText(R.id.weatheron_widget_location, snapshot.locationName)
       views.setTextViewText(R.id.weatheron_widget_updated, snapshot.updatedLabel)
-      views.setTextViewText(R.id.weatheron_widget_temperature, "${snapshot.temperatureC}°")
-      views.setTextViewText(R.id.weatheron_widget_condition, snapshot.conditionLabel)
+      views.setTextViewText(R.id.weatheron_widget_temperature, temperature(snapshot.temperatureC, snapshot.temperatureUnit))
+      views.setTextViewText(R.id.weatheron_widget_condition, conditionLabel(context, snapshot.condition))
       views.setTextViewText(
         R.id.weatheron_widget_detail,
-        "체감 ${snapshot.feelsLikeC}° · 강수 ${snapshot.rainProbabilityPct}%"
+        context.getString(R.string.weatheron_widget_feels_rain, temperature(snapshot.feelsLikeC, snapshot.temperatureUnit), snapshot.rainProbabilityPct)
       )
       views.setTextViewText(R.id.weatheron_widget_preparation, snapshot.preparation)
       views.setTextViewText(R.id.weatheron_widget_outfit, snapshot.outfitSummary)
@@ -59,7 +57,7 @@ class WeatherONWidgetProvider : AppWidgetProvider() {
       // ponytail: 앱이 저장한 스냅샷만 사용함. 앱 미실행 중 독립 갱신이 필요하면 WorkManager에 기존 weather provider를 연결한다.
       val raw = context.getSharedPreferences(WIDGET_PREFERENCES, Context.MODE_PRIVATE)
         .getString(WIDGET_SNAPSHOT_KEY, null)
-        ?: return WidgetViewData.placeholder
+        ?: return WidgetViewData.placeholder(context)
       return runCatching {
         val store = JSONObject(raw)
         val selectedId = store.optString("selectedDestinationId")
@@ -68,33 +66,50 @@ class WeatherONWidgetProvider : AppWidgetProvider() {
           .mapNotNull { destinations?.optJSONObject(it) }
           .firstOrNull { selectedId.isNotEmpty() && it.optString("id") == selectedId }
         val location = selected ?: store.getJSONObject("current")
+        val temperatureUnit = store.optJSONObject("localization")?.optString("temperatureUnit", "celsius") ?: "celsius"
         WidgetViewData(
           locationName = location.optString("locationName", "WeatherON"),
           temperatureC = location.optDouble("temperatureC", 0.0).roundToInt(),
           feelsLikeC = location.optDouble("feelsLikeC", 0.0).roundToInt(),
-          conditionLabel = location.optString("conditionLabel", "날씨 확인 중"),
+          condition = location.optString("condition", "cloud"),
           rainProbabilityPct = location.optDouble("rainProbabilityPct", 0.0).roundToInt(),
-          preparation = preparation(location),
-          outfitSummary = location.optString("outfitSummary").ifBlank { "코디를 확인해 보세요" },
-          updatedLabel = formatUpdatedAt(store.optString("updatedAt")),
-          deepLink = location.optString("deepLink", "weatheron://home")
+          preparation = preparation(context, location),
+          outfitSummary = location.optString("outfitSummary").ifBlank { context.getString(R.string.weatheron_widget_outfit_empty) },
+          updatedLabel = formatUpdatedAt(context, store.optString("updatedAt")),
+          deepLink = location.optString("deepLink", "weatheron://home"),
+          temperatureUnit = temperatureUnit,
         )
-      }.getOrDefault(WidgetViewData.placeholder)
+      }.getOrDefault(WidgetViewData.placeholder(context))
     }
 
-    private fun preparation(location: JSONObject): String {
+    private fun preparation(context: Context, location: JSONObject): String {
       val items = buildList {
-        if (location.optBoolean("umbrellaNeeded")) add("우산")
-        if (location.optBoolean("outerNeeded")) add("겉옷")
-        if (location.optBoolean("maskNeeded")) add("마스크")
+        if (location.optBoolean("umbrellaNeeded")) add(context.getString(R.string.weatheron_widget_umbrella))
+        if (location.optBoolean("outerNeeded")) add(context.getString(R.string.weatheron_widget_outer))
+        if (location.optBoolean("maskNeeded")) add(context.getString(R.string.weatheron_widget_mask))
       }
-      return if (items.isEmpty()) "준비 부담 낮음" else items.joinToString(" · ") + " 챙기기"
+      return if (items.isEmpty()) context.getString(R.string.weatheron_widget_prep_low) else context.getString(R.string.weatheron_widget_pack, items.joinToString(" · "))
     }
 
-    private fun formatUpdatedAt(value: String): String = runCatching {
-      val time = Instant.parse(value).atZone(ZoneId.systemDefault()).format(updateTimeFormatter)
-      "WeatherON · $time 갱신"
+    private fun formatUpdatedAt(context: Context, value: String): String = runCatching {
+      val locale = context.resources.configuration.locales[0] ?: Locale.ENGLISH
+      val pattern = if (android.text.format.DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
+      val formatter = java.text.SimpleDateFormat(pattern, locale)
+      val time = formatter.format(Date.from(Instant.parse(value)))
+      context.getString(R.string.weatheron_widget_updated, time)
     }.getOrDefault("WeatherON")
+
+    private fun temperature(valueC: Int, unit: String): String = if (unit == "fahrenheit") "${(valueC * 9.0 / 5.0 + 32).roundToInt()}°F" else "${valueC}°C"
+
+    private fun conditionLabel(context: Context, condition: String): String = context.getString(when (condition) {
+      "checking" -> R.string.weatheron_widget_checking
+      "clear" -> R.string.weatheron_condition_clear
+      "rain" -> R.string.weatheron_condition_rain
+      "snow" -> R.string.weatheron_condition_snow
+      "storm" -> R.string.weatheron_condition_storm
+      "dust" -> R.string.weatheron_condition_dust
+      else -> R.string.weatheron_condition_cloud
+    })
   }
 }
 
@@ -102,24 +117,26 @@ private data class WidgetViewData(
   val locationName: String,
   val temperatureC: Int,
   val feelsLikeC: Int,
-  val conditionLabel: String,
+  val condition: String,
   val rainProbabilityPct: Int,
   val preparation: String,
   val outfitSummary: String,
   val updatedLabel: String,
   val deepLink: String,
+  val temperatureUnit: String,
 ) {
   companion object {
-    val placeholder = WidgetViewData(
+    fun placeholder(context: Context) = WidgetViewData(
       locationName = "WeatherON",
       temperatureC = 0,
       feelsLikeC = 0,
-      conditionLabel = "앱에서 날씨를 확인해 주세요",
+      condition = "checking",
       rainProbabilityPct = 0,
-      preparation = "외출 준비를 확인해 보세요",
-      outfitSummary = "최신 코디가 여기에 표시됨",
+      preparation = context.getString(R.string.weatheron_widget_open_prep),
+      outfitSummary = context.getString(R.string.weatheron_widget_outfit_latest),
       updatedLabel = "WeatherON",
       deepLink = "weatheron://home",
+      temperatureUnit = "celsius",
     )
   }
 }

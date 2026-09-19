@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { AppState } from "../localization/react-native";
 import { isNightAtWeatherTime, type WeatherDaylightContext } from "./weatherDaylight";
 
 export function isNightHour(date: Date): boolean {

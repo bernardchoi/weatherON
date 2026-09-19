@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { AppScreen } from "../components/AppScreen";
 import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
 import { getAccountRegionLabel, orderProvidersForRegion, resolveAccountButtonLanguage, resolveAccountRegion, type AccountButtonLanguage } from "../providers/accountRegion";
+import { LocalizationContext } from "../localization/LocalizationProvider";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
@@ -55,8 +56,9 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [availability, setAvailability] = useState<AccountProviderAvailability[]>([]);
   const [providerCheckComplete, setProviderCheckComplete] = useState(false);
-  const region = useMemo(() => resolveAccountRegion(), []);
-  const buttonLanguage = useMemo(() => resolveAccountButtonLanguage(), []);
+  const locale = React.use(LocalizationContext);
+  const region = useMemo(() => resolveAccountRegion({ regionCode: locale.regionCode }), [locale.regionCode]);
+  const buttonLanguage = useMemo(() => resolveAccountButtonLanguage(locale.language), [locale.language]);
   const isSigningIn = authStatus === "signing-in";
   const destinationName = gate?.selectedDestinationName;
   const resumeLabel = gate?.resumeLabel ?? "준비 설정";

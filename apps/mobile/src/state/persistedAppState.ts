@@ -35,6 +35,7 @@ import {
   type SmartCareScenario,
   type StyleGender,
   type TemperatureUnit,
+  type UnitPreferenceSource,
   type ThemeMode,
   type WeatherLocationMode,
 } from "./appStateTypes";
@@ -66,6 +67,8 @@ export type PersistedAppState = {
   manualWeatherLocation: WeatherLocationPreset;
   temperatureUnit: TemperatureUnit;
   distanceUnit: DistanceUnit;
+  temperatureUnitSource: UnitPreferenceSource;
+  distanceUnitSource: UnitPreferenceSource;
   themeMode: ThemeMode;
   reducedTransparency: boolean;
   dynamicColorEnabled: boolean;
@@ -284,6 +287,9 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     manualWeatherLocation: isWeatherLocationPreset(record.manualWeatherLocation) ? record.manualWeatherLocation : defaultSeoulWeatherLocation,
     temperatureUnit: record.temperatureUnit === "fahrenheit" ? "fahrenheit" : "celsius",
     distanceUnit: record.distanceUnit === "mile" ? "mile" : "meter",
+    // 이전 버전에서 저장된 단위는 사용자가 선택했을 수 있으므로 강제로 기기 기본값으로 바꾸지 않는다.
+    temperatureUnitSource: record.temperatureUnitSource === "device" ? "device" : "explicit",
+    distanceUnitSource: record.distanceUnitSource === "device" ? "device" : "explicit",
     themeMode: isThemeMode(record.themeMode) ? record.themeMode : "system",
     reducedTransparency: record.reducedTransparency === true,
     dynamicColorEnabled: record.dynamicColorEnabled === true,
@@ -385,7 +391,14 @@ function normalizeSavedDestination(value: unknown): SavedDestination | null {
     schedulePreference: normalizeDestinationSchedulePreference(record.schedulePreference, place),
     travelEstimate: normalizeDestinationTravelEstimate(record.travelEstimate, defaultSeoulWeatherLocation, place),
     savedAtLabel: typeof record.savedAtLabel === "string" ? record.savedAtLabel : "저장됨",
+    changeStatus: isDestinationChangeStatus(record.changeStatus)
+      ? record.changeStatus
+      : record.savedAtLabel === "복구됨" ? "restored" : record.savedAtLabel === "방금 저장" ? "saved" : "updated",
   };
+}
+
+function isDestinationChangeStatus(value: unknown): value is SavedDestination["changeStatus"] {
+  return value === "saved" || value === "updated" || value === "removed" || value === "restored";
 }
 
 export function normalizeDestinationSchedulePreference(value: unknown, place: PlaceSearchResult): DestinationSchedulePreference {

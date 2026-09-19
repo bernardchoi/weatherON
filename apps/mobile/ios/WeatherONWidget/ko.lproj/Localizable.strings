@@ -1,0 +1,7 @@
+"widget.feels" = "체감 %@";
+"widget.feels.condition" = "체감 %@ · %@";
+"%lld분" = "%lld분";
+"condition.clear" = "맑음"; "condition.cloud" = "흐림"; "condition.rain" = "비"; "condition.snow" = "눈"; "condition.storm" = "강한 비"; "condition.dust" = "먼지";
+"guidance.rain-wind" = "우산 챙기고 강풍 조심해요"; "guidance.rain" = "우산 챙겨요"; "guidance.wind" = "바람이 강해요"; "guidance.clear" = "가볍게 출발해요";
+"activity.accessibility.summary" = "날씨 안내, %@, 권장 출발 시각 %@";
+"activity.accessibility.lock" = "%@, %@, 권장 출발 시각 %@, %@";
