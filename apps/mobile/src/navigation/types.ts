@@ -68,6 +68,7 @@ export type P0ScreenProps = {
   notificationDeliveryStatus: NotificationDeliveryStatus;
   alertSettingsRouteState: AlertSettingsRouteState | null;
   selectedPolicyDocument: PolicyDocumentType;
+  policyDocumentReturnRoute: "R1" | "A3";
   adConsentMode: AdConsentMode;
   temperatureUnit: TemperatureUnit;
   distanceUnit: DistanceUnit;
@@ -155,6 +156,6 @@ export type P0ScreenProps = {
   onRequireAccount: (reason: GateReason, returnTo: AccountGateReturnRouteId) => void;
   onDismissAccountGateResult: () => void;
   onRequestPermissionGate: (reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => void;
-  onSignOutAccount: () => void;
+  onSignOutAccount: () => Promise<void>;
   onDeleteAccount: () => Promise<void>;
 };

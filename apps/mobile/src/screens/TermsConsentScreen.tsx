@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
+import type { PolicyDocumentType } from "../state/appStateTypes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -13,11 +14,23 @@ type TermsConsentScreenProps = {
   gate: AccountGateState | null;
   authStatus: AccountAuthStatus;
   authMessage: string | null;
+  accepted: TermsConsentDraft;
+  onDraftChange: (draft: TermsConsentDraft) => void;
+  onOpenPolicyDocument: (type: PolicyDocumentType) => void;
   onComplete: (input: { marketingAccepted: boolean }) => Promise<void>;
   onCancel: () => void;
 };
 
-type ConsentKey = "age" | "terms" | "privacy" | "location" | "marketing";
+export type ConsentKey = "age" | "terms" | "privacy" | "location" | "marketing";
+export type TermsConsentDraft = Record<ConsentKey, boolean>;
+
+export const emptyTermsConsentDraft: TermsConsentDraft = {
+  age: false,
+  terms: false,
+  privacy: false,
+  location: false,
+  marketing: false,
+};
 
 const consentItems: { key: ConsentKey; label: string; meta: string; required?: boolean }[] = [
   { key: "age", label: "만 14세 이상입니다", meta: "서비스 이용 가능 연령 확인", required: true },
@@ -27,16 +40,9 @@ const consentItems: { key: ConsentKey; label: string; meta: string; required?: b
   { key: "marketing", label: "마케팅 정보 수신 동의", meta: "선택 항목 · 언제든 철회 가능" },
 ];
 
-export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, onCancel }: TermsConsentScreenProps) {
+export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, onDraftChange, onOpenPolicyDocument, onComplete, onCancel }: TermsConsentScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const [accepted, setAccepted] = useState<Record<ConsentKey, boolean>>({
-    age: false,
-    terms: false,
-    privacy: false,
-    location: false,
-    marketing: false,
-  });
   const gateLabel = gate?.resumeLabel ?? "저장";
   const returnLabel = getRouteLabel(gate?.returnTo);
   const requiredItems = consentItems.filter((item) => item.required);
@@ -52,12 +58,12 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
   }, [requiredAccepted, requiredCount, requiredItems.length]);
 
   const toggleItem = (key: ConsentKey) => {
-    setAccepted((current) => ({ ...current, [key]: !current[key] }));
+    onDraftChange({ ...accepted, [key]: !accepted[key] });
   };
 
   const toggleAll = () => {
     const next = !allAccepted;
-    setAccepted({
+    onDraftChange({
       age: next,
       terms: next,
       privacy: next,
@@ -69,7 +75,7 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
   return (
     <AppScreen
       title="약관 동의"
-      subtitle="필수 항목만 동의하면 저장 흐름을 이어갈 수 있어요"
+      subtitle="필수 항목만 동의하면 계속할 수 있어요"
       badge="필수"
       onBack={onCancel}
       compactHeader
@@ -100,7 +106,7 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
         <CheckBox checked={allAccepted} theme={theme} />
         <View style={styles.copy}>
           <Text style={[styles.title, { color: theme.text }]}>전체 동의</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>필수와 선택 항목을 한 번에 변경</Text>
+          <Text style={[styles.body, { color: theme.muted }]}>필수 4개와 선택 마케팅 1개를 함께 변경</Text>
         </View>
       </Pressable>
 
@@ -111,6 +117,7 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, onComplete, 
             item={item}
             checked={accepted[item.key]}
             onPress={() => toggleItem(item.key)}
+            onOpen={getConsentDocument(item.key) ? () => onOpenPolicyDocument(getConsentDocument(item.key)!) : undefined}
             minHeight={layout.accountConsentRowMinHeight}
             horizontalPadding={layout.accountPanelPadding}
             theme={theme}
@@ -152,6 +159,7 @@ function ConsentRow({
   item,
   checked,
   onPress,
+  onOpen,
   minHeight,
   horizontalPadding,
   theme,
@@ -160,33 +168,50 @@ function ConsentRow({
   item: (typeof consentItems)[number];
   checked: boolean;
   onPress: () => void;
+  onOpen?: () => void;
   minHeight: number;
   horizontalPadding: number;
   theme: AppTheme;
   withDivider: boolean;
 }) {
   return (
-    <Pressable
-      accessibilityLabel={`${item.label} ${checked ? "동의 해제" : "동의"}`}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      onPress={onPress}
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.consentRow,
-        { minHeight, paddingHorizontal: horizontalPadding, opacity: pressed ? 0.72 : 1 },
+        { minHeight, paddingHorizontal: horizontalPadding },
         withDivider ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
       ]}
     >
-      <CheckBox checked={checked} theme={theme} />
-      <View style={styles.consentCopy}>
-        <View style={styles.titleLine}>
-          <Text style={[styles.requireLabel, { color: item.required ? theme.gold : theme.subtle }]}>{item.required ? "필수" : "선택"}</Text>
-          <Text style={[styles.consentTitle, { color: theme.text }]}>{item.label}</Text>
+      <Pressable
+        accessibilityLabel={`${item.label} ${checked ? "동의 해제" : "동의"}`}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked }}
+        onPress={onPress}
+        style={({ pressed }) => [styles.consentToggle, { opacity: pressed ? 0.72 : 1 }]}
+      >
+        <CheckBox checked={checked} theme={theme} />
+        <View style={styles.consentCopy}>
+          <View style={styles.titleLine}>
+            <Text style={[styles.requireLabel, { color: item.required ? theme.gold : theme.subtle }]}>{item.required ? "필수" : "선택"}</Text>
+            <Text style={[styles.consentTitle, { color: theme.text }]}>{item.label}</Text>
+          </View>
+          <Text style={[styles.body, { color: theme.muted }]}>{item.meta}</Text>
         </View>
-        <Text style={[styles.body, { color: theme.muted }]}>{item.meta}</Text>
-      </View>
-    </Pressable>
+      </Pressable>
+      {onOpen ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`${item.label} 내용 보기`} onPress={onOpen} style={styles.openButton}>
+          <Text style={[styles.openText, { color: theme.sky }]}>내용 보기</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
+}
+
+function getConsentDocument(key: ConsentKey): PolicyDocumentType | null {
+  if (key === "terms") return "terms";
+  if (key === "location") return "location";
+  if (key === "privacy" || key === "marketing") return "privacy";
+  return null;
 }
 
 function CheckBox({ checked, theme }: { checked: boolean; theme: AppTheme }) {
@@ -264,9 +289,9 @@ const styles = StyleSheet.create({
   consentRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
     paddingVertical: spacing.sm,
   },
+  consentToggle: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", gap: spacing.md },
   checkbox: {
     width: 30,
     height: 30,
@@ -283,6 +308,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
+  openButton: { minWidth: 64, minHeight: 44, alignItems: "center", justifyContent: "center", paddingLeft: spacing.sm },
+  openText: { fontSize: 12, lineHeight: 17, fontWeight: "900" },
   titleLine: {
     flexDirection: "row",
     alignItems: "center",

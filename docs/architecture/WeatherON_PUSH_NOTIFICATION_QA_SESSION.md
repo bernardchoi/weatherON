@@ -4,13 +4,15 @@
 
 테스트 발송과 route별 딥링크 검증은 사용자 기능이 아닌 개발용 QA 도구로 분리한다.
 
-| 빌드 | EAS profile | 테스트 발송 노출 | 용도 |
+| 빌드 | 빌드 경로 | 테스트 발송 노출 | 용도 |
 | --- | --- | --- | --- |
-| QA | `qa` | 노출 | 실기기 알림 수신·딥링크 검증 |
-| 플랫폼 테스트 | `preview` | 미노출 | Android 내부 테스트 APK |
-| 플랫폼 테스트/출시 | `production` | 미노출 | TestFlight, Play AAB, 스토어 후보 |
+| Android QA | EAS `qa` | 노출 | Android 실기기 알림 수신·딥링크 검증 |
+| iOS 개발 QA | 로컬 Xcode 27 | 필요 시 노출 | 연결한 iPhone에서 디버깅·로그 확인 |
+| iOS 배포 후보 | Xcode Cloud → TestFlight | 미노출 | 실제 iPhone 배포 후보 QA |
+| Android 플랫폼 테스트/출시 | EAS `preview` / `production` | 미노출 | 내부 테스트 APK, Play AAB |
 
-- QA 빌드: `npm run build:android:qa`, `npm run build:ios:qa`
+- Android QA 빌드: `npm run build:android:qa`
+- iOS QA는 목적에 따라 로컬 Xcode 27 실행 또는 Xcode Cloud TestFlight Workflow를 사용한다.
 - 기준 플래그: `apps/mobile/app.config.js`의 `extra.enableNotificationQaTools`
 - `qa` 외 profile과 로컬 기본 빌드는 `false`여야 함.
 - 사용자 M2에는 권한·예약 상태만 표시. 테스트 발송과 route별 확인은 QA 빌드의 고급 설정 내부에서만 표시.

@@ -164,7 +164,7 @@ assertSourceIncludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
   "SegmentControl",
   "MaterialSwitch",
   "기기 색상 사용",
-  'androidMaterialSurface(theme, "surfaceContainerLow")',
+  'androidMaterialSurface(theme, "surfaceContainer")',
   'androidMaterialSurface(theme, "secondaryContainer")',
 ]);
 assertSourceIncludes("apps/mobile/src/components/AppButton.tsx", [
@@ -350,7 +350,10 @@ assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/TermsConsentScreen.tsx", [
   "전체 동의 해제",
+  "필수 4개와 선택 마케팅 1개를 함께 변경",
   "`${item.label} ${checked ? \"동의 해제\" : \"동의\"}`",
+  "내용 보기",
+  "onOpenPolicyDocument",
   "actionPanel",
   "동의하고 계속",
   "필수 동의 필요",
@@ -400,7 +403,11 @@ assertSourceIncludes("apps/mobile/src/screens/AccountConnectScreen.tsx", [
   "약관을 확인하면 원래 화면으로 돌아가요",
   "위치·알림 권한은 계정과 별도로 선택해요",
   "사용할 계정 방식을 선택",
+  "AppleAuthenticationButton",
+  "다시 시도",
+  "google-login-ios.png",
 ]);
+assertSourceExcludes("apps/mobile/src/components/provider-brand-icon.tsx", ["", "kakaoWideButton"]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "verification-failed",
   "finalIdentifiers",
@@ -423,14 +430,12 @@ assertSourceIncludes("packages/shared/src/fixtures/placeSearchFixtures.ts", [
   "센트럴 파크",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
-  "오늘 준비",
-  "확인 필요",
-  "ReadinessSummary",
-  "readinessCard",
   "needsTerms",
   "약관 동의 필요",
   "약관 동의 이어가기",
-  "약관 후 동기화",
+  "getProviderLabel(accountProfile?.provider)",
+  "날씨 위치 선택",
+  "알림 권한 켜기",
   "표시 설정",
   "앱 권한 관리",
   'onNavigate("M4")',
@@ -440,20 +445,21 @@ assertSourceIncludes("apps/mobile/src/screens/MyScreen.tsx", [
   "수동 위치",
   "알림 나중에 설정",
   "푸시는 대기 · 앱 안 판단 유지",
-  "savedDestinations",
   "관리",
   "정책 및 법적 고지",
   "WeatherON v1.0.0",
 ]);
+assertSourceExcludes("apps/mobile/src/screens/MyScreen.tsx", ["ReadinessSummary", "readinessCard", "savedDestinations"]);
 assertSourceExcludes("apps/mobile/src/screens/MyScreen.tsx", ["개인정보처리방침", "코디·옷장", 'onNavigate("C1")']);
 assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [
   "앱 권한 관리",
   "권한 상태",
   "위치 권한",
   "알림 권한",
-  "알림 권한 보류",
-  "위치 권한 복구",
-  "알림 권한 복구",
+  "기기 설정 열기",
+  "수동 사용 중",
+  "현재 위치 다시 확인",
+  "알림 허용",
   "수동 위치와 목적지 검색은 계속 사용할 수 있음",
   "홈·출발 판단은 유지되며 실제 푸시만 제한됨",
   "PermissionCard",
@@ -468,12 +474,14 @@ assertSourceIncludes("apps/mobile/src/screens/AppPermissionsScreen.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
   "표시 설정",
-  "현재 적용",
   "투명 효과",
-  "getDistanceUnitLabel",
+  "WeatherON v1.0.0",
+  "themePanel",
   "accessibilityState={{ checked",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/GlobalSettingsScreen.tsx", [
+  "현재 적용",
+  "getDistanceUnitLabel",
   "2곳 저장됨",
   "앱 권한 관리",
   "위치 관리",
@@ -498,13 +506,16 @@ assertSourceIncludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   "needsTerms",
   "profileTitle",
   "getProviderConnectedTitle",
-  "저장한 목적지와 코디",
+  "옷장 사진",
+  "서버 계정은 유지",
+  "되돌릴 수 없어요",
   "약관 동의",
   "필수 약관 동의 이어가기",
   "연결 완료",
   'onRequireAccount("account-connect", "A4")',
-  "로그아웃 확정",
-  "계정 작업 취소",
+  "ActivityIndicator",
+  "accessibilityViewIsModal",
+  "탈퇴하기",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/AccountManagementScreen.tsx", [
   'onRequireAccount("notification", "A4")',
@@ -538,17 +549,22 @@ assertSourceExcludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
   'onNavigate("H2")',
 ]);
 assertSourceIncludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
-  "상단 정책 목록으로 돌아가기",
-  "옷장 사진에서는 사람 존재 여부만 등록 안전성 확인에 사용하며 신원은 추론하지 않음",
-  "위치 변경, 권한 요청, 목적지 케어 화면과 같은 위치 기준을 사용함",
-  "약관 동의와 동일 기준",
-  "MY에서 위치·알림 설정 확인",
+  "정책 목록으로 돌아가기",
+  "약관 동의로 돌아가기",
+  'effectiveDate: "2026.08.30"',
+  "시행일 {document.effectiveDate}",
+  "현재 앱의 직접 런타임 의존성",
+  "MIT 라이선스 전문 보기",
+  "React Native Web 0.21.2",
 ]);
 assertSourceExcludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
   "A3 약관",
   "H2 위치",
   "O3 권한",
   "G2 목적지",
+  "같은 기준을 사용",
+  "고지 필요",
+  "약관 동의와 동일 기준",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/WeatherReportScreens.tsx", ["위치 권한 필요 · 권한 설정에서 허용"]);
 assertSourceExcludes("apps/mobile/src/screens/WeatherReportScreens.tsx", ["위치 권한 필요 · O3"]);

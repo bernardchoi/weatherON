@@ -72,7 +72,7 @@ Cloudflare Workers는 인증 Provider 검증, WeatherON 세션 발급, 사용자
 - 카카오·네이버·LINE·Google 개발자 콘솔의 운영 callback 등록과 client credential 설정
 - 공급자 토큰 암호화용 `AUTH_PROVIDER_TOKEN_KEY` 운영 Secret 설정
 - Apple Developer의 Sign in with Apple capability 활성 상태 확인
-- EAS iOS 실기기 빌드에서 Apple 및 활성화한 OAuth Provider 실제 로그인 검증
+- 로컬 Xcode 27 실기기 빌드와 Xcode Cloud TestFlight 빌드에서 Apple 및 활성화한 OAuth Provider 실제 로그인 검증
 - 로그인 이후 사용자 데이터 동기화 API
 - Android 실제 계정 로그인·약관·세션 복원 종단 검증
 - 계정 연결 추가, 전체 세션 종료, 데이터 내보내기

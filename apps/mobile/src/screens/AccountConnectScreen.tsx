@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "../components/AppScreen";
 import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
@@ -22,10 +22,16 @@ type AccountConnectScreenProps = {
 const providerLabels: Record<AccountProvider, string> = {
   apple: "Apple로 계속",
   kakao: "카카오 로그인",
-  naver: "네이버로 계속",
-  line: "LINE으로 계속",
-  google: "Google로 계속",
+  naver: "네이버 로그인",
+  line: "LINE으로 로그인",
+  google: "Sign in with Google",
 };
+
+const officialButtonAssets = {
+  kakao: require("../../../../assets/auth-providers/kakao-login-ko.png"),
+  naver: require("../../../../assets/auth-providers/naver-login-ko.png"),
+  google: require("../../../../assets/auth-providers/google-login-ios.png"),
+} as const;
 
 export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
@@ -39,8 +45,9 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
   const destinationName = gate?.selectedDestinationName;
   const resumeLabel = gate?.resumeLabel ?? "준비 설정";
 
-  useEffect(() => {
+  const loadProviders = useCallback(() => {
     let active = true;
+    setProviderCheckComplete(false);
     void Promise.all([
       Platform.OS === "ios" ? AppleAuthentication.isAvailableAsync().catch(() => false) : Promise.resolve(false),
       listAvailableAccountProviders(),
@@ -55,6 +62,8 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
     };
   }, []);
 
+  useEffect(() => loadProviders(), [loadProviders]);
+
   const orderedProviders = useMemo(() => {
     const available: AccountProvider[] = availability.filter((item) => item.available).map((item) => item.provider);
     if (appleAvailable) available.push("apple");
@@ -62,6 +71,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
   }, [appleAvailable, availability, region]);
   const recommendedProviders = orderedProviders.slice(0, 3);
   const otherProviders = orderedProviders.slice(3);
+  const providerLoadFailed = providerCheckComplete && availability.length === 0;
 
   return (
     <AppScreen
@@ -72,9 +82,9 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
       contentGap={layout.accountContentGap}
       contentPaddingTop={layout.weatherTopPadding}
     >
-        <View style={[styles.hero, pageStyles.card, { minHeight: layout.accountHeroMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.heroKicker, { color: theme.sky }]}>저장하고 이어보기</Text>
-          <Text style={[styles.heroTitle, { color: theme.text }]}>나만의 날씨 준비를{`\n`}다음에도 이어보세요</Text>
+        <View style={[styles.hero, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.heroKicker, { color: theme.sky }]}>계정 연결</Text>
+          <Text style={[styles.heroTitle, { color: theme.text }]}>저장 기능을 계속 사용해요</Text>
         </View>
 
         {destinationName ? (
@@ -88,19 +98,24 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
         ) : null}
 
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }]}>추천 계정</Text>
-          <Text style={[styles.sectionMeta, { color: theme.subtle }]}>{getAccountRegionLabel(region)}</Text>
+          <Text style={[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }]}>로그인 방법</Text>
+          <Text style={[styles.sectionMeta, { color: theme.subtle }]}>{getAccountRegionLabel(region)} 추천 순서</Text>
         </View>
 
         <View style={styles.providerList}>
           {recommendedProviders.map((provider) => (
             <ProviderButton key={provider} provider={provider} minHeight={Math.max(48, layout.accountProviderMinHeight)} disabled={isSigningIn} onPress={() => void onSignIn(provider)} theme={theme} />
           ))}
-          {recommendedProviders.length === 0 ? (
+          {providerLoadFailed || !providerCheckComplete ? (
             <View style={[styles.unavailablePanel, pageStyles.card, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
               <Text style={[styles.unavailableText, { color: theme.muted }]}>
                 {providerCheckComplete ? "간편 로그인을 불러오지 못했어요. 잠시 후 다시 시도해 주세요" : "간편 로그인을 준비하고 있어요"}
               </Text>
+              {providerCheckComplete ? (
+                <Pressable accessibilityRole="button" accessibilityLabel="로그인 방법 다시 불러오기" onPress={loadProviders} style={[styles.retryButton, { borderColor: theme.border }]}>
+                  <Text style={[styles.retryText, { color: theme.text }]}>다시 시도</Text>
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -135,12 +150,48 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 }
 
 function ProviderButton({ provider, minHeight, onPress, theme, disabled }: { provider: AccountProvider; minHeight: number; onPress: () => void; theme: AppTheme; disabled: boolean }) {
-  const palette = getProviderPalette(provider, theme);
+  if (provider === "apple") {
+    return (
+      <AppleAuthentication.AppleAuthenticationButton
+        accessibilityLabel={providerLabels.apple}
+        accessibilityState={{ busy: disabled, disabled }}
+        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+        buttonStyle={theme.name === "dark" ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+        cornerRadius={radius.lg}
+        onPress={() => {
+          if (!disabled) onPress();
+        }}
+        style={[styles.appleButton, { height: minHeight, opacity: disabled ? 0.55 : 1 }]}
+      />
+    );
+  }
+
+  if (provider !== "line") {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={providerLabels[provider]}
+        accessibilityState={{ busy: disabled, disabled }}
+        disabled={disabled}
+        onPress={onPress}
+        style={({ pressed }) => [styles.officialButton, { height: minHeight, opacity: disabled ? 0.55 : pressed ? 0.78 : 1 }]}
+      >
+        <Image
+          source={officialButtonAssets[provider]}
+          style={[styles.officialButtonImage, provider === "google" ? styles.googleButtonImage : null, { height: minHeight }]}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
+      </Pressable>
+    );
+  }
+
+  const palette = { background: "#06C755", border: "#06C755", text: "#FFFFFF" };
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={providerLabels[provider]} accessibilityState={{ busy: disabled, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.providerButton, pageStyles.card, { height: minHeight, borderWidth: 1, opacity: disabled ? 0.55 : pressed ? 0.78 : 1, backgroundColor: palette.background, borderColor: palette.border }]}>
       <View style={styles.providerContent}>
         <View style={styles.providerIconSlot}>
-          <ProviderBrandIcon provider={provider} size={22} appleColor={palette.text} />
+          <ProviderBrandIcon provider="line" size={34} />
         </View>
         <Text style={[styles.providerLabel, { color: palette.text }]}>{providerLabels[provider]}</Text>
       </View>
@@ -148,22 +199,10 @@ function ProviderButton({ provider, minHeight, onPress, theme, disabled }: { pro
   );
 }
 
-function getProviderPalette(provider: AccountProvider, theme: AppTheme) {
-  if (provider === "apple") {
-    return theme.name === "dark"
-      ? { background: "#FFFFFF", border: "#FFFFFF", text: "#000000" }
-      : { background: "#000000", border: "#000000", text: "#FFFFFF" };
-  }
-  if (provider === "kakao") return { background: "#FEE500", border: "#FEE500", text: "#191919" };
-  if (provider === "naver") return { background: "#03A94D", border: "#03A94D", text: "#FFFFFF" };
-  if (provider === "line") return { background: "#06C755", border: "#06C755", text: "#FFFFFF" };
-  return { background: "#FFFFFF", border: "#747775", text: "#1F1F1F" };
-}
-
 const styles = StyleSheet.create({
-  hero: { justifyContent: "center", gap: spacing.xs, borderWidth: 1 },
+  hero: { justifyContent: "center", gap: 3, borderWidth: 1 },
   heroKicker: { fontSize: 12, lineHeight: 16, fontWeight: "900", letterSpacing: 0.2 },
-  heroTitle: { fontSize: 26, lineHeight: 33, fontWeight: "900", letterSpacing: -0.4 },
+  heroTitle: { fontSize: 20, lineHeight: 26, fontWeight: "900", letterSpacing: -0.2 },
   contextStrip: { minHeight: 58, flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.lg, borderWidth: 1 },
   contextDot: { width: 8, height: 8, borderRadius: radius.pill },
   contextCopy: { flex: 1, gap: 1 },
@@ -173,12 +212,18 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, lineHeight: 21, fontWeight: "900" },
   sectionMeta: { fontSize: 11, lineHeight: 16, fontWeight: "700" },
   providerList: { gap: spacing.sm },
+  appleButton: { width: "100%" },
+  officialButton: { width: "100%", alignItems: "center", justifyContent: "center" },
+  officialButtonImage: { width: "100%" },
+  googleButtonImage: { width: 236 },
   providerButton: { width: "100%", alignItems: "center", justifyContent: "center", borderRadius: radius.lg, borderWidth: 1, paddingHorizontal: 16 },
   providerContent: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
-  providerIconSlot: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
+  providerIconSlot: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   providerLabel: { fontSize: 16, lineHeight: 21, fontWeight: "800" },
-  unavailablePanel: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: radius.md, borderWidth: 1, paddingHorizontal: spacing.md },
+  unavailablePanel: { minHeight: 88, alignItems: "center", justifyContent: "center", gap: spacing.sm, borderRadius: radius.md, borderWidth: 1, padding: spacing.md },
   unavailableText: { textAlign: "center", fontSize: 12, lineHeight: 17, fontWeight: "800" },
+  retryButton: { minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: radius.md, borderWidth: 1, paddingHorizontal: spacing.lg },
+  retryText: { fontSize: 13, lineHeight: 17, fontWeight: "900" },
   authStatus: { textAlign: "center", fontSize: 12, lineHeight: 17, fontWeight: "800" },
   otherButton: { minHeight: 46, alignItems: "center", justifyContent: "center", borderRadius: radius.lg, borderWidth: 1 },
   otherText: { fontSize: 12, lineHeight: 15, fontWeight: "900" },

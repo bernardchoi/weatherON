@@ -14,7 +14,6 @@
     "build:android:development": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile development",
     "build:android:qa": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile qa",
     "build:android:qa:no-wait": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile qa --no-wait",
-    "build:ios:qa": "npx --yes --cache ../../.npm-cache eas-cli build --platform ios --profile qa",
     "build:android:preview": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview",
     "build:android:preview:no-wait": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview --no-wait",
     "build:android:production": "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile production",

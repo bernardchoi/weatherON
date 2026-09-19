@@ -126,10 +126,9 @@ assert.equal(
   mobilePackageConfig.scripts?.["build:android:qa:no-wait"],
   "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile qa --no-wait",
 );
-assert.equal(
-  mobilePackageConfig.scripts?.["build:ios:qa"],
-  "npx --yes --cache ../../.npm-cache eas-cli build --platform ios --profile qa",
-);
+assert.equal(mobilePackageConfig.scripts?.["build:ios:qa"], undefined);
+assert.equal(easConfig.build?.production?.ios, undefined);
+assert.equal(easConfig.submit?.production?.ios, undefined);
 assert.equal(
   mobilePackageConfig.scripts?.["build:android:preview"],
   "npx --yes --cache ../../.npm-cache eas-cli build --platform android --profile preview",
@@ -200,10 +199,7 @@ assert.equal(
   packageConfig.scripts?.["build:android:qa:no-wait"],
   "npm --workspace @weatheron/mobile run build:android:qa:no-wait",
 );
-assert.equal(
-  packageConfig.scripts?.["build:ios:qa"],
-  "npm --workspace @weatheron/mobile run build:ios:qa",
-);
+assert.equal(packageConfig.scripts?.["build:ios:qa"], undefined);
 assert.equal(
   packageConfig.scripts?.["build:android:preview:no-wait"],
   "npm --workspace @weatheron/mobile run build:android:preview:no-wait",

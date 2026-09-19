@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -20,15 +20,30 @@ export function AppPermissionsScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState);
+  const locationCopy = getLocationPermissionCopy(locationReady, weatherLocationMode, deviceLocationState, permissionGateResult);
   const notificationCopy = getNotificationPermissionCopy(permissionReady, smartCareEnabled, permissionGateResult);
   const resultCopy = getPermissionResultCopy(permissionGateResult);
   const handleLocationPrimaryPress = () => {
+    if (locationCopy.requiresSettings && Platform.OS !== "web") {
+      void Linking.openSettings();
+      return;
+    }
     if (locationCopy.canRequest) {
       onRequestPermissionGate("location", "M4", "general");
       return;
     }
     onRequestCurrentLocation();
+  };
+  const handleNotificationPrimaryPress = () => {
+    if (notificationCopy.requiresSettings && Platform.OS !== "web") {
+      void Linking.openSettings();
+      return;
+    }
+    if (notificationCopy.canRequest) {
+      onRequestPermissionGate("notification", "M4", "general");
+      return;
+    }
+    onNavigate("M2");
   };
 
   return (
@@ -85,7 +100,8 @@ export function AppPermissionsScreen({
             body={locationCopy.body}
             helper={locationCopy.helper}
             primaryLabel={locationCopy.primaryLabel}
-            secondaryLabel="위치 선택"
+            primaryDisabled={deviceLocationState.status === "requesting"}
+            secondaryLabel="수동 위치 변경"
             status={locationCopy.status}
             tone={locationCopy.tone}
             onPrimaryPress={handleLocationPrimaryPress}
@@ -99,10 +115,10 @@ export function AppPermissionsScreen({
             body={notificationCopy.body}
             helper={notificationCopy.helper}
             primaryLabel={notificationCopy.primaryLabel}
-            secondaryLabel="알림 설정"
+            secondaryLabel={notificationCopy.canRequest || notificationCopy.requiresSettings ? "알림 항목 보기" : undefined}
             status={notificationCopy.status}
             tone={notificationCopy.tone}
-            onPrimaryPress={() => (notificationCopy.canRequest ? onRequestPermissionGate("notification", "M4", "general") : onNavigate("M2"))}
+            onPrimaryPress={handleNotificationPrimaryPress}
             onSecondaryPress={() => onNavigate("M2")}
             actionGap={layout.settingsActionGap}
             panelPadding={layout.settingsPanelPadding}
@@ -121,6 +137,7 @@ function PermissionCard({
   body,
   helper,
   primaryLabel,
+  primaryDisabled = false,
   secondaryLabel,
   status,
   tone,
@@ -134,7 +151,8 @@ function PermissionCard({
   body: string;
   helper: string;
   primaryLabel: string;
-  secondaryLabel: string;
+  primaryDisabled?: boolean;
+  secondaryLabel?: string;
   status: string;
   tone: "clear" | "gold" | "warm";
   onPrimaryPress: () => void;
@@ -158,12 +176,14 @@ function PermissionCard({
       </View>
       <Text style={[styles.permissionHelper, pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>
       <View style={[styles.permissionActions, { gap: actionGap }]}>
-        <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22` }]}>
+        <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" accessibilityState={{ disabled: primaryDisabled }} disabled={primaryDisabled} onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22`, opacity: primaryDisabled ? 0.55 : 1 }]}>
           <Text style={[styles.primaryActionText, { color }]}>{primaryLabel}</Text>
         </Pressable>
-        <Pressable accessibilityLabel={`${label} ${secondaryLabel}`} accessibilityRole="button" onPress={onSecondaryPress} style={[styles.secondaryAction, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Text style={[styles.secondaryActionText, { color: theme.text }]}>{secondaryLabel}</Text>
-        </Pressable>
+        {secondaryLabel ? (
+          <Pressable accessibilityLabel={`${label} ${secondaryLabel}`} accessibilityRole="button" onPress={onSecondaryPress} style={[styles.secondaryAction, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+            <Text style={[styles.secondaryActionText, { color: theme.text }]}>{secondaryLabel}</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -173,7 +193,8 @@ function getLocationPermissionCopy(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
   deviceLocationState: P0ScreenProps["deviceLocationState"],
-): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
+  permissionGateResult: P0ScreenProps["permissionGateResult"],
+): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean; requiresSettings: boolean } {
   if (deviceLocationState.status === "requesting") {
     return {
       body: "위치 권한과 현재 위치 확인 중",
@@ -182,45 +203,51 @@ function getLocationPermissionCopy(
       status: "확인 중",
       tone: "gold",
       canRequest: true,
+      requiresSettings: false,
     };
   }
-  if (deviceLocationState.status === "denied") {
+  const deniedBySystem = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "location" && permissionGateResult.denied;
+  if (deniedBySystem) {
     return {
-      body: "현재 위치 자동화는 대기 중",
+      body: "기기에서 위치 권한이 거부됨",
       helper: "수동 위치와 목적지 검색은 계속 사용할 수 있음",
-      primaryLabel: "위치 권한 복구",
-      status: "보류",
+      primaryLabel: "기기 설정 열기",
+      status: "거부됨",
       tone: "warm",
-      canRequest: true,
+      canRequest: false,
+      requiresSettings: true,
     };
   }
   if (locationReady && weatherLocationMode === "auto") {
     return {
       body: "현재 위치 기준 홈 날씨 반영 중",
       helper: "지역명 표시와 출발 판단에 현재 위치를 사용함",
-      primaryLabel: "위치 관리",
+      primaryLabel: "현재 위치 다시 확인",
       status: "허용됨",
       tone: "clear",
       canRequest: false,
+      requiresSettings: false,
     };
   }
   if (weatherLocationMode === "manual") {
     return {
       body: "수동 위치 기준으로 홈 날씨 유지",
       helper: "현재 위치 권한 없이도 선택한 지역 날씨는 계속 표시됨",
-      primaryLabel: "위치 권한 복구",
-      status: "수동",
-      tone: "gold",
+      primaryLabel: "현재 위치 사용",
+      status: "수동 사용 중",
+      tone: "clear",
       canRequest: true,
+      requiresSettings: false,
     };
   }
   return {
     body: "현재 위치 또는 수동 위치 설정 필요",
     helper: "권한을 허용하거나 위치 선택 화면에서 지역을 고를 수 있음",
-    primaryLabel: "위치 권한 복구",
-    status: "확인",
+    primaryLabel: "현재 위치 사용",
+    status: "선택 필요",
     tone: "warm",
     canRequest: true,
+    requiresSettings: false,
   };
 }
 
@@ -228,17 +255,18 @@ function getNotificationPermissionCopy(
   permissionReady: boolean,
   smartCareEnabled: boolean,
   permissionGateResult: P0ScreenProps["permissionGateResult"],
-): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean } {
+): { body: string; helper: string; primaryLabel: string; status: string; tone: "clear" | "gold" | "warm"; canRequest: boolean; requiresSettings: boolean } {
   const returnedFromNotificationGate = permissionGateResult?.returnTo === "M4" && permissionGateResult.reason === "notification";
-  const skipped = returnedFromNotificationGate && (permissionGateResult.denied || permissionGateResult.message.includes("나중에"));
-  if (skipped) {
+  const deniedBySystem = returnedFromNotificationGate && permissionGateResult.denied;
+  if (deniedBySystem) {
     return {
-      body: "푸시 알림은 대기 중",
+      body: "기기에서 알림 권한이 거부됨",
       helper: "홈·출발 판단은 유지되며 실제 푸시만 제한됨",
-      primaryLabel: "알림 권한 복구",
-      status: "보류",
+      primaryLabel: "기기 설정 열기",
+      status: "거부됨",
       tone: "warm",
-      canRequest: true,
+      canRequest: false,
+      requiresSettings: true,
     };
   }
   if (!smartCareEnabled) {
@@ -249,6 +277,7 @@ function getNotificationPermissionCopy(
       status: "중지",
       tone: "gold",
       canRequest: false,
+      requiresSettings: false,
     };
   }
   if (permissionReady) {
@@ -259,15 +288,17 @@ function getNotificationPermissionCopy(
       status: "허용됨",
       tone: "clear",
       canRequest: false,
+      requiresSettings: false,
     };
   }
   return {
     body: "푸시 권한을 켜면 강수·출발 알림 수신",
     helper: "권한은 계정 연결과 별도이며 나중에 변경 가능",
-    primaryLabel: "알림 권한 복구",
-    status: "확인",
+    primaryLabel: "알림 허용",
+    status: "허용 필요",
     tone: "warm",
     canRequest: true,
+    requiresSettings: false,
   };
 }
 
@@ -278,15 +309,15 @@ function getPermissionResultCopy(
   const skipped = permissionGateResult.denied || permissionGateResult.message.includes("나중에");
   if (permissionGateResult.reason === "notification") {
     return {
-      title: skipped ? "알림 권한 보류" : "알림 권한 확인됨",
-      body: skipped ? "푸시 수신만 대기. 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "확인 알림으로 실제 수신을 한 번 더 확인해야 함",
+      title: skipped ? (permissionGateResult.denied ? "알림 권한이 거부됐어요" : "알림을 나중에 설정했어요") : "알림 권한을 허용했어요",
+      body: skipped ? "푸시 수신은 꺼져 있고 홈·출발 판단은 앱 안에서 계속 사용할 수 있음" : "스마트 알림 설정에서 예약과 실제 수신 상태를 확인할 수 있음",
       tone: skipped ? "warm" : "clear",
     };
   }
   if (permissionGateResult.reason === "location") {
     return {
-      title: skipped ? "위치 권한 보류" : "위치 권한 확인됨",
-      body: skipped ? "현재 위치 자동화만 대기. 수동 위치와 목적지 검색은 계속 사용할 수 있음" : "현재 위치 기준 홈 날씨를 다시 확인함",
+      title: skipped ? (permissionGateResult.denied ? "위치 권한이 거부됐어요" : "수동 위치를 사용 중이에요") : "현재 위치를 사용 중이에요",
+      body: skipped ? "현재 위치 자동화는 꺼져 있고 수동 위치와 목적지 검색은 계속 사용할 수 있음" : "현재 위치 기준 홈 날씨를 다시 확인함",
       tone: skipped ? "warm" : "clear",
     };
   }

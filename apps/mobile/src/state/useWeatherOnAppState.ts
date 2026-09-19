@@ -238,6 +238,7 @@ export function useWeatherOnAppState() {
   const [alertSettingsRouteState, setAlertSettingsRouteState] = useState<AlertSettingsRouteState | null>(null);
   const [selectedPolicyDocument, setSelectedPolicyDocument] = useState<PolicyDocumentType>("privacy");
   const [policyHubReturnRoute, setPolicyHubReturnRoute] = useState<"M1" | "A4">("M1");
+  const [policyDocumentReturnRoute, setPolicyDocumentReturnRoute] = useState<"R1" | "A3">("R1");
   const [adConsentMode, setAdConsentMode] = useState<AdConsentMode>("pending");
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("celsius");
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>("meter");
@@ -1130,41 +1131,48 @@ export function useWeatherOnAppState() {
 
   const openPolicyDocument = useCallback((type: PolicyDocumentType) => {
     setSelectedPolicyDocument(type);
+    setPolicyDocumentReturnRoute(route === "A3" ? "A3" : "R1");
     setRoute("R2");
-  }, []);
+  }, [route]);
 
   const returnFromPolicyDocument = useCallback(() => {
-    setRoute("R1");
+    setRoute(policyDocumentReturnRoute);
+  }, [policyDocumentReturnRoute]);
+
+  const clearLinkedAccountState = useCallback(async () => {
+    await photoSaveInFlightRef.current?.catch(() => {});
+    setAccountLinked(false);
+    setAccountProfile(null);
+    setTermsRequiredAccepted(false);
+    setOutfitSaved(false);
+    setSavedDestinations([]);
+    setRecentlyRemovedDestination(null);
+    setWardrobeOwnedItemIds([]);
+    removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
+    setPhotoWardrobeItems([]);
+    setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+    setRecentlyRemovedWardrobeItemId(null);
+    setAccountGateResult(null);
   }, []);
 
-  const signOutAccount = useCallback(() => {
+  const signOutAccount = useCallback(async () => {
     setAccountAuthStatus("signing-out");
     setAccountAuthMessage(null);
-    void signOutAccountSession().finally(async () => {
-      await photoSaveInFlightRef.current?.catch(() => {});
-      setAccountLinked(false);
-      setAccountProfile(null);
-      setTermsRequiredAccepted(false);
-      setOutfitSaved(false);
-      setSavedDestinations([]);
-      setRecentlyRemovedDestination(null);
-      setWardrobeOwnedItemIds([]);
-      removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
-      setPhotoWardrobeItems([]);
-      setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
-      setRecentlyRemovedWardrobeItemId(null);
-      setAccountGateResult(null);
+    try {
+      await signOutAccountSession();
+    } finally {
+      await clearLinkedAccountState();
       setAccountAuthStatus("idle");
       setRoute("M1");
-    });
-  }, []);
+    }
+  }, [clearLinkedAccountState]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
     let active = true;
     let unsubscribe = () => {};
     void subscribeToAppleCredentialRevocation(() => {
-      if (active) signOutAccount();
+      if (active) void signOutAccount();
     }).then((remove) => {
       if (active) unsubscribe = remove;
       else remove();
@@ -1735,13 +1743,7 @@ export function useWeatherOnAppState() {
     setAccountAuthMessage(null);
     try {
       await deleteAccountSession();
-      await photoSaveInFlightRef.current?.catch(() => {});
-      removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
-      setAccountLinked(false);
-      setAccountProfile(null);
-      setTermsRequiredAccepted(false);
-      setWardrobeOwnedItemIds([]);
-      setPhotoWardrobeItems([]);
+      await clearLinkedAccountState();
       setAccountAuthStatus("idle");
       setRoute("M1");
     } catch (error) {
@@ -1849,7 +1851,7 @@ export function useWeatherOnAppState() {
   const backRoute =
     route === "A2" || route === "A3" ? gate?.returnTo ?? "H1" :
     route === "O3" ? permissionGate?.returnTo ?? "H1" :
-    route === "R2" ? "R1" :
+    route === "R2" ? policyDocumentReturnRoute :
     route === "R1" ? policyHubReturnRoute :
     route === "O4" && styleProfileReturnRoute ? styleProfileReturnRoute :
     route === "P1" ? destinationAddReturnRoute :
@@ -1900,6 +1902,7 @@ export function useWeatherOnAppState() {
     notificationDeliveryStatus,
     alertSettingsRouteState,
     selectedPolicyDocument,
+    policyDocumentReturnRoute,
     adConsentMode,
     temperatureUnit,
     distanceUnit,

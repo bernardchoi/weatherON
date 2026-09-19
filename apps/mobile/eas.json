@@ -45,18 +45,8 @@
       "env": {
         "WEATHERON_BUILD_VARIANT": "production"
       },
-      "ios": {
-        "image": "macos-sequoia-15.6-xcode-26.0"
-      },
       "android": {
         "buildType": "app-bundle"
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "ascAppId": "6789612592"
       }
     }
   }

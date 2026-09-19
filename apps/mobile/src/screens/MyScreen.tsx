@@ -5,21 +5,22 @@ import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
+import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
+import { cardShadow, radius, spacing } from "../theme/tokens";
 
 type MenuTone = "clear" | "gold" | "sky" | "warm";
 
 export function MyScreen({
   accountLinked,
+  accountProfile,
   termsRequiredAccepted,
   locationReady,
   weatherLocationMode,
   permissionReady,
   permissionGateResult,
   smartCareEnabled,
-  savedDestinations,
   temperatureUnit,
   distanceUnit,
   themeMode,
@@ -31,21 +32,18 @@ export function MyScreen({
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? "동기화 가능" : needsTerms ? "약관 후 동기화" : "연결 후 동기화";
+  const profileBody = isAccountReady ? `${getProviderLabel(accountProfile?.provider)} 연결됨` : needsTerms ? "필수 약관 확인 필요" : "연결 후 저장 기능 사용";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
-  const savedDestinationCount = savedDestinations.length;
-  const savedDestinationLabel = savedDestinationCount > 0 ? `목적지 ${savedDestinationCount}곳` : "목적지 없음";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
   const permissionTone: MenuTone =
     locationState.tone === "warm" ? "warm" : locationState.tone === "clear" && alertState.tone === "clear" ? "clear" : "sky";
   const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
-  const readinessTone: MenuTone =
-    locationState.tone === "warm"
-      ? "warm"
-      : savedDestinationCount === 0 || locationState.tone !== "clear" || alertState.tone !== "clear"
-        ? "sky"
-        : "clear";
+  const recommendation = locationState.tone === "warm"
+    ? { title: "날씨 위치 선택", body: "현재 위치를 허용하거나 수동 위치를 선택해요", action: "권한에서 설정", route: "M4" as const }
+    : smartCareEnabled && !permissionReady
+      ? { title: "알림 권한 켜기", body: "스마트 알림은 켜졌지만 기기 권한이 필요해요", action: "알림에서 설정", route: "M2" as const }
+      : null;
 
   const openProfile = () => {
     if (!isAccountReady) {
@@ -125,26 +123,21 @@ export function MyScreen({
           <Chevron color={theme.subtle} />
         </FeedbackPressable>
 
-        <ReadinessSummary
-          alertSummary={alertState.summary}
-          destinationSummary={savedDestinationLabel}
-          locationSummary={locationState.summary}
-          theme={theme}
-          tone={readinessTone}
-          minHeight={layout.myReadinessMinHeight}
-          panelPadding={layout.settingsPanelPadding}
-          onPress={() => {
-            if (locationState.tone === "warm") {
-              onNavigate("M4");
-              return;
-            }
-            if (alertState.tone !== "clear") {
-              onNavigate("M2");
-              return;
-            }
-            onNavigate(savedDestinationCount > 0 ? "M2" : "G1");
-          }}
-        />
+        {recommendation ? (
+          <FeedbackPressable
+            accessibilityLabel={`${recommendation.title}, ${recommendation.action}`}
+            accessibilityRole="button"
+            onPress={() => onNavigate(recommendation.route)}
+            style={[styles.recommendationCard, pageStyles.card, { minHeight: layout.myReadinessMinHeight, padding: layout.settingsPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+          >
+            <View style={styles.recommendationCopy}>
+              <Text style={[styles.readinessTitle, pageStyles.sectionTitle, { color: theme.text }]}>{recommendation.title}</Text>
+              <Text style={[styles.readinessMeta, pageStyles.compactCaption, { color: theme.subtle }]}>{recommendation.body}</Text>
+            </View>
+            <Text style={[styles.recommendationAction, { color: theme.sky }]}>{recommendation.action}</Text>
+            <Chevron color={theme.subtle} />
+          </FeedbackPressable>
+        ) : null}
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text>
 
@@ -258,53 +251,13 @@ function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
   return "시스템";
 }
 
-function ReadinessSummary({
-  alertSummary,
-  destinationSummary,
-  locationSummary,
-  onPress,
-  theme,
-  tone,
-  minHeight,
-  panelPadding,
-}: {
-  alertSummary: string;
-  destinationSummary: string;
-  locationSummary: string;
-  onPress: () => void;
-  theme: AppTheme;
-  tone: MenuTone;
-  minHeight: number;
-  panelPadding: number;
-}) {
-  const color = getToneColor(theme, tone);
-  const status = tone === "clear" ? "정상" : tone === "warm" ? "확인" : "설정";
-  return (
-    <FeedbackPressable
-      accessibilityLabel={`${status} 오늘 준비 상세 보기`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[
-        styles.readinessCard,
-        { minHeight, padding: panelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border },
-        cardShadow(theme),
-        pageStyles.card,
-        { minHeight: 76 },
-      ]}
-    >
-      <View style={styles.readinessCopy}>
-
-        <Text style={[styles.readinessTitle, pageStyles.sectionTitle, { color: theme.text }]}>{tone === "clear" ? "준비 완료" : tone === "warm" ? "확인 필요" : "설정 추천"}</Text>
-        <Text style={[styles.readinessMeta, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>
-          {destinationSummary} · {locationSummary} · {alertSummary}
-        </Text>
-      </View>
-      <View style={[styles.readinessPill, { backgroundColor: `${color}22` }]}>
-        <View style={[styles.readinessDot, { backgroundColor: color }]} />
-        <Text style={[styles.readinessPillText, { color }]}>{status}</Text>
-      </View>
-    </FeedbackPressable>
-  );
+function getProviderLabel(provider?: AccountProvider) {
+  if (provider === "kakao") return "카카오";
+  if (provider === "naver") return "네이버";
+  if (provider === "line") return "LINE";
+  if (provider === "google") return "Google";
+  if (provider === "apple") return "Apple";
+  return "계정";
 }
 
 function PersonGlyph({ color }: { color: string }) {
@@ -432,22 +385,16 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: "700",
   },
-  readinessCard: {
+  recommendationCard: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
   },
-  readinessCopy: {
+  recommendationCopy: {
     flex: 1,
     gap: 4,
-  },
-  readinessEyebrow: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
   },
   readinessTitle: {
     fontSize: 18,
@@ -459,20 +406,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
   },
-  readinessPill: {
-    minHeight: 30,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-  },
-  readinessDot: {
-    width: 7,
-    height: 7,
-    borderRadius: radius.pill,
-  },
-  readinessPillText: {
+  recommendationAction: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",

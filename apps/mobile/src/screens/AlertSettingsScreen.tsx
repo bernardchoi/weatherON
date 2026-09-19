@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../components/BackButton";
 import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
@@ -65,6 +65,14 @@ export function AlertSettingsScreen({
   const deliveryStatusLabel = deliveryReady ? (testNotificationOpened ? "탭 확인" : testNotificationReceived ? "수신 확인" : "수신 확인 전") : "푸시 대기";
   const testNotificationBody = getTestNotificationBody(permissionReady, latestTestNotification?.statusLabel, testNotificationReceived, testNotificationOpened);
   const testNotificationActionLabel = permissionReady ? (latestTestNotification ? "테스트 다시 보내기" : "테스트 알림 보내기") : "권한 켜기";
+  const notificationDenied = permissionGateResult?.returnTo === "M2" && permissionGateResult.reason === "notification" && permissionGateResult.denied;
+  const openNotificationPermission = () => {
+    if (notificationDenied && Platform.OS !== "web") {
+      void Linking.openSettings();
+      return;
+    }
+    onRequestPermissionGate("notification", "M2", "general");
+  };
 
   const goBack = () => {
     if (alertSettingsRouteState) onReturnFromAlertSettings();
@@ -160,11 +168,6 @@ export function AlertSettingsScreen({
           <View style={[styles.heroStatus, { borderTopColor: theme.border }]}>
             <DeliveryLine label="권한" value={permissionReady ? "알림 받을 준비 완료" : "권한 켜기 필요"} tone={permissionReady ? "clear" : "warm"} theme={theme} />
             <DeliveryLine label="예약" value={`${deliveryStatus.statusLabel} · ${deliveryStatus.countLabel}`} tone={deliveryStatus.statusLabel === "예약 완료" ? "clear" : "gold"} theme={theme} />
-            {!permissionReady ? (
-              <Pressable accessibilityLabel="알림 권한 켜기" accessibilityRole="button" onPress={() => onRequestPermissionGate("notification", "M2", "general")} style={[styles.deliveryAction, { backgroundColor: `${theme.warm}22` }]}>
-                <Text style={[styles.deliveryActionText, { color: theme.warm }]}>알림 권한 켜기</Text>
-              </Pressable>
-            ) : null}
           </View>
         </View>
 
@@ -176,6 +179,17 @@ export function AlertSettingsScreen({
 
         <View style={[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
           <Text style={[styles.groupLabel, { color: theme.subtle }]}>어떤 순간을 챙길까요?</Text>
+          {!permissionReady ? (
+            <View style={[styles.permissionNotice, { backgroundColor: `${theme.warm}16`, borderColor: `${theme.warm}55` }]}>
+              <View style={styles.permissionNoticeCopy}>
+                <Text style={[styles.permissionNoticeTitle, { color: theme.text }]}>기기 알림 권한이 필요해요</Text>
+                <Text style={[styles.permissionNoticeBody, { color: theme.subtle }]}>스마트 알림 설정은 유지되지만 예약·수신과 세부 변경은 사용할 수 없어요</Text>
+              </View>
+              <Pressable accessibilityLabel={notificationDenied ? "기기 알림 설정 열기" : "알림 권한 허용"} accessibilityRole="button" onPress={openNotificationPermission} style={[styles.permissionNoticeButton, { backgroundColor: `${theme.warm}22` }]}>
+                <Text style={[styles.permissionNoticeButtonText, { color: theme.warm }]}>{notificationDenied ? "기기 설정 열기" : "알림 허용"}</Text>
+              </Pressable>
+            </View>
+          ) : null}
           <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
           <AlertSummaryRow
             icon="rain"
@@ -206,7 +220,7 @@ export function AlertSettingsScreen({
 
           <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }]}>
             <Text style={[styles.advancedTitle, { color: theme.text }]}>세부 알림 맞추기</Text>
-            <Text style={[styles.advancedCount, pageStyles.compactCaption, { color: theme.subtle }]}>{advancedEnabledCount}/6 사용 중</Text>
+            <Text style={[styles.advancedCount, pageStyles.compactCaption, { color: theme.subtle }]}>{permissionReady ? `${advancedEnabledCount}/6 사용 중` : "권한 없어 수신 불가"}</Text>
             <ChevronDown color={theme.subtle} open={advancedOpen} />
           </Pressable>
 
@@ -267,7 +281,7 @@ export function AlertSettingsScreen({
                 testStatusLabel={deliveryStatusLabel}
                 actionLabel={testNotificationActionLabel}
                 onSend={onSendTestNotification}
-                onRequestPermission={() => onRequestPermissionGate("notification", "M2", "general")}
+                onRequestPermission={openNotificationPermission}
                 theme={theme}
               />
             ) : null}
@@ -563,8 +577,8 @@ function getAlertReadinessCopy(
     };
   }
   return {
-    title: skippedPermission ? "알림은 나중에 받아도 돼요" : "알림 받을 준비가 필요해요",
-    body: skippedPermission ? "앱 안의 날씨 판단은 계속돼요" : "권한만 켜면 바로 시작할 수 있어요",
+    title: "스마트 알림 켜짐 · 권한 필요",
+    body: skippedPermission ? "앱 설정은 유지되지만 푸시는 받을 수 없어요" : "기기 권한을 켜야 알림을 받을 수 있어요",
     resultBody: skippedPermission ? "푸시 없이도 홈과 출발 판단은 계속 이용할 수 있어요" : "권한을 켜면 설정 화면으로 돌아와요",
     gateTitle: skippedPermission ? "알림은 나중에" : "알림 권한이 필요해요",
     gateBody: skippedPermission ? "앱 기능은 계속 이용할 수 있어요" : "권한을 켜면 바로 시작해요",
@@ -870,6 +884,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
+  permissionNotice: {
+    gap: spacing.sm,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  permissionNoticeCopy: { gap: 3 },
+  permissionNoticeTitle: { fontSize: 14, lineHeight: 19, fontWeight: "900" },
+  permissionNoticeBody: { fontSize: 12, lineHeight: 18, fontWeight: "600" },
+  permissionNoticeButton: { minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: radius.md },
+  permissionNoticeButtonText: { fontSize: 13, lineHeight: 17, fontWeight: "900" },
   alertList: {
     borderTopWidth: 1,
     borderBottomWidth: 1,

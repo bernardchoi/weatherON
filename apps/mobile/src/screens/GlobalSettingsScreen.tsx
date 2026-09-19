@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Animated, Easing, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { BackButton } from "../components/BackButton";
@@ -31,10 +31,6 @@ export function GlobalSettingsScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
-  const distanceLabel = getDistanceUnitLabel(distanceUnit);
-  const themeLabel = getThemeModeLabel(themeMode);
-  const stateSummary = `${temperatureLabel} · ${distanceLabel} · 테마 ${themeLabel}${dynamicColorEnabled ? " · 기기 색상" : ""}`;
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
@@ -68,25 +64,6 @@ export function GlobalSettingsScreen({
           >
             표시 설정
           </Text>
-        </View>
-
-        <View
-          style={[
-            styles.topSummary,
-            Platform.OS === "android" ? styles.materialBorder : null,
-            {
-              minHeight: layout.settingsTopSummaryMinHeight,
-              paddingHorizontal: layout.settingsPanelPadding,
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-            androidMaterialSurface(theme, "surfaceContainerLow"),
-            pageStyles.card,
-          ]}
-        >
-          <Text style={[styles.topSummaryLabel, { color: theme.sky }]}>현재 적용</Text>
-          <Text style={[styles.topSummaryValue, pageStyles.sectionTitle, { color: theme.text }]}>{temperatureLabel} · {distanceLabel}</Text>
-          <Text style={[styles.topSummaryMeta, { color: theme.subtle }]}>{themeLabel} 테마</Text>
         </View>
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>기본 표시</Text>
@@ -123,25 +100,26 @@ export function GlobalSettingsScreen({
               />
             )}
           />
-          <AppListRow
-            icon={uiIconAssets.myDisplay}
-            title="테마"
-            subtitle="앱 전체 색상"
-            tone="clear"
-            divider
-            right={(
-              <SegmentControl
-                label="테마"
-                wide
-                options={(["system", "light", "dark"] as const).map((mode) => ({
-                  label: getThemeModeLabel(mode),
-                  active: themeMode === mode,
-                  onPress: () => onSetThemeMode(mode),
-                }))}
-              />
-            )}
-          />
         </AppListGroup>
+
+        <View style={[styles.themePanel, pageStyles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.themeCopy}>
+            <Image source={uiIconAssets.myDisplay} style={[styles.themeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <View>
+              <Text style={[styles.themeTitle, { color: theme.text }]}>테마</Text>
+              <Text style={[styles.themeBody, { color: theme.subtle }]}>앱 전체 색상</Text>
+            </View>
+          </View>
+          <SegmentControl
+            label="테마"
+            fullWidth
+            options={(["system", "light", "dark"] as const).map((mode) => ({
+              label: getThemeModeLabel(mode),
+              active: themeMode === mode,
+              onPress: () => onSetThemeMode(mode),
+            }))}
+          />
+        </View>
 
         <Text style={[styles.groupLabel, { color: theme.subtle }]}>화면</Text>
 
@@ -179,7 +157,7 @@ export function GlobalSettingsScreen({
           accessibilityLabel="표시 설정 버전 정보"
           style={styles.footerLinks}
         >
-          <Text style={[styles.footerText, { color: theme.subtle }]}>WeatherON v1.0.0 · {stateSummary}</Text>
+          <Text style={[styles.footerText, { color: theme.subtle }]}>WeatherON v1.0.0</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -191,11 +169,11 @@ export function GlobalSettingsScreen({
 function SegmentControl({
   label,
   options,
-  wide = false,
+  fullWidth = false,
 }: {
   label: string;
   options: { label: string; active: boolean; onPress: () => void }[];
-  wide?: boolean;
+  fullWidth?: boolean;
 }) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -204,8 +182,8 @@ function SegmentControl({
       style={[
         styles.segmentControl,
         Platform.OS === "android" ? styles.materialBorder : null,
-        wide ? styles.segmentControlWide : null,
-        layout.isShort ? (wide ? styles.segmentControlWideShort : styles.segmentControlShort) : null,
+        fullWidth ? styles.segmentControlFull : null,
+        layout.isShort && !fullWidth ? styles.segmentControlShort : null,
         { backgroundColor: theme.nav, borderColor: theme.border },
         androidMaterialSurface(theme, "surfaceContainer"),
       ]}
@@ -286,10 +264,6 @@ function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
   return "시스템";
 }
 
-function getDistanceUnitLabel(unit: P0ScreenProps["distanceUnit"]) {
-  return unit === "mile" ? "마일" : "미터";
-}
-
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -328,29 +302,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: "900",
   },
-  topSummary: {
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-  },
-  topSummaryLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  topSummaryValue: {
-    marginTop: 4,
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "900",
-    fontVariant: ["tabular-nums"],
-  },
-  topSummaryMeta: {
-    marginTop: 2,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
   segmentControl: {
     width: 128,
     minHeight: 52,
@@ -359,26 +310,21 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: radius.md,
   },
-  segmentControlWide: {
-    width: 154,
-  },
+  segmentControlFull: { width: "100%", minHeight: 56 },
   segmentControlShort: {
     width: 116,
   },
-  segmentControlWideShort: {
-    width: 142,
-  },
   segmentOption: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
     paddingHorizontal: 4,
   },
   segmentText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
   effectSwitchTrack: {
@@ -406,6 +352,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  themePanel: { gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1 },
+  themeCopy: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  themeIcon: { width: 24, height: 24 },
+  themeTitle: { fontSize: 15, lineHeight: 20, fontWeight: "900" },
+  themeBody: { fontSize: 12, lineHeight: 17, fontWeight: "600" },
   footerText: {
     fontSize: 11,
     lineHeight: 15,

@@ -44,7 +44,7 @@ import { WalkingTripScreen } from "../screens/WalkingTripScreen";
 import { AiJourneyPlannerScreen } from "../screens/AiJourneyPlannerScreen";
 import { PremiumScreen } from "../screens/PremiumScreen";
 import { AccountConnectScreen } from "../screens/AccountConnectScreen";
-import { TermsConsentScreen } from "../screens/TermsConsentScreen";
+import { emptyTermsConsentDraft, TermsConsentScreen, type TermsConsentDraft } from "../screens/TermsConsentScreen";
 import { PermissionGateScreen } from "../screens/PermissionGateScreen";
 import { OnboardingIntroScreen } from "../screens/OnboardingIntroScreen";
 import { OnboardingOutfitScreen } from "../screens/OnboardingOutfitScreen";
@@ -61,6 +61,7 @@ export function AppNavigator() {
   const [launchVisible, setLaunchVisible] = React.useState(true);
   const [launchReady, setLaunchReady] = React.useState(false);
   const [launchStarted, setLaunchStarted] = React.useState(false);
+  const [termsConsentDraft, setTermsConsentDraft] = React.useState<TermsConsentDraft>(() => ({ ...emptyTermsConsentDraft }));
   const finishLaunch = React.useCallback(() => setLaunchVisible(false), []);
   const readyLaunch = React.useCallback(() => setLaunchReady(true), []);
   const handledDeepLinkRef = useRef<string | null>(null);
@@ -89,6 +90,10 @@ export function AppNavigator() {
     const subscription = BackHandler.addEventListener("hardwareBackPress", appState.goBack);
     return () => subscription.remove();
   }, [appState.goBack]);
+
+  useEffect(() => {
+    if (!appState.gate) setTermsConsentDraft({ ...emptyTermsConsentDraft });
+  }, [appState.gate]);
 
   useEffect(() => {
     const openDeepLink = (url: string | null) => {
@@ -151,6 +156,7 @@ export function AppNavigator() {
     notificationDeliveryStatus: appState.notificationDeliveryStatus,
     alertSettingsRouteState: appState.alertSettingsRouteState,
     selectedPolicyDocument: appState.selectedPolicyDocument,
+    policyDocumentReturnRoute: appState.policyDocumentReturnRoute,
     adConsentMode: appState.adConsentMode,
     temperatureUnit: appState.temperatureUnit,
     distanceUnit: appState.distanceUnit,
@@ -310,6 +316,9 @@ export function AppNavigator() {
           gate={appState.gate}
           authStatus={appState.accountAuthStatus}
           authMessage={appState.accountAuthMessage}
+          accepted={termsConsentDraft}
+          onDraftChange={setTermsConsentDraft}
+          onOpenPolicyDocument={appState.openPolicyDocument}
           onCancel={appState.cancelAccountGate}
           onComplete={appState.completeTerms}
         />

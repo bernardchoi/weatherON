@@ -2,6 +2,7 @@ import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
+import { pageStyles } from "../theme/pageStyles";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -27,18 +28,16 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProp
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.accountContentGap,
+            gap: layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
-
-        <View style={[styles.header, { minHeight: layout.accountHeaderMinHeight }]}>
+        <View style={[styles.header, { minHeight: layout.settingsHeaderMinHeight }, pageStyles.header]}>
           <BackButton accessibilityLabel="이전 화면으로 돌아가기" onPress={onGoBack} />
-          <Text style={[styles.screenTitle, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>정책</Text>
+          <Text style={[styles.screenTitle, pageStyles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>정책 및 법적 고지</Text>
         </View>
 
         <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
@@ -54,7 +53,7 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProp
                 index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
               ]}
             >
-              <View style={[styles.iconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+              <View style={styles.iconBox}>
                 <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
               </View>
               <View style={styles.copy}>
@@ -81,15 +80,6 @@ const styles = StyleSheet.create({
     minHeight: "100%",
     paddingBottom: spacing.xl,
     alignSelf: "center",
-  },
-  atmosphere: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 280,
-    height: 500,
-    opacity: 0.34,
-    borderRadius: 78,
   },
   header: {
     flexDirection: "row",
@@ -118,7 +108,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-    borderWidth: 1,
   },
   iconImage: {
     width: 22,
