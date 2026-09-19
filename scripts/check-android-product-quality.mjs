@@ -405,8 +405,9 @@ assertSourceIncludes("apps/mobile/src/screens/AccountConnectScreen.tsx", [
   "사용할 계정 방식을 선택",
   "AppleAuthenticationButton",
   "다시 시도",
-  "google-login-ios.png",
+  "resolveAccountButtonLanguage",
 ]);
+assertSourceIncludes("apps/mobile/src/components/provider-brand-icon.tsx", ["google-icon-ios.png"]);
 assertSourceExcludes("apps/mobile/src/components/provider-brand-icon.tsx", ["", "kakaoWideButton"]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "verification-failed",

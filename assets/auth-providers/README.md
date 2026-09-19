@@ -1,8 +1,8 @@
 # OAuth brand assets
 
-These button images are unmodified official provider assets downloaded on 2026-08-22 from each provider's login-brand resource page.
+These button images are unmodified official provider assets downloaded from each provider's login-brand resource page. The English Kakao asset was added on 2026-09-19.
 
-- `kakao-login-ko.png`: Kakao Developers login resource, large/wide Korean
+- `kakao-login-ko.png`, `kakao-login-en.png`: Kakao Developers login resources, large/wide Korean and English
 - `naver-login-ko.png`: NAVER Login Korean green wide H56
 - `line-login.png`: LINE Developers iOS 44dp 3x login button
 - `google-login-ios.png`: Google Identity iOS light pill 3x sign-in button

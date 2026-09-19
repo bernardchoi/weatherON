@@ -1,6 +1,13 @@
 import type { AccountProvider } from "./accountAuth";
 
 export type AccountRegion = "KR" | "JP" | "GLOBAL";
+export type AccountButtonLanguage = "ko" | "ja" | "en";
+
+export function resolveAccountButtonLanguage(locale = Intl.DateTimeFormat().resolvedOptions().locale ?? ""): AccountButtonLanguage {
+  const language = locale.replace("_", "-").split("-")[0]?.toLowerCase();
+  if (language === "ko" || language === "ja") return language;
+  return "en";
+}
 
 export function resolveAccountRegion(options: { locale?: string; timeZone?: string } = {}): AccountRegion {
   const locale = (options.locale ?? Intl.DateTimeFormat().resolvedOptions().locale ?? "").replace("_", "-");

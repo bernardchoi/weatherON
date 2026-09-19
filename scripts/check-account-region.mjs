@@ -14,10 +14,15 @@ await build({
   platform: "node",
   format: "esm",
 });
-const { resolveAccountRegion, orderProvidersForRegion } = await import(`${pathToFileURL(outputFile).href}?v=${Date.now()}`);
+const { resolveAccountButtonLanguage, resolveAccountRegion, orderProvidersForRegion } = await import(`${pathToFileURL(outputFile).href}?v=${Date.now()}`);
 
+assert.equal(resolveAccountButtonLanguage("ko-KR"), "ko");
+assert.equal(resolveAccountButtonLanguage("ja_JP"), "ja");
+assert.equal(resolveAccountButtonLanguage("en-US"), "en");
+assert.equal(resolveAccountButtonLanguage("fr-FR"), "en");
 assert.equal(resolveAccountRegion({ locale: "ko-KR", timeZone: "Asia/Tokyo" }), "KR");
 assert.equal(resolveAccountRegion({ locale: "ja-JP", timeZone: "Asia/Seoul" }), "JP");
+assert.equal(resolveAccountRegion({ locale: "en-US", timeZone: "Asia/Seoul" }), "KR");
 assert.equal(resolveAccountRegion({ locale: "en-US", timeZone: "America/New_York" }), "GLOBAL");
 assert.deepEqual(orderProvidersForRegion("KR", ["apple", "google", "kakao", "naver"]), ["kakao", "naver", "apple", "google"]);
 assert.deepEqual(orderProvidersForRegion("JP", ["apple", "google", "line"]), ["line", "apple", "google"]);

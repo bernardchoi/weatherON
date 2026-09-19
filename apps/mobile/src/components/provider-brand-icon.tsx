@@ -3,12 +3,13 @@ import { Image } from "react-native";
 import type { AccountProvider } from "../providers/accountAuth";
 
 const providerAssets = {
+  google: require("../../../../assets/auth-providers/google-icon-ios.png"),
   naver: require("../../../../assets/auth-providers/naver-icon.png"),
   line: require("../../../../assets/auth-providers/line-icon.png"),
 } as const;
 
 type ProviderBrandIconProps = {
-  provider: Extract<AccountProvider, "naver" | "line">;
+  provider: Extract<AccountProvider, "google" | "naver" | "line">;
   size?: number;
 };
 
