@@ -57,6 +57,8 @@ const deviceQaEnvSyncStatusPath = join(rootDir, "docs/architecture/WeatherON_AND
 const adbStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_ADB_STATUS.md");
 const installStatusPath = join(rootDir, "docs/architecture/WeatherON_ANDROID_INSTALL_STATUS.md");
 const privacyPolicyHtmlPath = join(rootDir, "docs/policy/weatheron_privacy_policy.html");
+const privacyPolicyEnglishHtmlPath = join(rootDir, "docs/policy/weatheron_privacy_policy_en.html");
+const privacyPolicyJapaneseHtmlPath = join(rootDir, "docs/policy/weatheron_privacy_policy_ja.html");
 const androidAppIconPath = join(rootDir, "assets/store/android-app-icon-512.png");
 const androidFeatureGraphicPath = join(rootDir, "assets/store/android-feature-graphic-v1.png");
 const androidStoreAssetsManifestPath = join(rootDir, "assets/store/android-store-assets.json");
@@ -352,7 +354,16 @@ assertDocIncludes(deviceQaApplyStatusPath, ["WeatherON Android Device QA Apply S
 assertDocIncludes(deviceQaEnvSyncStatusPath, ["WeatherON Android Device QA Env Sync Status", "sync:android-device-qa-env", "network"]);
 assertDocIncludes(adbStatusPath, ["WeatherON Android ADB Status", "check:android-adb-ready", "ADB devices"]);
 assertDocIncludes(installStatusPath, ["WeatherON Android Install Status", "install:android-preview-apk", "APK artifact"]);
-assertDocIncludes(privacyPolicyHtmlPath, ["WeatherON 개인정보처리방침", "Google Play 제출용 공개 페이지 초안", "개인정보 보호책임자"]);
+assertDocIncludes(privacyPolicyHtmlPath, ["WeatherON 개인정보처리방침", "개인정보 보호책임자"]);
+assertDocExcludes(privacyPolicyHtmlPath, ["Google Play 제출용", "비공개 테스트", "외부 공개 전 보완"]);
+assertDocIncludes(privacyPolicyEnglishHtmlPath, ['<html lang="en">', "WeatherON Privacy Policy", "Effective date: 2026-09-19", "Chief Privacy Officer"]);
+assertDocIncludes(privacyPolicyJapaneseHtmlPath, ['<html lang="ja">', "WeatherONプライバシーポリシー", "発効日：2026-09-19", "個人情報保護責任者"]);
+for (const path of [privacyPolicyHtmlPath, privacyPolicyEnglishHtmlPath, privacyPolicyJapaneseHtmlPath]) {
+  assertDocIncludes(path, ["APAC", "Workers Logs", "Apple WeatherKit", "APNs"]);
+}
+assertDocIncludes(privacyPolicyHtmlPath, ["최대 7일"]);
+assertDocIncludes(privacyPolicyEnglishHtmlPath, ["up to 7 days"]);
+assertDocIncludes(privacyPolicyJapaneseHtmlPath, ["最大7日間"]);
 assertPngDimensions(androidAppIconPath, 512, 512);
 assertPngDimensions(androidFeatureGraphicPath, 1024, 500);
 assertDocIncludes(androidStoreAssetsManifestPath, ["android-app-icon-512", "512", "android-feature-graphic-v1", "1024", "500"]);
@@ -374,6 +385,14 @@ function assertDocIncludes(path, snippets) {
   const text = readFileSync(path, "utf8");
   for (const snippet of snippets) {
     assert.ok(text.includes(snippet), `${path} must include: ${snippet}`);
+  }
+}
+
+function assertDocExcludes(path, snippets) {
+  assert.ok(existsSync(path), `required doc is missing: ${path}`);
+  const text = readFileSync(path, "utf8");
+  for (const snippet of snippets) {
+    assert.ok(!text.includes(snippet), `${path} must not include: ${snippet}`);
   }
 }
 

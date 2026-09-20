@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WeatherONプライバシーポリシー</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7fbff;
+      --panel: #ffffff;
+      --ink: #10243f;
+      --muted: #54647a;
+      --line: #dce7f2;
+      --accent: #0f8f8a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+    header {
+      padding: 32px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.25;
+    }
+    h2 {
+      margin: 40px 0 12px;
+      font-size: 22px;
+    }
+    p, li { color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #eef5fb;
+      color: var(--ink);
+    }
+    tr:last-child td { border-bottom: 0; }
+    footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .language-links { display: flex; gap: 12px; flex-wrap: wrap; }
+    .language-links a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>WeatherONプライバシーポリシー</h1>
+      <p>発効日：2026-09-19</p>
+      <p>運営者：최대현 / WeatherON</p>
+      <p>お問い合わせ：support@weatheron.app</p>
+      <nav class="language-links" aria-label="言語選択">
+        <a href="weatheron_privacy_policy.html" lang="ko">한국어</a>
+        <a href="weatheron_privacy_policy_en.html" lang="en">English</a>
+        <strong>日本語</strong>
+      </nav>
+    </header>
+
+    <section>
+      <h2>1. 取得する個人情報</h2>
+      <table>
+        <thead>
+          <tr><th>区分</th><th>取得項目</th><th>取得方法</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>必須（アカウント利用者）</td><td>ログイン識別子、メールアドレス、プロフィール識別子、プロバイダーのユーザーID、ニックネーム</td><td>アカウントの連携または作成時にOAuth提供事業者から受領</td></tr>
+          <tr><td>任意</td><td>位置情報（GPS座標または行政区域単位の位置）および保存済みの場所</td><td>アプリ内で位置情報へのアクセスを許可した場合、または利用者が場所を直接入力した場合</td></tr>
+          <tr><td>自動取得</td><td>端末情報（OS、機種、言語）、アプリ利用ログ、エラー・パフォーマンスログ</td><td>アプリの利用中に自動生成</td></tr>
+          <tr><td>任意</td><td>スタイルタグ、コーディネートのフィット基準、おすすめ年齢層、利用者が撮影または選択したワードローブ画像とカテゴリー</td><td>オンボーディングまたはコーディネート・ワードローブ登録時。写真は分析用の縮小JPEGへ変換</td></tr>
+          <tr><td>任意</td><td>目的地情報、自宅・勤務先・学校などのラベル、座標</td><td>目的地の登録時</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>2. 個人情報の利用目的</h2>
+      <ul>
+        <li>利用者の識別、ログイン、アカウント管理、データ同期</li>
+        <li>現在地の天気、目的地との比較、出発準備情報の提供</li>
+        <li>天気に基づくコーディネート、傘、靴、通知の提案</li>
+        <li>ワードローブ写真の登録可否確認ならびにカテゴリー・天気タグの提案</li>
+        <li>サービスの安定性向上、エラー分析、品質管理</li>
+      </ul>
+      <p>利用者が天気・場所・経路の照会を求めた場合、現在地の座標はWeatherONのCloudflare Workerを経由し、韓国気象庁、Apple WeatherKit、Open-Meteo、Kakao、Googleなど、その機能に必要な提供事業者へ送信されます。WeatherONアプリは、リアルタイムの位置座標をD1またはR2に保存しません。座標は、設定されたTTLの間、天気・場所・経路のレスポンス用インメモリキャッシュキーに一時的に含まれる場合があります。提供事業者側のログとバックアップは、WeatherONアプリケーションのストレージとは別のものです。</p>
+    </section>
+
+    <section>
+      <h2>3. 保存期間</h2>
+      <ul>
+        <li>アカウント情報および保存データは、アカウント削除または削除の申出を受けた場合、遅滞なく削除します。</li>
+        <li>法令上の保存義務がある情報は、当該法令で定められた期間保存します。</li>
+        <li>アカウント情報およびアカウントに紐づく同意記録は、アカウント削除まで保存します。削除は本番データベースに適用されますが、削除前のデータがD1のポイントインタイムリカバリー履歴に最大7日間残る場合があります。</li>
+        <li>端末に保存されたデータは、アプリ内で削除するか、アプリを削除するまで保存します。</li>
+        <li>リアルタイムの位置情報は、利用者が求めた天気・場所・経路の照会に使用し、WeatherONのサーバー保存領域には別途保存しません。</li>
+        <li>ワードローブ写真の原本はWeatherONのサーバー保存領域には保存しません。分析用の縮小JPEGは、登録可否を確認するためのリクエスト処理にのみ使用します。承認された写真ファイルは利用者の端末に保存されます。iOSでは、iCloudバックアップの対象外とし、端末のロック中はファイル保護を適用します。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. 第三者提供および取扱いの委託</h2>
+      <p>Cloudflare D1のアカウントデータベースはアジア太平洋（APAC）地域で稼働し、読み取りレプリケーションは使用していません。APACは個別の国名ではなく、この設定は特定国内での保存を保証するものではありません。また、Workers・Workers AIの処理場所を制限するものでもありません。現在、本番WorkerではWorkers Logs・Workers Traces・Logpushを無効にしています。これは、Cloudflareのサービス運用・セキュリティ記録が一切存在しないことを意味するものではありません。</p>
+      <table>
+        <thead>
+          <tr><th>提供先・委託先</th><th>目的</th><th>取扱項目</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kakao / Naver / LINE / Google / Apple</td><td>ソーシャルログイン認証</td><td>認証トークン、メールアドレス、プロフィール識別子</td></tr>
+          <tr><td>Cloudflare, Inc.</td><td>Workersによる認証・サーバー機能、D1へのデータ保存、Workers AIによるワードローブ写真分析、Secret管理</td><td>アカウント情報、保存済みの場所、通知・設定情報、利用者が選択した分析用の縮小ワードローブ写真。WeatherONアプリは、分析のために送信された写真をD1またはR2へ記録しません</td></tr>
+          <tr><td>Kakao Local、韓国気象庁、Apple WeatherKit、Open-Meteo、Google Maps関連API</td><td>天気・場所検索機能の提供</td><td>座標、検索語、リクエスト時刻など、機能提供に必要な最小限の情報</td></tr>
+          <tr><td>Cloudflare Durable Objects / Apple Push Notification service（APNs）</td><td>iOSの出発Live Activityの終了予約・送信</td><td>アクティビティ識別子、プッシュトークン、出発時刻、アプリ識別子、プッシュ環境。この予約処理に座標は含まれません</td></tr>
+          <tr><td>メール認証配信サービスは未使用</td><td>WeatherONは現在、メール認証配信サービスを使用していません。</td><td>該当なし</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. 広告およびマーケティング</h2>
+      <p>広告識別子に基づく広告およびマーケティングメッセージ配信は、現在のアプリには実装していません。導入前に取扱項目、目的および保存期間を別途通知し、必要な同意を取得します。</p>
+    </section>
+
+    <section>
+      <h2>6. 利用者の権利および行使方法</h2>
+      <p>利用者は、アプリのアカウント管理またはsupport@weatheron.appを通じて、個人情報の開示、訂正、削除、利用停止または同意の撤回を請求できます。本人確認後、遅滞なく処理結果を案内します。アプリ内のアカウント削除機能は、サーバーのアカウントデータおよび関連する端末内データを削除します。</p>
+    </section>
+
+    <section>
+      <h2>7. 位置情報の取扱い</h2>
+      <p>WeatherONは、現在地の天気、目的地ケアおよび出発準備の提案を提供するため、位置情報を使用する場合があります。現在地の座標はWeatherONのCloudflare Workerを経由して必要な天気・場所・経路の提供事業者へ送信され、D1またはR2には保存されません。位置情報へのアクセスを拒否した場合でも、手動で選択した場所や目的地検索などの基本機能を利用できます。位置情報の利用に関する詳細な条件は、位置情報サービス利用規約に従います。</p>
+    </section>
+
+    <section>
+      <h2>8. 個人情報保護責任者</h2>
+      <ul>
+        <li>氏名：최대현</li>
+        <li>役職：個人情報保護責任者</li>
+        <li>連絡先：support@weatheron.app</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>9. 個人情報の削除手続および方法</h2>
+      <p>アカウント削除の申出が完了すると、本番データベースのアカウント行および関連データを削除し、端末データベースの記録およびワードローブ写真ファイルを削除します。</p>
+    </section>
+
+    <section>
+      <h2>10. 安全管理措置</h2>
+      <p>通信の暗号化、セッショントークンのハッシュ保存、ログイン提供事業者トークンの暗号化、アプリの完全性確認、リクエストのサイズ・回数制限およびアクセス範囲の制限を実施します。</p>
+    </section>
+
+    <section>
+      <h2>11. 改定履歴</h2>
+      <table>
+        <thead>
+          <tr><th>日付</th><th>内容</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-09-19</td><td>保存期間、削除手続、権利行使、安全管理措置および現在未導入の広告・マーケティングに関する記載を整理</td></tr>
+          <tr><td>2026-08-30</td><td>ワードローブ写真の端末保存、Workers AIによる分析、サーバー非保存の原則および登録可否判定の目的を反映</td></tr>
+          <tr><td>2026-08-08</td><td>Cloudflare WorkersおよびD1によるアカウント処理構成を反映</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>WeatherONプライバシーポリシー</p>
+    </footer>
+  </main>
+</body>
+</html>

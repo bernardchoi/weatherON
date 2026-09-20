@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WeatherON Privacy Policy</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7fbff;
+      --panel: #ffffff;
+      --ink: #10243f;
+      --muted: #54647a;
+      --line: #dce7f2;
+      --accent: #0f8f8a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+    header {
+      padding: 32px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 40px 0 12px;
+      font-size: 22px;
+    }
+    p, li { color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #eef5fb;
+      color: var(--ink);
+    }
+    tr:last-child td { border-bottom: 0; }
+    footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .language-links { display: flex; gap: 12px; flex-wrap: wrap; }
+    .language-links a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>WeatherON Privacy Policy</h1>
+      <p>Effective date: 2026-09-19</p>
+      <p>Operator: 최대현 / WeatherON</p>
+      <p>Contact: support@weatheron.app</p>
+      <nav class="language-links" aria-label="Language selection">
+        <a href="weatheron_privacy_policy.html" lang="ko">한국어</a>
+        <strong>English</strong>
+        <a href="weatheron_privacy_policy_ja.html" lang="ja">日本語</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>1. Personal information we collect</h2>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Information collected</th><th>How it is collected</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Required (account users)</td><td>Sign-in identifier, email address, profile identifier, provider user ID, and nickname</td><td>Received from the OAuth provider when an account is linked or created</td></tr>
+          <tr><td>Optional</td><td>Location information (GPS coordinates or district-level location) and saved locations</td><td>When the user grants location access in the app or enters a location directly</td></tr>
+          <tr><td>Collected automatically</td><td>Device information (OS, model, and language), app usage logs, and error or performance logs</td><td>Generated while the app is used</td></tr>
+          <tr><td>Optional</td><td>Style tags, outfit-fit preferences, recommended age range, wardrobe images captured or selected by the user, and image categories</td><td>During onboarding or outfit and wardrobe registration. Photos are converted to reduced-size JPEGs for analysis</td></tr>
+          <tr><td>Optional</td><td>Destination information, labels such as home, work, or school, and coordinates</td><td>When a destination is added</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>2. Purposes of processing</h2>
+      <ul>
+        <li>User identification, sign-in, account management, and data synchronization</li>
+        <li>Current-location weather, destination comparisons, and departure preparation information</li>
+        <li>Weather-based outfit, umbrella, footwear, and notification recommendations</li>
+        <li>Checking whether wardrobe photos can be registered and suggesting category and weather tags</li>
+        <li>Improving service stability, analyzing errors, and managing quality</li>
+      </ul>
+      <p>When the user requests a weather, place, or route lookup, current-location coordinates are sent through WeatherON's Cloudflare Worker to the provider required for that feature, such as the Korea Meteorological Administration, Apple WeatherKit, Open-Meteo, Kakao, or Google. The WeatherON application does not store real-time location coordinates in D1 or R2. Coordinates may be temporarily included in in-memory cache keys for weather, place, or route responses for the configured TTL. Provider-side logs and backups are separate from WeatherON application storage.</p>
+    </section>
+
+    <section>
+      <h2>3. Retention periods</h2>
+      <ul>
+        <li>Account information and saved data are deleted without delay when the account is deleted or deletion is requested.</li>
+        <li>Information subject to a statutory retention obligation is retained for the period required by the applicable law.</li>
+        <li>Account information and consent records linked to the account are retained until account deletion. Deletion is applied to the production database; pre-deletion data may remain in D1 point-in-time recovery history for up to 7 days.</li>
+        <li>Data stored on the device is retained until it is deleted in the app or the app is removed.</li>
+        <li>Real-time location information is used for the requested weather, place, or route lookup and is not separately retained in WeatherON server storage.</li>
+        <li>Original wardrobe photos are not retained in WeatherON server storage. Reduced-size JPEGs are used only to process the request and check whether the photo can be registered. Approved photo files are stored on the user's device. On iOS, the files are excluded from iCloud backup and protected while the device is locked.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Third-party disclosures and processing service providers</h2>
+      <p>The Cloudflare D1 account database runs in the Asia-Pacific (APAC) region without read replication. APAC is not an individual country, and this configuration does not guarantee storage within a specific country. It does not restrict processing locations for Workers or Workers AI. Workers Logs, Workers Traces, and Logpush are currently disabled for the production Worker. This does not mean that Cloudflare has no service-operation or security records.</p>
+      <table>
+        <thead>
+          <tr><th>Recipient or service provider</th><th>Purpose</th><th>Information processed</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kakao / Naver / LINE / Google / Apple</td><td>Social sign-in authentication</td><td>Authentication token, email address, and profile identifier</td></tr>
+          <tr><td>Cloudflare, Inc.</td><td>Workers-based authentication and server functions, D1 data storage, Workers AI wardrobe-photo analysis, and secret management</td><td>Account information, saved locations, notification and settings information, and reduced-size wardrobe photos selected by the user for analysis. The WeatherON application does not write photos submitted for analysis to D1 or R2</td></tr>
+          <tr><td>Kakao Local, Korea Meteorological Administration, Apple WeatherKit, Open-Meteo, and Google Maps APIs</td><td>Weather and place-search features</td><td>The minimum information needed to provide the feature, such as coordinates, search terms, and request time</td></tr>
+          <tr><td>Cloudflare Durable Objects / Apple Push Notification service (APNs)</td><td>Scheduling and delivering the end of an iOS departure Live Activity</td><td>Activity identifier, push token, departure time, app identifier, and push environment. This scheduled job does not include coordinates</td></tr>
+          <tr><td>No email verification delivery service</td><td>WeatherON does not currently use an email verification delivery service.</td><td>Not applicable</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. Advertising and marketing</h2>
+      <p>Advertising based on advertising identifiers and marketing-message delivery are not currently implemented in the app. Before introducing them, WeatherON will separately disclose the information processed, purposes, and retention periods, and obtain any required consent.</p>
+    </section>
+
+    <section>
+      <h2>6. User rights and how to exercise them</h2>
+      <p>Users may request access to, correction or deletion of, or suspension of processing of their personal information, or withdraw consent, through Account Management in the app or at support@weatheron.app. After identity verification, WeatherON will provide the result without undue delay. The in-app account deletion feature deletes server account data and associated data stored on the device.</p>
+    </section>
+
+    <section>
+      <h2>7. Location information</h2>
+      <p>WeatherON may use location information to provide current-location weather, destination care, and departure preparation recommendations. Current-location coordinates are sent through WeatherON's Cloudflare Worker to the required weather, place, or route provider and are not stored in D1 or R2. Users can continue to use core features, including manually selected locations and destination search, after denying location access. Detailed terms for the use of location information are provided in the Terms and Conditions for Location-Based Services.</p>
+    </section>
+
+    <section>
+      <h2>8. Chief Privacy Officer</h2>
+      <ul>
+        <li>Name: 최대현</li>
+        <li>Title: Chief Privacy Officer</li>
+        <li>Contact: support@weatheron.app</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>9. Deletion procedure and method</h2>
+      <p>When an account deletion request is completed, WeatherON deletes the account row and linked data from the production database, as well as records in the device database and wardrobe-photo files.</p>
+    </section>
+
+    <section>
+      <h2>10. Security measures</h2>
+      <p>WeatherON applies encryption in transit, hashed session-token storage, encryption of sign-in provider tokens, app-integrity verification, request size and rate limits, and access restrictions.</p>
+    </section>
+
+    <section>
+      <h2>11. Revision history</h2>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Changes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-09-19</td><td>Clarified retention periods, deletion procedures, user rights, security measures, and advertising and marketing features that are not currently implemented</td></tr>
+          <tr><td>2026-08-30</td><td>Added on-device wardrobe-photo storage, Workers AI analysis, the server non-retention principle, and the registration-suitability purpose</td></tr>
+          <tr><td>2026-08-08</td><td>Added the Cloudflare Workers and D1 account-processing architecture</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>WeatherON Privacy Policy</p>
+    </footer>
+  </main>
+</body>
+</html>
