@@ -11,7 +11,7 @@ const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URL = `${APPLE_ISSUER}/auth/keys`;
 const DEFAULT_CHALLENGE_TTL_SECONDS = 5 * 60;
 const DEFAULT_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
-const DEFAULT_TERMS_VERSION = "2026-08-08";
+const DEFAULT_TERMS_VERSION = "2026-09-19";
 const MAX_JSON_BODY_BYTES = 24 * 1024;
 
 const appleJwksCache = new Map();
@@ -149,17 +149,29 @@ async function acceptTerms(request, database, env) {
   const session = await requireSession(request, database);
   await verifyAppIntegrityRequest(request.clone(), database, env, { session, routeKey: "POST /account/terms" });
   const body = await readJsonObject(request);
-  if (body.requiredAccepted !== true) {
+  if (
+    body.requiredAccepted !== true ||
+    body.termsAccepted !== true ||
+    body.privacyAccepted !== true ||
+    body.locationAccepted !== true
+  ) {
     throw new AuthHttpError(400, "required_terms_missing", "필수 약관 동의가 필요합니다.");
   }
   const nowIso = new Date().toISOString();
   const termsVersion = readTermsVersion(env);
-  await database
-    .prepare(
+  await database.batch([
+    database.prepare(
       "UPDATE users SET terms_version = ?, terms_accepted_at = ?, marketing_consent = ?, updated_at = ? WHERE id = ?",
     )
-    .bind(termsVersion, nowIso, body.marketingAccepted === true ? 1 : 0, nowIso, session.user_id)
-    .run();
+      .bind(termsVersion, nowIso, 0, nowIso, session.user_id),
+    ...["terms", "privacy", "location"].map((consentType) => database
+      .prepare(
+        `INSERT INTO consent_records (user_id, consent_type, document_version, accepted_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(user_id, consent_type, document_version) DO UPDATE SET accepted_at = excluded.accepted_at`,
+      )
+      .bind(session.user_id, consentType, termsVersion, nowIso)),
+  ]);
   return { status: 200, payload: { account: await readAccountProfile(database, session.user_id, env) } };
 }
 

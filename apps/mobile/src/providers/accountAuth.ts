@@ -193,12 +193,17 @@ export async function restoreAccountSession(): Promise<AccountRestoreResult> {
   }
 }
 
-export async function acceptAccountTerms(marketingAccepted: boolean): Promise<AccountProfile> {
+export async function acceptAccountTerms(): Promise<AccountProfile> {
   const token = await requireStoredSessionToken();
   const response = await accountRequest<{ account: AccountProfile }>("/account/terms", {
     method: "POST",
     token,
-    body: { requiredAccepted: true, marketingAccepted },
+    body: {
+      requiredAccepted: true,
+      termsAccepted: true,
+      privacyAccepted: true,
+      locationAccepted: true,
+    },
   });
   return response.account;
 }

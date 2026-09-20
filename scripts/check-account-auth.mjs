@@ -57,6 +57,8 @@ const sqlite = new DatabaseSync(":memory:");
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0001_account_auth.sql", import.meta.url), "utf8"));
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0002_app_integrity.sql", import.meta.url), "utf8"));
 sqlite.exec(readFileSync(new URL("../apps/server/migrations/0003_oauth_provider_tokens.sql", import.meta.url), "utf8"));
+sqlite.exec(readFileSync(new URL("../apps/server/migrations/0004_wardrobe_ai_usage.sql", import.meta.url), "utf8"));
+sqlite.exec(readFileSync(new URL("../apps/server/migrations/0005_consent_records.sql", import.meta.url), "utf8"));
 const database = new D1DatabaseAdapter(sqlite);
 const keyPair = await crypto.subtle.generateKey(
   {
@@ -94,7 +96,7 @@ globalThis.fetch = async (input, init) => {
 const env = {
   WEATHERON_DB: database,
   APPLE_CLIENT_IDS: "com.weatheron.mobile,com.weatheron.mobile.dev",
-  WEATHERON_TERMS_VERSION: "2026-08-08",
+  WEATHERON_TERMS_VERSION: "2026-09-19",
   APPLE_TEAM_IDENTIFIER: "R4L3X54675",
   APP_ATTEST_BUNDLE_IDS: "com.weatheron.mobile,com.weatheron.mobile.dev",
   APP_INTEGRITY_MODE: "monitor",
@@ -218,19 +220,35 @@ try {
   const enforcedTerms = await requestJson("/account/terms", {
     method: "POST",
     headers: { authorization },
-    body: { requiredAccepted: true, marketingAccepted: false },
+    body: { requiredAccepted: true, termsAccepted: true, privacyAccepted: true, locationAccepted: true, marketingAccepted: false },
   });
   assert.equal(enforcedTerms.response.status, 401);
   assert.equal(enforcedTerms.body.error, "integrity_assertion_missing");
   env.APP_INTEGRITY_MODE = "monitor";
 
+  const incompleteTerms = await requestJson("/account/terms", {
+    method: "POST",
+    headers: { authorization },
+    body: { requiredAccepted: true, termsAccepted: true, privacyAccepted: true, locationAccepted: false },
+  });
+  assert.equal(incompleteTerms.response.status, 400);
+  assert.equal(incompleteTerms.body.error, "required_terms_missing");
+
   const terms = await requestJson("/account/terms", {
     method: "POST",
     headers: { authorization },
-    body: { requiredAccepted: true, marketingAccepted: false },
+    body: { requiredAccepted: true, termsAccepted: true, privacyAccepted: true, locationAccepted: true, marketingAccepted: false },
   });
   assert.equal(terms.response.status, 200);
   assert.equal(terms.body.account.termsAccepted, true);
+  assert.deepEqual(
+    sqlite.prepare("SELECT consent_type, document_version FROM consent_records ORDER BY consent_type").all().map((row) => ({ ...row })),
+    [
+      { consent_type: "location", document_version: "2026-09-19" },
+      { consent_type: "privacy", document_version: "2026-09-19" },
+      { consent_type: "terms", document_version: "2026-09-19" },
+    ],
+  );
 
   const logout = await requestJson("/auth/logout", { method: "POST", headers: { authorization } });
   assert.equal(logout.response.status, 200);

@@ -5,13 +5,21 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 preview_urls = false
 
+[observability]
+enabled = true
+redact_query_string = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
+
 [vars]
 WEATHER_TIMEOUT_MS = "8000"
 WEATHER_CACHE_TTL_MS = "600000"
 PLACE_CACHE_TTL_MS = "1800000"
 ROUTE_CACHE_TTL_MS = "600000"
 APPLE_CLIENT_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
-WEATHERON_TERMS_VERSION = "2026-08-08"
+WEATHERON_TERMS_VERSION = "2026-09-19"
 APPLE_TEAM_IDENTIFIER = "R4L3X54675"
 APP_ATTEST_BUNDLE_IDS = "com.weatheron.mobile,com.weatheron.mobile.dev"
 APP_ATTEST_ALLOW_DEVELOPMENT = "false"

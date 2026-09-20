@@ -1794,11 +1794,11 @@ export function useWeatherOnAppState() {
     }
   };
 
-  const completeTerms = async ({ marketingAccepted }: { marketingAccepted: boolean }) => {
+  const completeTerms = async () => {
     setAccountAuthStatus("saving-terms");
     setAccountAuthMessage(null);
     try {
-      const profile = await acceptAccountTerms(marketingAccepted);
+      const profile = await acceptAccountTerms();
       setAccountProfile(profile);
       setTermsRequiredAccepted(profile.termsAccepted);
       setAccountAuthStatus("ready");
