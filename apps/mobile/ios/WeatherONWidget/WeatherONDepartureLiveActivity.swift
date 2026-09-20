@@ -18,6 +18,7 @@ struct WeatherONDepartureLiveActivity: Widget {
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
           WeatherONDepartureExpandedLabel()
+            .padding(.leading, 18)
         }
         DynamicIslandExpandedRegion(.trailing) {
           WeatherONDepartureCountdown(
@@ -26,6 +27,7 @@ struct WeatherONDepartureLiveActivity: Widget {
             isCompleted: context.state.isCompleted,
             style: .expanded
           )
+          .padding(.trailing, 18)
         }
         DynamicIslandExpandedRegion(.bottom) {
           WeatherONDepartureExpandedSummary(
@@ -34,6 +36,7 @@ struct WeatherONDepartureLiveActivity: Widget {
             guidanceSymbol: context.isStale ? "exclamationmark.clock.fill" : context.state.guidanceSymbol,
             departureTimeLabel: context.state.departureTimeLabel ?? context.attributes.departureTimeLabel
           )
+          .padding(.horizontal, 18)
           .accessibilityElement(children: .combine)
           .accessibilityLabel(String(format: weatherONDepartureLocalized("activity.accessibility.summary"), context.state.guidance, context.state.departureTimeLabel ?? context.attributes.departureTimeLabel))
         }
