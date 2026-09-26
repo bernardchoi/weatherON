@@ -5,6 +5,7 @@ import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
 import { StatusPill } from "../components/StatusPill";
+import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -14,9 +15,11 @@ export function OnboardingDestinationScreen({
   selectedDestinationPlace,
   destinationSelectionReady,
   savedDestinations,
+  destinationLimitNotice,
   onSaveDestination,
   onNavigate,
   onCompleteOnboarding,
+  onDismissDestinationLimitNotice,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -92,6 +95,7 @@ export function OnboardingDestinationScreen({
         </View>
         <StatusPill label={saved ? "저장됨" : canUseSelection ? "선택" : "대기"} tone={saved ? "clear" : canUseSelection ? "gold" : "sky"} />
       </View>
+      {destinationLimitNotice ? <MaterialSnackbar message="목적지는 최대 3개까지 등록할 수 있어요." supportingText="기존 목적지를 삭제한 뒤 추가해 주세요." onDismiss={onDismissDestinationLimitNotice} /> : null}
     </AppScreen>
   );
 }

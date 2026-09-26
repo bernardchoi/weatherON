@@ -148,6 +148,7 @@ import {
   shouldKeepPersistedWeatherResult,
 } from "./persistedAppState";
 import { formatDisplayTime, getLocalePolicy, subscribeLocalePolicy, translateText } from "../localization/localization";
+import { canSaveDestination } from "./destinationLimit";
 
 // 화면들이 이 모듈에서 타입을 임포트하던 기존 경로를 유지하기 위해 재노출한다.
 export type {
@@ -222,7 +223,9 @@ export function useWeatherOnAppState() {
   const [deviceWeatherLocation, setDeviceWeatherLocation] = useState<KmaWeatherLocationPreset | null>(null);
   const [manualWeatherLocation, setManualWeatherLocation] = useState<WeatherLocationPreset>(defaultSeoulWeatherLocation);
   const [savedDestinations, setSavedDestinations] = useState<SavedDestination[]>([]);
+  const savedDestinationsRef = useRef<SavedDestination[]>([]);
   const [recentlyRemovedDestination, setRecentlyRemovedDestination] = useState<SavedDestination | null>(null);
+  const [destinationLimitNotice, setDestinationLimitNotice] = useState(false);
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
   const [previewDestinationAlertCondition, setPreviewDestinationAlertCondition] = useState<DestinationAlertCondition>(defaultDestinationAlertCondition);
   const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(getDefaultDestinationPlace());
@@ -302,6 +305,12 @@ export function useWeatherOnAppState() {
   } | null>(null);
   locationReadyRef.current = locationReady;
   weatherLocationModeRef.current = weatherLocationMode;
+  const updateSavedDestinations = useCallback((update: (current: SavedDestination[]) => SavedDestination[]) => {
+    const next = update(savedDestinationsRef.current);
+    savedDestinationsRef.current = next;
+    setSavedDestinations(next);
+    return next;
+  }, []);
   const savedDestinationWeatherKey = savedDestinations
     .map((destination) => `${destination.place.id}:${destination.place.coordinate.latitude}:${destination.place.coordinate.longitude}`)
     .join("|");
@@ -534,6 +543,7 @@ export function useWeatherOnAppState() {
         setWardrobeOwnedItemIds(persistedState.wardrobeOwnedItemIds);
         setPhotoWardrobeItems(persistedState.photoWardrobeItems);
         setSelectedWardrobeItemId(persistedState.selectedWardrobeItemId);
+        savedDestinationsRef.current = persistedState.savedDestinations;
         setSavedDestinations(persistedState.savedDestinations);
         setSelectedDestinationPlace(persistedState.selectedDestinationPlace);
         setPreviewDestinationCareEnabled(persistedState.previewDestinationCareEnabled);
@@ -782,7 +792,7 @@ export function useWeatherOnAppState() {
         if (!active) return;
         const estimate = createDestinationTravelEstimate(originLocation.locationId, destinationPlace.id, result);
         setPreviewDestinationTravelEstimate(estimate);
-        setSavedDestinations((current) =>
+        updateSavedDestinations((current) =>
           current.map((destination) =>
             destination.place.id === destinationPlace.id
               ? { ...destination, travelEstimate: estimate, savedAtLabel: destination.changeStatus === "saved" ? "방금 저장" : "업데이트됨", changeStatus: destination.changeStatus === "saved" ? "saved" : "updated" }
@@ -804,6 +814,7 @@ export function useWeatherOnAppState() {
     appStateHydrated,
     placeSearchOrigin,
     selectedDestinationPlace,
+    updateSavedDestinations,
     selectedDestinationSchedulePreference.timeBasis,
     selectedDestinationSchedulePreference.transportMode,
     destinationTargetTimeIso,
@@ -1186,7 +1197,7 @@ export function useWeatherOnAppState() {
     setAccountProfile(null);
     setTermsRequiredAccepted(false);
     setOutfitSaved(false);
-    setSavedDestinations([]);
+    updateSavedDestinations(() => []);
     setRecentlyRemovedDestination(null);
     setWardrobeOwnedItemIds([]);
     removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
@@ -1194,7 +1205,7 @@ export function useWeatherOnAppState() {
     setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
     setRecentlyRemovedWardrobeItemId(null);
     setAccountGateResult(null);
-  }, []);
+  }, [updateSavedDestinations]);
 
   const signOutAccount = useCallback(async () => {
     setAccountAuthStatus("signing-out");
@@ -1555,22 +1566,30 @@ export function useWeatherOnAppState() {
   }, []);
 
   const saveSelectedDestination = useCallback((careEnabled = true) => {
-    setDestinationSelectionReady(true);
-    setSavedDestinations((current) => {
+    const current = savedDestinationsRef.current;
+    if (!canSaveDestination(current, selectedDestinationPlace.id)) {
+      setDestinationLimitNotice(true);
+      return false;
+    }
+    const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
+    const nextDestination: SavedDestination = {
+      place: selectedDestinationPlace,
+      careEnabled,
+      alertCondition: selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition,
+      schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
+      travelEstimate: selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate,
+      savedAtLabel: exists ? "업데이트됨" : "방금 저장",
+      changeStatus: exists ? "updated" : "saved",
+    };
+    updateSavedDestinations((current) => {
       const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
-      const nextDestination: SavedDestination = {
-        place: selectedDestinationPlace,
-        careEnabled,
-        alertCondition: selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition,
-        schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
-        travelEstimate: selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate,
-        savedAtLabel: exists ? "업데이트됨" : "방금 저장",
-        changeStatus: exists ? "updated" : "saved",
-      };
       return exists
         ? current.map((destination) => (destination.place.id === selectedDestinationPlace.id ? nextDestination : destination))
         : [nextDestination, ...current];
     });
+    setDestinationSelectionReady(true);
+    setDestinationLimitNotice(false);
+    return true;
   }, [
     previewDestinationAlertCondition,
     previewDestinationSchedulePreference,
@@ -1579,6 +1598,7 @@ export function useWeatherOnAppState() {
     selectedSavedDestination?.alertCondition,
     selectedSavedDestination?.schedulePreference,
     selectedSavedDestination?.travelEstimate,
+    updateSavedDestinations,
   ]);
 
   const startAccountGate = useCallback((reason: GateReason, returnTo: AccountGateReturnRouteId, selectedDestinationName?: string) => {
@@ -1587,13 +1607,14 @@ export function useWeatherOnAppState() {
   }, [accountLinked, state.outfit.variant]);
 
   const saveDestination = useCallback((returnTo: P0RouteId = "G1") => {
-    saveSelectedDestination(permissionReady);
+    if (!saveSelectedDestination(permissionReady)) return false;
     resetPlaceSearch();
     setPreviewDestinationCareEnabled(permissionReady);
     setAccountGateResult(createAccountGateResult("destination-care", returnTo));
     if (route === "O6" || destinationAddReturnRoute === "O6") setOnboardingCompleted(true);
     setDestinationAddReturnRoute("G1");
     setRoute(returnTo);
+    return true;
   }, [destinationAddReturnRoute, permissionReady, resetPlaceSearch, route, saveSelectedDestination]);
 
   const toggleDestinationCare = useCallback(() => {
@@ -1604,16 +1625,16 @@ export function useWeatherOnAppState() {
       return;
     }
     if (destinationSaved) {
-      setSavedDestinations((current) =>
+      updateSavedDestinations((current) =>
         current.map((destination) =>
           destination.place.id === selectedDestinationPlace.id ? { ...destination, careEnabled: nextCareEnabled, savedAtLabel: "업데이트됨", changeStatus: "updated" } : destination,
         ),
       );
     } else {
-      saveSelectedDestination(nextCareEnabled);
+      if (!saveSelectedDestination(nextCareEnabled)) return;
     }
     setPreviewDestinationCareEnabled(nextCareEnabled);
-  }, [destinationCareEnabled, destinationSaved, permissionReady, saveSelectedDestination, selectedDestinationPlace.id, selectedDestinationPlace.name]);
+  }, [destinationCareEnabled, destinationSaved, permissionReady, saveSelectedDestination, selectedDestinationPlace.id, selectedDestinationPlace.name, updateSavedDestinations]);
 
   const toggleSavedDestinationCare = useCallback((placeId: string) => {
     const matchedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
@@ -1623,17 +1644,17 @@ export function useWeatherOnAppState() {
       setRoute("O3");
       return;
     }
-    setSavedDestinations((current) =>
+    updateSavedDestinations((current) =>
       current.map((destination) =>
         destination.place.id === placeId ? { ...destination, careEnabled: !destination.careEnabled, savedAtLabel: "업데이트됨", changeStatus: "updated" } : destination,
       ),
     );
-  }, [permissionReady, savedDestinations]);
+  }, [permissionReady, savedDestinations, updateSavedDestinations]);
 
   const setSelectedDestinationSchedulePreference = useCallback((nextPreference: DestinationSchedulePreference) => {
     setPreviewDestinationSchedulePreference(nextPreference);
     if (destinationSaved) {
-      setSavedDestinations((current) =>
+      updateSavedDestinations((current) =>
         current.map((destination) =>
           destination.place.id === selectedDestinationPlace.id
             ? { ...destination, schedulePreference: nextPreference, savedAtLabel: "업데이트됨", changeStatus: "updated" }
@@ -1641,7 +1662,7 @@ export function useWeatherOnAppState() {
         ),
       );
     }
-  }, [destinationSaved, selectedDestinationPlace.id]);
+  }, [destinationSaved, selectedDestinationPlace.id, updateSavedDestinations]);
 
   const setSelectedDestinationTargetArrivalTime = useCallback((targetArrivalTime: string) => {
     const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
@@ -1684,10 +1705,12 @@ export function useWeatherOnAppState() {
   }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
 
   const removeSavedDestination = useCallback((placeId: string) => {
-    const removedDestination = savedDestinations.find((destination) => destination.place.id === placeId);
+    const current = savedDestinationsRef.current;
+    const removedDestination = current.find((destination) => destination.place.id === placeId);
     if (!removedDestination) return;
-    const nextDestinations = savedDestinations.filter((destination) => destination.place.id !== placeId);
-    setSavedDestinations(nextDestinations);
+    const nextDestinations = current.filter((destination) => destination.place.id !== placeId);
+    updateSavedDestinations(() => nextDestinations);
+    setDestinationLimitNotice(false);
     if (recentlyRemovedDestinationTimerRef.current) clearTimeout(recentlyRemovedDestinationTimerRef.current);
     setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제", changeStatus: "removed" });
     recentlyRemovedDestinationTimerRef.current = setTimeout(() => {
@@ -1703,12 +1726,16 @@ export function useWeatherOnAppState() {
       setWeatherProviderMode("ready");
       setWeatherRefreshTick((value) => value + 1);
     }
-  }, [savedDestinations, selectedDestinationPlace.id]);
+  }, [selectedDestinationPlace.id, updateSavedDestinations]);
 
   const restoreRemovedDestination = useCallback(() => {
     if (!recentlyRemovedDestination) return;
     const restoredDestination: SavedDestination = { ...recentlyRemovedDestination, savedAtLabel: "복구됨", changeStatus: "restored" };
-    setSavedDestinations((current) => {
+    if (!canSaveDestination(savedDestinationsRef.current, restoredDestination.place.id)) {
+      setDestinationLimitNotice(true);
+      return;
+    }
+    updateSavedDestinations((current) => {
       const exists = current.some((destination) => destination.place.id === restoredDestination.place.id);
       return exists
         ? current.map((destination) => (destination.place.id === restoredDestination.place.id ? restoredDestination : destination))
@@ -1721,7 +1748,8 @@ export function useWeatherOnAppState() {
     dismissRemovedDestination();
     setWeatherProviderMode("ready");
     setWeatherRefreshTick((value) => value + 1);
-  }, [dismissRemovedDestination, recentlyRemovedDestination]);
+    setDestinationLimitNotice(false);
+  }, [dismissRemovedDestination, recentlyRemovedDestination, updateSavedDestinations]);
 
   const requestAccountGate = (reason: GateReason, returnTo: AccountGateReturnRouteId) => {
     if (accountLinked && termsRequiredAccepted) {
@@ -1732,7 +1760,7 @@ export function useWeatherOnAppState() {
           setRoute("O3");
           return;
         }
-        saveSelectedDestination(true);
+        if (!saveSelectedDestination(true)) return;
         setPreviewDestinationCareEnabled(true);
       }
       setAccountGateResult(createAccountGateResult(reason, returnTo));
@@ -1747,13 +1775,17 @@ export function useWeatherOnAppState() {
   }, []);
 
   const completeAccountAction = (pendingGate: AccountGateState | null) => {
-    if (!pendingGate) return;
+    if (!pendingGate) return true;
     if (pendingGate.reason === "save-outfit") setOutfitSaved(true);
     if (pendingGate.reason === "destination-care") {
-      saveSelectedDestination(permissionReady);
+      if (!saveSelectedDestination(permissionReady)) {
+        setAccountAuthMessage("목적지는 최대 3개까지 등록할 수 있어요.\n기존 목적지를 삭제한 뒤 추가해 주세요.");
+        return false;
+      }
       setPreviewDestinationCareEnabled(permissionReady);
     }
     setAccountGateResult(createAccountGateResult(pendingGate.reason, pendingGate.returnTo));
+    return true;
   };
 
   const signInWithProvider = async (provider: AccountProvider) => {
@@ -1770,8 +1802,7 @@ export function useWeatherOnAppState() {
         return;
       }
       const returnTo = gate?.returnTo ?? "H1";
-      completeAccountAction(gate);
-      setRoute(returnTo);
+      if (completeAccountAction(gate)) setRoute(returnTo);
       setGate(null);
     } catch (error) {
       const message = getAccountAuthDisplayMessage(error);
@@ -1808,8 +1839,7 @@ export function useWeatherOnAppState() {
       return;
     }
     const returnTo = gate?.returnTo ?? "H1";
-    completeAccountAction(gate);
-    setRoute(returnTo);
+    if (completeAccountAction(gate)) setRoute(returnTo);
     setGate(null);
   };
 
@@ -1835,13 +1865,13 @@ export function useWeatherOnAppState() {
       setPermissionReady(result.granted);
     }
     if (permissionGate?.reason === "destination-care") {
-      saveSelectedDestination(permissionCompleted);
+      if (!saveSelectedDestination(permissionCompleted)) return;
       setPreviewDestinationCareEnabled(permissionCompleted);
     }
     if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
       if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
       if (permissionGate.pendingAccountAction === "destination-care") {
-        saveSelectedDestination(notificationCompleted);
+        if (!saveSelectedDestination(notificationCompleted)) return;
         setPreviewDestinationCareEnabled(notificationCompleted);
       }
       setAccountGateResult(createAccountGateResult(permissionGate.pendingAccountAction, getAccountResultReturnRoute(permissionGate.returnTo)));
@@ -1861,13 +1891,13 @@ export function useWeatherOnAppState() {
   const skipPermissionGate = () => {
     if (permissionGate) setPermissionGateResult(createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo));
     if (permissionGate?.reason === "destination-care") {
-      saveSelectedDestination(false);
+      if (!saveSelectedDestination(false)) return;
       setPreviewDestinationCareEnabled(false);
     }
     if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
       if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
       if (permissionGate.pendingAccountAction === "destination-care") {
-        saveSelectedDestination(false);
+        if (!saveSelectedDestination(false)) return;
         setPreviewDestinationCareEnabled(false);
       }
       setAccountGateResult(createAccountGateResult(permissionGate.pendingAccountAction, getAccountResultReturnRoute(permissionGate.returnTo)));
@@ -1926,6 +1956,7 @@ export function useWeatherOnAppState() {
     placeSearchOrigin,
     destinationSaved,
     savedDestinations,
+    destinationLimitNotice,
     recentlyRemovedDestination,
     destinationCareEnabled,
     selectedDestinationAlertCondition,
@@ -2031,6 +2062,7 @@ export function useWeatherOnAppState() {
     removeSavedDestination,
     restoreRemovedDestination,
     dismissRemovedDestination,
+    dismissDestinationLimitNotice: () => setDestinationLimitNotice(false),
     searchPlaces,
     selectDestinationPlace,
     markNotificationRead,

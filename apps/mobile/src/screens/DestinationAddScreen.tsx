@@ -2,6 +2,7 @@ import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
+import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
@@ -17,6 +18,7 @@ import { formatDistance } from "../utils/units";
 export function DestinationAddScreen({
   state,
   destinationSaved,
+  destinationLimitNotice,
   deviceLocationState,
   placeSearchOrigin,
   selectedDestinationPlace,
@@ -30,6 +32,7 @@ export function DestinationAddScreen({
   onSaveDestination,
   onSearchPlaces,
   onSelectDestinationPlace,
+  onDismissDestinationLimitNotice,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -273,6 +276,7 @@ export function DestinationAddScreen({
           </View>
         </View>
       )}
+      {destinationLimitNotice ? <MaterialSnackbar message="목적지는 최대 3개까지 등록할 수 있어요." supportingText="기존 목적지를 삭제한 뒤 추가해 주세요." onDismiss={onDismissDestinationLimitNotice} /> : null}
     </View>
   );
 }

@@ -46,6 +46,7 @@ export function DestinationCareScreen({
   selectedStyles,
   smartCareScenario,
   destinationSaved,
+  destinationLimitNotice,
   onNavigate,
   onOpenAlertSettings,
   onToggleDestinationCare,
@@ -55,6 +56,7 @@ export function DestinationCareScreen({
   onToggleDestinationRepeat,
   onToggleDestinationRepeatDay,
   onRemoveSavedDestination,
+  onDismissDestinationLimitNotice,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -425,6 +427,8 @@ export function DestinationCareScreen({
 
       {directionsMessage ? (
         <MaterialSnackbar key={directionsMessage} message={directionsMessage} onDismiss={() => setDirectionsMessage(null)} />
+      ) : destinationLimitNotice ? (
+        <MaterialSnackbar message="목적지는 최대 3개까지 등록할 수 있어요." supportingText="기존 목적지를 삭제한 뒤 추가해 주세요." onDismiss={onDismissDestinationLimitNotice} />
       ) : null}
 
       <BottomSheet

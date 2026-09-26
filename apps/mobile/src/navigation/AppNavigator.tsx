@@ -138,6 +138,7 @@ export function AppNavigator() {
     placeSearchOrigin: appState.placeSearchOrigin,
     destinationSaved: appState.destinationSaved,
     savedDestinations: appState.savedDestinations,
+    destinationLimitNotice: appState.destinationLimitNotice,
     recentlyRemovedDestination: appState.recentlyRemovedDestination,
     destinationCareEnabled: appState.destinationCareEnabled,
     selectedDestinationAlertCondition: appState.selectedDestinationAlertCondition,
@@ -230,6 +231,7 @@ export function AppNavigator() {
     onRemoveSavedDestination: appState.removeSavedDestination,
     onRestoreRemovedDestination: appState.restoreRemovedDestination,
     onDismissRemovedDestination: appState.dismissRemovedDestination,
+    onDismissDestinationLimitNotice: appState.dismissDestinationLimitNotice,
     onSearchPlaces: appState.searchPlaces,
     onSelectDestinationPlace: appState.selectDestinationPlace,
     onMarkNotificationRead: appState.markNotificationRead,
@@ -328,6 +330,7 @@ export function AppNavigator() {
           gate={appState.permissionGate}
           locationReady={appState.locationReady}
           permissionReady={appState.permissionReady}
+          destinationLimitNotice={appState.destinationLimitNotice}
           onCancel={appState.skipPermissionGate}
           onComplete={appState.completePermissionGate}
         />

@@ -50,6 +50,7 @@ export type P0ScreenProps = {
   placeSearchOrigin: WeatherLocationPreset | null;
   destinationSaved: boolean;
   savedDestinations: SavedDestination[];
+  destinationLimitNotice: boolean;
   recentlyRemovedDestination: SavedDestination | null;
   destinationCareEnabled: boolean;
   selectedDestinationAlertCondition: DestinationAlertCondition;
@@ -142,6 +143,7 @@ export type P0ScreenProps = {
   onRemoveSavedDestination: (placeId: string) => void;
   onRestoreRemovedDestination: () => void;
   onDismissRemovedDestination: () => void;
+  onDismissDestinationLimitNotice: () => void;
   onSearchPlaces: (query: string) => void;
   onSelectDestinationPlace: (place: PlaceSearchResult) => void;
   onMarkNotificationRead: (id: string) => void;

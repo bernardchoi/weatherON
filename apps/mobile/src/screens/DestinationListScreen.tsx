@@ -52,6 +52,7 @@ export function DestinationListScreen({
   accountGateResult,
   permissionGateResult,
   permissionReady,
+  destinationLimitNotice,
   temperatureUnit,
   wardrobeItems,
   styleGender,
@@ -63,6 +64,7 @@ export function DestinationListScreen({
   onSelectDestinationPlace,
   onRestoreRemovedDestination,
   onDismissRemovedDestination,
+  onDismissDestinationLimitNotice,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
@@ -155,6 +157,7 @@ export function DestinationListScreen({
               <Text style={[styles.addDestinationIcon, { color: theme.clear }]}>+</Text>
               <Text style={[styles.addDestinationText, { color: theme.clear }]}>목적지 추가</Text>
             </FeedbackPressable>
+            {savedDestinations.length >= 3 ? <Text style={[styles.limitHint, { color: theme.muted }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
           </View>
         ) : null}
 
@@ -168,6 +171,12 @@ export function DestinationListScreen({
           onAction={onRestoreRemovedDestination}
           onDismiss={onDismissRemovedDestination}
           duration={3800}
+        />
+      ) : destinationLimitNotice ? (
+        <MaterialSnackbar
+          message="목적지는 최대 3개까지 등록할 수 있어요."
+          supportingText="기존 목적지를 삭제한 뒤 추가해 주세요."
+          onDismiss={onDismissDestinationLimitNotice}
         />
       ) : resultBanner ? (
         <MaterialSnackbar
@@ -383,7 +392,7 @@ function buildDestinationCards(
   if (!savedDestinations.length) return [];
   const originWeather = care.originWeather;
 
-  return savedDestinations.slice(0, 3).map((destination) => {
+  return savedDestinations.map((destination) => {
     const destinationWeather = destinationWeatherById[destination.place.id] ?? care.destinationWeather;
     const destinationRain = Math.max(destinationWeather.current.rainProbabilityPct, ...destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
     const destinationWind = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
@@ -646,6 +655,10 @@ const styles = StyleSheet.create({
   },
   secondaryActions: {
     gap: spacing.sm,
+  },
+  limitHint: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   addDestinationRail: {
     minHeight: 50,

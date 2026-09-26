@@ -15,11 +15,12 @@ type PermissionGateScreenProps = {
   gate: PermissionGateState | null;
   locationReady: boolean;
   permissionReady: boolean;
+  destinationLimitNotice: boolean;
   onComplete: () => void;
   onCancel: () => void;
 };
 
-export function PermissionGateScreen({ gate, locationReady, permissionReady, onComplete, onCancel }: PermissionGateScreenProps) {
+export function PermissionGateScreen({ gate, locationReady, permissionReady, destinationLimitNotice, onComplete, onCancel }: PermissionGateScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const gateLabel = gate?.resumeLabel ?? "알림 권한";
@@ -69,6 +70,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, onC
           <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "sky"} />
         </View>
         {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
+        {destinationLimitNotice ? <Text accessibilityLiveRegion="polite" style={[styles.stateCopy, { color: theme.warm }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
         <View style={styles.actions}>
           <AppButton label={primaryLabel} onPress={onComplete} />
           <AppButton

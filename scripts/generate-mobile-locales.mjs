@@ -11,6 +11,10 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "목적지는 최대 3개까지 등록할 수 있어요.": "You can save up to 3 destinations.",
+    "기존 목적지를 삭제한 뒤 추가해 주세요.": "Delete an existing destination before adding another.",
+    "목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.": "You can save up to 3 destinations. Delete an existing destination before adding another.",
+    "목적지는 최대 3개까지 등록할 수 있어요.\n기존 목적지를 삭제한 뒤 추가해 주세요.": "You can save up to 3 destinations.\nDelete an existing destination before adding another.",
     "개인정보처리방침": "Privacy Policy",
     "개인정보 수집·이용과 이용자 권리": "How we collect and use personal information, and your rights",
     "수집 항목: 로그인 식별자와 계정 프로필, 위치정보와 저장 위치, 기기정보와 앱 사용 로그, 사용자가 선택한 옷장 사진과 설정 정보": "Information we collect: login identifiers and account profile information; location information and saved locations; device information and app usage logs; wardrobe photos selected by the user; and settings information",
@@ -121,6 +125,10 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "목적지는 최대 3개까지 등록할 수 있어요.": "目的地は最大3件まで登録できます。",
+    "기존 목적지를 삭제한 뒤 추가해 주세요.": "既存の目的地を削除してから追加してください。",
+    "목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.": "目的地は最大3件まで登録できます。既存の目的地を削除してから追加してください。",
+    "목적지는 최대 3개까지 등록할 수 있어요.\n기존 목적지를 삭제한 뒤 추가해 주세요.": "目的地は最大3件まで登録できます。\n既存の目的地を削除してから追加してください。",
     "개인정보처리방침": "プライバシーポリシー（個人情報保護方針）",
     "개인정보 수집·이용과 이용자 권리": "個人情報の取得・利用と利用者の権利",
     "수집 항목: 로그인 식별자와 계정 프로필, 위치정보와 저장 위치, 기기정보와 앱 사용 로그, 사용자가 선택한 옷장 사진과 설정 정보": "取得する情報：ログイン識別子およびアカウントのプロフィール情報、位置情報および保存済みの場所、端末情報およびアプリの利用ログ、利用者が選択したワードローブ写真、設定情報",
