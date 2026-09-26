@@ -20,6 +20,7 @@ import { getDestinationImageAsset } from "../utils/destinationImage";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { addMinutesToTime } from "../utils/zonedDateTime";
 import { formatTemperature } from "../utils/units";
+import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
 import {
   departureLiveActivityAutoLeadMinutes,
   endDepartureLiveActivity,
@@ -50,6 +51,7 @@ export function DestinationCareScreen({
   onNavigate,
   onOpenAlertSettings,
   onToggleDestinationCare,
+  onSetDestinationLabel,
   onSetDestinationTargetArrivalTime,
   onSetDestinationTimeBasis,
   onSetDestinationTransportMode,
@@ -66,9 +68,9 @@ export function DestinationCareScreen({
   const destinationOutfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
   const destinationOutfitReason = destinationOutfit.reasons[0] ?? "목적지 날씨 기준으로 다시 고름";
   const headerTitle = selectedDestinationPlace?.name ?? care.name;
-  const justSaved = Boolean(
-    selectedDestinationPlace && savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id)?.changeStatus === "saved",
-  );
+  const selectedSavedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id);
+  const justSaved = selectedSavedDestination?.changeStatus === "saved";
+  const selectedDestinationLabel = selectedSavedDestination?.label ?? null;
   const timeBasis = selectedDestinationSchedulePreference.timeBasis;
   const selectedTargetTime = selectedDestinationSchedulePreference.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes;
@@ -231,6 +233,20 @@ export function DestinationCareScreen({
           <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
             <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
             <Text style={[styles.savedBannerBody, { color: theme.muted }]}>아래 출발 시간과 날씨 비교가 이 목적지 기준으로 계산됨</Text>
+          </View>
+        ) : null}
+
+        {destinationSaved ? (
+          <View style={[styles.labelPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+            <View style={styles.labelCopy}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>목적지 라벨</Text>
+              <Text style={[styles.labelHint, { color: theme.subtle }]}>집 또는 회사를 지정</Text>
+            </View>
+            <View style={styles.labelOptions}>
+              <DestinationLabelOption label={null} selected={selectedDestinationLabel === null} onPress={onSetDestinationLabel} theme={theme} />
+              <DestinationLabelOption label="home" selected={selectedDestinationLabel === "home"} onPress={onSetDestinationLabel} theme={theme} />
+              <DestinationLabelOption label="work" selected={selectedDestinationLabel === "work"} onPress={onSetDestinationLabel} theme={theme} />
+            </View>
           </View>
         ) : null}
 
@@ -490,6 +506,31 @@ export function DestinationCareScreen({
         />
       </BottomSheet>
     </View>
+  );
+}
+
+function DestinationLabelOption({
+  label,
+  selected,
+  onPress,
+  theme,
+}: {
+  label: DestinationLabel | null;
+  selected: boolean;
+  onPress: (label: DestinationLabel | null) => void;
+  theme: AppTheme;
+}) {
+  const text = label ? getDestinationLabelText(label) : "라벨 없음";
+  return (
+    <FeedbackPressable
+      accessibilityLabel={text}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={() => onPress(label)}
+      style={[styles.labelOption, { backgroundColor: selected ? `${theme.clear}18` : theme.cardMuted, borderColor: selected ? theme.clear : theme.border }]}
+    >
+      <Text style={[styles.labelOptionText, { color: selected ? theme.clear : theme.text }]}>{text}</Text>
+    </FeedbackPressable>
   );
 }
 
@@ -921,6 +962,38 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
+  },
+  labelPanel: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+  },
+  labelCopy: {
+    gap: 2,
+  },
+  labelHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  labelOptions: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  labelOption: {
+    minHeight: 40,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+    borderWidth: 1,
+    borderRadius: radius.pill,
+  },
+  labelOptionText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800",
   },
   content: {
     paddingBottom: spacing.lg,

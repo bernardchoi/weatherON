@@ -11,6 +11,10 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "집": "Home",
+    "목적지 라벨": "Destination label",
+    "집 또는 회사를 지정": "Set Home or Company",
+    "라벨 없음": "No label",
     "목적지는 최대 3개까지 등록할 수 있어요.": "You can save up to 3 destinations.",
     "기존 목적지를 삭제한 뒤 추가해 주세요.": "Delete an existing destination before adding another.",
     "목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.": "You can save up to 3 destinations. Delete an existing destination before adding another.",
@@ -125,6 +129,10 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "집": "自宅",
+    "목적지 라벨": "目的地ラベル",
+    "집 또는 회사를 지정": "自宅または会社を指定",
+    "라벨 없음": "ラベルなし",
     "목적지는 최대 3개까지 등록할 수 있어요.": "目的地は最大3件まで登録できます。",
     "기존 목적지를 삭제한 뒤 추가해 주세요.": "既存の目的地を削除してから追加してください。",
     "목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.": "目的地は最大3件まで登録できます。既存の目的地を削除してから追加してください。",

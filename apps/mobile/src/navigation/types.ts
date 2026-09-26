@@ -4,6 +4,7 @@ import type { PlaceSearchResult } from "@weatheron/shared";
 import type { WardrobeItem } from "@weatheron/shared";
 import type {
   DestinationAlertCondition,
+  DestinationLabel,
   AlertSettingsRouteState,
   AlertSettingsFocus,
   AlertPreferenceKey,
@@ -135,6 +136,7 @@ export type P0ScreenProps = {
   onReturnFromDestinationAdd: () => void;
   onToggleDestinationCare: () => void;
   onToggleSavedDestinationCare: (placeId: string) => void;
+  onSetDestinationLabel: (label: DestinationLabel | null) => void;
   onSetDestinationTargetArrivalTime: (targetArrivalTime: string) => void;
   onSetDestinationTimeBasis: (timeBasis: DestinationSchedulePreference["timeBasis"]) => void;
   onSetDestinationTransportMode: (transportMode: DestinationTransportMode) => void;

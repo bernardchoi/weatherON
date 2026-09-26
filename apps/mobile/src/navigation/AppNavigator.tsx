@@ -223,6 +223,7 @@ export function AppNavigator() {
     onReturnFromDestinationAdd: appState.returnFromDestinationAdd,
     onToggleDestinationCare: appState.toggleDestinationCare,
     onToggleSavedDestinationCare: appState.toggleSavedDestinationCare,
+    onSetDestinationLabel: appState.setSelectedDestinationLabel,
     onSetDestinationTargetArrivalTime: appState.setSelectedDestinationTargetArrivalTime,
     onSetDestinationTimeBasis: appState.setSelectedDestinationTimeBasis,
     onSetDestinationTransportMode: appState.setSelectedDestinationTransportMode,

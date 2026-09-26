@@ -25,6 +25,7 @@ import {
   type AgeBand,
   type AlertPreferences,
   type DestinationAlertCondition,
+  isDestinationLabel,
   type DestinationSchedulePreference,
   type DestinationTransportMode,
   type DestinationTravelEstimate,
@@ -386,6 +387,7 @@ function normalizeSavedDestination(value: unknown): SavedDestination | null {
   const place = normalizePlaceSearchResultCategory(record.place);
   return {
     place,
+    label: isDestinationLabel(record.label) ? record.label : null,
     careEnabled: record.careEnabled,
     alertCondition: normalizeDestinationAlertCondition(record.alertCondition),
     schedulePreference: normalizeDestinationSchedulePreference(record.schedulePreference, place),

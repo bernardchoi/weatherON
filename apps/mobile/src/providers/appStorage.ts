@@ -21,6 +21,7 @@ type DestinationRow = {
   longitude: number;
   timezone: string;
   provider: string;
+  destination_label: string | null;
   care_enabled: number;
   alert_rain_threshold_pct: number;
   alert_lead_time_minutes: number;
@@ -273,6 +274,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         longitude REAL NOT NULL,
         timezone TEXT NOT NULL,
         provider TEXT NOT NULL,
+        destination_label TEXT,
         care_enabled INTEGER NOT NULL,
         alert_rain_threshold_pct REAL NOT NULL,
         alert_lead_time_minutes REAL NOT NULL,
@@ -419,6 +421,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
     `);
     await ensureDestinationScheduleColumns(database);
     await ensureDestinationStatusColumn(database);
+    await ensureDestinationLabelColumn(database);
     await ensureWeatherSnapshotColumns(database);
     await migrateLegacyStorage(database);
     return database;
@@ -601,6 +604,7 @@ async function readSavedDestinations(database: SQLiteExecutor): Promise<unknown[
   const rows = await database.getAllAsync<DestinationRow>("SELECT * FROM destinations ORDER BY seq");
   return Promise.all(rows.map(async (row) => ({
     place: placeFromRow(row),
+    label: row.destination_label === "home" || row.destination_label === "work" ? row.destination_label : null,
     careEnabled: row.care_enabled === 1,
     alertCondition: alertConditionFromRow(row),
     schedulePreference: {
@@ -625,17 +629,18 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
     const alertCondition = objectRecord(destination.alertCondition);
     const schedulePreference = objectRecord(destination.schedulePreference);
     const travelEstimate = objectRecord(destination.travelEstimate);
+    const destinationLabel = textValue(destination.label);
     const placeId = textValue(place.id) ?? `destination-${index}`;
     const timezone = textValue(place.timezone);
     if (!timezone) continue;
     await database.runAsync(
       `INSERT INTO destinations (
-        place_id, seq, name, address, category, country_code, latitude, longitude, timezone, provider,
+        place_id, seq, name, address, category, country_code, latitude, longitude, timezone, provider, destination_label,
         care_enabled, alert_rain_threshold_pct, alert_lead_time_minutes, alert_wind_threshold_ms,
         schedule_time_basis, schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
         travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at, travel_route_options_json,
         saved_at_label, change_status, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       placeId,
       index,
       textValue(place.name) ?? "",
@@ -646,6 +651,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       numberValue(objectRecord(place.coordinate).longitude),
       timezone,
       textValue(place.provider) ?? "fixture",
+      destinationLabel === "home" || destinationLabel === "work" ? destinationLabel : null,
       boolValue(destination.careEnabled) ? 1 : 0,
       numberValue(alertCondition.rainThresholdPct),
       numberValue(alertCondition.leadTimeMinutes),
@@ -1128,6 +1134,11 @@ async function ensureDestinationStatusColumn(database: SQLiteDatabase) {
       "저장됨",
     );
   }
+}
+
+async function ensureDestinationLabelColumn(database: SQLiteDatabase) {
+  const columns = new Set((await database.getAllAsync<{ name: string }>("PRAGMA table_info(destinations)")).map((row) => row.name));
+  if (!columns.has("destination_label")) await database.runAsync("ALTER TABLE destinations ADD COLUMN destination_label TEXT");
 }
 
 async function migrateLegacyStorage(database: SQLiteDatabase) {

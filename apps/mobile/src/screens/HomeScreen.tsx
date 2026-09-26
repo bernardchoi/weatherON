@@ -8,6 +8,7 @@ import { WeatherBackground } from "../components/WeatherBackground";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
+import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -343,7 +344,10 @@ function DestinationSelectorCard({
             <Image source={getDestinationTypeIcon(selectedDestination.place)} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.clear }]} />
           </View>
           <View style={styles.destinationSelectCopy}>
-            <RawText style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
+            <View style={styles.destinationChipTitleRow}>
+              {selectedDestination.label ? <DestinationLabelPill label={selectedDestination.label} theme={theme} /> : null}
+              <RawText style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
+            </View>
             <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(selectedDestination.place)}</Text>
           </View>
         </FeedbackPressable>
@@ -377,7 +381,10 @@ function DestinationSelectorCard({
                   <Image source={getDestinationTypeIcon(destination.place)} resizeMode="contain" style={[styles.destinationSheetIcon, { tintColor: theme.clear }]} />
                 </View>
                 <View style={styles.destinationSelectCopy}>
-                  <RawText style={[styles.destinationSheetOptionTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</RawText>
+                  <View style={styles.destinationChipTitleRow}>
+                    {destination.label ? <DestinationLabelPill label={destination.label} theme={theme} /> : null}
+                    <RawText style={[styles.destinationSheetOptionTitle, { color: selected ? theme.clear : theme.text }]} numberOfLines={1}>{destination.place.name}</RawText>
+                  </View>
                   <Text style={[styles.destinationSheetOptionMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(destination.place)}</Text>
                 </View>
                 {selected ? <Image source={uiIconAssets.check} resizeMode="contain" style={[styles.destinationSheetCheck, { tintColor: theme.clear }]} /> : null}
@@ -397,6 +404,14 @@ function DestinationSelectorCard({
           <Text style={[styles.destinationSheetAddText, { color: theme.gold }]}>새 목적지 추가</Text>
         </FeedbackPressable>
       </BottomSheet>
+    </View>
+  );
+}
+
+function DestinationLabelPill({ label, theme }: { label: DestinationLabel; theme: AppTheme }) {
+  return (
+    <View style={[styles.destinationLabelPill, { backgroundColor: `${theme.clear}18` }]}>
+      <Text style={[styles.destinationLabelText, { color: theme.clear }]}>{getDestinationLabelText(label)}</Text>
     </View>
   );
 }
@@ -1071,8 +1086,27 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   destinationChipTitle: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 14,
     lineHeight: 19,
+    fontWeight: "900",
+  },
+  destinationChipTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  destinationLabelPill: {
+    minHeight: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.pill,
+  },
+  destinationLabelText: {
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "900",
   },
   destinationChipMeta: {
@@ -1117,6 +1151,8 @@ const styles = StyleSheet.create({
     height: 20,
   },
   destinationSheetOptionTitle: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",

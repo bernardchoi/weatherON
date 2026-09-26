@@ -8,6 +8,7 @@ import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { getAutoBufferMinutes, getRouteArrivalTimeIso } from "../state/appStateHelpers";
+import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
@@ -39,6 +40,7 @@ type DestinationCardModel = {
   place: PlaceSearchResult;
   saved: boolean;
   careEnabled: boolean;
+  label: DestinationLabel | null;
   savedAtLabel: string;
   changeStatus: P0ScreenProps["savedDestinations"][number]["changeStatus"];
 };
@@ -331,6 +333,7 @@ function DestinationCard({
           <View style={styles.destinationTitleColumn}>
             <View style={styles.destinationNameRow}>
               {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
+              {item.label ? <DestinationLabelPill label={item.label} theme={theme} /> : null}
               <RawText style={[styles.destinationName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</RawText>
             </View>
             <RawText style={[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</RawText>
@@ -372,6 +375,14 @@ function DestinationCard({
 function getAlertPillLabel(careEnabled: boolean, permissionReady: boolean) {
   if (!permissionReady) return "권한 필요";
   return careEnabled ? "알림 켬" : "알림 꺼짐";
+}
+
+function DestinationLabelPill({ label, theme }: { label: DestinationLabel; theme: AppTheme }) {
+  return (
+    <View style={[styles.destinationLabelPill, { backgroundColor: `${theme.clear}18` }]}>
+      <Text style={[styles.destinationLabelText, { color: theme.clear }]}>{getDestinationLabelText(label)}</Text>
+    </View>
+  );
 }
 
 function getStatusColor(careEnabled: boolean, permissionReady: boolean, theme: AppTheme) {
@@ -431,6 +442,7 @@ function buildDestinationCards(
       place: destination.place,
       saved: true,
       careEnabled: destination.careEnabled,
+      label: destination.label,
       savedAtLabel: destination.savedAtLabel,
       changeStatus: destination.changeStatus,
     };
@@ -787,6 +799,18 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: 17,
     lineHeight: 22,
+    fontWeight: "900",
+  },
+  destinationLabelPill: {
+    minHeight: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.pill,
+  },
+  destinationLabelText: {
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "900",
   },
   destinationArea: {

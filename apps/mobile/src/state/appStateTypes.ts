@@ -9,6 +9,7 @@ import type { TravelEstimateResult } from "../providers/travelEstimateClient";
 export type { DestinationAlertCondition, DestinationTransportMode };
 
 export type DestinationRepeatDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type DestinationLabel = "home" | "work";
 
 export type GateReason = "account-connect" | "save-outfit" | "destination-care" | "notification" | "social-note" | "weather-report" | "add-destination";
 export type WeatherLocationMode = "auto" | "manual";
@@ -87,6 +88,7 @@ export type PermissionGateResultState = {
 
 export type SavedDestination = {
   place: PlaceSearchResult;
+  label: DestinationLabel | null;
   careEnabled: boolean;
   alertCondition: DestinationAlertCondition;
   schedulePreference: DestinationSchedulePreference;
@@ -94,6 +96,14 @@ export type SavedDestination = {
   savedAtLabel: string;
   changeStatus: "saved" | "updated" | "removed" | "restored";
 };
+
+export function isDestinationLabel(value: unknown): value is DestinationLabel {
+  return value === "home" || value === "work";
+}
+
+export function getDestinationLabelText(label: DestinationLabel) {
+  return label === "home" ? "집" : "회사";
+}
 
 export type NotificationHistoryItem = {
   id: string;

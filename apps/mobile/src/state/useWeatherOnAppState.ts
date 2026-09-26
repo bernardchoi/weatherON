@@ -81,6 +81,7 @@ import type {
   AlertSettingsRouteState,
   DestinationAddReturnRouteId,
   DestinationAlertCondition,
+  DestinationLabel,
   DestinationRepeatDay,
   DestinationSchedulePreference,
   DestinationTransportMode,
@@ -165,6 +166,7 @@ export type {
   AlertSettingsRouteState,
   DestinationAddReturnRouteId,
   DestinationAlertCondition,
+  DestinationLabel,
   DestinationRepeatDay,
   DestinationSchedulePreference,
   DestinationTransportMode,
@@ -1574,6 +1576,7 @@ export function useWeatherOnAppState() {
     const exists = current.some((destination) => destination.place.id === selectedDestinationPlace.id);
     const nextDestination: SavedDestination = {
       place: selectedDestinationPlace,
+      label: selectedSavedDestination?.label ?? null,
       careEnabled,
       alertCondition: selectedSavedDestination?.alertCondition ?? previewDestinationAlertCondition,
       schedulePreference: selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference,
@@ -1662,6 +1665,17 @@ export function useWeatherOnAppState() {
         ),
       );
     }
+  }, [destinationSaved, selectedDestinationPlace.id, updateSavedDestinations]);
+
+  const setSelectedDestinationLabel = useCallback((label: DestinationLabel | null) => {
+    if (!destinationSaved) return;
+    updateSavedDestinations((current) =>
+      current.map((destination) =>
+        destination.place.id === selectedDestinationPlace.id
+          ? { ...destination, label, savedAtLabel: "업데이트됨", changeStatus: "updated" }
+          : destination,
+      ),
+    );
   }, [destinationSaved, selectedDestinationPlace.id, updateSavedDestinations]);
 
   const setSelectedDestinationTargetArrivalTime = useCallback((targetArrivalTime: string) => {
@@ -2054,6 +2068,7 @@ export function useWeatherOnAppState() {
     returnFromDestinationAdd,
     toggleDestinationCare,
     toggleSavedDestinationCare,
+    setSelectedDestinationLabel,
     setSelectedDestinationTargetArrivalTime,
     setSelectedDestinationTimeBasis,
     setSelectedDestinationTransportMode,
