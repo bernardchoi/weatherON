@@ -2,7 +2,9 @@ const developmentProfiles = new Set(["development"]);
 const easProfile = process.env.EAS_BUILD_PROFILE;
 const isXcodeCloud = process.env.CI_XCODE_CLOUD === "TRUE";
 const buildVariant = process.env.WEATHERON_BUILD_VARIANT ?? easProfile ?? (isXcodeCloud ? "production" : "platform");
-const isDevelopmentBuild = developmentProfiles.has(easProfile) || process.env.WEATHERON_BUILD_VARIANT === "development";
+const isDevelopmentBuild = developmentProfiles.has(easProfile)
+  || process.env.WEATHERON_BUILD_VARIANT === "development"
+  || process.env.CONFIGURATION === "Debug";
 const isNotificationQaBuild = buildVariant === "qa";
 
 module.exports = ({ config }) => {
@@ -29,6 +31,7 @@ module.exports = ({ config }) => {
     usesAppleSignIn: true,
     entitlements: {
       ...(expo.ios?.entitlements ?? {}),
+      "aps-environment": isDevelopmentBuild ? "development" : "production",
       "com.apple.developer.devicecheck.appattest-environment": isDevelopmentBuild ? "development" : "production",
       "com.apple.security.application-groups": ["group.com.weatheron.mobile"],
     },
