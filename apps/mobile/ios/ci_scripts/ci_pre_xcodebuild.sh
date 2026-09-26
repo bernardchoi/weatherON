@@ -25,4 +25,15 @@ if [ -z "${EXPO_PUBLIC_WEATHER_API_TOKEN:-}" ]; then
   exit 1
 fi
 
+project_file="$CI_PRIMARY_REPOSITORY_PATH/apps/mobile/ios/WeatherON.xcodeproj/project.pbxproj"
+
+sed -i '' \
+  -e '/04C57CCC2C0F08A506196E75/,/name = Release;/ { /CODE_SIGN_STYLE = Automatic;/ i\
+                CODE_SIGNING_ALLOWED = NO;
+  }' \
+  -e '/13B07F951A680F5B00A75B9A/,/name = Release;/ { /CODE_SIGN_STYLE = Automatic;/ i\
+                CODE_SIGNING_ALLOWED = NO;
+  }' \
+  "$project_file"
+
 echo "WeatherON production environment is configured for the Xcode Cloud build."
