@@ -295,6 +295,7 @@ export function useWeatherOnAppState() {
   const weatherLocationModeRef = useRef(weatherLocationMode);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const widgetSnapshotContentKeyRef = useRef("");
+  const appLifecycleStateRef = useRef(AppState.currentState);
   const weatherLoadedFromNetworkRef = useRef(false);
   const locallyRestoredAccountLinkedRef = useRef(false);
   const persistedWeatherProviderResultRef = useRef<WeatherProviderResult | null>(null);
@@ -673,6 +674,17 @@ export function useWeatherOnAppState() {
   useEffect(() => {
     const intervalId = setInterval(() => setNowMinuteTick(Date.now()), 60 * 1000);
     return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      const previousState = appLifecycleStateRef.current;
+      appLifecycleStateRef.current = nextState;
+      if ((previousState === "background" || previousState === "inactive") && nextState === "active") {
+        setWeatherRefreshTick((value) => value + 1);
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {

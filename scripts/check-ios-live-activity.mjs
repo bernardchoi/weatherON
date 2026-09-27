@@ -110,6 +110,9 @@ assert.match(appState, /syncAutomaticDepartureLiveActivity\(automaticDepartureAc
 assert.match(appState, /status\.automaticStartSupported/u);
 assert.match(appState, /getDepartureLiveActivityActivationDelay\(automaticDepartureActivityInput\.departureAt\)/u);
 assert.match(appState, /widgetSnapshotContentKeyRef\.current === widgetSnapshotContentKey/u);
+assert.match(appState, /appLifecycleStateRef\.current = nextState/u);
+assert.match(appState, /previousState === "background" \|\| previousState === "inactive"/u);
+assert.match(appState, /nextState === "active"[\s\S]*?setWeatherRefreshTick\(\(value\) => value \+ 1\)/u);
 assert.doesNotMatch(appState, /new Date\(selectedDestinationDepartureAt\)\.getTime\(\) <= nowMinuteTick/u);
 assert.match(appStateHelpers, /repeatDays\.includes\(getWeekdayForZonedDate\(arrivalDate\)\)/u);
 assert.match(liveActivityProvider, /isDepartureLiveActivityAutoWindow\(input\.departureAt\)/u);
