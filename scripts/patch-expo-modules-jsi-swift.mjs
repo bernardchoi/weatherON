@@ -116,6 +116,13 @@ patchFile(join(expoModulesCoreRoot, "Core/Modules/Module.swift"), (original) =>
   ),
 );
 
+patchFile(join(packageRoot, "apple", "scripts", "build-xcframework.sh"), (original) =>
+  original.replace(
+    "    SWIFT_COMPILATION_MODE=wholemodule \\\n  )",
+    "    SWIFT_COMPILATION_MODE=wholemodule \\\n    2>&1 | sed '/^error: the following command failed with exit code 0 but produced no further output$/d'\n  )",
+  ),
+);
+
 patchFile(join(expoModulesCoreRoot, "Core/SharedObjects/SharedObject.swift"), (original) =>
   original.replace(
     "extension SharedObject: EventEmitter {",
