@@ -508,23 +508,24 @@ private struct WeatherONLegacySnapshot: Codable {
 
 private enum WeatherONStoreReader {
   static func load() -> (store: WeatherONWidgetStore, hasSharedSnapshot: Bool) {
-    if
-      let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier),
-      let data = try? Data(contentsOf: containerURL.appendingPathComponent(widgetStoreRelativePath, isDirectory: false)),
-      let store = try? JSONDecoder().decode(WeatherONWidgetStore.self, from: data)
-    {
-      return (store, true)
-    }
+    let fileStore = FileManager.default
+      .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+      .flatMap { try? Data(contentsOf: $0.appendingPathComponent(widgetStoreRelativePath, isDirectory: false)) }
+      .flatMap { try? JSONDecoder().decode(WeatherONWidgetStore.self, from: $0) }
+    let defaults = UserDefaults(suiteName: appGroupIdentifier)
+    let defaultsStore = defaults?
+      .string(forKey: widgetStoreKey)
+      .flatMap { $0.data(using: .utf8) }
+      .flatMap { try? JSONDecoder().decode(WeatherONWidgetStore.self, from: $0) }
 
-    guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return (.placeholder, false) }
-
-    if
-      let json = defaults.string(forKey: widgetStoreKey),
-      let data = json.data(using: .utf8),
-      let store = try? JSONDecoder().decode(WeatherONWidgetStore.self, from: data)
-    {
-      return (store, true)
+    // 파일 쓰기가 지연되거나 실패한 경우에도 최신 App Group defaults를 우선한다.
+    if let fileStore, let defaultsStore {
+      return (fileStore.updatedAt > defaultsStore.updatedAt ? fileStore : defaultsStore, true)
     }
+    if let defaultsStore { return (defaultsStore, true) }
+    if let fileStore { return (fileStore, true) }
+
+    guard let defaults else { return (.placeholder, false) }
 
     if
       let json = defaults.string(forKey: legacySnapshotKey),

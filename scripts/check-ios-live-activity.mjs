@@ -61,6 +61,7 @@ assert.match(widgetBundle, /WeatherONDepartureLiveActivity\(\)/u);
 assert.match(widgetBundle, /return entry\.hasSharedSnapshot \? entry : \.placeholder/u);
 assert.doesNotMatch(widgetBundle, /context\.isPreview \? \.placeholder/u);
 assert.match(widgetBundle, /Library\/Application Support\/WeatherONWidget\/weatheron-widget-store-v2\.json/u);
+assert.match(widgetBundle, /fileStore\.updatedAt > defaultsStore\.updatedAt \? fileStore : defaultsStore/u);
 assert.match(widgetBundle, /let kind = "WeatherONLocationWidgetV4"/u);
 assert.match(widgetBundle, /AppIntentConfiguration\(/u);
 assert.match(widgetBundle, /intent: WeatherONWidgetConfigurationIntent\.self/u);
@@ -91,6 +92,9 @@ assert.doesNotMatch(nativeModule, /WidgetCenter\.shared\.reloadAllTimelines\(\)/
 assert.match(nativeModule, /Library\/Application Support\/WeatherONWidget\/weatheron-widget-store-v2\.json/u);
 assert.match(nativeModule, /createDirectory\(/u);
 assert.match(nativeModule, /Data\(snapshotJson\.utf8\)/u);
+assert.match(nativeModule, /requestDepartureActivity\(attributes: attributes, content: content, pushType: \.token\)/u);
+assert.match(nativeModule, /requestDepartureActivity\(attributes: attributes, content: content, pushType: nil\)/u);
+assert.match(nativeModule, /pushType: PushType\?/u);
 
 const nativeBuildVersions = [...project.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/gu)].map((match) => match[1]);
 assert.ok(nativeBuildVersions.length > 0, "native build version missing");

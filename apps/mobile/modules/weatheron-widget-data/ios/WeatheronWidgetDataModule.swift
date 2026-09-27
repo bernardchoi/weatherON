@@ -155,28 +155,12 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       }
 
       await self.endAllDepartureActivities()
-      let startAt = departureAt.addingTimeInterval(-departureActivityLeadTime)
       let activity: Activity<WeatherONDepartureActivityAttributes>
-      if #available(iOS 26.0, *), startAt > Date() {
-        let alert = AlertConfiguration(
-          title: LocalizedStringResource("departure.alert.title", defaultValue: "출발 준비 시작"),
-          body: LocalizedStringResource("departure.alert.body", defaultValue: "\(payload.destinationName) 출발까지 60분 남았어요"),
-          sound: .default
-        )
-        activity = try Activity<WeatherONDepartureActivityAttributes>.request(
-          attributes: attributes,
-          content: content,
-          pushType: .token,
-          style: .standard,
-          alertConfiguration: alert,
-          start: startAt
-        )
-      } else {
-        activity = try Activity<WeatherONDepartureActivityAttributes>.request(
-          attributes: attributes,
-          content: content,
-          pushType: .token
-        )
+      do {
+        activity = try self.requestDepartureActivity(attributes: attributes, content: content, pushType: .token)
+      } catch {
+        // Push token 생성 실패가 Live Activity 표시 자체를 막으면 로컬 Activity로 계속한다.
+        activity = try self.requestDepartureActivity(attributes: attributes, content: content, pushType: nil)
       }
       self.observePushToken(for: activity)
       self.scheduleAutomaticEnd(for: activity)
@@ -225,6 +209,34 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
 
   private func localized(_ key: String) -> String {
     NSLocalizedString(key, bundle: .main, value: key, comment: "")
+  }
+
+  private func requestDepartureActivity(
+    attributes: WeatherONDepartureActivityAttributes,
+    content: ActivityContent<WeatherONDepartureActivityAttributes.ContentState>,
+    pushType: PushType?
+  ) throws -> Activity<WeatherONDepartureActivityAttributes> {
+    let startAt = attributes.departureAt.addingTimeInterval(-departureActivityLeadTime)
+    if #available(iOS 26.0, *), startAt > Date() {
+      let alert = AlertConfiguration(
+        title: LocalizedStringResource("departure.alert.title", defaultValue: "출발 준비 시작"),
+        body: LocalizedStringResource("departure.alert.body", defaultValue: "\(attributes.destinationName) 출발까지 60분 남았어요"),
+        sound: .default
+      )
+      return try Activity<WeatherONDepartureActivityAttributes>.request(
+        attributes: attributes,
+        content: content,
+        pushType: pushType,
+        style: .standard,
+        alertConfiguration: alert,
+        start: startAt
+      )
+    }
+    return try Activity<WeatherONDepartureActivityAttributes>.request(
+      attributes: attributes,
+      content: content,
+      pushType: pushType
+    )
   }
 
   private func scheduleAutomaticEnd(for activity: Activity<WeatherONDepartureActivityAttributes>) {
