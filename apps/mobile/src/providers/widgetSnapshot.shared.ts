@@ -120,7 +120,10 @@ export function createWeatheronWidgetLocationSnapshot(
     })),
     departureTime: options.departureTime,
     arrivalTime: options.arrivalTime,
-    travelMinutes: options.travelMinutes,
+    // Swift decodes this field as Int; live route providers may return fractions.
+    travelMinutes: typeof options.travelMinutes === "number" && Number.isFinite(options.travelMinutes)
+      ? Math.round(options.travelMinutes)
+      : undefined,
     transportMode: options.transportMode,
     deepLink: options.deepLink ?? weatheronWidgetDeepLink,
   };

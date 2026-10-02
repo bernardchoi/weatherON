@@ -48,6 +48,7 @@
     "check:wardrobe-analysis": "node scripts/check-wardrobe-analysis.mjs",
     "check:ios-launch-state": "node scripts/check-ios-launch-state.mjs",
     "check:ios-live-activity": "node scripts/check-ios-live-activity.mjs",
+    "check:ios-widget-sync": "node --no-warnings scripts/check-ios-widget-sync.mjs",
     "check:android-widget": "node scripts/check-android-widget.mjs",
     "check:android-live-update": "node scripts/check-android-live-update.mjs",
     "migrate:account-db:local": "npx --yes --cache ./.npm-cache wrangler d1 migrations apply WEATHERON_DB --local",

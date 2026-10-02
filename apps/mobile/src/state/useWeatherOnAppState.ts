@@ -26,9 +26,11 @@ import {
   createWeatheronWidgetStoreSnapshot,
   getWeatheronDestinationDeepLink,
   saveWeatheronWidgetSnapshot,
+  saveWeatheronWidgetLocations,
   subtractWidgetTime,
   type WeatheronWidgetLocationSnapshot,
 } from "../providers/widgetSnapshot";
+import { createWidgetLocations } from "../providers/widgetLocations";
 import {
   acceptAccountTerms,
   deleteAccountSession,
@@ -295,6 +297,7 @@ export function useWeatherOnAppState() {
   const weatherLocationModeRef = useRef(weatherLocationMode);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const widgetSnapshotContentKeyRef = useRef("");
+  const widgetLocationsKeyRef = useRef("");
   const appLifecycleStateRef = useRef(AppState.currentState);
   const weatherLoadedFromNetworkRef = useRef(false);
   const locallyRestoredAccountLinkedRef = useRef(false);
@@ -398,7 +401,7 @@ export function useWeatherOnAppState() {
     );
     const destinations = savedDestinations.reduce<WeatheronWidgetLocationSnapshot[]>((items, destination) => {
       const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
-      if (!weather) return items;
+      if (!weather || (Platform.OS === "ios" && weather.source === "fallback")) return items;
       const travelMinutes = placeSearchOrigin
         ? getTravelMinutesForTransport(
             destination.travelEstimate,
@@ -681,6 +684,9 @@ export function useWeatherOnAppState() {
       const previousState = appLifecycleStateRef.current;
       appLifecycleStateRef.current = nextState;
       if ((previousState === "background" || previousState === "inactive") && nextState === "active") {
+        // Retry delivery/reload even if the weather response has not changed.
+        widgetSnapshotContentKeyRef.current = "";
+        widgetLocationsKeyRef.current = "";
         setWeatherRefreshTick((value) => value + 1);
       }
     });
@@ -688,12 +694,26 @@ export function useWeatherOnAppState() {
   }, []);
 
   useEffect(() => {
-    if (!appStateHydrated || isWeatherLoading || (Platform.OS !== "ios" && Platform.OS !== "android")) return;
+    if (!appStateHydrated || Platform.OS !== "ios") return;
+    const locations = createWidgetLocations(activeWeatherLocation.locationName, savedDestinations);
+    const key = JSON.stringify(locations);
+    if (widgetLocationsKeyRef.current === key) return;
+    if (saveWeatheronWidgetLocations(locations)) widgetLocationsKeyRef.current = key;
+  }, [appStateHydrated, activeWeatherLocation.locationName, savedDestinations, weatherRefreshTick, nowMinuteTick]);
+
+  useEffect(() => {
+    if (!appStateHydrated || (Platform.OS !== "ios" && Platform.OS !== "android")) return;
+    if (Platform.OS === "android" && isWeatherLoading) return;
+    // Publish the same usable current snapshot that home already displays while
+    // destination requests are pending. Never overwrite it with launch fixtures
+    // or attach coordinates from a newly selected location to old weather.
+    if (Platform.OS === "ios" && (weatherProviderResult.current.source === "fallback"
+      || weatherProviderResult.current.locationId !== activeWeatherLocation.locationId)) return;
     if (widgetSnapshotContentKeyRef.current === widgetSnapshotContentKey) return;
     if (saveWeatheronWidgetSnapshot(widgetStoreSnapshot)) {
       widgetSnapshotContentKeyRef.current = widgetSnapshotContentKey;
     }
-  }, [appStateHydrated, isWeatherLoading, widgetSnapshotContentKey, widgetStoreSnapshot]);
+  }, [appStateHydrated, isWeatherLoading, widgetSnapshotContentKey, widgetStoreSnapshot, weatherRefreshTick, nowMinuteTick, weatherProviderResult.current, activeWeatherLocation.locationId]);
 
   useEffect(() => {
     if (!appStateHydrated) return;

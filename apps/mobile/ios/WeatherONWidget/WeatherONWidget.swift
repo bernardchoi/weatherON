@@ -507,6 +507,25 @@ private struct WeatherONLegacySnapshot: Codable {
 }
 
 private enum WeatherONStoreReader {
+  static func locations() -> [WeatherONLocationEntity]? {
+    let fileURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
+      .appendingPathComponent("Library/Application Support/WeatherONWidget/weatheron-widget-locations-v1.json")
+    if let fileURL, let data = try? Data(contentsOf: fileURL),
+       let locations = try? JSONDecoder().decode([WeatherONLocationEntity].self, from: data) {
+      return locations
+    }
+    return UserDefaults(suiteName: appGroupIdentifier)?.string(forKey: "weatheron.widget.locations.v1")
+      .flatMap { $0.data(using: .utf8) }
+      .flatMap { try? JSONDecoder().decode([WeatherONLocationEntity].self, from: $0) }
+  }
+
+  static func hasWeather(selectionID: String?, store: WeatherONWidgetStore, hasSharedSnapshot: Bool) -> Bool {
+    guard hasSharedSnapshot else { return false }
+    guard let selectionID, selectionID != currentLocationEntityID else { return true }
+    if let catalog = locations(), !catalog.contains(where: { $0.id == selectionID }) { return false }
+    return store.destinations.contains(where: { $0.id == selectionID })
+  }
+
   static func load() -> (store: WeatherONWidgetStore, hasSharedSnapshot: Bool) {
     let fileStore = FileManager.default
       .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
@@ -566,7 +585,7 @@ private enum WeatherONTimelineFactory {
     return WeatherONEntry(
       date: date,
       location: WeatherONStoreReader.location(for: selectionID, in: loaded.store),
-      hasSharedSnapshot: loaded.hasSharedSnapshot,
+      hasSharedSnapshot: WeatherONStoreReader.hasWeather(selectionID: selectionID, store: loaded.store, hasSharedSnapshot: loaded.hasSharedSnapshot),
       visualPhase: phase,
       localization: loaded.store.localization
     )
@@ -574,9 +593,14 @@ private enum WeatherONTimelineFactory {
 
   static func timeline(selectionID: String?) -> Timeline<WeatherONEntry> {
     let now = Date()
-    let refresh = now.addingTimeInterval(90 * 60)
+    // Re-read app deliveries if WidgetKit coalesced an explicit reload. This is
+    // a cache refresh, not a network weather request.
+    let refresh = now.addingTimeInterval(15 * 60)
     let loaded = WeatherONStoreReader.load()
     let location = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
+    let hasSharedSnapshot = WeatherONStoreReader.hasWeather(
+      selectionID: selectionID, store: loaded.store, hasSharedSnapshot: loaded.hasSharedSnapshot
+    )
     var entryDates = (0...48).map { phase in
       Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
     }
@@ -592,7 +616,7 @@ private enum WeatherONTimelineFactory {
       WeatherONEntry(
         date: date,
         location: location,
-        hasSharedSnapshot: loaded.hasSharedSnapshot,
+        hasSharedSnapshot: hasSharedSnapshot,
         visualPhase: phase,
         localization: loaded.store.localization
       )
@@ -602,11 +626,11 @@ private enum WeatherONTimelineFactory {
 
   static func snapshot(selectionID: String?) -> WeatherONEntry {
     let entry = entry(selectionID: selectionID)
-    return entry.hasSharedSnapshot ? entry : .placeholder
+    return entry
   }
 }
 
-struct WeatherONLocationEntity: AppEntity, Identifiable {
+struct WeatherONLocationEntity: AppEntity, Identifiable, Codable {
   static let typeDisplayRepresentation: TypeDisplayRepresentation = "날씨 위치"
   static let defaultQuery = WeatherONLocationQuery()
 
@@ -624,7 +648,14 @@ struct WeatherONLocationEntity: AppEntity, Identifiable {
 
 struct WeatherONLocationQuery: EntityQuery {
   func entities(for identifiers: [WeatherONLocationEntity.ID]) async throws -> [WeatherONLocationEntity] {
-    availableEntities().filter { identifiers.contains($0.id) }
+    let available = availableEntities()
+    // Preserve an installed widget's selection when a place is deleted or the
+    // shared container is temporarily unreadable. Resolving it to nil can make
+    // WidgetKit select current location and display unrelated weather.
+    return identifiers.map { id in
+      available.first(where: { $0.id == id })
+        ?? WeatherONLocationEntity(id: id, name: "앱에서 업데이트", kind: id == currentLocationEntityID ? "current" : "destination")
+    }
   }
 
   func suggestedEntities() async throws -> [WeatherONLocationEntity] {
@@ -636,7 +667,12 @@ struct WeatherONLocationQuery: EntityQuery {
   }
 
   private func availableEntities() -> [WeatherONLocationEntity] {
-    let store = WeatherONStoreReader.load().store
+    if let locations = WeatherONStoreReader.locations() { return locations }
+    let loaded = WeatherONStoreReader.load()
+    guard loaded.hasSharedSnapshot else {
+      return [WeatherONLocationEntity(id: currentLocationEntityID, name: "현재 위치", kind: "current")]
+    }
+    let store = loaded.store
     return [WeatherONLocationEntity(id: currentLocationEntityID, name: store.current.locationName, kind: "current")]
       + store.destinations.map { WeatherONLocationEntity(id: $0.id, name: $0.locationName, kind: "destination") }
   }
@@ -686,13 +722,22 @@ private struct WeatherONWidgetView: View {
 
   var body: some View {
     Group {
-      switch family {
-      case .systemMedium:
-        WeatherONMediumView(entry: entry, palette: palette)
-      case .systemLarge:
-        WeatherONLargeView(entry: entry, palette: palette)
-      default:
-        WeatherONSmallView(entry: entry, palette: palette)
+      if !entry.hasSharedSnapshot {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("WeatherON").font(.headline)
+          Text("앱에서 업데이트").font(.subheadline)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(16)
+      } else {
+        switch family {
+        case .systemMedium:
+          WeatherONMediumView(entry: entry, palette: palette)
+        case .systemLarge:
+          WeatherONLargeView(entry: entry, palette: palette)
+        default:
+          WeatherONSmallView(entry: entry, palette: palette)
+        }
       }
     }
     .widgetURL(entry.location.deepLinkURL)
@@ -891,7 +936,7 @@ private struct WeatherONHeader: View {
     let minutes = max(0, Int(entry.date.timeIntervalSince(observedAt) / 60))
     if minutes < 1 { return "방금 전" }
     if minutes < 60 { return String(format: weatherONLocalized("%lld분 전"), Int64(minutes)) }
-    return "최근 업데이트"
+    return observedAt.formatted(date: .abbreviated, time: .shortened)
   }
 }
 

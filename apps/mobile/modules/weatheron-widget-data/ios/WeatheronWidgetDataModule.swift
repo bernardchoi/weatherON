@@ -32,7 +32,6 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   private var departureTokenTask: Task<Void, Never>?
   private var observedActivityId: String?
   private var departureEndWorkItem: DispatchWorkItem?
-  private var widgetReloadWorkItem: DispatchWorkItem?
 
   public func definition() -> ModuleDefinition {
     Name("WeatheronWidgetData")
@@ -40,40 +39,15 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     OnDestroy { self.departureTokenTask?.cancel() }
 
     Function("saveSnapshot") { (snapshotJson: String) -> Bool in
-      guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return false }
+      self.saveWidgetJSON(snapshotJson, key: widgetSnapshotKey, relativePath: widgetSnapshotRelativePath)
+    }
 
-      let snapshotData = Data(snapshotJson.utf8)
-      let fileURL = FileManager.default
-        .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
-        .appendingPathComponent(widgetSnapshotRelativePath, isDirectory: false)
-      let previousFileData = fileURL.flatMap { try? Data(contentsOf: $0) }
-      let changed = defaults.string(forKey: widgetSnapshotKey) != snapshotJson || previousFileData != snapshotData
-      guard changed else { return true }
-
-      defaults.set(snapshotJson, forKey: widgetSnapshotKey)
-      defaults.synchronize()
-
-      if let fileURL {
-        try? FileManager.default.createDirectory(
-          at: fileURL.deletingLastPathComponent(),
-          withIntermediateDirectories: true
-        )
-        try? snapshotData.write(to: fileURL, options: .atomic)
-        try? FileManager.default.setAttributes(
-          [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-          ofItemAtPath: fileURL.path
-        )
-      }
-
-      // React 상태가 연달아 바뀔 때 reload 요청이 폭주하면 WidgetKit이 throttle한다.
-      // 마지막 스냅샷 저장 뒤 한 번만 타임라인을 갱신한다.
-      self.widgetReloadWorkItem?.cancel()
-      let reloadWorkItem = DispatchWorkItem {
-        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-      }
-      self.widgetReloadWorkItem = reloadWorkItem
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: reloadWorkItem)
-      return changed
+    Function("saveLocations") { (locationsJson: String) -> Bool in
+      self.saveWidgetJSON(
+        locationsJson,
+        key: "weatheron.widget.locations.v1",
+        relativePath: "Library/Application Support/WeatherONWidget/weatheron-widget-locations-v1.json"
+      )
     }
 
     Function("protectWardrobePhoto") { (fileUri: String) -> Bool in
@@ -171,6 +145,29 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       let hadActivity = !Activity<WeatherONDepartureActivityAttributes>.activities.isEmpty
       await self.endAllDepartureActivities()
       return hadActivity
+    }
+  }
+
+  private func saveWidgetJSON(_ json: String, key: String, relativePath: String) -> Bool {
+    guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier),
+          let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return false }
+    let data = Data(json.utf8)
+    guard (try? JSONSerialization.jsonObject(with: data)) != nil else { return false }
+    let fileURL = container.appendingPathComponent(relativePath, isDirectory: false)
+    do {
+      if (try? Data(contentsOf: fileURL)) != data {
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try data.write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+      }
+      defaults.set(json, forKey: key)
+      defaults.synchronize()
+      // JS deduplicates successful deliveries. Request before returning so suspension
+      // cannot strand a delayed work item; identical data can retry a lost reload.
+      WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+      return true
+    } catch {
+      // Do not acknowledge an unwritten snapshot: the app will retry.
+      return false
     }
   }
 
