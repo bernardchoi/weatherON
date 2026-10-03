@@ -1768,6 +1768,7 @@
   "카카오": "cacao",
   "카카오 로그인": "Kakao Login",
   "카카오맵 길찾기": "Kakao Map directions",
+  "카카오맵에는 출발시각이 자동 반영되지 않아요.": "Departure time isn't passed to KakaoMap.",
   "카테고리별 강수·바람·출발 알림 기준을 목적지 카드에서 바로 확인해요": "Check the precipitation, wind, and departure notification standards for each category right from the destination card.",
   "카페": "cafe",
   "캐주얼": "casual",

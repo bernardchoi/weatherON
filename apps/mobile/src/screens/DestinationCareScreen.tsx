@@ -104,7 +104,8 @@ export function DestinationCareScreen({
   const repeatDays = selectedDestinationSchedulePreference.repeatDays;
   const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
-  const directionsLabel = selectedDestinationPlace.countryCode === "KR" ? "카카오맵 길찾기" : "Google 지도 길찾기";
+  const usesKakaoMap = selectedDestinationPlace.countryCode === "KR";
+  const directionsLabel = usesKakaoMap ? "카카오맵 길찾기" : "Google 지도 길찾기";
   const destinationImage = getDestinationImageAsset(selectedDestinationPlace);
   const departureActivityMatchesDestination =
     (departureActivityStatus.active || departureActivityStatus.scheduled) &&
@@ -374,36 +375,43 @@ export function DestinationCareScreen({
           </DropdownMotion>
         </View>
 
-        <View style={[styles.quickActionRow, { borderColor: theme.border }]}>
-          <FeedbackPressable
-            accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
-            accessibilityRole="button"
-            onPress={() => void openDirections()}
-            style={[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }]}
-          >
-            <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }]}>
-              <Image source={uiIconAssets.depart} style={[styles.quickActionIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-            </View>
-            <View style={styles.quickActionCopy}>
-              <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>{directionsLabel}</Text>
-              <Text style={[styles.quickActionMeta, { color: theme.subtle }]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
-            </View>
-            <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
-          </FeedbackPressable>
-
-          {Platform.OS === "ios" || Platform.OS === "android" ? (
-            <View
-              accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
-              style={[styles.quickAction, { backgroundColor: theme.cardMuted }]}
+        <View style={styles.quickActions}>
+          <View style={[styles.quickActionRow, { borderColor: theme.border }]}>
+            <FeedbackPressable
+              accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
+              accessibilityRole="button"
+              onPress={() => void openDirections()}
+              style={[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }]}
             >
-              <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }]}>
-                <Image source={uiIconAssets.clock} style={[styles.quickActionIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+              <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }]}>
+                <Image source={uiIconAssets.depart} style={[styles.quickActionIcon, { tintColor: theme.clear }]} resizeMode="contain" />
               </View>
               <View style={styles.quickActionCopy}>
-                <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>자동 카운트다운</Text>
-                <Text style={[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
+                <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>{directionsLabel}</Text>
+                <Text style={[styles.quickActionMeta, { color: theme.subtle }]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
               </View>
-            </View>
+              <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
+            </FeedbackPressable>
+
+            {Platform.OS === "ios" || Platform.OS === "android" ? (
+              <View
+                accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
+                style={[styles.quickAction, { backgroundColor: theme.cardMuted }]}
+              >
+                <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }]}>
+                  <Image source={uiIconAssets.clock} style={[styles.quickActionIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+                </View>
+                <View style={styles.quickActionCopy}>
+                  <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>자동 카운트다운</Text>
+                  <Text style={[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+          {usesKakaoMap ? (
+            <Text allowFontScaling style={[styles.directionsTimeNotice, { color: theme.muted }]}>
+              카카오맵에는 출발시각이 자동 반영되지 않아요.
+            </Text>
           ) : null}
         </View>
         </View>
@@ -1152,6 +1160,14 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 0,
+  },
+  quickActions: {
+    gap: 6,
+  },
+  directionsTimeNotice: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "400",
   },
   quickActionRow: {
     flexDirection: "row",
