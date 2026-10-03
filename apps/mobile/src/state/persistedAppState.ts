@@ -98,11 +98,14 @@ export async function readPersistedWeatherProviderResult(
 ): Promise<WeatherProviderResult | null> {
   const value = await readAppValue<unknown>(weatherProviderResultStorageKey);
   const result = value ? normalizePersistedWeatherProviderResult(value) : null;
-  return result && (!requiredSource || hasOnlyWeatherSource(result, requiredSource)) ? result : null;
+  // A missing destination must not invalidate a persisted successful current
+  // location. Still reject other providers when iOS requires WeatherKit.
+  return result && (!requiredSource || [result.current, result.destination, ...result.destinationSnapshots]
+    .every((snapshot) => snapshot.source === requiredSource || snapshot.source === "fallback")) ? result : null;
 }
 
 export function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
-  if (result.status !== "ready" || result.fallbackUsed) return;
+  if (![result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) return;
   void writeAppValue(weatherProviderResultStorageKey, result);
 }
 
@@ -117,6 +120,7 @@ export function saveNotificationState(state: PersistedNotificationState) {
 
 export function shouldKeepPersistedWeatherResult(result: WeatherProviderResult, persistedResult: WeatherProviderResult | null): persistedResult is WeatherProviderResult {
   if (!persistedResult) return false;
+  if ([result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback" && !snapshot.stale)) return false;
   if (!isSameWeatherSnapshotLocation(result.current, persistedResult.current)) return false;
   if (!isSameWeatherSnapshotLocation(result.destination, persistedResult.destination)) return false;
   if (!hasSameWeatherSnapshotLocations(result.destinationSnapshots, persistedResult.destinationSnapshots)) return false;

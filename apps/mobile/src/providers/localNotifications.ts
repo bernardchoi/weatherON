@@ -190,7 +190,7 @@ async function syncLocalWeatherNotificationsNow(options: {
   const finalIdentifiers = new Set(finalScheduledNotifications.map((notification) => notification.identifier));
   const scheduledCount = finalScheduledNotifications.filter((notification) => notification.identifier.startsWith(smartNotificationIdentifierPrefix)).length;
   return {
-    status: [...desiredIdentifiers].every((identifier) => finalIdentifiers.has(identifier)) ? "scheduled" : "verification-failed",
+    status: scheduledCount === desiredIdentifiers.size && [...desiredIdentifiers].every((identifier) => finalIdentifiers.has(identifier)) ? "scheduled" : "verification-failed",
     scheduledCount,
   };
 }

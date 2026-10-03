@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createNotificationSync } from "../providers/notificationSync";
 import { AppState, Platform } from "../localization/react-native";
 import type { PlaceSearchResult, WardrobeItem } from "@weatheron/shared";
 import { presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
@@ -289,7 +290,7 @@ export function useWeatherOnAppState() {
   const [weatherRefreshTick, setWeatherRefreshTick] = useState(0);
   const [weatherProviderResult, setWeatherProviderResult] = useState(() => getFallbackSnapshots("stale"));
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
-  const localNotificationSyncKeyRef = useRef("");
+  const localNotificationSync = useMemo(() => createNotificationSync(syncLocalWeatherNotifications), []);
   const placeSearchRequestSeqRef = useRef(0);
   const recentlyRemovedDestinationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deviceLocationRequestInFlightRef = useRef(false);
@@ -687,11 +688,12 @@ export function useWeatherOnAppState() {
         // Retry delivery/reload even if the weather response has not changed.
         widgetSnapshotContentKeyRef.current = "";
         widgetLocationsKeyRef.current = "";
+        localNotificationSync.retry();
         setWeatherRefreshTick((value) => value + 1);
       }
     });
     return () => subscription.remove();
-  }, []);
+  }, [localNotificationSync]);
 
   useEffect(() => {
     if (!appStateHydrated || Platform.OS !== "ios") return;
@@ -730,6 +732,25 @@ export function useWeatherOnAppState() {
       && currentWeatherSnapshotRef.current?.locationId === currentLocation.locationId
       ? currentWeatherSnapshotRef.current
       : undefined;
+    const applyResult = (result: WeatherProviderResult) => {
+      if (active) {
+        const persistedWeatherResult = persistedWeatherProviderResultRef.current;
+        const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult) ? persistedWeatherResult : result;
+        weatherLoadedFromNetworkRef.current = true;
+        currentWeatherSnapshotRef.current = nextResult.current;
+        previousWeatherRequestRef.current = {
+          currentLocationId: currentLocation.locationId,
+          mode: weatherProviderMode,
+          refreshTick: weatherRefreshTick,
+        };
+        setWeatherProviderResult(nextResult);
+        if ([result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) {
+          persistedWeatherProviderResultRef.current = normalizePersistedWeatherProviderResult(result);
+          savePersistedWeatherProviderResult(result);
+        }
+      }
+    };
+    const persisted = persistedWeatherProviderResultRef.current;
     runtimeWeatherProvider
       .getSnapshots(weatherProviderMode, {
         currentLocation,
@@ -737,25 +758,10 @@ export function useWeatherOnAppState() {
         destinationLocation,
         destinationLocations: savedDestinationWeatherLocations,
         language: localePolicy.language,
+        cachedSnapshots: persisted ? [persisted.current, ...persisted.destinationSnapshots] : [],
+        onUpdate: applyResult,
       })
-      .then((result) => {
-        if (active) {
-          const persistedWeatherResult = persistedWeatherProviderResultRef.current;
-          const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult) ? persistedWeatherResult : result;
-          weatherLoadedFromNetworkRef.current = true;
-          currentWeatherSnapshotRef.current = nextResult.current;
-          previousWeatherRequestRef.current = {
-            currentLocationId: currentLocation.locationId,
-            mode: weatherProviderMode,
-            refreshTick: weatherRefreshTick,
-          };
-          setWeatherProviderResult(nextResult);
-          if (result.status === "ready" && !result.fallbackUsed) {
-            persistedWeatherProviderResultRef.current = normalizePersistedWeatherProviderResult(result);
-            savePersistedWeatherProviderResult(result);
-          }
-        }
-      })
+      .then(applyResult)
       .finally(() => {
         if (active) setIsWeatherLoading(false);
       });
@@ -950,7 +956,6 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated) return;
-    let active = true;
     const notifications = state.notifications
       .filter((item) => shouldScheduleLocalNotification(item, alertPreferences))
       .map((item) => ({ ...item, pushTitle: translateText(item.pushTitle, localePolicy.language), pushBody: translateText(item.pushBody, localePolicy.language) }));
@@ -959,27 +964,20 @@ export function useWeatherOnAppState() {
       smartCareEnabled,
       preferences: alertPreferences,
       language: localePolicy.language,
-      ids: notifications.map((item) => `${item.id}:${item.active}:${item.reason}:${item.scheduledAt ?? ""}`),
+      notifications,
     });
-    if (localNotificationSyncKeyRef.current === syncKey) return;
-    localNotificationSyncKeyRef.current = syncKey;
-    void syncLocalWeatherNotifications({
+    localNotificationSync.request(syncKey, {
       enabled: permissionReady && smartCareEnabled,
       notifications,
       reducedInterruptions: alertPreferences.quietHours,
       contentRevision: localePolicy.language,
-    })
-      .then((result) => {
-        if (__DEV__) console.info("[WeatherON notification sync]", JSON.stringify(result));
-        if (active) setNotificationDeliveryStatus(result);
-      })
-      .catch(() => {
-        if (active) setNotificationDeliveryStatus(defaultNotificationDeliveryStatus);
-      });
-    return () => {
-      active = false;
-    };
-  }, [alertPreferences, appStateHydrated, localePolicy.language, permissionReady, smartCareEnabled, state.notifications]);
+    }, (result) => {
+      if (__DEV__) console.info("[WeatherON notification sync]", JSON.stringify(result));
+      setNotificationDeliveryStatus(result);
+    });
+  }, [alertPreferences, appStateHydrated, localePolicy.language, permissionReady, smartCareEnabled, state.notifications, localNotificationSync, nowMinuteTick]);
+
+  useEffect(() => () => localNotificationSync.stop(), [localNotificationSync]);
 
   persistedStateRef.current = {
     onboardingCompleted,

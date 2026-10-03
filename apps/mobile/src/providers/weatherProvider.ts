@@ -52,6 +52,8 @@ export type WeatherProviderOptions = {
   destinationLocation?: WeatherLocationPreset;
   destinationLocations?: WeatherLocationPreset[];
   language?: "ko" | "en" | "ja";
+  cachedSnapshots?: WeatherSnapshot[];
+  onUpdate?: (result: WeatherProviderResult) => void;
 };
 
 export type WeatherProvider = {
@@ -64,61 +66,80 @@ export type WeatherProviderCreateOptions = {
 };
 
 export function createWeatherProvider(client: WeatherClient = runtimeWeatherClient, createOptions: WeatherProviderCreateOptions = {}): WeatherProvider {
-  let cachedResult: WeatherProviderResult | null = null;
+  const cache = new Map<string, WeatherSnapshot>();
+
+  function remember(snapshot: WeatherSnapshot): WeatherSnapshot {
+    if (snapshot.source === "fallback") return snapshot;
+    const previous = cache.get(snapshot.locationId);
+    // An older/slower response must not regress a newer observation.
+    if (previous && (Date.parse(previous.observedAt) > Date.parse(snapshot.observedAt)
+      || (previous.observedAt === snapshot.observedAt && !previous.stale && snapshot.stale))) return previous;
+    cache.delete(snapshot.locationId);
+    cache.set(snapshot.locationId, snapshot);
+    if (cache.size > 32) cache.delete(cache.keys().next().value!);
+    return snapshot;
+  }
 
   return {
     async getSnapshots(mode = "ready", options = {}) {
-      try {
-        if (mode === "error") {
-          throw new Error("Simulated weather provider error");
-        }
-        if (mode === "stale" && cachedResult) {
-          return markProviderResultStale(cachedResult, "stale", options);
-        }
-        const stale = mode === "stale";
-        const fallback = mode === "fallback";
-        const currentLocation = fallback ? defaultSeoulWeatherLocation : options.currentLocation ?? seongsuWeatherLocation;
-        const destinationLocation = fallback ? defaultGangneungWeatherLocation : options.destinationLocation ?? gangneungWeatherLocation;
-        const destinationLocations = fallback
-          ? [defaultGangneungWeatherLocation]
-          : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
-        const currentSnapshot =
-          (createOptions.platform ?? Platform.OS) === "ios" && options.currentSnapshot?.source !== "weatherkit"
-            ? undefined
-            : options.currentSnapshot;
-        const [weatherSnapshots, officialSpecialAlert] = await Promise.all([
-          Promise.all([
-            resolveCurrentWeatherSnapshot(client, currentLocation, currentSnapshot, stale, createOptions, options.language),
-            ...destinationLocations.map((location) => fetchWeatherSnapshot(client, location, stale, createOptions, options.language)),
-          ]),
-          fetchOfficialSpecialAlert(client, currentLocation),
-        ]);
-        const [current, ...destinationSnapshots] = weatherSnapshots;
-        const destination = destinationSnapshots[0] ?? normalizeOpenMeteoWeather(openMeteoFixture, {
-          locationId: destinationLocation.locationId,
-          locationName: destinationLocation.locationName,
-          countryCode: destinationLocation.countryCode,
-          stale: true,
-        });
-
-        const result = {
-          current,
-          destination,
-          destinationSnapshots,
-          officialSpecialAlert,
-          status: mode,
-          message: getProviderMessage(mode, fallback),
-          retryable: mode !== "ready",
-          fallbackUsed: fallback,
-        };
-        if (mode === "ready") cachedResult = result;
-        return result;
-      } catch {
-        if (cachedResult) {
-          return markProviderResultStale(cachedResult, "error", options);
-        }
-        return markProviderResultStale(getFallbackSnapshots("error"), "error", options);
+      const ios = (createOptions.platform ?? Platform.OS) === "ios";
+      for (const snapshot of options.cachedSnapshots ?? []) {
+        if (!ios || snapshot.source === "weatherkit") remember(snapshot);
       }
+      const stale = mode === "stale";
+      const fallback = mode === "fallback";
+      const currentLocation = fallback ? defaultSeoulWeatherLocation : options.currentLocation ?? seongsuWeatherLocation;
+      const destinationLocation = fallback ? defaultGangneungWeatherLocation : options.destinationLocation ?? gangneungWeatherLocation;
+      const destinationLocations = fallback
+        ? [defaultGangneungWeatherLocation]
+        : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
+      const locations = getUniqueDestinationLocations(currentLocation, destinationLocations);
+      const snapshots = new Map(locations.map((location) => [
+        location.locationId, markSnapshotStale(cache.get(location.locationId), location),
+      ]));
+      const pending = new Set(locations.map((location) => location.locationId));
+      const failed = new Set<string>();
+      let officialSpecialAlert = createInactiveOfficialSpecialAlert();
+      function result(): WeatherProviderResult {
+        const current = snapshots.get(currentLocation.locationId)!;
+        const destinationSnapshots = destinationLocations.map((location) => snapshots.get(location.locationId)!);
+        const fallbackUsed = fallback || [current, ...destinationSnapshots].some((snapshot) => snapshot.source === "fallback");
+        const status = failed.size ? "error" : pending.size ? "stale" : mode;
+        return {
+          current, destination: destinationSnapshots[0], destinationSnapshots, officialSpecialAlert,
+          status, message: getProviderMessage(status, fallbackUsed), retryable: status !== "ready", fallbackUsed,
+        };
+      }
+      if (mode === "error" || (stale && locations.every((location) => cache.has(location.locationId)))) {
+        pending.clear();
+        return result();
+      }
+      const publish = () => {
+        // A current-location result is usable without waiting for destinations
+        // or the separate official-alert endpoint. The caller guards its lifecycle.
+        if (!pending.has(currentLocation.locationId)) options.onUpdate?.(result());
+      };
+      const supplied = ios && options.currentSnapshot?.source !== "weatherkit" ? undefined : options.currentSnapshot;
+      await Promise.all([
+        ...locations.map(async (location) => {
+          try {
+            const snapshot = location.locationId === currentLocation.locationId
+              ? await resolveCurrentWeatherSnapshot(client, location, supplied, stale, createOptions, options.language)
+              : await fetchWeatherSnapshot(client, location, stale, createOptions, options.language);
+            snapshots.set(location.locationId, remember(snapshot));
+          } catch {
+            failed.add(location.locationId);
+            snapshots.set(location.locationId, markSnapshotStale(cache.get(location.locationId), location));
+          }
+          pending.delete(location.locationId);
+          publish();
+        }),
+        fetchOfficialSpecialAlert(client, currentLocation).then((alert) => {
+          officialSpecialAlert = alert;
+          publish();
+        }),
+      ]);
+      return result();
     },
   };
 }
@@ -211,6 +232,10 @@ async function resolveCurrentWeatherSnapshot(
 ): Promise<WeatherSnapshot> {
   if (!currentSnapshot) return fetchWeatherSnapshot(client, location, stale, options, language);
   if (currentSnapshot.locationId !== location.locationId) return fetchWeatherSnapshot(client, location, stale, options, language);
+  const age = Date.now() - Date.parse(currentSnapshot.observedAt);
+  if (currentSnapshot.stale || currentSnapshot.source === "fallback" || !Number.isFinite(age) || age < 0 || age >= 15 * 60_000) {
+    return fetchWeatherSnapshot(client, location, stale, options, language);
+  }
   if (shouldRefreshLifestyleIndex(currentSnapshot, location, options)) {
     return enhanceAirQuality(client, location, currentSnapshot);
   }
@@ -306,32 +331,6 @@ function getProviderMessage(status: WeatherProviderStatus, fallbackUsed = false)
   return fallbackUsed ? "날씨 갱신 실패. 기본 예보 기준 추천" : "날씨 갱신 실패. 최근 예보 기준 추천";
 }
 
-function markProviderResultStale(result: WeatherProviderResult, status: WeatherProviderStatus, options: WeatherProviderOptions = {}): WeatherProviderResult {
-  const requestedDestinationLocations = getRequestedDestinationLocations(options);
-  const existingDestinationSnapshots = result.destinationSnapshots.length ? result.destinationSnapshots : [result.destination];
-  // 위치별로 id를 맞춰 캐시를 재사용해야 한다. 인덱스로만 짝지으면 목적지 목록이
-  // 바뀌었을 때 다른 지역의 날씨 데이터가 새 지역 이름표를 달고 나온다.
-  const destinationSnapshots = requestedDestinationLocations
-    ? requestedDestinationLocations.map((location) => markSnapshotStale(findSnapshotForLocation(existingDestinationSnapshots, location), location))
-    : existingDestinationSnapshots.map((snapshot) => markSnapshotStale(snapshot));
-
-  return {
-    ...result,
-    current: markSnapshotStale(result.current, options.currentLocation),
-    destination: destinationSnapshots[0] ?? markSnapshotStale(result.destination, options.destinationLocation),
-    destinationSnapshots,
-    officialSpecialAlert: createInactiveOfficialSpecialAlert(),
-    status,
-    message: getProviderMessage(status, result.fallbackUsed),
-    retryable: true,
-    fallbackUsed: result.fallbackUsed,
-  };
-}
-
-function findSnapshotForLocation(snapshots: WeatherSnapshot[], location: WeatherLocationPreset): WeatherSnapshot | undefined {
-  return snapshots.find((snapshot) => snapshot.locationId === location.locationId);
-}
-
 function getUniqueDestinationLocations(
   primaryLocation: WeatherLocationPreset,
   extraLocations: WeatherLocationPreset[] = [],
@@ -343,11 +342,6 @@ function getUniqueDestinationLocations(
     seen.add(location.locationId);
     return true;
   });
-}
-
-function getRequestedDestinationLocations(options: WeatherProviderOptions): WeatherLocationPreset[] | null {
-  if (!options.destinationLocation && !options.destinationLocations?.length) return null;
-  return getUniqueDestinationLocations(options.destinationLocation ?? options.destinationLocations?.[0] ?? gangneungWeatherLocation, options.destinationLocations);
 }
 
 function markSnapshotStale(snapshot: WeatherSnapshot | undefined, location?: WeatherLocationPreset): WeatherSnapshot {

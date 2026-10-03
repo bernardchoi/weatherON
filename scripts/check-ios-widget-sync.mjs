@@ -95,6 +95,7 @@ const lifecycleContext = {
   appLifecycleStateRef: { current: "background" },
   widgetSnapshotContentKeyRef: { current: "delivered" }, widgetLocationsKeyRef: { current: "delivered" },
   setWeatherRefreshTick: () => {},
+  localNotificationSync: { retry() {} },
 };
 runEffect('const previousState = appLifecycleStateRef.current;', lifecycleContext);
 onChange("active");

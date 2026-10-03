@@ -592,12 +592,9 @@ async function readListValues(database: SQLiteExecutor, listKey: string): Promis
 
 async function replaceListValues(database: SQLiteExecutor, listKey: string, values: string[]) {
   await database.runAsync("DELETE FROM app_list_values WHERE list_key = ?", listKey);
-  await Promise.all(values.map((value, index) => database.runAsync(
-    "INSERT INTO app_list_values (list_key, seq, value) VALUES (?, ?, ?)",
-    listKey,
-    index,
-    value,
-  )));
+  for (const [index, value] of values.entries()) {
+    await database.runAsync("INSERT INTO app_list_values (list_key, seq, value) VALUES (?, ?, ?)", listKey, index, value);
+  }
 }
 
 async function readSavedDestinations(database: SQLiteExecutor): Promise<unknown[]> {
@@ -683,12 +680,9 @@ async function readDestinationRepeatDays(database: SQLiteExecutor, placeId: stri
 }
 
 async function replaceDestinationRepeatDays(database: SQLiteExecutor, placeId: string, days: string[]) {
-  await Promise.all(days.map((day, index) => database.runAsync(
-    "INSERT INTO destination_repeat_days (place_id, seq, day) VALUES (?, ?, ?)",
-    placeId,
-    index,
-    day,
-  )));
+  for (const [index, day] of days.entries()) {
+    await database.runAsync("INSERT INTO destination_repeat_days (place_id, seq, day) VALUES (?, ?, ?)", placeId, index, day);
+  }
 }
 
 async function readDestinationPreview(database: SQLiteExecutor): Promise<Record<string, unknown> | null> {
@@ -759,11 +753,9 @@ async function writeDestinationPreview(database: SQLiteExecutor, record: Record<
     now,
   );
   await database.runAsync("DELETE FROM preview_repeat_days");
-  await Promise.all(stringArray(schedulePreference.repeatDays).map((day, index) => database.runAsync(
-    "INSERT INTO preview_repeat_days (seq, day) VALUES (?, ?)",
-    index,
-    day,
-  )));
+  for (const [index, day] of stringArray(schedulePreference.repeatDays).entries()) {
+    await database.runAsync("INSERT INTO preview_repeat_days (seq, day) VALUES (?, ?)", index, day);
+  }
 }
 
 async function readPreviewRepeatDays(database: SQLiteExecutor): Promise<string[]> {
@@ -890,11 +882,9 @@ async function writeNotificationState(database: SQLiteExecutor, value: unknown) 
   const record = objectRecord(value);
   await database.runAsync("DELETE FROM notification_read_ids");
   await database.runAsync("DELETE FROM notification_history");
-  await Promise.all(stringArray(record.readNotificationIds).map((id, index) => database.runAsync(
-    "INSERT INTO notification_read_ids (seq, notification_id) VALUES (?, ?)",
-    index,
-    id,
-  )));
+  for (const [index, id] of stringArray(record.readNotificationIds).entries()) {
+    await database.runAsync("INSERT INTO notification_read_ids (seq, notification_id) VALUES (?, ?)", index, id);
+  }
   for (const [index, item] of arrayValue(record.notificationHistory).entries()) {
     const history = objectRecord(item);
     await database.runAsync(
@@ -1153,48 +1143,58 @@ async function migrateLegacyStorage(database: SQLiteDatabase) {
   if (hasLegacyTable) {
     const rows = await database.getAllAsync<{ key: string; value: string }>(`SELECT key, value FROM ${legacyAppValueTableName}`);
     for (const row of rows) {
+      if (!legacyStorageKeys.includes(row.key as typeof legacyStorageKeys[number])) continue;
       const parsed = parseLegacyValue(row.value);
-      if (parsed !== undefined) legacyValues.set(row.key, parsed);
+      if (parsed === undefined) throw new Error("Legacy storage could not be decoded");
+      legacyValues.set(row.key, parsed);
     }
   }
 
   const fileSystem = await getFileSystem();
+  if (!fileSystem?.documentDirectory) throw new Error("Legacy storage is unavailable");
+  const migratedFiles: string[] = [];
   if (fileSystem?.documentDirectory) {
     const documentDirectory = fileSystem.documentDirectory;
     const entries = await Promise.all(
       legacyStorageKeys.map(async (key) => {
         const uri = getLegacyStorageUri(documentDirectory, key);
-        try {
-          const info = await fileSystem.getInfoAsync(uri);
-          if (!info.exists) return null;
-          const value = await fileSystem.readAsStringAsync(uri);
-          const parsed = parseLegacyValue(value);
-          if (parsed === undefined) return null;
-          return { key, uri, value: parsed };
-        } catch {
-          return null;
-        }
+        // A failed read is not an absent file. Preserve the original and retry.
+        const info = await fileSystem.getInfoAsync(uri);
+        if (!info.exists) return null;
+        const value = await fileSystem.readAsStringAsync(uri);
+        const parsed = parseLegacyValue(value);
+        if (parsed === undefined) throw new Error("Legacy storage could not be decoded");
+        return { key, uri, value: parsed };
       }),
     );
     for (const entry of entries) {
       if (!entry) continue;
       if (!legacyValues.has(entry.key)) legacyValues.set(entry.key, entry.value);
+      migratedFiles.push(entry.uri);
     }
-    await Promise.all(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)).map((entry) =>
-      fileSystem.deleteAsync(entry.uri, { idempotent: true })
-    ));
   }
 
-  for (const [key, value] of legacyValues) {
-    await writeStructuredValue(database, key, value);
-  }
-  await database.runAsync(
-    `INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-    schemaVersionKey,
-    "complete",
-    Date.now(),
-  );
+  // openDatabase does not expose this connection until migration has committed.
+  // The data and completion marker are atomic; originals survive any rollback.
+  await database.withTransactionAsync(async () => {
+    for (const [key, value] of legacyValues) {
+      await writeStructuredValue(database, key, value);
+      if (await readStructuredValue(database, key) === null) {
+        throw new Error("Migrated storage could not be read");
+      }
+    }
+    await database.runAsync(
+      `INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+      schemaVersionKey,
+      "complete",
+      Date.now(),
+    );
+  });
+  // A failed cleanup leaves a harmless original. The marker prevents reimport.
+  await Promise.all(migratedFiles.map((uri) =>
+    fileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {})
+  ));
 }
 
 function parseLegacyValue(value: string): unknown | undefined {

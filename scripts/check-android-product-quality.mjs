@@ -716,7 +716,7 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "requestLocalNotificationPermission",
   "syncLocalWeatherNotifications",
   "shouldScheduleLocalNotification",
-  "localNotificationSyncKeyRef",
+  "localNotificationSync.request",
   "preferences: alertPreferences",
   "saveSelectedDestination(permissionCompleted)",
 ]);
