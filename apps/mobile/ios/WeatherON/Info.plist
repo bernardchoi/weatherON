@@ -59,6 +59,8 @@
     <string>WeatherON uses motion data to adapt weather effects and transitions to your device and accessibility settings.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>WeatherON uses your photo library so you can add photos of clothes you own to your wardrobe and outfit recommendations.</string>
+    <key>RCTNewArchEnabled</key>
+    <true/>
     <key>NSSupportsLiveActivities</key>
     <true/>
     <key>UILaunchStoryboardName</key>

@@ -440,7 +440,8 @@ function withScheduledNotificationTimes(
   // 이전 버전의 해외 캐시는 시간대가 없으므로 새 예보를 받기 전 예약을 보류한다.
   if (!timeZone) return notifications.map((item) => ({ ...item, active: false, scheduledAt: undefined }));
   const rainEvent = getRainEvent(weather, nowMs, timeZone);
-  return notifications.map((notification) => {
+  return notifications.map((input) => {
+    const notification = { ...input, scheduleTimeZone: timeZone };
     if (notification.type === "routine") {
       return {
         ...notification,

@@ -97,6 +97,8 @@ export type NotificationRuleEvaluation = NotificationRule & {
   pushBody: string;
   /** 실제 기기 알림을 발송할 절대 시각. 시간 기준이 없는 안내 알림은 예약하지 않음. */
   scheduledAt?: string;
+  /** IANA time zone used to calculate recurring reminder wall time. */
+  scheduleTimeZone?: string;
   /** 동일 특보 등급을 한 번만 발송하기 위한 영속 dedupe 키. */
   deliveryKey?: string;
   conditionSummary?: string;

@@ -25,6 +25,13 @@ else
   unset SKIP_BUNDLING
 fi
 
+# Physical Release builds must retain the same live services as Cloud builds.
+# Validate through Expo's dotenv loader without printing credentials or URLs.
+if [[ "$CONFIGURATION" == "Release" && "$PLATFORM_NAME" == "iphoneos" ]]; then
+  "$NODE_BINARY" "$PROJECT_ROOT/../../scripts/check-ios-service-env.mjs"
+  (cd "$PROJECT_ROOT/../.." && "$NODE_BINARY" scripts/check-ios-native-modules.mjs --installed)
+fi
+
 if [[ -z "$ENTRY_FILE" ]]; then
   export ENTRY_FILE="$("$NODE_BINARY" -e "require('expo/scripts/resolveAppEntry')" "$PROJECT_ROOT" ios absolute | tail -n 1)"
 fi

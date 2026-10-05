@@ -48,7 +48,9 @@
     "check:wardrobe-analysis": "node scripts/check-wardrobe-analysis.mjs",
     "check:ios-launch-state": "node scripts/check-ios-launch-state.mjs",
     "check:ios-live-activity": "node scripts/check-ios-live-activity.mjs",
+    "check:ios-widget-native": "bash scripts/check-widget-native-weather.sh",
     "check:ios-widget-sync": "node --no-warnings scripts/check-ios-widget-sync.mjs",
+    "check:correctness-batch": "node --no-warnings scripts/check-correctness-batch.mjs",
     "check:ios-reliability": "node --no-warnings scripts/check-ios-reliability.mjs",
     "check:android-widget": "node scripts/check-android-widget.mjs",
     "check:android-live-update": "node scripts/check-android-live-update.mjs",
@@ -100,7 +102,11 @@
     "check:eas-production-build-status": "node scripts/check-eas-production-build-status.mjs",
     "check:android-artifact-access": "node scripts/check-android-artifact-access.mjs",
     "check:android-release-consistency": "node scripts/check-android-release-consistency.mjs",
-    "dev:weather-server": "node apps/server/src/index.mjs"
+    "dev:weather-server": "node apps/server/src/index.mjs",
+    "check:ios-native-modules": "node scripts/check-ios-native-modules.mjs",
+    "check:ios-service-env": "node scripts/check-ios-service-env.mjs",
+    "check:ios-service-env-regression": "node scripts/check-ios-service-env.mjs --self-test",
+    "check:ios-deep-links": "node scripts/check-ios-deep-links.mjs"
   },
   "dependencies": {
     "@fontsource/manrope": "^5.2.8",

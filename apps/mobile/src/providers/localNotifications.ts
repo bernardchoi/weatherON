@@ -26,7 +26,7 @@ export type LocalNotificationResponsePayload = {
 
 type LocalNotificationInput = Pick<
   NotificationRuleEvaluation,
-  "id" | "type" | "pushTitle" | "pushBody" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt" | "deliveryKey"
+  "id" | "type" | "pushTitle" | "pushBody" | "deepLink" | "active" | "requiresPushPermission" | "scheduledAt" | "scheduleTimeZone" | "deliveryKey"
 >;
 type ExpoNotification = Parameters<ExpoNotificationsModule["addNotificationReceivedListener"]>[0] extends (notification: infer Notification) => void
   ? Notification
@@ -141,7 +141,7 @@ async function syncLocalWeatherNotificationsNow(options: {
         const scheduled = scheduledNotificationsByIdentifier.get(identifier);
         if (!scheduled) return false;
         if (scheduled.content.data?.contentRevision !== options.contentRevision) return false;
-        if (item.type === "routine" || item.type === "bedtime") return true;
+        if (item.type === "routine" || item.type === "bedtime") return scheduled.content.data?.scheduleTimeZone === item.scheduleTimeZone;
         const scheduledDeliveryKey = scheduled.content.data?.deliveryKey;
         return Boolean(item.deliveryKey && scheduledDeliveryKey === item.deliveryKey);
       })
@@ -165,6 +165,7 @@ async function syncLocalWeatherNotificationsNow(options: {
             ruleId: item.id,
             deliveryKey: item.deliveryKey,
             contentRevision: options.contentRevision,
+            scheduleTimeZone: item.scheduleTimeZone,
           },
           sound: "default",
           badge: 1,
@@ -412,6 +413,7 @@ function getNotificationTrigger(
     return {
       type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
       ...dailyTime,
+      timezone: item.scheduleTimeZone,
       repeats: true,
     };
   }

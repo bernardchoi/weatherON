@@ -228,7 +228,7 @@ export function AlertSettingsScreen({
             <View style={styles.advancedPanel}>
             <AdvancedToggleRow
               title="강수 상세"
-              body={`비 오기 전과 그칠 때 알려드려요 · ${selectedDestinationAlertCondition.rainThresholdPct}%`}
+              body={`강수 예보를 알려드려요 · ${selectedDestinationAlertCondition.rainThresholdPct}%`}
               enabled={alertPreferences.rainDetail}
               disabled={!permissionReady}
               onToggle={() => onToggleAlertPreference("rainDetail")}
@@ -587,7 +587,7 @@ function getAlertReadinessCopy(
 function getAlertFocusMeta(focus: NonNullable<P0ScreenProps["alertSettingsRouteState"]>["focus"], returnTo?: P0RouteId) {
   const returnLabel = getRouteLabel(returnTo);
   if (focus === "umbrella") return { title: "우산 알림 맞추기", caption: "우산 추천에서 왔어요", returnLabel, tone: "sky" as const, editBody: "우산이 필요한 순간을 놓치지 않게 챙겨드려요" };
-  if (focus === "rain") return { title: "비 알림 맞추기", caption: "강수 화면에서 왔어요", returnLabel, tone: "clear" as const, editBody: "비가 오기 전과 그칠 때를 골라 알려드려요" };
+  if (focus === "rain") return { title: "비 알림 맞추기", caption: "강수 화면에서 왔어요", returnLabel, tone: "clear" as const, editBody: "앱에서 확인한 강수 예보로 알림을 예약해요" };
   if (focus === "destination") return { title: "출발 알림 맞추기", caption: "목적지 케어에서 왔어요", returnLabel, tone: "gold" as const, editBody: "늦지 않도록 날씨와 이동 시간을 함께 챙겨드려요" };
   return { title: "알림 맞추기", caption: "홈 알림에서 왔어요", returnLabel, tone: "warm" as const, editBody: "원하는 알림만 편하게 골라보세요" };
 }

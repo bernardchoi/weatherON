@@ -326,6 +326,7 @@ const effectEnd = hook.indexOf("\n  }, [", effectStart);
 const effectBody = hook.slice(effectStart + "  useEffect(() => {".length, effectEnd);
 const hookJobs = [], shown = [], persistedWrites = [], loading = [];
 const hookContext = {
+  weatherRefreshAttemptAtRef: { current: 0 },
   appStateHydrated: true, setIsWeatherLoading: (value) => loading.push(value),
   getActiveWeatherLocation: (_, manual) => manual, weatherLocationMode: "manual", manualWeatherLocation: home, deviceWeatherLocation: null,
   savedDestinationWeatherLocations: [away], fallbackDestinationWeatherLocation: away,

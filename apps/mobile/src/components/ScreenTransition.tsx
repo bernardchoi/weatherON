@@ -22,13 +22,13 @@ export function ScreenTransition({
   const swipeX = useRef(new Animated.Value(0)).current;
   const edgeSwipeActiveRef = useRef(false);
   const { width } = useWindowDimensions();
-  const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
+  const [reduceMotionEnabled, setReduceMotionEnabled] = useState(true);
 
   useEffect(() => {
     let active = true;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
       if (active) setReduceMotionEnabled(enabled);
-    });
+    }).catch(() => {});
     const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
     return () => {
       active = false;

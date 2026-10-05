@@ -298,6 +298,15 @@ try {
   assert.ok(!storedToken.token_ciphertext.includes("kakao-access-token"));
 
   const oauthAuthorization = `Bearer ${oauthExchange.body.sessionToken}`;
+  // Mock database only: keep the 15-minute recent-auth security boundary.
+  const mockUserId = oauthExchange.body.account.userId;
+  sqlite.prepare("UPDATE auth_sessions SET created_at = ? WHERE user_id = ?").run(new Date(Date.now() - 16 * 60_000).toISOString(), mockUserId);
+  const staleDeletion = await requestJson("/account/delete", { method: "POST", headers: { authorization: oauthAuthorization } });
+  assert.equal(staleDeletion.response.status, 401);
+  assert.equal(staleDeletion.body.error, "recent_auth_required");
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM users WHERE id = ?").get(mockUserId).count, 1);
+  assert.equal(kakaoUnlinkCount, 0);
+  sqlite.prepare("UPDATE auth_sessions SET created_at = ? WHERE user_id = ?").run(new Date().toISOString(), mockUserId);
   const deleted = await requestJson("/account/delete", { method: "POST", headers: { authorization: oauthAuthorization } });
   assert.equal(deleted.response.status, 200);
   assert.equal(deleted.body.deleted, true);

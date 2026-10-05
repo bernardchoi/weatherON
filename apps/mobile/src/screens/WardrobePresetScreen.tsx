@@ -51,7 +51,7 @@ export function WardrobePresetScreen({
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
   const [previewId, setPreviewId] = React.useState(selectedPhotoItem ? presetItems[0]?.id ?? "" : selectedWardrobeItemId || presetItems[0]?.id || "");
   const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
-  const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(false);
+  const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(true);
   const [photoMode, setPhotoMode] = React.useState(Boolean(selectedPhotoItem));
 
   const ownedCount = presetItems.filter((item) => item.owned).length;
@@ -91,7 +91,7 @@ export function WardrobePresetScreen({
     let active = true;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
       if (active) setReduceMotionEnabled(enabled);
-    });
+    }).catch(() => {});
     const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
     return () => {
       active = false;

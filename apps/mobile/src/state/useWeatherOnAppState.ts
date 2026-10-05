@@ -33,6 +33,7 @@ import {
 } from "../providers/widgetSnapshot";
 import { createWidgetLocations } from "../providers/widgetLocations";
 import {
+  AccountAuthError,
   acceptAccountTerms,
   deleteAccountSession,
   restoreAccountSession,
@@ -288,6 +289,7 @@ export function useWeatherOnAppState() {
   const [permissionGate, setPermissionGate] = useState<PermissionGateState | null>(null);
   const [permissionGateResult, setPermissionGateResult] = useState<PermissionGateResultState | null>(null);
   const [weatherRefreshTick, setWeatherRefreshTick] = useState(0);
+  const weatherRefreshAttemptAtRef = useRef(0);
   const [weatherProviderResult, setWeatherProviderResult] = useState(() => getFallbackSnapshots("stale"));
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
   const localNotificationSync = useMemo(() => createNotificationSync(syncLocalWeatherNotifications), []);
@@ -719,6 +721,7 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated) return;
+    weatherRefreshAttemptAtRef.current = Date.now();
     let active = true;
     setIsWeatherLoading(true);
     const currentLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
@@ -770,6 +773,17 @@ export function useWeatherOnAppState() {
       active = false;
     };
   }, [appStateHydrated, localePolicy.language, weatherProviderMode, weatherRefreshTick, weatherLocationMode, deviceWeatherLocation, manualWeatherLocation, savedDestinationWeatherLocations, fallbackDestinationWeatherLocation]);
+
+  useEffect(() => {
+    if (!appStateHydrated || AppState.currentState !== "active" || isWeatherLoading) return;
+    const snapshot = currentWeatherSnapshotRef.current;
+    if (!snapshot) return;
+    const age = nowMinuteTick - Date.parse(snapshot.observedAt);
+    const expired = snapshot.stale || !Number.isFinite(age) || age < 0 || age >= 15 * 60_000;
+    if (expired && nowMinuteTick - weatherRefreshAttemptAtRef.current >= 15 * 60_000) {
+      setWeatherRefreshTick((value) => value + 1);
+    }
+  }, [appStateHydrated, isWeatherLoading, nowMinuteTick]);
 
   // 다음 출발/도착 목표의 ISO 값은 목표 시각을 지난 시점(보통 하루 한 번)에만 바뀐다.
   // nowMinuteTick을 이 계산에만 쓰고, 아래 요청 effect는 계산된 문자열에만 의존시켜야
@@ -826,6 +840,7 @@ export function useWeatherOnAppState() {
         originCountryCode: originLocation.countryCode,
         destinationCountryCode: destinationPlace.countryCode,
         transportMode: selectedDestinationSchedulePreference.transportMode,
+        departureTime: selectedDestinationSchedulePreference.timeBasis === "departure" ? destinationTargetTimeIso : undefined,
         arrivalTime: selectedDestinationSchedulePreference.timeBasis === "arrival" ? destinationTargetTimeIso : undefined,
       })
       .then((result) => {
@@ -1101,11 +1116,12 @@ export function useWeatherOnAppState() {
         // 권한 다이얼로그 대기 중 자동 위치 동기화가 거부로 끝나면 모드가 manual로 되돌아갈 수 있어,
         // 허용 성공 시 auto를 다시 확정한다.
         setWeatherLocationMode("auto");
-      } else {
+      } else if (result.status === "denied") {
         setLocationReady(false);
         setDeviceWeatherLocation(null);
         setWeatherLocationMode("manual");
       }
+      // Transient GPS/network failures retain auto intent for foreground recovery.
       setWeatherRefreshTick((value) => value + 1);
       return result;
     } finally {
@@ -1137,11 +1153,12 @@ export function useWeatherOnAppState() {
       if (result.status === "granted" && result.location) {
         setLocationReady(true);
         setDeviceWeatherLocation(result.location);
-      } else {
+      } else if (result.status === "denied") {
         setLocationReady(false);
         setDeviceWeatherLocation(null);
         setWeatherLocationMode("manual");
       }
+      // Transient GPS/network failures retain auto intent for foreground recovery.
       setWeatherRefreshTick((value) => value + 1);
     });
     return () => {
@@ -1856,6 +1873,7 @@ export function useWeatherOnAppState() {
   };
 
   const deleteAccount = async () => {
+    if (accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in") return;
     setAccountAuthStatus("signing-out");
     setAccountAuthMessage(null);
     try {
@@ -1864,6 +1882,23 @@ export function useWeatherOnAppState() {
       setAccountAuthStatus("idle");
       setRoute("M1");
     } catch (error) {
+      if (error instanceof AccountAuthError && error.code === "recent_auth_required" && accountProfile) {
+        setAccountAuthStatus("signing-in");
+        try {
+          const result = accountProfile.provider === "apple"
+            ? await signInWithAppleAccount(accountProfile.userId)
+            : await signInWithOAuthAccount(accountProfile.provider, accountProfile.userId);
+          setAccountProfile(result.account);
+          // Reauthentication never implies deletion consent. Keep the dialog open
+          // and require another explicit press after authentication completes.
+          setAccountAuthStatus("ready");
+          setAccountAuthMessage("본인 확인을 완료했어요. 삭제 내용을 확인한 뒤 탈퇴하기를 다시 눌러 주세요.");
+        } catch (reauthError) {
+          setAccountAuthStatus("error");
+          setAccountAuthMessage(getAccountAuthDisplayMessage(reauthError));
+        }
+        return;
+      }
       setAccountAuthStatus("error");
       setAccountAuthMessage(error instanceof Error ? error.message : "회원 탈퇴를 완료하지 못했습니다.");
     }

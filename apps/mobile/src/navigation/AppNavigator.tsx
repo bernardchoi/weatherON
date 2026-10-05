@@ -96,8 +96,11 @@ export function AppNavigator() {
   }, [appState.gate]);
 
   useEffect(() => {
-    const openDeepLink = (url: string | null) => {
-      if (!url || handledDeepLinkRef.current === url) return;
+    let active = true;
+    const openDeepLink = (url: string | null, initial = false) => {
+      // Deduplicate launch restoration only. Each later widget/Activity tap is
+      // a new navigation request, even if its URL is unchanged.
+      if (!active || !url || (initial && handledDeepLinkRef.current !== null)) return;
       if (url.toLowerCase().replace(/[/?#]+$/u, "") === "weatheron://home") {
         handledDeepLinkRef.current = url;
         appState.navigate("H1");
@@ -105,9 +108,12 @@ export function AppNavigator() {
       }
       if (!/^weatheron:\/\/destination(?:[/?#]|$)/iu.test(url) || !appState.destinationSelectionReady) return;
       const encodedDestinationId = url.match(/[?&]id=([^&#]+)/u)?.[1];
-      const destinationId = encodedDestinationId
-        ? decodeURIComponent(encodedDestinationId.replace(/\+/gu, " "))
-        : null;
+      let destinationId: string | null = null;
+      try {
+        destinationId = encodedDestinationId ? decodeURIComponent(encodedDestinationId.replace(/\+/gu, " ")) : null;
+      } catch {
+        return;
+      }
       const destination = appState.savedDestinations.find(({ place }) => place.id === destinationId);
       handledDeepLinkRef.current = url;
       if (!destination) {
@@ -117,9 +123,9 @@ export function AppNavigator() {
       appState.selectDestinationPlace(destination.place);
       appState.navigate("G2");
     };
-    void Linking.getInitialURL().then(openDeepLink);
+    void Linking.getInitialURL().then((url) => openDeepLink(url, true)).catch(() => {});
     const subscription = Linking.addEventListener("url", ({ url }) => openDeepLink(url));
-    return () => subscription.remove();
+    return () => { active = false; subscription.remove(); };
   }, [
     appState.destinationSelectionReady,
     appState.navigate,

@@ -23,6 +23,7 @@ export type TravelEstimateParams = {
   destinationCountryCode?: "KR" | "JP" | "GLOBAL";
   transportMode?: DestinationTransportMode;
   arrivalTime?: string;
+  departureTime?: string;
 };
 
 export type TravelRouteStep = {
@@ -86,11 +87,13 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       if (params.originCountryCode) url.searchParams.set("originCountryCode", params.originCountryCode);
       if (params.destinationCountryCode) url.searchParams.set("destinationCountryCode", params.destinationCountryCode);
       if (params.transportMode) url.searchParams.set("transportMode", params.transportMode);
+      if (params.departureTime) url.searchParams.set("departureTime", params.departureTime);
       if (params.arrivalTime) url.searchParams.set("arrivalTime", params.arrivalTime);
       const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
       const result = await fetchJson<Omit<TravelEstimateResult, "updatedAt">>(url, timeoutMs, options.fetchImpl, headers);
       return {
         ...result,
+        message: result.status === "ready" ? getRouteEstimateMessage(result.provider, params) : result.message,
         updatedAt: new Date().toISOString(),
       };
     },
@@ -158,4 +161,12 @@ function formatCoordinate(coordinate: TravelEstimateCoordinate): string {
 
 function toRadians(value: number): number {
   return (value * Math.PI) / 180;
+}
+
+function getRouteEstimateMessage(provider: TravelEstimateProvider, params: TravelEstimateParams): string {
+  if (provider === "kakao") return "현재 교통 기준 추정 · 선택 시간대 미반영";
+  if (provider === "kakao-transit") return "대중교통 경로 추정 · 선택 시간대 미반영";
+  if (provider === "google-transit") return params.arrivalTime || params.departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정";
+  if (params.arrivalTime) return "현재 교통 기준 추정 · 선택 도착 시간 미반영";
+  return params.departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정";
 }

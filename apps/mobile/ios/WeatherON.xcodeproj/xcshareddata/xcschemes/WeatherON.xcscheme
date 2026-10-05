@@ -27,18 +27,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "WeatherONTests.xctest"
-               BlueprintName = "WeatherONTests"
-               ReferencedContainer = "container:WeatherON.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
+      <!-- No native XCTest target exists; do not reference the removed template target. -->
+      <Testables/>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

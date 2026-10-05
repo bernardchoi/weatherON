@@ -1,6 +1,7 @@
 import AppIntents
 import SwiftUI
 import WidgetKit
+import UIKit
 
 private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetStoreKey = "weatheron.widget.store.v2"
@@ -229,6 +230,32 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
     transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
     deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
+  }
+}
+
+private extension WeatherONLocationSnapshot {
+  var nativeLocation: WeatherONNativeLocation? {
+    guard let latitude, let longitude, let timeZone else { return nil }
+    let value = WeatherONNativeLocation(id: id, latitude: latitude, longitude: longitude, timeZone: timeZone)
+    return value.isValid ? value : nil
+  }
+
+  func applying(_ forecast: WeatherONNativeForecast) -> WeatherONLocationSnapshot {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = timeZone.flatMap(TimeZone.init(identifier:))
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    return WeatherONLocationSnapshot(
+      id: id, kind: kind, locationName: locationName, latitude: latitude, longitude: longitude, timeZone: timeZone,
+      temperatureC: Int(forecast.temperatureC.rounded()), feelsLikeC: Int(forecast.feelsLikeC.rounded()),
+      condition: forecast.condition, conditionLabel: forecast.condition,
+      rainProbabilityPct: Int(forecast.rainProbabilityPct.rounded()), humidityPct: Int(forecast.humidityPct.rounded()), windMs: forecast.windMs,
+      umbrellaNeeded: umbrellaNeeded, outerNeeded: outerNeeded, maskNeeded: maskNeeded,
+      outfitSummary: outfitSummary, outfitItems: outfitItems, outfitVariant: outfitVariant,
+      observedAt: forecast.observedAt.ISO8601Format(),
+      hourly: forecast.hourly.map { WeatherONHourlySnapshot(time: formatter.string(from: $0.date), temperatureC: Int($0.temperatureC.rounded()), condition: $0.condition, rainProbabilityPct: Int($0.rainProbabilityPct.rounded())) },
+      departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink
+    )
   }
 }
 
@@ -569,6 +596,7 @@ private struct WeatherONEntry: TimelineEntry {
   let hasSharedSnapshot: Bool
   let visualPhase: Int
   let localization: WeatherONWidgetLocalization
+  var nativeAttribution: WeatherONNativeAttribution? = nil
 
   static let placeholder = WeatherONEntry(
     date: Date(),
@@ -591,16 +619,28 @@ private enum WeatherONTimelineFactory {
     )
   }
 
-  static func timeline(selectionID: String?) -> Timeline<WeatherONEntry> {
+  static func timeline(selectionID: String?, nativeForecast: WeatherONNativeForecast? = nil, requestKey: String? = nil) -> Timeline<WeatherONEntry> {
     let now = Date()
     // Re-read app deliveries if WidgetKit coalesced an explicit reload. This is
     // a cache refresh, not a network weather request.
     let refresh = now.addingTimeInterval(15 * 60)
     let loaded = WeatherONStoreReader.load()
-    let location = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
+    var location = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
+    var attribution: WeatherONNativeAttribution?
     let hasSharedSnapshot = WeatherONStoreReader.hasWeather(
       selectionID: selectionID, store: loaded.store, hasSharedSnapshot: loaded.hasSharedSnapshot
     )
+    // Re-read after the asynchronous request: deletion, moved coordinates, or a
+    // newer app delivery must win over an old native completion.
+    let appObserved = snapshotDateFormatter.date(from: location.observedAt)
+      ?? fallbackSnapshotDateFormatter.date(from: location.observedAt) ?? .distantPast
+    if let nativeForecast,
+       WeatherONNativeWeatherRefresh.canApply(nativeForecast, requestKey: requestKey, currentKey: location.nativeLocation?.cacheKey, hasSharedSnapshot: hasSharedSnapshot, appObservedAt: appObserved, now: now),
+       UIImage(data: nativeForecast.attribution.darkMark) != nil,
+       UIImage(data: nativeForecast.attribution.lightMark) != nil {
+      location = location.applying(nativeForecast)
+      attribution = nativeForecast.attribution
+    }
     var entryDates = (0...48).map { phase in
       Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
     }
@@ -618,7 +658,8 @@ private enum WeatherONTimelineFactory {
         location: location,
         hasSharedSnapshot: hasSharedSnapshot,
         visualPhase: phase,
-        localization: loaded.store.localization
+        localization: loaded.store.localization,
+        nativeAttribution: attribution
       )
     }
     return Timeline(entries: entries, policy: .after(refresh))
@@ -710,7 +751,16 @@ private struct WeatherONIntentProvider: AppIntentTimelineProvider {
   }
 
   func timeline(for configuration: WeatherONWidgetConfigurationIntent, in context: Context) async -> Timeline<WeatherONEntry> {
-    WeatherONTimelineFactory.timeline(selectionID: configuration.location?.id)
+    let selectionID = configuration.location?.id
+    let loaded = WeatherONStoreReader.load()
+    guard WeatherONStoreReader.hasWeather(selectionID: selectionID, store: loaded.store, hasSharedSnapshot: loaded.hasSharedSnapshot),
+          let location = WeatherONStoreReader.location(for: selectionID, in: loaded.store).nativeLocation else {
+      return WeatherONTimelineFactory.timeline(selectionID: selectionID)
+    }
+    let snapshot = WeatherONStoreReader.location(for: selectionID, in: loaded.store)
+    let observed = snapshotDateFormatter.date(from: snapshot.observedAt) ?? fallbackSnapshotDateFormatter.date(from: snapshot.observedAt)
+    let forecast = await WeatherONNativeWeather.refresh.refresh(location: location, appObservedAt: observed, enabled: WeatherONNativeWeather.enabled)
+    return WeatherONTimelineFactory.timeline(selectionID: selectionID, nativeForecast: forecast, requestKey: location.cacheKey)
   }
 }
 
@@ -721,6 +771,7 @@ private struct WeatherONWidgetView: View {
   let entry: WeatherONEntry
 
   var body: some View {
+    VStack(spacing: 0) {
     Group {
       if !entry.hasSharedSnapshot {
         VStack(alignment: .leading, spacing: 8) {
@@ -740,6 +791,10 @@ private struct WeatherONWidgetView: View {
         }
       }
     }
+    if let attribution = entry.nativeAttribution {
+      WeatherONNativeAttributionView(attribution: attribution, compact: family == .systemSmall)
+    }
+    }
     .widgetURL(entry.location.deepLinkURL)
     .weatherONWidgetBackground(
       condition: entry.location.condition,
@@ -755,6 +810,29 @@ private struct WeatherONWidgetView: View {
 
   private var palette: WeatherONWidgetPalette {
     WeatherONWidgetPalette(colorScheme: colorScheme, condition: entry.location.condition, isNight: isNight)
+  }
+}
+
+private struct WeatherONNativeAttributionView: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let attribution: WeatherONNativeAttribution
+  let compact: Bool
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Link(destination: attribution.legalURL) {
+        if let image = UIImage(data: colorScheme == .dark ? attribution.lightMark : attribution.darkMark) {
+          Image(uiImage: image).resizable().scaledToFit().frame(height: 10)
+        } else {
+          Text(attribution.serviceName).font(.system(size: 9))
+        }
+      }
+      .accessibilityLabel(Text(weatherONLocalized("widget.native.attribution")))
+      Text(weatherONLocalized("widget.native.app-guidance"))
+        .font(.system(size: compact ? 8 : 9)).lineLimit(1)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 14).padding(.bottom, 5)
   }
 }
 

@@ -263,6 +263,7 @@ export function DestinationCareScreen({
           <View style={styles.decisionHeader}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
+              <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>
               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
                 {departureReady

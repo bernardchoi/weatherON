@@ -67,7 +67,7 @@ export async function isAppleAccountSignInAvailable(): Promise<boolean> {
   return AppleAuthentication.isAvailableAsync();
 }
 
-export async function signInWithAppleAccount(): Promise<AccountSessionResult> {
+export async function signInWithAppleAccount(expectedUserId?: string): Promise<AccountSessionResult> {
   if (Platform.OS !== "ios") {
     throw new AccountAuthError("apple_unavailable", "Apple 로그인은 현재 iOS 앱에서 사용할 수 있습니다.");
   }
@@ -102,11 +102,7 @@ export async function signInWithAppleAccount(): Promise<AccountSessionResult> {
         displayName: formatAppleDisplayName(credential.fullName),
       },
     });
-    await writeSessionToken(exchange.sessionToken);
-    await rememberIntegrityUser(exchange.account.userId);
-    await ensureAppAttestEnrollment(exchange.sessionToken, exchange.account.userId).catch((error) => {
-      console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
-    });
+    await persistAuthenticatedSession(exchange, expectedUserId);
     return { account: exchange.account, expiresAt: exchange.expiresAt };
   } catch (error) {
     if (isAppleCancellation(error)) throw new AccountAuthError("apple_canceled", "Apple 로그인을 취소했습니다.");
@@ -125,6 +121,7 @@ export async function listAvailableAccountProviders(): Promise<AccountProviderAv
 
 export async function signInWithOAuthAccount(
   provider: Exclude<AccountProvider, "apple">,
+  expectedUserId?: string,
 ): Promise<AccountSessionResult> {
   if (Platform.OS !== "ios" && Platform.OS !== "android") {
     throw new AccountAuthError("oauth_unavailable", "간편 로그인은 iOS와 Android 앱에서 사용할 수 있습니다.");
@@ -168,7 +165,7 @@ export async function signInWithOAuthAccount(
       code,
     },
   });
-  await persistAuthenticatedSession(exchange);
+  await persistAuthenticatedSession(exchange, expectedUserId);
   return { account: exchange.account, expiresAt: exchange.expiresAt };
 }
 
@@ -349,7 +346,12 @@ function normalizeAccountError(error: unknown): AccountAuthError {
   return new AccountAuthError("account_unknown_error", error instanceof Error ? error.message : "계정 요청에 실패했습니다.");
 }
 
-async function persistAuthenticatedSession(exchange: OAuthExchangeResponse): Promise<void> {
+async function persistAuthenticatedSession(exchange: OAuthExchangeResponse, expectedUserId?: string): Promise<void> {
+  // Validate before replacing the existing keychain token or integrity identity.
+  if (expectedUserId && exchange.account.userId !== expectedUserId) {
+    await accountRequest("/auth/logout", { method: "POST", token: exchange.sessionToken }).catch(() => {});
+    throw new AccountAuthError("reauth_account_mismatch", "현재 연결된 계정으로 다시 인증해 주세요. 저장 데이터는 유지됩니다.");
+  }
   await writeSessionToken(exchange.sessionToken);
   await rememberIntegrityUser(exchange.account.userId);
   await ensureAppAttestEnrollment(exchange.sessionToken, exchange.account.userId).catch((error) => {
@@ -390,6 +392,7 @@ export function getAccountAuthDisplayMessage(error: unknown): string {
   if (error.code === "account_api_missing") return "계정 서버 주소가 설정되지 않았습니다.";
   if (error.code === "account_timeout") return "계정 서버 응답이 지연되고 있습니다.";
   if (error.code === "account_network_error") return "계정 서버에 연결할 수 없습니다.";
+  if (error.code === "reauth_account_mismatch") return "현재 연결된 계정으로 다시 인증해 주세요. 저장 데이터는 유지됩니다.";
   if (error.code === "session_required") return "다시 로그인해 주세요.";
   if (error.code.includes("response_invalid")) return "로그인 응답을 확인할 수 없습니다.";
   if (error.code === "oauth_denied") return "로그인이 완료되지 않았습니다.";

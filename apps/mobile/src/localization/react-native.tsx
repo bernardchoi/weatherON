@@ -16,7 +16,7 @@ export * from "react-native";
 
 export const Text = forwardRef<React.ElementRef<typeof NativeText>, TextProps>(function LocalizedText(props, ref) {
   const { language } = React.use(LocalizationContext);
-  return <NativeText {...props} ref={ref}>{translateChildren(props.children, language)}</NativeText>;
+  return <NativeText {...props} ref={ref} accessibilityLabel={translateAccessibility(props.accessibilityLabel, language)} accessibilityHint={translateAccessibility(props.accessibilityHint, language)}>{translateChildren(props.children, language)}</NativeText>;
 }) as unknown as typeof NativeText;
 
 export const RawText = NativeText;

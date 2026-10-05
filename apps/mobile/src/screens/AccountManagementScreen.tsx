@@ -35,7 +35,7 @@ export function AccountManagementScreen({
   const primaryAccessibilityLabel = needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
   const showPrimaryAction = accountLinked && !accountReady;
-  const isProcessing = accountAuthStatus === "signing-out";
+  const isProcessing = accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in";
 
   const requestConnect = () => onRequireAccount("account-connect", "A4");
   const handlePrimaryAccountAction = () => {
@@ -152,7 +152,7 @@ export function AccountManagementScreen({
                   ? "서버 계정 데이터와 이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제돼요. 되돌릴 수 없어요."
                   : "이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제되고 계정 연결이 해제돼요. 서버 계정은 유지돼요."}
               </Text>
-              {accountAuthMessage && accountAuthStatus === "error" ? (
+              {accountAuthMessage ? (
                 <Text accessibilityLiveRegion="polite" selectable style={[styles.confirmError, { color: theme.alert }]}>{accountAuthMessage}</Text>
               ) : null}
               <View style={styles.confirmActions}>

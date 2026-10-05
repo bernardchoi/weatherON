@@ -320,7 +320,8 @@ async function estimateRoute(params, readEnvValue) {
     normalizeCountryCode(params.get("destinationCountryCode")) ?? inferPlaceSearchCountryCode(destinationName);
   const transportMode = normalizeTransportMode(params.get("transportMode"));
   const arrivalTime = normalizeRouteTime(params.get("arrivalTime"));
-  const cacheKey = `route:${originCountryCode}:${destinationCountryCode}:${transportMode}:${arrivalTime ?? "none"}:${formatCoordinateKey(origin)}:${formatCoordinateKey(destination)}`;
+  const departureTime = arrivalTime ? undefined : normalizeRouteTime(params.get("departureTime"));
+  const cacheKey = `route:${originCountryCode}:${destinationCountryCode}:${transportMode}:${arrivalTime ?? "none"}:${departureTime ?? "none"}:${formatCoordinateKey(origin)}:${formatCoordinateKey(destination)}`;
 
   return fetchCachedJson(
     routeEstimateCache,
@@ -335,7 +336,7 @@ async function estimateRoute(params, readEnvValue) {
           return await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue);
         }
         if (shouldUseGoogleRoute(originCountryCode, destinationCountryCode) && getGoogleMapsApiKey(readEnvValue)) {
-          return await estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, readEnvValue);
+          return await estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, departureTime, readEnvValue);
         }
       } catch (error) {
         console.warn(`route provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
@@ -508,7 +509,7 @@ async function estimateKakaoRoute(origin, destination, originName, destinationNa
     status: "ready",
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
-    message: "Kakao Directions 기준",
+    message: "현재 교통 기준 추정 · 선택 시간대 미반영",
   };
 }
 
@@ -538,7 +539,7 @@ async function estimateKakaoTransitRoute(origin, destination, originName, destin
     status: "ready",
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
-    message: "Kakao 대중교통 기준",
+    message: "대중교통 경로 추정 · 선택 시간대 미반영",
     routeOptions,
   };
 }
@@ -570,7 +571,7 @@ function getKakaoTransitRouteOptions(payload) {
     }));
 }
 
-async function estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, readEnvValue) {
+async function estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, departureTime, readEnvValue) {
   const url = new URL(readEnvValue("GOOGLE_DISTANCE_MATRIX_URL") ?? DEFAULT_GOOGLE_DISTANCE_MATRIX_URL);
   url.searchParams.set("origins", `${origin.latitude},${origin.longitude}`);
   url.searchParams.set("destinations", `${destination.latitude},${destination.longitude}`);
@@ -582,9 +583,13 @@ async function estimateGoogleRoute(origin, destination, destinationCountryCode, 
   if (googleMode === "transit") {
     const arrivalSeconds = getUnixSeconds(arrivalTime);
     if (arrivalSeconds) url.searchParams.set("arrival_time", String(arrivalSeconds));
-    else url.searchParams.set("departure_time", "now");
+    else url.searchParams.set("departure_time", String(getUnixSeconds(departureTime) ?? "now"));
   } else {
-    url.searchParams.set("departure_time", "now");
+    const departureSeconds = getUnixSeconds(departureTime);
+    if (departureSeconds && departureSeconds < Math.floor(Date.now() / 1000)) {
+      throw new Error("Selected driving departure is in the past");
+    }
+    url.searchParams.set("departure_time", String(departureSeconds ?? "now"));
   }
   const payload = await fetchJson(url, readEnvValue);
   if (payload.status !== "OK") throw new Error(`google route failed: ${payload.status ?? "unknown_status"}`);
@@ -602,7 +607,10 @@ async function estimateGoogleRoute(origin, destination, destinationCountryCode, 
     status: "ready",
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
-    message: googleMode === "transit" ? "Google 대중교통 기준" : "Google Distance Matrix 기준",
+    message: googleMode === "transit"
+      ? arrivalTime || departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정"
+      : arrivalTime ? "현재 교통 기준 추정 · 선택 도착 시간 미반영"
+        : departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정",
   };
 }
 
@@ -747,7 +755,7 @@ function normalizeRouteTime(value) {
 function getUnixSeconds(value) {
   if (!value) return null;
   const time = new Date(value).getTime();
-  if (!Number.isFinite(time) || time <= Date.now()) return null;
+  if (!Number.isFinite(time)) return null;
   return Math.floor(time / 1000);
 }
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -7,13 +7,13 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 
-export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProps) {
+export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferences, onToggleAlertPreference, permissionReady, smartCareEnabled, onRequestPermissionGate }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const [rainEndAlertEnabled, setRainEndAlertEnabled] = useState(false);
+  const rainAlertEnabled = alertPreferences.rainDetail;
   const rainBars = useMemo(() => buildRainBars(state.weather), [state.weather]);
   const chartColors = getRainChartColors(theme);
-  const toggleColors = getRainToggleColors(theme, rainEndAlertEnabled);
+  const toggleColors = getRainToggleColors(theme, rainAlertEnabled);
   const peakAmount = getPeakRainAmount(rainBars);
   const rainWindow = getRainWindow(rainBars);
   const hasRain = rainBars.some((item) => item.amount > 0);
@@ -75,19 +75,23 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate }: P0ScreenProp
 
         <Pressable
           accessibilityRole="switch"
-          accessibilityState={{ checked: rainEndAlertEnabled }}
-          onPress={() => setRainEndAlertEnabled((value) => !value)}
+          accessibilityState={{ checked: rainAlertEnabled }}
+          accessibilityLabel="강수 예보 알림"
+          onPress={() => {
+            onToggleAlertPreference("rainDetail");
+            if (!rainAlertEnabled && !permissionReady) onRequestPermissionGate("notification", "H5", "rain");
+          }}
           style={[styles.togglePanel, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>{hasRain ? "완화 알림" : "강수 알림"}</Text>
-            <Text style={[styles.toggleTitle, { color: theme.text }]}>{hasRain ? "비 약해지면 알려줘" : "비 예보 생기면 알려줘"}</Text>
+            <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>강수 알림</Text>
+            <Text style={[styles.toggleTitle, { color: theme.text }]}>강수 예보 알림</Text>
             <Text style={[styles.toggleMeta, { color: theme.muted }]}>
-              {hasRain ? `${rainEnd} 전후로 완화 알림을 받을지 선택` : "새 강수 신호가 잡히면 알림 받기"}
+              {!permissionReady ? "알림 권한이 필요해요" : !smartCareEnabled ? "알림 설정에서 스마트 알림을 켜 주세요" : "앱에서 확인한 예보로 예약해요. 비 그침 알림은 지원하지 않아요."}
             </Text>
           </View>
           <View style={[styles.toggleTrack, { backgroundColor: toggleColors.track, borderColor: toggleColors.trackBorder }]}>
-            <View style={[styles.toggleKnob, { backgroundColor: toggleColors.knob, marginLeft: rainEndAlertEnabled ? 22 : 3 }]} />
+            <View style={[styles.toggleKnob, { backgroundColor: toggleColors.knob, marginLeft: rainAlertEnabled ? 22 : 3 }]} />
           </View>
         </Pressable>
 

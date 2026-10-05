@@ -1,13 +1,14 @@
+import { buildTomorrowWeather } from "../utils/tomorrowWeather";
 import React, { useEffect, useState } from "react";
 import { Image, LocalizedView, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "../localization/react-native";
-import { recommendOutfit, recommendUmbrella, type DailyWeather, type WeatherSnapshot } from "@weatheron/shared";
+import { recommendOutfit, recommendUmbrella } from "@weatheron/shared";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
-import { formatDisplayClockTime, formatDisplayDate, translateText } from "../localization/localization";
+import { formatDisplayClockTime, formatDisplayTime } from "../localization/localization";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { formatTemperature } from "../utils/units";
@@ -28,6 +29,13 @@ export function TomorrowBriefScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const tomorrow = buildTomorrowWeather(state.weather);
+  if (!tomorrow) return (
+    <View style={[styles.shell, { backgroundColor: theme.background, padding: spacing.lg }]}>
+      <BackButton onPress={onGoBack} />
+      <Text accessibilityLiveRegion="polite" style={{ color: theme.text }}>내일 예보를 아직 확인할 수 없어요.</Text>
+      <Text style={{ color: theme.muted }}>날씨를 새로고침한 뒤 다시 확인해 주세요.</Text>
+    </View>
+  );
   const outfit = recommendOutfit(tomorrow.weather, toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }), wardrobeItems);
   const outfitDecision = toTomorrowCopy(outfit.decisionText);
   const outfitReason = toTomorrowCopy(outfit.reasons[0] ?? "내일 예보 기준 기본 코디 추천");
@@ -115,7 +123,7 @@ export function TomorrowBriefScreen({
         <LocalizedView style={styles.factRow} accessibilityLabel="내일 핵심 예보">
           <BriefFact icon={uiIconAssets.rain} label="예상 강수" value={tomorrow.summary.precipitationMm > 0 ? `${tomorrow.summary.precipitationMm.toFixed(1)}mm` : "비 없음"} color={theme.sky} theme={theme} />
           <BriefFact icon={uiIconAssets.wind} label="최대 바람" value={`${tomorrow.summary.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
-          <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time) : "강수 없음"} color={theme.gold} theme={theme} />
+          <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time, state.weather.timezone) : tomorrow.summary.rainProbabilityPct >= 50 || tomorrow.summary.precipitationMm > 0 ? "확인 중" : "강수 없음"} color={theme.gold} theme={theme} />
         </LocalizedView>
       </View>
 
@@ -241,81 +249,8 @@ function BriefFact({ icon, label, value, color, theme }: { icon: ImageSourceProp
   );
 }
 
-function buildTomorrowWeather(weather: WeatherSnapshot): { weather: WeatherSnapshot; summary: DailyWeather; dateLabel: string; fallback: boolean } {
-  const observedDate = getDateKey(weather.observedAt);
-  const sortedDaily = [...(weather.daily ?? [])].sort((left, right) => left.date.localeCompare(right.date));
-  const summary = sortedDaily.find((item) => item.date > observedDate) ?? sortedDaily[1] ?? sortedDaily[0];
-  if (!summary) {
-    return {
-      weather,
-      summary: {
-        date: observedDate,
-        minTempC: weather.current.tempC,
-        maxTempC: weather.current.tempC,
-        rainProbabilityPct: weather.current.rainProbabilityPct,
-        precipitationMm: weather.current.precipitationMm,
-        windMs: weather.current.windMs,
-        condition: weather.current.condition,
-      },
-      dateLabel: "내일 예보 갱신 중",
-      fallback: true,
-    };
-  }
-
-  const matchingHours = weather.hourly.filter((item) => getDateKey(item.time) === summary.date);
-  const hourly = matchingHours.length > 0 ? matchingHours : buildDailyHours(summary);
-  const midpointTemperature = Math.round((summary.minTempC + summary.maxTempC) / 2);
-  return {
-    weather: {
-      ...weather,
-      observedAt: `${summary.date}T09:00:00`,
-      current: {
-        ...weather.current,
-        tempC: midpointTemperature,
-        feelsLikeC: midpointTemperature,
-        condition: toCondition(summary.condition),
-        precipitationMm: summary.precipitationMm,
-        rainProbabilityPct: summary.rainProbabilityPct,
-        windMs: summary.windMs,
-      },
-      hourly,
-      daily: [summary],
-    },
-    summary,
-    dateLabel: formatTomorrowDate(summary.date),
-    fallback: false,
-  };
-}
-
-function buildDailyHours(summary: DailyWeather): WeatherSnapshot["hourly"] {
-  return ["09:00", "14:00", "20:00"].map((time) => ({
-    time: `${summary.date}T${time}:00`,
-    tempC: Math.round((summary.minTempC + summary.maxTempC) / 2),
-    rainProbabilityPct: summary.rainProbabilityPct,
-    precipitationMm: Number((summary.precipitationMm / 3).toFixed(1)),
-    windMs: summary.windMs,
-    condition: summary.condition,
-  }));
-}
-
-function getDateKey(value: string) {
-  const match = value.match(/\d{4}-\d{2}-\d{2}/);
-  return match?.[0] ?? "";
-}
-
-function formatTomorrowDate(value: string) {
-  const parsed = new Date(`${value}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return translateText("내일");
-  return formatDisplayDate(parsed, { month: "long", day: "numeric", weekday: "short" });
-}
-
-function formatHour(value: string) {
-  return formatDisplayClockTime(value);
-}
-
-function toCondition(value: string): WeatherSnapshot["current"]["condition"] {
-  if (value === "clear" || value === "cloud" || value === "rain" || value === "snow" || value === "storm" || value === "dust") return value;
-  return "cloud";
+function formatHour(value: string, timezone?: string) {
+  return /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value) ? formatDisplayTime(value, timezone) : formatDisplayClockTime(value);
 }
 
 function getRainTone(rainProbabilityPct: number, theme: ReturnType<typeof useAppTheme>) {

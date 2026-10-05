@@ -45,12 +45,16 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (57.0.1):
     - ExpoModulesCore
+  - ExpoHaptics (57.0.3):
+    - ExpoModulesCore
   - ExpoImageManipulator (57.0.14):
     - ExpoModulesCore
     - SDWebImageWebPCoder
   - ExpoImagePicker (57.0.14):
     - ExpoModulesCore
   - ExpoKeepAwake (57.0.1):
+    - ExpoModulesCore
+  - ExpoLocalization (57.0.2):
     - ExpoModulesCore
   - ExpoLocation (57.0.6):
     - ExpoModulesCore
@@ -2070,9 +2074,11 @@ DEPENDENCIES:
   - "ExpoDomWebView (from `../../../node_modules/@expo/dom-webview/ios`)"
   - ExpoFileSystem (from `../../../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../../../node_modules/expo-font/ios`)
+  - ExpoHaptics (from `../../../node_modules/expo-haptics/ios`)
   - ExpoImageManipulator (from `../../../node_modules/expo-image-manipulator/ios`)
   - ExpoImagePicker (from `../../../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../../../node_modules/expo-keep-awake/ios`)
+  - ExpoLocalization (from `../../../node_modules/expo-localization/ios`)
   - ExpoLocation (from `../../../node_modules/expo-location/ios`)
   - "ExpoLogBox (from `../../../node_modules/@expo/log-box`)"
   - ExpoModulesCore (from `../../../node_modules/expo/node_modules/expo-modules-core`)
@@ -2193,12 +2199,16 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-file-system/ios"
   ExpoFont:
     :path: "../../../node_modules/expo-font/ios"
+  ExpoHaptics:
+    :path: "../../../node_modules/expo-haptics/ios"
   ExpoImageManipulator:
     :path: "../../../node_modules/expo-image-manipulator/ios"
   ExpoImagePicker:
     :path: "../../../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/expo-keep-awake/ios"
+  ExpoLocalization:
+    :path: "../../../node_modules/expo-localization/ios"
   ExpoLocation:
     :path: "../../../node_modules/expo-location/ios"
   ExpoLogBox:
@@ -2391,9 +2401,11 @@ SPEC CHECKSUMS:
   ExpoDomWebView: fa9c72fe29dd4649197a7ecb07ddd870d55c4eda
   ExpoFileSystem: 3030d5166d05eb90b8f40d433f6007797310861f
   ExpoFont: 17668fb7b4e06edf35e015183eb7bc09d83be637
+  ExpoHaptics: 4f26ec5ebb4cc9c5907987672ef63de77ae9df60
   ExpoImageManipulator: a189c1d29be5167de63aacbe94246adabd616f0f
   ExpoImagePicker: 9e2fe20c434abb6d7e3399a27c078203d42434bf
   ExpoKeepAwake: 20a87dafdd9d84d68673e8eaf1a1c7eed8f92659
+  ExpoLocalization: fdd0a71791af322b739ea8aebddeb669498e4f2b
   ExpoLocation: fd00f8034479ca08c48577393c2d625bebd779df
   ExpoLogBox: 083b0283fc9df6748661caec5a2837569d83b8a6
   ExpoModulesCore: 3c1892404e02457555610aa801f6d8fc27d6fa7e
@@ -2405,7 +2417,7 @@ SPEC CHECKSUMS:
   ExpoSQLite: b4b265ea48e563c08cf40931587f4b962b4a8941
   ExpoWebBrowser: f93f4989f6c2a34cfaba5461ea3572c191947e0f
   FBLazyVector: b3e7ad108f0d882e30445c5527d774e3fd432f3d
-  hermes-engine: 5d32fcb77efebf788e0d18a113cdf86d7cd15b5f
+  hermes-engine: e5f1268fb4d2b1d23ce22a2d4e32faa2b05a1438
   libwebp: af5937a13536ef73f3784d69cc342b98961acf33
   RCTDeprecation: 2a74a2c57675e64419bd89078efde81f7c1de90b
   RCTRequired: 30451112e6fef4e6f31b4e7eee0845156e35e4b0

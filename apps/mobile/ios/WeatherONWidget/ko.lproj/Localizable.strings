@@ -5,3 +5,6 @@
 "guidance.rain-wind" = "우산 챙기고 강풍 조심해요"; "guidance.rain" = "우산 챙겨요"; "guidance.wind" = "바람이 강해요"; "guidance.clear" = "가볍게 출발해요";
 "activity.accessibility.summary" = "날씨 안내, %@, 권장 출발 시각 %@";
 "activity.accessibility.lock" = "%@, %@, 권장 출발 시각 %@, %@";
+
+"widget.native.app-guidance" = "코디·준비물·경로: 마지막 앱 갱신 기준";
+"widget.native.attribution" = "Apple Weather 데이터 출처";
