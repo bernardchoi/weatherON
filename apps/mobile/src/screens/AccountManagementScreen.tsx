@@ -3,7 +3,6 @@ import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } fr
 import { uiIconAssets } from "../assets";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
-import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -71,11 +70,7 @@ export function AccountManagementScreen({
           ]}
         >
           <View style={[styles.profileVisual, { backgroundColor: theme.cardStrong }]}>
-            {provider === "naver" || provider === "line" ? (
-              <ProviderBrandIcon provider={provider} size={getProviderIconCanvasSize(provider)} />
-            ) : (
-              <Image source={uiIconAssets.tabMy} style={[styles.accountIcon, { tintColor: theme.sky }]} resizeMode="contain" />
-            )}
+            <Image source={uiIconAssets.tabMy} style={[styles.accountIcon, { tintColor: theme.sky }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />
             <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
           <View style={styles.profileCopy}>
@@ -168,11 +163,6 @@ export function AccountManagementScreen({
         </Modal>
     </AppScreen>
   );
-}
-
-function getProviderIconCanvasSize(provider: "naver" | "line") {
-  if (provider === "naver") return 48;
-  return 38;
 }
 
 function getProviderLabel(provider?: AccountProvider) {

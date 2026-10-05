@@ -4,6 +4,7 @@ import { StyleSheet, Text, type TextStyle } from "../localization/react-native";
 // (fontWeight 분포: 900 다수, 800, 700, 소수 600·300). 각 파일은 자기 웨이트 그대로의 페이스라
 // 별도의 fontWeight 없이 패밀리 이름만으로 원하는 두께가 나온다.
 export const pretendardFontMap = {
+  "GoogleSans": require("../../assets/fonts/google-sans/GoogleSans.ttf"),
   Pretendard: require("../../assets/fonts/Pretendard-Regular.otf"),
   "Pretendard-Light": require("../../assets/fonts/Pretendard-Light.otf"),
   "Pretendard-SemiBold": require("../../assets/fonts/Pretendard-SemiBold.otf"),
@@ -36,8 +37,7 @@ function pretendardFamilyForWeight(weight: TextStyle["fontWeight"]): string {
 let patched = false;
 
 // RN의 기본 Text 렌더링을 한 번만 가로채서, 인라인 스타일의 fontWeight에 맞는 Pretendard 패밀리를
-// 자동으로 주입한다. 앱 전역이 <Text>를 직접 쓰고 fontFamily는 어디에도 지정하지 않으므로,
-// 이 패치 한 번으로 모든 텍스트가 시스템 폰트 대신 Pretendard로 바뀐다.
+// 자동으로 주입한다. 명시적 fontFamily가 있는 브랜드/시스템 텍스트는 그대로 보존한다.
 // (React 19에서 Text.defaultProps가 제거되어 이 방식이 유일하게 안전한 전역 적용 경로다.)
 // 파일별로 이미 해당 두께의 페이스라, 중복 볼드(faux bold)를 막기 위해 fontWeight는 제거하고
 // 패밀리 이름으로만 두께를 표현한다.
@@ -50,6 +50,8 @@ export function applyPretendardToText(): void {
   TextComponent.render = function render(...args: unknown[]) {
     const props = args[0] as { style?: unknown };
     const flattened = (StyleSheet.flatten(props?.style as TextStyle) ?? {}) as TextStyle;
+    // Provider/system typography must retain its explicit family and weight.
+    if (flattened.fontFamily) return originalRender.apply(this, args);
     const { fontWeight, ...rest } = flattened;
     const family = pretendardFamilyForWeight(fontWeight);
     const nextProps = { ...(props as object), style: [rest, { fontFamily: family }] };

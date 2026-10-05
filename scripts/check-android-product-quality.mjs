@@ -348,16 +348,9 @@ assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
   ">DESTINATION CARE<",
   "letterSpacing: 1.7",
 ]);
-assertSourceIncludes("apps/mobile/src/screens/TermsConsentScreen.tsx", [
-  "전체 동의 해제",
-  "필수 4개와 선택 마케팅 1개를 함께 변경",
-  "`${item.label} ${checked ? \"동의 해제\" : \"동의\"}`",
-  "내용 보기",
-  "onOpenPolicyDocument",
-  "actionPanel",
-  "동의하고 계속",
-  "필수 동의 필요",
-]);
+// Validate real consent handlers instead of coupling behavior to explanatory copy.
+await import("./check-terms-consent-behavior.mjs");
+
 assertSourceIncludes("apps/mobile/src/screens/OutfitDetailScreen.tsx", [
   "needsTerms",
   "약관 동의 후 저장",
@@ -403,11 +396,12 @@ assertSourceIncludes("apps/mobile/src/screens/AccountConnectScreen.tsx", [
   "약관을 확인하면 원래 화면으로 돌아가요",
   "위치·알림 권한은 계정과 별도로 선택해요",
   "사용할 계정 방식을 선택",
-  "AppleAuthenticationButton",
+  "AccountProviderButton",
   "다시 시도",
   "resolveAccountButtonLanguage",
 ]);
-assertSourceIncludes("apps/mobile/src/components/provider-brand-icon.tsx", ["google-icon-ios.png"]);
+assertSourceIncludes("apps/mobile/src/components/AccountProviderButton.tsx", ["AppleAuthenticationButton", "GoogleSans"]);
+assertSourceIncludes("apps/mobile/src/components/provider-brand-icon.tsx", ["google-g.png"]);
 assertSourceExcludes("apps/mobile/src/components/provider-brand-icon.tsx", ["", "kakaoWideButton"]);
 assertSourceIncludes("apps/mobile/src/providers/localNotifications.ts", [
   "verification-failed",
@@ -552,7 +546,7 @@ assertSourceExcludes("apps/mobile/src/screens/PolicyHubScreen.tsx", [
 assertSourceIncludes("apps/mobile/src/screens/PolicyDocumentScreen.tsx", [
   "정책 목록으로 돌아가기",
   "약관 동의로 돌아가기",
-  'effectiveDate: "2026.08.30"',
+  'effectiveDate: "2026.09.19"',
   "시행일 {document.effectiveDate}",
   "현재 앱의 직접 런타임 의존성",
   "MIT 라이선스 전문 보기",
@@ -760,7 +754,7 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "목적지 강수",
   "오늘 챙길 것",
   "오늘 입기 좋은 코디",
-  "getHomeOutfitCopy(outfit.decisionText, packTitle)",
+  "getHomeOutfitCopy(outfit.variant, packTitle)",
   "getHeroTemperatureRange",
   "최고 ",
   "onNavigate(\"C1\")",
@@ -795,7 +789,8 @@ assertSourceIncludes("apps/mobile/src/screens/AlertSettingsScreen.tsx", [
   "수신 확인 전",
   "알림 도착을 확인해볼까요?",
   "확인 알림으로 한 번 점검해요",
-  "최근 ${statusLabel}",
+  "최근 이력",
+  'notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"',
   "다시 보내기",
   "onSendTestNotification",
   "notificationDeliveryStatus",

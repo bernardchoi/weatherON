@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { AppScreen } from "../components/AppScreen";
-import { ProviderBrandIcon } from "../components/provider-brand-icon";
+import { AccountProviderButton as ProviderButton } from "../components/AccountProviderButton";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
-import { getAccountRegionLabel, orderProvidersForRegion, resolveAccountButtonLanguage, resolveAccountRegion, type AccountButtonLanguage } from "../providers/accountRegion";
+import { getAccountRegionLabel, orderProvidersForRegion, resolveAccountButtonLanguage, resolveAccountRegion } from "../providers/accountRegion";
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { radius, spacing } from "../theme/tokens";
 
 type AccountConnectScreenProps = {
   gate: AccountGateState | null;
@@ -19,35 +19,6 @@ type AccountConnectScreenProps = {
   onSignIn: (provider: AccountProvider) => Promise<void>;
   onCancel: () => void;
 };
-
-const providerLabels: Record<AccountButtonLanguage, Record<AccountProvider, string>> = {
-  ko: {
-    apple: "Apple로 계속",
-    kakao: "카카오 로그인",
-    naver: "네이버 로그인",
-    line: "LINE으로 로그인",
-    google: "Google 계정으로 로그인",
-  },
-  ja: {
-    apple: "Appleで続ける",
-    kakao: "Login with Kakao",
-    naver: "Log in with Naver",
-    line: "LINEでログイン",
-    google: "Googleでログイン",
-  },
-  en: {
-    apple: "Continue with Apple",
-    kakao: "Login with Kakao",
-    naver: "Log in with Naver",
-    line: "Log in with LINE",
-    google: "Sign in with Google",
-  },
-};
-
-const kakaoButtonAssets = {
-  ko: require("../../../../assets/auth-providers/kakao-login-ko.png"),
-  en: require("../../../../assets/auth-providers/kakao-login-en.png"),
-} as const;
 
 export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
@@ -167,64 +138,6 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
   );
 }
 
-function ProviderButton({ provider, language, minHeight, onPress, theme, disabled }: { provider: AccountProvider; language: AccountButtonLanguage; minHeight: number; onPress: () => void; theme: AppTheme; disabled: boolean }) {
-  const label = providerLabels[language][provider];
-  if (provider === "apple") {
-    return (
-      <AppleAuthentication.AppleAuthenticationButton
-        accessibilityLabel={label}
-        accessibilityState={{ busy: disabled, disabled }}
-        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-        buttonStyle={theme.name === "dark" ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-        cornerRadius={12}
-        onPress={() => {
-          if (!disabled) onPress();
-        }}
-        style={[styles.appleButton, { height: minHeight, opacity: disabled ? 0.55 : 1 }]}
-      />
-    );
-  }
-
-  if (provider === "kakao") {
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityState={{ busy: disabled, disabled }}
-        disabled={disabled}
-        onPress={onPress}
-        style={({ pressed }) => [styles.kakaoButton, { height: minHeight, opacity: disabled ? 0.55 : pressed ? 0.78 : 1 }]}
-      >
-        <Image
-          source={kakaoButtonAssets[language === "ko" ? "ko" : "en"]}
-          style={styles.kakaoButtonImage}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-        />
-      </Pressable>
-    );
-  }
-
-  const palette = provider === "naver"
-    ? { background: "#03A94D", border: "#03A94D", text: "#FFFFFF" }
-    : provider === "line"
-      ? { background: "#06C755", border: "#06C755", text: "#FFFFFF" }
-      : theme.name === "dark"
-        ? { background: "#131314", border: "#8E918F", text: "#E3E3E3" }
-        : { background: "#FFFFFF", border: "#747775", text: "#1F1F1F" };
-  const iconSize = provider === "line" ? 30 : provider === "naver" ? 28 : 30;
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ busy: disabled, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.providerButton, { height: minHeight, opacity: disabled ? 0.55 : pressed ? 0.78 : 1, backgroundColor: palette.background, borderColor: palette.border }]}>
-      <View style={styles.providerContent}>
-        <View style={styles.providerIconSlot}>
-          <ProviderBrandIcon provider={provider} size={iconSize} />
-        </View>
-        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.providerLabel, provider === "google" ? styles.googleProviderLabel : null, { color: palette.text }]}>{label}</Text>
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   hero: { justifyContent: "center", gap: 3, borderWidth: 1 },
   heroKicker: { fontSize: 12, lineHeight: 16, fontWeight: "900", letterSpacing: 0.2 },
@@ -238,14 +151,6 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, lineHeight: 21, fontWeight: "900" },
   sectionMeta: { fontSize: 11, lineHeight: 16, fontWeight: "700" },
   providerList: { gap: spacing.sm },
-  appleButton: { width: "100%" },
-  kakaoButton: { width: "100%", alignItems: "center", justifyContent: "center", borderRadius: 12, overflow: "hidden" },
-  kakaoButtonImage: { width: "100%", height: "100%" },
-  providerButton: { width: "100%", alignItems: "center", justifyContent: "center", borderRadius: 12, borderCurve: "continuous", borderWidth: 1, paddingHorizontal: 16 },
-  providerContent: { width: "100%", height: "100%", alignItems: "center", justifyContent: "center", paddingHorizontal: 44 },
-  providerIconSlot: { position: "absolute", left: 2, width: 36, height: 36, alignItems: "center", justifyContent: "center" },
-  providerLabel: { maxWidth: "100%", textAlign: "center", fontSize: 16, lineHeight: 21, fontWeight: "800" },
-  googleProviderLabel: { fontSize: 14, lineHeight: 20, fontWeight: "600" },
   unavailablePanel: { minHeight: 88, alignItems: "center", justifyContent: "center", gap: spacing.sm, borderRadius: radius.md, borderWidth: 1, padding: spacing.md },
   unavailableText: { textAlign: "center", fontSize: 12, lineHeight: 17, fontWeight: "800" },
   retryButton: { minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: radius.md, borderWidth: 1, paddingHorizontal: spacing.lg },

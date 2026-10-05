@@ -7,7 +7,7 @@ const platform = { OS: 'android' };
 let result, stored, exchanges;
 const account = { userId: 'test-user', provider: 'google', termsAccepted: true };
 const mocks = {
-  'react-native': { Platform: platform },
+  '../localization/react-native': { Platform: platform },
   'expo-crypto': {},
   '../config/accountEnv': { getAccountRuntimeConfig: () => ({ apiBaseUrl: 'https://test.invalid', timeoutMs: 1000 }) },
   '../utils/httpJson': { normalizeBaseUrl: v => v },
