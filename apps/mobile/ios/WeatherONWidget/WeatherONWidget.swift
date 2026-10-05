@@ -597,6 +597,8 @@ private struct WeatherONEntry: TimelineEntry {
   let visualPhase: Int
   let localization: WeatherONWidgetLocalization
   var nativeAttribution: WeatherONNativeAttribution? = nil
+  // Actual persisted app delivery time; native weather must never replace it.
+  var appSnapshotUpdatedAt: String? = nil
 
   static let placeholder = WeatherONEntry(
     date: Date(),
@@ -615,7 +617,8 @@ private enum WeatherONTimelineFactory {
       location: WeatherONStoreReader.location(for: selectionID, in: loaded.store),
       hasSharedSnapshot: WeatherONStoreReader.hasWeather(selectionID: selectionID, store: loaded.store, hasSharedSnapshot: loaded.hasSharedSnapshot),
       visualPhase: phase,
-      localization: loaded.store.localization
+      localization: loaded.store.localization,
+      appSnapshotUpdatedAt: loaded.store.updatedAt
     )
   }
 
@@ -659,7 +662,8 @@ private enum WeatherONTimelineFactory {
         hasSharedSnapshot: hasSharedSnapshot,
         visualPhase: phase,
         localization: loaded.store.localization,
-        nativeAttribution: attribution
+        nativeAttribution: attribution,
+        appSnapshotUpdatedAt: loaded.store.updatedAt
       )
     }
     return Timeline(entries: entries, policy: .after(refresh))
@@ -791,8 +795,8 @@ private struct WeatherONWidgetView: View {
         }
       }
     }
-    if let attribution = entry.nativeAttribution {
-      WeatherONNativeAttributionView(attribution: attribution, compact: family == .systemSmall)
+    if entry.hasSharedSnapshot {
+      WeatherONWidgetFooter(entry: entry, compact: family == .systemSmall)
     }
     }
     .widgetURL(entry.location.deepLinkURL)
@@ -813,26 +817,82 @@ private struct WeatherONWidgetView: View {
   }
 }
 
-private struct WeatherONNativeAttributionView: View {
+private func weatherONAppSnapshotTime(
+  _ value: String?, referenceDate: Date, timeZone: TimeZone,
+  localization: WeatherONWidgetLocalization
+) -> String? {
+  guard let value,
+        let date = snapshotDateFormatter.date(from: value) ?? fallbackSnapshotDateFormatter.date(from: value),
+        date <= referenceDate else { return nil }
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = timeZone
+  let clock = localization.uses24HourClock ? "HHmm" : "hm"
+  let sameDay = calendar.isDate(date, inSameDayAs: referenceDate)
+  let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: referenceDate)
+  let template = sameDay ? clock : (sameYear ? "Md" : "yMd") + clock
+  let formatter = DateFormatter()
+  formatter.calendar = calendar
+  formatter.locale = Locale(identifier: localization.languageTag)
+  formatter.timeZone = timeZone
+  formatter.setLocalizedDateFormatFromTemplate(template)
+  return formatter.string(from: date)
+}
+
+private struct WeatherONWidgetFooter: View {
   @Environment(\.colorScheme) private var colorScheme
-  let attribution: WeatherONNativeAttribution
+  let entry: WeatherONEntry
   let compact: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    Group {
+      if compact {
+        VStack(alignment: .leading, spacing: 3) {
+          guidance
+          mark
+        }
+      } else {
+        HStack(alignment: .center, spacing: 6) {
+          guidance
+          Spacer(minLength: 6)
+          mark
+        }
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, compact ? 16 : 18)
+    .padding(.bottom, 12)
+  }
+
+  @ViewBuilder private var mark: some View {
+    if let attribution = entry.nativeAttribution {
       Link(destination: attribution.legalURL) {
-        if let image = UIImage(data: colorScheme == .dark ? attribution.lightMark : attribution.darkMark) {
-          Image(uiImage: image).resizable().scaledToFit().frame(height: 10)
+        // The dark-appearance asset contains a light mark, and vice versa.
+        if let image = UIImage(data: colorScheme == .dark ? attribution.darkMark : attribution.lightMark) {
+          Image(uiImage: image).resizable().scaledToFit().frame(height: 12)
         } else {
           Text(attribution.serviceName).font(.system(size: 9))
         }
       }
+      .fixedSize()
       .accessibilityLabel(Text(weatherONLocalized("widget.native.attribution")))
-      Text(weatherONLocalized("widget.native.app-guidance"))
-        .font(.system(size: compact ? 8 : 9)).lineLimit(1)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 14).padding(.bottom, 5)
+  }
+
+  private var basis: String {
+    guard let time = weatherONAppSnapshotTime(
+      entry.appSnapshotUpdatedAt, referenceDate: entry.date,
+      timeZone: entry.location.resolvedTimeZone, localization: entry.localization
+    ) else { return weatherONLocalized("widget.guidance.unknown-time") }
+    return String(format: weatherONLocalized("widget.guidance.as-of"), time)
+  }
+
+  private var guidance: some View {
+    Text("\(weatherONLocalized("widget.guidance.scope")) · \(basis)")
+      .font(.system(size: 9))
+      .foregroundStyle(colorScheme == .dark ? Color.white : Color(red: 20 / 255, green: 32 / 255, blue: 51 / 255))
+      .lineLimit(2)
+      .fixedSize(horizontal: false, vertical: true)
+      .accessibilityLabel(Text("\(weatherONLocalized("widget.guidance.accessibility")), \(basis)"))
   }
 }
 
@@ -847,34 +907,43 @@ private struct WeatherONSmallView: View {
       HStack(alignment: .center, spacing: 6) {
         VStack(alignment: .leading, spacing: 0) {
           Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 40, weight: .bold, design: .rounded))
+            .font(.system(size: 32, weight: .bold, design: .rounded))
             .tracking(-2)
-          Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(palette.secondaryText)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .layoutPriority(1)
         }
 
         Spacer(minLength: 0)
 
-        WeatherONConditionGlyph(
-          condition: entry.location.condition,
-          isNight: entry.location.isNight(at: entry.date),
-          palette: palette,
-          size: 42
-        )
+        VStack(spacing: 2) {
+          WeatherONConditionGlyph(
+            condition: entry.location.condition,
+            isNight: entry.location.isNight(at: entry.date),
+            palette: palette,
+            size: 24
+          )
+          Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .foregroundStyle(palette.secondaryText)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+        .frame(minWidth: 44)
       }
       .foregroundStyle(palette.primaryText)
-      .padding(.top, 5)
+      .padding(.top, 3)
 
-      Spacer(minLength: 3)
+      Spacer(minLength: 1)
 
       if entry.location.isDestination {
-          WeatherONSmallDestinationStrip(location: entry.location, localization: entry.localization, palette: palette)
+        WeatherONSmallDestinationStrip(location: entry.location, localization: entry.localization, palette: palette)
       } else {
         WeatherONPreparationStrip(location: entry.location, palette: palette, compact: true)
       }
     }
-    .padding(14)
+    .padding(.horizontal, 16)
+    .padding(.vertical, entry.hasSharedSnapshot ? 8 : 14)
   }
 }
 
@@ -889,13 +958,15 @@ private struct WeatherONMediumView: View {
         Spacer(minLength: 4)
         HStack(alignment: .center, spacing: 8) {
           Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 44, weight: .bold, design: .rounded))
+            .font(.system(size: 34, weight: .bold, design: .rounded))
             .tracking(-2)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
           WeatherONConditionGlyph(
             condition: entry.location.condition,
             isNight: entry.location.isNight(at: entry.date),
             palette: palette,
-            size: 44
+            size: 30
           )
         }
         Text(String(format: weatherONLocalized("widget.feels.condition"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit), weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel)))
@@ -905,21 +976,23 @@ private struct WeatherONMediumView: View {
         Spacer(minLength: 5)
         WeatherONPreparationStrip(location: entry.location, palette: palette, compact: true)
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
+      .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
       VStack(spacing: 8) {
         if entry.location.isDestination {
           WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         } else {
-          WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 3, referenceDate: entry.date)
+          WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 3, referenceDate: entry.date, compact: true)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         }
       }
-      .frame(maxWidth: .infinity)
+      .frame(minWidth: 0, maxWidth: .infinity)
     }
     .foregroundStyle(palette.primaryText)
-    .padding(16)
+    .padding(.horizontal, 18)
+    .padding(.top, 12)
+    .padding(.bottom, entry.hasSharedSnapshot ? 6 : 12)
   }
 }
 
@@ -928,13 +1001,13 @@ private struct WeatherONLargeView: View {
   let palette: WeatherONWidgetPalette
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 10) {
       WeatherONHeader(entry: entry, palette: palette, compact: false)
 
-      HStack(spacing: 12) {
+      HStack(spacing: 10) {
         HStack(spacing: 10) {
           Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 48, weight: .bold, design: .rounded))
+            .font(.system(size: 44, weight: .bold, design: .rounded))
             .tracking(-2)
             .lineLimit(1)
             .minimumScaleFactor(0.78)
@@ -955,7 +1028,7 @@ private struct WeatherONLargeView: View {
             condition: entry.location.condition,
             isNight: entry.location.isNight(at: entry.date),
             palette: palette,
-            size: 48
+            size: 40
           )
         }
         .frame(maxWidth: .infinity)
@@ -979,7 +1052,8 @@ private struct WeatherONLargeView: View {
       }
     }
     .foregroundStyle(palette.primaryText)
-    .padding(18)
+    .padding(.horizontal, 20)
+    .padding(.vertical, 18)
   }
 }
 
@@ -1069,7 +1143,7 @@ private struct WeatherONPreparationTile: View {
     }
     .foregroundStyle(isNeeded ? palette.accent : palette.secondaryText)
     .frame(maxWidth: .infinity)
-    .frame(height: compact ? 34 : 40)
+    .frame(height: compact ? 30 : 36)
     .weatherONCard(palette: palette, highlighted: isNeeded)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("\(title), \(isNeeded ? "필요" : "불필요")")
@@ -1103,7 +1177,7 @@ private struct WeatherONCompactFact: View {
       Text(label).font(.system(size: 7, weight: .semibold, design: .rounded)).foregroundStyle(palette.secondaryText)
     }
     .frame(maxWidth: .infinity)
-    .frame(height: 38)
+    .frame(height: 34)
     .weatherONCard(palette: palette, highlighted: false)
   }
 }
@@ -1130,7 +1204,9 @@ private struct WeatherONScheduleCard: View {
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         VStack(alignment: .leading, spacing: 1) {
           Text(weatherONClock(location.departureTime, localization: localization))
-            .font(.system(size: compact ? 18 : 23, weight: .bold, design: .rounded))
+            .font(.system(size: compact ? 16 : 21, weight: .bold, design: .rounded))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
           Text("출발")
             .font(.system(size: 8, weight: .semibold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
@@ -1141,6 +1217,8 @@ private struct WeatherONScheduleCard: View {
         VStack(alignment: .leading, spacing: 1) {
           Text(weatherONClock(location.arrivalTime, localization: localization))
             .font(.system(size: compact ? 14 : 18, weight: .bold, design: .rounded))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
           Text("도착")
             .font(.system(size: 8, weight: .semibold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
@@ -1148,7 +1226,8 @@ private struct WeatherONScheduleCard: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(compact ? 9 : 12)
+    .padding(.horizontal, compact ? 9 : 12)
+    .padding(.vertical, compact ? 4 : 10)
     .weatherONCard(palette: palette, highlighted: true)
   }
 }
@@ -1159,7 +1238,7 @@ private struct WeatherONOutfitCard: View {
   let compact: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: compact ? 4 : 8) {
+    VStack(alignment: .leading, spacing: compact ? 3 : 8) {
       HStack {
         Label("추천 코디", systemImage: outfitSymbol(location.outfitVariant))
           .font(.system(size: compact ? 9 : 11, weight: .bold, design: .rounded))
@@ -1173,7 +1252,7 @@ private struct WeatherONOutfitCard: View {
         ForEach(location.outfitItems.prefix(compact ? 3 : 4)) { item in
           VStack(spacing: 3) {
             Image(systemName: outfitItemSymbol(item.category))
-              .font(.system(size: compact ? 12 : 16, weight: .semibold))
+              .font(.system(size: compact ? 11 : 14, weight: .semibold))
               .foregroundStyle(palette.accent)
             if !compact {
               Text(item.name)
@@ -1194,7 +1273,7 @@ private struct WeatherONOutfitCard: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(compact ? 8 : 12)
+    .padding(compact ? 5 : 12)
     .weatherONCard(palette: palette, highlighted: false)
   }
 }
@@ -1205,6 +1284,7 @@ private struct WeatherONHourlyStrip: View {
   let palette: WeatherONWidgetPalette
   let limit: Int
   let referenceDate: Date
+  var compact = false
 
   var body: some View {
     HStack(spacing: 5) {
@@ -1213,28 +1293,53 @@ private struct WeatherONHourlyStrip: View {
           Text(compactHour(hour.time))
             .font(.system(size: 8, weight: .semibold, design: .rounded))
             .foregroundStyle(palette.secondaryText)
-          Image(
-            systemName: weatherSymbol(
-              hour.condition,
-              isNight: location.isNight(for: hour.time, relativeTo: referenceDate)
-            )
-          )
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(palette.accent)
-          Text(weatherONTemperature(hour.temperatureC, unit: localization.temperatureUnit))
-            .font(.system(size: 10, weight: .bold, design: .rounded))
-          if hour.rainProbabilityPct > 0 {
-            Text("\(hour.rainProbabilityPct)%")
-              .font(.system(size: 7, weight: .bold, design: .rounded))
-              .foregroundStyle(palette.rain)
+          if compact {
+            HStack(spacing: 3) {
+              condition(hour)
+              precipitation(hour)
+            }
+          } else {
+            condition(hour)
           }
+          temperature(hour)
+          if !compact { precipitation(hour) }
         }
         .frame(maxWidth: .infinity)
       }
     }
-    .padding(.vertical, 9)
+    .padding(.vertical, compact ? 4 : 8)
     .padding(.horizontal, 8)
     .weatherONCard(palette: palette, highlighted: false)
+  }
+
+  @ViewBuilder private func condition(_ hour: WeatherONHourlySnapshot) -> some View {
+    let image = Image(systemName: weatherSymbol(
+      hour.condition,
+      isNight: location.isNight(for: hour.time, relativeTo: referenceDate)
+    ))
+    if compact {
+      image.resizable().scaledToFit().frame(width: 13, height: 12)
+        .foregroundStyle(palette.accent)
+    } else {
+      image.font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(palette.accent)
+    }
+  }
+
+  private func temperature(_ hour: WeatherONHourlySnapshot) -> some View {
+    Text(weatherONTemperature(hour.temperatureC, unit: localization.temperatureUnit))
+      .font(.system(size: 10, weight: .bold, design: .rounded))
+      .lineLimit(1)
+  }
+
+  @ViewBuilder private func precipitation(_ hour: WeatherONHourlySnapshot) -> some View {
+    if hour.rainProbabilityPct > 0 {
+      Text("\(hour.rainProbabilityPct)%")
+        .font(.system(size: 7, weight: .bold, design: .rounded))
+        .foregroundStyle(palette.rain)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+    }
   }
 }
 
@@ -1530,15 +1635,29 @@ private func outfitItemSymbol(_ category: String) -> String {
 }
 
 private func compactHour(_ value: String) -> String {
-  if value.range(of: #"^\d{2}:\d{2}$"#, options: .regularExpression) != nil {
-    return value
+  // Hourly snapshots contain the forecast location's wall time, matching
+  // date(for:relativeTo:), including legacy snapshots with a Z/offset suffix.
+  // Do not reinterpret them in the device timezone or take the trailing mm:ss.
+  let pattern = #"^(?:(\d{4})-(\d{2})-(\d{2})[T ])?(\d{2}):(\d{2})(?::([0-5]\d)(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?$"#
+  guard let expression = try? NSRegularExpression(pattern: pattern),
+        let match = expression.firstMatch(in: value, range: NSRange(value.startIndex..., in: value)) else {
+    return "--:--"
   }
-  if let date = snapshotDateFormatter.date(from: value) ?? fallbackSnapshotDateFormatter.date(from: value) {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "HH시"
-    return formatter.string(from: date)
+  func component(_ index: Int) -> Int? {
+    guard let range = Range(match.range(at: index), in: value) else { return nil }
+    return Int(value[range])
   }
-  return String(value.suffix(5))
+  guard let hour = component(4), let minute = component(5),
+        (0...23).contains(hour), (0...59).contains(minute) else { return "--:--" }
+  if let year = component(1) {
+    guard year > 0, let month = component(2), let day = component(3) else { return "--:--" }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+    let parts = DateComponents(year: year, month: month, day: day)
+    guard let date = calendar.date(from: parts),
+          calendar.dateComponents([.year, .month, .day], from: date) == parts else { return "--:--" }
+  }
+  return String(format: "%02d:%02d", hour, minute)
 }
 
 private extension WeatherONLocationSnapshot {

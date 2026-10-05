@@ -56,5 +56,8 @@
 "activity.accessibility.summary" = "Weather guidance: %@. Recommended departure time: %@.";
 "activity.accessibility.lock" = "%@: %@. Recommended departure time: %@. %@";
 
-"widget.native.app-guidance" = "Outfit, preparation and route: last app update";
 "widget.native.attribution" = "Apple Weather data sources";
+"widget.guidance.scope" = "App guidance";
+"widget.guidance.as-of" = "As of %@";
+"widget.guidance.unknown-time" = "Time unavailable";
+"widget.guidance.accessibility" = "Outfit, preparation and route, app snapshot";

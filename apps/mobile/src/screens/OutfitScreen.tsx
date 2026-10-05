@@ -43,7 +43,7 @@ export function OutfitScreen({
           ))}
           <View style={styles.actions}>
             <AppButton label="코디 자세히 보기" onPress={() => onNavigate("C4")} size="sm" />
-            <AppButton label="우산도 확인" onPress={() => onNavigate("H4")} tone="secondary" size="sm" />
+            <AppButton label="우산 추천" onPress={() => onNavigate("H4")} tone="secondary" size="sm" />
           </View>
         </View>
         <View style={[styles.criteriaStats, { gap: 8 }]}>

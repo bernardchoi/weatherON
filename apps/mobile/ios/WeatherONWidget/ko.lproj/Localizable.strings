@@ -6,5 +6,8 @@
 "activity.accessibility.summary" = "날씨 안내, %@, 권장 출발 시각 %@";
 "activity.accessibility.lock" = "%@, %@, 권장 출발 시각 %@, %@";
 
-"widget.native.app-guidance" = "코디·준비물·경로: 마지막 앱 갱신 기준";
 "widget.native.attribution" = "Apple Weather 데이터 출처";
+"widget.guidance.scope" = "외출정보";
+"widget.guidance.as-of" = "%@ 기준";
+"widget.guidance.unknown-time" = "기준 시각 없음";
+"widget.guidance.accessibility" = "코디·준비물·경로, 앱 스냅샷";

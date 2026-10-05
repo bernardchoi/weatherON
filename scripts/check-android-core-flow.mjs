@@ -217,7 +217,7 @@ async function checkOutfitLaunchFlow(page) {
 
   await clickAriaIncludes(page, "코디 탭");
   await assertText(page, "오늘 입기 좋은 조합");
-  await clickText(page, "우산도 확인");
+  await clickText(page, "우산 추천");
   await assertText(page, "우산 추천");
   await clickAriaIncludes(page, "뒤로");
   await assertText(page, "오늘 입기 좋은 조합");

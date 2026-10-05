@@ -12,5 +12,8 @@
 "activity.accessibility.summary" = "天気の案内：%@。おすすめの出発時刻：%@。";
 "activity.accessibility.lock" = "%@、%@。おすすめの出発時刻：%@。%@";
 
-"widget.native.app-guidance" = "コーデ・持ち物・経路：アプリの最終更新時点";
 "widget.native.attribution" = "Apple Weatherのデータ提供元";
+"widget.guidance.scope" = "外出情報";
+"widget.guidance.as-of" = "%@時点";
+"widget.guidance.unknown-time" = "基準時刻なし";
+"widget.guidance.accessibility" = "コーデ・持ち物・経路、アプリのスナップショット";
