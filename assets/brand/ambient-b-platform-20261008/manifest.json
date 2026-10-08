@@ -1,0 +1,374 @@
+{
+  "name": "WeatherON Ambient B platform assets",
+  "version": "2026-10-08-v1",
+  "status": "authored-and-locally-validated; native-build-and-device-unverified",
+  "method": "new SVG/vector authoring from visual B reference; no source raster alteration",
+  "existing_repository_assets_changed": false,
+  "shared_path_geometry": true,
+  "android_monochrome_note": "separate negative-space fold gap for themed readability",
+  "not_executed": [
+    "Icon Composer .icon assembly",
+    "Xcode build",
+    "Android resource compilation",
+    "device tests",
+    "project activation",
+    "commit or deployment"
+  ],
+  "sources": [
+    "https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer",
+    "https://developer.apple.com/documentation/xcode/configuring-your-app-icon",
+    "https://developer.android.com/develop/ui/compose/system/icon_design_adaptive",
+    "https://developer.android.com/distribute/google-play/resources/icon-design-specifications"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3014,
+      "sha256": "45ad6ef8f1784797af709ce61a47f4c009992a2da4c0f3d10827f79c6d45661c"
+    },
+    {
+      "path": "android/res/drawable/weatheron_ambient_b_background.xml",
+      "bytes": 252,
+      "sha256": "d8b403b1a5bdfaf259e9d0957cff21ee0cf4ee0810c45415021959e2b74fe637"
+    },
+    {
+      "path": "android/res/drawable/weatheron_ambient_b_foreground.xml",
+      "bytes": 1211,
+      "sha256": "d2769904e9a642c15ad2dc1c6210216c1104bdd547a9b127a1a58a50addbd52f"
+    },
+    {
+      "path": "android/res/drawable/weatheron_ambient_b_monochrome.xml",
+      "bytes": 1112,
+      "sha256": "7dee16d2e7ecb8a858c22f399d2dfe63c580707dc34bc139901d97cae6e7605e"
+    },
+    {
+      "path": "android/res/mipmap-anydpi-v26/weatheron_ambient_b.xml",
+      "bytes": 236,
+      "sha256": "30dc87f43f9a5d620de61af0f0e4c9f6aa3cc8bdfe120d7043a5b20afc23b046"
+    },
+    {
+      "path": "android/res/mipmap-anydpi-v33/weatheron_ambient_b.xml",
+      "bytes": 309,
+      "sha256": "c49238f76bea755cc8294fa53523767ee759d7e4722313f703116b60bcabae6d"
+    },
+    {
+      "path": "android/store/WeatherON-Ambient-B-Play-512.png",
+      "bytes": 18344,
+      "sha256": "86711dd6763b109e56dfd44776895ea45b7e9b5006fa440cc407a4551f01a949",
+      "width": 512,
+      "height": 512,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "android/store/WeatherON-Ambient-B-Play-512.svg",
+      "bytes": 971,
+      "sha256": "9490a6c59c5d22ca7c4308272472db2b7925768eb3a0c46746136d273b57b9fb"
+    },
+    {
+      "path": "docs/platform-handoff.md",
+      "bytes": 2986,
+      "sha256": "3b5e47da8c4451cb3cb83619a083d140075acf467122efdcd223139f187a1bcc"
+    },
+    {
+      "path": "docs/validation.json",
+      "bytes": 1292,
+      "sha256": "cf88bc360dd4205ea7402144def909c6b82f8134c96fafde8fc14c222cbd389e"
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-dark-1024.png",
+      "bytes": 68110,
+      "sha256": "63b35b5af9967583d69d186d583a2c9017396597abc41ededd73c38a8d64b174",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 2
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-dark-1024.svg",
+      "bytes": 1505,
+      "sha256": "692b9a9376a8bf18a0f0172bd976ee1421e9275a81ae69e921c356c6de1789ec"
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-dark-foreground.png",
+      "bytes": 73556,
+      "sha256": "9f71ed75e871b59188b951cdb4f77209d5624851d327f6b3ecab9afebbe9df62",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-dark-foreground.svg",
+      "bytes": 1456,
+      "sha256": "dfb046a3d81410a4a75a1776f5be90d4037ff17ebcfd6dd57e4094a71647cb67"
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-light-1024.png",
+      "bytes": 77951,
+      "sha256": "ff19101d0a03398e88e255e6e51a27c5d6fc1fbd1a7c83cf724affb21440299f",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 2
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-light-1024.svg",
+      "bytes": 1505,
+      "sha256": "765f7889d069373d7d9052c7279f46468a4c2485cb6fa15d3b5320b6aa74b33e"
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-light-foreground.png",
+      "bytes": 88341,
+      "sha256": "c7a67494eecac6a95781cef771ff18527fd8f0014032d34298a796fed75d1251",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/composites/WeatherON-Ambient-B-iOS-light-foreground.svg",
+      "bytes": 1456,
+      "sha256": "4ec4afba5b7e776a65c28eb6653b213c99734a691c05f0b1ec3ebda374879914"
+    },
+    {
+      "path": "ios/layers/dark/00-background.png",
+      "bytes": 6565,
+      "sha256": "f9fa2ae9e24e0de8ac9c7e3bf23d6d5e8188def447edee88617da05524fe19b5",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/dark/00-background.svg",
+      "bytes": 159,
+      "sha256": "2bf1c436ad13090338f1ab1e000ca4837fd56760bca9e8838deb5702ed876e48"
+    },
+    {
+      "path": "ios/layers/dark/10-sun.png",
+      "bytes": 19991,
+      "sha256": "2b9c9cab31d3a782d6ae3984f51f644ef8447d4a9df9cf0166191cbc5ea60855",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/dark/10-sun.svg",
+      "bytes": 238,
+      "sha256": "2668c56eb195e13049ee02bf20bd4b972506ecf4f9eb913273fb8c5552848a0b"
+    },
+    {
+      "path": "ios/layers/dark/20-cloud.png",
+      "bytes": 20803,
+      "sha256": "e88209f6cdd8452c9dad3b732a9dff27068b2fc821d8bf195b18f5be1864b301",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/dark/20-cloud.svg",
+      "bytes": 432,
+      "sha256": "402f499190c44f3ee8cf24a45ffcce90d6d5b0d019c5015294993ee49b1e2a50"
+    },
+    {
+      "path": "ios/layers/dark/30-fold-under.png",
+      "bytes": 9929,
+      "sha256": "d36042d8e0a50804159432ea59e7733be2210fbe6560c78deb38225382b394f3",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/dark/30-fold-under.svg",
+      "bytes": 226,
+      "sha256": "592316913863d9bc45ba805c757faeee1b5abcc2095f93f3946b218e3c996733"
+    },
+    {
+      "path": "ios/layers/dark/40-fold.png",
+      "bytes": 18475,
+      "sha256": "be035716904140b2ae878806a9f82e18cebf98cb1327ef63b9732384c28c648a",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/dark/40-fold.svg",
+      "bytes": 356,
+      "sha256": "43bc67c8bc0c96043a932b557e80a1b2a2372194fefc6378634a6f49d39da5ac"
+    },
+    {
+      "path": "ios/layers/light/00-background.png",
+      "bytes": 6564,
+      "sha256": "33eb2ad6139f806e45cec374092dd76ad52de4449441ef6e72c5d91f6f54af0a",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/light/00-background.svg",
+      "bytes": 159,
+      "sha256": "381acabf7255c14f6dc4cc164c236778b0edacd1020ddbd28f3ae005ad4d52f7"
+    },
+    {
+      "path": "ios/layers/light/10-sun.png",
+      "bytes": 20035,
+      "sha256": "ff760a7c9310bec5fc8a64603c9ba67076eafe1e3a52ae2c38024be439f7f135",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/light/10-sun.svg",
+      "bytes": 238,
+      "sha256": "5aff97ca7fd4ece35d9b15d5217e8837961fcf18832887330b85db629b504362"
+    },
+    {
+      "path": "ios/layers/light/20-cloud.png",
+      "bytes": 22014,
+      "sha256": "bf80670aea2f6a5e9f229fb1b33858e6aa3650fac1e99c56666e0b729e134ee9",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/light/20-cloud.svg",
+      "bytes": 432,
+      "sha256": "025372553c91189aac79af6e0cda866feea539af802505d46f6747446a0813b2"
+    },
+    {
+      "path": "ios/layers/light/30-fold-under.png",
+      "bytes": 9924,
+      "sha256": "0a417ccba78fa5fd5e9124bca0cd6c08c5ae28b7c09775b84182ae3c1e20def0",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/light/30-fold-under.svg",
+      "bytes": 226,
+      "sha256": "4c5ba4c21f73584e3dd26bcc665c5109d78253ad5e889705a05b42c117e44400"
+    },
+    {
+      "path": "ios/layers/light/40-fold.png",
+      "bytes": 18432,
+      "sha256": "c29a638427f3132e1a2a274f7c6c978230ec9789c5aed98a0c9de925f23b0491",
+      "width": 1024,
+      "height": 1024,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "ios/layers/light/40-fold.svg",
+      "bytes": 356,
+      "sha256": "f7293c415b24a29e400e9b7a4aa24c74185fdc65f51eab8d26520a11cd9a6b2a"
+    },
+    {
+      "path": "previews/Android-circle.png",
+      "bytes": 21063,
+      "sha256": "6c23017ffd950fb66d6548837849e9532403ae8347277a521f3fd4409900aea2",
+      "width": 512,
+      "height": 512,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/Android-circle.svg",
+      "bytes": 1195,
+      "sha256": "3b6e91c6ace94bc20d31b5aaa5b17c2e097931c21ddf802912d321a369820289"
+    },
+    {
+      "path": "previews/Android-foreground-safezone.png",
+      "bytes": 32730,
+      "sha256": "fd84d8c85d8c510c1f48f715bb57b0cc476aeb28f58a145a894d8ec7a95a11a5",
+      "width": 1080,
+      "height": 1080,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/Android-foreground-safezone.svg",
+      "bytes": 969,
+      "sha256": "0e5b00aaa6c6bc6196f8e1df9af1c763e2b8ba9320b144eed9576f2c1e1c9e45"
+    },
+    {
+      "path": "previews/Android-monochrome-safezone.png",
+      "bytes": 24642,
+      "sha256": "7a2100141fbe4eaf0cc5ae8a033bfe39e86463f0587387825c9a83234d601271",
+      "width": 1080,
+      "height": 1080,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/Android-monochrome-safezone.svg",
+      "bytes": 888,
+      "sha256": "b304d68f08d3746ec8fc07da25797d81f55d04bcd44ecf40180d4e761b2cf64a"
+    },
+    {
+      "path": "previews/Android-monochrome.png",
+      "bytes": 22482,
+      "sha256": "454e120c4b7c572d47b85b19a436cf4cba538c526bf74658ef60dcea9fd351cb",
+      "width": 512,
+      "height": 512,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/Android-monochrome.svg",
+      "bytes": 933,
+      "sha256": "c785de4414fcd1db2e1948f4d38be5ff3cdd234dd8fc224f44814ffaf3e650b4"
+    },
+    {
+      "path": "previews/Android-round.png",
+      "bytes": 18084,
+      "sha256": "917a1968e8781f2824cd675ccf7c4bc93a77ed0c5f99b1ed4ce7e1440bfa662b",
+      "width": 512,
+      "height": 512,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/Android-round.svg",
+      "bytes": 1194,
+      "sha256": "c17c8d9b20f1bf0557950d022e18f6133ea0aba34c7cc47b0901beb00ad48a24"
+    },
+    {
+      "path": "previews/WeatherON-Ambient-B-Platform-Overview.png",
+      "bytes": 150614,
+      "sha256": "89f2077012860a35ec133165af2495fa34a6e603dddabaa1154c1dd2969f6b29",
+      "width": 1600,
+      "height": 760,
+      "bit_depth": 8,
+      "png_color_type": 6
+    },
+    {
+      "path": "previews/WeatherON-Ambient-B-Platform-Overview.svg",
+      "bytes": 6322,
+      "sha256": "638757c4b8ef5e0d68444061fe2aba37d6443c5b3761cbe55e950a5e6e367f77"
+    },
+    {
+      "path": "source/build_assets.py",
+      "bytes": 7116,
+      "sha256": "3aa6cbeecbbe7bf6571ab1a9bce3790555c27afed2f5dd2380483dc8473ba3d9"
+    },
+    {
+      "path": "source/geometry.json",
+      "bytes": 1089,
+      "sha256": "de14fb00d0152d08f1b3b0bf8479aa42f3de464ba1f71b059105a61c0dab19e7"
+    },
+    {
+      "path": "source/validate_and_preview.py",
+      "bytes": 3569,
+      "sha256": "973edc2ca9541107a13e3d535773262c008692927d8d7bc40dddcb5bc6a29e31"
+    }
+  ]
+}

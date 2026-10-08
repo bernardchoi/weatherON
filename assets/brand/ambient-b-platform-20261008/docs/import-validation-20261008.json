@@ -1,0 +1,46 @@
+{
+  "source_archive": "WeatherON-Ambient-B-Platform-Assets-20261008.zip",
+  "source_archive_bytes": 678949,
+  "source_archive_sha256": "a05a72592ccdf3b414481274679fe97dc08b9d52f5fc97d2252d8f6f8d8a0e5a",
+  "imported_package_files": 54,
+  "source_manifest_files_verified": 53,
+  "pngs_verified": 21,
+  "svg_xml_documents_verified": 26,
+  "safezone_checks": {
+    "previews/Android-foreground-safezone.png": {
+      "radius_dp": 32.367,
+      "bounds_px": [
+        224,
+        294,
+        851,
+        779
+      ]
+    },
+    "previews/Android-monochrome-safezone.png": {
+      "radius_dp": 32.732,
+      "bounds_px": [
+        224,
+        294,
+        851,
+        788
+      ]
+    }
+  },
+  "play_png_color_profile": {
+    "sRGB_chunk": false,
+    "ICC_profile_chunk": false,
+    "color_space_verified": false,
+    "note": "Source README claims sRGB; this PNG has no sRGB or ICC tag, so color-space compliance is not established by this inspection."
+  },
+  "original_files_byte_identical": true,
+  "environment_absolute_paths_found": false,
+  "existing_assets_or_app_configuration_changed": false,
+  "source_manifest_context": "Authoring-stage validation supplied in ZIP, before this repository import; not current publication status.",
+  "native_builds_icon_composer_and_device_tests": "not executed",
+  "device_test_plan": "2026-10-08 evening or 2026-10-09 Korea time; pending",
+  "repository_added_files": [
+    ".gitattributes",
+    "docs/import-validation-20261008.json"
+  ],
+  "total_repository_files": 56
+}

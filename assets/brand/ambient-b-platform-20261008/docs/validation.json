@@ -1,0 +1,71 @@
+[
+  {
+    "file": "Android-foreground-safezone.png",
+    "max_radius_dp": 32.367,
+    "limit_radius_dp": 33,
+    "pass": true,
+    "bounds_px": [
+      224,
+      294,
+      851,
+      779
+    ],
+    "width_dp": 62.7,
+    "height_dp": 48.5
+  },
+  {
+    "file": "Android-monochrome-safezone.png",
+    "max_radius_dp": 32.732,
+    "limit_radius_dp": 33,
+    "pass": true,
+    "bounds_px": [
+      224,
+      294,
+      851,
+      788
+    ],
+    "width_dp": 62.7,
+    "height_dp": 49.4
+  },
+  {
+    "file": "android/store/WeatherON-Ambient-B-Play-512.png",
+    "size": [
+      512,
+      512
+    ],
+    "mode": "RGBA",
+    "bytes": 18344,
+    "alpha_extrema": [
+      255,
+      255
+    ]
+  },
+  {
+    "file": "ios/composites/WeatherON-Ambient-B-iOS-light-1024.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 77951,
+    "alpha_extrema": null
+  },
+  {
+    "file": "ios/composites/WeatherON-Ambient-B-iOS-dark-1024.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 68110,
+    "alpha_extrema": null
+  },
+  {
+    "xml_parse": "passed",
+    "note": "XML parse is not Android resource compilation."
+  },
+  {
+    "ios_light_dark_path_equality": "passed",
+    "original_raster_pixel_equality": "not claimed; newly authored vectors"
+  }
+]
