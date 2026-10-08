@@ -143,6 +143,10 @@ export function evaluateNotificationRules(
         weatherAlertSignals,
       });
     const weatherAlertSignal = getWeatherAlertSignal(rule, weatherAlertSignals);
+    const eventKey = weatherAlertSignal ? `${rule.id}:${weatherAlertSignal.eventDate}` : undefined;
+    const deliveryKey = eventKey && rule.type === "heatwave"
+      ? `app-high-temperature-v1:${eventKey}:${encodeURIComponent(weather.locationId)}:${encodeURIComponent(getForecastTimeZone(weather, options) ?? "")}`
+      : eventKey;
     return {
       ...rule,
       active,
@@ -162,7 +166,7 @@ export function evaluateNotificationRules(
         weatherAlertSignal,
       }),
       forecastEventDate: rule.type === "heatwave" ? weatherAlertSignal?.eventDate : undefined,
-      deliveryKey: weatherAlertSignal ? `${rule.type === "heatwave" ? "app-high-temperature-v1:" : ""}${rule.id}:${weatherAlertSignal.eventDate}` : undefined,
+      deliveryKey,
       conditionSummary:
         rule.type === "destination"
           ? formatDestinationCondition(destinationCondition)
@@ -309,7 +313,7 @@ function getWeatherAlertSignals(weather: WeatherSnapshot, options: NotificationE
 function getHeatwaveSignal(weather: WeatherSnapshot, options: NotificationEvaluationOptions): WeatherAlertSignal | undefined {
   // 미래 체감온도는 공통 예보 계약에 없다. 33/35℃는 앱의 일반 기온 안내
   // 구간이며, 공급자 feels-like나 기상청 체감온도 특보 기준으로 해석하지 않는다.
-  const timeZone = options.timeZone ?? weather.timezone ?? (weather.countryCode === "KR" ? "Asia/Seoul" : weather.countryCode === "JP" ? "Asia/Tokyo" : undefined);
+  const timeZone = getForecastTimeZone(weather, options);
   const nowMs = options.nowMs ?? Date.parse(weather.observedAt);
   if (!timeZone || !Number.isFinite(nowMs) || weather.stale || weather.source === "fallback") return undefined;
   const nowDate = getForecastLocalDate(new Date(nowMs).toISOString(), timeZone);
@@ -332,6 +336,10 @@ function getHeatwaveSignal(weather: WeatherSnapshot, options: NotificationEvalua
     reason: `${advisoryRun.startDate}부터 ${advisoryRun.days}일간 일최고 기온 33℃ 이상 예보 · 기간 최고 ${advisoryRun.maxTempC.toFixed(0)}℃`,
     eventDate: advisoryRun.startDate,
   };
+}
+
+function getForecastTimeZone(weather: WeatherSnapshot, options: NotificationEvaluationOptions): string | undefined {
+  return options.timeZone ?? weather.timezone ?? (weather.countryCode === "KR" ? "Asia/Seoul" : weather.countryCode === "JP" ? "Asia/Tokyo" : undefined);
 }
 
 function getHeavyRainSignal(weather: WeatherSnapshot): WeatherAlertSignal | undefined {

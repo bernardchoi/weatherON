@@ -36,6 +36,12 @@ type ExpoNotificationResponse = NonNullable<Awaited<ReturnType<ExpoNotifications
 const notificationChannelId = "weatheron-smart-care";
 const smartNotificationIdentifierPrefix = "weatheron:smart:";
 const specialAlertDeliveryStorageKey = "weatheron.specialAlertDelivery.v1";
+// Keep SQLite's string-map contract, with explicit evidence and reservation states.
+const receivedRecordPrefix = "received:v3:";
+const pendingRecordPrefix = "pending:v3:";
+const cancelledRecordPrefix = "cancelled:v3:";
+const unknownRecordPrefix = "unknown:v3:";
+const observedReceipts = new Map<string, string>();
 const routineReminderHour = 7;
 const routineReminderMinute = 30;
 const bedtimeReminderHour = 21;
@@ -87,111 +93,75 @@ async function syncLocalWeatherNotificationsNow(options: {
   if (!Notifications) return { status: "unavailable", scheduledCount: 0 };
   await configureNotifications(Notifications);
 
+  if (options.enabled) {
+    const permission = await Notifications.getPermissionsAsync();
+    if (!permission.granted) return { status: "permission-required", scheduledCount: 0 };
+  }
+
+  // A failed OS read is not an empty list. Do not mutate reservations or records.
+  const snapshot = await readNativeNotifications(Notifications);
+  if (!snapshot) return { status: "verification-failed", scheduledCount: 0 };
+  const { scheduled: scheduledNotifications, presented } = snapshot;
+  const deliveryRecords = reconcileDeliveryRecords(await readSpecialAlertDeliveryRecords(), scheduledNotifications, presented);
+  await writeSpecialAlertDeliveryRecords(deliveryRecords);
+
   if (!options.enabled) {
-    await cancelSmartScheduledNotifications(Notifications);
-    const remaining = await Notifications.getAllScheduledNotificationsAsync();
+    const remaining = await cancelSmartScheduledNotifications(Notifications, scheduledNotifications, deliveryRecords);
+    if (!remaining) return { status: "verification-failed", scheduledCount: 0 };
     const scheduledCount = remaining.filter((item) => item.identifier.startsWith(smartNotificationIdentifierPrefix)).length;
     return { status: scheduledCount === 0 ? "cancelled" : "verification-failed", scheduledCount };
   }
 
-  const permission = await Notifications.getPermissionsAsync();
-  if (!permission.granted) return { status: "permission-required", scheduledCount: 0 };
+  const desiredNotifications = applyLocalNotificationPolicy(
+    options.notifications.filter((item) => !isDeliverySuppressed(deliveryRecords, item.deliveryKey)),
+    { reducedInterruptions: options.reducedInterruptions ?? true },
+  );
+  const scheduledByIdentifier = new Map(scheduledNotifications.map((request) => [request.identifier, request]));
+  const preservedIdentifiers = new Set(desiredNotifications
+    .filter((item) => scheduledByIdentifier.get(getSmartNotificationIdentifier(item))?.content.data?.scheduleFingerprint === getScheduleFingerprint(item, options.contentRevision))
+    .map(getSmartNotificationIdentifier));
 
-  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-  const scheduledIdentifiers = new Set(scheduledNotifications.map((notification) => notification.identifier));
-  const scheduledNotificationsByIdentifier = new Map(
-    scheduledNotifications.map((notification) => [notification.identifier, notification]),
-  );
-  const presentedNotifications = await getPresentedNotifications(Notifications);
-  const nowIso = new Date().toISOString();
-  const storedDeliveryRecords = await readSpecialAlertDeliveryRecords();
-  const presentedDeliveryRecords = Object.fromEntries(
-    options.notifications.flatMap((item) =>
-      item.deliveryKey && presentedNotifications.some((notification) => notification.request.identifier === getSmartNotificationIdentifier(item))
-        ? [[item.deliveryKey, nowIso]]
-        : [],
-    ),
-  );
-  const deliveryRecords = cleanStalePendingDeliveryRecords(
-    { ...storedDeliveryRecords, ...presentedDeliveryRecords },
-    options.notifications,
-    scheduledIdentifiers,
-  );
-  const deliveredKeys = new Set(
-    Object.entries(deliveryRecords)
-      .filter(([key, value]) => {
-        const item = options.notifications.find((notification) => notification.deliveryKey === key);
-        const stillScheduled = item ? scheduledIdentifiers.has(getSmartNotificationIdentifier(item)) : false;
-        return !stillScheduled && Date.parse(value) <= Date.now();
-      })
-      .map(([key]) => key),
-  );
-  const policyNotifications = applyLocalNotificationPolicy(
-    options.notifications.filter((item) => !item.deliveryKey || !deliveredKeys.has(item.deliveryKey)),
-    {
-      reducedInterruptions: options.reducedInterruptions ?? true,
-    },
-  );
-  const desiredNotifications = policyNotifications;
-  const desiredIdentifiers = new Set(desiredNotifications.map(getSmartNotificationIdentifier));
-  const preservedIdentifiers = new Set(
-    desiredNotifications
-      .filter((item) => {
-        const identifier = getSmartNotificationIdentifier(item);
-        const scheduled = scheduledNotificationsByIdentifier.get(identifier);
-        if (!scheduled) return false;
-        if (scheduled.content.data?.contentRevision !== options.contentRevision) return false;
-        if (item.type === "routine" || item.type === "bedtime") return scheduled.content.data?.scheduleTimeZone === item.scheduleTimeZone;
-        const scheduledDeliveryKey = scheduled.content.data?.deliveryKey;
-        return Boolean(item.deliveryKey && scheduledDeliveryKey === item.deliveryKey);
-      })
-      .map(getSmartNotificationIdentifier),
-  );
-
-  await cancelSmartScheduledNotifications(Notifications, preservedIdentifiers);
-  const notificationsToSchedule = desiredNotifications.filter((item) => {
-    return !preservedIdentifiers.has(getSmartNotificationIdentifier(item));
+  const afterCancel = await cancelSmartScheduledNotifications(Notifications, scheduledNotifications, deliveryRecords, preservedIdentifiers);
+  if (!afterCancel) return { status: "verification-failed", scheduledCount: 0 };
+  if (afterCancel.some((request) => request.identifier.startsWith(smartNotificationIdentifierPrefix) && !preservedIdentifiers.has(request.identifier))) {
+    return { status: "verification-failed", scheduledCount: afterCancel.filter((request) => request.identifier.startsWith(smartNotificationIdentifierPrefix)).length };
+  }
+  // Receipt callbacks publish evidence immediately, even while their durable write is queued.
+  const eligibleNotifications = desiredNotifications.filter((item) => !isDeliverySuppressed(deliveryRecords, item.deliveryKey));
+  eligibleNotifications.forEach((item) => {
+    if (item.deliveryKey) setDeliveryRecord(deliveryRecords, item.deliveryKey, pendingRecordPrefix, item.scheduledAt!);
   });
-
-  const scheduledResults = await Promise.allSettled(
-    notificationsToSchedule.map((item) =>
-      Notifications.scheduleNotificationAsync({
-        identifier: getSmartNotificationIdentifier(item),
-        content: {
-          title: item.pushTitle,
-          body: item.pushBody,
-          data: {
-            route: item.deepLink,
-            ruleId: item.id,
-            deliveryKey: item.deliveryKey,
-            contentRevision: options.contentRevision,
-            scheduleTimeZone: item.scheduleTimeZone,
-          },
-          sound: "default",
-          badge: 1,
+  // Journal attempts before native scheduling: a crash cannot turn an overdue attempt into a resend.
+  await writeSpecialAlertDeliveryRecords(deliveryRecords);
+  const scheduledResults = await Promise.allSettled(eligibleNotifications
+    .filter((item) => !preservedIdentifiers.has(getSmartNotificationIdentifier(item)))
+    .map((item) => Notifications.scheduleNotificationAsync({
+      identifier: getSmartNotificationIdentifier(item),
+      content: {
+        title: item.pushTitle, body: item.pushBody,
+        data: {
+          route: item.deepLink, ruleId: item.id, deliveryKey: item.deliveryKey,
+          contentRevision: options.contentRevision, scheduleTimeZone: item.scheduleTimeZone,
+          scheduledAt: item.scheduledAt, scheduleFingerprint: getScheduleFingerprint(item, options.contentRevision),
         },
-        trigger: getNotificationTrigger(Notifications, item),
-      }),
-    ),
-  );
+        sound: "default", badge: 1,
+      },
+      trigger: getNotificationTrigger(Notifications, item),
+    })));
   const failedSchedule = scheduledResults.find((result) => result.status === "rejected");
   if (failedSchedule?.status === "rejected") throw failedSchedule.reason;
-  const newlyScheduledDeliveryRecords = Object.fromEntries(
-    notificationsToSchedule.flatMap((item) => (item.deliveryKey ? [[item.deliveryKey, item.scheduledAt!]] : [])),
-  );
-  const deliveryRecordsChanged = JSON.stringify(deliveryRecords) !== JSON.stringify(storedDeliveryRecords);
-  if (deliveryRecordsChanged || Object.keys(newlyScheduledDeliveryRecords).length > 0) {
-    await writeSpecialAlertDeliveryRecords({
-      ...deliveryRecords,
-      ...newlyScheduledDeliveryRecords,
-    });
-  }
 
-  const finalScheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-  const finalIdentifiers = new Set(finalScheduledNotifications.map((notification) => notification.identifier));
-  const scheduledCount = finalScheduledNotifications.filter((notification) => notification.identifier.startsWith(smartNotificationIdentifierPrefix)).length;
+  const finalScheduled = await readNativeScheduledNotifications(Notifications);
+  if (!finalScheduled) return { status: "verification-failed", scheduledCount: 0 };
+  // A receipt may arrive during a native schedule call; cancel its replacement before finishing.
+  const finalDesired = eligibleNotifications.filter((item) => !isDeliverySuppressed(deliveryRecords, item.deliveryKey));
+  const desiredIdentifiers = new Set(finalDesired.map(getSmartNotificationIdentifier));
+  const verified = await cancelSmartScheduledNotifications(Notifications, finalScheduled, deliveryRecords, desiredIdentifiers);
+  if (!verified) return { status: "verification-failed", scheduledCount: 0 };
+  const finalIdentifiers = new Set(verified.map((request) => request.identifier));
+  const scheduledCount = verified.filter((request) => request.identifier.startsWith(smartNotificationIdentifierPrefix)).length;
   return {
-    status: scheduledCount === desiredIdentifiers.size && [...desiredIdentifiers].every((identifier) => finalIdentifiers.has(identifier)) ? "scheduled" : "verification-failed",
+    status: scheduledCount === desiredIdentifiers.size && [...desiredIdentifiers].every((id) => finalIdentifiers.has(id)) ? "scheduled" : "verification-failed",
     scheduledCount,
   };
 }
@@ -247,7 +217,7 @@ export async function addLocalNotificationResponseListener(
 
   const emitPayload = (response: ExpoNotificationResponse) => {
     const payload = getLocalNotificationResponsePayload(response);
-    void markSpecialAlertDelivered(payload.deliveryKey);
+    void markSpecialAlertReceived(payload.deliveryKey, response.notification.date);
     listener(payload);
     void dismissRespondedNotification(Notifications, response);
   };
@@ -271,7 +241,7 @@ export async function addLocalNotificationReceivedListener(
 
   const subscription = Notifications.addNotificationReceivedListener((notification) => {
     const payload = getLocalNotificationPayload(notification);
-    void markSpecialAlertDelivered(payload.deliveryKey);
+    void markSpecialAlertReceived(payload.deliveryKey, notification.date);
     listener(payload);
   });
   return () => {
@@ -312,18 +282,29 @@ async function configureNotifications(Notifications: ExpoNotificationsModule) {
   }
 }
 
-async function cancelSmartScheduledNotifications(Notifications: ExpoNotificationsModule, preservedIdentifiers = new Set<string>()) {
-  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-  const cancelledResults = await Promise.allSettled(
-    scheduledNotifications
-      .filter(
-        (notification) =>
-          notification.identifier.startsWith(smartNotificationIdentifierPrefix) && !preservedIdentifiers.has(notification.identifier),
-      )
-      .map((notification) => Notifications.cancelScheduledNotificationAsync(notification.identifier)),
-  );
-  const failedCancel = cancelledResults.find((result) => result.status === "rejected");
-  if (failedCancel?.status === "rejected") throw failedCancel.reason;
+async function cancelSmartScheduledNotifications(
+  Notifications: ExpoNotificationsModule,
+  scheduled: Awaited<ReturnType<ExpoNotificationsModule["getAllScheduledNotificationsAsync"]>>,
+  records: Record<string, string>,
+  preservedIdentifiers = new Set<string>(),
+) {
+  const toCancel = scheduled.filter((request) => request.identifier.startsWith(smartNotificationIdentifierPrefix) && !preservedIdentifiers.has(request.identifier));
+  const results = await Promise.allSettled(toCancel.map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)));
+  const remaining = toCancel.length ? await readNativeScheduledNotifications(Notifications) : scheduled;
+  const remainingIds = remaining ? new Set(remaining.map((request) => request.identifier)) : null;
+  results.forEach((result, index) => {
+    const key = toCancel[index].content.data?.deliveryKey;
+    if (result.status === "fulfilled" && remainingIds && !remainingIds.has(toCancel[index].identifier) && typeof key === "string" && !isDeliverySuppressed(records, key)) {
+      const scheduledAt = records[pendingRecordPrefix + key] ?? toCancel[index].content.data?.scheduledAt;
+      const future = typeof scheduledAt === "string" && Date.parse(scheduledAt) > Date.now();
+      // It may have fired between the snapshot and cancellation; overdue absence is ambiguous.
+      setDeliveryRecord(records, key, future ? cancelledRecordPrefix : unknownRecordPrefix, new Date(Date.now()).toISOString());
+    }
+  });
+  await writeSpecialAlertDeliveryRecords(records);
+  const failure = results.find((result) => result.status === "rejected");
+  if (failure?.status === "rejected") throw failure.reason;
+  return remaining;
 }
 
 function getSmartNotificationIdentifier(item: LocalNotificationInput): string {
@@ -343,6 +324,8 @@ async function readSpecialAlertDeliveryRecords(): Promise<Record<string, string>
 }
 
 async function writeSpecialAlertDeliveryRecords(keys: Record<string, string>) {
+  pruneObservedReceipts();
+  observedReceipts.forEach((value, key) => setDeliveryRecord(keys, key, receivedRecordPrefix, value));
   const compactKeys = Object.entries(keys)
     .slice(-40)
     .reduce<Record<string, string>>((acc, [key, value]) => {
@@ -424,35 +407,92 @@ function getNotificationTrigger(
   };
 }
 
-async function getPresentedNotifications(Notifications: ExpoNotificationsModule): Promise<ExpoNotification[]> {
+async function readNativeNotifications(Notifications: ExpoNotificationsModule) {
   try {
-    return await Notifications.getPresentedNotificationsAsync();
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    return { scheduled, presented };
   } catch {
-    return [];
+    return null;
   }
 }
 
-function cleanStalePendingDeliveryRecords(
-  records: Record<string, string>,
-  notifications: LocalNotificationInput[],
-  scheduledIdentifiers: Set<string>,
-): Record<string, string> {
-  return Object.entries(records).reduce<Record<string, string>>((acc, [key, value]) => {
-    const timestamp = Date.parse(value);
-    if (!Number.isFinite(timestamp)) return acc;
-    const item = notifications.find((notification) => notification.deliveryKey === key);
-    const stillScheduled = item ? scheduledIdentifiers.has(getSmartNotificationIdentifier(item)) : false;
-    if (timestamp > Date.now() && item && !stillScheduled) return acc;
-    acc[key] = value;
-    return acc;
-  }, {});
+async function readNativeScheduledNotifications(Notifications: ExpoNotificationsModule) {
+  try { return await Notifications.getAllScheduledNotificationsAsync(); }
+  catch { return null; }
 }
 
-async function markSpecialAlertDelivered(deliveryKey: string | undefined) {
-  if (!deliveryKey) return;
-  const records = await readSpecialAlertDeliveryRecords();
-  await writeSpecialAlertDeliveryRecords({
-    ...records,
-    [deliveryKey]: new Date().toISOString(),
+function getScheduleFingerprint(item: LocalNotificationInput, contentRevision?: string): string {
+  // Recurring reminders depend on wall-clock rules, not the computed next occurrence.
+  const recurring = item.type === "routine" || item.type === "bedtime";
+  return JSON.stringify([
+    1, item.type, item.deliveryKey ?? null, item.scheduleTimeZone ?? null,
+    recurring ? item.type : Date.parse(item.scheduledAt!),
+    item.pushTitle, item.pushBody, item.deepLink, contentRevision ?? null,
+  ]);
+}
+
+function pruneObservedReceipts() {
+  const cutoff = Date.now() - 8 * 24 * 60 * 60_000;
+  observedReceipts.forEach((value, key) => { if (Date.parse(value) < cutoff) observedReceipts.delete(key); });
+  while (observedReceipts.size > 40) observedReceipts.delete(observedReceipts.keys().next().value!);
+}
+
+function setDeliveryRecord(records: Record<string, string>, eventKey: string, prefix: string, value: string) {
+  for (const statePrefix of [receivedRecordPrefix, pendingRecordPrefix, cancelledRecordPrefix, unknownRecordPrefix]) delete records[statePrefix + eventKey];
+  records[prefix + eventKey] = value;
+}
+
+function isDeliverySuppressed(records: Record<string, string>, eventKey: string | undefined): boolean {
+  return !!eventKey && (observedReceipts.has(eventKey) || !!records[receivedRecordPrefix + eventKey] || !!records[unknownRecordPrefix + eventKey]);
+}
+
+function reconcileDeliveryRecords(
+  records: Record<string, string>,
+  scheduled: Awaited<ReturnType<ExpoNotificationsModule["getAllScheduledNotificationsAsync"]>>,
+  presented: ExpoNotification[],
+): Record<string, string> {
+  const pendingKeys = new Set(scheduled.flatMap((request) => typeof request.content.data?.deliveryKey === "string" ? [request.content.data.deliveryKey] : []));
+  pruneObservedReceipts();
+  const result: Record<string, string> = {};
+  Object.entries(records).forEach(([key, value]) => {
+    const timestamp = Date.parse(value);
+    if (!Number.isFinite(timestamp)) return;
+    const statePrefix = [receivedRecordPrefix, pendingRecordPrefix, cancelledRecordPrefix, unknownRecordPrefix, "delivered:v2:", "pending:v2:"].find((prefix) => key.startsWith(prefix));
+    const eventKey = statePrefix ? key.slice(statePrefix.length) : key;
+    // v2 'delivered' mixed actual receipts with inferred expiry, so it is not proof.
+    // Unscoped legacy event keys stay unscoped: never attach them to today's location.
+    const prefix = statePrefix === receivedRecordPrefix || statePrefix === cancelledRecordPrefix || statePrefix === unknownRecordPrefix
+      ? statePrefix
+      : statePrefix === "delivered:v2:" ? unknownRecordPrefix
+      : pendingKeys.has(eventKey) ? pendingRecordPrefix
+      : timestamp <= Date.now() ? unknownRecordPrefix : cancelledRecordPrefix;
+    // Mixed older maps can contain both pending and terminal entries; evidence wins.
+    if (result[receivedRecordPrefix + eventKey] || (result[unknownRecordPrefix + eventKey] && prefix !== receivedRecordPrefix)) return;
+    setDeliveryRecord(result, eventKey, prefix, value);
   });
+  presented.forEach((notification) => {
+    const key = notification.request.content.data?.deliveryKey;
+    if (typeof key === "string") setDeliveryRecord(result, key, receivedRecordPrefix, receiptTimestamp(notification.date));
+  });
+  observedReceipts.forEach((value, key) => setDeliveryRecord(result, key, receivedRecordPrefix, value));
+  return result;
+}
+
+function receiptTimestamp(date: number | undefined): string {
+  return new Date(Number.isFinite(date) ? date! : Date.now()).toISOString();
+}
+
+async function markSpecialAlertReceived(deliveryKey: string | undefined, date?: number) {
+  if (!deliveryKey) return;
+  const value = receiptTimestamp(date);
+  observedReceipts.set(deliveryKey, value);
+  // Serialize durable writes, while immediate evidence prevents in-flight rescheduling.
+  const run = notificationSyncQueue.then(async () => {
+    const records = await readSpecialAlertDeliveryRecords();
+    setDeliveryRecord(records, deliveryKey, receivedRecordPrefix, value);
+    await writeSpecialAlertDeliveryRecords(records);
+  });
+  notificationSyncQueue = run.catch(() => {});
+  await run;
 }
