@@ -29,7 +29,13 @@ export type OutfitRecommendation = {
     shoes: WardrobeItem;
     accessory?: WardrobeItem;
   };
-  matchPct: number;
+  /** 추천된 품목의 보유 상태. 날씨 적합도/정확도 점수가 아님. */
+  preparation: {
+    ownedItemCount: number;
+    totalItemCount: number;
+    missingItemNames: string[];
+    rainProtectionGaps: string[];
+  };
   decisionText: string;
   timeAdvice: Array<{ time: string; text: string }>;
   reasons: string[];
@@ -99,6 +105,8 @@ export type NotificationRuleEvaluation = NotificationRule & {
   scheduledAt?: string;
   /** IANA time zone used to calculate recurring reminder wall time. */
   scheduleTimeZone?: string;
+  /** 앱 자체 고온 안내의 예보 시작일(예보 지역 현지 날짜). */
+  forecastEventDate?: string;
   /** 동일 특보 등급을 한 번만 발송하기 위한 영속 dedupe 키. */
   deliveryKey?: string;
   conditionSummary?: string;

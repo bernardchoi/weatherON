@@ -425,10 +425,11 @@ export function DestinationCareScreen({
               <Text style={[styles.outfitReason, { color: theme.muted }]} numberOfLines={1}>{destinationOutfitReason}</Text>
             </View>
             <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>
-              <Text style={[styles.outfitMatchText, { color: theme.clear }]}>{destinationOutfit.matchPct}%</Text>
+              <Text style={[styles.outfitMatchText, { color: theme.clear }]}>보유 {destinationOutfit.preparation.ownedItemCount}/{destinationOutfit.preparation.totalItemCount}</Text>
             </View>
           </View>
           <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow />
+          {destinationOutfit.preparation.missingItemNames.length > 0 ? <Text style={[styles.outfitReason, { color: theme.warm }]}>추가 준비: {destinationOutfit.preparation.missingItemNames.join(", ")}</Text> : null}
         </View>
 
         {destinationSaved ? (

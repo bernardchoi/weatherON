@@ -874,7 +874,7 @@ await build({
   format: "esm",
   jsx: "automatic",
   target: "es2022",
-  loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file" },
+  loader: { ".png": "dataurl", ".jpg": "file", ".otf": "file", ".ttf": "file" },
   external: [
     "react",
     "react/jsx-runtime",
@@ -993,7 +993,7 @@ assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.act
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushTitle === "우산 챙길 시간이에요"));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushBody === "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요"));
 assert.ok(results.notifications.some((item) => item.id === "routine-morning" && item.pushTitle === "오늘 아침, 가볍게 준비해요"));
-assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.3.0");
+assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.4.0");
 assert.ok(results.highUvOutfit.reasons.some((reason) => reason.includes("자외선 지수 8")));
 assert.equal(results.highUvOutfit.items.accessory.name, "네이비 볼캡");
 assert.ok(results.dustyOutfit.reasons.some((reason) => reason.includes("초미세 39")));
@@ -1011,7 +1011,7 @@ assert.equal(results.seongsuGrid.ny, 126);
 assert.equal(results.feelsLikeHotHumid, 40);
 assert.equal(results.feelsLikeDryWarm, 28);
 assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-warning" && item.active));
-assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-warning" && item.pushTitle === "오늘 한낮, 많이 더울 예정이에요"));
+assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-warning" && item.pushTitle === "2026-06-26부터 고온 예보가 있어요"));
 assert.ok(results.heatwaveAlerts.some((item) => item.id === "heatwave-advisory" && !item.active));
 assert.ok(results.heavyRainAlerts.some((item) => item.id === "heavy-rain-warning" && item.active && item.reason.includes("3시간 105mm")));
 assert.ok(results.heavyRainAlerts.some((item) => item.id === "heavy-rain-warning" && item.pushBody === "이동 전 우산과 안전한 경로를 확인해요"));

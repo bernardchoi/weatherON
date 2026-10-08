@@ -15,7 +15,11 @@ export function selectWardrobeItem(
 
   const desiredTags = getDesiredWeatherTags(signals);
   const seasonReadyCandidates = candidates.filter((item) => isThermallyCompatible(item, signals));
-  const weatherReadyCandidates = seasonReadyCandidates.filter((item) => matchesDesiredWeather(item, desiredTags));
+  // 우천 보호가 필요한 슬롯은 heat/wind 태그 하나만 맞아도 통과시키지 않는다.
+  // 온열 조건을 충족한 비 대응 품목 안에서만 보유품을 우선한다.
+  const needsRainProtection = signals.isRainy && ["outer", "shoes", "accessory"].includes(category);
+  const weatherReadyCandidates = seasonReadyCandidates.filter((item) =>
+    needsRainProtection ? item.weatherTags.includes("rain") : matchesDesiredWeather(item, desiredTags));
   const weatherReadyOwnedCandidates = weatherReadyCandidates.filter((item) => item.owned);
   const rankingCandidates =
     weatherReadyOwnedCandidates.length > 0

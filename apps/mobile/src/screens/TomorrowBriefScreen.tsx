@@ -143,10 +143,11 @@ export function TomorrowBriefScreen({
           </View>
           <View style={styles.outfitTitleCopy}>
             <Text style={[styles.outfitEyebrow, { color: theme.gold }]}>내일 코디</Text>
-            <Text style={[styles.outfitTitle, { color: theme.text }]}>이렇게 입으면 준비 끝</Text>
+            <Text style={[styles.outfitTitle, { color: theme.text }]}>내일 준비할 코디</Text>
           </View>
-          <Text style={[styles.matchPct, { color: theme.gold }]}>{outfit.matchPct}%</Text>
+          <Text style={[styles.matchPct, { color: theme.gold }]}>보유 {outfit.preparation.ownedItemCount}/{outfit.preparation.totalItemCount}</Text>
         </View>
+        {outfit.preparation.missingItemNames.length > 0 ? <Text style={{ color: theme.warm, fontSize: 12 }}>추가 준비: {outfit.preparation.missingItemNames.join(", ")}</Text> : null}
         <View
           style={[
             styles.outfitHero,

@@ -60,7 +60,7 @@ export function OutfitDetailScreen({
   return (
     <AppScreen
       title="코디 상세"
-      badge={`${state.outfit.matchPct}%`}
+      badge="추천 코디"
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
@@ -76,7 +76,7 @@ export function OutfitDetailScreen({
               <View
                 key={slot}
                 accessible
-                accessibilityLabel={`${getOutfitSlotLabel(slot)} ${item.name}`}
+                accessibilityLabel={`${getOutfitSlotLabel(slot)} ${item.name} · ${item.owned ? "보유" : "추가 준비"}`}
                 style={[
                   styles.outfitMiniTile,
                   usesWrappedItemGrid
@@ -106,6 +106,8 @@ export function OutfitDetailScreen({
                   )}
                 </View>
                 <Text style={[styles.itemSlot, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
+                <Text style={[pageStyles.compactCaption, { color: theme.text }]}>{item.name}</Text>
+                <Text style={[pageStyles.compactCaption, { color: item.owned ? theme.muted : theme.warm }]}>{item.owned ? "보유" : "추가 준비"}</Text>
               </View>
             ) : null;
           })}
@@ -141,10 +143,16 @@ export function OutfitDetailScreen({
               <Image source={uiIconAssets.check} style={[styles.recommendationIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             </View>
             <View style={styles.recommendationCopy}>
-              <Text style={[styles.recommendationTitle, { color: theme.text }]}>오늘 날씨에 {state.outfit.matchPct}% 잘 맞아요</Text>
-              <Text numberOfLines={1} style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심으로 골랐어요</Text>
+              <Text style={[styles.recommendationTitle, { color: theme.text }]}>추천 품목 {state.outfit.preparation.totalItemCount}개 중 {state.outfit.preparation.ownedItemCount}개 보유</Text>
+              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.</Text>
             </View>
           </View>
+          {state.outfit.preparation.missingItemNames.length > 0 ? (
+            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>추가 준비: {state.outfit.preparation.missingItemNames.join(", ")}</Text>
+          ) : null}
+          {state.outfit.preparation.rainProtectionGaps.length > 0 ? (
+            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>온열 조건에 맞는 비 대응 품목이 부족해요: {state.outfit.preparation.rainProtectionGaps.map(getOutfitSlotLabel).join(", ")}. 별도 비 대비가 필요해요.</Text>
+          ) : null}
           <View style={styles.reasonGrid}>
             {weatherReasons.map((reason) => (
               <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }]}>

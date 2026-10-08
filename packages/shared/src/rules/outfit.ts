@@ -17,14 +17,24 @@ export function recommendOutfit(
   const shoes = selectWardrobeItem(wardrobe, "shoes", signals, profile);
   const accessory = shouldUseAccessory(signals) ? selectWardrobeItem(wardrobe, "accessory", signals, profile) : undefined;
   const outer = shouldUseOuter(signals) ? selectWardrobeItem(wardrobe, "outer", signals, profile) : undefined;
-  const reasons = buildReasons(weather, signals, Boolean(outer), Boolean(accessory));
-  const matchPct = Math.min(96, 72 + reasons.length * 4 + wardrobe.filter((item) => item.owned).length);
+  const reasons = buildReasons(weather, signals, Boolean(outer), Boolean(accessory && (!signals.isRainy || accessory.weatherTags.includes("rain"))));
+  const items = { outer, top, bottom, shoes, accessory };
+  const selectedItems = Object.values(items).filter((item): item is WardrobeItem => Boolean(item));
+  const preparation = {
+    ownedItemCount: selectedItems.filter((item) => item.owned).length,
+    totalItemCount: selectedItems.length,
+    missingItemNames: selectedItems.filter((item) => !item.owned).map((item) => item.name),
+    rainProtectionGaps: signals.isRainy
+      ? [outer, shoes, accessory].filter((item) => !item?.weatherTags.includes("rain"))
+          .map((item) => item?.category ?? "accessory")
+      : [],
+  };
 
   return {
     id: `outfit-${weather.locationId}-${OUTFIT_RULE_VERSION}`,
     weatherSnapshotId: weather.id ?? weather.locationId,
-    items: { outer, top, bottom, shoes, accessory },
-    matchPct,
+    items,
+    preparation,
     decisionText: buildDecisionText(signals),
     timeAdvice: buildTimeAdvice(weather),
     reasons,

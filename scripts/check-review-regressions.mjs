@@ -59,6 +59,7 @@ const sqlite = {
   },
 };
 const storage = load("apps/mobile/src/providers/appStorage.ts", {
+  "expo-file-system/legacy": { documentDirectory: "file:///mock/Documents/", getInfoAsync: async () => ({ exists: false }) },
   "expo-sqlite": { openDatabaseAsync: async () => {
     if (failOpen) { failOpen = false; throw new Error("temporarily unavailable"); }
     return sqlite;
@@ -99,7 +100,7 @@ const hydrateCode = expression(statePath, (node, source) => ts.isArrowFunction(n
 const setters = Object.fromEntries([...new Set(hydrateCode.match(/\bset[A-Z]\w*/g))].map((name) => [name, (value) => { restored[name] = value; }]));
 const restored = {};
 const hydrate = callback(hydrateCode, {
-  ...setters, Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {},
+  ...setters, Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {}, savedDestinationsRef: {},
   readPersistedWeatherProviderResult: async () => null,
   readPersistedAppState: readPersisted,
   readPersistedNotificationState: async () => ({ readNotificationIds: [], notificationHistory: [] }),
@@ -191,7 +192,8 @@ const notifications = {
   SchedulableTriggerInputTypes: { DATE: "date", CALENDAR: "calendar" },
 };
 const local = load("apps/mobile/src/providers/localNotifications.ts", {
-  "react-native": { Platform: { OS: "ios" } }, "./appStorage": storage,
+  "../localization/react-native": { Platform: { OS: "ios" } }, "./appStorage": storage,
+  "../localization/localization": { translateText: (value) => value },
   "./notificationPolicy": load("apps/mobile/src/providers/notificationPolicy.ts"), "expo-notifications": notifications,
 });
 const input = { id: "test", type: "rain", active: true, requiresPushPermission: true,

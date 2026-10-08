@@ -34,7 +34,6 @@ type DestinationCardModel = {
   warning: string;
   warningKind: "rain" | "wind" | "none";
   outfitTitle: string;
-  outfitMatchPct: number;
   outfitItems: Array<{ id: string; name: string; imageUrl?: string }>;
   tone: "warm" | "clear";
   place: PlaceSearchResult;
@@ -432,7 +431,6 @@ function buildDestinationCards(
       warning,
       warningKind,
       outfitTitle: getOutfitVariantLabel(outfit.variant),
-      outfitMatchPct: outfit.matchPct,
       outfitItems: outfitItems.slice(0, 3).map((item) => ({
         id: item?.id ?? "",
         name: item?.name ?? "",

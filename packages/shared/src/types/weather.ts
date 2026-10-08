@@ -6,6 +6,7 @@ export type WeatherSource = "kma" | "openmeteo" | "weatherkit" | "cache" | "fall
 
 export type HourlyWeather = {
   time: string;
+  /** 일반 기온 예보. 공급자 feels-like/기상청 체감온도와 구분한다. */
   tempC: number;
   rainProbabilityPct: number;
   precipitationMm: number;
@@ -16,6 +17,7 @@ export type HourlyWeather = {
 export type DailyWeather = {
   date: string;
   minTempC: number;
+  /** 일최고 일반 기온 예보. 일최고 체감온도가 아님. */
   maxTempC: number;
   rainProbabilityPct: number;
   precipitationMm: number;

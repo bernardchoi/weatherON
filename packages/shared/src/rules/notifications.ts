@@ -100,6 +100,8 @@ export const defaultNotificationRules: NotificationRule[] = [
 ];
 
 export type NotificationEvaluationOptions = {
+  nowMs?: number;
+  timeZone?: string;
   rules?: NotificationRule[];
   destinationWeather?: WeatherSnapshot;
   destinationCategory?: DestinationCare["category"];
@@ -124,7 +126,7 @@ export function evaluateNotificationRules(
   const destinationWeather = options.destinationWeather;
   const destinationCondition = options.destinationAlertCondition ?? defaultDestinationAlertCondition;
   const destinationShoes = destinationWeather ? recommendShoes(destinationWeather, options.destinationCategory) : undefined;
-  const weatherAlertSignals = getWeatherAlertSignals(weather);
+  const weatherAlertSignals = getWeatherAlertSignals(weather, options);
   const rainNotificationActive = getMaxRainProbabilityPct(weather) >= RAIN_NOTIFICATION_THRESHOLD_PCT;
 
   return rules.map((rule) => {
@@ -152,17 +154,20 @@ export function evaluateNotificationRules(
         destinationWeather,
         weatherAlertSignal,
       }),
-      pushTitle: getPushTitle(rule),
+      pushTitle: rule.type === "heatwave" && weatherAlertSignal
+        ? `${weatherAlertSignal.eventDate}부터 고온 예보가 있어요`
+        : getPushTitle(rule),
       pushBody: getPushBody(rule, active, {
         destinationSignals,
         weatherAlertSignal,
       }),
-      deliveryKey: weatherAlertSignal ? `${rule.id}:${weatherAlertSignal.eventDate}` : undefined,
+      forecastEventDate: rule.type === "heatwave" ? weatherAlertSignal?.eventDate : undefined,
+      deliveryKey: weatherAlertSignal ? `${rule.type === "heatwave" ? "app-high-temperature-v1:" : ""}${rule.id}:${weatherAlertSignal.eventDate}` : undefined,
       conditionSummary:
         rule.type === "destination"
           ? formatDestinationCondition(destinationCondition)
           : weatherAlertSignal
-            ? `${weatherAlertSignal.label} 기준 도달 예상`
+            ? rule.type === "heatwave" ? `${weatherAlertSignal.label} · 일반 기온 예보 기준 · 공식 특보 아님` : `${weatherAlertSignal.label} 기준 도달 예상`
             : undefined,
       ruleVersion: RULE_VERSION,
     };
@@ -201,7 +206,7 @@ function getRuleTitle(rule: NotificationRule): string {
     shoes: "신발 알림",
     destination: "목적지 알림",
     bedtime: "내일 브리핑",
-    heatwave: rule.id.endsWith("warning") ? "폭염경보 기준 도달 예상" : "폭염주의보 기준 도달 예상",
+    heatwave: rule.id.endsWith("warning") ? "앱 자체 강한 고온 안내" : "앱 자체 고온 안내",
     "heavy-rain": rule.id.endsWith("warning") ? "호우경보 기준 도달 예상" : "호우주의보 기준 도달 예상",
   };
   return titleByType[rule.type];
@@ -245,7 +250,7 @@ function getPushTitle(rule: NotificationRule): string {
     shoes: "발끝까지 편안하게 나가요",
     destination: "목적지 가는 길, 미리 살펴봐요",
     bedtime: "내일 아침을 가볍게 준비해요",
-    heatwave: "오늘 한낮, 많이 더울 예정이에요",
+    heatwave: "고온 예보를 확인해요",
     "heavy-rain": "비가 강해질 수 있어요",
   };
   return titleByType[rule.type];
@@ -265,7 +270,7 @@ function getPushBody(
   if (rule.type === "rain") return "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요";
   if (rule.type === "umbrella") return "비가 이어질 수 있어요. 우산이나 방수 아우터를 챙겨요";
   if (rule.type === "shoes") return "오늘은 미끄럽지 않은 편한 신발이 좋아요";
-  if (rule.type === "heatwave") return "야외 일정은 조금 여유 있게 잡고 물을 챙겨요";
+  if (rule.type === "heatwave") return `${context.weatherAlertSignal?.reason ?? "고온 예보 확인"} · 물을 챙겨요. 공식 기상청 특보와 별개인 앱 안내예요`;
   if (rule.type === "heavy-rain") return "이동 전 우산과 안전한 경로를 확인해요";
   if (context.destinationSignals?.rainExceeded) return "가는 길에 비가 올 수 있어요. 우산을 챙겨요";
   if (context.destinationSignals?.windExceeded) return "가는 길 바람이 강할 수 있어요. 가벼운 겉옷을 챙겨요";
@@ -294,30 +299,37 @@ function getWeatherAlertSignal(rule: NotificationRule, signals: WeatherAlertSign
   return signal.level === expectedLevel ? signal : undefined;
 }
 
-function getWeatherAlertSignals(weather: WeatherSnapshot): WeatherAlertSignals {
+function getWeatherAlertSignals(weather: WeatherSnapshot, options: NotificationEvaluationOptions): WeatherAlertSignals {
   return {
-    heatwave: getHeatwaveSignal(weather),
+    heatwave: getHeatwaveSignal(weather, options),
     heavyRain: getHeavyRainSignal(weather),
   };
 }
 
-function getHeatwaveSignal(weather: WeatherSnapshot): WeatherAlertSignal | undefined {
-  const dailyHighs = getDailyHighs(weather);
+function getHeatwaveSignal(weather: WeatherSnapshot, options: NotificationEvaluationOptions): WeatherAlertSignal | undefined {
+  // 미래 체감온도는 공통 예보 계약에 없다. 33/35℃는 앱의 일반 기온 안내
+  // 구간이며, 공급자 feels-like나 기상청 체감온도 특보 기준으로 해석하지 않는다.
+  const timeZone = options.timeZone ?? weather.timezone ?? (weather.countryCode === "KR" ? "Asia/Seoul" : weather.countryCode === "JP" ? "Asia/Tokyo" : undefined);
+  const nowMs = options.nowMs ?? Date.parse(weather.observedAt);
+  if (!timeZone || !Number.isFinite(nowMs) || weather.stale || weather.source === "fallback") return undefined;
+  const nowDate = getForecastLocalDate(new Date(nowMs).toISOString(), timeZone);
+  const localHour = Number(new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(new Date(nowMs)));
+  const dailyHighs = getDailyHighs(weather, timeZone).filter((day) => day.date > nowDate || (day.date === nowDate && localHour < 18));
   const warningRun = getConsecutiveHeatDays(dailyHighs, 35);
-  if (warningRun) {
+  const advisoryRun = getConsecutiveHeatDays(dailyHighs, 33);
+  if (warningRun && (!advisoryRun || warningRun.startDate <= advisoryRun.startDate)) {
     return {
       level: "warning",
-      label: "폭염경보",
-      reason: `일최고 ${warningRun.maxTempC.toFixed(0)}℃ 이상 ${warningRun.days}일 예상 · 야외 활동과 수분 보충 확인`,
+      label: "앱 자체 강한 고온 안내",
+      reason: `${warningRun.startDate}부터 ${warningRun.days}일간 일최고 기온 35℃ 이상 예보 · 기간 최고 ${warningRun.maxTempC.toFixed(0)}℃`,
       eventDate: warningRun.startDate,
     };
   }
-  const advisoryRun = getConsecutiveHeatDays(dailyHighs, 33);
   if (!advisoryRun) return undefined;
   return {
     level: "advisory",
-    label: "폭염주의보",
-    reason: `일최고 ${advisoryRun.maxTempC.toFixed(0)}℃ 이상 ${advisoryRun.days}일 예상 · 한낮 외출 조절 권장`,
+    label: "앱 자체 고온 안내",
+    reason: `${advisoryRun.startDate}부터 ${advisoryRun.days}일간 일최고 기온 33℃ 이상 예보 · 기간 최고 ${advisoryRun.maxTempC.toFixed(0)}℃`,
     eventDate: advisoryRun.startDate,
   };
 }
@@ -345,15 +357,14 @@ function getHeavyRainSignal(weather: WeatherSnapshot): WeatherAlertSignal | unde
   return undefined;
 }
 
-function getDailyHighs(weather: WeatherSnapshot): Array<{ date: string; maxTempC: number }> {
+function getDailyHighs(weather: WeatherSnapshot, timeZone: string): Array<{ date: string; maxTempC: number }> {
   const highs = new Map<string, number>();
   const add = (date: string, tempC: number) => {
     if (!date || !Number.isFinite(tempC)) return;
     highs.set(date, Math.max(highs.get(date) ?? -Infinity, tempC));
   };
   weather.daily?.forEach((day) => add(day.date, day.maxTempC));
-  weather.hourly.forEach((hour) => add(getWeatherDate(hour.time), hour.tempC));
-  add(getWeatherDate(weather.observedAt), weather.current.feelsLikeC);
+  weather.hourly.forEach((hour) => add(getForecastLocalDate(hour.time, timeZone), hour.tempC));
   return [...highs.entries()]
     .map(([date, maxTempC]) => ({ date, maxTempC }))
     .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.date))
@@ -368,7 +379,7 @@ function getConsecutiveHeatDays(highs: Array<{ date: string; maxTempC: number }>
     const consecutive = previous && getDateOffsetDays(previous.date, high.date) === 1;
     if (high.maxTempC >= thresholdC) {
       current = consecutive ? [...current, high] : [high];
-      if (current.length > best.length) best = current;
+      if (current.length >= 2 && (best.length === 0 || current[0].date === best[0].date)) best = current;
       return;
     }
     current = [];
@@ -379,6 +390,15 @@ function getConsecutiveHeatDays(highs: Array<{ date: string; maxTempC: number }>
     days: best.length,
     maxTempC: Math.max(...best.map((item) => item.maxTempC)),
   };
+}
+
+function getForecastLocalDate(value: string, timeZone: string): string {
+  // 공급자가 지역 벽시계로 준 값은 그대로, offset/Z가 있으면 예보 지역 날짜로 변환한다.
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/u.test(value)) return value.slice(0, 10);
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 function getRainWindowTotals(weather: WeatherSnapshot): { max3hMm: number; max12hMm: number } | undefined {

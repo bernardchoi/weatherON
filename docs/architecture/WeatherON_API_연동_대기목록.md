@@ -8,7 +8,7 @@
 | API | 상태 | 사용 위치 | 비고 |
 |---|---|---|---|
 | KMA 단기예보 조회서비스 | 활성 | 서버 weather proxy, live smoke | Decoding 서비스키 사용. 서버 프록시는 TTL 캐시와 이전 성공값 fallback 적용. 현재 upstream 429 발생 가능성이 있어 활용기간/쿼터 확인 필요 |
-| KMA 기상특보 조회서비스 | 연동 대기 | 공식 특보 발효 확인 | 현재 앱은 단기예보 기준으로 폭염·호우 주의보/경보 도달 예상만 로컬 알림 처리. 공식 발효 특보는 `WthrWrnInfoService`와 특보구역 매핑 추가 후 우선 적용 필요 |
+| KMA 기상특보 조회서비스 | 조회·정규화·표시 코드 구현, 운영 검증 필요 | 공식 특보 발효 확인 | `/weather/kma-special-alert` → `weatherProvider.officialSpecialAlert` 경로 구현. 실제 upstream 접근·특보구역 매핑 범위는 별도 검증 필요. 앱 고온 안내는 일반 기온 예보 규칙이며 공식 특보를 생성하거나 대체하지 않음 |
 | Kakao Local API | 활성 | `/places/search?countryCode=KR` | 국내 장소 검색 우선 provider. `WEATHERON_PLACE_SMOKE=1` 통과. REST API 키는 서버 환경변수/Cloudflare Worker Secrets에만 보관 |
 | Open-Meteo | 활성 | Android 해외 날씨 | 별도 키 없음. 서버 adapter 경유. `WEATHERON_PROXY_SMOKE=1`, `WEATHERON_LIVE_SMOKE=1` 통과 |
 
@@ -62,8 +62,12 @@
 - Google Maps와 Mapbox 비용 비교 및 재검토 기준은 `docs/architecture/WeatherON_MAP_PROVIDER_COST_COMPARISON.md`를 따른다.
 - KMA 키는 만료 전 연장신청이 필요하므로 운영 캘린더에 만료 30일 전, 7일 전 알림을 둔다.
 - KMA 호출은 서버 프록시 캐시(`WEATHER_CACHE_TTL_MS`)를 통해 중복 호출을 줄이고, upstream 오류 시 이전 성공값이 있으면 우선 반환한다.
-- 폭염·호우 로컬 알림은 공식 특보 발효 알림이 아니라 `기준 도달 예상` 알림이다. 폭염은 일최고 33℃/35℃ 이상 2일 연속, 호우는 3시간 60mm/90mm 또는 12시간 110mm/180mm 예보를 각각 주의보/경보 기준으로 사용한다.
-- 동일 특보 등급은 event date 기준 하루 1회만 예약한다. 주의보가 경보로 높아지면 별도 key로 1회 추가 예약한다.
-- KMA 기상특보 조회서비스와 특보구역 매핑이 적용되면 공식 발효 상태가 예보 기반 알림보다 우선하며, `발효 중` 문구는 그 시점에만 사용한다.
+- 고온 로컬 알림은 `앱 자체 고온 안내`이며 일반 기온 예보가 33℃/35℃ 이상으로 2일 연속 예상될 때의 제품 안내 구간이다. 공식 폭염주의보/경보 기준에 도달했다는 뜻이 아니다. 기상청 공식 기준은 **일최고 체감온도**를 사용한다([발표 기준](https://www.weather.go.kr/w/forecast/guide/standard.do)). 일반 기온, 현재 feels-like, 미래 체감온도를 혼용하지 않는다.
+- Open-Meteo hourly `apparent_temperature`, WeatherKit hourly `temperatureApparent`는 원응답 타입에 있으나 공통 `HourlyWeather`/`DailyWeather`와 저장 계약에 미래 체감온도가 없다. 공급자 값의 공식 기상청 체감온도 동등성은 확인되지 않았다. [Open-Meteo 정의](https://open-meteo.com/en/docs)는 습도·바람·일사 등을 고려한다. 공식 폭염 예측에는 산식·출처·시간대·일최고 집계·전 공급자 및 저장 계약 검증이 선행되어야 한다.
+- 고온 안내는 과거 날짜·stale·fallback을 제외하고 가장 가까운 연속 고온 기간을 선택한다. 예보 지역 현지 시작일 아침 07:30에 예약하며, 당일 07:30 이후 18:00 전 갱신 시 5초 후 예약한다. 18:00 이후 지난 시작일은 제외한다. 일별 최고 예보만으로 특정 한낮 시간의 고온을 주장하지 않고 시작일·기간·일최고 일반 기온을 표시한다. 시간대 없는 해외 캐시는 보류한다.
+- 고온 안내의 중복 방지는 `app-high-temperature-v1:<기존 rule id>:<현지 시작일>`로 관리한다. 내부 기존 heatwave rule id는 저장 설정 호환을 위해 유지하되 공식 특보 표시는 `officialSpecialAlert`만 사용한다. 호우 예보의 기존 3시간 60mm/90mm, 12시간 110mm/180mm 기준 도달 예상 경로는 이번 수정에서 유지했다.
+- `발효 중` 문구는 실제 공식 특보 조회 결과에만 사용한다. 앱 고온 안내를 공식 특보 발효 상태로 전달하지 않는다.
 - 현재 로컬 예약은 앱이 예보를 새로 읽은 시점에 생성된다. 앱 미실행 상태의 실시간 특보는 KMA 특보 API polling과 FCM/APNs 서버 푸시 연결 후 제공한다.
 - Android 출시 준비와 테스트/심사 프로세스는 `docs/architecture/WeatherON_ANDROID_출시_준비_프로세스.md`에서 추적한다.
+
+2026-10-08 수정 근거·회귀 결과 및 10-08 저녁/10-09 실기기 일정은 [고온·코디 검증 기록](WeatherON_HEAT_OUTFIT_REGRESSION_2026-10-08.md)에서 추적한다.

@@ -94,15 +94,19 @@ export function buildDemoStateFromWeatherResult(
   const outfit = recommendOutfit(activeWeather, preferenceProfile, wardrobe);
   const umbrella = recommendUmbrella(activeWeather);
   const baseNotificationRules = defaultNotificationRules.filter((rule) => rule.type !== "destination");
+  const notificationNow = options.notificationNow ?? Date.now();
+  const notificationTimeZone = activeWeather.timezone
+    ?? (useDestinationWeather ? options.destination?.timezone : undefined)
+    ?? (activeWeather.countryCode === "GLOBAL" ? undefined : getDefaultTimeZone(activeWeather.countryCode));
   const notifications = withScheduledNotificationTimes(
     evaluateNotificationRules(activeWeather, {
       rules: baseNotificationRules,
+      nowMs: notificationNow,
+      timeZone: notificationTimeZone,
     }),
     activeWeather,
-    options.notificationNow ?? Date.now(),
-    activeWeather.timezone
-      ?? (useDestinationWeather ? options.destination?.timezone : undefined)
-      ?? (activeWeather.countryCode === "GLOBAL" ? undefined : getDefaultTimeZone(activeWeather.countryCode)),
+    notificationNow,
+    notificationTimeZone,
   );
   const destinationNotifications = hasDestination
     ? buildDestinationNotifications(activeWeather, weatherProviderResult.destination, {
@@ -470,7 +474,16 @@ function withScheduledNotificationTimes(
         deliveryKey: `${notification.id}:${rainEvent.key}`,
       };
     }
-    if ((notification.type === "heatwave" || notification.type === "heavy-rain") && notification.active) {
+    if (notification.type === "heatwave" && notification.active) {
+      const eventDate = notification.forecastEventDate;
+      if (!eventDate || !/^\d{4}-\d{2}-\d{2}$/u.test(eventDate)) return { ...notification, active: false, scheduledAt: undefined };
+      const [year, month, day] = eventDate.split("-").map(Number);
+      const morningAt = createDateAtTimeInZone({ year, month, day }, "07:30", timeZone).getTime();
+      const expiresAt = createDateAtTimeInZone({ year, month, day }, "18:00", timeZone).getTime();
+      if (expiresAt <= nowMs) return { ...notification, active: false, scheduledAt: undefined };
+      return { ...notification, scheduledAt: new Date(Math.max(nowMs + weatherAlertDeliveryLeadMs, morningAt)).toISOString() };
+    }
+    if (notification.type === "heavy-rain" && notification.active) {
       return { ...notification, scheduledAt: new Date(nowMs + weatherAlertDeliveryLeadMs).toISOString() };
     }
     return notification;

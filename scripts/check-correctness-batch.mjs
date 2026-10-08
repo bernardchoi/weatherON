@@ -21,7 +21,7 @@ for (const status of ['error', 'unavailable', 'denied', 'granted']) {
 }
 console.log('Cold-start location transitions passed');
 function load(path, names, bindings={}) {
- const source=stripTypeScriptTypes(read(path)).replace(/^import[\s\S]*?;\n/gmu,'').replace(/^export /gmu,'');
+ const source=stripTypeScriptTypes(read(path)).replace(/^import[\s\S]*?;\r?\n/gmu,'').replace(/^export /gmu,'');
  return new Function(...Object.keys(bindings), `${source}\nreturn {${names.join(',')}}`)(...Object.values(bindings));
 }
 const {buildTomorrowWeather}=load('apps/mobile/src/utils/tomorrowWeather.ts',['buildTomorrowWeather'],{formatDisplayDate:()=>'',translateText:x=>x});

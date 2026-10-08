@@ -230,7 +230,8 @@ const overrides = {
 
 const files = (await Promise.all(sourceRoots.map(collectSourceFiles))).flat()
   .filter((file) => !file.includes(`${path.sep}localization${path.sep}`));
-const messages = new Set();
+// 공식 특보 제목은 provider에서 조합하므로, 앱 고온 문구 변경으로 번역 키가 사라지지 않게 유지한다.
+const messages = new Set(["폭염주의보", "폭염경보", "호우주의보", "호우경보"]);
 
 for (const file of files) {
   const source = await fs.readFile(file, "utf8");
