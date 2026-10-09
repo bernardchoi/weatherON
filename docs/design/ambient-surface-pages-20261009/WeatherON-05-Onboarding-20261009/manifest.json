@@ -1,0 +1,145 @@
+{
+  "package": "05-Onboarding",
+  "title": "시작 · 온보딩 · A1 부록",
+  "total_packages": 5,
+  "package_pngs": 14,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "O1": {
+      "ios-light": "07-onboarding-intro-ios-light.png",
+      "ios-dark": "07-onboarding-intro-ios-dark.png",
+      "android-light": "07-onboarding-intro-android-light.png",
+      "android-dark": "07-onboarding-intro-android-dark.png"
+    },
+    "O2": {
+      "ios-light": "07-onboarding-intro-ios-light.png",
+      "ios-dark": "07-onboarding-intro-ios-dark.png",
+      "android-light": "07-onboarding-intro-android-light.png",
+      "android-dark": "07-onboarding-intro-android-dark.png"
+    },
+    "O7": {
+      "ios-light": "07-onboarding-intro-ios-light.png",
+      "ios-dark": "07-onboarding-intro-ios-dark.png",
+      "android-light": "07-onboarding-intro-android-light.png",
+      "android-dark": "07-onboarding-intro-android-dark.png"
+    },
+    "O3": {
+      "ios-light": "07-onboarding-care-ios-light-v2.png",
+      "ios-dark": "07-onboarding-care-ios-dark-v2.png",
+      "android-light": "07-onboarding-care-android-light.png",
+      "android-dark": "07-onboarding-care-android-dark.png"
+    },
+    "O5": {
+      "ios-light": "07-onboarding-care-ios-light-v2.png",
+      "ios-dark": "07-onboarding-care-ios-dark-v2.png",
+      "android-light": "07-onboarding-care-android-light.png",
+      "android-dark": "07-onboarding-care-android-dark.png"
+    },
+    "O6": {
+      "ios-light": "07-onboarding-care-ios-light-v2.png",
+      "ios-dark": "07-onboarding-care-ios-dark-v2.png",
+      "android-light": "07-onboarding-care-android-light.png",
+      "android-dark": "07-onboarding-care-android-dark.png"
+    },
+    "A1": {
+      "ios-light": "07-onboarding-appendix-A1-all-modes.png",
+      "ios-dark": "07-onboarding-appendix-A1-all-modes.png",
+      "android-light": "07-onboarding-appendix-A1-all-modes.png",
+      "android-dark": "07-onboarding-appendix-A1-all-modes.png"
+    }
+  },
+  "state_families": {
+    "O3-context-variants": {
+      "title": "권한 안내: 일반·위치·계정·목적지 문맥",
+      "modes": [
+        "ios-light",
+        "ios-dark",
+        "android-light",
+        "android-dark"
+      ],
+      "files": [
+        "07-onboarding-permission-contexts-ios-light.png",
+        "07-onboarding-permission-contexts-ios-dark.png",
+        "07-onboarding-permission-contexts-android-light.png",
+        "07-onboarding-permission-contexts-android-dark.png",
+        "07-onboarding-care-ios-light-v2.png",
+        "07-onboarding-care-ios-dark-v2.png",
+        "07-onboarding-care-android-light.png",
+        "07-onboarding-care-android-dark.png"
+      ]
+    },
+    "root-load-failure-preserved-data-retry": {
+      "title": "불러오기 실패 · 기존 데이터 보존 · 다시 불러오기",
+      "modes": [
+        "ios-light",
+        "ios-dark",
+        "android-light",
+        "android-dark"
+      ],
+      "files": [
+        "07-onboarding-root-load-failure-all-modes.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/07-onboarding-intro-ios-light.png",
+      "sha256": "ac4e296e51096a65fa1f82ed8fea0c513743027718dcd699a39bcde0fd00bdc7"
+    },
+    {
+      "file": "images/07-onboarding-intro-ios-dark.png",
+      "sha256": "d9a8fc1f5425c77df3d33c81bdbc01d9f825cf4acc10a64695641ec5df780fe7"
+    },
+    {
+      "file": "images/07-onboarding-intro-android-light.png",
+      "sha256": "3342072284352e2d31fc2c6262ae869873ef268148b9b787af5b8eb881c01e92"
+    },
+    {
+      "file": "images/07-onboarding-intro-android-dark.png",
+      "sha256": "ea05e1bbde82029eeab95afd99da5cee98edbb9dc218c584b45519e03b2f6a0d"
+    },
+    {
+      "file": "images/07-onboarding-care-ios-light-v2.png",
+      "sha256": "e64524e92e588c02f3dd724f75e71c855b019f8a64e62382cfae9e5da8877066"
+    },
+    {
+      "file": "images/07-onboarding-care-ios-dark-v2.png",
+      "sha256": "ce79e649c608896e7ecdaf6bf4ef90720f62dca896399d61a7dfd75ef04d1e29"
+    },
+    {
+      "file": "images/07-onboarding-care-android-light.png",
+      "sha256": "b9e43ec0b6518108f6fedf3c8aebba0f9eac99d7a667900a70fedb6e0542272f"
+    },
+    {
+      "file": "images/07-onboarding-care-android-dark.png",
+      "sha256": "77c157c7ddec06df967126d8e1265c22faead13f2ddbb142819b60b492f08304"
+    },
+    {
+      "file": "images/07-onboarding-permission-contexts-ios-light.png",
+      "sha256": "e04e235698adb2f78e4b8e50ce43093294d437829039737046d8367a67c5bed1"
+    },
+    {
+      "file": "images/07-onboarding-permission-contexts-ios-dark.png",
+      "sha256": "040543fc6c1a1870c357997c151f8ab02b1e29e123dc8f2807490d32b669c9c7"
+    },
+    {
+      "file": "images/07-onboarding-permission-contexts-android-light.png",
+      "sha256": "0e47fba2c479df1db84d5282816b9fd99aea476f58d9c05cbc9a00150497a7a8"
+    },
+    {
+      "file": "images/07-onboarding-permission-contexts-android-dark.png",
+      "sha256": "dc05a8556c401c06a865e24f7d6da6ed2cda53b6e47bae4529d4efc1f7961405"
+    },
+    {
+      "file": "images/07-onboarding-root-load-failure-all-modes.png",
+      "sha256": "8fc13faeeb3cd7cf8bbc4dc3e2d4378c49859019be290fe33e059dabca29309e"
+    },
+    {
+      "file": "images/07-onboarding-appendix-A1-all-modes.png",
+      "sha256": "138d7a0a502a2630a570f66cc6cddeb9ddf74903e629c77dce7adb7e0a1adf56"
+    }
+  ]
+}

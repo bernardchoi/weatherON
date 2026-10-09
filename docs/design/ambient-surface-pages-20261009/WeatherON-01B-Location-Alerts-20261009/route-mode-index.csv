@@ -1,0 +1,13 @@
+﻿route,title,mode,file
+H2,위치 변경,ios-light,images/04-location-alerts-ios-light.png
+H2,위치 변경,ios-dark,images/04-location-alerts-ios-dark.png
+H2,위치 변경,android-light,images/04-location-alerts-android-light.png
+H2,위치 변경,android-dark,images/04-location-alerts-android-dark.png
+H3,알림 센터,ios-light,images/04-location-alerts-ios-light.png
+H3,알림 센터,ios-dark,images/04-location-alerts-ios-dark.png
+H3,알림 센터,android-light,images/04-location-alerts-android-light.png
+H3,알림 센터,android-dark,images/04-location-alerts-android-dark.png
+M2,스마트 알림 설정,ios-light,images/04-location-alerts-ios-light.png
+M2,스마트 알림 설정,ios-dark,images/04-location-alerts-ios-dark.png
+M2,스마트 알림 설정,android-light,images/04-location-alerts-android-light.png
+M2,스마트 알림 설정,android-dark,images/04-location-alerts-android-dark.png

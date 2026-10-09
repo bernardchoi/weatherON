@@ -1,0 +1,65 @@
+{
+  "package": "02C-Outfit-Photo-Transitions",
+  "title": "사진 진행 · 코디 경계 상태",
+  "total_packages": 10,
+  "package_pngs": 8,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {},
+  "state_families_in_this_part": {
+    "C3-photo-add-edit": {
+      "title": "사진 추가 · 기존 사진 수정",
+      "files": [
+        "02-outfit-photo-transitions-ios-light.png",
+        "02-outfit-photo-transitions-ios-dark.png",
+        "02-outfit-photo-transitions-android-light.png",
+        "02-outfit-photo-transitions-android-dark.png"
+      ]
+    },
+    "C3-photo-analysis-loading-failure-retry": {
+      "title": "사진 분석중 · 실패 · 재시도",
+      "files": [
+        "02-outfit-photo-transitions-ios-light.png",
+        "02-outfit-photo-transitions-ios-dark.png",
+        "02-outfit-photo-transitions-android-light.png",
+        "02-outfit-photo-transitions-android-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/02-outfit-photo-transitions-ios-light.png",
+      "sha256": "8b97c37493f46ebf58026f796074586da0bd4dbb21368f2985317cd40c461057"
+    },
+    {
+      "file": "images/02-outfit-photo-transitions-ios-dark.png",
+      "sha256": "9be79a10201c15c4a07cf87bf8b156c00e09c04746223d929a51d0d1b9849960"
+    },
+    {
+      "file": "images/02-outfit-photo-transitions-android-light.png",
+      "sha256": "4af518956bc851210dc093e355ada3308d89456d789efcd08d7101ae48e8f35c"
+    },
+    {
+      "file": "images/02-outfit-photo-transitions-android-dark.png",
+      "sha256": "cd594cc1bfe72a6fb38ba25930ffb85e758dc13f853bfbdab7cafc0e233da500"
+    },
+    {
+      "file": "images/02-outfit-boundary-states-ios-light-v2.png",
+      "sha256": "209a4f2cf6da36d0f1ba41505b72af237640d8c6e2e56f68d3c9b1b7d13693a6"
+    },
+    {
+      "file": "images/02-outfit-boundary-states-ios-dark.png",
+      "sha256": "23a3a46c58f92946f2f435553f88ff68d8d676f80a40c75b5d6e83eaa3874819"
+    },
+    {
+      "file": "images/02-outfit-boundary-states-android-light.png",
+      "sha256": "5986119a6eb0b592adbf104dfbf3f0b32c31ea7e8c8aa29c409537463f379a71"
+    },
+    {
+      "file": "images/02-outfit-boundary-states-android-dark.png",
+      "sha256": "df096a8a9980d8f5e54497437bcebf84e2a19e0816784acc4c5e7b35d3e1e9b5"
+    }
+  ]
+}

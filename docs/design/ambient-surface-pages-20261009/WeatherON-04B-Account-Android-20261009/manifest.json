@@ -1,0 +1,132 @@
+{
+  "package": "04B-Account-Android",
+  "title": "계정 · 설정 · 정책 Android",
+  "total_packages": 10,
+  "package_pngs": 14,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "M3": {
+      "android-light": "06-settings-android-light-v4.png",
+      "android-dark": "06-settings-android-dark-v4.png"
+    },
+    "M4": {
+      "android-light": "06-settings-android-light-v4.png",
+      "android-dark": "06-settings-android-dark-v4.png"
+    },
+    "A4": {
+      "android-light": "06-settings-android-light-v4.png",
+      "android-dark": "06-settings-android-dark-v4.png"
+    },
+    "A2": {
+      "android-light": "06-account-consent-android-light.png",
+      "android-dark": "06-account-consent-android-dark-v2.png"
+    },
+    "A3": {
+      "android-light": "06-account-consent-android-light.png",
+      "android-dark": "06-account-consent-android-dark-v2.png"
+    },
+    "R1": {
+      "android-light": "06-policy-android-light.png",
+      "android-dark": "06-policy-android-dark.png"
+    },
+    "R2": {
+      "android-light": "06-policy-android-light.png",
+      "android-dark": "06-policy-android-dark.png"
+    }
+  },
+  "state_families_in_this_part": {
+    "A2-other-provider-loading-error": {
+      "title": "계정 연결: 다른 방식 · 제공자 확인중 · 오류/재시도",
+      "files": [
+        "06-auth-provider-states-android-light.png",
+        "06-auth-provider-states-android-dark.png",
+        "06-auth-ready-states-android-light.png",
+        "06-auth-ready-states-android-dark.png"
+      ]
+    },
+    "A4-logout-confirmation": {
+      "title": "로그아웃 확인",
+      "files": [
+        "06-modals-android-light.png",
+        "06-modals-android-dark.png"
+      ]
+    },
+    "A4-delete-account-confirmation": {
+      "title": "회원 탈퇴 확인",
+      "files": [
+        "06-modals-android-light.png",
+        "06-modals-android-dark.png"
+      ]
+    },
+    "R2-privacy-terms-location-oss-variants": {
+      "title": "개인정보 · 이용약관 · 위치기반 · 오픈소스 문서",
+      "files": [
+        "06-variants-android-light.png",
+        "06-variants-android-dark-v2.png",
+        "06-policy-android-light.png",
+        "06-policy-android-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/06-settings-android-light-v4.png",
+      "sha256": "2b89e59785ebfa4850beb851bb7f6c6a441b9831913008cbe608214e6202bbeb"
+    },
+    {
+      "file": "images/06-account-consent-android-light.png",
+      "sha256": "d19ede9f2b5a5b885bfb19fcd5c10fceefa81eae32f9ca49a0a635d69a469e03"
+    },
+    {
+      "file": "images/06-policy-android-light.png",
+      "sha256": "38c11920cc617d0af5feccfe224500b542828394caab044879c30e557516cc2a"
+    },
+    {
+      "file": "images/06-modals-android-light.png",
+      "sha256": "86c68b346e9ae0ca9a3ae33fa006773e7584ac216b2a5002d92e167cdcd61d97"
+    },
+    {
+      "file": "images/06-variants-android-light.png",
+      "sha256": "81fdbc1844f4755468ccfac58dc6e2ad4c050992d7da58564c9ec6c20598894a"
+    },
+    {
+      "file": "images/06-auth-provider-states-android-light.png",
+      "sha256": "6cf66ff8483c2976b11a92749e26adf0ab20db6219518e5d782a706f090f8ce1"
+    },
+    {
+      "file": "images/06-auth-ready-states-android-light.png",
+      "sha256": "9aeb46b0f0586ab94a142ecbe257f403d7694d101b0fcb461248c1131d2c6780"
+    },
+    {
+      "file": "images/06-settings-android-dark-v4.png",
+      "sha256": "eeea3e42130771b80d6dd90ad8a06988471664b0dd8b7ea30cbbdabfa54a561c"
+    },
+    {
+      "file": "images/06-account-consent-android-dark-v2.png",
+      "sha256": "2868f7df2bbc22a6e44882db19e8af004aec174fa0e6583a09fc3da38ac947d2"
+    },
+    {
+      "file": "images/06-policy-android-dark.png",
+      "sha256": "124121166042343956dbecf9405ce9dd135075b6ff15f6ab1148b9acb5c97210"
+    },
+    {
+      "file": "images/06-modals-android-dark.png",
+      "sha256": "6edf54030fb47aed9a597ad27c93bc036f299c75a6179796e129e26ad191d99e"
+    },
+    {
+      "file": "images/06-variants-android-dark-v2.png",
+      "sha256": "0983beb383beadd0451f0916221cc071e67b9e709f3d0e0021a35e79f69795da"
+    },
+    {
+      "file": "images/06-auth-provider-states-android-dark.png",
+      "sha256": "fa3f6f2122d3f688589c8c9ebc30abdc74eca27e8766d818472e66003f84de27"
+    },
+    {
+      "file": "images/06-auth-ready-states-android-dark.png",
+      "sha256": "74bc31e73b8eb8cd6fa179f70c8f26c993aa883c043c64f489beb62fb07bc6cd"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+﻿route,title,mode,file
+P1,목적지 추가,ios-light,images/05-destination-ios-light.png
+P1,목적지 추가,ios-dark,images/05-destination-ios-dark.png
+P1,목적지 추가,android-light,images/05-destination-android-light.png
+P1,목적지 추가,android-dark,images/05-destination-android-dark.png
+G2,목적지 케어,ios-light,images/05-destination-ios-light.png
+G2,목적지 케어,ios-dark,images/05-destination-ios-dark.png
+G2,목적지 케어,android-light,images/05-destination-android-light.png
+G2,목적지 케어,android-dark,images/05-destination-android-dark.png

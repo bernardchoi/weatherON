@@ -1,0 +1,15 @@
+﻿route,title,mode,file
+M3,표시 설정,android-light,images/06-settings-android-light-v4.png
+M3,표시 설정,android-dark,images/06-settings-android-dark-v4.png
+M4,앱 권한 관리,android-light,images/06-settings-android-light-v4.png
+M4,앱 권한 관리,android-dark,images/06-settings-android-dark-v4.png
+A4,계정 관리,android-light,images/06-settings-android-light-v4.png
+A4,계정 관리,android-dark,images/06-settings-android-dark-v4.png
+A2,계정 연결,android-light,images/06-account-consent-android-light.png
+A2,계정 연결,android-dark,images/06-account-consent-android-dark-v2.png
+A3,약관 동의,android-light,images/06-account-consent-android-light.png
+A3,약관 동의,android-dark,images/06-account-consent-android-dark-v2.png
+R1,정책 및 법적 고지,android-light,images/06-policy-android-light.png
+R1,정책 및 법적 고지,android-dark,images/06-policy-android-dark.png
+R2,정책 문서,android-light,images/06-policy-android-light.png
+R2,정책 문서,android-dark,images/06-policy-android-dark.png

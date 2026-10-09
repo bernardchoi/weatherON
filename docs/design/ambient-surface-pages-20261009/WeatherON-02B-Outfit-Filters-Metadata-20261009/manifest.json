@@ -1,0 +1,121 @@
+{
+  "package": "02B-Outfit-Filters-Metadata",
+  "title": "코디 상태 · 필터 · 사진정보",
+  "total_packages": 10,
+  "package_pngs": 12,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {},
+  "state_families_in_this_part": {
+    "C2-filter-kind-season-purpose": {
+      "title": "옷장 필터: 종류 · 계절 · 목적",
+      "files": [
+        "02-outfit-states-ios-light-v2.png",
+        "02-outfit-states-ios-dark-v2.png",
+        "02-outfit-states-android-light.png",
+        "02-outfit-states-android-dark.png",
+        "02-outfit-extra-states-ios-light.png",
+        "02-outfit-extra-states-ios-dark.png",
+        "02-outfit-extra-states-android-light.png",
+        "02-outfit-extra-states-android-dark.png"
+      ]
+    },
+    "C2-empty-and-no-filter-results": {
+      "title": "빈 옷장 · 필터 결과 없음",
+      "files": [
+        "02-outfit-extra-states-ios-light.png",
+        "02-outfit-extra-states-ios-dark.png",
+        "02-outfit-extra-states-android-light.png",
+        "02-outfit-extra-states-android-dark.png"
+      ]
+    },
+    "C2-delete-undo": {
+      "title": "옷 삭제 · 복구",
+      "files": [
+        "02-outfit-extra-states-ios-light.png",
+        "02-outfit-extra-states-ios-dark.png",
+        "02-outfit-extra-states-android-light.png",
+        "02-outfit-extra-states-android-dark.png"
+      ]
+    },
+    "C3-photo-add-edit": {
+      "title": "사진 추가 · 기존 사진 수정",
+      "files": [
+        "02-outfit-states-ios-light-v2.png",
+        "02-outfit-states-ios-dark-v2.png",
+        "02-outfit-states-android-light.png",
+        "02-outfit-states-android-dark.png"
+      ]
+    },
+    "C3-photo-analysis-loading-failure-retry": {
+      "title": "사진 분석중 · 실패 · 재시도",
+      "files": [
+        "02-outfit-states-ios-light-v2.png",
+        "02-outfit-states-ios-dark-v2.png",
+        "02-outfit-states-android-light.png",
+        "02-outfit-states-android-dark.png"
+      ]
+    },
+    "C3-photo-metadata-choice-sheets": {
+      "title": "사진 정보 선택: 종류 · 계절 · 상황 · 날씨",
+      "files": [
+        "02-outfit-photo-metadata-ios-light-v4.png",
+        "02-outfit-photo-metadata-ios-dark-v2.png",
+        "02-outfit-photo-metadata-android-light-v2.png",
+        "02-outfit-photo-metadata-android-dark-v2.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/02-outfit-states-ios-light-v2.png",
+      "sha256": "4471e6db43c54d769a9a35d0a57072d2e487e6c49a2f7f72126c15948b53dff8"
+    },
+    {
+      "file": "images/02-outfit-states-ios-dark-v2.png",
+      "sha256": "7d1b6faecf4e6a9149296e0a42d38740904072779538ec2783e6ef1de63b0ae5"
+    },
+    {
+      "file": "images/02-outfit-states-android-light.png",
+      "sha256": "a5ae765715715f885c1859a2885ba556007c8943332957f97b1ba71fd137d08d"
+    },
+    {
+      "file": "images/02-outfit-states-android-dark.png",
+      "sha256": "61357092080c50132c4c40a93b07b9719649924c31f6316121c49494d4b5b4c5"
+    },
+    {
+      "file": "images/02-outfit-extra-states-ios-light.png",
+      "sha256": "90a3143478043a703e43a6453c2bb06081d1e4b5af912c0f6091a393e3b9a80c"
+    },
+    {
+      "file": "images/02-outfit-extra-states-ios-dark.png",
+      "sha256": "e71545f23a6a7b1a4836992426c2c7cb021003ddc5c331e3de00c9963512dd0c"
+    },
+    {
+      "file": "images/02-outfit-extra-states-android-light.png",
+      "sha256": "7ea648eacd99cf51077e49e7e7b07f5312aeac471a1596b180969255a29a1f7e"
+    },
+    {
+      "file": "images/02-outfit-extra-states-android-dark.png",
+      "sha256": "1c504e7401abf771a4a9462d05c11fc46528a496a88b1ece1167e35f35ef7c63"
+    },
+    {
+      "file": "images/02-outfit-photo-metadata-ios-light-v4.png",
+      "sha256": "813f487862bb6e7dc2e5a18ac057edd22f8af7caded5d8786847aea12b3f5373"
+    },
+    {
+      "file": "images/02-outfit-photo-metadata-ios-dark-v2.png",
+      "sha256": "8c8c1d27798ae7d84f26ffc6ca93684cbeb90cf30b07055c6bebedd0abee6bdc"
+    },
+    {
+      "file": "images/02-outfit-photo-metadata-android-light-v2.png",
+      "sha256": "d39bfa8a2568a1a58de64c4b18e9dd0e477262cdd8e0d0dccb17d7ea34850426"
+    },
+    {
+      "file": "images/02-outfit-photo-metadata-android-dark-v2.png",
+      "sha256": "d8759a81091b5d340d4b804cc0b459f83ffaf2de1a11683964c820d2f6765148"
+    }
+  ]
+}

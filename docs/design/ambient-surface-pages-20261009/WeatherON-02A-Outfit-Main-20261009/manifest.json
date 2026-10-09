@@ -1,0 +1,90 @@
+{
+  "package": "02A-Outfit-Main",
+  "title": "코디 · 옷장 기본 화면",
+  "total_packages": 10,
+  "package_pngs": 8,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "C4": {
+      "ios-light": "02-outfit-detail-ios-light-v2.png",
+      "ios-dark": "02-outfit-detail-ios-dark-v2.png",
+      "android-light": "02-outfit-detail-android-light-v3.png",
+      "android-dark": "02-outfit-detail-android-dark-v2.png"
+    },
+    "C2": {
+      "ios-light": "02-outfit-wardrobe-ios-light.png",
+      "ios-dark": "02-outfit-wardrobe-ios-dark.png",
+      "android-light": "02-outfit-wardrobe-android-light.png",
+      "android-dark": "02-outfit-wardrobe-android-dark.png"
+    },
+    "C3": {
+      "ios-light": "02-outfit-wardrobe-ios-light.png",
+      "ios-dark": "02-outfit-wardrobe-ios-dark.png",
+      "android-light": "02-outfit-wardrobe-android-light.png",
+      "android-dark": "02-outfit-wardrobe-android-dark.png"
+    },
+    "O4": {
+      "ios-light": "02-outfit-wardrobe-ios-light.png",
+      "ios-dark": "02-outfit-wardrobe-ios-dark.png",
+      "android-light": "02-outfit-wardrobe-android-light.png",
+      "android-dark": "02-outfit-wardrobe-android-dark.png"
+    }
+  },
+  "state_families_in_this_part": {
+    "C4-first-view-and-scrolled-continuation": {
+      "title": "코디 상세: 첫 화면 · 스크롤 후",
+      "files": [
+        "02-outfit-detail-ios-light-v2.png",
+        "02-outfit-detail-ios-dark-v2.png",
+        "02-outfit-detail-android-light-v3.png",
+        "02-outfit-detail-android-dark-v2.png"
+      ]
+    },
+    "C3-photo-add-edit": {
+      "title": "사진 추가 · 기존 사진 수정",
+      "files": [
+        "02-outfit-wardrobe-ios-light.png",
+        "02-outfit-wardrobe-ios-dark.png",
+        "02-outfit-wardrobe-android-light.png",
+        "02-outfit-wardrobe-android-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/02-outfit-detail-ios-light-v2.png",
+      "sha256": "576773f2861ada8d1bf281b07f02c3909e68c009a45b96f8699618c53ae9d324"
+    },
+    {
+      "file": "images/02-outfit-detail-ios-dark-v2.png",
+      "sha256": "b22ad27b4060f3e89312a8e4a1ff8966e3c209fff9b7a3b8dfb3c5d9767aebd7"
+    },
+    {
+      "file": "images/02-outfit-detail-android-light-v3.png",
+      "sha256": "4e7335d99dfa88e0c8c934f68d015507ea24c2f819fe5456439f70685d2a1fed"
+    },
+    {
+      "file": "images/02-outfit-detail-android-dark-v2.png",
+      "sha256": "5cf98296bdc6d9a44534e13b143ca1d931c0d3b8041a02d34acf54ecf967eb52"
+    },
+    {
+      "file": "images/02-outfit-wardrobe-ios-light.png",
+      "sha256": "26bc9a89fda903f561ab6ded9fbcd2722e58feab15d4c5f02b31bc4391dbca30"
+    },
+    {
+      "file": "images/02-outfit-wardrobe-ios-dark.png",
+      "sha256": "ac793a00774d3dc6fcecbb6a807210009c606e1ab72c0d274aeac569ee27fdc8"
+    },
+    {
+      "file": "images/02-outfit-wardrobe-android-light.png",
+      "sha256": "bc4908981486911f93f1c9542526cba75dd327b85bd9c1f964ae10f0fb7cf2c2"
+    },
+    {
+      "file": "images/02-outfit-wardrobe-android-dark.png",
+      "sha256": "2291e22292f9f01cff06298e6b99b2324ee51707d06cb14715e0bff90f4798bc"
+    }
+  ]
+}

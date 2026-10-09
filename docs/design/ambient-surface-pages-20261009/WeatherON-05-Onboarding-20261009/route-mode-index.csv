@@ -1,0 +1,29 @@
+﻿route,title,mode,file
+O1,온보딩 시작,ios-light,images/07-onboarding-intro-ios-light.png
+O1,온보딩 시작,ios-dark,images/07-onboarding-intro-ios-dark.png
+O1,온보딩 시작,android-light,images/07-onboarding-intro-android-light.png
+O1,온보딩 시작,android-dark,images/07-onboarding-intro-android-dark.png
+O2,온보딩 소개,ios-light,images/07-onboarding-intro-ios-light.png
+O2,온보딩 소개,ios-dark,images/07-onboarding-intro-ios-dark.png
+O2,온보딩 소개,android-light,images/07-onboarding-intro-android-light.png
+O2,온보딩 소개,android-dark,images/07-onboarding-intro-android-dark.png
+O7,코디 안내,ios-light,images/07-onboarding-intro-ios-light.png
+O7,코디 안내,ios-dark,images/07-onboarding-intro-ios-dark.png
+O7,코디 안내,android-light,images/07-onboarding-intro-android-light.png
+O7,코디 안내,android-dark,images/07-onboarding-intro-android-dark.png
+O3,권한 gate,ios-light,images/07-onboarding-care-ios-light-v2.png
+O3,권한 gate,ios-dark,images/07-onboarding-care-ios-dark-v2.png
+O3,권한 gate,android-light,images/07-onboarding-care-android-light.png
+O3,권한 gate,android-dark,images/07-onboarding-care-android-dark.png
+O5,스마트 케어,ios-light,images/07-onboarding-care-ios-light-v2.png
+O5,스마트 케어,ios-dark,images/07-onboarding-care-ios-dark-v2.png
+O5,스마트 케어,android-light,images/07-onboarding-care-android-light.png
+O5,스마트 케어,android-dark,images/07-onboarding-care-android-dark.png
+O6,목적지 설정,ios-light,images/07-onboarding-care-ios-light-v2.png
+O6,목적지 설정,ios-dark,images/07-onboarding-care-ios-dark-v2.png
+O6,목적지 설정,android-light,images/07-onboarding-care-android-light.png
+O6,목적지 설정,android-dark,images/07-onboarding-care-android-dark.png
+A1,보조 앱 진입 소개,ios-light,images/07-onboarding-appendix-A1-all-modes.png
+A1,보조 앱 진입 소개,ios-dark,images/07-onboarding-appendix-A1-all-modes.png
+A1,보조 앱 진입 소개,android-light,images/07-onboarding-appendix-A1-all-modes.png
+A1,보조 앱 진입 소개,android-dark,images/07-onboarding-appendix-A1-all-modes.png

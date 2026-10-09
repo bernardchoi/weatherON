@@ -1,0 +1,65 @@
+{
+  "package": "03B-Destination-States",
+  "title": "목적지 피드백 · 경로 예외",
+  "total_packages": 10,
+  "package_pngs": 8,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {},
+  "state_families_in_this_part": {
+    "G2-route-loading-unavailable": {
+      "title": "경로 로딩 · 이동시간 갱신 실패 · 장거리 도보 제외",
+      "files": [
+        "05-destination-route-status-ios-light.png",
+        "05-destination-route-status-ios-dark.png",
+        "05-destination-route-status-android-light.png",
+        "05-destination-route-status-android-dark.png"
+      ]
+    },
+    "save-success-limit-snackbars": {
+      "title": "저장 완료 · 삭제 복구 · 최대 개수 안내",
+      "files": [
+        "05-destination-feedback-ios-light.png",
+        "05-destination-feedback-ios-dark.png",
+        "05-destination-feedback-android-light.png",
+        "05-destination-feedback-android-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/05-destination-feedback-ios-light.png",
+      "sha256": "abbbf7ebf31e5c1d174180b12851619272e6bb8a14adc2fcab25caebfa31131e"
+    },
+    {
+      "file": "images/05-destination-feedback-ios-dark.png",
+      "sha256": "6e163ffb19dcf5f110ed08468b2ad0a174ace979ed562f2104a61d3af3ec563d"
+    },
+    {
+      "file": "images/05-destination-feedback-android-light.png",
+      "sha256": "56de4c055d8872c9c1e18c1b5eabedefeb9df5101f6efeb2d04d6b172272bbda"
+    },
+    {
+      "file": "images/05-destination-feedback-android-dark.png",
+      "sha256": "251fcbb5331c5333708e35ddd9035e7a18bcd30097242b7609f531aa42cb661e"
+    },
+    {
+      "file": "images/05-destination-route-status-ios-light.png",
+      "sha256": "204b797f0cf1a6b83623bbe9b05cea7c97c02602848f6ba9f6a5d9565da8454d"
+    },
+    {
+      "file": "images/05-destination-route-status-ios-dark.png",
+      "sha256": "dcf31b98b20b27266e2fb9901b142a54be59010a1ce3642dab00b3a9a398d8d3"
+    },
+    {
+      "file": "images/05-destination-route-status-android-light.png",
+      "sha256": "c2026999e8dee96e5d8664f88e15426f359f792d87555279f506ba8d7d332a81"
+    },
+    {
+      "file": "images/05-destination-route-status-android-dark.png",
+      "sha256": "4d628f257d136c157d50e80446f89ad24745a587cb6808b37da032b568be9318"
+    }
+  ]
+}

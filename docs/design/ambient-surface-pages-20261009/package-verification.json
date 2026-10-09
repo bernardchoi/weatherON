@@ -1,0 +1,103 @@
+{
+  "source_archives": [
+    {
+      "file": "WeatherON-01A-Core-Weather-20261009.zip",
+      "sha256": "1afb37947b5c8fd5413e68b1623bfaa328ca03f14dc4b694b3be9780eaa37b26",
+      "bytes": 14334519,
+      "directory": "WeatherON-01A-Core-Weather-20261009",
+      "png_count": 10,
+      "title": "기본 탭 · 날씨"
+    },
+    {
+      "file": "WeatherON-01B-Location-Alerts-20261009.zip",
+      "sha256": "4853a8a350e3a9353aa4dc96dd437d6f94559a30159ddf6b6db3c26730e01315",
+      "bytes": 10703047,
+      "directory": "WeatherON-01B-Location-Alerts-20261009",
+      "png_count": 8,
+      "title": "위치 · 알림"
+    },
+    {
+      "file": "WeatherON-02A-Outfit-Main-20261009.zip",
+      "sha256": "9f5a200dd2d6c8aca652ca9702f5a635b04a25d66a0e42f767e9e1d8c4b41311",
+      "bytes": 11343132,
+      "directory": "WeatherON-02A-Outfit-Main-20261009",
+      "png_count": 8,
+      "title": "코디 · 옷장 기본 화면"
+    },
+    {
+      "file": "WeatherON-02B-Outfit-Filters-Metadata-20261009.zip",
+      "sha256": "527722be7620adc4fee4cf9109342666b8155bea06d67a982038698e32add990",
+      "bytes": 16044389,
+      "directory": "WeatherON-02B-Outfit-Filters-Metadata-20261009",
+      "png_count": 12,
+      "title": "코디 상태 · 필터 · 사진정보"
+    },
+    {
+      "file": "WeatherON-02C-Outfit-Photo-Transitions-20261009.zip",
+      "sha256": "0ca0ae94260b4f5ade657c71b7eba095913466c325531e9c622e3affea9ed9a6",
+      "bytes": 10965189,
+      "directory": "WeatherON-02C-Outfit-Photo-Transitions-20261009",
+      "png_count": 8,
+      "title": "사진 진행 · 코디 경계 상태"
+    },
+    {
+      "file": "WeatherON-03A-Destination-Main-20261009.zip",
+      "sha256": "f0fa024f0eedc29c030592f5690b6ddcead9769519b5cd4960bc7c83c0e24e60",
+      "bytes": 11637010,
+      "directory": "WeatherON-03A-Destination-Main-20261009",
+      "png_count": 8,
+      "title": "목적지 기본 화면 · 시간·교통·일정"
+    },
+    {
+      "file": "WeatherON-03B-Destination-States-20261009.zip",
+      "sha256": "0ccc2a6d6515206be129e7775b68fda78ef3d306bb725cdd88dc9c8e070cce9b",
+      "bytes": 11862817,
+      "directory": "WeatherON-03B-Destination-States-20261009",
+      "png_count": 8,
+      "title": "목적지 피드백 · 경로 예외"
+    },
+    {
+      "file": "WeatherON-04A-Account-iOS-20261009.zip",
+      "sha256": "02e1a78b5715c948c7946b037fcc22b9292c6fb9316256d2b366bc9ded3b2b72",
+      "bytes": 17988918,
+      "directory": "WeatherON-04A-Account-iOS-20261009",
+      "png_count": 14,
+      "title": "계정 · 설정 · 정책 iOS"
+    },
+    {
+      "file": "WeatherON-04B-Account-Android-20261009.zip",
+      "sha256": "a56c9767ab7b106d701ffaad3f128f439156ed2060976b69bfb0057ba6090beb",
+      "bytes": 17339614,
+      "directory": "WeatherON-04B-Account-Android-20261009",
+      "png_count": 14,
+      "title": "계정 · 설정 · 정책 Android"
+    },
+    {
+      "file": "WeatherON-05-Onboarding-20261009.zip",
+      "sha256": "4915d1ef8d493cca9c98f3fce1a9e6ac281d33bd82e2b20b9caf00a6812482a2",
+      "bytes": 19176288,
+      "directory": "WeatherON-05-Onboarding-20261009",
+      "png_count": 14,
+      "title": "시작 · 온보딩 · A1 부록"
+    }
+  ],
+  "validation": {
+    "source_zip_hashes": "pass",
+    "safe_zip_paths_and_crc": "pass",
+    "original_files": 144,
+    "unique_pngs": 104,
+    "png_sha256_and_chunk_crc_and_zlib": "pass",
+    "baseline_routes": 31,
+    "baseline_route_modes": 124,
+    "representative_state_families": 19,
+    "local_index_links_checked": 433,
+    "missing_links": 0,
+    "extracted_bytes_match_archives": true
+  },
+  "scope": {
+    "static_design_only": true,
+    "hidden_routes_excluded": 16,
+    "app_or_native_behavior_validated": false,
+    "my_core_version": "v3"
+  }
+}

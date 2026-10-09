@@ -1,0 +1,87 @@
+{
+  "package": "03A-Destination-Main",
+  "title": "목적지 기본 화면 · 시간·교통·일정",
+  "total_packages": 10,
+  "package_pngs": 8,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "P1": {
+      "ios-light": "05-destination-ios-light.png",
+      "ios-dark": "05-destination-ios-dark.png",
+      "android-light": "05-destination-android-light.png",
+      "android-dark": "05-destination-android-dark.png"
+    },
+    "G2": {
+      "ios-light": "05-destination-ios-light.png",
+      "ios-dark": "05-destination-ios-dark.png",
+      "android-light": "05-destination-android-light.png",
+      "android-dark": "05-destination-android-dark.png"
+    }
+  },
+  "state_families_in_this_part": {
+    "G2-time-mode-and-wheel": {
+      "title": "시간 기준 선택 · 시각 휠",
+      "files": [
+        "05-destination-states-ios-light-v2.png",
+        "05-destination-states-ios-dark-v2.png",
+        "05-destination-states-android-light-v2.png",
+        "05-destination-states-android-dark-v2.png"
+      ]
+    },
+    "G2-transport-selection": {
+      "title": "이동 수단 선택",
+      "files": [
+        "05-destination-states-ios-light-v2.png",
+        "05-destination-states-ios-dark-v2.png",
+        "05-destination-states-android-light-v2.png",
+        "05-destination-states-android-dark-v2.png"
+      ]
+    },
+    "G2-expanded-alert-schedule-repeat-days": {
+      "title": "본문 알림 일정 펼침 · 반복 요일",
+      "files": [
+        "05-destination-states-ios-light-v2.png",
+        "05-destination-states-ios-dark-v2.png",
+        "05-destination-states-android-light-v2.png",
+        "05-destination-states-android-dark-v2.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/05-destination-ios-light.png",
+      "sha256": "9892371cb4d9ec109671ac3137a24c91f8582ac2cf59258126e0724f4699d5ed"
+    },
+    {
+      "file": "images/05-destination-ios-dark.png",
+      "sha256": "666a41ce9df2d948d84f2643857213dc0c9349c0c0eef07e837362a4c5f0a52b"
+    },
+    {
+      "file": "images/05-destination-android-light.png",
+      "sha256": "ea215a25298288c24e82f6ef6968d0439c411367e8edd2e69837575f7b24eeca"
+    },
+    {
+      "file": "images/05-destination-android-dark.png",
+      "sha256": "18d2ae983e984cf602d2d2bbdd32554f39d1ef1112d41366b430ecfaa5331b04"
+    },
+    {
+      "file": "images/05-destination-states-ios-light-v2.png",
+      "sha256": "5ba24c2efd0c3f08155fe80e67af6ed362b14bf0e27d2b9d6f2302157cb87178"
+    },
+    {
+      "file": "images/05-destination-states-ios-dark-v2.png",
+      "sha256": "11c52ae7a332eb6b6343f425c6454b47eca55515113dab99884b9256138d7aff"
+    },
+    {
+      "file": "images/05-destination-states-android-light-v2.png",
+      "sha256": "4c3e5d728a4bf0206385533a770f97f0e697833baa306886555913c6346749f2"
+    },
+    {
+      "file": "images/05-destination-states-android-dark-v2.png",
+      "sha256": "42433b855309cc09d0c45da9aeba2d5de36621a76f1db517f813944c7f8c0f1a"
+    }
+  ]
+}

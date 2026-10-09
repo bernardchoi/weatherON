@@ -1,0 +1,132 @@
+{
+  "package": "04A-Account-iOS",
+  "title": "계정 · 설정 · 정책 iOS",
+  "total_packages": 10,
+  "package_pngs": 14,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "M3": {
+      "ios-light": "06-settings-ios-light-v3.png",
+      "ios-dark": "06-settings-ios-dark-v3.png"
+    },
+    "M4": {
+      "ios-light": "06-settings-ios-light-v3.png",
+      "ios-dark": "06-settings-ios-dark-v3.png"
+    },
+    "A4": {
+      "ios-light": "06-settings-ios-light-v3.png",
+      "ios-dark": "06-settings-ios-dark-v3.png"
+    },
+    "A2": {
+      "ios-light": "06-account-consent-ios-light.png",
+      "ios-dark": "06-account-consent-ios-dark.png"
+    },
+    "A3": {
+      "ios-light": "06-account-consent-ios-light.png",
+      "ios-dark": "06-account-consent-ios-dark.png"
+    },
+    "R1": {
+      "ios-light": "06-policy-ios-light.png",
+      "ios-dark": "06-policy-ios-dark.png"
+    },
+    "R2": {
+      "ios-light": "06-policy-ios-light.png",
+      "ios-dark": "06-policy-ios-dark.png"
+    }
+  },
+  "state_families_in_this_part": {
+    "A2-other-provider-loading-error": {
+      "title": "계정 연결: 다른 방식 · 제공자 확인중 · 오류/재시도",
+      "files": [
+        "06-auth-provider-states-ios-light.png",
+        "06-auth-provider-states-ios-dark-v2.png",
+        "06-auth-ready-states-ios-light-v2.png",
+        "06-auth-ready-states-ios-dark-v4.png"
+      ]
+    },
+    "A4-logout-confirmation": {
+      "title": "로그아웃 확인",
+      "files": [
+        "06-modals-ios-light.png",
+        "06-modals-ios-dark.png"
+      ]
+    },
+    "A4-delete-account-confirmation": {
+      "title": "회원 탈퇴 확인",
+      "files": [
+        "06-modals-ios-light.png",
+        "06-modals-ios-dark.png"
+      ]
+    },
+    "R2-privacy-terms-location-oss-variants": {
+      "title": "개인정보 · 이용약관 · 위치기반 · 오픈소스 문서",
+      "files": [
+        "06-variants-ios-light.png",
+        "06-variants-ios-dark.png",
+        "06-policy-ios-light.png",
+        "06-policy-ios-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/06-settings-ios-light-v3.png",
+      "sha256": "656bdf5ddfdf9a6450a759877f4770f3274b6ea6bee66d36e78be86e780d4a49"
+    },
+    {
+      "file": "images/06-account-consent-ios-light.png",
+      "sha256": "c8d677771df258bde1a969ee522b44833ddd4089eda7654cc08d1fa8802b94da"
+    },
+    {
+      "file": "images/06-policy-ios-light.png",
+      "sha256": "426163d2369a2bb94cb16fe25e945177392457de8b5409b5b10e952f65e92137"
+    },
+    {
+      "file": "images/06-modals-ios-light.png",
+      "sha256": "4fe4177da2f79ad2690b66749516a1fb69594222da19bac3ad50551a829ee4b3"
+    },
+    {
+      "file": "images/06-variants-ios-light.png",
+      "sha256": "a1bdfce3625ab64fafc9056c18170daed8d2b25be9f0dbc21bc16551ae0da98e"
+    },
+    {
+      "file": "images/06-auth-provider-states-ios-light.png",
+      "sha256": "8bc0bb7f907f8738347b88fc126b74e084be02c0fac142df42c96def8f9f06b1"
+    },
+    {
+      "file": "images/06-auth-ready-states-ios-light-v2.png",
+      "sha256": "387af877bf77b045e88385c6bd637f1f719cadc636de86cc26a5771849475391"
+    },
+    {
+      "file": "images/06-settings-ios-dark-v3.png",
+      "sha256": "cbfac88afd21acefe1300aeeb9a174448dc8b04c1cfe16ea7be553b8bd5376a1"
+    },
+    {
+      "file": "images/06-account-consent-ios-dark.png",
+      "sha256": "f845640d9958049138f0a11ef28d16c43ac8e1ee816513a078ba1d96785a8d69"
+    },
+    {
+      "file": "images/06-policy-ios-dark.png",
+      "sha256": "2f4b6b5187c7218f24f937e89fd51235b48af709f160b859aa93ce892a43c5a3"
+    },
+    {
+      "file": "images/06-modals-ios-dark.png",
+      "sha256": "0f74810ee0ec58ccbd7d5982e0bc52b5fdf202fc7397557f03c9abfd0d1f24dd"
+    },
+    {
+      "file": "images/06-variants-ios-dark.png",
+      "sha256": "ea0f779368644a53d33b13999a97323205108e6fcbc3977d9e6b7d88e6d75d50"
+    },
+    {
+      "file": "images/06-auth-provider-states-ios-dark-v2.png",
+      "sha256": "ac7ca1b2585f4533bdfa2a28ae40a6040499df22f2fac1b237d4b79d25fd4cc1"
+    },
+    {
+      "file": "images/06-auth-ready-states-ios-dark-v4.png",
+      "sha256": "e8acaf6d78d16ebc6500e4ec1a649072ccb5feafb7085c6b1d704c3073786ecd"
+    }
+  ]
+}

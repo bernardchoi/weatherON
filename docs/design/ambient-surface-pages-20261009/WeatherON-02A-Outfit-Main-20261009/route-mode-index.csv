@@ -1,0 +1,17 @@
+﻿route,title,mode,file
+C4,코디 상세,ios-light,images/02-outfit-detail-ios-light-v2.png
+C4,코디 상세,ios-dark,images/02-outfit-detail-ios-dark-v2.png
+C4,코디 상세,android-light,images/02-outfit-detail-android-light-v3.png
+C4,코디 상세,android-dark,images/02-outfit-detail-android-dark-v2.png
+C2,내 옷장,ios-light,images/02-outfit-wardrobe-ios-light.png
+C2,내 옷장,ios-dark,images/02-outfit-wardrobe-ios-dark.png
+C2,내 옷장,android-light,images/02-outfit-wardrobe-android-light.png
+C2,내 옷장,android-dark,images/02-outfit-wardrobe-android-dark.png
+C3,아이템 추가,ios-light,images/02-outfit-wardrobe-ios-light.png
+C3,아이템 추가,ios-dark,images/02-outfit-wardrobe-ios-dark.png
+C3,아이템 추가,android-light,images/02-outfit-wardrobe-android-light.png
+C3,아이템 추가,android-dark,images/02-outfit-wardrobe-android-dark.png
+O4,코디 기준 수정,ios-light,images/02-outfit-wardrobe-ios-light.png
+O4,코디 기준 수정,ios-dark,images/02-outfit-wardrobe-ios-dark.png
+O4,코디 기준 수정,android-light,images/02-outfit-wardrobe-android-light.png
+O4,코디 기준 수정,android-dark,images/02-outfit-wardrobe-android-dark.png

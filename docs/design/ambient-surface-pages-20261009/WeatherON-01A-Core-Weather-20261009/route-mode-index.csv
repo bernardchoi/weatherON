@@ -1,0 +1,33 @@
+﻿route,title,mode,file
+H1,홈,ios-light,images/01-core-ios-light-v3.png
+H1,홈,ios-dark,images/01-core-ios-dark-v3.png
+H1,홈,android-light,images/01-core-android-light-v3.png
+H1,홈,android-dark,images/01-core-android-dark-v3.png
+C1,코디,ios-light,images/01-core-ios-light-v3.png
+C1,코디,ios-dark,images/01-core-ios-dark-v3.png
+C1,코디,android-light,images/01-core-android-light-v3.png
+C1,코디,android-dark,images/01-core-android-dark-v3.png
+G1,출발,ios-light,images/01-core-ios-light-v3.png
+G1,출발,ios-dark,images/01-core-ios-dark-v3.png
+G1,출발,android-light,images/01-core-android-light-v3.png
+G1,출발,android-dark,images/01-core-android-dark-v3.png
+M1,마이,ios-light,images/01-core-ios-light-v3.png
+M1,마이,ios-dark,images/01-core-ios-dark-v3.png
+M1,마이,android-light,images/01-core-android-light-v3.png
+M1,마이,android-dark,images/01-core-android-dark-v3.png
+H6,날씨 상세,ios-light,images/03-weather-ios-light.png
+H6,날씨 상세,ios-dark,images/03-weather-ios-dark.png
+H6,날씨 상세,android-light,images/03-weather-android-light.png
+H6,날씨 상세,android-dark,images/03-weather-android-dark.png
+H4,우산 추천,ios-light,images/03-weather-ios-light.png
+H4,우산 추천,ios-dark,images/03-weather-ios-dark.png
+H4,우산 추천,android-light,images/03-weather-android-light.png
+H4,우산 추천,android-dark,images/03-weather-android-dark.png
+H5,강수 타임라인,ios-light,images/03-weather-ios-light.png
+H5,강수 타임라인,ios-dark,images/03-weather-ios-dark.png
+H5,강수 타임라인,android-light,images/03-weather-android-light.png
+H5,강수 타임라인,android-dark,images/03-weather-android-dark.png
+H7,내일 브리핑,ios-light,images/03-weather-ios-light.png
+H7,내일 브리핑,ios-dark,images/03-weather-ios-dark.png
+H7,내일 브리핑,android-light,images/03-weather-android-light.png
+H7,내일 브리핑,android-dark,images/03-weather-android-dark.png

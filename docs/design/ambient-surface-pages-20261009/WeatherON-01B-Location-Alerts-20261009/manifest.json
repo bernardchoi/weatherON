@@ -1,0 +1,75 @@
+{
+  "package": "01B-Location-Alerts",
+  "title": "위치 · 알림",
+  "total_packages": 10,
+  "package_pngs": 8,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "H2": {
+      "ios-light": "04-location-alerts-ios-light.png",
+      "ios-dark": "04-location-alerts-ios-dark.png",
+      "android-light": "04-location-alerts-android-light.png",
+      "android-dark": "04-location-alerts-android-dark.png"
+    },
+    "H3": {
+      "ios-light": "04-location-alerts-ios-light.png",
+      "ios-dark": "04-location-alerts-ios-dark.png",
+      "android-light": "04-location-alerts-android-light.png",
+      "android-dark": "04-location-alerts-android-dark.png"
+    },
+    "M2": {
+      "ios-light": "04-location-alerts-ios-light.png",
+      "ios-dark": "04-location-alerts-ios-dark.png",
+      "android-light": "04-location-alerts-android-light.png",
+      "android-dark": "04-location-alerts-android-dark.png"
+    }
+  },
+  "state_families_in_this_part": {
+    "M2-expanded-details-permission-off": {
+      "title": "스마트 알림: 여섯 세부 토글 · 권한 꺼짐",
+      "files": [
+        "04-location-alerts-states-ios-light.png",
+        "04-location-alerts-states-ios-dark.png",
+        "04-location-alerts-states-android-light.png",
+        "04-location-alerts-states-android-dark.png"
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "images/04-location-alerts-ios-light.png",
+      "sha256": "f9834c2c262afbf063efad7aa5818c218c51e864f5377485ab350e2d1cf5df68"
+    },
+    {
+      "file": "images/04-location-alerts-ios-dark.png",
+      "sha256": "569c0b7c75ba39f158e55259ffc2c81e6edf4ad64f8fb6865d572f6e6b5d93ca"
+    },
+    {
+      "file": "images/04-location-alerts-android-light.png",
+      "sha256": "88f4d6a4a3e098a72e7b8287f09c1dbf1e9a399d80963d9eb2b2be5cff14ca0b"
+    },
+    {
+      "file": "images/04-location-alerts-android-dark.png",
+      "sha256": "59095816e87ba6cece1aa4de5cb95e77593c3cf33302c6bddc6da2a7af797750"
+    },
+    {
+      "file": "images/04-location-alerts-states-ios-light.png",
+      "sha256": "ec236c2b62821f42d9a38cb6f8350a96d5148e0dcdbd1a3f1f0abdda837af2b4"
+    },
+    {
+      "file": "images/04-location-alerts-states-ios-dark.png",
+      "sha256": "6990fadfff3c28e9d2c475e7d9b9fdb5dfe69ea1cefd72e0c4fa467bd0edd163"
+    },
+    {
+      "file": "images/04-location-alerts-states-android-light.png",
+      "sha256": "6bb593905a77400ea6f62b17c18687fb731f6552846a5277a367a1e64111d5d3"
+    },
+    {
+      "file": "images/04-location-alerts-states-android-dark.png",
+      "sha256": "06a90b361507313347381c1d0aa437da308227ce498bd36df6b785a12552d895"
+    }
+  ]
+}

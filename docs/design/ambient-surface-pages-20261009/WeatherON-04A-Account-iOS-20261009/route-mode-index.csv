@@ -1,0 +1,15 @@
+﻿route,title,mode,file
+M3,표시 설정,ios-light,images/06-settings-ios-light-v3.png
+M3,표시 설정,ios-dark,images/06-settings-ios-dark-v3.png
+M4,앱 권한 관리,ios-light,images/06-settings-ios-light-v3.png
+M4,앱 권한 관리,ios-dark,images/06-settings-ios-dark-v3.png
+A4,계정 관리,ios-light,images/06-settings-ios-light-v3.png
+A4,계정 관리,ios-dark,images/06-settings-ios-dark-v3.png
+A2,계정 연결,ios-light,images/06-account-consent-ios-light.png
+A2,계정 연결,ios-dark,images/06-account-consent-ios-dark.png
+A3,약관 동의,ios-light,images/06-account-consent-ios-light.png
+A3,약관 동의,ios-dark,images/06-account-consent-ios-dark.png
+R1,정책 및 법적 고지,ios-light,images/06-policy-ios-light.png
+R1,정책 및 법적 고지,ios-dark,images/06-policy-ios-dark.png
+R2,정책 문서,ios-light,images/06-policy-ios-light.png
+R2,정책 문서,ios-dark,images/06-policy-ios-dark.png

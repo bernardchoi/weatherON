@@ -1,0 +1,103 @@
+{
+  "package": "01A-Core-Weather",
+  "title": "기본 탭 · 날씨",
+  "total_packages": 10,
+  "package_pngs": 10,
+  "total_unique_pngs": 104,
+  "total_baseline_representations": 124,
+  "total_representative_state_families": 19,
+  "route_and_state_file_base": "images/",
+  "routes": {
+    "H1": {
+      "ios-light": "01-core-ios-light-v3.png",
+      "ios-dark": "01-core-ios-dark-v3.png",
+      "android-light": "01-core-android-light-v3.png",
+      "android-dark": "01-core-android-dark-v3.png"
+    },
+    "C1": {
+      "ios-light": "01-core-ios-light-v3.png",
+      "ios-dark": "01-core-ios-dark-v3.png",
+      "android-light": "01-core-android-light-v3.png",
+      "android-dark": "01-core-android-dark-v3.png"
+    },
+    "G1": {
+      "ios-light": "01-core-ios-light-v3.png",
+      "ios-dark": "01-core-ios-dark-v3.png",
+      "android-light": "01-core-android-light-v3.png",
+      "android-dark": "01-core-android-dark-v3.png"
+    },
+    "M1": {
+      "ios-light": "01-core-ios-light-v3.png",
+      "ios-dark": "01-core-ios-dark-v3.png",
+      "android-light": "01-core-android-light-v3.png",
+      "android-dark": "01-core-android-dark-v3.png"
+    },
+    "H6": {
+      "ios-light": "03-weather-ios-light.png",
+      "ios-dark": "03-weather-ios-dark.png",
+      "android-light": "03-weather-android-light.png",
+      "android-dark": "03-weather-android-dark.png"
+    },
+    "H4": {
+      "ios-light": "03-weather-ios-light.png",
+      "ios-dark": "03-weather-ios-dark.png",
+      "android-light": "03-weather-android-light.png",
+      "android-dark": "03-weather-android-dark.png"
+    },
+    "H5": {
+      "ios-light": "03-weather-ios-light.png",
+      "ios-dark": "03-weather-ios-dark.png",
+      "android-light": "03-weather-android-light.png",
+      "android-dark": "03-weather-android-dark.png"
+    },
+    "H7": {
+      "ios-light": "03-weather-ios-light.png",
+      "ios-dark": "03-weather-ios-dark.png",
+      "android-light": "03-weather-android-light.png",
+      "android-dark": "03-weather-android-dark.png"
+    }
+  },
+  "state_families_in_this_part": {},
+  "files": [
+    {
+      "file": "images/01-core-ios-light-v3.png",
+      "sha256": "c0afd6b8d543255d9de68367e57798b76664d4180877547d65dc05449cd77a89"
+    },
+    {
+      "file": "images/01-core-ios-dark-v3.png",
+      "sha256": "1a5fbd5908b0851eb3b686ed9ddd8dfa3ba5bd71931b25e16de900e75d0596d7"
+    },
+    {
+      "file": "images/01-core-android-light-v3.png",
+      "sha256": "e2c79261871dfe55ca8a09d916cb0fed36e4cfa520ff49e1cbc7e6d8bc8238f6"
+    },
+    {
+      "file": "images/01-core-android-dark-v3.png",
+      "sha256": "84025104b89608476f45a01a4c3b61f0bf48ac86d8a34d80934e8947313092d8"
+    },
+    {
+      "file": "images/03-weather-ios-light.png",
+      "sha256": "4e29bf2b77e3c53c3c3b57b0a1650e731f05ace71d6d403ac630fce91be6bfdb"
+    },
+    {
+      "file": "images/03-weather-ios-dark.png",
+      "sha256": "10f1133d958dc047dc50a0f3b0fbe144cdded54721458cee56765ff5bf6488c2"
+    },
+    {
+      "file": "images/03-weather-android-light.png",
+      "sha256": "25059e045f32a55cc61f746f3d437aaf4722cc917cf9baa38643eab39ae1bf39"
+    },
+    {
+      "file": "images/03-weather-android-dark.png",
+      "sha256": "817cce56d9f8b3b7e36884dc7b0d7806f8e6a99d8e8147fa99c6a0a3f857b713"
+    },
+    {
+      "file": "images/03-weather-state-no-rain-all-modes.png",
+      "sha256": "1558f7c7376a28dd278472c2aba41237f11db3a3f0fbb2941d33fc4c200930e5"
+    },
+    {
+      "file": "images/03-weather-state-missing-tomorrow-all-modes.png",
+      "sha256": "3db2dece498a076a0c146ef5818e94f3e549f76a60ee44a81fc4706dc4c6c51f"
+    }
+  ]
+}
