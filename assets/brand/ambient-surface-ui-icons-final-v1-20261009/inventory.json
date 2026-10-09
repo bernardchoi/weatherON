@@ -1,0 +1,370 @@
+[
+  {
+    "path": "compact-24/dark/cloud.svg",
+    "sha256": "96f76d98f84a68616c0a4f12fbd90e0567c64bc0ff183386186d5b7e12f2ea54"
+  },
+  {
+    "path": "compact-24/dark/fog.svg",
+    "sha256": "1670d58f69b5c87191dfa01cdf1683735392148f94a626d9052cd4db3616f57b"
+  },
+  {
+    "path": "compact-24/dark/heavy-rain.svg",
+    "sha256": "22f57a3e8616f3fbf62b43cce54367a56906891b67c09009a3b6f1ff5c866657"
+  },
+  {
+    "path": "compact-24/dark/partly-cloudy.svg",
+    "sha256": "5609882aad2463bc046e8fe424096a2a99862a07fb065c4ff654680662905800"
+  },
+  {
+    "path": "compact-24/dark/rain.svg",
+    "sha256": "b8f0dfe3d48048bf89dc5b31ee0d91e5f8056e648c214d25b09d77ca324b8120"
+  },
+  {
+    "path": "compact-24/dark/snow.svg",
+    "sha256": "bc779662510945c8c1018a8c400ea265a476d5c6a98df815b5f25cf572cedf8d"
+  },
+  {
+    "path": "compact-24/dark/sun.svg",
+    "sha256": "50329c9a33fe7231b3322588c970bc81e8a643cf104fcfde8b03e960813b2c29"
+  },
+  {
+    "path": "compact-24/dark/thunder.svg",
+    "sha256": "0be7544d1c6a86ae2280a3572e5b6ee327c1e24c05d32b4bb4b0ef55ce9bc033"
+  },
+  {
+    "path": "compact-24/light/cloud.svg",
+    "sha256": "878a9346fec1c79c44dd2baa0e7da5508c29fb4f908ecc75a83df3e32f511a08"
+  },
+  {
+    "path": "compact-24/light/fog.svg",
+    "sha256": "0e27863b4e4450ffd805c539c12a29c405f02125ee706a226c5abd4447123a7d"
+  },
+  {
+    "path": "compact-24/light/heavy-rain.svg",
+    "sha256": "403e239dcf2294ce78640af8624b7d7f2e3a389853f2743485d9f4371cf6bbd4"
+  },
+  {
+    "path": "compact-24/light/partly-cloudy.svg",
+    "sha256": "e9b1f176af9bec222abd7e3b0c1d971948be5d8959cbfdde40f223cfb60e6717"
+  },
+  {
+    "path": "compact-24/light/rain.svg",
+    "sha256": "f06aa2b2f6caad3d864c4626f76028b67c0595b30ce48bd4c0b1808dae867496"
+  },
+  {
+    "path": "compact-24/light/snow.svg",
+    "sha256": "9b86b20bca1aa6c03ee413e91f3957467f3b5d398741f8fe9c2b950f0cd2dd77"
+  },
+  {
+    "path": "compact-24/light/sun.svg",
+    "sha256": "8756c2857a5edfe56c355cb4acc75a0079b4dd5797ef4bb4702a8e227b15c419"
+  },
+  {
+    "path": "compact-24/light/thunder.svg",
+    "sha256": "80b9342dacf646bd742f8d28ecbc2a112227459a623f9af8877b71751e467f4c"
+  },
+  {
+    "path": "compact-32/dark/cloud.svg",
+    "sha256": "96f76d98f84a68616c0a4f12fbd90e0567c64bc0ff183386186d5b7e12f2ea54"
+  },
+  {
+    "path": "compact-32/dark/fog.svg",
+    "sha256": "ec656ce885d5f8bb9892eb30eb420715512f5822ba5128acc4594bbd2597d928"
+  },
+  {
+    "path": "compact-32/dark/heavy-rain.svg",
+    "sha256": "9570871f0c3a6229fbb2f466ae840340d8dbb4ee10cf063c799f5ba860c00df2"
+  },
+  {
+    "path": "compact-32/dark/partly-cloudy.svg",
+    "sha256": "5609882aad2463bc046e8fe424096a2a99862a07fb065c4ff654680662905800"
+  },
+  {
+    "path": "compact-32/dark/rain.svg",
+    "sha256": "e11b659ead12ffaccf588b459604d3bd66721180ff19f688ca1e4e5237e874fb"
+  },
+  {
+    "path": "compact-32/dark/snow.svg",
+    "sha256": "27ea9628dd8432810c5d223438e3abe02d85d57fe6645d82c398883d05a71f57"
+  },
+  {
+    "path": "compact-32/dark/sun.svg",
+    "sha256": "549cfa56e85c9f9a3dc7d066ce6cc4211083659aa55db363508fb474cd0d71f1"
+  },
+  {
+    "path": "compact-32/dark/thunder.svg",
+    "sha256": "0be7544d1c6a86ae2280a3572e5b6ee327c1e24c05d32b4bb4b0ef55ce9bc033"
+  },
+  {
+    "path": "compact-32/light/cloud.svg",
+    "sha256": "878a9346fec1c79c44dd2baa0e7da5508c29fb4f908ecc75a83df3e32f511a08"
+  },
+  {
+    "path": "compact-32/light/fog.svg",
+    "sha256": "19dd1ac13d11cd0ebc11f738be37e5894a99c8bf8c9a7f0cf004f8c59cd3a16a"
+  },
+  {
+    "path": "compact-32/light/heavy-rain.svg",
+    "sha256": "3e3d2a7a3875427d895fff7bdcd2a570ab9a6fa172d991baac407d082d0b65a9"
+  },
+  {
+    "path": "compact-32/light/partly-cloudy.svg",
+    "sha256": "e9b1f176af9bec222abd7e3b0c1d971948be5d8959cbfdde40f223cfb60e6717"
+  },
+  {
+    "path": "compact-32/light/rain.svg",
+    "sha256": "a2513c52e90a7af08f0a1e8f2f0a9ba4e8e900c052e4912801e32144d5b3b2d4"
+  },
+  {
+    "path": "compact-32/light/snow.svg",
+    "sha256": "98790ecd036d734380c132aab8053b765b13aa4be3f11e8ea481c24bc888113f"
+  },
+  {
+    "path": "compact-32/light/sun.svg",
+    "sha256": "df7eacff8d8ad2a0ed0e8b4e191e2f89abffffce5a95136300bacd681ce3f81e"
+  },
+  {
+    "path": "compact-32/light/thunder.svg",
+    "sha256": "80b9342dacf646bd742f8d28ecbc2a112227459a623f9af8877b71751e467f4c"
+  },
+  {
+    "path": "hero/dark/cloud.svg",
+    "sha256": "778a71c4c324a81aad33647e8c74f71864f4ec6bf707972a3a20efd07aba002f"
+  },
+  {
+    "path": "hero/dark/fog.svg",
+    "sha256": "837a79cb10f4b49b258af536cef791a6dea146edb23410e86943037dfa923050"
+  },
+  {
+    "path": "hero/dark/heavy-rain.svg",
+    "sha256": "c1d10941c952396eda8ce7ad4b0ca74185942bd860ecfe13693b0d53c07166f9"
+  },
+  {
+    "path": "hero/dark/partly-cloudy.svg",
+    "sha256": "b59a57f6a3d7647270dd46254c728d7cf9b029066550435e4e91aa82049e853c"
+  },
+  {
+    "path": "hero/dark/rain.svg",
+    "sha256": "27f61bc287332d72a5fb953c67e0ff21d5172f86d1ce69e36aeaab4487a0e1fb"
+  },
+  {
+    "path": "hero/dark/snow.svg",
+    "sha256": "fb41f076ac26cd11540f040d28be119ab96394a0afdfd597cbb1856ef96bba1f"
+  },
+  {
+    "path": "hero/dark/sun.svg",
+    "sha256": "903c447a1643f372757ca948be81d5ba1c6e0a01d82bf435a10862aadce0da98"
+  },
+  {
+    "path": "hero/dark/thunder.svg",
+    "sha256": "cb866a82d50a7734f7a140029c9f2242af242714493e1a0c23d09b308db4c406"
+  },
+  {
+    "path": "hero/light/cloud.svg",
+    "sha256": "055c662b8817e7621f3087bbfa8efd20a0c0c85897faef7fb18d6315d384122e"
+  },
+  {
+    "path": "hero/light/fog.svg",
+    "sha256": "861e1f51d467ef05102e48f46687d3429a49cec5d916b0d42e146f21e1c4fdea"
+  },
+  {
+    "path": "hero/light/heavy-rain.svg",
+    "sha256": "02e547260c2bd55a60ce84aa12157580e7a48487b4ce63b02a01a0d4b628a521"
+  },
+  {
+    "path": "hero/light/partly-cloudy.svg",
+    "sha256": "035977b12f3bf0054954bdc99554e7125cca0ff61a48da4179dcbfd5842a994e"
+  },
+  {
+    "path": "hero/light/rain.svg",
+    "sha256": "81220f1921e155f56a3339fc6e5de6609d18c5652cb878ecad1d653f25396fd0"
+  },
+  {
+    "path": "hero/light/snow.svg",
+    "sha256": "7c19737139e1f83fead852979f99b3d484e87b7dd26c503e51febe891a1e1cb7"
+  },
+  {
+    "path": "hero/light/sun.svg",
+    "sha256": "cf89d2d651f90f9af14eac3659f8151676fc02016506acde9d389ba57370a1d8"
+  },
+  {
+    "path": "hero/light/thunder.svg",
+    "sha256": "1b2c91ce874f25077d7e425c1d2cf395181fff02dab0470d7d5366bfb0c08bc2"
+  },
+  {
+    "path": "monochrome/dark/cloud.svg",
+    "sha256": "ad0102a44fae021b789b0ecbf180a09007ca626318e1df69811034c8b980d789"
+  },
+  {
+    "path": "monochrome/dark/fog.svg",
+    "sha256": "0f129263ef86006849180b082d479e62b93cc95b71e2597c1e0a5dae8b13df4d"
+  },
+  {
+    "path": "monochrome/dark/heavy-rain.svg",
+    "sha256": "dd867a34c57e936e58948380462f5d1082e45c13ade9185391381708aef43712"
+  },
+  {
+    "path": "monochrome/dark/partly-cloudy.svg",
+    "sha256": "7e60bfbcc5ae7017326142252a85b3fd03b7d577a0e515604fb1c6a59bd3a0a2"
+  },
+  {
+    "path": "monochrome/dark/rain.svg",
+    "sha256": "4f5702fcffb2cf6d1c405ece3002e00b9660ddb999375d81e79bb70bcad4e128"
+  },
+  {
+    "path": "monochrome/dark/snow.svg",
+    "sha256": "27a6127a4a722906bc03c6b28507ce1afeb3a3238fd3a7c11954726be0a11de0"
+  },
+  {
+    "path": "monochrome/dark/sun.svg",
+    "sha256": "9fd74ba5cd95c1d14e450bb723eb4b63f002c9ab5a991f49e397f4f775596a64"
+  },
+  {
+    "path": "monochrome/dark/thunder.svg",
+    "sha256": "e9a842f9b8768393675c07adbf86d6ad2ef7ca5315d92392e5e8bdf558e9b0ce"
+  },
+  {
+    "path": "monochrome/light/cloud.svg",
+    "sha256": "7212d2e435ccd8061e08ae1d755095ad06e80dc5335c1012408ef5120cac3b9d"
+  },
+  {
+    "path": "monochrome/light/fog.svg",
+    "sha256": "19a4e8112821c0db9279b83725eed823d6cda63c5e0e52cbc8e48a3e1b9356b9"
+  },
+  {
+    "path": "monochrome/light/heavy-rain.svg",
+    "sha256": "b647067663230fea190f903dd6a26125da3ea700e193d5fe1a8dc015c6efa399"
+  },
+  {
+    "path": "monochrome/light/partly-cloudy.svg",
+    "sha256": "8c7a89754bbaa67ce5fe2a51e9f00eaf3d02110df9d5db64a2a55470cb4d5163"
+  },
+  {
+    "path": "monochrome/light/rain.svg",
+    "sha256": "47d3195cc3fdc245971b3625e5e734bcaf56e453af23cd2872ec36f207372e46"
+  },
+  {
+    "path": "monochrome/light/snow.svg",
+    "sha256": "a29e9741dd3927192a14ef5f496349ef62095da8af2a8c7610c37053a6cb181e"
+  },
+  {
+    "path": "monochrome/light/sun.svg",
+    "sha256": "aa34a1036229ffbfa8cc8d3b5c96c6ec871c450c2417dd2e54cd10fec71faf9f"
+  },
+  {
+    "path": "monochrome/light/thunder.svg",
+    "sha256": "7c5abe87af13f26b1ed943b3a0ab43c5954e42ee5ca5dd87b7ced3b6182ad3d0"
+  },
+  {
+    "path": "tabs-selected/tab-depart.svg",
+    "sha256": "58f3cdb20111e677c90bf84780b73b3bafd1a63369e7eb52481ca519390fdfda"
+  },
+  {
+    "path": "tabs-selected/tab-home.svg",
+    "sha256": "2dc8318d7256f90ab8a1c164835710fe865f8d6b646fe0d6176c5fe132be0184"
+  },
+  {
+    "path": "tabs-selected/tab-my.svg",
+    "sha256": "0add4f3ed0b3e2257e788c6e6ffd7539d36da5226e33d2e9c34dc76808bcc88a"
+  },
+  {
+    "path": "tabs-selected/tab-outfit.svg",
+    "sha256": "f480aed678d8ea8141fe7568814d4724f62462da1e4ea39ba0074e78c3c212df"
+  },
+  {
+    "path": "ui-outline/add.svg",
+    "sha256": "797bb88f8bb58dd47627267d4c1ddb94bcb181939c3f8e945103089204e1977b"
+  },
+  {
+    "path": "ui-outline/back.svg",
+    "sha256": "eb62a95ad588a04fa2d8514c2968e857d2dd84a8b4087258f89c420c1d61f4c9"
+  },
+  {
+    "path": "ui-outline/bookmark.svg",
+    "sha256": "078721b5c7636ee2595aba1177758747d48546c9add218fa45434e756f76a60a"
+  },
+  {
+    "path": "ui-outline/check.svg",
+    "sha256": "e685bfda5e3d1fecccf06c37d5acbe77656e86bbcb7128d3fa9b683e9f71ca86"
+  },
+  {
+    "path": "ui-outline/close.svg",
+    "sha256": "df7a87dcd9f2ce8572a6273365ce264a92cbe00b221ac7475bc01dbcf265d92d"
+  },
+  {
+    "path": "ui-outline/delete.svg",
+    "sha256": "891c51b4630acaff0197f28d3a501787707c7b19f530af2d26a631492a4ab8b3"
+  },
+  {
+    "path": "ui-outline/droplet.svg",
+    "sha256": "c5c6fa55a359651d2fa1a134638ca277c692a3ddfb4b4ff47d14835ede751dbc"
+  },
+  {
+    "path": "ui-outline/edit.svg",
+    "sha256": "9078861a5b5f9e5e78e579bdeccf783a343f1d363a79d1f6877c635699f86b93"
+  },
+  {
+    "path": "ui-outline/expand.svg",
+    "sha256": "2d602bd60590c2fcff032e6ffd7ee57e4144625d53382ab23a0c74aeac994f4f"
+  },
+  {
+    "path": "ui-outline/location.svg",
+    "sha256": "6c741bf13f1b1f4609e26455e61bc027263bf57f72a3d5465db384e4439424e6"
+  },
+  {
+    "path": "ui-outline/notifications.svg",
+    "sha256": "ca69d4fef847f375b0694967cb0c6f23a1e2f550e12eed25fed53675029234b4"
+  },
+  {
+    "path": "ui-outline/permissions.svg",
+    "sha256": "1f292b5c9a1fc23ef7eb93e8b297713809b0d189d30c875c19cb8666d37ecf4c"
+  },
+  {
+    "path": "ui-outline/search.svg",
+    "sha256": "c63b91e7016e1ce9f8acdd7079998ab0a8590d20395eb874c7d42784fb9409f2"
+  },
+  {
+    "path": "ui-outline/settings.svg",
+    "sha256": "562949cf944b3e45c3e91a2c2f4032d36406f38e5c19f69dcdcd87e5ed6aeb5e"
+  },
+  {
+    "path": "ui-outline/style.svg",
+    "sha256": "201633c92210a8e069bbf7be0b1bef60d1d37cbb4cb478c878427793b1a3ad06"
+  },
+  {
+    "path": "ui-outline/tab-depart.svg",
+    "sha256": "061a4b37fdea403f83429565b28729ae2ed4710c57e086ad7bb8ce54dac62ead"
+  },
+  {
+    "path": "ui-outline/tab-home.svg",
+    "sha256": "4bd895ad1c65b65becb5f227cbf790c2eb27c9e94a9910e588aed88b18d4417b"
+  },
+  {
+    "path": "ui-outline/tab-my.svg",
+    "sha256": "50b20e847f85f1ea42eb13b088aa1a67adfa9c2a9eb825e80fae29a2ad197f56"
+  },
+  {
+    "path": "ui-outline/tab-outfit.svg",
+    "sha256": "49783a65ecac8e17fd58c476963c4950406f6dea1a91815157b6b4485d85cd9c"
+  },
+  {
+    "path": "ui-outline/temperature.svg",
+    "sha256": "abc0a1796e55f4b93f31f0311f16c720f48ef4ec5c84f8f14d6c4949a01b4c1e"
+  },
+  {
+    "path": "ui-outline/time.svg",
+    "sha256": "cba36219c06c07a613fb7a03ab2777b5118199aa1f424c21cff23fb9f893d663"
+  },
+  {
+    "path": "ui-outline/umbrella.svg",
+    "sha256": "88f7abeda684f57739af56e30aed37298588f7347b416399476ddf752c5661ef"
+  },
+  {
+    "path": "ui-outline/wardrobe.svg",
+    "sha256": "2eac79877a890057be8c2a68880fffade9e3b11a0e2e22fdab919a9247d665c1"
+  },
+  {
+    "path": "ui-outline/wind.svg",
+    "sha256": "2d722b1f398ec014f6eba8856c56930876c400935783ae3286d762f07fa0d600"
+  }
+]

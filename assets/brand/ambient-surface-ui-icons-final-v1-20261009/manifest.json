@@ -1,0 +1,27 @@
+{
+  "name": "WeatherON Ambient Surface Icons",
+  "version": "1.0-final-assets",
+  "date": "2026-10-09",
+  "individual_svg_count": 92,
+  "weather_states": 8,
+  "ui_outline_count": 24,
+  "selected_tab_count": 4,
+  "selection": {
+    "fill": "none",
+    "stroke": 2,
+    "same_geometry_as_default": true,
+    "signals": [
+      "accent",
+      "stroke weight",
+      "background",
+      "bold label"
+    ]
+  },
+  "default_stroke": 1.75,
+  "accent": {
+    "light_icon": "#E53C24",
+    "light_label": "#B63121",
+    "dark": "#FFB52E"
+  },
+  "native_implemented": false
+}

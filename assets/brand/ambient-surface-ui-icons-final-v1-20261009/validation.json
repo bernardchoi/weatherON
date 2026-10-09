@@ -1,0 +1,17 @@
+{
+  "xml": "pass",
+  "changed_vs_v04": [
+    "tabs-selected/tab-home.svg",
+    "tabs-selected/tab-depart.svg",
+    "tabs-selected/tab-outfit.svg",
+    "tabs-selected/tab-my.svg"
+  ],
+  "preserved_vs_v04_count": 88,
+  "selected_geometry_matches_default": true,
+  "contrast": {
+    "light_label_on_selected": 5.08,
+    "dark_label_on_selected": 6.35,
+    "light_icon_on_selected": 3.5
+  },
+  "device_tested": false
+}
