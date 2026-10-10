@@ -12,10 +12,11 @@ const React = {
 const mocks = {
   react: React,
   "../localization/react-native": {
-    Image: "Image", Pressable: "Pressable", Text: "Text", View: "View",
+    Platform: { OS: "ios" }, Image: "Image", Pressable: "Pressable", Text: "Text", View: "View",
     StyleSheet: { create: (value) => value },
   },
   "../assets": { uiIconAssets: { check: "check" } },
+  "../ambientAssets": { ambientUiIcons: { check: "check" } },
   "../components/AppScreen": { AppScreen: "AppScreen" },
   "../navigation/routeLabels": { getRouteLabel: () => "Return screen" },
   "../theme/AppThemeContext": { useAppTheme: () => ({}) },

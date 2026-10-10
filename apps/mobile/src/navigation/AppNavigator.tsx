@@ -3,6 +3,8 @@ import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "../localization/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AmbientReadingContext, AmbientReadingSurface } from "../components/AmbientReadingSurface";
+import { ambientReadingTheme, ambientReadingRouteIds } from "../theme/ambientSurface";
 import { HomeAmbientHost } from "../components/HomeAmbientHost";
 import { BottomNav } from "../components/BottomNav";
 import { AppButton } from "../components/AppButton";
@@ -81,9 +83,11 @@ export function AppNavigator() {
     if (!["H5", "O3", "M2"].includes(route)) setRainForecastContext(null);
   }, [route]);
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4);
-  const appBackgroundColor = theme.background;
+  const readingAmbient = Platform.OS === "ios" && ambientReadingRouteIds.includes(route);
+  const presentationTheme = readingAmbient ? ambientReadingTheme(theme) : theme;
+  const appBackgroundColor = presentationTheme.background;
   const fullHomeAmbient = Platform.OS === "ios" && route === "H1";
-  const contentBackground = fullHomeAmbient ? "transparent" : appBackgroundColor;
+  const contentBackground = fullHomeAmbient || readingAmbient ? "transparent" : appBackgroundColor;
 
   useEffect(() => {
     if (!appState.appStateHydrated && !appState.storageLoadError) return;
@@ -363,8 +367,10 @@ export function AppNavigator() {
   </>);
 
   return (
-    <AppThemeProvider theme={theme}>
+    <AppThemeProvider theme={presentationTheme}>
+      <AmbientReadingContext.Provider value={readingAmbient}>
       <HomeAmbientHost enabled={fullHomeAmbient} backgroundColor={appBackgroundColor} theme={theme} weather={appState.state.destinationCare.originWeather} location={appState.placeSearchOrigin} reliable={appState.state.weatherProvider.status === "ready" && !appState.state.weatherProvider.fallbackUsed && !appState.state.destinationCare.originWeather.stale && !appState.isWeatherLoading}>
+      {readingAmbient ? <AmbientReadingSurface theme={presentationTheme} /> : null}
       <SafeAreaView
         accessibilityElementsHidden={launchVisible}
         importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
@@ -378,12 +384,13 @@ export function AppNavigator() {
           backRoute={appState.canGoBack && !isPrimaryTabRoute(route) ? appState.backRoute : undefined}
           onGoBack={appState.goBack} renderScreen={renderScreen} />
           {(isLaunchVisibleP0Route(route) && route !== "G6") || route === "A4" || route === "R1" || route === "R2" || (route === "O4" && appState.styleProfileReturnRoute) ? (
-            <BottomNav transparentBackground={fullHomeAmbient} activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
+            <BottomNav transparentBackground={fullHomeAmbient || readingAmbient} activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
           ) : null}
         </View>
       </SafeAreaView>
       {launchVisible ? <LaunchSplash started={launchStarted} onReady={readyLaunch} onFinish={finishLaunch} /> : null}
       </HomeAmbientHost>
+      </AmbientReadingContext.Provider>
     </AppThemeProvider>
   );
 }

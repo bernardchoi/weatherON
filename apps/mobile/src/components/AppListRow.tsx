@@ -4,6 +4,7 @@ import { Image, type ImageSourcePropType, Platform, StyleSheet, Text, View } fro
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { cardShadow, getToneColor, radius, spacing, type AppTheme } from "../theme/tokens";
+import { useAmbientReadingSurface } from "./AmbientReadingSurface";
 import { FeedbackPressable } from "./FeedbackPressable";
 
 export type AppListTone = "clear" | "gold" | "sky" | "warm";
@@ -20,6 +21,7 @@ type AppListRowProps = {
   tone?: AppListTone;
   right?: React.ReactNode;
   divider?: boolean;
+  contained?: boolean;
   onPress?: () => void;
   accessibilityLabel?: string;
   accessibilityRole?: "button" | "switch";
@@ -28,6 +30,7 @@ type AppListRowProps = {
 
 export function AppListGroup({ children }: AppListGroupProps) {
   const theme = useAppTheme();
+  const ambient = useAmbientReadingSurface();
   return (
     <View
       style={[
@@ -37,6 +40,7 @@ export function AppListGroup({ children }: AppListGroupProps) {
         cardShadow(theme),
         androidMaterialSurface(theme, "surfaceContainer"),
         pageStyles.card,
+        ambient && { ...pageStyles.unboxed, borderRadius: 0 },
       ]}
     >
       {children}
@@ -52,25 +56,27 @@ export function AppListRow({
   tone = "sky",
   right,
   divider = false,
+  contained = false,
   onPress,
   accessibilityLabel,
   accessibilityRole = "button",
   accessibilityState,
 }: AppListRowProps) {
   const theme = useAppTheme();
+  const ambient = useAmbientReadingSurface();
   const color = getToneColor(theme, tone);
   const content = (
     <>
-      {divider ? <View style={[styles.divider, { backgroundColor: theme.border }]} /> : null}
+      {divider && !ambient ? <View style={[styles.divider, { backgroundColor: theme.border }]} /> : null}
       <View style={[styles.iconFrame, { backgroundColor: `${color}16` }, pageStyles.quietIcon]}>
         <Image source={icon} style={[styles.icon, { tintColor: color }]} resizeMode="contain" />
       </View>
       <View style={styles.copy}>
-        <Text style={[styles.title, pageStyles.body, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{subtitle}</Text> : null}
+        <Text style={[styles.title, pageStyles.body, { color: theme.text }]} numberOfLines={ambient ? undefined : 1}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={ambient ? undefined : 1}>{subtitle}</Text> : null}
       </View>
-      {right ?? (value ? <Text style={[styles.value, { fontWeight: "500" }, { color }]} numberOfLines={1}>{value}</Text> : null)}
-      {onPress && accessibilityRole !== "switch" ? <Chevron color={theme.subtle} /> : null}
+      {right ?? (value ? <Text style={[styles.value, { fontWeight: "500" }, { color }]} numberOfLines={contained ? undefined : 1}>{value}</Text> : null)}
+      {onPress && !ambient && accessibilityRole !== "switch" ? <Chevron color={theme.subtle} /> : null}
     </>
   );
 
@@ -82,14 +88,14 @@ export function AppListRow({
         accessibilityState={accessibilityState}
         android_ripple={androidMaterialRipple(theme)}
         onPress={onPress}
-        style={styles.row}
+        style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }]}
       >
         {content}
       </FeedbackPressable>
     );
   }
 
-  return <View style={styles.row}>{content}</View>;
+  return <View style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }]}>{content}</View>;
 }
 
 function Chevron({ color }: { color: string }) {

@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
@@ -10,6 +11,8 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
 export function OnboardingDestinationScreen({
   selectedDestinationPlace,
@@ -61,22 +64,22 @@ export function OnboardingDestinationScreen({
 
       <Image
         source={onboardingAssets.destinationCare}
-        style={[styles.destinationVisual, { height: layout.onboardingDestinationVisualHeight }]}
+        style={[[styles.destinationVisual, { height: layout.onboardingDestinationVisualHeight }], Platform.OS === "ios" && ambientVisual.destinationVisual]}
         resizeMode="cover"
         accessibilityLabel="목적지 날씨와 출발 시간 비교 예시"
       />
 
       <OnboardingVisualStrip
         items={[
-          { label: "날씨", value: "양쪽을 한눈에", icon: uiIconAssets.rain, tone: "sky" },
-          { label: "출발", value: "나설 시간 안내", icon: uiIconAssets.depart, tone: "gold" },
-          { label: "준비물", value: "미리 챙기기", icon: uiIconAssets.umbrella, tone: "clear" },
+          { label: "날씨", value: "양쪽을 한눈에", icon: screenIcons.rain, tone: "sky" },
+          { label: "출발", value: "나설 시간 안내", icon: screenIcons.depart, tone: "gold" },
+          { label: "준비물", value: "미리 챙기기", icon: screenIcons.umbrella, tone: "clear" },
         ]}
       />
 
       <View
         accessibilityLabel={canUseSelection ? "선택한 목적지" : "목적지 선택"}
-        style={[
+        style={[[
           styles.destinationCard,
           {
             backgroundColor: theme.card,
@@ -85,11 +88,11 @@ export function OnboardingDestinationScreen({
             padding: layout.onboardingPanelPadding,
           },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.destinationCard]}
       >
         <View style={styles.copy}>
-          {canUseSelection ? <RawText style={[styles.title, { color: theme.text }]}>{selectedDestinationPlace.name}</RawText> : <Text style={[styles.title, { color: theme.text }]}>장소 검색 후 선택</Text>}
-          <Text style={[styles.body, { color: theme.muted }]} numberOfLines={1}>
+          {canUseSelection ? <RawText style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{selectedDestinationPlace.name}</RawText> : <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>장소 검색 후 선택</Text>}
+          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]} numberOfLines={1}>
             {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만 골라보세요"}
           </Text>
         </View>
@@ -135,4 +138,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "destinationCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "destinationVisual": {
+    "borderRadius": 20
+  },
+  "title": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "body": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

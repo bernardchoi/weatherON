@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
@@ -9,6 +10,8 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
 type TermsConsentScreenProps = {
   gate: AccountGateState | null;
@@ -104,14 +107,14 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, on
       contentGap={layout.accountContentGap}
       contentPaddingTop={layout.weatherTopPadding}
     >
-      <View style={[styles.progressCard, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[[styles.progressCard, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.progressCard]}>
         <View style={styles.copy}>
-          <Text style={[styles.kicker, { color: theme.clear }]}>약관 상태</Text>
-          <Text style={[styles.headline, { color: theme.text }]}>{statusLabel}</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>동의 후 저장·알림 설정으로 돌아가요</Text>
+          <Text style={[[styles.kicker, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.kicker]}>약관 상태</Text>
+          <Text style={[[styles.headline, { color: theme.text }], Platform.OS === "ios" && ambientVisual.headline]}>{statusLabel}</Text>
+          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>동의 후 저장·알림 설정으로 돌아가요</Text>
         </View>
-        <View style={[styles.countBubble, { backgroundColor: theme.cardMuted }]}>
-          <Text style={[styles.countText, { color: theme.clear }]}>{requiredCount}/{requiredItems.length}</Text>
+        <View style={[[styles.countBubble, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.countBubble]}>
+          <Text style={[[styles.countText, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.countText]}>{requiredCount}/{requiredItems.length}</Text>
         </View>
         <View style={[styles.progressTrack, { backgroundColor: theme.cardMuted }]}>
           <View style={[styles.progressFill, { width: `${(requiredCount / requiredItems.length) * 100}%`, backgroundColor: theme.clear }]} />
@@ -123,16 +126,16 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, on
         accessibilityRole="checkbox"
         accessibilityState={{ checked: allAccepted }}
         onPress={toggleAll}
-        style={({ pressed }) => [styles.allRow, pageStyles.card, { minHeight: layout.accountConsentRowMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]}
+        style={({ pressed }) => [[styles.allRow, pageStyles.card, { minHeight: layout.accountConsentRowMinHeight, padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }], Platform.OS === "ios" && ambientVisual.allRow]}
       >
         <CheckBox checked={allAccepted} theme={theme} />
         <View style={styles.copy}>
-          <Text style={[styles.title, { color: theme.text }]}>전체 동의</Text>
-          <Text style={[styles.body, { color: theme.muted }]}>필수 4개를 함께 변경</Text>
+          <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>전체 동의</Text>
+          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>필수 4개를 함께 변경</Text>
         </View>
       </Pressable>
 
-      <View style={[styles.listPanel, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+      <View style={[[styles.listPanel, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.listPanel]}>
         {consentItems.map((item, index) => (
           <ConsentRow
             key={item.key}
@@ -148,10 +151,10 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, on
         ))}
       </View>
 
-      <View style={[styles.actionPanel, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }]}>
+      <View style={[[styles.actionPanel, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }], Platform.OS === "ios" && ambientVisual.actionPanel]}>
         <View style={styles.actionCopy}>
           <Text style={[styles.gateTitle, pageStyles.sectionTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
-          <Text style={[styles.body, pageStyles.caption, { color: theme.muted }]}>
+          <Text style={[[styles.body, pageStyles.caption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>
             {gate?.selectedDestinationName ? `${gate.selectedDestinationName} 저장 후 ${returnLabel} 화면으로 돌아가요` : `${returnLabel} 화면으로 돌아가요`}
           </Text>
         </View>
@@ -164,13 +167,13 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, on
           }}
           style={({ pressed }) => [styles.primaryButton, pageStyles.card, { borderWidth: 1, backgroundColor: requiredAccepted ? theme.gold : theme.cardMuted, borderColor: requiredAccepted ? theme.gold : theme.border, opacity: pressed ? 0.78 : 1 }]}
         >
-          <Text style={[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }]}>
+          <Text style={[[styles.primaryText, { color: requiredAccepted ? theme.onAccent : theme.subtle }], Platform.OS === "ios" && ambientVisual.primaryText]}>
             {isSaving ? "동의 저장 중" : requiredAccepted ? "동의하고 계속" : "필수 동의 필요"}
           </Text>
         </Pressable>
-        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[styles.body, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
+        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.body, { color: authStatus === "error" ? theme.alert : theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>{authMessage}</Text> : null}
         <Pressable accessibilityLabel="계정 연결 취소" accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.cancelButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }]}>
-          <Text style={[styles.cancelText, { color: theme.subtle }]}>취소</Text>
+          <Text style={[[styles.cancelText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.cancelText]}>취소</Text>
         </Pressable>
       </View>
     </AppScreen>
@@ -198,32 +201,32 @@ function ConsentRow({
 }) {
   return (
     <View
-      style={[
+      style={[[
         styles.consentRow,
         { minHeight, paddingHorizontal: horizontalPadding },
         withDivider ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.consentRow]}
     >
       <Pressable
         accessibilityLabel={`${item.label} ${checked ? "동의 해제" : "동의"}`}
         accessibilityRole="checkbox"
         accessibilityState={{ checked }}
         onPress={onPress}
-        style={({ pressed }) => [styles.consentToggle, { opacity: pressed ? 0.72 : 1 }]}
+        style={({ pressed }) => [[styles.consentToggle, { opacity: pressed ? 0.72 : 1 }], Platform.OS === "ios" && ambientVisual.consentToggle]}
       >
         <CheckBox checked={checked} theme={theme} />
         <View style={styles.consentCopy}>
           <View style={styles.titleLine}>
-            <Text style={[styles.requireLabel, { color: theme.gold }]}>필수</Text>
-            <Text style={[styles.consentTitle, { color: theme.text }]}>{item.label}</Text>
+            <Text style={[[styles.requireLabel, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.requireLabel]}>필수</Text>
+            <Text style={[[styles.consentTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.consentTitle]}>{item.label}</Text>
           </View>
-          <Text style={[styles.body, { color: theme.muted }]}>{item.meta}</Text>
-          {item.details?.map((detail) => <Text key={detail} style={[styles.detail, { color: theme.subtle }]}>• {detail}</Text>)}
+          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>{item.meta}</Text>
+          {item.details?.map((detail) => <Text key={detail} style={[[styles.detail, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.detail]}>• {detail}</Text>)}
         </View>
       </Pressable>
       {onOpen ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`${item.label} 내용 보기`} onPress={onOpen} style={styles.openButton}>
-          <Text style={[styles.openText, { color: theme.sky }]}>내용 보기</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={`${item.label} 내용 보기`} onPress={onOpen} style={[styles.openButton, Platform.OS === "ios" && ambientVisual.openButton]}>
+          <Text style={[[styles.openText, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.openText]}>내용 보기</Text>
         </Pressable>
       ) : null}
     </View>
@@ -241,7 +244,7 @@ function CheckBox({ checked, theme }: { checked: boolean; theme: AppTheme }) {
   return (
     <View style={[styles.checkbox, { borderColor: checked ? theme.gold : theme.border, backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
       <Image
-        source={uiIconAssets.check}
+        source={screenIcons.check}
         style={[styles.check, { tintColor: checked ? theme.onAccent : "transparent" }]}
         resizeMode="contain"
       />
@@ -414,4 +417,122 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "progressCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "kicker": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "headline": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "body": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "detail": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "countBubble": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "countText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "listPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0
+  },
+  "allRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "actionPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "consentRow": {
+    "paddingHorizontal": 0,
+    "paddingVertical": 20,
+    "flexDirection": "column",
+    "alignItems": "stretch",
+    "gap": 12
+  },
+  "consentToggle": {
+    "flex": 0,
+    "width": "100%"
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "consentTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "requireLabel": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "openButton": {
+    "alignSelf": "flex-end",
+    "minHeight": 44,
+    "paddingHorizontal": 18
+  },
+  "openText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "primaryText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "cancelText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

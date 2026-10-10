@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -10,6 +11,8 @@ import type { PermissionGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
 type PermissionGateScreenProps = {
   gate: PermissionGateState | null;
@@ -46,7 +49,7 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, des
   return (
     <AppScreen title={screenTitle} subtitle={screenSubtitle} badge="권한" showWordmark={false}>
       <View
-        style={[
+        style={[[
           styles.actionPanel,
           {
             backgroundColor: theme.cardStrong,
@@ -54,12 +57,12 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, des
             padding: layout.onboardingPanelPadding,
           },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.actionPanel]}
       >
         <View style={styles.actionHeader}>
           <View style={styles.copy}>
-            <Text style={[styles.actionTitle, { color: theme.text }]}>{gateLabel}</Text>
-            <Text style={[styles.meta, { color: theme.muted }]}>
+            <Text style={[[styles.actionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.actionTitle]}>{gateLabel}</Text>
+            <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>
               {isAccountSetupGate
                 ? "저장·동기화와 무관한 선택 권한"
                 : isDestinationCareGate
@@ -69,9 +72,9 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, des
           </View>
           <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "sky"} />
         </View>
-        {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
-        {destinationLimitNotice ? <Text accessibilityLiveRegion="polite" style={[styles.stateCopy, { color: theme.warm }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
-        <View style={styles.actions}>
+        {gate?.selectedDestinationName ? <Text style={[[styles.stateCopy, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.stateCopy]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
+        {destinationLimitNotice ? <Text accessibilityLiveRegion="polite" style={[[styles.stateCopy, { color: theme.warm }], Platform.OS === "ios" && ambientVisual.stateCopy]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
+        <View style={[styles.actions, Platform.OS === "ios" && ambientVisual.actions]}>
           <AppButton label={primaryLabel} onPress={onComplete} />
           <AppButton
             label={isDestinationCareGate ? "알림 없이 저장" : "나중에 설정"}
@@ -127,19 +130,19 @@ export function PermissionGateScreen({ gate, locationReady, permissionReady, des
             ) : null}
           </>
         )}
-        <View style={[styles.stateBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+        <View style={[[styles.stateBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.stateBox]}>
           <View style={styles.stateHeader}>
-            <Text style={[styles.stateTitle, { color: theme.skyLite }]}>{isDestinationCareGate ? "저장 상태" : "권한 상태"}</Text>
+            <Text style={[[styles.stateTitle, { color: theme.skyLite }], Platform.OS === "ios" && ambientVisual.stateTitle]}>{isDestinationCareGate ? "저장 상태" : "권한 상태"}</Text>
             <StatusPill label={statusLabel} tone={isDestinationCareGate || gateReady ? "clear" : "sky"} />
           </View>
-          <Text style={[styles.stateCopy, { color: theme.muted }]}>
+          <Text style={[[styles.stateCopy, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.stateCopy]}>
             {isDestinationCareGate
               ? "알림 없이 저장해도 목적지 비교와 출발 시간은 바로 사용할 수 있음"
               : isAccountSetupGate
                 ? "나중에 해도 홈과 목적지 비교는 사용 가능"
                 : "허용하지 않아도 다음 단계 진행 가능"}
           </Text>
-          {gate?.selectedDestinationName ? <Text style={[styles.stateCopy, { color: theme.muted }]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
+          {gate?.selectedDestinationName ? <Text style={[[styles.stateCopy, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.stateCopy]}>선택 목적지 유지 · {gate.selectedDestinationName}</Text> : null}
         </View>
         {resultCards.length > 0 ? (
           <View style={styles.resultGrid}>
@@ -192,7 +195,7 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
   const color = tone === "clear" ? theme.clear : theme.skyLite;
   return (
     <View
-      style={[
+      style={[[
         styles.resultCard,
         {
           backgroundColor: theme.card,
@@ -200,12 +203,12 @@ function ResultCard({ title, body, tone }: { title: string; body: string; tone: 
           padding: layout.isShort ? spacing.sm : spacing.md,
         },
         cardShadow(theme),
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.resultCard]}
     >
       <View style={[styles.resultDot, { backgroundColor: color }]} />
       <View style={styles.copy}>
-        <Text style={[styles.resultTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.resultBody, { color: theme.muted }]}>{body}</Text>
+        <Text style={[[styles.resultTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.resultTitle]}>{title}</Text>
+        <Text style={[[styles.resultBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.resultBody]}>{body}</Text>
       </View>
     </View>
   );
@@ -216,7 +219,7 @@ function PermissionCard({ title, body, mark, active, ready }: { title: string; b
   const layout = useResponsiveLayout();
   return (
     <View
-      style={[
+      style={[[
         styles.permissionCard,
         {
           backgroundColor: theme.card,
@@ -225,18 +228,18 @@ function PermissionCard({ title, body, mark, active, ready }: { title: string; b
           padding: layout.onboardingPanelPadding,
         },
         cardShadow(theme),
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.permissionCard]}
     >
-      <View style={[styles.iconBox, { backgroundColor: active ? theme.sky : theme.cardMuted }]}>
+      <View style={[styles.iconBox, { backgroundColor: Platform.OS === "ios" ? "transparent" : active ? theme.sky : theme.cardMuted }]}>
         <Image
-          source={uiIconAssets[mark]}
-          style={[styles.iconImage, { tintColor: active ? theme.onAccent : theme.skyLite }]}
+          source={screenIcons[mark]}
+          style={[[styles.iconImage, { tintColor: Platform.OS === "ios" ? theme.muted : active ? theme.onAccent : theme.skyLite }], Platform.OS === "ios" && ambientVisual.iconImage]}
           resizeMode="contain"
         />
       </View>
       <View style={styles.copy}>
-        <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.meta, { color: theme.muted }]}>{body}</Text>
+        <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{title}</Text>
+        <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>{body}</Text>
       </View>
       <StatusPill label={ready ? "허용됨" : active ? "허용" : "대기"} tone={ready ? "clear" : "sky"} />
     </View>
@@ -366,4 +369,91 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "actionPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "actionTitle": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "meta": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "permissionCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "iconImage": {
+    "width": 30,
+    "height": 30
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "stateBox": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "stateTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "stateCopy": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "resultCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "resultTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "resultBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "actions": {
+    "flexDirection": "column",
+    "gap": 12
+  }
 });

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { AccountProviderButton as ProviderButton } from "../components/AccountProviderButton";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
@@ -71,49 +72,50 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
       contentGap={layout.accountContentGap}
       contentPaddingTop={layout.weatherTopPadding}
     >
-        <View style={[styles.hero, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.heroKicker, { color: theme.sky }]}>계정 연결</Text>
-          <Text style={[styles.heroTitle, { color: theme.text }]}>저장 기능을 계속 사용해요</Text>
+        <View style={[[styles.hero, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.hero]}>
+          {Platform.OS === "ios" ? <Image source={ambientUiIcons.tabMy} accessible={false} style={{ width: 88, height: 88, tintColor: theme.muted, marginBottom: 12 }} /> : null}
+          <Text style={[[styles.heroKicker, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.heroKicker]}>계정 연결</Text>
+          <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]}>저장 기능을 계속 사용해요</Text>
         </View>
 
         {destinationName ? (
-          <View style={[styles.contextStrip, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[[styles.contextStrip, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.contextStrip]}>
             <View style={[styles.contextDot, { backgroundColor: theme.gold }]} />
             <View style={styles.contextCopy}>
-              <Text style={[styles.contextKicker, { color: theme.gold }]}>연결 후 바로 이어져요</Text>
-              <Text style={[styles.contextTitle, { color: theme.text }]} numberOfLines={1}>{`${destinationName} · ${resumeLabel}`}</Text>
+              <Text style={[[styles.contextKicker, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.contextKicker]}>연결 후 바로 이어져요</Text>
+              <Text style={[[styles.contextTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.contextTitle]} numberOfLines={1}>{`${destinationName} · ${resumeLabel}`}</Text>
             </View>
           </View>
         ) : null}
 
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }]}>로그인 방법</Text>
-          <Text style={[styles.sectionMeta, { color: theme.subtle }]}>{getAccountRegionLabel(region)} 추천 순서</Text>
+          <Text style={[[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.sectionTitle]}>로그인 방법</Text>
+          <Text style={[[styles.sectionMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.sectionMeta]}>{getAccountRegionLabel(region)} 추천 순서</Text>
         </View>
 
-        <View style={styles.providerList}>
+        <View style={[styles.providerList, Platform.OS === "ios" && ambientVisual.providerList]}>
           {recommendedProviders.map((provider) => (
             <ProviderButton key={provider} provider={provider} language={buttonLanguage} minHeight={Math.max(48, layout.accountProviderMinHeight)} disabled={isSigningIn} onPress={() => void onSignIn(provider)} theme={theme} />
           ))}
           {providerLoadFailed || !providerCheckComplete ? (
-            <View style={[styles.unavailablePanel, pageStyles.card, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <Text style={[styles.unavailableText, { color: theme.muted }]}>
+            <View style={[[styles.unavailablePanel, pageStyles.card, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.unavailablePanel]}>
+              <Text style={[[styles.unavailableText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.unavailableText]}>
                 {providerCheckComplete ? "간편 로그인을 불러오지 못했어요. 잠시 후 다시 시도해 주세요" : "간편 로그인을 준비하고 있어요"}
               </Text>
               {providerCheckComplete ? (
                 <Pressable accessibilityRole="button" accessibilityLabel="로그인 방법 다시 불러오기" onPress={loadProviders} style={[styles.retryButton, { borderColor: theme.border }]}>
-                  <Text style={[styles.retryText, { color: theme.text }]}>다시 시도</Text>
+                  <Text style={[[styles.retryText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.retryText]}>다시 시도</Text>
                 </Pressable>
               ) : null}
             </View>
           ) : null}
         </View>
 
-        {isSigningIn ? <Text accessibilityLiveRegion="polite" style={[styles.authStatus, { color: theme.sky }]}>안전하게 계정을 연결하고 있어요</Text> : null}
-        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }]}>{authMessage}</Text> : null}
+        {isSigningIn ? <Text accessibilityLiveRegion="polite" style={[[styles.authStatus, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.authStatus]}>안전하게 계정을 연결하고 있어요</Text> : null}
+        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }], Platform.OS === "ios" && ambientVisual.authStatus]}>{authMessage}</Text> : null}
 
         {showOtherMethods && otherProviders.length > 0 ? (
-          <View style={styles.providerList}>
+          <View style={[styles.providerList, Platform.OS === "ios" && ambientVisual.providerList]}>
             {otherProviders.map((provider) => (
               <ProviderButton key={provider} provider={provider} language={buttonLanguage} minHeight={Math.max(48, layout.accountProviderMinHeight)} disabled={isSigningIn} onPress={() => void onSignIn(provider)} theme={theme} />
             ))}
@@ -122,17 +124,17 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
 
         {otherProviders.length > 0 ? (
           <Pressable accessibilityRole="button" accessibilityState={{ expanded: showOtherMethods }} onPress={() => setShowOtherMethods((current) => !current)} style={({ pressed }) => [styles.otherButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent", opacity: pressed ? 0.72 : 1 }]}>
-            <Text style={[styles.otherText, { color: theme.muted }]}>{showOtherMethods ? "계정 선택 줄이기" : "다른 계정으로 계속하기"}</Text>
+            <Text style={[[styles.otherText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.otherText]}>{showOtherMethods ? "계정 선택 줄이기" : "다른 계정으로 계속하기"}</Text>
           </Pressable>
         ) : null}
 
-        <View style={[styles.nextStep, pageStyles.card, { backgroundColor: theme.cardMuted }]}>
-          <Text style={[styles.nextStepTitle, { color: theme.text }]}>다음 단계</Text>
-          <Text style={[styles.nextStepBody, { color: theme.muted }]}>약관을 확인하면 원래 화면으로 돌아가요</Text>
-          <Text style={[styles.nextStepBody, { color: theme.subtle }]}>위치·알림 권한은 계정과 별도로 선택해요</Text>
+        <View style={[[styles.nextStep, pageStyles.card, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.nextStep]}>
+          <Text style={[[styles.nextStepTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.nextStepTitle]}>다음 단계</Text>
+          <Text style={[[styles.nextStepBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>약관을 확인하면 원래 화면으로 돌아가요</Text>
+          <Text style={[[styles.nextStepBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>위치·알림 권한은 계정과 별도로 선택해요</Text>
         </View>
         <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.laterButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }]}>
-          <Text style={[styles.laterText, { color: theme.subtle }]}>지금은 둘러보기</Text>
+          <Text style={[[styles.laterText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.laterText]}>지금은 둘러보기</Text>
         </Pressable>
     </AppScreen>
   );
@@ -163,4 +165,120 @@ const styles = StyleSheet.create({
   nextStepBody: { fontSize: 12, lineHeight: 17, fontWeight: "700" },
   laterButton: { minHeight: 46, alignItems: "center", justifyContent: "center", borderRadius: radius.lg, borderWidth: 1 },
   laterText: { fontSize: 13, lineHeight: 17, fontWeight: "800" },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "hero": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 26,
+    "gap": 16,
+    "alignItems": "center"
+  },
+  "heroKicker": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400",
+    "textAlign": "center"
+  },
+  "heroTitle": {
+    "fontSize": 24,
+    "lineHeight": 33,
+    "fontWeight": "600",
+    "textAlign": "center"
+  },
+  "contextStrip": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "contextTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "contextKicker": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "sectionTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "600"
+  },
+  "sectionMeta": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "providerList": {
+    "gap": 14
+  },
+  "unavailablePanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "unavailableText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500",
+    "textAlign": "center"
+  },
+  "authStatus": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "nextStep": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "nextStepTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "nextStepBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "otherText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "laterText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "retryText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

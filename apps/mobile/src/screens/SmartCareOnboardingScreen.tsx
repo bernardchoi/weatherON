@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
@@ -12,10 +13,12 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
+
 const scenarios: { value: SmartCareScenario; title: string; body: string; icon: number }[] = [
-  { value: "commute", title: "출근·등교", body: "아침에 나설 시간과 비 소식부터 챙겨드림", icon: uiIconAssets.depart },
-  { value: "outing", title: "일상 외출", body: "체감온도와 비 변화를 알맞게 알려드림", icon: uiIconAssets.rain },
-  { value: "travel", title: "여행·출장", body: "가는 곳 날씨가 달라지면 먼저 알려드림", icon: uiIconAssets.pin },
+  { value: "commute", title: "출근·등교", body: "아침에 나설 시간과 비 소식부터 챙겨드림", icon: screenIcons.depart },
+  { value: "outing", title: "일상 외출", body: "체감온도와 비 변화를 알맞게 알려드림", icon: screenIcons.rain },
+  { value: "travel", title: "여행·출장", body: "가는 곳 날씨가 달라지면 먼저 알려드림", icon: screenIcons.pin },
 ];
 
 export function SmartCareOnboardingScreen({
@@ -70,22 +73,22 @@ export function SmartCareOnboardingScreen({
               accessibilityState={{ checked: item.value === smartCareScenario }}
               key={item.value}
               onPress={() => onSetSmartCareScenario(item.value)}
-              style={[
+              style={[[
                 styles.segment,
                 {
                   backgroundColor: item.value === smartCareScenario ? theme.gold : theme.cardMuted,
                   borderColor: item.value === smartCareScenario ? theme.gold : theme.border,
                   minHeight: layout.onboardingSegmentMinHeight,
                 },
-              ]}
+              ], Platform.OS === "ios" && ambientVisual.segment]}
             >
-              <Image source={item.icon} style={[styles.segmentIcon, { tintColor: item.value === smartCareScenario ? theme.onAccent : theme.clear }]} resizeMode="contain" />
-              <Text style={[styles.segmentText, { color: item.value === smartCareScenario ? theme.onAccent : theme.text }]}>{item.title}</Text>
+              <Image source={item.icon} style={[[styles.segmentIcon, { tintColor: item.value === smartCareScenario ? theme.onAccent : theme.clear }], Platform.OS === "ios" && ambientVisual.segmentIcon]} resizeMode="contain" />
+              <Text style={[[styles.segmentText, { color: item.value === smartCareScenario ? theme.onAccent : theme.text }], Platform.OS === "ios" && ambientVisual.segmentText]}>{item.title}</Text>
             </FeedbackPressable>
           ))}
         </View>
         <View
-          style={[
+          style={[[
             styles.scenarioRow,
             {
               backgroundColor: theme.cardStrong,
@@ -94,29 +97,29 @@ export function SmartCareOnboardingScreen({
               padding: layout.onboardingPanelPadding,
             },
             cardShadow(theme),
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.scenarioRow]}
         >
-          <View style={[styles.scenarioIconFrame, { backgroundColor: `${theme.clear}18` }]}>
+          <View style={[[styles.scenarioIconFrame, { backgroundColor: `${theme.clear}18` }], Platform.OS === "ios" && ambientVisual.scenarioIconFrame]}>
             <Image source={selectedScenario.icon} style={[styles.scenarioIcon, { tintColor: theme.clear }]} resizeMode="contain" />
           </View>
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.text }]}>{selectedScenario.title}</Text>
-            <Text style={[styles.body, { color: theme.muted }]}>{selectedScenario.body}</Text>
+            <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{selectedScenario.title}</Text>
+            <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>{selectedScenario.body}</Text>
           </View>
-          <Text style={[styles.selectedLabel, { color: theme.clear }]}>선택됨</Text>
+          <Text style={[[styles.selectedLabel, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.selectedLabel]}>선택됨</Text>
         </View>
       </Section>
 
       <OnboardingVisualStrip
         items={[
-          { label: "비 변화", value: "시작 전", icon: uiIconAssets.rain, tone: "sky" },
-          { label: "출발", value: "맞춤 시각", icon: uiIconAssets.depart, tone: "gold" },
-          { label: "목적지", value: "급변만", icon: uiIconAssets.pin, tone: "clear" },
+          { label: "비 변화", value: "시작 전", icon: screenIcons.rain, tone: "sky" },
+          { label: "출발", value: "맞춤 시각", icon: screenIcons.depart, tone: "gold" },
+          { label: "목적지", value: "급변만", icon: screenIcons.pin, tone: "clear" },
         ]}
       />
 
       <View
-        style={[
+        style={[[
           styles.notificationPrompt,
           {
             backgroundColor: theme.cardStrong,
@@ -125,16 +128,16 @@ export function SmartCareOnboardingScreen({
             padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.notificationPrompt]}
       >
-        <View style={[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }]}>
-          <Image source={uiIconAssets.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+        <View style={[[styles.notificationIconFrame, { backgroundColor: `${theme.gold}22` }], Platform.OS === "ios" && ambientVisual.notificationIconFrame]}>
+          <Image source={screenIcons.myAlerts} style={[styles.notificationIcon, { tintColor: theme.gold }]} resizeMode="contain" />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.notificationTitle, { color: theme.text }]}>{permissionReady ? "필요한 알림을 받을 준비 끝" : notificationSkipped ? "알림은 원할 때 켤 수 있어요" : "비 오기 전, 나서기 전에 알려드릴게요"}</Text>
-          <Text style={[styles.notificationBody, { color: theme.muted }]}>{permissionReady ? "중요한 변화만 한 번씩 가볍게 알려드려요" : notificationSkipped ? "알림 설정에서 언제든 바꿀 수 있어요" : "선택한 상황에 맞춰 꼭 필요한 소식만 전해드려요"}</Text>
+          <Text style={[[styles.notificationTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.notificationTitle]}>{permissionReady ? "필요한 알림을 받을 준비 끝" : notificationSkipped ? "알림은 원할 때 켤 수 있어요" : "비 오기 전, 나서기 전에 알려드릴게요"}</Text>
+          <Text style={[[styles.notificationBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.notificationBody]}>{permissionReady ? "중요한 변화만 한 번씩 가볍게 알려드려요" : notificationSkipped ? "알림 설정에서 언제든 바꿀 수 있어요" : "선택한 상황에 맞춰 꼭 필요한 소식만 전해드려요"}</Text>
         </View>
-        <Text style={[styles.notificationStatus, { color: permissionReady ? theme.clear : notificationSkipped ? theme.gold : theme.sky }]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
+        <Text style={[[styles.notificationStatus, { color: permissionReady ? theme.clear : notificationSkipped ? theme.gold : theme.sky }], Platform.OS === "ios" && ambientVisual.notificationStatus]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
       </View>
 
     </AppScreen>
@@ -244,4 +247,81 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "900",
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "scenarioRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "scenarioIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "title": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "body": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "selectedLabel": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "notificationPrompt": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "notificationIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "notificationTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "notificationBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "notificationStatus": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "segmentText": {
+    "fontSize": 15,
+    "lineHeight": 21,
+    "fontWeight": "600"
+  },
+  "segment": {
+    "paddingVertical": 16,
+    "borderRadius": 18
+  },
+  "segmentIcon": {
+    "width": 32,
+    "height": 32
+  }
 });

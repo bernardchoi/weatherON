@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
@@ -11,6 +12,8 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
 export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onRequestCurrentLocation, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -52,14 +55,14 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
 
       <OnboardingVisualStrip
         items={[
-          { label: "체감", value: `${Math.round(state.weather.current.feelsLikeC)}°`, icon: uiIconAssets.clearNight, tone: "clear" },
-          { label: "강수", value: `${state.weather.current.rainProbabilityPct}%`, icon: uiIconAssets.rain, tone: "sky" },
-          { label: "추천", value: `${outfitItems.length}개`, icon: uiIconAssets.shirt, tone: "gold" },
+          { label: "체감", value: `${Math.round(state.weather.current.feelsLikeC)}°`, icon: screenIcons.clearNight, tone: "clear" },
+          { label: "강수", value: `${state.weather.current.rainProbabilityPct}%`, icon: screenIcons.rain, tone: "sky" },
+          { label: "추천", value: `${outfitItems.length}개`, icon: screenIcons.shirt, tone: "gold" },
         ]}
       />
 
       <View
-        style={[
+        style={[[
           styles.outfitPreview,
           {
             backgroundColor: theme.card,
@@ -67,15 +70,15 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             padding: layout.onboardingPanelPadding,
           },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.outfitPreview]}
       >
         <View style={styles.previewHeader}>
-          <View style={[styles.iconFrame, { backgroundColor: `${theme.clear}18` }]}>
-            <Image source={uiIconAssets.shirt} style={[styles.heroIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+          <View style={[[styles.iconFrame, { backgroundColor: `${theme.clear}18` }], Platform.OS === "ios" && ambientVisual.iconFrame]}>
+            <Image source={screenIcons.shirt} style={[styles.heroIcon, { tintColor: theme.clear }]} resizeMode="contain" />
           </View>
           <View style={styles.copy}>
-            <Text style={[styles.previewLabel, { color: theme.clear }]}>오늘 입기 좋은 조합</Text>
-            <Text style={[styles.previewTitle, { color: theme.text }]}>{state.outfit.decisionText}</Text>
+            <Text style={[[styles.previewLabel, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.previewLabel]}>오늘 입기 좋은 조합</Text>
+            <Text style={[[styles.previewTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.previewTitle]}>{state.outfit.decisionText}</Text>
           </View>
         </View>
         <OutfitGrid outfit={state.outfit} maxItems={2} compact dense={layout.isShort || layout.isNarrow} />
@@ -86,7 +89,7 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
       </View>
 
       <View
-        style={[
+        style={[[
           styles.locationPrompt,
           {
             backgroundColor: theme.cardStrong,
@@ -95,14 +98,14 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
             padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.locationPrompt]}
       >
-        <View style={[styles.locationIconFrame, { backgroundColor: `${theme.sky}22` }]}>
-          <Image source={uiIconAssets.pin} style={[styles.locationIcon, { tintColor: theme.sky }]} resizeMode="contain" />
+        <View style={[[styles.locationIconFrame, { backgroundColor: `${theme.sky}22` }], Platform.OS === "ios" && ambientVisual.locationIconFrame]}>
+          <Image source={screenIcons.pin} style={[styles.locationIcon, { tintColor: theme.sky }]} resizeMode="contain" />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.locationTitle, { color: theme.text }]}>{locationReady ? "지금 있는 곳에 맞춰 준비했어요" : locationSkipped ? "지역은 나중에 골라도 괜찮아요" : "지금 있는 곳을 알면 더 잘 챙겨드려요"}</Text>
-          <Text style={[styles.locationBody, { color: theme.muted }]}>{locationReady ? "기온과 비 변화까지 오늘 추천에 담았어요" : locationSkipped ? "홈에서 원하는 지역을 직접 고를 수 있어요" : "현재 날씨를 반영해 코디와 준비물을 골라드려요"}</Text>
+          <Text style={[[styles.locationTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.locationTitle]}>{locationReady ? "지금 있는 곳에 맞춰 준비했어요" : locationSkipped ? "지역은 나중에 골라도 괜찮아요" : "지금 있는 곳을 알면 더 잘 챙겨드려요"}</Text>
+          <Text style={[[styles.locationBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.locationBody]}>{locationReady ? "기온과 비 변화까지 오늘 추천에 담았어요" : locationSkipped ? "홈에서 원하는 지역을 직접 고를 수 있어요" : "현재 날씨를 반영해 코디와 준비물을 골라드려요"}</Text>
         </View>
         <StatusPill label={locationReady ? "사용 중" : locationSkipped ? "보류" : "선택"} tone={locationReady ? "clear" : locationSkipped ? "gold" : "sky"} />
       </View>
@@ -188,4 +191,58 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.xs,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "outfitPreview": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "iconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "locationPrompt": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "locationIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "locationTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "locationBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "previewTitle": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "previewLabel": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

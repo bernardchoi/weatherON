@@ -1,6 +1,9 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Platform, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { ambientUiIcons } from "../ambientAssets";
+import { AmbientControlSurface } from "../components/AmbientControlSurface";
+import { AppButton } from "../components/AppButton";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -28,6 +31,7 @@ export function MyScreen({
   onRequireAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
@@ -54,7 +58,7 @@ export function MyScreen({
   };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: ambient ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -62,7 +66,7 @@ export function MyScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.settingsContentGap,
+            gap: ambient ? 12 : layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -86,7 +90,14 @@ export function MyScreen({
           </Text>
         </View>
 
-        <FeedbackPressable
+        {ambient ? <View style={{ alignItems: "center", gap: 10, paddingVertical: 12 }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44, alignItems: "center", justifyContent: "center", backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>
+            <Image source={ambientUiIcons.tabMy} style={{ width: 56, height: 56, tintColor: theme.muted }} resizeMode="contain" accessibilityElementsHidden />
+          </View>
+          <Text style={{ fontSize: 24, lineHeight: 32, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
+          <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
+          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 4 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} /></View>
+        </View> : <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
@@ -121,9 +132,9 @@ export function MyScreen({
             <Text style={[styles.profilePillText, pageStyles.caption, { color: theme.text }]}>{profileAction}</Text>
           </View>
           <Chevron color={theme.subtle} />
-        </FeedbackPressable>
+        </FeedbackPressable>}
 
-        {recommendation ? (
+        {recommendation && !ambient ? (
           <FeedbackPressable
             accessibilityLabel={`${recommendation.title}, ${recommendation.action}`}
             accessibilityRole="button"
@@ -139,11 +150,21 @@ export function MyScreen({
           </FeedbackPressable>
         ) : null}
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text>
+        {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text> : null}
+        <AmbientControlSurface style={{ padding: 12, gap: 0 }}>
+          {ambient && recommendation ? <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${recommendation.title}, ${recommendation.action}`} onPress={() => onNavigate(recommendation.route)} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, paddingBottom: 16 }}>
+            <Image source={recommendation.route === "M4" ? ambientUiIcons.location : ambientUiIcons.notifications} style={{ width: 28, height: 28, tintColor: theme.warm }} />
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={[pageStyles.body, { color: theme.text }]}>{recommendation.title}</Text>
+              <Text style={[pageStyles.caption, { color: theme.muted }]}>{recommendation.body}</Text>
+              <Text style={[pageStyles.caption, { color: theme.clear }]}>{recommendation.action}</Text>
+            </View>
+          </FeedbackPressable> : null}
 
         <AppListGroup>
           <AppListRow
-            icon={uiIconAssets.myPermissions}
+            contained={ambient}
+            icon={ambient ? ambientUiIcons.permissions : uiIconAssets.myPermissions}
             title="앱 권한 관리"
             subtitle={`위치 ${locationState.status} · 알림 ${alertState.status}`}
             value={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
@@ -151,7 +172,8 @@ export function MyScreen({
             onPress={() => onNavigate("M4")}
           />
           <AppListRow
-            icon={uiIconAssets.myAlerts}
+            contained={ambient}
+            icon={ambient ? ambientUiIcons.notifications : uiIconAssets.myAlerts}
             title="스마트 알림 설정"
             subtitle={alertState.meta}
             value={alertState.status}
@@ -160,7 +182,8 @@ export function MyScreen({
             onPress={() => onNavigate("M2")}
           />
           <AppListRow
-            icon={uiIconAssets.myDisplay}
+            contained={ambient}
+            icon={ambient ? ambientUiIcons.settings : uiIconAssets.myDisplay}
             title="표시 설정"
             subtitle={globalSettingsSummary}
             value="관리"
@@ -170,7 +193,8 @@ export function MyScreen({
           />
         </AppListGroup>
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>정보</Text>
+        </AmbientControlSurface>
+        {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>정보</Text> : null}
 
         <AppListGroup>
           <AppListRow

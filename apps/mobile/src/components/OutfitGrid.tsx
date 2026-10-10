@@ -1,6 +1,8 @@
 import React from "react";
 import { Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
+import { useAmbientReadingSurface } from "./AmbientReadingSurface";
+import { useWindowDimensions } from "../localization/react-native";
 import { getOutfitImageSource } from "../assets";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -27,6 +29,9 @@ const slotLabel: Record<string, string> = {
 
 export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, onePage = false, singleRow = false, onItemPress }: OutfitGridProps) {
   const theme = useAppTheme();
+  const ambient = useAmbientReadingSurface();
+  const { width, fontScale } = useWindowDimensions();
+  const imageHeight = width < 390 ? 106 : 118;
   const entries = Object.entries(outfit.items)
     .filter(([, item]) => Boolean(item))
     .slice(0, maxItems);
@@ -49,6 +54,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
               singleRow ? styles.itemCellSingleRow : null,
               { backgroundColor: theme.cardMuted, borderColor: theme.border },
               { ...pageStyles.unboxed, borderRadius: 0, padding: 0, minHeight: singleRow ? 102 : 142 },
+              ambient && { gap: 3, minHeight: 0, alignItems: "center", ...(fontScale > 1.5 ? { flexBasis: "100%", maxWidth: "100%" } : {}) },
             ]}
           >
             <View
@@ -60,6 +66,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                 singleRow ? styles.imageWellSingleRow : null,
                 { backgroundColor: theme.cardMuted },
                 { height: singleRow ? 54 : 100, borderRadius: 18 },
+                ambient && { height: imageHeight, width: "100%", backgroundColor: "transparent", borderRadius: 0, justifyContent: "flex-end" },
               ]}
             >
               {imageSource ? (
@@ -72,15 +79,16 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                     onePage ? styles.itemImageOnePage : null,
                     singleRow ? styles.itemImageSingleRow : null,
                     { height: singleRow ? 50 : 94 },
+                    ambient && { height: slot === "shoes" ? imageHeight * 0.70 : slot === "accessory" ? imageHeight * 0.65 : imageHeight - 4, width: slot === "bottom" ? "74%" : "92%" },
                   ]}
                   resizeMode="contain"
                 />
               ) : null}
             </View>
-            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
+            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: ambient ? theme.muted : theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
             {item.source === "photo" ? <RawText style={[styles.itemName,
-                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</RawText> : <Text style={[styles.itemName,
-                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }]}>{item.name}</Text>}
+                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }, ambient && { fontSize: 14, lineHeight: 19, textAlign: "center" }]}>{item.name}</RawText> : <Text style={[styles.itemName,
+                { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }, ambient && { fontSize: 14, lineHeight: 19, textAlign: "center" }]}>{item.name}</Text>}
           </FeedbackPressable>
         ) : null;
       })}

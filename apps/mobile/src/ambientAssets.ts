@@ -2,6 +2,11 @@
 import { uiIconAssets } from "./assets";
 import type { AppTheme } from "./theme/tokens";
 export const ambientUiIcons = {
+  delete: require("../../../assets/ambient-surface-runtime-v1/ui-outline/delete.png"),
+  wardrobe: require("../../../assets/ambient-surface-runtime-v1/ui-outline/wardrobe.png"),
+  style: require("../../../assets/ambient-surface-runtime-v1/ui-outline/style.png"),
+  permissions: require("../../../assets/ambient-surface-runtime-v1/ui-outline/permissions.png"),
+  settings: require("../../../assets/ambient-surface-runtime-v1/ui-outline/settings.png"),
   tabHome: require("../../../assets/ambient-surface-runtime-v1/ui-outline/tab-home.png"),
   tabOutfit: require("../../../assets/ambient-surface-runtime-v1/ui-outline/tab-outfit.png"),
   tabDepart: require("../../../assets/ambient-surface-runtime-v1/ui-outline/tab-depart.png"),

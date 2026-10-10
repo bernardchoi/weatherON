@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
+import { Platform, Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { BackButton } from "../components/BackButton";
@@ -46,8 +46,8 @@ export function DestinationAddScreen({
   const canUseSelectedDestination = selectedFromResults || selectedFromNearbyPlaces;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
   const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
-  const searchGlassSurface = iosGlassSurface(theme, "input", { nativeBackdrop: true });
-  const searchControlGlass = iosGlassSurface(theme, "control", { nativeBackdrop: true });
+  const searchGlassSurface = Platform.OS === "ios" ? undefined : iosGlassSurface(theme, "input", { nativeBackdrop: true });
+  const searchControlGlass = Platform.OS === "ios" ? undefined : iosGlassSurface(theme, "control", { nativeBackdrop: true });
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, canUseSelectedDestination, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
@@ -103,7 +103,7 @@ export function DestinationAddScreen({
   };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -131,7 +131,7 @@ export function DestinationAddScreen({
         </View>
 
         <View
-          style={[
+          style={[[
             styles.searchField,
             {
               backgroundColor: theme.name === "light" ? theme.cardSoft : theme.card,
@@ -140,7 +140,7 @@ export function DestinationAddScreen({
             cardShadow(theme),
             pageStyles.card,
             searchGlassSurface,
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.searchField]}
         >
           {searchGlassSurface ? <IosGlassBackdrop theme={theme} role="input" overlayColor={theme.name === "light" ? theme.cardSoft : undefined} style={styles.searchGlassBackdrop} /> : null}
           <SearchGlyph color={theme.sky} />
@@ -151,7 +151,7 @@ export function DestinationAddScreen({
             placeholder="장소명 또는 주소 검색"
             placeholderTextColor={theme.muted}
             returnKeyType="search"
-            style={[styles.input, { color: theme.text }]}
+            style={[[styles.input, { color: theme.text }], Platform.OS === "ios" && ambientVisual.input]}
             value={placeSearchQuery}
           />
           {searchControlGlass && placeSearchQuery.length > 0 ? (
@@ -168,7 +168,7 @@ export function DestinationAddScreen({
         </View>
 
         {searchSuggestions.length > 0 ? (
-          <View style={[styles.suggestionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[[styles.suggestionPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.suggestionPanel]}>
             <Text style={[styles.suggestionPanelTitle, { color: theme.muted }]}>연관 검색</Text>
             {searchSuggestions.map((suggestion, index) => (
               <FeedbackPressable
@@ -186,7 +186,7 @@ export function DestinationAddScreen({
         ) : null}
 
         {displayedPlaces.length > 0 ? (
-          <View style={[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+          <View style={[[styles.resultPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.resultPanel]}>
             <View style={[styles.resultPanelHeader, { borderBottomColor: theme.border }]}>
               <Text style={[styles.resultPanelTitle, { color: theme.muted }]}>{hasInput ? "검색 결과" : "주변에서 가볼 만한 곳"}</Text>
               <Text style={[styles.resultPanelMeta, { color: theme.gold }]}>{hasInput ? `${resultCount} · ${resultSortLabel}` : resultSortLabel}</Text>
@@ -201,7 +201,7 @@ export function DestinationAddScreen({
                   accessibilityState={{ selected }}
                   key={place.id}
                   onPress={() => onSelectDestinationPlace(place)}
-                  style={[
+                  style={[[
                     styles.resultRow,
                     {
                       minHeight: layout.destinationResultRowMinHeight,
@@ -209,7 +209,7 @@ export function DestinationAddScreen({
                       backgroundColor: selected ? semanticColor(theme, "accentTint") : "transparent",
                       borderTopColor: index === 0 ? "transparent" : theme.border,
                     },
-                  ]}
+                  ], Platform.OS === "ios" && ambientVisual.resultRow]}
                 >
                   <View style={[styles.resultGlyph, { backgroundColor: selected ? theme.gold : theme.cardMuted }]}>
                     <CategoryIcon color={selected ? theme.onAccent : theme.subtle} />
@@ -228,8 +228,8 @@ export function DestinationAddScreen({
                         </View>
                       ) : null}
                     </View>
-                    <RawText style={[styles.resultAddress, { color: theme.muted }]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</RawText>
-                    <Text style={[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }]} numberOfLines={1}>
+                    <RawText style={[[styles.resultAddress, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.resultAddress]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</RawText>
+                    <Text style={[[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }], Platform.OS === "ios" && ambientVisual.resultMeta]} numberOfLines={1}>
                       {[
                         getPlaceDistanceLabel(place, placeSearchOrigin, state.weather.countryCode, distanceUnit),
                         getCategoryDetail(place.category),
@@ -242,7 +242,7 @@ export function DestinationAddScreen({
             })}
           </View>
         ) : hasQuery ? (
-          <View style={[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+          <View style={[[styles.resultPanel, styles.emptyPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.resultPanel]}>
             <Text style={[styles.resultName, { color: theme.text }]}>{getEmptyTitle(placeSearchStatus)}</Text>
             <Text style={[styles.resultBody, { color: theme.muted }]}>{getEmptyBody(placeSearchStatus)}</Text>
             <View style={styles.recoveryRow}>
@@ -261,15 +261,15 @@ export function DestinationAddScreen({
 
       {keyboardVisible ? null : (
         <View
-          style={[
+          style={[[
             styles.footer,
             {
               paddingHorizontal: layout.screenHorizontalPadding,
               paddingTop: layout.footerPaddingTop,
               paddingBottom: layout.footerPaddingBottom,
-              backgroundColor: theme.background,
+              backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background,
             },
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.footer]}
         >
           <View style={[styles.footerInner, { maxWidth: layout.contentMaxWidth }]}>
             <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={handlePrimaryAction} tone="warning" disabled={!canUseSelectedDestination} />
@@ -741,4 +741,51 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 18,
   },
+});
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "resultPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "suggestionPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "resultRow": {
+    "paddingVertical": 18
+  },
+  "resultAddress": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "resultMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "footer": {
+    "borderTopWidth": 0.5
+  },
+  "searchField": {
+    "borderRadius": 20,
+    "minHeight": 52
+  },
+  "input": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  }
 });

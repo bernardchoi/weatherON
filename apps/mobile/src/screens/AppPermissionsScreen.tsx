@@ -1,6 +1,7 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { ambientUiIcons } from "../ambientAssets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -47,7 +48,7 @@ export function AppPermissionsScreen({
   };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -88,11 +89,11 @@ export function AppPermissionsScreen({
             { ...pageStyles.unboxed, padding: 0 },
           ]}
         >
-          <Text style={[styles.sectionLabel, { color: theme.muted }]}>권한 상태</Text>
+          <Text style={[[styles.sectionLabel, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.sectionLabel]}>권한 상태</Text>
           {resultCopy ? (
-            <View style={[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>
-              <Text style={[styles.resultTitle, { color: resultCopy.tone === "warm" ? theme.warm : theme.clear }]}>{resultCopy.title}</Text>
-              <Text style={[styles.resultBody, { color: theme.subtle }]}>{resultCopy.body}</Text>
+            <View style={[[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.resultStrip]}>
+              <Text style={[[styles.resultTitle, { color: resultCopy.tone === "warm" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.resultTitle]}>{resultCopy.title}</Text>
+              <Text style={[[styles.resultBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.resultBody]}>{resultCopy.body}</Text>
             </View>
           ) : null}
           <PermissionCard
@@ -163,25 +164,25 @@ function PermissionCard({
 }) {
   const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
   return (
-    <View style={[styles.permissionPanel, pageStyles.card, { padding: panelPadding, backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[[styles.permissionPanel, pageStyles.card, { padding: panelPadding, backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.permissionPanel]}>
       <View style={styles.permissionHeader}>
-        <View style={[styles.permissionDot, { backgroundColor: color }]} />
+        {Platform.OS === "ios" ? <Image source={label === "위치 권한" ? ambientUiIcons.location : ambientUiIcons.notifications} accessible={false} style={{ width: 30, height: 30, tintColor: theme.muted }} /> : <View style={[styles.permissionDot, { backgroundColor: color }]} />}
         <View style={styles.permissionCopy}>
-          <Text style={[styles.permissionLabel, pageStyles.sectionTitle, { color: theme.text }]}>{label}</Text>
-          <Text style={[styles.permissionBody, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+          <Text style={[[styles.permissionLabel, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.permissionLabel]}>{label}</Text>
+          <Text style={[[styles.permissionBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.permissionBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{body}</Text>
         </View>
         <View style={[styles.permissionStatus, { backgroundColor: `${color}22` }]}>
-          <Text style={[styles.permissionStatusText, { color }]}>{status}</Text>
+          <Text style={[[styles.permissionStatusText, { color }], Platform.OS === "ios" && ambientVisual.permissionStatusText]}>{status}</Text>
         </View>
       </View>
-      <Text style={[styles.permissionHelper, pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>
-      <View style={[styles.permissionActions, { gap: actionGap }]}>
+      <Text style={[[styles.permissionHelper, pageStyles.compactCaption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.permissionHelper]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{helper}</Text>
+      <View style={[[styles.permissionActions, { gap: actionGap }], Platform.OS === "ios" && ambientVisual.permissionActions]}>
         <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" accessibilityState={{ disabled: primaryDisabled }} disabled={primaryDisabled} onPress={onPrimaryPress} style={[styles.primaryAction, { backgroundColor: `${color}22`, opacity: primaryDisabled ? 0.55 : 1 }]}>
-          <Text style={[styles.primaryActionText, { color }]}>{primaryLabel}</Text>
+          <Text style={[[styles.primaryActionText, { color }], Platform.OS === "ios" && ambientVisual.primaryActionText]}>{primaryLabel}</Text>
         </Pressable>
         {secondaryLabel ? (
           <Pressable accessibilityLabel={`${label} ${secondaryLabel}`} accessibilityRole="button" onPress={onSecondaryPress} style={[styles.secondaryAction, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <Text style={[styles.secondaryActionText, { color: theme.text }]}>{secondaryLabel}</Text>
+            <Text style={[[styles.secondaryActionText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.secondaryActionText]}>{secondaryLabel}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -464,4 +465,77 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 42,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "permissionPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "permissionLabel": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "permissionBody": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "permissionHelper": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "permissionStatusText": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "resultStrip": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "resultTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "resultBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "sectionLabel": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "permissionActions": {
+    "flexDirection": "column",
+    "gap": 10
+  },
+  "primaryActionText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "secondaryActionText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

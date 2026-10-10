@@ -161,3 +161,35 @@ assert.equal(started(offHome).length,beforeHidden+1,'Returning restarts the base
 const newPoint={session:2,getTranslateTransform:()=>[]};offHome.render({touchPoint:newPoint,touchContact:{id:1,phase:'down'}});
 assert.equal(started(offHome).length,beforeHidden+2,'New Home touch session can reuse its local id');offHome.unmount();
 console.log('PASS: hidden Home stops motion/touch and native raster work; same-id new touch sessions remain responsive.');
+
+// The next reading group shares color/material, not Home's environmental motion.
+const readingModule = loadTS(path.join(root,'apps/mobile/src/components/AmbientReadingSurface.tsx'), {
+  react: { createContext: value => ({value}), useContext: ctx => ctx.value },
+  'react/jsx-runtime': { jsx: (type,props) => ({type,props}) },
+  '../localization/react-native': { View: 'View', StyleSheet: {absoluteFill:{position:'absolute',top:0,right:0,bottom:0,left:0}} },
+});
+for (const name of ['light','dark']) for (const reducedTransparency of [false,true]) {
+  const tree=readingModule.AmbientReadingSurface({theme:{name,reducedTransparency,background:'#123456'}});
+  assert.equal(tree.props.pointerEvents,'none');
+  assert.equal(tree.props.accessibilityElementsHidden,true);
+  const material=style(tree);
+  assert.equal(material.backgroundColor,'#123456');
+  if(reducedTransparency) assert.equal(material.experimental_backgroundImage,undefined);
+  else assert.equal(parseGradient(material.experimental_backgroundImage).length,2);
+}
+console.log('PASS: reading surface native gradient parsing, both themes, opaque transparency fallback and no touch/accessibility interception.');
+for (const name of ['light','dark']) {
+  const t=ambientTheme.ambientReadingTheme({name});
+  const tree=readingModule.AmbientReadingSurface({theme:t});
+  let background=rgb(t.background);
+  for (const layer of parseGradient(style(tree).experimental_backgroundImage).toReversed()) {
+    const candidates=layer.colorStops.filter(s=>typeof s.color==='number').map(s=>composite(background,s.color,1));
+    background=candidates.reduce((worst,c)=>((name==='dark')===(luminance(c)>luminance(worst)))?c:worst,background);
+  }
+  for (const key of ['text','muted','clear','gold']) {
+    const values=[luminance(rgb(t[key])),luminance(background)].sort((a,b)=>b-a);
+    const ratio=(values[0]+.05)/(values[1]+.05);
+    assert.ok(ratio>=4.5,`${name} reading ${key}: ${ratio}`);
+    console.log(`${name} reading ${key}: ${ratio.toFixed(2)}:1`);
+  }
+}

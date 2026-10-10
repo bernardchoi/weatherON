@@ -1,7 +1,10 @@
 import React, { useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "../localization/react-native";
+import { Platform, StyleSheet, useWindowDimensions, View } from "../localization/react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AmbientReadingSurface } from "./AmbientReadingSurface";
 import { ScreenStack, ScreenStackItem } from "react-native-screens";
 import type { AppRouteId } from "../navigation/routes";
+import { ambientReadingRouteIds } from "../theme/ambientSurface";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { ScreenTransition } from "./ScreenTransition";
@@ -33,6 +36,8 @@ export function NavigationStack(props: Props) {
 
 function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
   const [viewportHeight, setViewportHeight] = useState(0);
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useAppTheme();
   const reducedMotion = useReducedMotion();
   const [stack, setStack] = useState<AppRouteId[]>(() => backRoute && backRoute !== route ? [backRoute, route] : [route]);
@@ -42,7 +47,7 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
   routeRef.current = route;
   return <View style={styles.fill} onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}>
     <HomeViewportContext.Provider value={viewportHeight}>
-    <ScreenStack style={StyleSheet.absoluteFill}>
+    <ScreenStack key={next[0]} style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
         key={id} screenId={id} activityState={2}
         style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: id === "H1" ? "transparent" : theme.background }}
@@ -50,6 +55,7 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
         stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
         gestureEnabled={index > 0}
         onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
+        {ambientReadingRouteIds.includes(id) ? <AmbientReadingSurface theme={theme} viewport={{ top: -insets.top, height: windowHeight }} /> : null}
         {renderScreen(id)}
       </ScreenStackItem>)}
     </ScreenStack>

@@ -10,10 +10,13 @@ function sourceFunction(path, name) {
 }
 const path = 'apps/mobile/src/components/NavigationStack.tsx';
 const stackSource = readFileSync(path, 'utf8');
-assert.match(stackSource, /<View style=\{styles\.fill\}>[\s\S]*<ScreenStack style=\{StyleSheet\.absoluteFill\}>/,
+assert.match(stackSource, /<View style=\{styles\.fill\}[^>]*>[\s\S]*<ScreenStack[^>]*style=\{StyleSheet\.absoluteFill\}>/,
   'native stack must fill a flex-sized wrapper');
 assert.match(stackSource, /<ScreenStackItem[\s\S]*style=\{StyleSheet\.absoluteFill\}/,
   'native screen items must fill the stack viewport');
+assert.match(stackSource, /<ScreenStack key=\{next\[0\]\}/, 'primary tab resets the native controller to remove transparent snapshots');
+assert.match(stackSource, /backgroundColor: id === "H1" \? "transparent" : theme.background/, 'reading controllers must occlude previous screen content');
+assert.match(stackSource, /<AmbientReadingSurface theme=\{theme\} viewport=\{\{ top: -insets.top, height: windowHeight \}\}/, 'reading decoration aligns with the full-window root material');
 const reconcile = new Function(`${sourceFunction(path,'reconcileScreenStack')} return reconcileScreenStack;`)();
 let stack = ['M1'];
 stack = reconcile(stack, 'A4', 'M1');
@@ -51,8 +54,8 @@ function findBack(node) {
 findBack(stateAst);
 assert.ok(backExpression && backCallback);
 const getBackRoute=new Function(`${sourceFunction('apps/mobile/src/state/appStateHelpers.ts','getBackRoute')} return getBackRoute;`)();
-const dynamicBack=new Function('route','gate','permissionGate','policyHubReturnRoute','styleProfileReturnRoute','destinationAddReturnRoute','isOverlayReturnRouteId','overlayReturnRoutes','getBackRoute', `return (${backExpression});`);
-const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4','C1','G1',r=>r==='H4',{H4:'C1'},getBackRoute);
+const dynamicBack=new Function('route','gate','permissionGate','policyHubReturnRoute','policyDocumentReturnRoute','styleProfileReturnRoute','destinationAddReturnRoute','isOverlayReturnRouteId','overlayReturnRoutes','getBackRoute', `return (${backExpression});`);
+const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4','R1','C1','G1',r=>r==='H4',{H4:'C1'},getBackRoute);
 for (const [from,to] of [['A4','M1'],['A2','C1'],['O3','M4'],['R2','R1'],['R1','A4'],['O4','C1'],['H4','C1']]) assert.equal(resolveBack(from),to);
 for (const route of ['A4','A2','O3','H1']) {
   let destination,accountCleared=false,permissionCleared=false;

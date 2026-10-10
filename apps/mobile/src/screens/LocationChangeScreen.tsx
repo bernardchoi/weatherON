@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, RawText, StyleSheet, Text, TextInput, View } from "../localization/react-native";
+import { Platform, Pressable, RawText, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { StatusPill } from "../components/StatusPill";
@@ -56,7 +56,7 @@ export function LocationChangeScreen({
 
   return (
     <AppScreen title="위치 변경" subtitle="현재 날씨 기준 위치를 선택하세요" badge={accountLinked ? "계정 연결됨" : "게스트"} showWordmark={false}>
-      <View style={[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+      <View style={[[styles.searchBox, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)], Platform.OS === "ios" && ambientVisual.searchBox]}>
         <SearchGlyph color={theme.subtle} />
         <TextInput
           accessibilityLabel="동 읍 면 검색"
@@ -64,7 +64,7 @@ export function LocationChangeScreen({
           onChangeText={onSearchPlaces}
           placeholder="동/읍/면 또는 장소 검색"
           placeholderTextColor={theme.subtle}
-          style={[styles.searchInput, { color: theme.text }]}
+          style={[[styles.searchInput, { color: theme.text }], Platform.OS === "ios" && ambientVisual.searchInput]}
         />
       </View>
       {showShortQueryHint ? (
@@ -78,18 +78,18 @@ export function LocationChangeScreen({
         accessibilityLabel={`현재 위치 사용, ${currentLocationAction}`}
         accessibilityRole="button"
         onPress={onRequestCurrentLocation}
-        style={[
+        style={[[
           styles.currentRow,
           { backgroundColor: theme.cardStrong, borderColor: locationReady && weatherLocationMode === "auto" ? theme.clear : theme.border },
           cardShadow(theme),
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.currentRow]}
       >
         <View style={[styles.weatherIcon, { backgroundColor: theme.cardMuted, borderColor: theme.clear }]}>
           <CurrentLocationGlyph color={theme.clear} />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.title, { color: theme.text }]}>현재 위치 사용</Text>
-          <Text style={[styles.meta, { color: theme.muted }]}>{currentLocationAction}</Text>
+          <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>현재 위치 사용</Text>
+          <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>{currentLocationAction}</Text>
           {currentLocationStatus ? <Text style={[styles.stateHint, { color: theme.subtle }]}>{currentLocationStatus}</Text> : null}
         </View>
         <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
@@ -97,10 +97,10 @@ export function LocationChangeScreen({
 
       <View style={styles.group}>
         <View style={styles.groupHeader}>
-          <Text style={[styles.groupTitle, { color: theme.muted }]}>{locationSectionTitle}</Text>
-          <Text style={[styles.groupMeta, { color: theme.subtle }]}>{locationSectionMeta}</Text>
+          <Text style={[[styles.groupTitle, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.groupTitle]}>{locationSectionTitle}</Text>
+          <Text style={[[styles.groupMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.groupMeta]}>{locationSectionMeta}</Text>
         </View>
-        <View style={[styles.savedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <View style={[[styles.savedPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)], Platform.OS === "ios" && ambientVisual.savedPanel]}>
           {listedPlaces.length > 0 ? (
             listedPlaces.map((place, index) => (
               <Pressable
@@ -108,7 +108,7 @@ export function LocationChangeScreen({
                 accessibilityRole="button"
                 key={place.id}
                 onPress={() => selectPlace(place)}
-                style={[styles.savedRow, index < listedPlaces.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null]}
+                style={[[styles.savedRow, index < listedPlaces.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null], Platform.OS === "ios" && ambientVisual.savedRow]}
               >
                 <View style={[styles.weatherIcon, { backgroundColor: theme.cardMuted, borderColor: place.id === state.weather.locationId ? theme.gold : theme.border }]}>
                   <Text style={[styles.weatherGlyph, { color: place.id === state.weather.locationId ? theme.gold : theme.subtle }]}>
@@ -117,18 +117,18 @@ export function LocationChangeScreen({
                 </View>
                 <View style={styles.copy}>
                   <View style={styles.inline}>
-                    <RawText style={[styles.title, { color: theme.text }]}>{place.name}</RawText>
+                    <RawText style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{place.name}</RawText>
                     {place.id === state.weather.locationId ? <StatusPill label="현재" tone="clear" /> : null}
                   </View>
-                  <RawText style={[styles.meta, { color: theme.muted }]}>{place.address}</RawText>
+                  <RawText style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>{place.address}</RawText>
                 </View>
                 <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
               </Pressable>
             ))
           ) : (
             <View style={styles.emptyResult}>
-              <Text style={[styles.title, { color: theme.text }]}>{getLocationEmptyTitle(placeSearchStatus, searchMode)}</Text>
-              <Text style={[styles.meta, { color: theme.muted }]}>{getLocationEmptyBody(placeSearchStatus, searchMode)}</Text>
+              <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{getLocationEmptyTitle(placeSearchStatus, searchMode)}</Text>
+              <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>{getLocationEmptyBody(placeSearchStatus, searchMode)}</Text>
               {placeSearchStatus === "error" ? (
                 <LocationRecoveryButton label="다시 검색" accessibilityLabel="위치 검색 다시 시도" onPress={() => onSearchPlaces(placeSearchQuery)} />
               ) : null}
@@ -154,7 +154,7 @@ export function LocationChangeScreen({
         accessibilityLabel={addLocationLabel}
         accessibilityRole="button"
         onPress={() => (accountLinked ? onNavigate("P1") : onRequireAccount("add-destination", "P1"))}
-        style={[styles.addRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}
+        style={[[styles.addRow, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)], Platform.OS === "ios" && ambientVisual.addRow]}
       >
         <Text style={[styles.addPlus, { color: theme.subtle }]}>＋</Text>
         <Text style={[styles.addText, { color: theme.muted }]}>{addLocationLabel}</Text>
@@ -162,7 +162,7 @@ export function LocationChangeScreen({
 
       <View style={[styles.statusBox, { backgroundColor: theme.cardStrong }, cardShadow(theme)]}>
         <Text style={[styles.statusTitle, { color: theme.clear }]}>{locationCopy.statusTitle}</Text>
-        <Text style={[styles.meta, { color: theme.muted }]}>
+        <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>
           {isPlaceSearchLoading ? "검색 중" : `${state.weather.locationName} 기준 · ${locationCopy.statusBody(hasSavedDestinations, savedDestinations.length)}`}
         </Text>
         <Text style={[styles.stateHint, { color: theme.subtle }]}>
@@ -482,4 +482,71 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
+});
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "searchBox": {
+    "borderRadius": 20,
+    "minHeight": 52
+  },
+  "savedPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0
+  },
+  "currentRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "savedRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "addRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "searchInput": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "meta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "groupTitle": {
+    "fontSize": 18,
+    "lineHeight": 25,
+    "fontWeight": "600"
+  },
+  "groupMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  }
 });

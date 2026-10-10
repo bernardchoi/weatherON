@@ -1,5 +1,6 @@
+import { ambientUiIcons } from "../ambientAssets";
 import React, { useEffect } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -31,7 +32,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
   }, [umbrellaReviewed, onReviewUmbrella]);
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -45,15 +46,15 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt, height: layout.weatherAtmosphereHeight }]} />
+        <View style={[[styles.atmosphere, { backgroundColor: theme.backgroundAlt, height: layout.weatherAtmosphereHeight }], Platform.OS === "ios" && ambientVisual.atmosphere]} />
 
         <View style={styles.header}>
           <BackButton onPress={onGoBack} />
-          <Text style={[styles.title, { color: theme.text }]}>우산 추천</Text>
+          <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>우산 추천</Text>
         </View>
 
         <View
-          style={[
+          style={[[
             styles.heroCard,
             {
               minHeight: layout.isShort ? 96 : 104,
@@ -62,10 +63,10 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               borderColor: getUmbrellaTone(umbrella.level, theme),
             },
             cardShadow(theme),
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.heroCard]}
         >
-          <View style={[styles.heroIconFrame, { backgroundColor: `${getUmbrellaTone(umbrella.level, theme)}18` }]}>
-            <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaTone(umbrella.level, theme) }]} resizeMode="contain" />
+          <View style={[[styles.heroIconFrame, { backgroundColor: `${getUmbrellaTone(umbrella.level, theme)}18` }], Platform.OS === "ios" && ambientVisual.heroIconFrame]}>
+            <Image source={screenIcons.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaTone(umbrella.level, theme) }]} resizeMode="contain" />
           </View>
           <View style={styles.heroCopy}>
             <View style={styles.heroTopRow}>
@@ -86,8 +87,8 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                 <Text style={[styles.alertLinkText, { color: theme.muted }]}>알림 기준</Text>
               </Pressable>
             </View>
-            <Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={2}>{umbrella.title}</Text>
-            <Text style={[styles.heroMeta, { color: theme.muted }]} numberOfLines={1}>{peakWindow} · {recommendedOption.title}</Text>
+            <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]} numberOfLines={2}>{umbrella.title}</Text>
+            <Text style={[[styles.heroMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroMeta]} numberOfLines={1}>{peakWindow} · {recommendedOption.title}</Text>
           </View>
         </View>
 
@@ -116,7 +117,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
                       />
                     </View>
                     <Text
-                      style={[styles.barValue, { color: hour.signalPercent >= 70 ? theme.sky : theme.subtle }]}
+                      style={[[styles.barValue, { color: hour.signalPercent >= 70 ? theme.sky : theme.subtle }], Platform.OS === "ios" && ambientVisual.barValue]}
                       numberOfLines={2}
                     >
                       {hour.rainProbabilityPct}%{rainAmount ? `\n${rainAmount}` : ""}
@@ -126,8 +127,8 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               })}
             </View>
             <View style={styles.chartTimes}>
-              <Text style={[styles.timeLabel, { color: theme.subtle }]}>{formatHourLabel(rainBars[0]?.time ?? "15:00")}</Text>
-              <Text style={[styles.timeLabel, { color: theme.subtle }]}>{formatHourLabel(rainBars[rainBars.length - 1]?.time ?? "21:00")}</Text>
+              <Text style={[[styles.timeLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.timeLabel]}>{formatHourLabel(rainBars[0]?.time ?? "15:00")}</Text>
+              <Text style={[[styles.timeLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.timeLabel]}>{formatHourLabel(rainBars[rainBars.length - 1]?.time ?? "21:00")}</Text>
             </View>
           </View>
         </Panel>
@@ -147,16 +148,16 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               >
                 <View style={styles.optionIcon}>
                   <Image
-                    source={uiIconAssets.umbrella}
+                    source={screenIcons.umbrella}
                     style={[styles.smallUmbrellaIcon, { tintColor: item.recommended ? theme.sky : theme.subtle }]}
                     resizeMode="contain"
                   />
                 </View>
                 <View style={styles.optionCopy}>
                   <View style={styles.optionTitleRow}>
-                    <Text style={[styles.optionTitle, { color: theme.text }]}>{item.title}</Text>
+                    <Text style={[[styles.optionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.optionTitle]}>{item.title}</Text>
                   </View>
-                  <View style={[styles.optionSignal, { backgroundColor: item.recommended ? theme.sky : theme.border }]} />
+                  <View style={[[styles.optionSignal, { backgroundColor: item.recommended ? theme.sky : theme.border }], Platform.OS === "ios" && ambientVisual.optionSignal]} />
                 </View>
               </View>
             ))}
@@ -171,8 +172,8 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
 function Panel({ title, theme, children }: { title: string; theme: AppTheme; children: React.ReactNode }) {
   const layout = useResponsiveLayout();
   return (
-    <View style={[styles.panel, { backgroundColor: theme.card, padding: layout.weatherPanelPadding }, cardShadow(theme)]}>
-      <Text style={[styles.panelTitle, { color: theme.muted }]}>{title}</Text>
+    <View style={[[styles.panel, { backgroundColor: theme.card, padding: layout.weatherPanelPadding }, cardShadow(theme)], Platform.OS === "ios" && ambientVisual.panel]}>
+      <Text style={[[styles.panelTitle, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.panelTitle]}>{title}</Text>
       {children}
     </View>
   );
@@ -180,9 +181,9 @@ function Panel({ title, theme, children }: { title: string; theme: AppTheme; chi
 
 function MetricTile({ icon, label, value, theme, tone }: { icon: "clock" | "drop" | "wind"; label: string; value: string; theme: AppTheme; tone: string }) {
   return (
-    <View style={[styles.metricTile, { backgroundColor: theme.card, borderColor: theme.border }]}>
+    <View style={[[styles.metricTile, { backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.metricTile]}>
       <ReasonGlyph type={icon} color={tone} />
-      <Text style={[styles.metricLabel, { color: theme.subtle }]}>{label}</Text>
+      <Text style={[[styles.metricLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.metricLabel]}>{label}</Text>
       <Text style={[styles.metricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
     </View>
   );
@@ -564,4 +565,87 @@ const styles = StyleSheet.create({
     width: 21,
     height: 21,
   },
+});
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
+  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
+  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
+  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
+  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
+} : uiIconAssets;
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "atmosphere": {
+    "display": "none"
+  },
+  "heroCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "heroIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "metricTile": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "panel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "optionSignal": {
+    "display": "none"
+  },
+  "title": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "heroTitle": {
+    "fontSize": 24,
+    "lineHeight": 32,
+    "fontWeight": "700"
+  },
+  "heroMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "metricLabel": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "panelTitle": {
+    "fontSize": 19,
+    "lineHeight": 26,
+    "fontWeight": "600"
+  },
+  "optionTitle": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "timeLabel": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "barValue": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  }
 });

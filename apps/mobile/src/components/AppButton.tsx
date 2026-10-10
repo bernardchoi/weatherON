@@ -16,6 +16,7 @@ type AppButtonProps = {
   size?: "md" | "sm";
   accessibilityLabel?: string;
   disabled?: boolean;
+  hapticFeedback?: "automatic" | "none";
 };
 
 export function AppButton({
@@ -26,6 +27,7 @@ export function AppButton({
   size = "md",
   accessibilityLabel,
   disabled = false,
+  hapticFeedback = "automatic",
 }: AppButtonProps) {
   const theme = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
@@ -72,7 +74,7 @@ export function AppButton({
       disabled={disabled}
       hitSlop={size === "sm" ? 5 : undefined}
       onPress={() => {
-        triggerImportantActionHaptic(accessibilityLabel ?? label);
+        if (hapticFeedback === "automatic") triggerImportantActionHaptic(accessibilityLabel ?? label);
         onPress();
       }}
       onPressIn={() => animateTo(0.97)}

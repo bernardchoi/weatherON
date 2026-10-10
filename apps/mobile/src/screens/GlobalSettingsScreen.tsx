@@ -2,6 +2,7 @@ import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { BackButton } from "../components/BackButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -15,6 +16,8 @@ import {
 } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
 export function GlobalSettingsScreen({
   temperatureUnit,
@@ -33,7 +36,7 @@ export function GlobalSettingsScreen({
   const layout = useResponsiveLayout();
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -66,11 +69,11 @@ export function GlobalSettingsScreen({
           </Text>
         </View>
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>기본 표시</Text>
+        <Text style={[[styles.groupLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.groupLabel]}>기본 표시</Text>
 
         <AppListGroup>
           <AppListRow
-            icon={uiIconAssets.uv}
+            icon={screenIcons.uv}
             title="온도"
             subtitle="날씨와 출발 비교"
             tone="gold"
@@ -85,7 +88,7 @@ export function GlobalSettingsScreen({
             )}
           />
           <AppListRow
-            icon={uiIconAssets.pin}
+            icon={screenIcons.pin}
             title="거리"
             subtitle="검색과 이동 안내"
             tone="sky"
@@ -102,12 +105,12 @@ export function GlobalSettingsScreen({
           />
         </AppListGroup>
 
-        <View style={[styles.themePanel, pageStyles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[[styles.themePanel, pageStyles.card, { backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.themePanel]}>
           <View style={styles.themeCopy}>
-            <Image source={uiIconAssets.myDisplay} style={[styles.themeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <Image source={screenIcons.myDisplay} style={[styles.themeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <View>
-              <Text style={[styles.themeTitle, { color: theme.text }]}>테마</Text>
-              <Text style={[styles.themeBody, { color: theme.subtle }]}>앱 전체 색상</Text>
+              <Text style={[[styles.themeTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.themeTitle]}>테마</Text>
+              <Text style={[[styles.themeBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.themeBody]}>앱 전체 색상</Text>
             </View>
           </View>
           <SegmentControl
@@ -121,11 +124,11 @@ export function GlobalSettingsScreen({
           />
         </View>
 
-        <Text style={[styles.groupLabel, { color: theme.subtle }]}>화면</Text>
+        <Text style={[[styles.groupLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.groupLabel]}>화면</Text>
 
         <AppListGroup>
           <AppListRow
-            icon={uiIconAssets.settings}
+            icon={screenIcons.settings}
             title="투명 효과 줄이기"
             subtitle={reducedTransparency ? "반투명 패널·탭 바를 단색으로 표시" : "기본 투명 효과 사용"}
             tone="sky"
@@ -139,7 +142,7 @@ export function GlobalSettingsScreen({
           />
           {isAndroidDynamicColorAvailable() ? (
             <AppListRow
-              icon={uiIconAssets.myDisplay}
+              icon={screenIcons.myDisplay}
               title="기기 색상 사용"
               subtitle="탭·선택·스위치에 시스템 강조색 적용"
               tone="clear"
@@ -157,7 +160,7 @@ export function GlobalSettingsScreen({
           accessibilityLabel="표시 설정 버전 정보"
           style={styles.footerLinks}
         >
-          <Text style={[styles.footerText, { color: theme.subtle }]}>WeatherON v1.0.0</Text>
+          <Text style={[[styles.footerText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.footerText]}>WeatherON v1.0.0</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -203,10 +206,10 @@ function SegmentControl({
           ]}
         >
           <Text
-            style={[
+            style={[[
               styles.segmentText,
               { color: option.active ? androidMaterialColor(theme, "onSecondaryContainer") : theme.subtle },
-            ]}
+            ], Platform.OS === "ios" && ambientVisual.segmentText]}
           >
             {option.label}
           </Text>
@@ -366,4 +369,44 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 10,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "themePanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "groupLabel": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500",
+    "marginTop": 16
+  },
+  "themeTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "themeBody": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "footerText": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "segmentText": {
+    "fontSize": 15,
+    "lineHeight": 21,
+    "fontWeight": "600"
+  }
 });

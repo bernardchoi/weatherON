@@ -1,6 +1,7 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { useAmbientReadingSurface } from "./AmbientReadingSurface";
 import { BackButton } from "./BackButton";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
 import { StatusPill } from "./StatusPill";
@@ -48,13 +49,14 @@ export function AppScreen({
   children,
 }: AppScreenProps) {
   const theme = useAppTheme();
+  const ambient = useAmbientReadingSurface();
   const layout = useResponsiveLayout();
-  const barGlass = iosGlassSurface(theme, "bar", { nativeBackdrop: true });
+  const barGlass = ambient ? undefined : iosGlassSurface(theme, "bar", { nativeBackdrop: true });
   const inlineHeader = compactHeader && Boolean(onBack);
   return (
     <View style={styles.shell}>
       <ScrollView
-        style={[styles.scroll, { backgroundColor: theme.background }]}
+        style={[styles.scroll, { backgroundColor: ambient ? "transparent" : theme.background }]}
         contentContainerStyle={[
           styles.content,
           {
@@ -99,7 +101,7 @@ export function AppScreen({
               {title}
             </Text>
             {subtitle ? (
-              <Text style={[styles.subtitle, pageStyles.caption, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={compactHeader ? 1 : undefined}>
+              <Text style={[styles.subtitle, pageStyles.caption, compactHeader ? styles.compactSubtitle : null, { color: theme.muted }]} numberOfLines={ambient ? undefined : compactHeader ? 1 : undefined}>
                 {subtitle}
               </Text>
             ) : null}
@@ -118,7 +120,7 @@ export function AppScreen({
           style={[
             styles.footer,
             {
-              backgroundColor: theme.background,
+              backgroundColor: ambient ? "transparent" : theme.background,
               borderTopColor: theme.border,
               paddingTop: layout.footerPaddingTop,
               paddingBottom: layout.footerPaddingBottom,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
@@ -96,7 +96,7 @@ export function StyleProfileScreen({
 
       <Section title="현재 선택 기준" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
         <View
-          style={[
+          style={[[
             styles.summaryCard,
             {
               backgroundColor: theme.card,
@@ -104,10 +104,10 @@ export function StyleProfileScreen({
               padding: layout.onboardingPanelPadding,
             },
             cardShadow(theme),
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.summaryCard]}
         >
           <View style={styles.summaryHeader}>
-            <Text style={[styles.title, { color: theme.text }]}>
+            <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>
               {topTags.length ? topTags.join(" · ") : "스타일 미선택"}
             </Text>
             <StatusPill label={styleProfileSaved ? "저장됨" : "편집중"} tone={styleProfileSaved ? "clear" : "gold"} />
@@ -131,8 +131,8 @@ function OptionGrid({ children }: { children: React.ReactNode }) {
 function CriterionGroup({ label, children }: { label: string; children: React.ReactNode }) {
   const theme = useAppTheme();
   return (
-    <View style={styles.criterionGroup}>
-      <Text style={[styles.criterionLabel, { color: theme.subtle }]}>{label}</Text>
+    <View style={[styles.criterionGroup, Platform.OS === "ios" && ambientVisual.criterionGroup]}>
+      <Text style={[[styles.criterionLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.criterionLabel]}>{label}</Text>
       <OptionGrid>{children}</OptionGrid>
     </View>
   );
@@ -145,12 +145,12 @@ function ChoiceButton({ label, selected, onPress }: { label: string; selected: b
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[
+      style={[[
         styles.choice,
         { backgroundColor: selected ? theme.gold : theme.cardMuted, borderColor: selected ? theme.gold : theme.border },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.choice]}
     >
-      <Text style={[styles.choiceText, { color: selected ? theme.onAccent : theme.muted }]}>{label}</Text>
+      <Text style={[[styles.choiceText, { color: selected ? theme.onAccent : theme.muted }], Platform.OS === "ios" && ambientVisual.choiceText]}>{label}</Text>
     </Pressable>
   );
 }
@@ -221,4 +221,41 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.xs,
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "summaryCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "criterionGroup": {
+    "gap": 16,
+    "paddingVertical": 12
+  },
+  "criterionLabel": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "choiceText": {
+    "fontSize": 15,
+    "lineHeight": 22,
+    "fontWeight": "600"
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "choice": {
+    "minHeight": 48,
+    "paddingHorizontal": 18
+  }
 });

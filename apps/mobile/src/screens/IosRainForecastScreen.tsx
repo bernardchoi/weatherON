@@ -15,15 +15,18 @@ export function IosRainForecastScreen({ state, rainForecastContext, onGoBack, al
   const forecast = buildRainForecast(weather, rainForecastContext, now);
   const enabled = alertPreferences.rainDetail;
   return <AppScreen title="강수 예보" subtitle={weather ? getDisplayLocationName(weather.locationName) : "위치 확인 필요"} onBack={onGoBack} compactHeader>
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 16 }}>
       <Text style={{ color: theme.muted }}>{rainForecastContext?.basisLabel ?? "현재 선택 위치"}{rainForecastContext?.targetAt ? ` · ${forecastTime(Date.parse(rainForecastContext.targetAt), weather)}` : ""}</Text>
-      <Text style={{ color: theme.text, fontSize: 22, lineHeight: 30 }}>{forecast.title}</Text>
+      <Text style={{ color: theme.text, fontSize: 24, lineHeight: 33, fontWeight: "600" }}>{forecast.title}</Text>
       <Text style={{ color: theme.muted }}>{forecast.range}</Text>
       {forecast.missing ? <Text style={{ color: theme.muted }}>일부 시간 예보 없음 · 빈 구간은 강수 없음이 아니에요</Text> : null}
       {!forecast.bars.length && weather && forecast.usable ? <Text style={{ color: theme.muted }}>{forecastTime(Date.parse(weather.observedAt), weather)} 현재 날씨 기준 · 시간별 미래 예보가 아니에요</Text> : null}
       {forecast.bars.map(hour => <View key={hour.at} style={[styles.row, { borderColor: theme.border }]} accessible accessibilityLabel={`${forecastTime(hour.at, weather)}, 강수확률 ${hour.rainProbabilityPct}%, 강수량 ${hour.precipitationMm}mm`}>
-        <Text style={{ color: theme.text, flex: 1 }}>{forecastTime(hour.at, weather)}</Text>
-        <Text style={{ color: theme.text }}>{hour.rainProbabilityPct}% · {hour.precipitationMm}mm</Text>
+        <Text style={{ color: theme.text, minWidth: 54, fontSize: 16 }}>{forecastTime(hour.at, weather)}</Text>
+        <View pointerEvents="none" accessibilityElementsHidden style={{ flex: 1, minWidth: 60, height: 10, borderRadius: 5, backgroundColor: theme.card }}>
+          <View style={{ height: 10, borderRadius: 5, width: `${Math.min(100, hour.precipitationMm / Math.max(1, ...forecast.bars.map(item => item.precipitationMm)) * 100)}%`, backgroundColor: theme.sky }} />
+        </View>
+        <Text style={{ color: theme.text, fontSize: 16 }}>{hour.rainProbabilityPct}% · {hour.precipitationMm}mm</Text>
       </View>)}
       <Text style={{ color: theme.muted }}>표시된 시간대의 예보예요. 이후 비 그침은 확인되지 않았어요.</Text>
     </View>
@@ -36,4 +39,4 @@ export function IosRainForecastScreen({ state, rainForecastContext, onGoBack, al
     </FeedbackPressable>
   </AppScreen>;
 }
-const styles = StyleSheet.create({ row: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth }, toggle: { minHeight: 44, gap: 6, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth } });
+const styles = StyleSheet.create({ row: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center", paddingVertical: 18, borderBottomWidth: StyleSheet.hairlineWidth }, toggle: { minHeight: 44, gap: 6, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth } });

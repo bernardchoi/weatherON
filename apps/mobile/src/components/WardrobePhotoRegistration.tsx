@@ -2,6 +2,7 @@ import React from "react";
 import * as Crypto from "expo-crypto";
 import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import type { Purpose, Season, WardrobeCategory, WardrobeItem, WeatherTag } from "@weatheron/shared";
+import { ambientUiIcons } from "../ambientAssets";
 import { BottomSheet } from "./BottomSheet";
 import { AppButton } from "./AppButton";
 import { AppScreen } from "./AppScreen";
@@ -191,35 +192,36 @@ export function WardrobePhotoRegistration({
     >
       <Section title="옷 사진" caption="옷을 확인할 때만 사진을 보내요. WeatherON 서버에는 보관하지 않아요." accent="clear">
         {previewUri ? (
-          <View style={[styles.photoFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <View style={[[styles.photoFrame, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoFrame]}>
             <Image source={getOutfitImageSource(previewUri)} style={styles.photo} resizeMode="contain" />
           </View>
         ) : (
-          <View style={[styles.photoPlaceholder, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-            <Text style={[styles.placeholderTitle, { color: theme.text }]}>옷 한 개를 정면에서 촬영</Text>
-            <Text style={[styles.placeholderBody, { color: theme.muted }]}>밝은 곳에서 옷 전체가 보이게 찍어 주세요. 사람이 나오지 않게 옷만 담아 주세요.</Text>
+          <View style={[[styles.photoPlaceholder, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoPlaceholder]}>
+            {Platform.OS === "ios" ? <Image source={ambientUiIcons.tabOutfit} accessible={false} style={{ width: 52, height: 52, tintColor: theme.muted }} /> : null}
+            <Text style={[[styles.placeholderTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.placeholderTitle]}>옷 한 개를 정면에서 촬영</Text>
+            <Text style={[[styles.placeholderBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.placeholderBody]}>밝은 곳에서 옷 전체가 보이게 찍어 주세요. 사람이 나오지 않게 옷만 담아 주세요.</Text>
           </View>
         )}
         <View style={styles.photoActions}>
           <AppButton label="사진 촬영" onPress={() => void selectPhoto("camera")} tone="warning" size="sm" disabled={busy || !canUseNativePhoto} />
           <AppButton label="앨범에서 선택" onPress={() => void selectPhoto("library")} tone="secondary" size="sm" disabled={busy || !canUseNativePhoto} />
         </View>
-        {!canUseNativePhoto ? <Text style={[styles.message, { color: theme.muted }]}>사진 등록은 iOS·Android 앱에서 확인 가능</Text> : null}
-        <View style={[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: analysis?.quality === "retake" ? theme.warm : theme.border }]}>
-          <Text style={[styles.statusTitle, { color: status === "error" || analysis?.quality === "retake" ? theme.warm : theme.clear }]}>
+        {!canUseNativePhoto ? <Text style={[[styles.message, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.message]}>사진 등록은 iOS·Android 앱에서 확인 가능</Text> : null}
+        <View style={[[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: analysis?.quality === "retake" ? theme.warm : theme.border }], Platform.OS === "ios" && ambientVisual.statusCard]}>
+          <Text style={[[styles.statusTitle, { color: status === "error" || analysis?.quality === "retake" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.statusTitle]}>
             {getStatusTitle(status, analysis)}
           </Text>
-          <Text style={[styles.message, { color: theme.muted }]}>{message}</Text>
-          {analysis?.issues.length ? <Text style={[styles.issueText, { color: theme.muted }]}>{analysis.issues.join(" · ")}</Text> : null}
+          <Text style={[[styles.message, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.message]}>{message}</Text>
+          {analysis?.issues.length ? <Text style={[[styles.issueText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.issueText]}>{analysis.issues.join(" · ")}</Text> : null}
         </View>
       </Section>
 
       {previewUri ? (
         <Section title="옷 정보" caption="다르게 보이는 정보는 직접 바꿔 주세요" accent="gold">
-          <View style={[styles.summaryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+          <View style={[[styles.summaryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.summaryCard]}>
             <View style={styles.summaryCopy}>
-              <Text style={[styles.summaryName, { color: theme.text }]} numberOfLines={1}>{draft.name}</Text>
-              <Text style={[styles.summaryMeta, { color: theme.muted }]} numberOfLines={2}>
+              <Text style={[[styles.summaryName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.summaryName]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{draft.name}</Text>
+              <Text style={[[styles.summaryMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.summaryMeta]} numberOfLines={2}>
                 {getWardrobeCategoryLabel(draft.category)} · {draft.seasons.map(getPhotoTagLabel).join(" · ")} · {draft.weatherTags.map(getPhotoTagLabel).join(" · ")}
               </Text>
             </View>
@@ -227,14 +229,14 @@ export function WardrobePhotoRegistration({
           </View>
 
           {detailsOpen ? (
-            <View style={styles.form}>
+            <View style={[styles.form, Platform.OS === "ios" && ambientVisual.form]}>
               <FieldLabel label="옷 이름" />
               <TextInput
                 value={draft.name}
                 onChangeText={(name) => { draftEdited.current = true; setDraft((current) => ({ ...current, name: name.slice(0, 30) })); }}
                 placeholder="예: 검정 경량 패딩"
                 placeholderTextColor={theme.subtle}
-                style={[styles.input, { color: theme.text, backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+                style={[[styles.input, { color: theme.text, backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.input]}
                 maxLength={30}
               />
               <ChoiceRow label="옷 종류" values={categories} selected={[draft.category]} labelFor={getWardrobeCategoryLabel} onToggle={(category) => { draftEdited.current = true; setDraft((current) => ({ ...current, category })); }} />
@@ -267,13 +269,13 @@ function ChoiceRow<T extends string>({
   const [open, setOpen] = React.useState(false);
   return (
     <>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${label}, ${selected.map(labelFor).join(", ")}`} accessibilityState={{ expanded: open }} onPress={() => setOpen(true)} style={[styles.selectRow, { borderColor: theme.border }]}>
-        <Text style={[styles.fieldLabel, { color: theme.muted }]}>{label}</Text>
-        <Text style={[styles.selectValue, { color: theme.text }]}>{selected.map(labelFor).join(" · ")}　›</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${label}, ${selected.map(labelFor).join(", ")}`} accessibilityState={{ expanded: open }} onPress={() => setOpen(true)} style={[[styles.selectRow, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.selectRow]}>
+        <Text style={[[styles.fieldLabel, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.fieldLabel]}>{label}</Text>
+        <Text style={[[styles.selectValue, { color: theme.text }], Platform.OS === "ios" && ambientVisual.selectValue]}>{selected.map(labelFor).join(" · ")}　›</Text>
       </Pressable>
       <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel={label}>
         <FieldLabel label={label} />
-        <View style={styles.choiceRow}>
+        <View style={[styles.choiceRow, Platform.OS === "ios" && ambientVisual.choiceRow]}>
           {values.map((value) => {
             const active = selected.includes(value);
             return (
@@ -282,9 +284,9 @@ function ChoiceRow<T extends string>({
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 onPress={() => onToggle(value)}
-                style={[styles.choice, { backgroundColor: active ? theme.cardStrong : theme.cardMuted, borderColor: active ? theme.clear : theme.border }]}
+                style={[[styles.choice, { backgroundColor: active ? theme.cardStrong : theme.cardMuted, borderColor: active ? theme.clear : theme.border }], Platform.OS === "ios" && ambientVisual.choice]}
               >
-                <Text style={[styles.choiceText, { color: active ? theme.clear : theme.text }]}>{labelFor(value)}</Text>
+                <Text style={[[styles.choiceText, { color: active ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.choiceText]}>{labelFor(value)}</Text>
               </Pressable>
             );
           })}
@@ -302,7 +304,7 @@ function getPhotoTagLabel(value: string): string {
 
 function FieldLabel({ label }: { label: string }) {
   const theme = useAppTheme();
-  return <Text style={[styles.fieldLabel, { color: theme.text }]}>{label}</Text>;
+  return <Text style={[[styles.fieldLabel, { color: theme.text }], Platform.OS === "ios" && ambientVisual.fieldLabel]}>{label}</Text>;
 }
 
 function toDraft(item: Pick<WardrobeItem, "name" | "category" | "seasons" | "purposes" | "weatherTags">): Draft {
@@ -358,4 +360,115 @@ const styles = StyleSheet.create({
   choiceRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   choice: { minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1 },
   choiceText: { fontSize: 12, lineHeight: 17, fontWeight: "900" },
+});
+
+// iOS Ambient image-led wardrobe; original Android layout is retained.
+const ambientVisual = StyleSheet.create({
+  "photoFrame": {
+    "height": undefined,
+    "borderWidth": 0,
+    "borderRadius": 20,
+    "aspectRatio": 1
+  },
+  "photoPlaceholder": {
+    "backgroundColor": "transparent",
+    "minHeight": 260,
+    "gap": 16
+  },
+  "placeholderTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "600",
+    "textAlign": "center"
+  },
+  "placeholderBody": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500",
+    "textAlign": "center"
+  },
+  "statusCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "statusTitle": {
+    "fontSize": 19,
+    "lineHeight": 27,
+    "fontWeight": "600"
+  },
+  "message": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "issueText": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "summaryCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "summaryName": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "summaryMeta": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "form": {
+    "gap": 14
+  },
+  "fieldLabel": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "input": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "minHeight": 52
+  },
+  "selectRow": {
+    "minHeight": 64,
+    "paddingVertical": 18,
+    "gap": 8
+  },
+  "selectValue": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "choiceRow": {
+    "flexDirection": "column",
+    "gap": 8
+  },
+  "choice": {
+    "width": "100%",
+    "minHeight": 52,
+    "alignItems": "flex-start",
+    "paddingHorizontal": 18,
+    "borderRadius": 14
+  },
+  "choiceText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, type ImageSourcePropType, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, type ImageSourcePropType, StyleSheet, Text, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, semanticColor, spacing } from "../theme/tokens";
@@ -15,14 +15,15 @@ export type OnboardingVisualItem = {
 
 type OnboardingVisualStripProps = {
   items: OnboardingVisualItem[];
+  rows?: boolean;
 };
 
-export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
+export function OnboardingVisualStrip({ items, rows = false }: OnboardingVisualStripProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, rows && { flexDirection: "column", gap: 20 }]}>
       {items.map((item) => {
         const accent = theme[item.tone];
         return (
@@ -32,10 +33,11 @@ export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
             accessibilityLabel={`${item.label} ${item.value}`}
             style={[
               styles.item,
+              Platform.OS === "ios" && { backgroundColor: "transparent", borderWidth: 0 },
               {
-                backgroundColor: theme.cardStrong,
+                backgroundColor: Platform.OS === "ios" ? "transparent" : theme.cardStrong,
                 borderColor: theme.border,
-                minHeight: layout.onboardingVisualItemMinHeight,
+                minHeight: rows ? 110 : layout.onboardingVisualItemMinHeight,
                 paddingVertical: layout.isShort || layout.isNarrow ? 6 : spacing.sm,
               },
             ]}
@@ -44,7 +46,7 @@ export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
               style={[
                 styles.iconFrame,
                 {
-                  backgroundColor: semanticColor(theme, item.tone === "clear" ? "successTint" : item.tone === "gold" ? "accentTint" : "infoTint"),
+                  backgroundColor: Platform.OS === "ios" ? "transparent" : semanticColor(theme, item.tone === "clear" ? "successTint" : item.tone === "gold" ? "accentTint" : "infoTint"),
                   width: layout.onboardingVisualIconFrameSize,
                   height: layout.onboardingVisualIconFrameSize,
                 },
@@ -54,15 +56,15 @@ export function OnboardingVisualStrip({ items }: OnboardingVisualStripProps) {
                 source={item.icon}
                 style={{
                   tintColor: accent,
-                  width: layout.onboardingVisualIconSize,
-                  height: layout.onboardingVisualIconSize,
+                  width: rows ? 44 : layout.onboardingVisualIconSize,
+                  height: rows ? 44 : layout.onboardingVisualIconSize,
                 }}
                 resizeMode="contain"
                 accessible={false}
               />
             </View>
-            <Text style={[styles.value, { color: theme.text }]} numberOfLines={1}>{item.value}</Text>
-            <Text style={[styles.label, { color: accent }]} numberOfLines={1}>{item.label}</Text>
+            <Text style={[styles.value, { color: theme.text }, Platform.OS === "ios" && { fontSize: 16, lineHeight: 24, fontWeight: "500" }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{item.value}</Text>
+            <Text style={[styles.label, { color: accent }, Platform.OS === "ios" && { fontSize: 15, lineHeight: 22, fontWeight: "600" }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{item.label}</Text>
           </View>
         );
       })}

@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, View } from "../localization/react-native";
+import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, useWindowDimensions, View } from "../localization/react-native";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -137,10 +137,10 @@ export function WardrobePresetScreen({
       contentGap={layout.destinationContentGap}
     >
       <Section title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
-        <View style={[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+        <View style={[[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoEntryCard]}>
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.text }]}>사진 한 장으로 옷장에 쏙</Text>
-            <Text style={[styles.copyText, { color: theme.muted }]}>
+            <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>사진 한 장으로 옷장에 쏙</Text>
+            <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]}>
               {accountLinked ? "옷 정보는 확인하고 바꿀 수 있어요" : "로그인하고 내 옷을 추가해 보세요"}
             </Text>
           </View>
@@ -148,13 +148,13 @@ export function WardrobePresetScreen({
         </View>
       </Section>
 
-      <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+      <View style={[[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.searchBox]}>
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="아이템 이름 검색"
           placeholderTextColor={theme.subtle}
-          style={[styles.searchInput, { color: theme.text }]}
+          style={[[styles.searchInput, { color: theme.text }], Platform.OS === "ios" && ambientVisual.searchInput]}
           accessibilityLabel="아이템 이름 검색"
           returnKeyType="search"
         />
@@ -178,7 +178,7 @@ export function WardrobePresetScreen({
           accent="clear"
         >
           <View
-            style={[
+            style={[[
               styles.selectedCard,
               {
                 gap: layout.outfitCardGap,
@@ -187,25 +187,25 @@ export function WardrobePresetScreen({
                 borderColor: theme.border,
               },
               cardShadow(theme),
-            ]}
+            ], Platform.OS === "ios" && ambientVisual.selectedCard]}
           >
             <View
-              style={[
+              style={[[
                 styles.selectedImageWrap,
                 {
                   width: layout.isShort || layout.isNarrow ? 54 : 58,
                   height: layout.isShort || layout.isNarrow ? 54 : 58,
                   backgroundColor: theme.cardMuted,
                 },
-              ]}
+              ], Platform.OS === "ios" && ambientVisual.selectedImageWrap]}
             >
               {outfitImageAssets[previewItem.imageUrl] ? (
                 <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMethod="resize" resizeMode="contain" />
               ) : null}
             </View>
             <View style={styles.copy}>
-              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{previewItem.name}</Text>
-              <Text style={[styles.copyText, { color: theme.muted }]} numberOfLines={1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
+              <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{previewItem.name}</Text>
+              <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
             </View>
             <AppButton
               label={previewItem.owned ? "해제" : "추가"}
@@ -224,7 +224,7 @@ export function WardrobePresetScreen({
         accent="gold"
       >
         {filteredItems.length === 0 ? (
-          <Text style={[styles.empty, { color: theme.muted }]}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>
+          <Text style={[[styles.empty, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.empty]}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>
         ) : categoryFilter === "all" ? (
           <View style={styles.categoryList}>
             {wardrobeCategories.map((category) => (
@@ -241,7 +241,7 @@ export function WardrobePresetScreen({
             ))}
           </View>
         ) : (
-          <View style={styles.presetGrid}>
+          <View style={[styles.presetGrid, Platform.OS === "ios" && ambientVisual.presetGrid]}>
             {filteredItems.map((item) => (
               <PresetCard
                 key={item.id}
@@ -305,7 +305,7 @@ function PresetCategory({
 
   return (
     <View
-      style={[
+      style={[[
         styles.categoryCard,
         {
           gap: layout.outfitCardGap,
@@ -313,25 +313,25 @@ function PresetCategory({
           backgroundColor: theme.cardMuted,
           borderColor: expanded ? theme.gold : theme.border,
         },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.categoryCard]}
     >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${categoryLabel} ${items.length}개 ${expanded ? "접기" : "펼치기"}`}
         accessibilityState={{ expanded }}
         onPress={onToggle}
-        style={styles.categoryHeader}
+        style={[styles.categoryHeader, Platform.OS === "ios" && ambientVisual.categoryHeader]}
       >
         <View style={styles.categoryCopy}>
-          <Text style={[styles.categoryTitle, { color: theme.text }]}>{categoryLabel}</Text>
-          <Text style={[styles.categoryCount, { color: theme.muted }]}>{items.length}개</Text>
+          <Text style={[[styles.categoryTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.categoryTitle]}>{categoryLabel}</Text>
+          <Text style={[[styles.categoryCount, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.categoryCount]}>{items.length}개</Text>
         </View>
-        <Text style={[styles.categoryToggle, { color: theme.gold }]}>{expanded ? "접기" : "펼치기"}</Text>
+        <Text style={[[styles.categoryToggle, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.categoryToggle]}>{expanded ? "접기" : "펼치기"}</Text>
       </Pressable>
       {expanded ? (
         items.length > 0 ? (
           <Animated.View style={{ opacity: contentOpacity }}>
-          <View style={styles.presetGrid}>
+          <View style={[styles.presetGrid, Platform.OS === "ios" && ambientVisual.presetGrid]}>
             {items.map((item) => (
               <PresetCard
                 key={item.id}
@@ -344,7 +344,7 @@ function PresetCategory({
           </View>
           </Animated.View>
         ) : (
-          <Text style={[styles.categoryEmpty, { color: theme.muted }]}>현재 조건에 맞는 아이템 없음</Text>
+          <Text style={[[styles.categoryEmpty, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.categoryEmpty]}>현재 조건에 맞는 아이템 없음</Text>
         )
       ) : null}
     </View>
@@ -365,24 +365,25 @@ function PresetCard({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const imageSource = outfitImageAssets[item.imageUrl];
+  const { fontScale } = useWindowDimensions();
   return (
     <View
-      style={[
+      style={[[
         styles.presetCard,
         {
-          width: layout.wardrobeGridItemWidth,
+          width: Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.wardrobeGridItemWidth,
           minHeight: layout.wardrobePresetCardMinHeight,
           backgroundColor: theme.cardMuted,
           borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
         },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && (item.owned || selected) && { borderWidth: 1, borderRadius: 16 }]}
     >
       <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
-        <View style={[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }]}>
-          {imageSource ? <Image source={imageSource} style={styles.presetImage} resizeMethod="resize" resizeMode="contain" /> : null}
+        <View style={[[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.presetImageWrap]}>
+          {imageSource ? <Image source={imageSource} style={[styles.presetImage, Platform.OS === "ios" && ambientVisual.presetImage]} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
-        <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>
-        <Text style={[styles.presetMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
+        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.presetName]} numberOfLines={2}>{item.name}</Text>
+        <Text style={[[styles.presetMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.presetMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </FeedbackPressable>
       <AppButton
         label={item.owned ? "해제" : "추가"}
@@ -536,4 +537,124 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
+});
+
+// iOS Ambient image-led wardrobe; original Android layout is retained.
+const ambientVisual = StyleSheet.create({
+  "photoEntryCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "searchInput": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "searchBox": {
+    "minHeight": 52,
+    "borderRadius": 20
+  },
+  "selectedCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "selectedImageWrap": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "width": 86,
+    "height": 108
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "copyText": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "categoryCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "categoryHeader": {
+    "minHeight": 56
+  },
+  "categoryTitle": {
+    "fontSize": 19,
+    "lineHeight": 27,
+    "fontWeight": "600"
+  },
+  "categoryCount": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "categoryToggle": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "categoryEmpty": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "presetCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "padding": 0,
+    "gap": 12
+  },
+  "presetImageWrap": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "height": 148
+  },
+  "presetImage": {
+    "width": "94%",
+    "height": "94%"
+  },
+  "presetName": {
+    "fontSize": 15,
+    "lineHeight": 22,
+    "fontWeight": "600",
+    "minHeight": 44
+  },
+  "presetMeta": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "presetGrid": {
+    "rowGap": 24
+  },
+  "empty": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

@@ -1,6 +1,7 @@
+import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import { buildTomorrowWeather } from "../utils/tomorrowWeather";
 import React, { useEffect, useState } from "react";
-import { Image, LocalizedView, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "../localization/react-native";
+import { Platform, Image, LocalizedView, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "../localization/react-native";
 import { recommendOutfit, recommendUmbrella } from "@weatheron/shared";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -30,10 +31,15 @@ export function TomorrowBriefScreen({
   const layout = useResponsiveLayout();
   const tomorrow = buildTomorrowWeather(state.weather);
   if (!tomorrow) return (
-    <View style={[styles.shell, { backgroundColor: theme.background, padding: spacing.lg }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background, padding: spacing.lg }]}>
       <BackButton onPress={onGoBack} />
-      <Text accessibilityLiveRegion="polite" style={{ color: theme.text }}>내일 예보를 아직 확인할 수 없어요.</Text>
-      <Text style={{ color: theme.muted }}>날씨를 새로고침한 뒤 다시 확인해 주세요.</Text>
+      {Platform.OS === "ios" ? <View style={{ flex: 1, justifyContent: "center", gap: 16 }}>
+        <Text accessibilityLiveRegion="polite" style={{ color: theme.text, fontSize: 23, lineHeight: 32, fontWeight: "600", textAlign: "center" }}>내일 예보를 아직 확인할 수 없어요.</Text>
+        <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24, textAlign: "center" }}>날씨를 새로고침한 뒤 다시 확인해 주세요.</Text>
+      </View> : <>
+        <Text accessibilityLiveRegion="polite" style={{ color: theme.text }}>내일 예보를 아직 확인할 수 없어요.</Text>
+        <Text style={{ color: theme.muted }}>날씨를 새로고침한 뒤 다시 확인해 주세요.</Text>
+      </>}
     </View>
   );
   const outfit = recommendOutfit(tomorrow.weather, toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }), wardrobeItems);
@@ -49,7 +55,7 @@ export function TomorrowBriefScreen({
   const umbrellaAction = getUmbrellaActionShort(umbrella.level);
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -68,8 +74,8 @@ export function TomorrowBriefScreen({
         <View style={styles.headerCopy}>
           <View style={styles.headerHeadlineRow}>
             <View style={styles.headerTextBlock}>
-              <Text style={[styles.headerTitle, { color: theme.text }]}>내일 브리핑</Text>
-              <Text style={[styles.headerMeta, { color: theme.muted }]} numberOfLines={1}>
+              <Text style={[[styles.headerTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.headerTitle]}>내일 브리핑</Text>
+              <Text style={[[styles.headerMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.headerMeta]} numberOfLines={1}>
                 {tomorrow.dateLabel} · {getDisplayLocationName(tomorrow.weather.locationName)}
               </Text>
             </View>
@@ -82,36 +88,36 @@ export function TomorrowBriefScreen({
       </View>
 
       <View
-        style={[
+        style={[[
           styles.weatherCard,
           {
             padding: layout.weatherPanelPadding,
             backgroundColor: theme.card,
             borderColor: theme.border,
           },
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.weatherCard]}
       >
         <View style={styles.weatherTopRow}>
           <View
-            style={[
+            style={[[
               styles.weatherIconFrame,
               {
                 width: layout.isShort ? 56 : 64,
                 height: layout.isShort ? 56 : 64,
                 backgroundColor: `${weatherTone}18`,
               },
-            ]}
+            ], Platform.OS === "ios" && ambientVisual.weatherIconFrame]}
           >
             <Image
-              source={getConditionIcon(tomorrow.weather.current.condition)}
-              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: weatherTone }]}
+              source={Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme)?.source ?? getConditionIcon(tomorrow.weather.current.condition) : getConditionIcon(tomorrow.weather.current.condition)}
+              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme)?.tintColor : weatherTone }]}
               resizeMode="contain"
             />
           </View>
           <View style={styles.weatherCopy}>
             <Text style={[styles.weatherEyebrow, { color: weatherTone }]}>내일 날씨</Text>
-            <Text style={[styles.weatherCondition, { color: theme.text }]} numberOfLines={1}>{weatherHeadline}</Text>
-            <Text style={[styles.weatherRange, { color: theme.muted }]}>
+            <Text style={[[styles.weatherCondition, { color: theme.text }], Platform.OS === "ios" && ambientVisual.weatherCondition]} numberOfLines={1}>{weatherHeadline}</Text>
+            <Text style={[[styles.weatherRange, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.weatherRange]}>
               {formatTemperature(tomorrow.summary.minTempC, temperatureUnit)} ~ {formatTemperature(tomorrow.summary.maxTempC, temperatureUnit)}
             </Text>
           </View>
@@ -121,25 +127,25 @@ export function TomorrowBriefScreen({
           </View>
         </View>
         <LocalizedView style={styles.factRow} accessibilityLabel="내일 핵심 예보">
-          <BriefFact icon={uiIconAssets.rain} label="예상 강수" value={tomorrow.summary.precipitationMm > 0 ? `${tomorrow.summary.precipitationMm.toFixed(1)}mm` : "비 없음"} color={theme.sky} theme={theme} />
-          <BriefFact icon={uiIconAssets.wind} label="최대 바람" value={`${tomorrow.summary.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
-          <BriefFact icon={uiIconAssets.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time, state.weather.timezone) : tomorrow.summary.rainProbabilityPct >= 50 || tomorrow.summary.precipitationMm > 0 ? "확인 중" : "강수 없음"} color={theme.gold} theme={theme} />
+          <BriefFact icon={screenIcons.rain} label="예상 강수" value={tomorrow.summary.precipitationMm > 0 ? `${tomorrow.summary.precipitationMm.toFixed(1)}mm` : "비 없음"} color={theme.sky} theme={theme} />
+          <BriefFact icon={screenIcons.wind} label="최대 바람" value={`${tomorrow.summary.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
+          <BriefFact icon={screenIcons.clock} label="비 시작" value={hourlyRain ? formatHour(hourlyRain.time, state.weather.timezone) : tomorrow.summary.rainProbabilityPct >= 50 || tomorrow.summary.precipitationMm > 0 ? "확인 중" : "강수 없음"} color={theme.gold} theme={theme} />
         </LocalizedView>
       </View>
 
       <View
-        style={[
+        style={[[
           styles.outfitCard,
           {
             padding: layout.weatherPanelPadding,
             backgroundColor: theme.card,
             borderColor: theme.border,
           },
-        ]}
+        ], Platform.OS === "ios" && ambientVisual.outfitCard]}
       >
         <View style={styles.outfitTitleRow}>
-          <View style={[styles.outfitTitleIcon, { backgroundColor: `${theme.gold}18` }]}>
-            <Image source={uiIconAssets.shirt} style={[styles.outfitTitleIconImage, { tintColor: theme.gold }]} resizeMode="contain" />
+          <View style={[[styles.outfitTitleIcon, { backgroundColor: `${theme.gold}18` }], Platform.OS === "ios" && ambientVisual.outfitTitleIcon]}>
+            <Image source={screenIcons.shirt} style={[styles.outfitTitleIconImage, { tintColor: theme.gold }]} resizeMode="contain" />
           </View>
           <View style={styles.outfitTitleCopy}>
             <Text style={[styles.outfitEyebrow, { color: theme.gold }]}>내일 코디</Text>
@@ -160,14 +166,14 @@ export function TomorrowBriefScreen({
           ]}
         >
           <View
-            style={[
+            style={[[
               styles.outfitImageFrame,
               {
                 width: layout.isShort ? 64 : 76,
                 height: layout.isShort ? 64 : 76,
                 backgroundColor: theme.card,
               },
-            ]}
+            ], Platform.OS === "ios" && ambientVisual.outfitImageFrame]}
           >
             <OutfitItemImage
               imageUrl={outfitPreview?.imageUrl}
@@ -176,33 +182,33 @@ export function TomorrowBriefScreen({
             />
           </View>
           <View style={styles.outfitCopy}>
-            <Text style={[styles.outfitDecision, { color: theme.text }]} numberOfLines={1}>{toFriendlyOutfitHeadline(outfitDecision)}</Text>
-            <Text style={[styles.outfitReason, { color: theme.muted }]} numberOfLines={1}>{outfitReason}</Text>
+            <Text style={[[styles.outfitDecision, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitDecision]} numberOfLines={1}>{toFriendlyOutfitHeadline(outfitDecision)}</Text>
+            <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]} numberOfLines={1}>{outfitReason}</Text>
           </View>
         </View>
         <LocalizedView style={styles.outfitItems} accessibilityLabel="추천 코디 구성">
           {outfitItems.slice(0, 4).map(([slot, item]) => (
-            <View key={`${slot}:${item.id}`} style={[styles.outfitItem, { backgroundColor: theme.cardMuted }]}>
-              <View style={[styles.outfitMiniImageFrame, { backgroundColor: theme.card }]}>
+            <View key={`${slot}:${item.id}`} style={[[styles.outfitItem, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.outfitItem]}>
+              <View style={[[styles.outfitMiniImageFrame, { backgroundColor: theme.card }], Platform.OS === "ios" && ambientVisual.outfitMiniImageFrame]}>
                 <OutfitItemImage
                   imageUrl={item.imageUrl}
                   imageStyle={styles.outfitMiniImage}
                   fallbackStyle={[styles.outfitMiniFallbackIcon, { tintColor: theme.gold }]}
                 />
               </View>
-              <Text style={[styles.outfitSlot, { color: theme.gold }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
+              <Text style={[[styles.outfitSlot, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.outfitSlot]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
             </View>
           ))}
         </LocalizedView>
       </View>
 
-      <View style={[styles.readyStrip, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-        <View style={[styles.umbrellaIconFrame, { backgroundColor: `${umbrella.level === "none" ? theme.clear : theme.sky}18` }]}>
-          <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: umbrella.level === "none" ? theme.clear : theme.sky }]} resizeMode="contain" />
+      <View style={[[styles.readyStrip, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.readyStrip]}>
+        <View style={[[styles.umbrellaIconFrame, { backgroundColor: `${umbrella.level === "none" ? theme.clear : theme.sky}18` }], Platform.OS === "ios" && ambientVisual.umbrellaIconFrame]}>
+          <Image source={screenIcons.umbrella} style={[styles.umbrellaIcon, { tintColor: umbrella.level === "none" ? theme.clear : theme.sky }]} resizeMode="contain" />
         </View>
         <View style={styles.umbrellaCopy}>
           <Text style={[styles.umbrellaTitle, { color: theme.text }]}>{umbrellaAction}</Text>
-          <Text style={[styles.umbrellaBody, { color: theme.muted }]} numberOfLines={1}>{umbrella.reason}</Text>
+          <Text style={[[styles.umbrellaBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.umbrellaBody]} numberOfLines={1}>{umbrella.reason}</Text>
         </View>
       </View>
       </ScrollView>
@@ -227,7 +233,7 @@ function OutfitItemImage({
   }, [imageUrl]);
 
   if (!source || failedImageUrl === imageUrl) {
-    return <Image source={uiIconAssets.shirt} style={fallbackStyle} resizeMode="contain" />;
+    return <Image source={screenIcons.shirt} style={fallbackStyle} resizeMode="contain" />;
   }
 
   return (
@@ -588,4 +594,106 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "700",
   },
+});
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
+  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
+  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
+  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
+  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
+} : uiIconAssets;
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "weatherCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "outfitCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "readyStrip": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "weatherIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "outfitTitleIcon": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "outfitItem": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "outfitMiniImageFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "outfitImageFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "umbrellaIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "headerTitle": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "headerMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "weatherCondition": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "weatherRange": {
+    "fontSize": 24,
+    "lineHeight": 32,
+    "fontWeight": "600"
+  },
+  "outfitDecision": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "outfitReason": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "outfitSlot": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "umbrellaBody": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  }
 });

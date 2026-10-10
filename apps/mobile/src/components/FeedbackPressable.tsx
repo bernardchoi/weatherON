@@ -15,6 +15,7 @@ import { triggerImportantActionHaptic } from "../utils/interactionFeedback";
 
 type FeedbackPressableProps = PressableProps & {
   feedbackColor?: string;
+  hapticFeedback?: "automatic" | "none";
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -31,6 +32,7 @@ function resolveFeedbackPressableStyle(
 
 export function FeedbackPressable({
   feedbackColor,
+  hapticFeedback = "automatic",
   android_ripple,
   accessibilityLabel,
   onPress,
@@ -66,7 +68,7 @@ export function FeedbackPressable({
     onPressOut?.(event);
   };
   const handlePress = (event: GestureResponderEvent) => {
-    triggerImportantActionHaptic(accessibilityLabel);
+    if (hapticFeedback === "automatic") triggerImportantActionHaptic(accessibilityLabel);
     onPress?.(event);
   };
   const resolvedStyle = resolveFeedbackPressableStyle(style, { pressed }, scale);

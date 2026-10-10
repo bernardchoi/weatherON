@@ -1,7 +1,10 @@
+import { ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Image, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
+import { AmbientControlSurface } from "../components/AmbientControlSurface";
+import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
@@ -77,9 +80,21 @@ export function DestinationListScreen({
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
   const resultBanner = getDestinationResultBanner(accountGateResult, permissionGateResult, hasDestinations);
   const selectedCard = destinationCards.find((item) => item.place.id === selectedDestinationPlace.id) ?? destinationCards[0];
+  const visibleCards = Platform.OS === "ios" && selectedCard ? [selectedCard, ...destinationCards.filter(item => item.id !== selectedCard.id)] : destinationCards;
+  const pendingSelection = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (pendingSelection.current !== selectedDestinationPlace.id) return;
+    pendingSelection.current = null;
+    triggerConfirmedSelectionHaptic();
+  }, [selectedDestinationPlace.id]);
+  const openDestination = (place: PlaceSearchResult) => {
+    if (Platform.OS === "ios" && place.id !== selectedDestinationPlace.id) pendingSelection.current = place.id;
+    onSelectDestinationPlace(place);
+    onNavigate("G2");
+  };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -87,7 +102,7 @@ export function DestinationListScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.destinationContentGap,
+            gap: Platform.OS === "ios" ? 12 : layout.destinationContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -111,9 +126,9 @@ export function DestinationListScreen({
           </Text>
         </View>
 
-        {(
+        {(Platform.OS !== "ios" || !hasDestinations) && (
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={selectedCard ? `${selectedCard.title} 출발 상세 보기` : "첫 목적지 추가"}
-            onPress={() => { if (selectedCard) { onSelectDestinationPlace(selectedCard.place); onNavigate("G2"); } else onNavigate("P1"); }}
+            onPress={() => { if (selectedCard) { openDestination(selectedCard.place); } else onNavigate("P1"); }}
             style={{ minHeight: 80, gap: 4, paddingVertical: 8 }}>
             <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{selectedCard ? `선택한 목적지 · ${selectedCard.title}` : "첫 출발 준비"}</Text>
             <Text style={[pageStyles.number, { color: theme.text }]}>{selectedCard ? selectedCard.departureTime.includes(":") ? `${selectedCard.departureTime} 출발` : selectedCard.departureTime : "어디로 가시나요?"}</Text>
@@ -123,8 +138,8 @@ export function DestinationListScreen({
 
         <View style={styles.destinationList}>
           {hasDestinations ? (
-            destinationCards.map((item) => (
-              <DestinationCard
+            visibleCards.map((item) => (
+              Platform.OS === "ios" ? <AmbientDestinationSummary key={item.id} item={item} theme={theme} permissionReady={permissionReady} selected={selectedDestinationPlace.id === item.id} featured={selectedCard?.id === item.id} onOpen={() => openDestination(item.place)} /> : <DestinationCard
                 key={item.id}
                 item={item}
                 paddingHorizontal={layout.destinationCardPaddingHorizontal}
@@ -153,7 +168,7 @@ export function DestinationListScreen({
               accessibilityLabel="목록 하단 목적지 추가"
               accessibilityRole="button"
               onPress={() => onNavigate("P1")}
-              style={[styles.addDestinationRail, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+              style={[[styles.addDestinationRail, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.addDestinationRail]}
             >
               <Text style={[styles.addDestinationIcon, { color: theme.clear }]}>+</Text>
               <Text style={[styles.addDestinationText, { color: theme.clear }]}>목적지 추가</Text>
@@ -201,7 +216,7 @@ function EmptyDestinationState({
 }) {
   return (
     <View
-      style={[
+      style={[[
         styles.emptyCard,
         {
           padding: panelPadding,
@@ -212,7 +227,7 @@ function EmptyDestinationState({
         cardShadow(theme),
         pageStyles.card,
         { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border, borderColor: theme.border },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.emptyCard]}
     >
       <View style={styles.emptyHeader}>
         <View style={[styles.emptyIconBox, { backgroundColor: theme.cardStrong }]}>
@@ -225,7 +240,7 @@ function EmptyDestinationState({
       </View>
       <View style={styles.emptyBenefitGrid}>
         <EmptyBenefit
-          icon={uiIconAssets.clock}
+          icon={screenIcons.clock}
           title="출발 시간"
           body="도착 시간 기준 계산"
           color={theme.clear}
@@ -234,7 +249,7 @@ function EmptyDestinationState({
           onPress={onAdd}
         />
         <EmptyBenefit
-          icon={uiIconAssets.rain}
+          icon={screenIcons.rain}
           title="비 완화"
           body="강수 변화 먼저 확인"
           color={theme.clear}
@@ -270,7 +285,7 @@ function EmptyBenefit({
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.emptyBenefit, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}
+      style={[[styles.emptyBenefit, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.emptyBenefit]}
     >
       <Image source={icon} style={[styles.emptyBenefitIcon, { tintColor: color }]} resizeMode="contain" />
       <View style={styles.emptyBenefitCopy}>
@@ -279,6 +294,53 @@ function EmptyBenefit({
       </View>
     </FeedbackPressable>
   );
+}
+
+function AmbientDestinationSummary({ item, theme, permissionReady, selected, featured, onOpen }: {
+  item: DestinationCardModel; theme: AppTheme; permissionReady: boolean; selected: boolean; featured: boolean; onOpen: () => void;
+}) {
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = width < 360 || fontScale > 1.3;
+  const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
+  const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 8, minHeight: 44 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} style={{ width: 28, height: 28, tintColor: selected ? theme.clear : theme.muted }} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <RawText style={{ fontSize: featured ? 22 : 18, lineHeight: featured ? 28 : 24, fontWeight: "700", color: theme.text }}>{item.title}</RawText>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <RawText style={[pageStyles.caption, { color: theme.muted }]}>{item.area}</RawText>
+          {item.label ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{getDestinationLabelText(item.label)}</Text> : null}
+        </View>
+      </View>
+      {!stacked ? <Text style={[pageStyles.caption, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text> : null}
+    </View>
+    {stacked ? <Text style={[pageStyles.caption, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text> : null}
+    <View style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "flex-start" : "center", gap: 12 }}>
+      <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
+      <View style={{ flex: stacked ? undefined : 1, gap: 2 }}>
+        <Text style={{ fontSize: featured && item.departureTime.includes(":") ? 32 : 20, lineHeight: featured && item.departureTime.includes(":") ? 38 : 28, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
+      </View>
+      <View style={{ gap: 2 }}>
+        <Text style={[pageStyles.body, { color: theme.text }]}>{item.arrivalTime}</Text>
+        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalLabel}</Text>
+      </View>
+    </View>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+      <Image source={ambientUiIcons.temperature} style={{ width: 22, height: 22, tintColor: theme.muted }} />
+      <Text style={[pageStyles.body, { color: theme.text }]}>{item.originTemp} → {item.destinationTemp}</Text>
+      <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.tempDiff}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+        <Image source={ambientUiIcons.umbrella} style={{ width: 22, height: 22, tintColor: item.warningKind === "rain" ? theme.clear : theme.muted }} />
+        <Text style={[pageStyles.caption, { color: theme.text }]}>{item.rainPct}</Text>
+      </View>
+    </View>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+      <Text style={[pageStyles.caption, { color: item.tone === "warm" ? theme.warm : theme.muted, flexShrink: 1 }]}>{getDestinationActionText(item)}</Text>
+      <Text style={[pageStyles.caption, { color: theme.muted }]}>반복 · {item.repeatLabel}</Text>
+    </View>
+  </FeedbackPressable>;
+  return featured ? <AmbientControlSurface style={{ padding: 16 }}>{content}</AmbientControlSurface>
+    : <View style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>{content}</View>;
 }
 
 function DestinationCard({
@@ -304,7 +366,7 @@ function DestinationCard({
   const warningColor = item.tone === "warm" ? theme.warm : theme.subtle;
   return (
     <View
-      style={[
+      style={[[
         styles.destinationCard,
         {
           backgroundColor: theme.card,
@@ -316,7 +378,7 @@ function DestinationCard({
         cardShadow(theme),
         pageStyles.card,
         { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: selected ? selectedAccent : theme.border, borderColor: selected ? selectedAccent : theme.border },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.destinationCard]}
     >
       <FeedbackPressable
         accessibilityLabel={`${item.title} 목적지 상세 보기`}
@@ -326,21 +388,21 @@ function DestinationCard({
         style={styles.destinationMainButton}
       >
         <View style={styles.destinationTop}>
-          <View style={[styles.destinationIconFrame, { backgroundColor: `${accent}18` }]}>
+          <View style={[[styles.destinationIconFrame, { backgroundColor: `${accent}18` }], Platform.OS === "ios" && ambientVisual.destinationIconFrame]}>
             <PlaceGlyph type={item.icon} color={accent} />
           </View>
           <View style={styles.destinationTitleColumn}>
             <View style={styles.destinationNameRow}>
-              {selected ? <Image source={uiIconAssets.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
+              {selected ? <Image source={screenIcons.check} style={[styles.destinationSelectedCheck, { tintColor: selectedAccent }]} resizeMode="contain" /> : null}
               {item.label ? <DestinationLabelPill label={item.label} theme={theme} /> : null}
               <RawText style={[styles.destinationName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</RawText>
             </View>
-            <RawText style={[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.area}</RawText>
+            <RawText style={[[styles.destinationArea, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.destinationArea]} numberOfLines={1}>{item.area}</RawText>
           </View>
-          <View style={[styles.readyPill, { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.readyText, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
+          <View style={[[styles.readyPill, { backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.readyPill]}>
+            <Text style={[[styles.readyText, { color: statusColor }], Platform.OS === "ios" && ambientVisual.readyText]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text>
           </View>
-          <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+          {Platform.OS !== "ios" ? <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text> : null}
         </View>
 
         {<View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
@@ -350,20 +412,20 @@ function DestinationCard({
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
             <SunGlyph color={theme.clear} />
-            <Text style={[styles.signalText, { color: theme.text }]} numberOfLines={1}>
+            <Text style={[[styles.signalText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.signalText]} numberOfLines={1}>
               {item.originTemp} → {item.destinationTemp}
             </Text>
             <Text style={[styles.diffText, { color: warningColor }]} numberOfLines={1}>{item.tempDiff}</Text>
           </View>
-          <View style={[styles.rainPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-            <Image source={uiIconAssets.rain} style={[styles.rainPillIcon, { tintColor: warningColor }]} resizeMode="contain" />
+          <View style={[[styles.rainPill, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.rainPill]}>
+            <Image source={screenIcons.rain} style={[styles.rainPillIcon, { tintColor: warningColor }]} resizeMode="contain" />
             <Text style={[styles.rainPillText, { color: warningColor }]} numberOfLines={1}>{item.rainPct}</Text>
           </View>
         </View>
 
         <View style={styles.destinationFooterRow}>
           <Text style={[styles.warningText, { color: warningColor }]} numberOfLines={1}>{getDestinationActionText(item)}</Text>
-          <Text style={[styles.repeatText, { color: theme.subtle }]} numberOfLines={1}>{item.repeatLabel}</Text>
+          <Text style={[[styles.repeatText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.repeatText]} numberOfLines={1}>{item.repeatLabel}</Text>
         </View>
       </FeedbackPressable>
 
@@ -619,6 +681,7 @@ function subtractMinutes(time: string, minutes: number) {
 }
 
 function SunGlyph({ color }: { color: string }) {
+  if (Platform.OS === "ios") return <Image source={ambientUiIcons.temperature} style={{ width: 24, height: 24, tintColor: color }} resizeMode="contain" accessibilityElementsHidden />;
   return (
     <View style={styles.sunGlyph} accessibilityElementsHidden>
       <View style={[styles.sunCore, { borderColor: color }]} />
@@ -629,7 +692,7 @@ function SunGlyph({ color }: { color: string }) {
 }
 
 function PlaceGlyph({ type, color }: { type: DestinationCardModel["icon"]; color: string }) {
-  const source = type === "place" ? uiIconAssets.pin : uiIconAssets.pin;
+  const source = type === "place" ? screenIcons.pin : screenIcons.pin;
   return (
     <Image source={source} style={[styles.placeGlyph, { tintColor: color }]} resizeMode="contain" accessibilityElementsHidden />
   );
@@ -935,4 +998,78 @@ const styles = StyleSheet.create({
     height: 19,
     flexShrink: 0,
   },
+});
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
+  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
+  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
+  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
+  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
+} : uiIconAssets;
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "destinationCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "addDestinationRail": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  },
+  "emptyCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "emptyBenefit": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "destinationIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "readyPill": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "rainPill": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "signalText": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "repeatText": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "destinationArea": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "readyText": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  }
 });
