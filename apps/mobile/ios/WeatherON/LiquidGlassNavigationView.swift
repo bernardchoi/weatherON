@@ -139,8 +139,17 @@ struct AmbientSurfaceTextureGenerator {
     let field = random.transformed(by: CGAffineTransform(translationX: origin.x, y: origin.y))
       .cropped(to: rect.insetBy(dx: -4, dy: -4))
       .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0])
-      .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 0.45])
+      .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 0.2])
       .applyingFilter("CIMaskToAlpha")
+      // Matte grain, not a continuous white veil. Clamp sparse microdensity.
+      .applyingFilter("CIColorMatrix", parameters: [
+        "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1.8),
+        "inputBiasVector": CIVector(x: 0, y: 0, z: 0, w: -0.65),
+      ])
+      .applyingFilter("CIColorClamp", parameters: [
+        "inputMinComponents": CIVector(x: 0, y: 0, z: 0, w: 0),
+        "inputMaxComponents": CIVector(x: 1, y: 1, z: 1, w: 1),
+      ])
     let color: (CGFloat, CGFloat, CGFloat) = dark ? (140 / 255, 171 / 255, 202 / 255) : (1, 1, 1)
     let tint = field.applyingFilter("CIColorMatrix", parameters: [
       "inputRVector": CIVector(x: color.0, y: 0, z: 0, w: 0),
@@ -166,6 +175,7 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
   private let densityMask = CAGradientLayer()
   private var requestedSize = CGSize.zero
   private var renderVersion = 0
+  private var textureRenderMs: Double = 0
   private let origin = CGPoint(x: CGFloat.random(in: 0...4096), y: CGFloat.random(in: 0...4096))
 
   override init(frame: CGRect) {
@@ -195,7 +205,16 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
     #else
     let baseOnly = false
     #endif
-    onPowerState?(["lowPower": ProcessInfo.processInfo.isLowPowerModeEnabled, "baseOnly": baseOnly])
+    var evidence: [String: Any] = ["lowPower": ProcessInfo.processInfo.isLowPowerModeEnabled, "baseOnly": baseOnly]
+    #if DEBUG
+    evidence["textureWidth"] = imageView.image?.cgImage?.width ?? 0
+    evidence["textureHeight"] = imageView.image?.cgImage?.height ?? 0
+    evidence["textureViewWidth"] = imageView.bounds.width
+    evidence["textureViewHeight"] = imageView.bounds.height
+    evidence["textureRenderMs"] = textureRenderMs
+    evidence["thermalState"] = ProcessInfo.processInfo.thermalState.rawValue
+    #endif
+    onPowerState?(evidence)
   }
 
   required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -224,11 +243,54 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
     renderVersion += 1
     let version = renderVersion
     DispatchQueue.global(qos: .utility).async { [weak self] in
+      let renderStarted = Date()
       guard let cg = AmbientSurfaceTextureGenerator.image(size: size, dark: dark, origin: sampleOrigin) else { return }
+      let renderMs = Date().timeIntervalSince(renderStarted) * 1000
       DispatchQueue.main.async {
         guard let self, self.renderVersion == version else { return }
         self.imageView.image = UIImage(cgImage: cg)
+        self.textureRenderMs = renderMs
+        self.reportPowerState()
       }
+    }
+  }
+}
+
+// A quiet functional panel beneath destination, schedule and forecast controls.
+// RN owns the foreground and all touches; this material never adds gestures.
+@objc(HomePlanGlassView)
+final class HomePlanGlassView: RCTViewManager {
+  override func view() -> UIView! { HomePlanGlassSurfaceView() }
+  @objc override static func requiresMainQueueSetup() -> Bool { true }
+}
+
+final class HomePlanGlassSurfaceView: UIView {
+  @objc var isDarkTheme = false { didSet { updateMaterial() } }
+  private let material = UIVisualEffectView()
+  private var transparencyObserver: NSObjectProtocol?
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    isUserInteractionEnabled = false
+    accessibilityElementsHidden = true
+    addSubview(material)
+    material.layer.cornerRadius = 24
+    material.clipsToBounds = true
+    transparencyObserver = NotificationCenter.default.addObserver(forName: UIAccessibility.reduceTransparencyStatusDidChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.updateMaterial() }
+    updateMaterial()
+  }
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+  deinit { if let transparencyObserver { NotificationCenter.default.removeObserver(transparencyObserver) } }
+  override func layoutSubviews() { super.layoutSubviews(); material.frame = bounds }
+  private func updateMaterial() {
+    overrideUserInterfaceStyle = isDarkTheme ? .dark : .light
+    if #available(iOS 26.0, *), !UIAccessibility.isReduceTransparencyEnabled {
+      let effect = UIGlassEffect(style: .regular)
+      effect.isInteractive = false
+      material.effect = effect
+      material.backgroundColor = .clear
+    } else {
+      material.effect = nil
+      material.backgroundColor = isDarkTheme ? UIColor(red: 35/255, green: 55/255, blue: 80/255, alpha: 1) : UIColor(red: 233/255, green: 241/255, blue: 248/255, alpha: 1)
     }
   }
 }

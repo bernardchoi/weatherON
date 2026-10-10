@@ -5,6 +5,8 @@ export type WeatherCondition = "clear" | "cloud" | "rain" | "snow" | "storm" | "
 export type WeatherSource = "kma" | "openmeteo" | "weatherkit" | "cache" | "fallback";
 
 export type HourlyWeather = {
+  /** Provider field presence, separate from legacy numeric fallback values. */
+  available?: { temp: boolean; rainProbability: boolean; precipitation: boolean; wind: boolean; condition?: boolean };
   time: string;
   /** 일반 기온 예보. 공급자 feels-like/기상청 체감온도와 구분한다. */
   tempC: number;
@@ -27,6 +29,8 @@ export type DailyWeather = {
 
 export type WeatherSnapshot = {
   id?: string;
+  /** A relabelled fallback does not establish weather at the requested place. */
+  locationUnverified?: boolean;
   locationId: string;
   locationName: string;
   countryCode: CountryCode;
@@ -35,6 +39,9 @@ export type WeatherSnapshot = {
   current: {
     tempC: number;
     feelsLikeC: number;
+    feelsLikeAvailable?: boolean;
+    tempAvailable?: boolean;
+    windAvailable?: boolean;
     condition: WeatherCondition;
     precipitationMm: number;
     rainProbabilityPct: number;

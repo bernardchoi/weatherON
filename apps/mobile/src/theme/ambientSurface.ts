@@ -7,7 +7,7 @@ export function ambientPalette(theme: AppTheme) {
     border: "#324B67", accent: "#FFB52E", accentLabel: "#FFB52E", selected: "#433A27", wordmarkOn: "#E6B98D",
   } : {
     background: "#EFF9FF", surface: "#E4F2FC", text: "#111738", muted: "#626A91",
-    border: "#CDDFEE", accent: "#E53C24", accentLabel: "#B63121", selected: "#FFE5DE", wordmarkOn: "#A96D50",
+    border: "#CDDFEE", accent: "#E53C24", accentLabel: "#B63121", selected: "#FFE5DE", wordmarkOn: "#9E6449",
   };
 }
 
@@ -16,5 +16,5 @@ export function ambientHomeTheme(theme: AppTheme, iosReadingSurface = false): Ap
   const p = ambientPalette(theme);
   return { ...theme, background: p.background, card: p.surface, cardStrong: p.surface,
     cardSoft: p.surface, text: p.text, muted: iosReadingSurface && theme.name === "light" ? "#475477" : p.muted, subtle: iosReadingSurface && theme.name === "light" ? "#475477" : p.muted, border: p.border,
-    clear: p.accent, gold: iosReadingSurface && theme.name === "light" ? "#B12F21" : p.accentLabel, onAccent: theme.name === "dark" ? p.background : "#FFFFFF" };
+    clear: iosReadingSurface && theme.name === "light" ? "#DA3622" : p.accent, gold: iosReadingSurface ? theme.name === "light" ? "#AA2C1F" : "#FFD17A" : p.accentLabel, onAccent: theme.name === "dark" ? p.background : "#FFFFFF" };
 }

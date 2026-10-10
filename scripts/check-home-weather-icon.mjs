@@ -14,7 +14,15 @@ for(const fontScale of [1,1.6,2])for(const language of ['ko','en','ja'])for(cons
  vm.runInNewContext(code,context);
  const nodes=[];const visit=n=>{if(!n||typeof n!=='object')return;nodes.push(n);for(const c of n.children??[])Array.isArray(c)?c.forEach(visit):visit(c)};visit(context.result);
  assert.ok(nodes.some(n=>n.type==='Image'&&n.props.source===icon.source),`${os}/${mode}/${condition}: actual Home hero must render its weather status icon`);
+ if(os==='ios'){
+  const status=nodes.find(n=>n.props?.testID==='home-weather-status-icon');assert.ok(status);
+  assert.equal(status.props.style.width,28);assert.equal(status.props.style.height,28);
+  const statusRow=nodes.find(n=>n.type==='View'&&n.children.includes(status));
+  assert.ok(statusRow.children.some(n=>n.type==='Text'&&n.children.includes(condition)),'small icon accompanies the actual short condition');
+  assert.equal(nodes.some(n=>n.props?.style?.width===126||n.props?.style?.height===126),false,'no reserved large hero icon panel');
+ }
+
  if(os==='ios'&&fontScale>1.3){const main=nodes.find(n=>n.type==='FeedbackPressable');assert.equal(main.props.style.at(-1).flexDirection,'column');}
- if(os==='ios'){const companion=nodes.find(n=>n.type==='Text'&&n.children[0]?.includes('\n'));assert.ok(companion);const original=context.input.companionMessage;const translated=locales[language][original]??original;assert.equal(companion.children[0],translated.replace(/([.!?])\s+|([。！？])(?=\S)/,'$1$2\n'));assert.equal(companion.children[0].replace('\n',language==='ja'?'':' '),translated);assert.equal(companion.props.numberOfLines,undefined);assert.equal(companion.props.adjustsFontSizeToFit,undefined);assert.equal(companion.props.style.at(-1).fontSize,30);assert.equal(companion.props.style.at(-1).lineHeight,39);assert.equal(companion.props.style.at(-1).maxWidth,352);}
+ if(os==='ios'){const companion=nodes.find(n=>n.type==='Text'&&n.children[0]?.includes('\n'));assert.ok(companion);const original=context.input.companionMessage;const translated=locales[language][original]??original;assert.equal(companion.children[0],translated.replace(/([.!?])\s+|([。！？])(?=\S)/,'$1$2\n'));assert.equal(companion.children[0].replace('\n',language==='ja'?'':' '),translated);assert.equal(companion.props.numberOfLines,undefined);assert.equal(companion.props.adjustsFontSizeToFit,undefined);assert.equal(companion.props.style.at(-1).fontSize,26);assert.equal(companion.props.style.at(-1).lineHeight,34);assert.equal(companion.props.style.at(-1).maxWidth,undefined);}
 }
-console.log('PASS: actual HomeDecisionHero renders mapped status icon on iOS/Android, light/dark, seven weather conditions; KO/EN/JA intact translation then sentence break; uncapped 30/39pt companion. Native image pixels require physical capture.');
+console.log('PASS: actual HomeDecisionHero renders mapped status icon on iOS/Android, light/dark, seven weather conditions; KO/EN/JA intact translation then sentence break; uncapped 26/34pt preparation copy. Native image pixels require physical capture.');

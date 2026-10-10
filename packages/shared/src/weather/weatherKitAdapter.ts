@@ -28,7 +28,10 @@ export function normalizeWeatherKitWeather(
     timezone: options.timezone,
     observedAt,
     current: {
+      tempAvailable: Number.isFinite(current.temperature),
+      windAvailable: Number.isFinite(current.windSpeed),
       tempC: current.temperature ?? hourly[0]?.tempC ?? 0,
+      feelsLikeAvailable: Number.isFinite(current.temperatureApparent),
       feelsLikeC: current.temperatureApparent ?? current.temperature ?? hourly[0]?.tempC ?? 0,
       condition: conditionFromWeatherKit(current.conditionCode),
       precipitationMm: currentPrecipitationMm,
@@ -53,6 +56,7 @@ function buildHourly(payload: WeatherKitResponse, timeZone: string, observedAt?:
   return (payload.forecastHourly?.hours ?? [])
     .filter((hour) => isCurrentOrFutureHour(hour.forecastStart, observedHourMs))
     .map((hour) => ({
+      available: { temp: Number.isFinite(hour.temperature), rainProbability: Number.isFinite(hour.precipitationChance), precipitation: Number.isFinite(hour.precipitationAmount), wind: Number.isFinite(hour.windSpeed), condition: typeof hour.conditionCode === "string" && hour.conditionCode.length > 0 },
       time: hour.forecastStart ? toLocalTimeString(hour.forecastStart, timeZone) : "",
       tempC: hour.temperature ?? payload.currentWeather?.temperature ?? 0,
       rainProbabilityPct: ratioToPct(hour.precipitationChance),

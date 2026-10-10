@@ -31,7 +31,7 @@ const jsx=(type,props)=>({type,props});
 const interpolation=config=>{assert.equal(config.inputRange.length,config.outputRange.length);for(let i=1;i<config.inputRange.length;i++)assert.ok(config.inputRange[i]>config.inputRange[i-1],JSON.stringify(config));return {config,interpolate:interpolation};};
 const scalar=v=>typeof v==='number'?v:v.value??0;
 function at(c,x){const ir=c.inputRange,or=c.outputRange;if(x<=ir[0])return or[0];if(x>=ir.at(-1))return or.at(-1);for(let i=1;i<ir.length;i++)if(x<=ir[i])return or[i-1]+(or[i]-or[i-1])*(x-ir[i-1])/(ir[i]-ir[i-1]);}
-class Value {constructor(value=0){this.value=value} setValue(v){this.value=v} stopAnimation(){} interpolate(c){return {...interpolation(c),value:at(c,this.value)}}}
+class Value {constructor(value=0){this.value=value} setValue(v){this.value=v} stopAnimation(){} interpolate(c){return {...interpolation(c),value:at(c,this.value),interpolate:next=>({...interpolation(next),value:at(next,at(c,this.value))})}}}
 const effects=[];
 const {AmbientWeatherLayer}=load(base+'components/AmbientWeatherLayer.tsx',{'react':{useRef:()=>({current:new Value}),useEffect:fn=>effects.push(fn)},'react/jsx-runtime':{jsx,jsxs:jsx},'../localization/react-native':{View:'View',Animated:{View:'AnimatedView',Value,multiply:(...v)=>new Value(v.reduce((a,b)=>a*scalar(b),1)),subtract:(a,b)=>new Value(scalar(a)-scalar(b)),add:(a,b)=>new Value(scalar(a)+scalar(b))}}});
 const all=n=>!n||typeof n!=='object'?[]:Array.isArray(n)?n.flatMap(all):[n,...all(n.props?.children)];
@@ -43,11 +43,28 @@ for(const dark of [true,false])for(const kind of ['clear','cloud','rain','snow',
  if(!dark&&stars.length){const star=stars.find(n=>n.props.style.width===2.4);const alpha=typeof star.props.style.opacity==='number'?star.props.style.opacity:Math.min(...star.props.style.opacity.config.outputRange);const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));const luminance=c=>c.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);const bg=rgb('#C6DDF5');const fg=rgb(star.props.style.backgroundColor).map((v,i)=>v*alpha+bg[i]*(1-alpha));assert.ok((luminance(bg)+.05)/(luminance(fg)+.05)>=3,'light night stars stay visible on core upper background');}
 
 }
+
+// Reproduce the reported geometry: a tiny status icon must not bound sunlight.
+for(const dark of [true,false])for(const phase of ['day','twilight','night','unknown']) {
+ const surface={x:0,y:0,width:440,height:758};
+ const tree=AmbientWeatherLayer({kind:'clear',particles:0,phase:new Value(.3),moving:false,daylight:{phase,season:'autumn'},region:{x:28,y:180,width:28,height:28},skyRegion:surface,dark});
+ assert.equal(tree.props.style.width,440);assert.equal(tree.props.style.height,758);
+ const light=all(tree).find(n=>n.props?.testID==='ambient-day-sunlight');
+ assert.equal(!!light,phase==='day'||phase==='twilight','UI theme never selects day/night');
+ if(light){const s=light.props.style;assert.equal(s.backgroundColor,undefined);assert.equal(s.borderWidth,undefined);assert.ok(s.width>440&&s.height>758&&s.left<0&&s.top<0,'solar field edges extend outside screen');assert.ok(s.experimental_backgroundImage.includes('00 100%'));assert.ok(s.transform.some(v=>v.translateX.config.outputRange.some(x=>x!==0)),'shared native clock changes sunlight placement');}
+}
 const target=ambientStars[0],sky={x:0,y:0,width:440,height:758};const r={x:target.x*440-8,y:target.y*758-8,width:16,height:16};
 const renderSky=y=>AmbientWeatherLayer({kind:'clear',particles:0,phase:new Value(.2),moving:false,daylight:{phase:'night',season:'autumn'},skyRegion:sky,readingAreas:[r],scrollOffset:new Value(y),dark:true});
 const opacity=y=>scalar(all(renderSky(y)).find(n=>n.props?.testID==='ambient-sky-star').props.style.opacity);
 assert.ok(opacity(80)>opacity(0)*10,'native scroll weight follows the actual measured reading area');
 assert.equal(all(renderSky(0)).filter(n=>n.props?.testID==='ambient-sky-star').length,26);assert.equal(all(renderSky(80)).filter(n=>n.props?.testID==='ambient-sky-star').length,26,'scroll never removes sky stars');
+for(const kind of ['rain','snow','storm']) {
+ const particles=ambientWeatherMotion(kind,true,3,2).particles;
+ const render=y=>AmbientWeatherLayer({kind,particles,phase:new Value(.5),moving:false,daylight:{phase:'day',season:'autumn'},skyRegion:sky,readingAreas:[{x:0,y:0,width:440,height:758}],scrollOffset:new Value(y),dark:true});
+ const drops=y=>all(render(y)).filter(n=>n.props?.testID==='ambient-weather-particle');
+ assert.equal(drops(0).length,particles);
+ assert.ok(drops(0).reduce((sum,n)=>sum+scalar(n.props.style.opacity),0)<drops(900).reduce((sum,n)=>sum+scalar(n.props.style.opacity),0)*.1,'particles fade across actual reading regions, tracking native scroll');
+}
 const home=fs.readFileSync(base+'screens/HomeScreen.tsx','utf8');assert.ok(home.includes('Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }]'));assert.equal(home.includes('setAmbientScrollOffset'),false,'no React state update per scroll frame');
 const ast=ts.createSourceFile('HomeScreen.tsx',home,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);let layoutHandler;function findLayout(n){if(ts.isJsxAttribute(n)&&n.name.getText(ast)==='onReadingLayout')layoutHandler=n.initializer.expression;ts.forEachChild(n,findLayout);}findLayout(ast);assert.ok(layoutHandler);let queued;
 const layoutJS=ts.transpileModule('const handler='+layoutHandler.getText(ast)+';',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;

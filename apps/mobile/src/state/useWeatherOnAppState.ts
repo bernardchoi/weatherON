@@ -2042,6 +2042,7 @@ export function useWeatherOnAppState() {
     selectedDestinationSchedulePreference,
     selectedDestinationTravelEstimate,
     selectedDestinationDepartureAt,
+    selectedDestinationTargetAt: destinationTargetTimeIso ?? undefined,
     selectedDestinationPlace,
     destinationSelectionReady,
     placeSearchQuery,

@@ -27,11 +27,12 @@ import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 
 type BottomNavProps = {
+  transparentBackground?: boolean;
   activeRoute: P0RouteId;
   onNavigate: (route: P0RouteId) => void;
 };
 
-export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
+export function BottomNav({ activeRoute, onNavigate, transparentBackground = false }: BottomNavProps) {
   const theme = useAppTheme();
   const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
@@ -159,7 +160,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   };
 
   return (
-    <View style={[styles.dockWrap, { backgroundColor: activeTabRoute === "H1" ? ambientPalette(theme).background : theme.background }]}>
+    <View style={[styles.dockWrap, { backgroundColor: isIos && transparentBackground ? "transparent" : activeTabRoute === "H1" ? ambientPalette(theme).background : theme.background }]}>
       <View
         style={[
           styles.dockFrame,

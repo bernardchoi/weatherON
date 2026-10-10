@@ -537,6 +537,7 @@ function relabelWeatherSnapshot(
 ): WeatherSnapshot {
   return {
     ...snapshot,
+    locationUnverified: snapshot.locationUnverified || snapshot.locationId !== place.id,
     locationId: place.id,
     locationName: place.name,
     countryCode: place.countryCode,

@@ -15,8 +15,8 @@ export function AmbientTouchLayer({ point, strength, phase, dark, night, reading
   return <Animated.View testID="ambient-touch-layer" style={{ position: "absolute", left: -74, top: -74, width: 148, height: 148, opacity: readingWeight, transform: point.getTranslateTransform() }}>
     <Animated.View style={{ position: "absolute", inset: 0,
       experimental_backgroundImage: dark
-        ? "radial-gradient(ellipse at center, #8CABCA 0%, #8CABCA66 34%, #8CABCA00 70%)"
-        : "radial-gradient(ellipse at center, #FFFFFF 0%, #FFFFFF66 34%, #FFFFFF00 70%)",
+        ? "radial-gradient(ellipse 58% 46% at center, #8CABCA 0%, #8CABCA66 34%, #8CABCA00 70%)"
+        : "radial-gradient(ellipse 58% 46% at center, #FFFFFF 0%, #FFFFFF66 34%, #FFFFFF00 70%)",
       opacity: dark ? .10 : .28,
       transform: [{ translateX: phase.interpolate({ inputRange: [0, .5, 1], outputRange: [-5, 6, -5] }) }],
     }} />

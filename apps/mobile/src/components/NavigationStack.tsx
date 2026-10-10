@@ -42,7 +42,7 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
     <ScreenStack style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
         key={id} screenId={id} activityState={2}
-        style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: theme.background }}
+        style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: id === "H1" ? "transparent" : theme.background }}
         headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
         stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
         gestureEnabled={index > 0}

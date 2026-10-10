@@ -9,7 +9,7 @@ const resolve=context.exports.resolveHomeViewportSpacing;
 for(const available of [450,600,757,790,850]){
   const values=resolve(available);
   assert.ok(Object.values(values).every(v=>Number.isFinite(v)&&v>=6));
-  assert.equal(values.planMargin,available<800?8:18);
+  assert.equal(values.planMargin,available<800?18:24);
   assert.ok(!('fontSize' in values)&&!('height' in values));
 }
 const source=fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');

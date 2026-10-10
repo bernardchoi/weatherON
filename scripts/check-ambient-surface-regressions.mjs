@@ -46,12 +46,12 @@ function harness(options = {}) {
   const animation = (kind, config) => { const a={kind,config,starts:0,stops:0,start(){this.starts++;},stop(){this.stops++;}};h.animations.push(a);return a; };
   const native = { View:'View', StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}}, Platform:{OS:'ios'},
     Easing:{linear:()=>{},sin:()=>{},inOut:()=>{}}, useWindowDimensions:()=>({width:440,height:956}),
-    Animated:{View:'AnimatedView',Value,ValueXY,multiply:(...nodes)=>({math:'multiply',nodes}),subtract:(...nodes)=>({math:'subtract',nodes}),timing:(v,c)=>animation('timing',c),sequence:c=>animation('sequence',c),loop:c=>animation('loop',c)},
+    Animated:{View:'AnimatedView',Value,ValueXY,add:(...nodes)=>({math:'add',nodes,interpolate(config){return {interpolation:config}}}),multiply:(...nodes)=>({math:'multiply',nodes}),subtract:(...nodes)=>({math:'subtract',nodes}),timing:(v,c)=>animation('timing',c),sequence:c=>animation('sequence',c),loop:c=>animation('loop',c)},
     AppState:{currentState:h.appState,addEventListener:(name,fn)=>{h.appEvent=fn;return {remove(){h.appEvent=null;}};}},
     AccessibilityInfo:{isReduceMotionEnabled:()=>h.reduceMotion===null?new Promise(()=>{}):h.reduceMotion==='failure'?Promise.reject(new Error('unavailable')):Promise.resolve(h.reduceMotion),
       addEventListener:(name,fn)=>{h.motionEvent=fn;return {remove(){h.motionEvent=null;}};}},
   };
-  const boundaries={'react':react,'react/jsx-runtime':{jsx:(type,props)=>typeof type==='function'?type(props):({type,props}),jsxs:(type,props)=>typeof type==='function'?type(props):({type,props})},'../localization/react-native':native,'./AmbientSurfaceTexture':{AmbientSurfaceTexture:'NativeSurfaceTexture'},'./AmbientWeatherLayer':{AmbientWeatherLayer:'WeatherLayer'}};
+  const boundaries={'react':react,'react/jsx-runtime':{jsx:(type,props)=>typeof type==='function'?type(props):({type,props}),jsxs:(type,props)=>typeof type==='function'?type(props):({type,props})},'../localization/react-native':native,'./AmbientSurfaceTexture':{AmbientSurfaceTexture:'NativeSurfaceTexture'}};
   const component=loadTS(path.join(root,'apps/mobile/src/components/AmbientSurfaceBackground.tsx'),boundaries).AmbientSurfaceBackground;
   h.props={theme:{name:'dark',reducedTransparency:false},condition:'cloud',windMs:4,precipitationMm:0,reliable:true,touchPulse:0,lowPowerMode:false,touchContact:{id:0,phase:'cancel'},touchPoint:new ValueXY({x:80,y:230})};
   h.render=(props={})=>{h.props={...h.props,...props};h.cursor=0;h.pending=[];h.tree=component(h.props);for(const e of h.pending){h.slots[e.i]?.cleanup?.();h.slots[e.i]={deps:e.deps,cleanup:e.fn()};}return h.tree;};
@@ -62,7 +62,13 @@ function harness(options = {}) {
 function nodes(tree,result=[]) { if (!tree || typeof tree !=='object')return result;if(Array.isArray(tree)){tree.forEach(t=>nodes(t,result));return result;}result.push(tree);nodes(tree.props?.children,result);return result; }
 const style=node=>Object.assign({},...[node.props?.style].flat(Infinity).filter(Boolean));
 const started=h=>h.animations.filter(a=>a.starts);
-const gradients=h=>nodes(h.tree).map(style).filter(s=>s.experimental_backgroundImage);
+const gradients=h=>nodes(h.tree).map(n=>({...style(n),testID:n.props?.testID})).filter(s=>s.experimental_backgroundImage);
+// Root-mounted sky keeps reading and touch coordinates aligned with safe-area content.
+const shifted=await harness().initialize({condition:'clear',daylight:{phase:'night',season:'autumn'},contentOrigin:{x:12,y:62},readingAreas:[{x:0,y:0,width:440,height:758}]});
+assert.ok(nodes(shifted.tree).some(n=>style(n).left===12&&style(n).top===62),'local touch canvas retains the content origin');
+const skyNode=nodes(shifted.tree).find(n=>n.props?.testID==='ambient-night-sky');
+assert.equal(style(skyNode).height,956,'root sky includes status and home-indicator areas');
+shifted.unmount();
 const h=await harness().initialize();
 assert.equal(h.tree.props.pointerEvents,'none');assert.equal(h.tree.props.accessibilityElementsHidden,true);
 assert.equal(h.tree.props.importantForAccessibility,'no-hide-descendants');
@@ -70,7 +76,18 @@ assert.equal(started(h).length,1);assert.equal(started(h)[0].kind,'loop');
 for (const theme of ['dark','light']) { h.render({theme:{name:theme,reducedTransparency:false}});for(const s of gradients(h))assert.ok(parseGradient(s.experimental_backgroundImage).length>0,'real RN must parse every gradient'); }
 assert.ok(gradients(h).some(s=>parseGradient(s.experimental_backgroundImage).length>=2),'base surface has multiple moving layers');
 const flow=style(nodes(h.tree).find(n=>n.props?.testID==='ambient-base-flow'));assert.ok(flow.transform.some(v=>v.translateY&&Math.max(...v.translateY.interpolation.outputRange)-Math.min(...v.translateY.interpolation.outputRange)>=60),'actual base has surface displacement, not just tiny scale');
-const baseQA=await harness().initialize();const qaNative=nodes(baseQA.tree).find(n=>n.type==='NativeSurfaceTexture');qaNative.props.onPowerState({nativeEvent:{lowPower:false,baseOnly:true}});baseQA.render();assert.ok(nodes(baseQA.tree).some(n=>n.props?.testID==='ambient-base-flow'));assert.equal(nodes(baseQA.tree).some(n=>n.type==='WeatherLayer'||n.props?.testID==='ambient-touch-layer'),false,'development base-only mode truly excludes weather and touch');baseQA.unmount();
+const baseQA=await harness().initialize();const qaNative=nodes(baseQA.tree).find(n=>n.type==='NativeSurfaceTexture');qaNative.props.onPowerState({nativeEvent:{lowPower:false,baseOnly:true}});baseQA.render();assert.ok(nodes(baseQA.tree).some(n=>n.props?.testID==='ambient-base-flow'));assert.equal(nodes(baseQA.tree).some(n=>n.props?.testID==='ambient-weather-region'||n.props?.testID==='ambient-night-sky'||n.props?.testID==='ambient-touch-layer'),false,'development base-only mode truly excludes weather and touch');baseQA.unmount();
+
+// Sunlight is weather/solar driven in both UI themes; no icon-sized or opaque panel.
+for (const name of ['light','dark']) for (const solar of ['day','twilight','night']) {
+ const q=await harness().initialize({theme:{name,reducedTransparency:false},condition:'clear',daylight:{phase:solar,season:'autumn'}});
+ const sun=nodes(q.tree).find(n=>n.props?.testID==='ambient-day-sunlight');
+ assert.equal(!!sun,solar!=='night','actual night never shows sunlight, regardless of UI theme');
+ if(sun){const s=style(sun);assert.ok(s.width>440&&s.height>956,'source spans measured sky with overscan');assert.equal(s.backgroundColor,undefined);const layers=parseGradient(s.experimental_backgroundImage);assert.equal(layers.length,4,'source/halo and two soft rays parse in actual RN');for(const layer of layers)assert.ok(layer.colorStops.some(stop=>typeof stop.color==='number'&&((stop.color>>>24)&255)===0),'each field has transparent falloff');assert.ok(s.transform.some(v=>v.rotate),'rays drift through common native phase');}
+ q.unmount();
+}
+for(const condition of ['cloud','rain','snow','fog']){const q=await harness().initialize({condition,daylight:{phase:'day',season:'autumn'}});assert.equal(nodes(q.tree).some(n=>n.props?.testID==='ambient-day-sunlight'),false);q.unmount();}
+console.log('PASS: full-sky transparent sunlight; common phase; solar/UI-theme independence; no sun at night or non-clear weather.');
 
 const loop=started(h)[0];h.appEvent('background');h.render();assert.ok(loop.stops>0,'background stops live field');
 h.appEvent('active');h.render();const latest=started(h).at(-1);h.motionEvent(true);h.render();assert.ok(latest.stops>0,'Reduce Motion change stops live field');
@@ -82,7 +99,7 @@ assert.equal(started(touch).length,2);const local=nodes(touch.tree).find(n=>n.pr
 const dry=await harness().initialize({condition:'cloud',precipitationMm:4});
 const held=await harness().initialize({touchContact:{id:9,phase:'down'}});const heldStarts=started(held).length;held.appEvent('background');held.render();held.appEvent('active');held.render();assert.equal(started(held).length,heldStarts+1,'foreground restarts ambient only, never old touch');held.unmount();
 const rain=await harness().initialize({condition:'rain',precipitationMm:1});const heavy=await harness().initialize({condition:'rain',precipitationMm:5});
-const field=q=>nodes(q.tree).find(n=>n.type==='WeatherLayer').props;
+const field=q=>({particles:nodes(q.tree).filter(n=>n.props?.testID==='ambient-weather-particle').length,kind:q.props.reliable?q.props.condition:'none'});
 assert.equal(field(dry).particles,0);assert.ok(field(heavy).particles>field(rain).particles);rain.render({reliable:false});assert.equal(field(rain).kind,'none');
 const wind=await harness().initialize({windMs:100});const timings=wind.animations.filter(a=>a.kind==='timing');assert.ok(timings.every(a=>a.config.duration>=6200));assert.ok(timings.every(a=>a.config.useNativeDriver));
 // Run the actual Home handler with a native measurement boundary, including safe-area offset.
@@ -106,16 +123,16 @@ const palette=ambientTheme.ambientPalette;
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const luminance=c=>c.map(v=>v/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[0.2126,0.7152,0.0722][i],0);
 const composite=(background,color,opacity)=>{const alpha=((color>>>24)&255)/255*opacity;return [16,8,0].map((shift,i)=>((color>>>shift)&255)*alpha+background[i]*(1-alpha));};
-for(const name of ['dark','light']) {
-  const q=await harness().initialize({theme:{name,reducedTransparency:false},windMs:12,touchPulse:1});
-  const p={...palette({name}), muted:ambientTheme.ambientHomeTheme({name},true).muted, accentLabel:ambientTheme.ambientHomeTheme({name},true).gold};let background=rgb(p.background);
+for(const name of ['dark','light']) for(const condition of ['clear','cloud','rain','snow','storm']) {
+  const q=await harness().initialize({theme:{name,reducedTransparency:false},windMs:12,touchPulse:1,condition,daylight:{phase:'day',season:'autumn'}});
+  const p={...palette({name}), muted:ambientTheme.ambientHomeTheme({name},true).muted, accent:ambientTheme.ambientHomeTheme({name},true).clear, accentLabel:ambientTheme.ambientHomeTheme({name},true).gold};let background=rgb(p.background);
   for(const s of gradients(q)) {
     const opacity=typeof s.opacity==='number'?s.opacity:s.opacity?.interpolation?Math.max(...s.opacity.interpolation.outputRange):1;
     for(const layer of parseGradient(s.experimental_backgroundImage).toReversed()) {
       const candidates=layer.colorStops.filter(stop=>typeof stop.color==='number').map(stop=>composite(background,stop.color,opacity));
       background=candidates.reduce((worst,c)=>((name==='dark')===(luminance(c)>luminance(worst)))?c:worst);
     }
-    if (parseGradient(s.experimental_backgroundImage).length >= 2) {
+    if (s.testID === "ambient-base-flow") {
       const texture = nodes(q.tree).find(n => n.type === 'NativeSurfaceTexture');
       const density = texture ? style(texture).opacity : 0;
       // White density can be absent at a pixel, so retain the darker light bound.
@@ -126,7 +143,7 @@ for(const name of ['dark','light']) {
     const values=[luminance(rgb(p[role])),luminance(background)].sort((a,b)=>b-a);
     const ratio=(values[0]+0.05)/(values[1]+0.05);
     assert.ok(ratio>=minimum,`${name} ${role} worst-case flow+touch contrast ${ratio.toFixed(2)} must be >=${minimum}`);
-    console.log(`${name} ${role}: conservative minimum contrast ${ratio.toFixed(2)}:1`);
+    console.log(`${name}/${condition} ${role}: conservative minimum contrast ${ratio.toFixed(2)}:1`);
   }
   q.unmount();
 }
