@@ -145,13 +145,40 @@ restored=await storageBoundary.readWeatherSnapshotFromRow(database,sqlite.prepar
 sqlite.close();console.log('PASS: actual SQLite additive/idempotent presence migration, existing data preservation, observed/hourly field-presence round trip and legacy/malformed cache unknowns.');
 // Latest user direction: one friendly action based on destination conditions, readable evidence below.
 const preparation=api.buildHomePreparation;
-const arrival=preparation(dest,target,true,now);
+const rainKnown={...dest,hourly:dest.hourly.map(h=>({...h,condition:'rain',available:{...h.available,condition:true}}))};
+const arrival=preparation(rainKnown,target,true,now);
 assert.match(arrival.copy,/우산/);assert.equal(arrival.basis,'목적지 도착 무렵');assert.equal(arrival.evidence,'강수확률 70%');assert.equal(arrival.rainEvidence,true);
 const futureCool={...dest,current:{...dest.current,feelsLikeC:33},hourly:[hour('2026-10-10T10:00',17)]};
 const cool=preparation(futureCool,target,true,now);assert.match(cool.copy,/한 겹/);assert.equal(cool.evidence,'기온 17°C');assert.doesNotMatch(cool.evidence,/체감/);assert.doesNotMatch(cool.copy,/물 한 병/);
-const windyMissing={...dest,hourly:[{...hour('2026-10-10T10:00',17,70,1,12),available:{temp:true,rainProbability:true,precipitation:true,wind:false}}]};
+const windyMissing={...dest,hourly:[{...hour('2026-10-10T10:00',17,70,1,12),condition:'rain',available:{temp:true,rainProbability:true,precipitation:true,wind:false,condition:true}}]};
 assert.match(preparation(windyMissing,target,true,now).copy,/우산/);assert.doesNotMatch(preparation(windyMissing,target,true,now).copy,/바람|방수/);assert.match(preparation(windyMissing,target,true,now).status,/일부/);
-const windyReal={...windyMissing,hourly:[{...windyMissing.hourly[0],available:{temp:true,rainProbability:true,precipitation:true,wind:true}}]};assert.match(preparation(windyReal,target,true,now).copy,/방수/);
+const windyReal={...windyMissing,hourly:[{...windyMissing.hourly[0],available:{temp:true,rainProbability:true,precipitation:true,wind:true,condition:true}}]};assert.match(preparation(windyReal,target,true,now).copy,/방수/);
+// Realistic snow carries precipitation probability/amount; neither means liquid rain.
+for (const wind of [2, 9]) for (const probability of [0, 50, 80]) for (const amount of [0, 1]) {
+ const snowy={...dest,hourly:[{...hour('2026-10-10T10:00',-2,probability,amount,wind),condition:'snow',available:{temp:true,rainProbability:true,precipitation:true,wind:true,condition:true}}]};
+ const result=preparation(snowy,target,true,now);
+ assert.match(result.copy,/눈/,`snow ${probability}%/${amount}mm/${wind}mps remains snow`);
+ assert.match(result.copy,/미끄럼 적은 신발/);assert.doesNotMatch(result.copy,/비 소식|비와|우산/);
+ assert.equal(/바람/.test(result.copy),wind>=8);
+ assert.equal(result.basis,'목적지 도착 무렵');
+ const currentSnow={...snowy,current:{...snowy.current,condition:'snow',windMs:wind,windAvailable:true}};
+ const currentResult=preparation(currentSnow,'2026-10-11T10:30:00+09:00',true,now);
+ assert.match(currentResult.copy,/눈/);assert.match(currentResult.copy,/신발/);assert.doesNotMatch(currentResult.copy,/비 소식|비와|우산/);
+ assert.equal(currentResult.basis,'목적지 현재 날씨');assert.match(currentResult.status,/예보 없음/);
+}
+for(const condition of ['snow','rain','clear']) for(const wind of [2,9]) for(const [probability,amount] of [[80,0],[0,1],[80,1]]) {
+ const unknown={...dest,hourly:[{...hour('2026-10-10T10:00',-2,probability,amount,wind),condition,available:{temp:true,rainProbability:true,precipitation:true,wind:true,condition:false}}]};
+ const p=preparation(unknown,target,true,now);assert.match(p.copy,/강수/);assert.doesNotMatch(p.copy,/비 소식|비와|눈|우산/);assert.equal(p.rainEvidence,true);
+ assert.equal(/바람/.test(p.copy),wind>=8);assert.equal(p.basis,'목적지 도착 무렵');
+}
+const snowNoWind={...dest,hourly:[{...hour('2026-10-10T10:00',-2,80,1,9),condition:'snow',available:{temp:true,rainProbability:true,precipitation:true,wind:false,condition:true}}]};
+assert.match(preparation(snowNoWind,target,true,now).copy,/눈.*\n미끄럼 적은 신발/);
+assert.doesNotMatch(preparation(snowNoWind,target,true,now).copy,/바람/);
+const currentRain={...dest,current:{...dest.current,condition:'rain',windMs:2,windAvailable:true}};
+assert.match(preparation(currentRain,undefined,true,now).copy,/지금.*비.*\n우산/);
+const currentStorm={...currentRain,current:{...currentRain.current,condition:'storm',windMs:9}};
+assert.match(preparation(currentStorm,undefined,true,now).copy,/비와 바람.*\n방수/);
+console.log('PASS: realistic snow probability/amount/wind matrix preserves snow footwear; unknown phase uses generic precipitation; current and forecast bases stay distinct.');
 const snowMissing={...dest,hourly:[{...hour('2026-10-10T10:00',17),condition:'snow'}]};assert.doesNotMatch(preparation(snowMissing,target,true,now).copy,/눈|신발/);
 const snowReal={...snowMissing,hourly:[{...snowMissing.hourly[0],available:{...snowMissing.hourly[0].available,condition:true}}]};assert.match(preparation(snowReal,target,true,now).copy,/신발/);
 for(const fixture of [{...dest,stale:true},{...dest,locationUnverified:true},undefined]){

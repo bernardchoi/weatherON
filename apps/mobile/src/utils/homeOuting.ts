@@ -139,22 +139,26 @@ export function buildHomePreparation(weather: WeatherSnapshot | undefined, targe
   const rainProbability = hour && available("rainProbability") && Number.isFinite(hour.rainProbabilityPct) ? hour.rainProbabilityPct : undefined;
   const precipitation = hour && available("precipitation") && Number.isFinite(hour.precipitationMm) ? hour.precipitationMm : undefined;
   const condition = hour ? available("condition") ? hour.condition : undefined : current.condition;
-  const rainy = condition === "rain" || condition === "storm" || (rainProbability ?? 0) >= 50 || (precipitation ?? 0) > 0;
+  // Probability and amount describe precipitation, not its phase. Known snow wins.
+  const snowy = condition === "snow";
+  const rainy = condition === "rain" || condition === "storm";
+  const precipitationPossible = snowy || rainy || (rainProbability ?? 0) >= 50 || (precipitation ?? 0) > 0;
   const status = isForecast ? ["temp", "wind", "rainProbability", "precipitation"].some(field => !available(field as "temp")) ? "일부 예보 미확인" : ""
     : targetAt ? "선택 시각 예보 없음 · 현재 기준" : "도착 시각 미확인 · 현재 기준";
   const basis = isForecast ? "목적지 도착 무렵" : "목적지 현재 날씨";
-  const evidence = rainy ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : "비 소식 있어요"
+  const evidence = precipitationPossible ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : snowy ? "눈 소식 있어요" : rainy ? "비 소식 있어요" : "강수 가능성이 있어요"
     : wind !== undefined && wind >= 7 ? `바람 ${wind.toFixed(1)}m/s`
     : temp !== undefined ? `${!isForecast && hasFeelsLike(weather!) ? "현재 체감" : "기온"} ${temperature(temp)}` : "";
   let copy = "편한 차림으로,\n기분 좋게 나가요.";
-  if (rainy && wind !== undefined && wind >= 8) copy = "비와 바람이 겹쳐요.\n방수 겉옷을 챙겨요.";
+  if (snowy) copy = wind !== undefined && wind >= 8 ? "눈과 바람이 겹쳐요.\n미끄럼 적은 신발로 나가요." : isForecast ? "눈 소식이 있어요.\n미끄럼 적은 신발로 나가요." : "지금 가는 곳에 눈이 와요.\n미끄럼 적은 신발로 나가요.";
+  else if (rainy && wind !== undefined && wind >= 8) copy = "비와 바람이 겹쳐요.\n방수 겉옷을 챙겨요.";
   else if (rainy) copy = isForecast ? "비 소식이 있어요.\n우산 하나 챙겨 나가요." : "지금 가는 곳에 비가 와요.\n우산을 챙겨봐요.";
-  else if (condition === "snow") copy = "눈 소식이 있어요.\n미끄럼 적은 신발로 나가요.";
+  else if (precipitationPossible) copy = wind !== undefined && wind >= 8 ? "강수와 강한 바람에 대비해요.\n젖지 않을 겉옷을 챙겨요." : "강수 가능성이 있어요.\n젖지 않을 겉옷을 챙겨요.";
   else if (wind !== undefined && wind >= 7) copy = "바람을 막아줄\n한 겹만 더 챙겨요.";
   else if (temp !== undefined && temp <= 5) copy = "포근한 겉옷으로\n따뜻하게 나가요.";
   else if (temp !== undefined && temp <= 18) copy = "가볍게 걸칠 한 겹,\n같이 챙겨 나가요.";
   else if (temp !== undefined && temp >= 30) copy = "물 한 병 챙기고,\n여유롭게 나가요.";
   else if (temp === undefined) return { ...neutral, basis, status: status || "준비 판단에 필요한 예보 없음", evidence: "" };
   // Unknown rain/wind never become an optimistic 'no rain/no wind' statement.
-  return { copy, basis, status, evidence, rainEvidence: rainy };
+  return { copy, basis, status, evidence, rainEvidence: precipitationPossible };
 }

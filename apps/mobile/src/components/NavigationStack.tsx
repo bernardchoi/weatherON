@@ -5,6 +5,7 @@ import type { AppRouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { ScreenTransition } from "./ScreenTransition";
+import { HomeViewportContext } from "./HomeViewportContext";
 
 export function reconcileScreenStack(stack: AppRouteId[], route: AppRouteId, backRoute?: AppRouteId): AppRouteId[] {
   if (stack.at(-1) === route) return stack;
@@ -31,6 +32,7 @@ export function NavigationStack(props: Props) {
 }
 
 function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
+  const [viewportHeight, setViewportHeight] = useState(0);
   const theme = useAppTheme();
   const reducedMotion = useReducedMotion();
   const [stack, setStack] = useState<AppRouteId[]>(() => backRoute && backRoute !== route ? [backRoute, route] : [route]);
@@ -38,7 +40,8 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
   if (next !== stack) setStack(next);
   const routeRef = useRef(route);
   routeRef.current = route;
-  return <View style={styles.fill}>
+  return <View style={styles.fill} onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}>
+    <HomeViewportContext.Provider value={viewportHeight}>
     <ScreenStack style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
         key={id} screenId={id} activityState={2}
@@ -50,6 +53,7 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
         {renderScreen(id)}
       </ScreenStackItem>)}
     </ScreenStack>
+    </HomeViewportContext.Provider>
   </View>;
 }
 

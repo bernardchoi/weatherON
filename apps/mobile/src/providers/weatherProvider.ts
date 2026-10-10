@@ -95,7 +95,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
       const locations = getUniqueDestinationLocations(currentLocation, destinationLocations);
       const snapshots = new Map(locations.map((location) => [
-        location.locationId, markSnapshotStale(cache.get(location.locationId), location),
+        location.locationId, getPendingSnapshot(cache.get(location.locationId), location, ios && mode === "ready"),
       ]));
       const pending = new Set(locations.map((location) => location.locationId));
       const failed = new Set<string>();
@@ -122,6 +122,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
       const supplied = ios && options.currentSnapshot?.source !== "weatherkit" ? undefined : options.currentSnapshot;
       await Promise.all([
         ...locations.map(async (location) => {
+          const cachedAtStart = cache.get(location.locationId);
           try {
             const snapshot = location.locationId === currentLocation.locationId
               ? await resolveCurrentWeatherSnapshot(client, location, supplied, stale, createOptions, options.language)
@@ -129,7 +130,12 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
             snapshots.set(location.locationId, remember(snapshot));
           } catch {
             failed.add(location.locationId);
-            snapshots.set(location.locationId, markSnapshotStale(cache.get(location.locationId), location));
+            const cachedNow = cache.get(location.locationId);
+            const failedSnapshot = markSnapshotStale(cachedNow, location);
+            snapshots.set(location.locationId, failedSnapshot);
+            // A later retry must not briefly revive a snapshot whose refresh
+            // failed. Do not invalidate a newer concurrent successful result.
+            if (ios && cachedNow && cachedNow === cachedAtStart) cache.set(location.locationId, failedSnapshot);
           }
           pending.delete(location.locationId);
           publish();
@@ -342,6 +348,21 @@ function getUniqueDestinationLocations(
     seen.add(location.locationId);
     return true;
   });
+}
+
+// A pending request is not evidence that a recently observed snapshot is stale.
+// Keep only the same verified iOS location while refreshing; failures still use
+// markSnapshotStale below, and consumers validate their selected forecast time.
+function getPendingSnapshot(snapshot: WeatherSnapshot | undefined, location: WeatherLocationPreset, preserveFresh: boolean): WeatherSnapshot {
+  if (preserveFresh && snapshot && (snapshot.locationId !== location.locationId
+    || snapshot.countryCode !== location.countryCode || snapshot.timezone !== location.timezone)) {
+    return buildFallbackSnapshotForLocation(location);
+  }
+  const age = snapshot ? Date.now() - Date.parse(snapshot.observedAt) : NaN;
+  if (preserveFresh && snapshot?.source === "weatherkit" && !snapshot.stale && !snapshot.locationUnverified
+    && snapshot.locationId === location.locationId && snapshot.countryCode === location.countryCode
+    && snapshot.timezone === location.timezone && Number.isFinite(age) && age >= 0 && age < 15 * 60_000) return snapshot;
+  return markSnapshotStale(snapshot, location);
 }
 
 function markSnapshotStale(snapshot: WeatherSnapshot | undefined, location?: WeatherLocationPreset): WeatherSnapshot {

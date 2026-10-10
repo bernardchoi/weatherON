@@ -1,3 +1,4 @@
+import { buildTodayOutfit } from "../utils/todayOutfit";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createNotificationSync } from "../providers/notificationSync";
 import { AppState, Platform } from "../localization/react-native";
@@ -628,7 +629,7 @@ export function useWeatherOnAppState() {
   const state = useMemo(
     () => {
       const hasSavedDestination = savedDestinations.length > 0;
-      return buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
+      const base = buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
         hasDestination: hasSavedDestination,
         destinationCareEnabled: hasSavedDestination ? destinationCareEnabled : false,
         wardrobe: recommendationWardrobe,
@@ -659,6 +660,7 @@ export function useWeatherOnAppState() {
         savedDestinations,
         notificationNow: nowMinuteTick,
       });
+      return Platform.OS === "ios" ? { ...base, ...buildTodayOutfit(base.weather, userPreferenceProfile, recommendationWardrobe, nowMinuteTick) } : base;
     },
     [
       destinationCareEnabled,

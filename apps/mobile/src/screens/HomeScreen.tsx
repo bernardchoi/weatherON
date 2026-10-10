@@ -3,7 +3,8 @@ import { File, Paths } from "expo-file-system";
 import { createAmbientTouchController, type AmbientContact, type AmbientTouchSample } from "../utils/ambientTouch";
 import type { AmbientReadRegion } from "../utils/ambientSky";
 import { resolveHomeViewportSpacing } from "../theme/homeViewport";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { HomeViewportContext } from "../components/HomeViewportContext";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Animated, AppState, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
 import { BottomSheet } from "../components/BottomSheet";
@@ -95,7 +96,7 @@ export function HomeScreen({
   const surfaceRef = useRef<View>(null);
   const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
-  const [viewportHeight, setViewportHeight] = useState(0);
+  const viewportHeight = useContext(HomeViewportContext);
   const [contentHeight, setContentHeight] = useState(0);
   const { fontScale } = useWindowDimensions();
   const viewportSpacing = resolveHomeViewportSpacing(viewportHeight);
@@ -237,7 +238,6 @@ export function HomeScreen({
         onScrollEndDrag={event => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); if (!event.nativeEvent.velocity?.y) setAmbientScrolling(false); } }}
         onMomentumScrollEnd={() => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); setAmbientScrolling(false); } }}
         onMomentumScrollBegin={() => { touchController.cancel(); if (Platform.OS === "ios") setAmbientScrolling(true); }}
-        onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}
         onContentSizeChange={(_, height) => setContentHeight(height)}
         style={styles.homeScroll}
         contentContainerStyle={[
@@ -1088,9 +1088,13 @@ function BellGlyph({ color }: { color: string }) {
 function HomeValueTransition({ value, children }: { value: string; children: React.ReactNode }) {
   const reducedMotion = useReducedMotion();
   const progress = useRef(new Animated.Value(1)).current;
+  const previousValue = useRef(value);
   useEffect(() => {
+    const changed = previousValue.current !== value;
+    previousValue.current = value;
     progress.stopAnimation();
-    if (reducedMotion !== false) { progress.setValue(1); return; }
+    // A remount or an async accessibility result is not a content change.
+    if ((Platform.OS === "ios" && !changed) || reducedMotion !== false) { progress.setValue(1); return; }
     progress.setValue(0);
     const animation = Animated.timing(progress, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true });
     animation.start();

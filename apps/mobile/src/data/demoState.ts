@@ -1,3 +1,4 @@
+import type { TodayOutfitContext } from "../utils/todayOutfit";
 import {
   buildDestinationCare,
   defaultNotificationRules,
@@ -150,6 +151,7 @@ export function buildDemoStateFromWeatherResult(
     hasDestination,
     weather: activeWeather,
     outfit,
+    outfitContext: undefined as TodayOutfitContext | undefined,
     umbrella,
     notifications: [...notifications, ...destinationNotifications],
     officialSpecialAlert: weatherProviderResult.officialSpecialAlert,

@@ -68,6 +68,7 @@ export function OutfitDetailScreen({
       contentGap={layout.destinationContentGap}
       contentPaddingBottom={0}
     >
+      {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
       <Section title="오늘 입기 좋은 세트" caption={state.outfit.decisionText} accent="clear">
         <View style={styles.outfitRail}>
           {items.map(([slot, item]) => {
@@ -410,8 +411,8 @@ function buildWeatherReasons(state: P0ScreenProps["state"], theme: ReturnType<ty
     },
     {
       label: "비 가능성",
-      value: rainProbability > 0 ? `최대 ${Math.round(rainProbability)}%` : "비 없음",
-      detail: rainProbability >= 50 ? "우산 챙겨요" : rainProbability > 0 ? "가벼운 비예요" : "비 걱정 없어요",
+      value: state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.complete) ? "예보 확인 필요" : rainProbability > 0 ? `최대 ${Math.round(rainProbability)}%` : "비 없음",
+      detail: state.outfitContext ? state.outfitContext.status : rainProbability >= 50 ? "우산 챙겨요" : rainProbability > 0 ? "가벼운 비예요" : "비 걱정 없어요",
       icon: uiIconAssets.rain,
       color: rainProbability >= 50 ? theme.sky : theme.clear,
     },
@@ -426,10 +427,11 @@ function buildWeatherReasons(state: P0ScreenProps["state"], theme: ReturnType<ty
 }
 
 function getRainSignalPct(state: P0ScreenProps["state"]) {
+  const weather = state.outfitContext?.weather ?? state.weather;
   return Math.round(
     Math.max(
-      state.weather.current.rainProbabilityPct,
-      ...state.weather.hourly.map((item) => item.rainProbabilityPct),
+      weather.current.rainProbabilityPct,
+      ...weather.hourly.map((item) => item.rainProbabilityPct),
     ),
   );
 }

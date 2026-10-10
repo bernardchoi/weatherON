@@ -27,9 +27,14 @@ export function OutfitScreen({
     ownedItemCount > 0
       ? `내 옷장 ${ownedItemCount}개 반영 · 오늘 추천 중 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
       : "기본 옷장으로 먼저 골랐어요 · 내 옷을 더하면 추천이 더 나다워져요";
+  const weatherLine = !state.outfitContext ? getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)
+    : !state.outfitContext.currentAvailable ? "현재 날씨 확인 필요"
+    : state.outfitContext.reliable ? `현재 · ${Math.round(state.weather.current.feelsLikeC)}도 · ${getConditionLabel(state.weather.current.condition)}`
+    : `최근 관측 · ${Math.round(state.weather.current.feelsLikeC)}도 · ${getConditionLabel(state.weather.current.condition)}`;
   return (
-      <AppScreen title="코디" subtitle={getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)} showWordmark={false} compactHeader contentGap={layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={8}>
+      <AppScreen title="코디" subtitle={weatherLine} showWordmark={false} compactHeader contentGap={layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={8}>
         <View style={{ gap: 12 }}>
+          {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
           <Text style={[pageStyles.body, { color: theme.text }]}>{state.outfit.decisionText}</Text>
           <OutfitGrid outfit={state.outfit} maxItems={4} dense singleRow={layout.isShort} onItemPress={() => onNavigate("C4")} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
