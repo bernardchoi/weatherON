@@ -1,6 +1,22 @@
 import { useEffect, useState } from "react";
 import { AppState } from "../localization/react-native";
-import { isNightAtWeatherTime, type WeatherDaylightContext } from "./weatherDaylight";
+import { getAmbientDaylight, isNightAtWeatherTime, type WeatherDaylightContext } from "./weatherDaylight";
+
+export function useAmbientDaylight(context: WeatherDaylightContext) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const update = (state: string) => {
+      if (timer) clearInterval(timer);
+      timer = undefined;
+      if (state === "active") { setNow(Date.now()); timer = setInterval(() => setNow(Date.now()), 60_000); }
+    };
+    update(AppState.currentState);
+    const subscription = AppState.addEventListener("change", update);
+    return () => { if (timer) clearInterval(timer); subscription.remove(); };
+  }, []);
+  return getAmbientDaylight(new Date(now), context);
+}
 
 export function isNightHour(date: Date): boolean {
   const hour = date.getHours();

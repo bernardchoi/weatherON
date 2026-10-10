@@ -13,6 +13,8 @@ import {
 } from "../localization/react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons, ambientSelectedTabs } from "../ambientAssets";
+import { ambientPalette } from "../theme/ambientSurface";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
@@ -34,6 +36,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
   const isIos = Platform.OS === "ios";
+  const useNativeSurface = hasNativeLiquidGlassNavigationSurface && !theme.reducedTransparency;
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
   const reducedMotion = useReducedMotion();
@@ -60,9 +63,9 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   const draggedIndexRef = useRef(activeIndex);
   const didSwitchTabRef = useRef(false);
   const iosColors = getIosTabColors(theme);
-  const activeColor = isIos ? iosColors.activeIcon : androidMaterialColor(theme, "primary");
+  const activeColor = ambientPalette(theme).accent;
   const navigationBackground = isIos
-    ? iosGlassSurface(theme, "dock", { nativeBackdrop: hasNativeLiquidGlassNavigationSurface })
+    ? iosGlassSurface(theme, "dock", { nativeBackdrop: useNativeSurface })
     : androidMaterialSurface(theme, "navigation");
 
   activeIndexRef.current = activeIndex;
@@ -156,7 +159,7 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
   };
 
   return (
-    <View style={[styles.dockWrap, { backgroundColor: theme.background }]}>
+    <View style={[styles.dockWrap, { backgroundColor: activeTabRoute === "H1" ? ambientPalette(theme).background : theme.background }]}>
       <View
         style={[
           styles.dockFrame,
@@ -170,49 +173,43 @@ export function BottomNav({ activeRoute, onNavigate }: BottomNavProps) {
         <View
           ref={dockRef}
           onLayout={handleDockLayout}
-          {...(hasNativeLiquidGlassNavigationSurface || !isIos ? {} : dragResponder.panHandlers)}
+          {...(useNativeSurface || !isIos ? {} : dragResponder.panHandlers)}
           style={[
             styles.dock,
             isIos ? styles.iosDock : styles.androidDock,
             navigationBackground,
+            isIos ? { borderRadius: 42, borderWidth: StyleSheet.hairlineWidth, borderColor: colorWithAlpha(ambientPalette(theme).muted, 0.28), shadowOpacity: 0.1, shadowRadius: 16 } : null,
+            !isIos ? { borderRadius: 20, backgroundColor: ambientPalette(theme).surface, elevation: 0 } : null,
           ]}
         >
-          {isIos && !hasNativeLiquidGlassNavigationSurface ? (
-            <IosGlassBackdrop theme={theme} role="dock" style={styles.iosDockBackdrop} />
+          {isIos ? (
+            <IosGlassBackdrop theme={theme} role="dock" overlayColor={theme.name === "dark" ? "#24446C55" : "#D5EAFE55"} style={styles.iosDockBackdrop} />
           ) : null}
-          {hasNativeLiquidGlassNavigationSurface ? (
+          {useNativeSurface ? (
             <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"}
               onSelect={({ nativeEvent }) => {
                 const route = bottomNavRoutes[nativeEvent.index];
                 if (route) onNavigate(route.id);
               }} />
           ) : isIos && dockWidth > 2 ? (
-            <Animated.View pointerEvents="none" style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: (dockWidth - 2) / bottomNavRoutes.length - 8, transform: [{ translateX: selectionX }] }}>
-              <View style={[StyleSheet.absoluteFill, { borderRadius: 28, borderWidth: 1, backgroundColor: iosColors.activeBackground, borderColor: iosColors.activeBorder }]} />
+            <Animated.View pointerEvents="none" style={{ position: "absolute", top: 4, height: Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8), left: ((dockWidth - 2) / bottomNavRoutes.length - Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8)) / 2, width: Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8), transform: [{ translateX: selectionX }] }}>
+              <View style={[StyleSheet.absoluteFill, { borderRadius: 40, borderWidth: 0, backgroundColor: iosColors.activeBackground, borderColor: iosColors.activeBorder }]} />
             </Animated.View>
           ) : null}
           {bottomNavRoutes.map((route) => {
             const active = route.id === activeTabRoute;
             const label = translateText(route.label, language);
-            const iconColor = isIos ? (active ? iosColors.activeIcon : iosColors.inactiveIcon) : active ? activeColor : theme.subtle;
-            const labelColor = isIos ? (active ? iosColors.activeLabel : iosColors.inactiveLabel) : active ? activeColor : theme.subtle;
+            const iconColor = active ? activeColor : ambientPalette(theme).muted;
+            const labelColor = active ? ambientPalette(theme).accentLabel : ambientPalette(theme).muted;
             return (
               <TabButton
                 key={route.id}
                 label={label}
                 accessibilityLabel={translateText(`${route.label} 탭`, language)}
                 active={active}
+                nativeSurface={useNativeSurface}
                 onPress={() => onNavigate(route.id)}
               >
-                {isIos ? (
-                  <View
-                    style={[
-                      styles.activeDot,
-                      theme.name === "dark" ? styles.iosDarkActiveDot : null,
-                      { backgroundColor: active ? iosColors.activeDot : "transparent" },
-                    ]}
-                  />
-                ) : null}
                 <TabContent
                   route={route.id}
                   active={active}
@@ -283,7 +280,7 @@ function TabContent({
   const iconMotion = {
     opacity: transition.interpolate({
       inputRange: [0, 1],
-      outputRange: [useHighContrastIosMotion ? 0.94 : 0.72, 1],
+      outputRange: [isIos ? 1 : 0.72, 1],
     }),
     transform: [
       { translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [useHighContrastIosMotion ? 0 : 1, -1] }) },
@@ -293,7 +290,7 @@ function TabContent({
   const labelMotion = {
     opacity: transition.interpolate({
       inputRange: [0, 1],
-      outputRange: [useHighContrastIosMotion ? 0.92 : 0.78, 1],
+      outputRange: [isIos ? 1 : 0.78, 1],
     }),
     transform: [{ translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }],
   };
@@ -303,26 +300,27 @@ function TabContent({
       <Animated.View
         style={[
           styles.iconContainer,
+          isIos ? { height: 34 } : null,
           !isIos ? styles.androidIconContainer : null,
-          !isIos && active ? { backgroundColor: androidMaterialColor(theme, "secondaryContainer") } : null,
+          active && !isIos ? { backgroundColor: ambientPalette(theme).selected } : null,
           iconMotion,
         ]}
       >
-        <TabIcon route={route} color={iconColor} useHighContrastSize={useHighContrastIosMotion} />
+        <TabIcon route={route} active={active} color={iconColor} useHighContrastSize={isIos} />
       </Animated.View>
       <Animated.Text
         style={[
           styles.label,
           !isIos ? styles.androidLabel : null,
-          useHighContrastIosMotion ? styles.iosDarkLabel : null,
+          isIos ? styles.iosDarkLabel : null,
           useHighContrastIosMotion && active ? styles.iosDarkActiveLabel : null,
-          { color: labelColor },
+          { color: labelColor, fontWeight: active ? "700" : "400" },
           labelMotion,
         ]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.9}
-        allowFontScaling={false}
+        maxFontSizeMultiplier={1.4}
       >
         {label}
       </Animated.Text>
@@ -331,6 +329,7 @@ function TabContent({
 }
 
 function TabButton({
+  nativeSurface,
   label,
   accessibilityLabel,
   active,
@@ -338,6 +337,7 @@ function TabButton({
   children,
 }: {
   label: string;
+  nativeSurface: boolean;
   accessibilityLabel: string;
   active: boolean;
   onPress: () => void;
@@ -346,7 +346,7 @@ function TabButton({
   const theme = useAppTheme();
   return (
     <Pressable
-      pointerEvents={hasNativeLiquidGlassNavigationSurface ? "none" : "auto"}
+      pointerEvents={nativeSurface ? "none" : "auto"}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
@@ -371,39 +371,23 @@ function getActiveTabRoute(route: P0RouteId): P0RouteId {
 }
 
 function getIosTabColors(theme: AppTheme) {
-  if (theme.name === "dark") {
-    return {
-      activeIcon: theme.text,
-      activeLabel: theme.text,
-      activeDot: theme.clear,
-      inactiveIcon: colorWithAlpha(theme.skyLite, 0.92),
-      inactiveLabel: colorWithAlpha(theme.text, 0.86),
-      activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.34 : 0.28),
-      activeBorder: colorWithAlpha(theme.clear, 0.66),
-    };
-  }
-
-  return {
-    activeIcon: theme.clear,
-    activeLabel: theme.text,
-    activeDot: theme.clear,
-    inactiveIcon: colorWithAlpha(theme.text, 0.62),
-    inactiveLabel: colorWithAlpha(theme.text, 0.58),
-    activeBackground: colorWithAlpha(theme.clear, theme.reducedTransparency ? 0.22 : 0.16),
-    activeBorder: colorWithAlpha(theme.clear, 0.34),
-  };
+  const p = ambientPalette(theme);
+  return { activeIcon: p.accent, activeLabel: p.accentLabel, activeDot: p.accent,
+    inactiveIcon: p.muted, inactiveLabel: p.muted, activeBackground: p.selected, activeBorder: "transparent" };
 }
 
 function TabIcon({
   route,
+  active,
   color,
   useHighContrastSize,
 }: {
   route: P0RouteId;
+  active: boolean;
   color: ColorValue;
   useHighContrastSize: boolean;
 }) {
-  const source = getTabIconSource(route);
+  const source = getTabIconSource(route, active);
   return (
     <Image
       source={source}
@@ -413,11 +397,12 @@ function TabIcon({
   );
 }
 
-function getTabIconSource(route: P0RouteId) {
-  if (route === "H1") return uiIconAssets.tabHome;
-  if (route === "C1") return uiIconAssets.tabOutfit;
-  if (route === "G1") return uiIconAssets.tabDepart;
-  if (route === "M1") return uiIconAssets.tabMy;
+function getTabIconSource(route: P0RouteId, active: boolean) {
+  const icons = active ? ambientSelectedTabs : ambientUiIcons;
+  if (route === "H1") return icons.tabHome;
+  if (route === "C1") return icons.tabOutfit;
+  if (route === "G1") return icons.tabDepart;
+  if (route === "M1") return icons.tabMy;
   return uiIconAssets.tabSocial;
 }
 
@@ -430,7 +415,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   iosDockFrame: {
-    height: 64,
+    height: 82,
     marginBottom: 12,
   },
   androidDockFrame: {
@@ -449,7 +434,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   iosDockBackdrop: {
-    borderRadius: 32,
+    borderRadius: 42,
   },
   androidDock: {
     borderRadius: 32,
@@ -463,6 +448,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   iconContainer: {
+    width: 42,
+    height: 30,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -497,8 +485,8 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   iosDarkLabel: {
-    fontSize: 12,
-    lineHeight: 14,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "600",
   },
   iosDarkActiveLabel: {
@@ -510,11 +498,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   iconImage: {
-    width: 21,
-    height: 21,
+    width: 24,
+    height: 24,
   },
   iosDarkIconImage: {
-    width: 22,
-    height: 22,
+    width: 30,
+    height: 30,
   },
 });

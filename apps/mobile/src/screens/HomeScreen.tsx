@@ -1,10 +1,17 @@
+import { writeAmbientTouchEvidence } from "../debug/ambientTouchEvidence";
+import { File, Paths } from "expo-file-system";
+import { createAmbientTouchController, type AmbientContact, type AmbientTouchSample } from "../utils/ambientTouch";
+import type { AmbientReadRegion } from "../utils/ambientSky";
+import { resolveHomeViewportSpacing } from "../theme/homeViewport";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Animated, AppState, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
-import { WeatherBackground } from "../components/WeatherBackground";
+import { AmbientSurfaceBackground } from "../components/AmbientSurfaceBackground";
+import { ambientHomeTheme, ambientPalette } from "../theme/ambientSurface";
+import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
@@ -17,17 +24,18 @@ import { radius, spacing, type AppTheme } from "../theme/tokens";
 import { getDisplayLocationName } from "../utils/locationDisplay";
 import { getDestinationVisualKind } from "../utils/destination-visual-resolver";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
-import { useIsNightHour } from "../utils/useIsNightHour";
+import { useAmbientDaylight, useIsNightHour } from "../utils/useIsNightHour";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { getHomeCompanionMessage, getHomeDepartureSummary } from "../utils/homeCompanion";
-import { getConditionIcon, getConditionColor, getConditionLabel } from "../utils/weatherPresentation";
+import { getConditionLabel } from "../utils/weatherPresentation";
 import { defaultSeoulWeatherLocation } from "../providers/weatherLocations";
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 
 // 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
+const AmbientHomeScrollView = Platform.OS === "ios" ? Animated.ScrollView : ScrollView;
 const HOME_OUTFIT_CARD_VISIBLE = true;
 const HOME_OUTFIT_FALLBACK_IMAGE = "assets/outfits/weatheron-outfit-light-rain-jacket-v1.png";
 
@@ -50,9 +58,50 @@ export function HomeScreen({
   onRefreshWeather,
   onSelectDestinationPlace,
 }: P0ScreenProps) {
-  const theme = useAppTheme();
+  const theme = ambientHomeTheme(useAppTheme(), Platform.OS === "ios");
+  const [touchPulse, setTouchPulse] = useState(0);
+  const [touchContact, setTouchContact] = useState<AmbientContact>({ id: 0, phase: "cancel" });
+  const touchPoint = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const touchEvidence = useRef({ down: 0, move: 0, up: 0, cancel: 0, measured: 0 });
+  const touchController = useRef(createAmbientTouchController((x, y) => touchPoint.setValue({ x, y }), contact => {
+    if (contact.phase === "down") touchEvidence.current.measured++;
+    if (__DEV__) console.info("Ambient touch evidence", JSON.stringify({ phase: contact.phase, ...touchEvidence.current }));
+    writeAmbientTouchEvidence(touchEvidence.current, contact.phase);
+    setTouchContact(contact);
+  })).current;
+  const [lowPowerMode, setLowPowerMode] = useState(true);
+  const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    touchController.cancel();
+    writeAmbientTouchEvidence(touchEvidence.current, "policy", { lowPowerMode, reducedMotion, reducedTransparency: theme.reducedTransparency });
+    if (__DEV__) console.info("Ambient policy evidence", JSON.stringify({ lowPowerMode, reducedMotion, reducedTransparency: theme.reducedTransparency }));
+  }, [reducedMotion, theme.reducedTransparency, lowPowerMode, touchController]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", state => { if (state !== "active") touchController.cancel(); });
+    return () => { subscription.remove(); touchController.cancel(); };
+  }, [touchController]);
+  const sampleTouch = (event: import("react-native").GestureResponderEvent): AmbientTouchSample => {
+    const first = event.nativeEvent.touches[0] ?? event.nativeEvent.changedTouches[0] ?? event.nativeEvent;
+    return { identifier: Number(first.identifier), pageX: first.pageX, pageY: first.pageY, count: event.nativeEvent.touches.length || event.nativeEvent.changedTouches.length };
+  };
+  const surfaceRef = useRef<View>(null);
   const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+  const { fontScale } = useWindowDimensions();
+  const viewportSpacing = resolveHomeViewportSpacing(viewportHeight);
+  // Debug evidence is limited to layout numbers; never user content or stored records.
+  useEffect(() => {
+    if (!__DEV__ || Platform.OS !== "ios" || viewportHeight === 0 || contentHeight === 0) return;
+    const timer = setTimeout(() => {
+      try {
+        const file = new File(Paths.cache, "ambient-home-layout-debug-20261009.json");
+        file.write(JSON.stringify({ viewportHeight, contentHeight, fontScale, overflow: Math.max(0, contentHeight - viewportHeight) }));
+      } catch { /* Layout diagnostics must never affect weather or navigation. */ }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [viewportHeight, contentHeight, fontScale]);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [refreshCompletedAt, setRefreshCompletedAt] = useState(0);
   const pullRefreshObservedLoadingRef = useRef(false);
@@ -71,6 +120,31 @@ export function HomeScreen({
     coordinate: placeSearchOrigin?.coordinate,
     timeZone: resolveWeatherTimeZone(currentWeather.countryCode, placeSearchOrigin?.timezone ?? currentWeather.timezone),
   });
+  const ambientLocation = placeSearchOrigin?.locationId === currentWeather.locationId ? placeSearchOrigin
+    : currentWeather.locationId === defaultSeoulWeatherLocation.locationId ? defaultSeoulWeatherLocation : null;
+  const ambientDaylight = useAmbientDaylight({ coordinate: ambientLocation?.coordinate, timeZone: resolveWeatherTimeZone(currentWeather.countryCode, ambientLocation?.timezone ?? currentWeather.timezone) });
+  const readHeaderRef = useRef<View>(null);
+  const readPlanRef = useRef<View>(null);
+  const [readRegions, setReadRegions] = useState<Record<string, AmbientReadRegion>>({});
+  const ambientScrollOffset = useRef(new Animated.Value(0)).current;
+  const [meteorScrollY, setMeteorScrollY] = useState(0);
+  const [ambientScrolling, setAmbientScrolling] = useState(false);
+  const ambientScrollRef = useRef(0);
+  const measureReadArea = useCallback((id: string, node: Pick<View, "measureInWindow"> | null) => {
+    if (Platform.OS !== "ios") return;
+    node?.measureInWindow((x, y, width, height) => surfaceRef.current?.measureInWindow((ox, oy) => {
+      const area = { x: x - ox, y: y - oy + ambientScrollRef.current, width, height };
+      setReadRegions(previous => {
+        const old = previous[id];
+        return old && Object.keys(area).every(key => Math.abs(old[key as keyof AmbientReadRegion] - area[key as keyof AmbientReadRegion]) < .5) ? previous : { ...previous, [id]: area };
+      });
+    }));
+  }, []);
+  const weatherFrameRef = useRef<View>(null);
+  const [weatherRegion, setWeatherRegion] = useState<{ x: number; y: number; width: number; height: number }>();
+  const updateWeatherRegion = useCallback((x: number, y: number, width: number, height: number) => {
+    surfaceRef.current?.measureInWindow((originX, originY) => setWeatherRegion({ x: x - originX, y: y - originY, width, height }));
+  }, []);
   const reliableWeather = state.weatherProvider.status === "ready" && !state.weatherProvider.fallbackUsed && !currentWeather.stale;
   const companionMessage = getHomeCompanionMessage(currentWeather, reliableWeather);
   const departureSummary = getHomeDepartureSummary(
@@ -113,21 +187,40 @@ export function HomeScreen({
   }, [refreshCompletedAt]);
 
   return (
-    <View style={[styles.screenWrap, { backgroundColor: theme.background }]}>
+    <View ref={surfaceRef} collapsable={false} {...(Platform.OS === "ios" ? {
+      // RN's native phased touch events observe input before child bubbling.
+      // They never claim the scroll/button responder or stop propagation.
+      onTouchStartCapture: (event: import("react-native").GestureResponderEvent) => {
+        touchEvidence.current.down++;
+        writeAmbientTouchEvidence(touchEvidence.current, "start-received");
+        touchController.down(sampleTouch(event), done => surfaceRef.current?.measureInWindow(done));
+      },
+      onTouchMoveCapture: (event: import("react-native").GestureResponderEvent) => { touchEvidence.current.move++; if (touchEvidence.current.move === 1) writeAmbientTouchEvidence(touchEvidence.current, "move-received"); touchController.move(sampleTouch(event)); },
+      onTouchEndCapture: () => { touchEvidence.current.up++; writeAmbientTouchEvidence(touchEvidence.current, "end-received"); touchController.up(); },
+      onTouchCancelCapture: () => { touchEvidence.current.cancel++; writeAmbientTouchEvidence(touchEvidence.current, "cancel-received"); touchController.cancel(); },
+    } : { onTouchStart: () => setTouchPulse(value => value + 1) })} style={[styles.screenWrap, { backgroundColor: theme.background }]}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <WeatherBackground condition={current.condition} theme={theme} isNight={isNight} subtle />
+        <AmbientSurfaceBackground condition={current.condition} theme={theme} windMs={current.windMs} precipitationMm={current.precipitationMm} reliable={reliableWeather && !isWeatherLoading} touchPulse={touchPulse} touchContact={touchContact} touchPoint={touchPoint} lowPowerMode={lowPowerMode} onLowPowerChange={setLowPowerMode} daylight={ambientDaylight} weatherRegion={weatherRegion} readingAreas={Object.values(readRegions)} scrollOffset={ambientScrollOffset} meteorScrollY={meteorScrollY} scrolling={ambientScrolling} />
       </View>
-      <ScrollView
+      <AmbientHomeScrollView
         testID="home-scroll"
+        scrollEventThrottle={Platform.OS === "ios" ? 64 : undefined}
+        onScroll={Platform.OS === "ios" ? Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }], { useNativeDriver: true, listener: event => { ambientScrollRef.current = (event as import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>).nativeEvent.contentOffset.y; } }) : undefined}
+        onScrollBeginDrag={() => { touchController.cancel(); if (Platform.OS === "ios") setAmbientScrolling(true); }}
+        onScrollEndDrag={event => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); if (!event.nativeEvent.velocity?.y) setAmbientScrolling(false); } }}
+        onMomentumScrollEnd={() => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); setAmbientScrolling(false); } }}
+        onMomentumScrollBegin={() => { touchController.cancel(); if (Platform.OS === "ios") setAmbientScrolling(true); }}
+        onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}
+        onContentSizeChange={(_, height) => setContentHeight(height)}
         style={styles.homeScroll}
         contentContainerStyle={[
           styles.homeContent,
           {
             maxWidth: layout.contentMaxWidth,
-            gap: Math.max(layout.isShort ? 6 : 8, layout.homeContentGap),
+            gap: Platform.OS === "ios" ? viewportSpacing.contentGap : Math.max(layout.isShort ? 6 : 8, layout.homeContentGap),
             paddingHorizontal: layout.screenHorizontalPadding,
             // 출발·MY의 44pt 제목 행과 첫 줄 시작점을 맞춘다.
-            paddingTop: layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2,
+            paddingTop: Platform.OS === "ios" ? viewportSpacing.topPadding : layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -141,13 +234,15 @@ export function HomeScreen({
           />
         }
       >
-        <View style={styles.topBar}>
-          {(
-            <View style={styles.iosLocationHeader}>
-              <RawText style={[styles.iosLocationName, { color: theme.text }]} numberOfLines={1}>{currentLocationName}</RawText>
-              <Text accessibilityLiveRegion="polite" style={[styles.iosSecondaryText, { color: theme.muted }]}>{refreshMessage || locationStatus.value}</Text>
-            </View>
-          )}
+        <View ref={readHeaderRef} onLayout={() => measureReadArea("header", readHeaderRef.current)} style={styles.topBar}>
+          <View style={styles.iosLocationHeader}>
+            <RawText accessibilityLabel="WeatherON" style={[styles.homeWordmark, { color: theme.muted }]}>Weather<RawText style={{ color: ambientPalette(theme).wordmarkOn }}>ON</RawText></RawText>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName}, ${locationStatus.value}, 위치 변경`} onPress={() => onNavigate("H2")} style={styles.homeLocationAction}>
+              <Image source={ambientUiIcons.location} style={{ width: 20, height: 20, tintColor: theme.muted }} />
+              <RawText style={[styles.iosLocationName, { color: theme.text, flex: 1 }]} numberOfLines={2}>{currentLocationName}</RawText>
+            </FeedbackPressable>
+            {Platform.OS !== "ios" || refreshMessage || locationStatus.tone !== "clear" ? <Text accessibilityLiveRegion="polite" style={[styles.iosSecondaryText, { color: theme.muted }]}>{refreshMessage || locationStatus.value}</Text> : null}
+          </View>
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
             smartCareEnabled={smartCareEnabled}
@@ -158,6 +253,8 @@ export function HomeScreen({
 
         <View testID="home-decision-stack" style={styles.decisionStack}>
           <HomeDecisionHero
+            onReadingRegion={measureReadArea} onWeatherRegion={updateWeatherRegion} weatherFrameRef={weatherFrameRef}
+            heroGap={viewportSpacing.heroGap}
             current={current}
             isNight={isNight}
             companionMessage={companionMessage}
@@ -177,15 +274,19 @@ export function HomeScreen({
         </View>
 
         <View
+          ref={readPlanRef} onLayout={() => measureReadArea("plan", readPlanRef.current)}
           testID="home-plan-card"
           style={[
             styles.homePlanCard,
             {
-              padding: layout.homePanelPadding,
-              backgroundColor: theme.card,
+              paddingVertical: Platform.OS === "ios" ? 4 : layout.homePanelPadding,
+              marginTop: Platform.OS === "ios" ? viewportSpacing.planMargin : 0,
+              gap: Platform.OS === "ios" ? viewportSpacing.planGap : spacing.md,
+              paddingHorizontal: 0,
+              backgroundColor: "transparent",
               borderColor: theme.border,
             },
-            androidMaterialSurface(theme, "surfaceContainer"),
+
           ]}
         >
           <DestinationSelectorCard
@@ -201,33 +302,35 @@ export function HomeScreen({
                 accessibilityRole="button"
                 accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureSummary.body}`}
                 onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
-                style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact]}
+                style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && styles.ambientDepartureChip]}
               >
-                {isHomeTightLayout(layout) ? <>
-                  <View style={{ flex: 1, gap: 3 }}>
-                    <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
-                    <Text style={[styles.iosSecondaryText, { color: theme.muted }]} numberOfLines={2}>{departureSummary.body}</Text>
+                <View style={styles.ambientDepartureRow}>
+                  <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
+                  <View style={Platform.OS === "ios" ? styles.ambientDepartureInline : { flex: 1, minWidth: 0 }}>
+                    {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummaryLabel}</Text> : null}
+                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? selectedDestinationSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
                   </View>
-                  <Text style={[styles.iosCompactDepartureTime, !/^\d{1,2}:\d{2}$/u.test(departureSummary.value) && styles.iosDepartureStatus, { color: theme.text }]}>{departureSummary.value}</Text>
-                </> : <>
-                <View style={styles.iosDepartureHeading}>
-                  <Text style={[styles.iosSecondaryText, { color: departureSummary.soon ? theme.gold : theme.muted }]}>{departureSummaryLabel}</Text>
-                  <Text style={{ color: theme.muted }}>›</Text>
                 </View>
-                <Text style={[styles.iosDepartureTime, !/^\d{1,2}:\d{2}$/u.test(departureSummary.value) && styles.iosDepartureStatus, { color: theme.text }]}>{departureSummary.value}</Text>
-                <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text>
-                </>}
+                {Platform.OS !== "ios" || !/^\d{2}:\d{2}$/.test(departureSummary.value) || state.destinationCare.departureAdvice?.travelStatus === "fallback" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
           {destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
-          <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
+          {Platform.OS === "ios" ? <View style={styles.ambientPreparationRow}>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={`목적지 준비물 ${homeDecision.packTitle}. ${homeDecision.packBody}`} onPress={() => onNavigate(homeDecision.packFocus === "umbrella" ? "H4" : "C1")} style={styles.ambientPreparationAction}>
+              <Image source={homeDecision.packFocus === "umbrella" ? ambientUiIcons.umbrella : homeDecision.packFocus === "outfit" ? ambientUiIcons.tabOutfit : ambientUiIcons.check} style={{ width: 30, height: 30, tintColor: ambientPalette(theme).accent }} />
+              <Text style={{ color: theme.gold, fontSize: 17, lineHeight: 24 }}>{homeDecision.packTitle === "가볍게" ? homeDecision.packBody : `${homeDecision.packTitle} 챙기세요`}</Text>
+            </FeedbackPressable>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={`목적지 강수 ${state.destinationCare.destinationWeather.current.rainProbabilityPct}%, 시간별 예보 보기`} onPress={() => onNavigate("H5")} style={[styles.ambientForecastChip, { borderColor: theme.border }]}>
+              <Text style={{ color: theme.text, fontSize: 14, lineHeight: 20 }}>예보</Text>
+            </FeedbackPressable>
+          </View> : <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
             <VisualDecisionCard
               label={"목적지 강수"}
               value={destinationReady ? `${state.destinationCare.destinationWeather.current.rainProbabilityPct}%` : "목적지 선택"}
               helper={"시간별 예보 보기"}
-              accent={getInfoAccent(theme)}
-              icon={uiIconAssets.rain}
+              accent={theme.muted}
+              icon={ambientUiIcons.droplet}
               theme={theme}
               onPress={() => onNavigate(destinationReady ? "H5" : "P1")}
             />
@@ -235,19 +338,19 @@ export function HomeScreen({
               label={destinationReady ? "목적지 준비물" : "오늘 챙길 것"}
               value={homeDecision.packTitle}
               helper={homeDecision.packBody}
-              accent={getPackAccent(homeDecision.packTone, theme)}
-              icon={homeDecision.packIcon}
+              accent={theme.gold}
+              icon={homeDecision.packFocus === "umbrella" ? ambientUiIcons.umbrella : homeDecision.packIcon}
               theme={theme}
               onPress={() =>
                 onNavigate(homeDecision.packFocus === "umbrella" ? (destinationReady ? "H4" : "P1") : "C1")
               }
             />
-          </View>
+          </View>}
           </HomeValueTransition> : null}
         </View>
 
-        {!layout.isShort && HOME_OUTFIT_CARD_VISIBLE ? (
-          <HomeOutfitPreviewCard outfit={state.outfit} packTitle={homeDecision.packTitle} theme={theme} onPress={() => onNavigate("C1")} />
+        {HOME_OUTFIT_CARD_VISIBLE ? (
+          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} packTitle={homeDecision.packTitle} theme={theme} onPress={() => onNavigate("C1")} />
         ) : null}
         <View style={styles.cardStack}>
           {!isWeatherLoading && (state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed) ? (
@@ -261,7 +364,7 @@ export function HomeScreen({
             />
           ) : null}
         </View>
-      </ScrollView>
+      </AmbientHomeScrollView>
     </View>
   );
 }
@@ -298,23 +401,10 @@ function DestinationSelectorCard({
   const [selectorOpen, setSelectorOpen] = useState(false);
   const tightLayout = isHomeTightLayout(layout);
   const reducedMotion = useReducedMotion();
-  const destinationChipGlass = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
-  const headerCaption = hasDestinations
-    ? `저장한 ${savedDestinations.length}곳 · 눌러서 바꿔보기`
-    : "자주 가는 곳을 골라보세요";
+
 
   return (
     <View style={styles.destinationSelectorCard}>
-      {!((tightLayout || !hasDestinations)) ? <View style={styles.destinationSelectorHeader}>
-        <View style={[styles.destinationSelectorIconFrame, { backgroundColor: `${theme.gold}14` }]}>
-          <Image source={uiIconAssets.pin} style={[styles.destinationSelectorIcon, { tintColor: theme.gold }]} resizeMode="contain" />
-        </View>
-        <View style={styles.destinationSelectorCopy}>
-          <Text style={[styles.destinationSelectorLabel, { color: theme.gold }]}>오늘의 목적지</Text>
-          {tightLayout ? null : <Text style={[styles.destinationSelectorMeta, { color: theme.subtle }]} numberOfLines={1}>{headerCaption}</Text>}
-        </View>
-      </View> : null}
-
       {!hasDestinations ? (
         <FeedbackPressable
           accessibilityLabel="자주 가는 곳 추가"
@@ -333,23 +423,23 @@ function DestinationSelectorCard({
           onPress={() => setSelectorOpen(true)}
           style={({ pressed }) => [
             styles.destinationSelectButton,
-            { backgroundColor: theme.cardStrong, borderColor: theme.border },
-            destinationChipGlass,
+            { backgroundColor: "transparent", borderColor: "transparent" },
+            Platform.OS === "ios" && { minHeight: 44, paddingHorizontal: 0 },
             { transform: [{ scale: pressed && reducedMotion === false ? 0.98 : 1 }] },
-            androidMaterialSurface(theme, "surfaceContainerHigh"),
+
           ]}
         >
-          {destinationChipGlass ? <IosGlassBackdrop theme={theme} role="chip" style={styles.destinationChipBackdrop} /> : null}
-          <View style={[styles.destinationSelectIconFrame, { backgroundColor: `${theme.clear}18` }]} accessibilityElementsHidden>
-            <Image source={getDestinationTypeIcon(selectedDestination.place)} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.clear }]} />
+
+          <View style={[styles.destinationSelectIconFrame, { backgroundColor: "transparent" }]} accessibilityElementsHidden>
+            <Image source={ambientUiIcons.location} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.text }]} />
           </View>
-          <View style={styles.destinationSelectCopy}>
+          <View style={[styles.destinationSelectCopy, Platform.OS === "ios" && { flex: 0, flexShrink: 1 }]}>
             <View style={styles.destinationChipTitleRow}>
-              {selectedDestination.label ? <DestinationLabelPill label={selectedDestination.label} theme={theme} /> : null}
-              <RawText style={[styles.destinationChipTitle, { color: theme.text }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
+              <RawText style={[styles.destinationChipTitle, { color: theme.text }, Platform.OS === "ios" && { flex: 0, flexShrink: 1, fontSize: 24, lineHeight: 32 }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
             </View>
-            <Text style={[styles.destinationChipMeta, { color: theme.subtle }]} numberOfLines={1}>{getDestinationSelectorMeta(selectedDestination.place)}</Text>
+
           </View>
+          <Image source={ambientUiIcons.expand} style={{ width: 22, height: 22, tintColor: theme.text }} />
         </FeedbackPressable>
       )}
 
@@ -620,6 +710,10 @@ function getHeroTemperatureRange(
 }
 
 function HomeDecisionHero({
+  onReadingRegion,
+  onWeatherRegion,
+  weatherFrameRef,
+  heroGap = 14,
   current,
   isNight,
   currentLocationName,
@@ -629,6 +723,10 @@ function HomeDecisionHero({
   theme,
   onOpenForecast,
 }: {
+  onReadingRegion?: (id: string, node: Pick<View, "measureInWindow"> | null) => void;
+  weatherFrameRef?: React.RefObject<View | null>;
+  onWeatherRegion?: (x: number, y: number, width: number, height: number) => void;
+  heroGap?: number;
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
   isNight: boolean;
   currentLocationName: string;
@@ -639,24 +737,36 @@ function HomeDecisionHero({
   onOpenForecast: () => void;
 }) {
   const layout = useResponsiveLayout();
+  const copyReadRef = useRef<View>(null);
+  const companionReadRef = useRef<React.ElementRef<typeof Text>>(null);
+  const weatherIcon = ambientWeatherIcon(current.condition, isNight, theme);
+  const expandedType = useWindowDimensions().fontScale > 1.3;
+  const { language } = React.use(LocalizationContext);
+  const companionCopy = companionMessage === "오늘 날씨에 맞춰, 나갈 준비를 함께해요." ? "나갈 준비를 함께해요." : companionMessage;
+  // Translate the intact key first, then break at the first sentence boundary.
+  // Longer translations and Dynamic Type can wrap beyond two lines without truncation.
+  const iosCompanionCopy = translateText(companionCopy, language).replace(/([.!?])\s+|([。！？])(?=\S)/, "$1$2\n");
+  // Approved supporting role: 72pt, backed by 256px approved vector derivatives.
+  // Night uses a 96px original, bounded to 32pt at a 3x device scale.
+  const heroIconSize = Platform.OS === "ios" ? Math.min(current.condition === "clear" && isNight ? 32 : 72, 72 * (layout.width - 2 * layout.screenHorizontalPadding) / 352) : 72;
   return (
-      <View testID="home-weather" style={[styles.iosWeatherHero, { paddingVertical: layout.homePanelPadding }]}>
-        <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName} ${formatTemperature(current.tempC, temperatureUnit)}, 날씨 상세 보기`} onPress={onOpenForecast} style={styles.iosWeatherMain}>
-          <View style={styles.iosWeatherCopy}>
+      <View testID="home-weather" style={[styles.iosWeatherHero, { paddingVertical: Platform.OS === "ios" ? 2 : layout.homePanelPadding, gap: Platform.OS === "ios" ? heroGap : 8 }]}>
+        <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName} ${formatTemperature(current.tempC, temperatureUnit)}, ${getConditionLabel(current.condition)}. 체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}, 강수 ${current.rainProbabilityPct}%, 날씨 상세 보기`} onPress={onOpenForecast} style={[styles.iosWeatherMain, Platform.OS === "ios" && expandedType && { flexDirection: "column", alignItems: "flex-start", gap: 8 }]}>
+          <View ref={copyReadRef} onLayout={() => onReadingRegion?.("hero-copy", copyReadRef.current)} style={[styles.iosWeatherCopy, Platform.OS === "ios" && expandedType && { flex: 0, width: "100%" }]}>
             <HomeValueTransition value={`${current.tempC}:${temperatureUnit}`}>
-              <Text style={[styles.iosTemperature, { color: theme.text, fontSize: layout.isShort ? 56 : 68, lineHeight: layout.isShort ? 62 : 76 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.iosTemperature, { color: theme.text, fontSize: Platform.OS === "ios" ? layout.isShort ? 90 : 112 : layout.isShort ? 76 : 94, lineHeight: Platform.OS === "ios" ? layout.isShort ? 90 : 108 : layout.isShort ? 84 : 102 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
             </HomeValueTransition>
-            <Text style={[styles.iosCondition, { color: theme.text }]}>{getConditionLabel(current.condition)}</Text>
-            <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{todayMinMax ? getHeroTemperatureRange(todayMinMax, temperatureUnit) : ""}</Text>
+            <Text style={[styles.iosCondition, { color: theme.text }, Platform.OS === "ios" && { fontSize: 22, lineHeight: 30 }]}>{getConditionLabel(current.condition)}</Text>
+            <Text style={[styles.iosSecondaryText, { color: theme.muted }, Platform.OS === "ios" && { fontSize: 16, lineHeight: 24 }]}>{todayMinMax ? getHeroTemperatureRange(todayMinMax, temperatureUnit) : ""}</Text>
           </View>
-          <Image source={getConditionIcon(current.condition, isNight)} resizeMode="contain" style={[styles.iosWeatherIcon, { tintColor: getConditionColor(current.condition, theme, isNight), width: layout.homeWeatherOrbSize + 16, height: layout.homeWeatherOrbSize + 16 }]} />
+          {weatherIcon ? <View ref={weatherFrameRef} onLayout={() => weatherFrameRef?.current?.measureInWindow((x, y, w, h) => onWeatherRegion?.(x, y, w, h))} style={[{ width: Platform.OS === "ios" ? 126 : heroIconSize, height: Platform.OS === "ios" ? 126 : heroIconSize, alignItems: "center", justifyContent: "center", marginHorizontal: 12 }, Platform.OS === "ios" && expandedType && { alignSelf: "flex-end", marginHorizontal: 0 }]}><Image accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize }} /></View> : null}
         </FeedbackPressable>
         <HomeValueTransition value={companionMessage}>
-          <Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text>
+          {Platform.OS === "ios" ? <Text ref={companionReadRef} onLayout={() => onReadingRegion?.("companion", companionReadRef.current)} style={[styles.iosCompanion, { color: theme.text, fontSize: 30, lineHeight: 39, maxWidth: 352 }]}>{iosCompanionCopy}</Text> : <Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text>}
         </HomeValueTransition>
-        <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>
+        {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>
           체감 {formatTemperature(current.feelsLikeC, temperatureUnit)} · 강수 {current.rainProbabilityPct}%
-        </Text>
+        </Text> : null}
       </View>
     );
 }
@@ -683,9 +793,9 @@ function VisualDecisionCard({
         accessibilityRole="button"
         accessibilityLabel={`${label} ${value}. ${helper}`}
         onPress={onPress}
-        style={[styles.iosSupportingAction, { backgroundColor: theme.cardStrong }, androidMaterialSurface(theme, "surfaceContainerHigh")]}
+        style={[styles.iosSupportingAction, { backgroundColor: "transparent" }]}
       >
-        <View style={[styles.iosSupportingIconFrame, { backgroundColor: `${accent}18` }]} accessibilityElementsHidden>
+        <View style={[styles.iosSupportingIconFrame, { backgroundColor: "transparent" }]} accessibilityElementsHidden>
           <Image source={icon} resizeMode="contain" style={[styles.iosSupportingIcon, { tintColor: accent }]} />
         </View>
         <View style={styles.iosSupportingCopy}>
@@ -698,11 +808,15 @@ function VisualDecisionCard({
 }
 
 function HomeOutfitPreviewCard({
+  onReadingLayout,
+  viewportSpacing,
   outfit,
   packTitle,
   theme,
   onPress,
 }: {
+  onReadingLayout?: (event: import("react-native").LayoutChangeEvent) => void;
+  viewportSpacing: ReturnType<typeof resolveHomeViewportSpacing>;
   outfit: P0ScreenProps["state"]["outfit"];
   packTitle: string;
   theme: AppTheme;
@@ -713,60 +827,26 @@ function HomeOutfitPreviewCard({
   const imageSource = getHomeOutfitPreviewImage(outfit);
   const compactCopy = getHomeOutfitCopy(outfit.variant, packTitle);
   const title = getHomeOutfitTitle(compactCopy.title);
+  // The approved Home composition pairs the recommended layer and footwear;
+  // both remain actual recommendation items, never the board's example clothing.
+  const photos = (Platform.OS === "ios" ? [outfit.items.outer ?? outfit.items.top, outfit.items.shoes] : Object.values(outfit.items))
+    .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
-    <FeedbackPressable
-      accessibilityLabel={`오늘 입기 좋은 코디 ${outfit.decisionText}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[
-        styles.homeOutfitCard,
-        {
-          minHeight: layout.homeOutfitMinHeight,
-          gap: tightLayout ? spacing.sm : spacing.md,
-          paddingHorizontal: tightLayout ? spacing.sm : layout.homeCompact ? spacing.md : spacing.lg,
-          paddingVertical: tightLayout ? 4 : layout.homeCompact ? spacing.xs : spacing.md,
-          backgroundColor: theme.cardStrong,
-          borderColor: theme.border,
-        },
-      ]}
-    >
-      <View style={styles.homeOutfitCopy}>
-        <Text style={[styles.homeOutfitLabel, { color: theme.clear }]}>오늘 입기 좋은 코디</Text>
-        <Text style={[styles.homeOutfitTitle, { color: theme.text }]} numberOfLines={layout.homeCompact ? 1 : 2}>
-          {title}
-        </Text>
-        {tightLayout ? null : (
-          <Text style={[styles.homeOutfitBody, { color: theme.muted }]} numberOfLines={1}>
-            {compactCopy.body}
-          </Text>
-        )}
+    <FeedbackPressable onLayout={onReadingLayout} accessibilityLabel={`오늘 입기 좋은 코디 ${outfit.decisionText}. ${title}`} accessibilityRole="button" onPress={onPress}
+      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { paddingTop: viewportSpacing.outfitTop, paddingBottom: viewportSpacing.outfitBottom }]}>
+      <View style={styles.ambientOutfitHeading}>
+        <Text style={[styles.ambientOutfitTitle, { color: theme.text }, Platform.OS === "ios" && { fontSize: 30, lineHeight: 40 }]}>오늘의 코디</Text>
+        {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 20, height: 20, tintColor: theme.text, transform: [{ rotate: "-90deg" }] }} /> : <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>보기</Text>}
       </View>
-      <View
-        style={[
-          styles.homeOutfitImageFrame,
-          {
-            width: tightLayout ? 44 : layout.homeCompact ? 54 : 62,
-            height: tightLayout ? 44 : layout.homeCompact ? 54 : 62,
-            backgroundColor: theme.cardMuted,
-          },
-        ]}
-      >
-        {imageSource ? (
-          <Image
-            source={imageSource}
-            style={[
-              styles.homeOutfitImage,
-              {
-                width: tightLayout ? 40 : layout.homeCompact ? 48 : 56,
-                height: tightLayout ? 40 : layout.homeCompact ? 48 : 56,
-              },
-            ]}
-            resizeMode="contain"
-          />
-        ) : (
-          <Image source={uiIconAssets.shirt} style={[styles.homeOutfitIcon, { tintColor: theme.clear }]} resizeMode="contain" />
-        )}
+      <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: tightLayout ? 132 : 180 }]}>
+        {photos.length ? photos.map((item, index) => <Image key={index} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
+          position: "absolute", width: photos.length > 1 ? index === 0 ? "56%" : "48%" : "80%",
+          height: index === 0 ? tightLayout ? 132 : 180 : tightLayout ? 90 : 124,
+          left: index === 0 ? "12%" : undefined, right: index === 1 ? "20%" : undefined, bottom: 0,
+        } : { width: photos.length > 1 ? "46%" : "80%", height: tightLayout ? 100 : 132 }} />)
+          : <Image source={imageSource} resizeMode="contain" style={{ width: "80%", height: tightLayout ? 100 : 132 }} />}
       </View>
+      {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{title}</Text> : null}
     </FeedbackPressable>
   );
 }
@@ -921,10 +1001,10 @@ function NotificationBellButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, glassSurface]}
+      style={[styles.bellButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, glassSurface, Platform.OS === "ios" && { backgroundColor: "transparent", borderWidth: 0 }]}
     >
-      {glassSurface ? <IosGlassBackdrop theme={theme} role="control" style={styles.bellGlassBackdrop} /> : null}
-      <BellGlyph color={theme.text} />
+      {glassSurface && Platform.OS !== "ios" ? <IosGlassBackdrop theme={theme} role="control" style={styles.bellGlassBackdrop} /> : null}
+      <Image source={ambientUiIcons.notifications} style={{ width: 26, height: 26, tintColor: theme.text }} />
       {unreadCount > 0 ? (
         <View style={[styles.bellBadge, { backgroundColor: theme.sky }]}>
           <Text style={[styles.bellBadgeText, { color: theme.onAccent }]}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
@@ -966,23 +1046,36 @@ function HomeValueTransition({ value, children }: { value: string; children: Rea
 }
 
 const styles = StyleSheet.create({
+  homeWordmark: { fontSize: Platform.OS === "ios" ? 24 : 21, lineHeight: Platform.OS === "ios" ? 30 : 28, fontWeight: Platform.OS === "ios" ? "600" : "700", letterSpacing: -0.8 },
+  homeLocationAction: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: 6 },
+  ambientDepartureRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  ambientDepartureInline: { flexShrink: 1, flexDirection: "row", alignItems: "center" },
+  ambientDepartureChip: { minHeight: 44, borderWidth: StyleSheet.hairlineWidth, borderRadius: 24, alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 6 },
+  ambientPreparationRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  ambientPreparationAction: { flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 },
+  ambientForecastChip: { minHeight: 44, paddingHorizontal: 18, borderWidth: StyleSheet.hairlineWidth, borderRadius: 24, justifyContent: "center" },
+  ambientDepartureValue: { fontSize: Platform.OS === "ios" ? 18 : 20, lineHeight: 27, fontWeight: Platform.OS === "ios" ? "500" : "600", fontVariant: ["tabular-nums"] },
+  ambientOutfit: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16, paddingBottom: 12, gap: 8 },
+  ambientOutfitHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  ambientOutfitTitle: { fontSize: 22, lineHeight: 30, fontWeight: "700" },
+  ambientOutfitPhotos: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   iosLocationHeader: { flex: 1, gap: 2 },
-  iosLocationName: { fontSize: 20, lineHeight: 26, fontWeight: "700" },
+  iosLocationName: { fontSize: 15, lineHeight: 22, fontWeight: "700" },
   iosSecondaryText: { fontSize: 12, lineHeight: 17 },
-  iosWeatherHero: { gap: 8, paddingHorizontal: 8 },
+  iosWeatherHero: { gap: Platform.OS === "ios" ? 14 : 8, paddingHorizontal: 0 },
   iosWeatherMain: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 100 },
   iosWeatherCopy: { flex: 1, gap: 2 },
   iosTemperature: { fontWeight: "300", letterSpacing: -2, fontVariant: ["tabular-nums"] },
   iosCondition: { fontSize: 16, lineHeight: 22, fontWeight: "500" },
   iosWeatherIcon: { marginHorizontal: 12 },
-  iosCompanion: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
-  iosDeparture: { minHeight: 100, paddingVertical: 10, gap: 4, borderTopWidth: StyleSheet.hairlineWidth },
+  iosCompanion: { fontSize: 24, lineHeight: 33, fontWeight: "700" },
+  iosDeparture: { minHeight: 64, paddingVertical: 10, gap: 4, borderTopWidth: StyleSheet.hairlineWidth },
   iosDepartureCompact: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   iosCompactDepartureTime: { maxWidth: "48%", fontSize: 27, lineHeight: 33, fontWeight: "600", fontVariant: ["tabular-nums"] },
   iosDepartureHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   iosDepartureTime: { fontSize: 32, lineHeight: 38, fontWeight: "600", fontVariant: ["tabular-nums"] },
   iosDepartureStatus: { fontSize: 24, lineHeight: 30, fontWeight: "700" },
-  iosSupportingAction: { flex: 1, minWidth: 0, minHeight: 88, flexDirection: "row", alignItems: "center", padding: 12, gap: 10, borderRadius: 16 },
+  iosSupportingAction: { flex: 1, minWidth: 0, minHeight: 72, flexDirection: "row", alignItems: "center", paddingVertical: 8, gap: 6 },
   iosSupportingIconFrame: { width: 38, height: 38, alignItems: "center", justifyContent: "center", borderRadius: radius.md },
   iosSupportingIcon: { width: 24, height: 24 },
   iosSupportingCopy: { flex: 1, minWidth: 0, gap: 1 },
@@ -1015,8 +1108,8 @@ const styles = StyleSheet.create({
   },
   homePlanCard: {
     gap: spacing.md,
-    borderRadius: radius.xl,
-    borderWidth: 1,
+    borderRadius: 0,
+    borderWidth: 0,
   },
   destinationSelectorCard: {
     gap: spacing.sm,

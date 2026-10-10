@@ -1,5 +1,6 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, StyleSheet, Text } from "../localization/react-native";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
@@ -28,6 +29,8 @@ export function AppButton({
 }: AppButtonProps) {
   const theme = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useReducedMotion();
+  useEffect(() => { scale.stopAnimation(); scale.setValue(1); return () => scale.stopAnimation(); }, [reducedMotion, scale]);
   const resolvedVariant = variant ?? (tone === "secondary" ? "tonal" : "filled");
   const filledColor = tone === "warning" ? theme.gold : theme.clear;
   const foregroundColor = tone === "warning" ? theme.gold : tone === "primary" ? theme.clear : theme.text;
@@ -51,6 +54,8 @@ export function AppButton({
   // 그룹화된 보조 chrome에만 쓰고 버튼은 불투명 색상을 유지한다.
 
   const animateTo = (toValue: number) => {
+    scale.stopAnimation();
+    if (reducedMotion !== false) return scale.setValue(1);
     Animated.timing(scale, {
       toValue,
       duration: 110,

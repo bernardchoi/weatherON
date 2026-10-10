@@ -12,7 +12,33 @@ import {
 import { translateAccessibility, translateText } from "./localization";
 import { LocalizationContext } from "./LocalizationProvider";
 
-export * from "react-native";
+// Refresh reads every runtime export. Keep unused, optional native modules lazy.
+export {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Animated,
+  AppState,
+  BackHandler,
+  Easing,
+  Image,
+  Keyboard,
+  LayoutAnimation,
+  Linking,
+  Modal,
+  PanResponder,
+  Platform,
+  PlatformColor,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  UIManager,
+  View,
+  requireNativeComponent,
+  useColorScheme,
+  useWindowDimensions,
+} from "react-native";
+export type * from "react-native";
 
 export const Text = forwardRef<React.ElementRef<typeof NativeText>, TextProps>(function LocalizedText(props, ref) {
   const { language } = React.use(LocalizationContext);
