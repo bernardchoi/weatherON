@@ -170,12 +170,29 @@ final class AmbientSurfaceTextureView: RCTViewManager {
 final class AmbientSurfaceTextureSurfaceView: UIView {
   @objc var onPowerState: RCTDirectEventBlock? { didSet { reportPowerState() } }
   private var powerObserver: NSObjectProtocol?
-  @objc var isDarkTheme = false { didSet { if oldValue != isDarkTheme { updateDensityMask(); requestTexture() } } }
+  @objc var renderingEnabled = false {
+    didSet {
+      guard oldValue != renderingEnabled else { return }
+      if renderingEnabled { requestTexture() } else { textureOperation?.cancel(); renderVersion += 1 }
+      reportPowerState()
+    }
+  }
+  @objc var isDarkTheme = false { didSet { if oldValue != isDarkTheme { imageView.image = nil; updateDensityMask(); requestTexture() } } }
+  private var textureOperation: BlockOperation?
+  private static let textureQueue: OperationQueue = {
+    let queue = OperationQueue()
+    queue.maxConcurrentOperationCount = 1
+    queue.qualityOfService = .utility
+    return queue
+  }()
+  private var renderedSize = CGSize.zero
+  private var renderedDark: Bool?
   private let imageView = UIImageView()
   private let densityMask = CAGradientLayer()
   private var requestedSize = CGSize.zero
   private var renderVersion = 0
   private var textureRenderMs: Double = 0
+  private var textureGenerationCount = 0
   private let origin = CGPoint(x: CGFloat.random(in: 0...4096), y: CGFloat.random(in: 0...4096))
 
   override init(frame: CGRect) {
@@ -197,7 +214,7 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
     powerObserver = NotificationCenter.default.addObserver(forName: Notification.Name.NSProcessInfoPowerStateDidChange, object: nil, queue: .main) { [weak self] _ in self?.reportPowerState() }
   }
 
-  deinit { if let powerObserver { NotificationCenter.default.removeObserver(powerObserver) } }
+  deinit { textureOperation?.cancel(); if let powerObserver { NotificationCenter.default.removeObserver(powerObserver) } }
 
   private func reportPowerState() {
     #if DEBUG
@@ -207,6 +224,8 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
     #endif
     var evidence: [String: Any] = ["lowPower": ProcessInfo.processInfo.isLowPowerModeEnabled, "baseOnly": baseOnly]
     #if DEBUG
+    evidence["renderingEnabled"] = renderingEnabled
+    evidence["textureGenerationCount"] = textureGenerationCount
     evidence["textureWidth"] = imageView.image?.cgImage?.width ?? 0
     evidence["textureHeight"] = imageView.image?.cgImage?.height ?? 0
     evidence["textureViewWidth"] = imageView.bounds.width
@@ -234,25 +253,36 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
   }
 
   private func requestTexture() {
-    guard bounds.width > 0, bounds.height > 0 else { return }
+    guard renderingEnabled, bounds.width > 0, bounds.height > 0 else { return }
+    if renderedSize == bounds.size && renderedDark == isDarkTheme && imageView.image != nil { return }
+    textureOperation?.cancel()
     requestedSize = bounds.size
+    let viewSize = bounds.size
     // One sample per logical point, bounded memory; no continuous raster work.
     let size = CGSize(width: min(512, bounds.width), height: min(1024, bounds.height))
     let dark = isDarkTheme
     let sampleOrigin = origin
     renderVersion += 1
     let version = renderVersion
-    DispatchQueue.global(qos: .utility).async { [weak self] in
+    let operation = BlockOperation()
+    operation.addExecutionBlock { [weak self, weak operation] in
+      guard let operation, !operation.isCancelled else { return }
       let renderStarted = Date()
       guard let cg = AmbientSurfaceTextureGenerator.image(size: size, dark: dark, origin: sampleOrigin) else { return }
       let renderMs = Date().timeIntervalSince(renderStarted) * 1000
+      guard !operation.isCancelled else { return }
       DispatchQueue.main.async {
-        guard let self, self.renderVersion == version else { return }
+        guard let self, self.renderingEnabled, !operation.isCancelled, self.renderVersion == version else { return }
+        self.renderedSize = viewSize
+        self.renderedDark = dark
         self.imageView.image = UIImage(cgImage: cg)
         self.textureRenderMs = renderMs
         self.reportPowerState()
       }
     }
+    textureOperation = operation
+    textureGenerationCount += 1
+    Self.textureQueue.addOperation(operation)
   }
 }
 

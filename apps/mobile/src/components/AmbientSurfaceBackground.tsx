@@ -11,11 +11,11 @@ import { AmbientWeatherLayer, type AmbientWeatherRegion } from "./AmbientWeather
 import type { AmbientDaylight } from "../utils/weatherDaylight";
 import type { AppTheme } from "../theme/tokens";
 
-type Props = { contentOrigin?: { x: number; y: number }; scrollOffset?: Animated.Value; meteorScrollY?: number; scrolling?: boolean; readingAreas?: AmbientReadRegion[]; daylight?: AmbientDaylight; weatherRegion?: AmbientWeatherRegion; theme: AppTheme; condition: string; windMs: number; precipitationMm: number; reliable: boolean; touchPulse: number; touchPosition?: { x: number; y: number }; touchContact?: AmbientContact; touchPoint?: Animated.ValueXY; lowPowerMode?: boolean; onLowPowerChange?: (enabled: boolean) => void };
+type Props = { onScreen?: boolean; contentOrigin?: { x: number; y: number }; scrollOffset?: Animated.Value; meteorScrollY?: number; scrolling?: boolean; readingAreas?: AmbientReadRegion[]; daylight?: AmbientDaylight; weatherRegion?: AmbientWeatherRegion; theme: AppTheme; condition: string; windMs: number; precipitationMm: number; reliable: boolean; touchPulse: number; touchPosition?: { x: number; y: number }; touchContact?: AmbientContact; touchPoint?: Animated.ValueXY; lowPowerMode?: boolean; onLowPowerChange?: (enabled: boolean) => void };
 
 // Wind changes the pace of an undirected surface breath: this provider has no wind bearing.
 // Rain density comes only from current precipitation, never future probability.
-export function AmbientSurfaceBackground({ theme, condition, windMs, precipitationMm, reliable, touchPulse, touchPosition, touchContact, touchPoint, lowPowerMode = true, onLowPowerChange, daylight, weatherRegion, contentOrigin = { x: 0, y: 0 }, readingAreas = [], scrollOffset, meteorScrollY = 0, scrolling = false }: Props) {
+export function AmbientSurfaceBackground({ onScreen = true, theme, condition, windMs, precipitationMm, reliable, touchPulse, touchPosition, touchContact, touchPoint, lowPowerMode = true, onLowPowerChange, daylight, weatherRegion, contentOrigin = { x: 0, y: 0 }, readingAreas = [], scrollOffset, meteorScrollY = 0, scrolling = false }: Props) {
   const p = ambientPalette(theme);
   const { width, height } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
@@ -26,7 +26,7 @@ export function AmbientSurfaceBackground({ theme, condition, windMs, precipitati
   const touch = useRef(new Animated.Value(0)).current;
   const canceledContact = useRef<number | null>(null);
   const weather = ambientWeatherMotion(condition, reliable, windMs, precipitationMm);
-  const moving = active && (Platform.OS === "ios" || reliable) && reducedMotion === false && (Platform.OS !== "ios" || (!theme.reducedTransparency && !lowPowerMode));
+  const moving = onScreen && active && (Platform.OS === "ios" || reliable) && reducedMotion === false && (Platform.OS !== "ios" || (!theme.reducedTransparency && !lowPowerMode));
   const wind = Number.isFinite(windMs) ? Math.max(0, Math.min(12, windMs)) : 0;
   const raining = condition === "rain" || condition === "storm";
   const rainCount = reliable && raining ? 8 + Math.round(Math.min(16, Math.max(0, precipitationMm || 0) * 2)) : 0;
@@ -47,10 +47,11 @@ export function AmbientSurfaceBackground({ theme, condition, windMs, precipitati
     animation.start();
     return () => animation.stop();
   }, [moving, wind, weather.duration, breath]);
+  useEffect(() => { canceledContact.current = null; }, [touchPoint]);
   useEffect(() => {
     touch.stopAnimation();
     if (Platform.OS === "ios") {
-      if (!active || !touchContact || touchContact.phase === "cancel") { if (touchContact) canceledContact.current = touchContact.id; touch.setValue(0); return; }
+      if (!onScreen || !active || !touchContact || touchContact.phase === "cancel") { if (touchContact) canceledContact.current = touchContact.id; touch.setValue(0); return; }
       if (touchContact.phase === "down" && canceledContact.current === touchContact.id) { touch.setValue(0); return; }
       const target = touchContact.phase === "down" ? 1 : 0;
       if (reducedMotion !== false || theme.reducedTransparency || lowPowerMode) { touch.setValue(target); return; }
@@ -66,11 +67,11 @@ export function AmbientSurfaceBackground({ theme, condition, windMs, precipitati
     ]);
     animation.start();
     return () => animation.stop();
-  }, [touchContact?.id, touchContact?.phase, touchPulse, active, reducedMotion, theme.reducedTransparency, lowPowerMode, touch]);
+  }, [touchContact?.id, touchContact?.phase, touchPulse, touchPoint, onScreen, active, reducedMotion, theme.reducedTransparency, lowPowerMode, touch]);
   const fieldVisible = !theme.reducedTransparency;
 
 
-  return <View onLayout={event => { const { width: w, height: h } = event.nativeEvent.layout; setSurfaceSize(old => old.width === w && old.height === h ? old : { width: w, height: h }); }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[StyleSheet.absoluteFill, { overflow: "hidden", backgroundColor: p.background }]}>
+  return <View onLayout={event => { const { width: w, height: h } = event.nativeEvent.layout; setSurfaceSize(old => old.width === w && old.height === h ? old : { width: w, height: h }); }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[StyleSheet.absoluteFill, { overflow: "hidden", opacity: onScreen ? 1 : 0, backgroundColor: p.background }]}>
     {Platform.OS === "ios" ? <>
     <View style={[StyleSheet.absoluteFill, {
       // Keep the reading surface stable; only the faint wind field breathes.
@@ -78,7 +79,7 @@ export function AmbientSurfaceBackground({ theme, condition, windMs, precipitati
         ? "radial-gradient(ellipse at 70% 44%, #153053 0%, #0F2948 44%, #0C223D 100%)"
         : "radial-gradient(ellipse at 86% 8%, #C6DDF5 0%, #CCE1F6 24%, #D8EAFB 52%, #DDEFFC 75%, #EAF6FF 100%)",
     }]} />
-    <AmbientBaseFlow phase={breath} dark={theme.name === "dark"} visible={fieldVisible} onPowerState={event => {
+    <AmbientBaseFlow renderingEnabled={onScreen && active && !theme.reducedTransparency} phase={breath} dark={theme.name === "dark"} visible={fieldVisible} onPowerState={event => {
       onLowPowerChange?.(event.nativeEvent.lowPower);
       if (__DEV__) setBaseOnly(event.nativeEvent.baseOnly === true);
     }} />

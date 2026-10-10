@@ -399,9 +399,9 @@ function buildWeatherReasons(state: P0ScreenProps["state"], theme: ReturnType<ty
   const feelsLikeDelta = Math.round(state.weather.current.feelsLikeC - state.weather.current.tempC);
   return [
     {
-      label: "체감 온도",
-      value: `${Math.round(state.weather.current.feelsLikeC)}도`,
-      detail: feelsLikeDelta === 0
+      label: state.outfitContext?.temperature?.basis === "air" ? "현재 기온" : "체감 온도",
+      value: state.outfitContext ? state.outfitContext.temperature ? `${Math.round(state.outfitContext.temperature.value)}도` : "확인 필요" : `${Math.round(state.weather.current.feelsLikeC)}도`,
+      detail: state.outfitContext ? !state.outfitContext.temperature ? "온도 정보 없음" : !state.outfitContext.reliable ? "최근 관측 기준" : state.outfitContext.temperature.basis === "air" ? "현재 기온 기준" : "현재 체감 기준" : feelsLikeDelta === 0
         ? "딱 쾌적해요"
         : feelsLikeDelta > 0
           ? `${feelsLikeDelta}도 더 더워요`

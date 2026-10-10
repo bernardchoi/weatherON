@@ -131,7 +131,7 @@ export function HomeScreen({
   });
   const ambientLocation = placeSearchOrigin?.locationId === currentWeather.locationId ? placeSearchOrigin
     : currentWeather.locationId === defaultSeoulWeatherLocation.locationId ? defaultSeoulWeatherLocation : null;
-  const ambientDaylight = useAmbientDaylight({ coordinate: ambientLocation?.coordinate, timeZone: resolveWeatherTimeZone(currentWeather.countryCode, ambientLocation?.timezone ?? currentWeather.timezone) });
+  const ambientDaylight = useAmbientDaylight({ coordinate: ambientLocation?.coordinate, timeZone: resolveWeatherTimeZone(currentWeather.countryCode, ambientLocation?.timezone ?? currentWeather.timezone) }, Platform.OS !== "ios");
   const readHeaderRef = useRef<View>(null);
   const readPlanRef = useRef<View>(null);
   const [readRegions, setReadRegions] = useState<Record<string, AmbientReadRegion>>({});
@@ -180,6 +180,8 @@ export function HomeScreen({
     Date.now(),
     selectedDestinationSchedulePreference.timeBasis,
   );
+  const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
+  const showDepartureExplanation = destinationReady && (!/^\d{2}:\d{2}$/.test(departureSummary.value) || state.destinationCare.departureAdvice?.travelStatus === "fallback");
   const departureSummaryLabel = selectedDestinationSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
@@ -225,7 +227,7 @@ export function HomeScreen({
       onTouchEndCapture: () => { touchEvidence.current.up++; writeAmbientTouchEvidence(touchEvidence.current, "end-received"); touchController.up(); },
       onTouchCancelCapture: () => { touchEvidence.current.cancel++; writeAmbientTouchEvidence(touchEvidence.current, "cancel-received"); touchController.cancel(); },
     } : { onTouchStart: () => setTouchPulse(value => value + 1) })} style={[styles.screenWrap, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
-      <HomeAmbientPortal enabled={Platform.OS === "ios"}>
+      <HomeAmbientPortal enabled={Platform.OS === "ios"} interaction={{ contentOrigin: { x: ambientInsets.left, y: ambientInsets.top }, touchPulse, touchContact, touchPoint, onLowPowerChange: setLowPowerMode, readingAreas: Object.values(readRegions), scrollOffset: ambientScrollOffset, meteorScrollY, scrolling: ambientScrolling }}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <AmbientSurfaceBackground contentOrigin={Platform.OS === "ios" ? { x: ambientInsets.left, y: ambientInsets.top } : undefined} condition={current.condition} theme={theme} windMs={current.windMs} precipitationMm={current.precipitationMm} reliable={reliableWeather && !isWeatherLoading} touchPulse={touchPulse} touchContact={touchContact} touchPoint={touchPoint} lowPowerMode={lowPowerMode} onLowPowerChange={setLowPowerMode} daylight={ambientDaylight} readingAreas={Object.values(readRegions)} scrollOffset={ambientScrollOffset} meteorScrollY={meteorScrollY} scrolling={ambientScrolling} />
       </View>
@@ -321,7 +323,7 @@ export function HomeScreen({
           ]}
         >
           {Platform.OS === "ios" ? <HomePlanMaterial theme={theme} /> : null}
-          <View testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: layout.width < 390 || fontScale > 1.3 ? "stretch" : "center", gap: 14 } : undefined}>
+          <View testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: stackedPlanControls ? "column" : "row", alignItems: stackedPlanControls ? "stretch" : "center", gap: 14 } : undefined}>
           <View style={{ flex: 1, minWidth: 0 }}>
           <DestinationSelectorCard
             savedDestinations={savedDestinations}
@@ -332,7 +334,7 @@ export function HomeScreen({
           />
           </View>
           {destinationReady ? (
-            <HomeValueTransition value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureSummary.body}`}>
+            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureSummary.body}`}>
               <FeedbackPressable
                 accessibilityRole="button"
                 accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureSummary.body}`}
@@ -346,11 +348,12 @@ export function HomeScreen({
                     <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? selectedDestinationSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
                   </View>
                 </View>
-                {Platform.OS !== "ios" || !/^\d{2}:\d{2}$/.test(departureSummary.value) || state.destinationCare.departureAdvice?.travelStatus === "fallback" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
+                {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
           </View>
+          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
           {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
             {preparation.status ? <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{preparation.status}</Text> : null}
             {preparation.evidence && !preparation.rainEvidence ? <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{preparation.evidence}</Text> : null}
@@ -464,16 +467,16 @@ function DestinationSelectorCard({
           ]}
         >
 
-          <View style={[styles.destinationSelectIconFrame, { backgroundColor: "transparent" }]} accessibilityElementsHidden>
+          <View style={[styles.destinationSelectIconFrame, { backgroundColor: "transparent" }, Platform.OS === "ios" && { flexShrink: 0 }]} accessibilityElementsHidden>
             <Image source={ambientUiIcons.location} resizeMode="contain" style={[styles.destinationSelectIcon, { tintColor: theme.text }]} />
           </View>
-          <View style={[styles.destinationSelectCopy, Platform.OS === "ios" && { flex: 0, flexShrink: 1 }]}>
+          <View style={[styles.destinationSelectCopy, Platform.OS === "ios" && { flex: 1, flexShrink: 1 }]}>
             <View style={styles.destinationChipTitleRow}>
-              <RawText style={[styles.destinationChipTitle, { color: theme.text }, Platform.OS === "ios" && { flex: 0, flexShrink: 1, fontSize: 24, lineHeight: 32 }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
+              <RawText style={[styles.destinationChipTitle, { color: theme.text }, Platform.OS === "ios" && { flex: 1, flexShrink: 1, fontSize: 24, lineHeight: 32 }]} numberOfLines={1}>{selectedDestination.place.name}</RawText>
             </View>
 
           </View>
-          <Image source={ambientUiIcons.expand} style={{ width: 22, height: 22, tintColor: theme.text }} />
+          <Image source={ambientUiIcons.expand} style={[{ width: 22, height: 22, tintColor: theme.text }, Platform.OS === "ios" && { flexShrink: 0 }]} />
         </FeedbackPressable>
       )}
 
@@ -1085,7 +1088,7 @@ function BellGlyph({ color }: { color: string }) {
   );
 }
 
-function HomeValueTransition({ value, children }: { value: string; children: React.ReactNode }) {
+function HomeValueTransition({ value, children, style, testID }: { value: string; children: React.ReactNode; style?: import("react-native").StyleProp<import("react-native").ViewStyle>; testID?: string }) {
   const reducedMotion = useReducedMotion();
   const progress = useRef(new Animated.Value(1)).current;
   const previousValue = useRef(value);
@@ -1101,7 +1104,7 @@ function HomeValueTransition({ value, children }: { value: string; children: Rea
     return () => animation.stop();
   }, [value, reducedMotion, progress]);
 
-  return <Animated.View style={{ opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] }), transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [3, 0] }) }] }}>{children}</Animated.View>;
+  return <Animated.View testID={testID} style={[style, { opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] }), transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [3, 0] }) }] }]}>{children}</Animated.View>;
 }
 
 const styles = StyleSheet.create({

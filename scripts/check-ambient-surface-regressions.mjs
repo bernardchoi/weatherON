@@ -148,3 +148,16 @@ for(const name of ['dark','light']) for(const condition of ['clear','cloud','rai
   q.unmount();
 }
 console.log('PASS: actual component/hook lifecycle; installed RN gradient parser; wind bounds/current rain; background/Reduce Motion/Reduce Transparency; native touch-origin conversion. Native drawing, physical touch and VoiceOver remain unverified.');
+
+// A retained Home decoration must be inert on other routes, including old touches.
+const offHome=await harness().initialize({touchContact:{id:1,phase:'down'}});
+const beforeHidden=started(offHome).length;offHome.render({onScreen:false});
+assert.equal(style(offHome.tree).opacity,0);
+assert.equal(started(offHome).length,beforeHidden);
+assert.ok(started(offHome).every(a=>a.stops>0),'Leaving Home stops every active ambient/touch animation');
+assert.equal(nodes(offHome.tree).find(n=>n.type==='NativeSurfaceTexture').props.renderingEnabled,false);
+offHome.render({onScreen:true});assert.equal(style(offHome.tree).opacity,1);
+assert.equal(started(offHome).length,beforeHidden+1,'Returning restarts the base only, not a stale held touch');
+const newPoint={session:2,getTranslateTransform:()=>[]};offHome.render({touchPoint:newPoint,touchContact:{id:1,phase:'down'}});
+assert.equal(started(offHome).length,beforeHidden+2,'New Home touch session can reuse its local id');offHome.unmount();
+console.log('PASS: hidden Home stops motion/touch and native raster work; same-id new touch sessions remain responsive.');

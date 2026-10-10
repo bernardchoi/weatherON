@@ -5,7 +5,8 @@ import { AmbientSurfaceTexture } from "./AmbientSurfaceTexture";
 // Cyclic displacement of the surface, not a claim about measured wind bearing.
 // Narrower diffuse shoulders retain depth instead of a broad white wash.
 // Endpoints match; one long native clock keeps reading content stationary.
-export function AmbientBaseFlow({ phase, dark, visible, onPowerState }: {
+export function AmbientBaseFlow({ phase, dark, visible, onPowerState, renderingEnabled = true }: {
+  renderingEnabled?: boolean;
   phase: Animated.Value; dark: boolean; visible: boolean;
   onPowerState?: React.ComponentProps<typeof AmbientSurfaceTexture>["onPowerState"];
 }) {
@@ -20,6 +21,6 @@ export function AmbientBaseFlow({ phase, dark, visible, onPowerState }: {
       { translateY: phase.interpolate({ inputRange: [0, .25, .6, .85, 1], outputRange: [0, 46, 18, -28, 0] }) },
     ],
   }]}>
-    <AmbientSurfaceTexture isDarkTheme={dark} onPowerState={onPowerState} style={[StyleSheet.absoluteFill, { opacity: dark ? .08 : .28 }]} />
+    <AmbientSurfaceTexture renderingEnabled={renderingEnabled} isDarkTheme={dark} onPowerState={onPowerState} style={[StyleSheet.absoluteFill, { opacity: dark ? .08 : .28 }]} />
   </Animated.View>;
 }

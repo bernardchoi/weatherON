@@ -364,7 +364,7 @@ export function AppNavigator() {
 
   return (
     <AppThemeProvider theme={theme}>
-      <HomeAmbientHost enabled={fullHomeAmbient} backgroundColor={appBackgroundColor}>
+      <HomeAmbientHost enabled={fullHomeAmbient} backgroundColor={appBackgroundColor} theme={theme} weather={appState.state.destinationCare.originWeather} location={appState.placeSearchOrigin} reliable={appState.state.weatherProvider.status === "ready" && !appState.state.weatherProvider.fallbackUsed && !appState.state.destinationCare.originWeather.stale && !appState.isWeatherLoading}>
       <SafeAreaView
         accessibilityElementsHidden={launchVisible}
         importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
