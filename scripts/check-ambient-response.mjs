@@ -35,7 +35,7 @@ class Value {constructor(value=0){this.value=value} setValue(v){this.value=v} st
 const effects=[];
 const {AmbientWeatherLayer}=load(base+'components/AmbientWeatherLayer.tsx',{'react':{useRef:()=>({current:new Value}),useEffect:fn=>effects.push(fn)},'react/jsx-runtime':{jsx,jsxs:jsx},'../localization/react-native':{View:'View',Animated:{View:'AnimatedView',Value,multiply:(...v)=>new Value(v.reduce((a,b)=>a*scalar(b),1)),subtract:(a,b)=>new Value(scalar(a)-scalar(b)),add:(a,b)=>new Value(scalar(a)+scalar(b))}}});
 const all=n=>!n||typeof n!=='object'?[]:Array.isArray(n)?n.flatMap(all):[n,...all(n.props?.children)];
-for(const dark of [true,false])for(const kind of ['clear','cloud','rain','snow','storm','fog','dust','none'])for(const phase of ['day','twilight','night','unknown']) {
+for(const dark of [true,false])for(const kind of ['clear','cloud','rain','snow','storm','thunder','fog','dust','none'])for(const phase of ['day','twilight','night','unknown']) {
  const weather=ambientWeatherMotion(kind,true,3,2);
  const tree=AmbientWeatherLayer({kind:weather.kind,particles:weather.particles,phase:new Value,moving:false,daylight:{phase,season:'autumn'},region:{x:230,y:90,width:126,height:126},dark});
  if(kind==='none'){assert.equal(tree,null);continue;}assert.equal(tree.props.style.overflow,'hidden');if(kind==='clear'&&phase==='night')assert.equal(tree.props.testID,'ambient-night-sky');

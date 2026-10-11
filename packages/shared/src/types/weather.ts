@@ -37,6 +37,8 @@ export type WeatherSnapshot = {
   observedAt: string;
   timezone?: string;
   current: {
+    /** Optional fresh-provider evidence for ambient rendering; never inferred from theme. */
+    atmosphere?: { kind?: "fog" | "thunder"; conditionAvailable: boolean; precipitationMm?: number };
     tempC: number;
     feelsLikeC: number;
     feelsLikeAvailable?: boolean;

@@ -1,26 +1,37 @@
 import React from "react";
-import { Animated, StyleSheet } from "../localization/react-native";
+import { Animated, StyleSheet, View } from "../localization/react-native";
+import { ambientSurfaceDeformation, type AmbientSurfaceContact } from "./AmbientTouchLayer";
 import { AmbientSurfaceTexture } from "./AmbientSurfaceTexture";
 
-// Cyclic displacement of the surface, not a claim about measured wind bearing.
-// Narrower diffuse shoulders retain depth instead of a broad white wash.
-// Endpoints match; one long native clock keeps reading content stationary.
-export function AmbientBaseFlow({ phase, dark, visible, onPowerState, renderingEnabled = true }: {
-  renderingEnabled?: boolean;
+// Independent light and shadow planes: child opacity must not be multiplied by a faint parent.
+// All endpoints match. The shared clock survives route changes; content never moves.
+export function AmbientBaseFlow({ phase, dark, visible, onPowerState, renderingEnabled = true, wind = 0, contact }: {
+  renderingEnabled?: boolean; wind?: number; contact?: AmbientSurfaceContact;
   phase: Animated.Value; dark: boolean; visible: boolean;
   onPowerState?: React.ComponentProps<typeof AmbientSurfaceTexture>["onPowerState"];
 }) {
-  return <Animated.View testID="ambient-base-flow" style={[StyleSheet.absoluteFill, {
-    top: -80, bottom: -80, left: -60, right: -60,
-    experimental_backgroundImage: dark
-      ? "radial-gradient(ellipse 250% 140% at -20% -40%, #8CABCA00 55%, #8CABCA0C 58%, #8CABCA42 60%, #8CABCA18 62%, #8CABCA00 68%), radial-gradient(ellipse 185% 120% at 140% 125%, #8CABCA00 38%, #8CABCA20 45%, #8CABCA0C 49%, #8CABCA00 57%)"
-      : "radial-gradient(ellipse 250% 140% at -20% -40%, #FFFFFF00 55%, #FFFFFF18 58%, #FFFFFFD0 60%, #FFFFFF44 62%, #FFFFFF00 68%), radial-gradient(ellipse 185% 120% at 140% 125%, #FFFFFF00 38%, #FFFFFF70 45%, #FFFFFF28 49%, #FFFFFF00 57%)",
-    opacity: visible ? phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: dark ? [.34, .40, .36, .34] : [.50, .70, .58, .50] }) : 0,
-    transform: [
-      { translateX: phase.interpolate({ inputRange: [0, .25, .6, .85, 1], outputRange: [-24, 42, 12, -38, -24] }) },
-      { translateY: phase.interpolate({ inputRange: [0, .25, .6, .85, 1], outputRange: [0, 46, 18, -28, 0] }) },
-    ],
-  }]}>
-    <AmbientSurfaceTexture renderingEnabled={renderingEnabled} isDarkTheme={dark} onPowerState={onPowerState} style={[StyleSheet.absoluteFill, { opacity: dark ? .08 : .28 }]} />
-  </Animated.View>;
+  const drift = 1 + Math.min(12, wind) / 30;
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: visible ? 1 : 0 }]}>
+    <Animated.View testID="ambient-base-flow" style={[StyleSheet.absoluteFill, {
+      top: -220, bottom: -220, left: -210, right: -210,
+      experimental_backgroundImage: dark
+        ? "radial-gradient(ellipse 125% 68% at 5% -4%, #8CABCA00 46%, #8CABCA06 51%, #8CABCA20 55%, #8CABCA08 61%, #8CABCA00 69%)"
+        : "radial-gradient(ellipse 125% 68% at 5% -4%, #FFFFFF00 46%, #FFFFFF28 51%, #FFFFFFD0 55%, #FFFFFF48 61%, #FFFFFF00 69%)",
+      opacity: dark ? .72 : .78,
+      transform: [
+        ...ambientSurfaceDeformation(contact, "light"),
+        { translateX: phase.interpolate({ inputRange: [0, .25, .5, .75, 1], outputRange: [-65, 72, 55, -78, -65].map(value => value * drift) }) },
+        { translateY: phase.interpolate({ inputRange: [0, .25, .5, .75, 1], outputRange: [-45, 62, 100, -20, -45] }) },
+      ],
+    }]} />
+    <Animated.View testID="ambient-depth-shoulder" style={[StyleSheet.absoluteFill, {
+      top: -210, bottom: -210, left: -200, right: -200,
+      experimental_backgroundImage: dark
+        ? "radial-gradient(ellipse 105% 46% at 78% 62%, #01081500 24%, #0108159C 46%, #01081562 57%, #01081500 78%), radial-gradient(ellipse 110% 50% at 77% 62%, #92B6DD00 57%, #92B6DD10 63%, #92B6DD00 73%)"
+        : "radial-gradient(ellipse 105% 46% at 78% 62%, #FFFFFF00 24%, #FFFFFF98 46%, #FFFFFF48 57%, #FFFFFF00 78%), radial-gradient(ellipse 110% 50% at 77% 62%, #5586B800 57%, #5586B810 63%, #5586B800 73%)",
+      opacity: dark ? .72 : .55,
+      transform: [...ambientSurfaceDeformation(contact, "depth"), { translateX: phase.interpolate({ inputRange: [0, .25, .5, .75, 1], outputRange: [65, -72, -38, 80, 65].map(value => value * drift) }) }, { translateY: phase.interpolate({ inputRange: [0, .25, .5, .75, 1], outputRange: [40, -65, -90, 25, 40] }) }],
+    }]} />
+    <AmbientSurfaceTexture renderingEnabled={renderingEnabled} isDarkTheme={dark} onPowerState={onPowerState} style={[StyleSheet.absoluteFill, { opacity: dark ? .025 : .15 }]} />
+  </View>;
 }

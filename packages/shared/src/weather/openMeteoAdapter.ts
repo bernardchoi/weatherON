@@ -20,6 +20,11 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     timezone: options.timezone,
     observedAt: options.observedAt ?? current.time ?? new Date(0).toISOString(),
     current: {
+      atmosphere: {
+        kind: [95, 96, 99].includes(current.weather_code ?? -1) ? "thunder" : [45, 48].includes(current.weather_code ?? -1) ? "fog" : undefined,
+        conditionAvailable: Number.isFinite(current.weather_code),
+        precipitationMm: [current.precipitation, current.rain, current.showers, current.snowfall].some(Number.isFinite) ? precipitationMm : undefined,
+      },
       tempC: current.temperature_2m ?? hourly[0]?.tempC ?? 0,
       feelsLikeC: current.apparent_temperature ?? current.temperature_2m ?? hourly[0]?.tempC ?? 0,
       condition: conditionFromOpenMeteo(current.weather_code),

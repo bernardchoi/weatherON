@@ -32,12 +32,12 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
   const theme = useAppTheme();
   const ambient = useAmbientReadingSurface();
   const { width, height, fontScale } = useWindowDimensions();
-  const imageHeight = ambient && mainVisual ? height >= 900 ? 132 : width < 360 ? 112 : 124 : width < 390 ? 106 : 118;
+  const imageHeight = ambient && mainVisual ? height >= 900 ? 116 : width < 360 ? 100 : 110 : width < 390 ? 106 : 118;
   const entries = Object.entries(outfit.items)
     .filter(([, item]) => Boolean(item))
     .slice(0, maxItems);
   return (
-    <View style={[styles.outfitGrid, onePage ? styles.outfitGridOnePage : null, singleRow ? styles.outfitGridSingleRow : null]}>
+    <View style={[styles.outfitGrid, onePage ? styles.outfitGridOnePage : null, singleRow ? styles.outfitGridSingleRow : null, ambient && mainVisual && { rowGap: 8 }]}>
       {entries.map(([slot, item]) => {
         const imageSource = getOutfitImageSource(item?.imageUrl);
         return item ? (

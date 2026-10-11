@@ -46,7 +46,7 @@ function harness(options = {}) {
   const animation = (kind, config) => { const a={kind,config,starts:0,stops:0,start(){this.starts++;},stop(){this.stops++;}};h.animations.push(a);return a; };
   const native = { View:'View', StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}}, Platform:{OS:'ios'},
     Easing:{linear:()=>{},sin:()=>{},inOut:()=>{}}, useWindowDimensions:()=>({width:440,height:956}),
-    Animated:{View:'AnimatedView',Value,ValueXY,add:(...nodes)=>({math:'add',nodes,interpolate(config){return {interpolation:config}}}),multiply:(...nodes)=>({math:'multiply',nodes}),subtract:(...nodes)=>({math:'subtract',nodes}),timing:(v,c)=>animation('timing',c),sequence:c=>animation('sequence',c),loop:c=>animation('loop',c)},
+    Animated:{View:'AnimatedView',Value,ValueXY,add:(...nodes)=>({math:'add',nodes,interpolate(config){return {input:this,interpolation:config}}}),multiply:(...nodes)=>({math:'multiply',nodes,interpolate(config){return {input:this,interpolation:config}}}),subtract:(...nodes)=>({math:'subtract',nodes}),timing:(v,c)=>animation('timing',c),sequence:c=>animation('sequence',c),loop:c=>animation('loop',c)},
     AppState:{currentState:h.appState,addEventListener:(name,fn)=>{h.appEvent=fn;return {remove(){h.appEvent=null;}};}},
     AccessibilityInfo:{isReduceMotionEnabled:()=>h.reduceMotion===null?new Promise(()=>{}):h.reduceMotion==='failure'?Promise.reject(new Error('unavailable')):Promise.resolve(h.reduceMotion),
       addEventListener:(name,fn)=>{h.motionEvent=fn;return {remove(){h.motionEvent=null;}};}},
@@ -65,7 +65,7 @@ const started=h=>h.animations.filter(a=>a.starts);
 const gradients=h=>nodes(h.tree).map(n=>({...style(n),testID:n.props?.testID})).filter(s=>s.experimental_backgroundImage);
 // Root-mounted sky keeps reading and touch coordinates aligned with safe-area content.
 const shifted=await harness().initialize({condition:'clear',daylight:{phase:'night',season:'autumn'},contentOrigin:{x:12,y:62},readingAreas:[{x:0,y:0,width:440,height:758}]});
-assert.ok(nodes(shifted.tree).some(n=>style(n).left===12&&style(n).top===62),'local touch canvas retains the content origin');
+const deformationGraph=JSON.stringify(style(nodes(shifted.tree).find(n=>n.props?.testID==='ambient-base-flow')).transform);assert.ok(deformationGraph.includes(',12]')&&deformationGraph.includes(',62]'),'native deformation adds both content-origin offsets to contact coordinates');
 const skyNode=nodes(shifted.tree).find(n=>n.props?.testID==='ambient-night-sky');
 assert.equal(style(skyNode).height,956,'root sky includes status and home-indicator areas');
 shifted.unmount();
@@ -75,7 +75,7 @@ assert.equal(h.tree.props.importantForAccessibility,'no-hide-descendants');
 assert.equal(started(h).length,1);assert.equal(started(h)[0].kind,'loop');
 for (const theme of ['dark','light']) { h.render({theme:{name:theme,reducedTransparency:false}});for(const s of gradients(h))assert.ok(parseGradient(s.experimental_backgroundImage).length>0,'real RN must parse every gradient'); }
 assert.ok(gradients(h).some(s=>parseGradient(s.experimental_backgroundImage).length>=2),'base surface has multiple moving layers');
-const flow=style(nodes(h.tree).find(n=>n.props?.testID==='ambient-base-flow'));assert.ok(flow.transform.some(v=>v.translateY&&Math.max(...v.translateY.interpolation.outputRange)-Math.min(...v.translateY.interpolation.outputRange)>=60),'actual base has surface displacement, not just tiny scale');
+const flow=style(nodes(h.tree).find(n=>n.props?.testID==='ambient-base-flow'));assert.ok(flow.transform.some(v=>v.translateY?.interpolation&&Math.max(...v.translateY.interpolation.outputRange)-Math.min(...v.translateY.interpolation.outputRange)>=60),'actual base has surface displacement, not just tiny scale');
 const baseQA=await harness().initialize();const qaNative=nodes(baseQA.tree).find(n=>n.type==='NativeSurfaceTexture');qaNative.props.onPowerState({nativeEvent:{lowPower:false,baseOnly:true}});baseQA.render();assert.ok(nodes(baseQA.tree).some(n=>n.props?.testID==='ambient-base-flow'));assert.equal(nodes(baseQA.tree).some(n=>n.props?.testID==='ambient-weather-region'||n.props?.testID==='ambient-night-sky'||n.props?.testID==='ambient-touch-layer'),false,'development base-only mode truly excludes weather and touch');baseQA.unmount();
 
 // Sunlight is weather/solar driven in both UI themes; no icon-sized or opaque panel.
@@ -95,7 +95,7 @@ for (const reduced of [true,null,'failure']) {const q=await harness({reduceMotio
 for (const props of [{lowPowerMode:true},{theme:{name:'dark',reducedTransparency:true}}]) {const q=await harness().initialize(props);assert.equal(started(q).length,0);assert.equal(started(q).length,0);q.unmount();}
 const reduced=await harness().initialize({theme:{name:'dark',reducedTransparency:true},touchPulse:1});assert.equal(started(reduced).length,0,'transparent touch effect is disabled');
 const touch=await harness().initialize({windMs:0,touchContact:{id:1,phase:'down'},touchPosition:{x:80,y:230}});
-assert.equal(started(touch).length,2);const local=nodes(touch.tree).find(n=>n.props?.testID==='ambient-touch-layer');assert.ok(local);assert.equal(style(local).width,148);assert.equal(style(local).transform.length,2);
+assert.equal(started(touch).length,2);assert.equal(nodes(touch.tree).some(n=>n.props?.testID==='ambient-touch-layer'),false,'no cursor-shaped contact overlay');const bent=nodes(touch.tree).find(n=>n.props?.testID==='ambient-base-flow');assert.equal(style(bent).transform.length,7,'contact bends the existing light plane');const depth=nodes(touch.tree).find(n=>n.props?.testID==='ambient-depth-shoulder');assert.equal(style(depth).transform.length,7,'same contact deforms existing depth plane');const protectedTouch=await harness({reduceMotion:true}).initialize({touchContact:{id:2,phase:'down'}});assert.equal(style(nodes(protectedTouch.tree).find(n=>n.props?.testID==='ambient-base-flow')).transform.length,2,'Reduce Motion removes touch deformation');protectedTouch.unmount();
 const dry=await harness().initialize({condition:'cloud',precipitationMm:4});
 const held=await harness().initialize({touchContact:{id:9,phase:'down'}});const heldStarts=started(held).length;held.appEvent('background');held.render();held.appEvent('active');held.render();assert.equal(started(held).length,heldStarts+1,'foreground restarts ambient only, never old touch');held.unmount();
 const rain=await harness().initialize({condition:'rain',precipitationMm:1});const heavy=await harness().initialize({condition:'rain',precipitationMm:5});
@@ -123,7 +123,7 @@ const palette=ambientTheme.ambientPalette;
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const luminance=c=>c.map(v=>v/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[0.2126,0.7152,0.0722][i],0);
 const composite=(background,color,opacity)=>{const alpha=((color>>>24)&255)/255*opacity;return [16,8,0].map((shift,i)=>((color>>>shift)&255)*alpha+background[i]*(1-alpha));};
-for(const name of ['dark','light']) for(const condition of ['clear','cloud','rain','snow','storm']) {
+for(const name of ['dark','light']) for(const condition of ['clear','cloud','rain','snow','storm','thunder','fog']) {
   const q=await harness().initialize({theme:{name,reducedTransparency:false},windMs:12,touchPulse:1,condition,daylight:{phase:'day',season:'autumn'}});
   const p={...palette({name}), muted:ambientTheme.ambientHomeTheme({name},true).muted, accent:ambientTheme.ambientHomeTheme({name},true).clear, accentLabel:ambientTheme.ambientHomeTheme({name},true).gold};let background=rgb(p.background);
   for(const s of gradients(q)) {
@@ -199,3 +199,13 @@ for (const name of ['light','dark']) {
     console.log(`${name} reading ${key}: ${ratio.toFixed(2)}:1`);
   }
 }
+
+// Route/weather changes share a continuous native clock; quiet pages suppress foreground particles.
+const sharedRoute = await harness().initialize({condition:'cloud'});
+const startsBeforeRoute = started(sharedRoute).length;
+sharedRoute.render({quiet:true,condition:'thunder',windMs:10});
+assert.equal(started(sharedRoute).length,startsBeforeRoute,'route/weather changes must not restart the environmental clock');
+assert.equal(nodes(sharedRoute.tree).filter(n=>n.props?.testID==='ambient-weather-particle').length,0);
+assert.equal(nodes(sharedRoute.tree).filter(n=>n.props?.testID==='ambient-sky-star').length,0);
+sharedRoute.unmount();
+console.log('PASS shared-route continuous phase and quiet-page particle suppression.');

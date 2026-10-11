@@ -203,7 +203,7 @@ export function DestinationCareScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.isShort ? spacing.md : spacing.lg,
+            gap: Platform.OS === "ios" ? 12 : layout.isShort ? spacing.md : spacing.lg,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -592,9 +592,9 @@ function SummaryChip({
       <View style={[[styles.summaryIconFrame, { backgroundColor: `${color}18` }], Platform.OS === "ios" && ambientVisual.summaryIconFrame]}>
         <Image source={icon} style={[[styles.summaryIcon, { tintColor: color }], Platform.OS === "ios" && ambientVisual.summaryIcon]} resizeMode="contain" />
       </View>
-      <Text numberOfLines={1} style={[[styles.summaryLabel, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.summaryLabel]}>{label}</Text>
-      <Text numberOfLines={1} style={[[styles.summaryValue, pageStyles.body, { color: theme.text }], Platform.OS === "ios" && ambientVisual.summaryValue]}>{value}</Text>
-      <Text numberOfLines={1} style={[[styles.summaryMeta, pageStyles.compactCaption, { color }], Platform.OS === "ios" && ambientVisual.summaryMeta]}>{meta}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryLabel, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.summaryLabel]}>{label}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryValue, pageStyles.body, { color: theme.text }], Platform.OS === "ios" && ambientVisual.summaryValue]}>{value}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryMeta, pageStyles.compactCaption, { color }], Platform.OS === "ios" && ambientVisual.summaryMeta]}>{meta}</Text>
     </FeedbackPressable>
   );
 }
@@ -1706,8 +1706,8 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 0,
+    "gap": 12
   },
   "labelPanel": {
     "backgroundColor": "transparent",
@@ -1715,8 +1715,8 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 8,
+    "gap": 8
   },
   "outfitPanel": {
     "backgroundColor": "transparent",
@@ -1724,8 +1724,8 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 12,
+    "gap": 12
   },
   "detailPanel": {
     "backgroundColor": "transparent",
@@ -1733,10 +1733,11 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 8,
+    "gap": 12
   },
   "placeImageFrame": {
+    "height": 88,
     "borderRadius": 18
   },
   "routeSummaryStrip": {
@@ -1755,14 +1756,14 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
     "borderBottomWidth": 0.5,
-    "paddingVertical": 18,
+    "paddingVertical": 10,
     "flex": 0,
     "width": "100%",
     "minHeight": 64,
     "flexDirection": "row",
     "alignItems": "center",
     "flexWrap": "wrap",
-    "gap": 10
+    "gap": 4
   },
   "summaryLabel": {
     "fontSize": 16,

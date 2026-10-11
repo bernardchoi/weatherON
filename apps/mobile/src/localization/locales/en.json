@@ -881,8 +881,6 @@
   "박람회장": "fairground",
   "박물관": "museum",
   "반경 1km · 최근 30분": "Radius 1km · Last 30 minutes",
-  "반복 ·": "Repeat ·",
-  "반복 · {0}": "Repeat · {0}",
   "반복 알림 끄기": "Turn off recurring notifications",
   "반복 알림 켜기": "Turn on repeat notifications",
   "반복 없음": "no repetition",
@@ -2176,5 +2174,16 @@
   "훨씬 덥게": "much hotter",
   "흐림": "cloudy",
   "흐림 1명": "Cloudy 1 person",
-  "희귀 기상 이벤트 배지 드랍 영역": "Rare Weather Event Badge Drop Zone"
+  "희귀 기상 이벤트 배지 드랍 영역": "Rare Weather Event Badge Drop Zone",
+  "{0}개 보유 · 보유한 옷을 확인하고 정리": "{0} owned · Review and organize your clothes",
+  "날씨 확인 중": "Checking weather",
+  "목적지 날씨 확인 중": "Checking destination weather",
+  "시간대별 예보 확인 중": "Checking hourly forecast",
+  "아직 추가한 옷이 없음": "No clothes added yet",
+  "이전 날씨 · 업데이트 필요": "Earlier weather · Update needed",
+  "저장된 목적지": "Saved destinations",
+  "최신 날씨 확인 후 출발을 준비해 주세요": "Check the latest weather before preparing to leave",
+  "코디 보기 ›": "View outfit ›",
+  "프리셋에서 골라 추가해줘": "Choose from presets to add clothes",
+  "현재 {0}": "Currently {0}"
 }

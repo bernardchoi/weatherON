@@ -1,12 +1,12 @@
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Platform, Image, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
-import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile } from "@weatheron/shared";
-import { AmbientControlSurface } from "../components/AmbientControlSurface";
+import { recommendOutfit, type PlaceSearchResult, type UserPreferenceProfile, type WeatherSnapshot } from "@weatheron/shared";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
+import { AmbientControlSurface } from "../components/AmbientControlSurface";
 import { AppButton } from "../components/AppButton";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
@@ -23,7 +23,14 @@ import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { addMinutesToTime } from "../utils/zonedDateTime";
 
+import { getConditionLabel } from "../utils/weatherPresentation";
+import { useIsNightHour } from "../utils/useIsNightHour";
+import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
+
 type DestinationCardModel = {
+  weatherCondition: string | null;
+  weatherNotice: string | null;
+  weatherAvailable: boolean;
   id: string;
   title: string;
   area: string;
@@ -138,6 +145,8 @@ export function DestinationListScreen({
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{selectedCard ? `${selectedCard.arrivalTime} ${selectedCard.arrivalLabel} · ${alertLabel}` : "목적지를 추가하면 출발 날씨까지 챙겨드려요"}</Text>
           </FeedbackPressable>
         )}
+
+        {Platform.OS === "ios" && hasDestinations ? <Text style={[pageStyles.caption, { color: theme.muted }]}>저장된 목적지</Text> : null}
 
         <View style={styles.destinationList}>
           {hasDestinations ? (
@@ -305,46 +314,42 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
   const { language } = React.use(LocalizationContext);
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale > 1.3;
-  const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
-  const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 8, minHeight: 44 }}>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-      <View style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18, borderWidth: selected ? StyleSheet.hairlineWidth : 0, borderColor: theme.clear }}><Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} accessible={false} style={{ width: 28, height: 28, tintColor: selected ? theme.clear : theme.muted }} /></View>
+  const isNight = useIsNightHour({ coordinate: item.place.coordinate, timeZone: resolveWeatherTimeZone(item.place.countryCode, item.place.timezone) });
+  const weatherIcon = item.weatherCondition ? ambientWeatherIcon(item.weatherCondition, isNight, theme) : undefined;
+  const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 8, minHeight: stacked ? undefined : 112 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} accessible={false} style={{ width: 22, height: 22, tintColor: selected ? theme.clear : theme.muted }} />
       <View style={{ flex: 1, gap: 2 }}>
-        <RawText style={{ fontSize: featured ? 22 : 18, lineHeight: featured ? 28 : 24, fontWeight: "700", color: theme.text }}>{item.title}</RawText>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          <RawText style={[pageStyles.caption, { color: theme.muted }]}>{item.area}</RawText>
-          {item.label ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{getDestinationLabelText(item.label)}</Text> : null}
-        </View>
+        <RawText style={{ fontSize: 20, lineHeight: 26, fontWeight: "700", color: theme.text }}>{item.title}</RawText>
+        <RawText style={[pageStyles.caption, { color: theme.muted }]}>{item.area}{item.label ? ` · ${translateText(getDestinationLabelText(item.label), language)}` : ""}</RawText>
       </View>
-      {!stacked ? <Text style={[pageStyles.caption, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text> : null}
+      <Text accessible={false} style={{ fontSize: 22, color: theme.muted }}>›</Text>
     </View>
-    {stacked ? <Text style={[pageStyles.caption, { color: statusColor }]}>{getAlertPillLabel(item.careEnabled, permissionReady)}</Text> : null}
     <View style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "flex-start" : "center", gap: 12 }}>
-      <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
-      <View style={{ flex: stacked ? undefined : 1, gap: 2 }}>
-        <Text style={{ fontSize: featured && item.departureTime.includes(":") ? 32 : 20, lineHeight: featured && item.departureTime.includes(":") ? 38 : 28, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
+      <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
+        <Text style={{ fontSize: item.departureTime.includes(":") ? 28 : 18, lineHeight: 32, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
+        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalTime} {item.arrivalLabel}</Text>
       </View>
-      <View style={{ gap: 2 }}>
-        <Text style={[pageStyles.body, { color: theme.text }]}>{item.arrivalTime}</Text>
-        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalLabel}</Text>
-      </View>
-    </View>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-      <Image source={ambientUiIcons.temperature} style={{ width: 22, height: 22, tintColor: theme.muted }} />
-      <Text style={[pageStyles.body, { color: theme.text }]}>{item.originTemp} → {item.destinationTemp}</Text>
-      <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.tempDiff}</Text>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginLeft: "auto" }}>
-        <Image source={ambientUiIcons.umbrella} style={{ width: 22, height: 22, tintColor: item.warningKind === "rain" ? theme.clear : theme.muted }} />
-        <Text style={[pageStyles.caption, { color: theme.text }]}>{item.rainPct}</Text>
+      <View style={{ gap: 2, alignItems: stacked ? "flex-start" : "flex-end" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Image source={weatherIcon?.source ?? ambientUiIcons.temperature} accessible={false} style={{ width: 32, height: 32, ...(weatherIcon?.tintColor ? { tintColor: weatherIcon.tintColor } : !weatherIcon ? { tintColor: theme.muted } : {}) }} />
+          <Text style={{ fontSize: 28, lineHeight: 32, fontWeight: "600", color: theme.text }}>{item.weatherAvailable ? item.destinationTemp : "—"}</Text>
+        </View>
+        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.weatherAvailable ? `현재 ${item.weatherCondition ? translateText(getConditionLabel(item.weatherCondition), language) : "날씨"}` : "날씨 확인 중"}</Text>
       </View>
     </View>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-      <Text style={[pageStyles.caption, { color: item.tone === "warm" ? theme.warm : theme.muted, flexShrink: 1 }]}>{getDestinationActionText(item)}</Text>
-      <Text style={[pageStyles.caption, { color: theme.muted }]}>반복 · {translateText(item.repeatLabel, language)}</Text>
-    </View>
+    {item.weatherNotice ? <Text style={[pageStyles.caption, { color: theme.warm }]}>{item.weatherNotice}</Text> : null}
+    {selected ? <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border, paddingTop: 8, gap: 4, minHeight: stacked ? undefined : 52 }}>
+      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 6 }}>
+        <Image source={item.warningKind === "wind" ? ambientUiIcons.wind : ambientUiIcons.umbrella} accessible={false} style={{ width: 20, height: 20, tintColor: theme.clear }} />
+        <Text style={[pageStyles.caption, { flex: 1, color: theme.text }]}>{item.weatherNotice ? "최신 날씨 확인 후 출발을 준비해 주세요" : getDestinationActionText(item)}</Text>
+      </View>
+      <Text style={[pageStyles.caption, { color: getStatusColor(item.careEnabled, permissionReady, theme) }]}>{getAlertPillLabel(item.careEnabled, permissionReady)} · {translateText(item.repeatLabel, language)}</Text>
+    </View> : null}
   </FeedbackPressable>;
-  return featured ? <AmbientControlSurface style={{ padding: 16 }}>{content}</AmbientControlSurface>
-    : <View style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>{content}</View>;
+  return selected
+    ? <AmbientControlSurface style={{ padding: 12, gap: 0 }}>{content}</AmbientControlSurface>
+    : <View style={{ padding: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>{content}</View>;
 }
 
 function DestinationCard({
@@ -482,6 +487,7 @@ function buildDestinationCards(
     const outfitItems = Object.values(outfit.items).filter(Boolean);
 
     return {
+      ...getDestinationWeatherPresentation(destinationWeatherById[destination.place.id]),
       id: destination.place.id,
       title: destination.place.name,
       area: getAreaLabel(destination.place),
@@ -511,6 +517,16 @@ function buildDestinationCards(
       changeStatus: destination.changeStatus,
     };
   });
+}
+
+// A fallback for a different place must never masquerade as this destination's weather.
+function getDestinationWeatherPresentation(weather: WeatherSnapshot | undefined) {
+  if (!weather || weather.locationUnverified || weather.source === "fallback" || weather.current.tempAvailable === false || !Number.isFinite(weather.current.tempC)) {
+    return { weatherCondition: null, weatherAvailable: false, weatherNotice: "목적지 날씨 확인 중" };
+  }
+  const weatherNotice = weather.stale ? "이전 날씨 · 업데이트 필요"
+    : !weather.hourly.some(hour => Date.parse(hour.time) > Date.now()) ? "시간대별 예보 확인 중" : null;
+  return { weatherCondition: weather.current.condition, weatherAvailable: true, weatherNotice };
 }
 
 function buildDestinationWarning(

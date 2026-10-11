@@ -28,6 +28,11 @@ export function normalizeWeatherKitWeather(
     timezone: options.timezone,
     observedAt,
     current: {
+      atmosphere: {
+        kind: current.conditionCode?.toLowerCase().includes("thunder") ? "thunder" : current.conditionCode?.toLowerCase().includes("fog") ? "fog" : undefined,
+        conditionAvailable: Boolean(current.conditionCode?.trim()),
+        precipitationMm: Number.isFinite(current.precipitationIntensity) ? current.precipitationIntensity : undefined,
+      },
       tempAvailable: Number.isFinite(current.temperature),
       windAvailable: Number.isFinite(current.windSpeed),
       tempC: current.temperature ?? hourly[0]?.tempC ?? 0,

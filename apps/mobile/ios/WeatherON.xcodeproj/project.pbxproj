@@ -27,6 +27,7 @@
 		A11C27010000000000000002 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000022 /* Localizable.strings */; };
 		A11C27010000000000000003 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000023 /* Localizable.strings */; };
 		A11C28010000000000000001 /* WeatherONNativeWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C28010000000000000002 /* WeatherONNativeWeather.swift */; };
+		A11C28110000000000000005 /* WeatherON-Ambient-B.icon in Resources */ = {isa = PBXBuildFile; fileRef = A11C28110000000000000015 /* WeatherON-Ambient-B.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +87,7 @@
 		A11C27010000000000000018 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A11C27010000000000000019 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A11C28010000000000000002 /* WeatherONNativeWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherONNativeWeather.swift; sourceTree = "<group>"; };
+		A11C28110000000000000015 /* WeatherON-Ambient-B.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; name = "WeatherON-Ambient-B.icon"; path = "WeatherON/WeatherON-Ambient-B.icon"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +119,7 @@
 				A11C26010000000000000011 /* LiquidGlassNavigationView.swift */,
 				A11C26010000000000000012 /* LiquidGlassNavigationView.m */,
 				A11C26010000000000000015 /* WeatherON-App-Icon.icon */,
+				A11C28110000000000000015 /* WeatherON-Ambient-B.icon */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -326,6 +329,7 @@
 				A11C27010000000000000002 /* Localizable.strings in Resources */,
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				A11C26010000000000000005 /* WeatherON-App-Icon.icon in Resources */,
+				A11C28110000000000000005 /* WeatherON-Ambient-B.icon in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				B2F64F94C6529480B4064978 /* PrivacyInfo.xcprivacy in Resources */,
@@ -549,7 +553,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9FB6D87C045A522848899D8F /* Pods-WeatherON.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "WeatherON-App-Icon";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "WeatherON-Ambient-B";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WeatherON/WeatherON.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -589,7 +593,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 43D854AC55A59F547AED9959 /* Pods-WeatherON.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "WeatherON-App-Icon";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "WeatherON-Ambient-B";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WeatherON/WeatherONRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";

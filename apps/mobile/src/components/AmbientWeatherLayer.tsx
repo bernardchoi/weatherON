@@ -6,14 +6,14 @@ import type { AmbientDaylight } from "../utils/weatherDaylight";
 export type AmbientWeatherRegion = { x: number; y: number; width: number; height: number };
 // A process-wide deadline avoids a meteor every time Home is revisited.
 let nextMeteorAt = Date.now() + 90000;
-export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, region, skyRegion, readingAreas = [], scrollOffset, meteorScrollY = 0, scrolling = false, dark }: {
-  kind: string; particles: number; phase: Animated.Value; moving: boolean;
+export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, region, skyRegion, readingAreas = [], scrollOffset, meteorScrollY = 0, scrolling = false, dark, wind = 0, quiet = false }: {
+  kind: string; particles: number; wind?: number; quiet?: boolean; phase: Animated.Value; moving: boolean;
   daylight?: AmbientDaylight; region?: AmbientWeatherRegion; skyRegion?: AmbientWeatherRegion; readingAreas?: AmbientReadRegion[]; scrollOffset?: Animated.Value; meteorScrollY?: number; scrolling?: boolean; dark: boolean;
 }) {
   const meteor = useRef(new Animated.Value(0)).current;
   const sky = skyRegion ?? region;
   const gap = sky ? ambientMeteorGap(sky.height, readingAreas.map(area => ({ ...area, y: area.y - meteorScrollY }))) : null;
-  const night = kind === "clear" && daylight?.phase === "night";
+  const night = !quiet && kind === "clear" && daylight?.phase === "night";
   useEffect(() => {
     meteor.stopAnimation(); meteor.setValue(0);
     if (!night || !moving || !gap || scrolling) return;
@@ -53,7 +53,7 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
 
   const wave = phase.interpolate({ inputRange: [0, .5, 1], outputRange: [0, 1, 0] });
   const warm = daylight?.phase === "twilight";
-  return <View testID="ambient-weather-region" pointerEvents="none" style={{ position: "absolute", left: weatherRegion.x, top: weatherRegion.y, width: weatherRegion.width, height: weatherRegion.height, overflow: "hidden" }}>
+  return <View testID="ambient-weather-region" pointerEvents="none" style={{ position: "absolute", left: weatherRegion.x, top: weatherRegion.y, width: weatherRegion.width, height: weatherRegion.height, overflow: "hidden", opacity: quiet ? .35 : 1 }}>
     {kind === "clear" && daylight && (daylight.phase === "day" || daylight.phase === "twilight") ? <>
       <Animated.View testID="ambient-day-sunlight" style={{ position: "absolute", left: -80, top: -80, width: weatherRegion.width + 160, height: weatherRegion.height + 160,
         // Original diffuse sunlight: an off-screen source, broad halo and two soft rays.
@@ -68,9 +68,9 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
         transform: [{ translateX: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: [0, -18, 13, 0] }) }, { translateY: phase.interpolate({ inputRange: [0, .5, 1], outputRange: [0, 16, 0] }) }, { rotate: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: ["0deg", "-1.6deg", "1.1deg", "0deg"] }) }],
       }} />
     </> : null}
-    {["cloud", "partly-cloudy", "rain", "storm", "snow", "fog"].includes(kind) ? Array.from({ length: 3 }, (_, i) => <Animated.View key={`cloud${i}`} style={{ position: "absolute", left: -weatherRegion.width * .3, top: weatherRegion.height * (.02 + i * .22), width: weatherRegion.width * 1.6, height: weatherRegion.height * .4,
-      experimental_backgroundImage: `radial-gradient(ellipse at center, ${dark ? "#A6BFDA20" : "#FFFFFFB0"} 0%, ${dark ? "#A6BFDA00" : "#FFFFFF00"} 70%)`,
-      opacity: wave.interpolate({ inputRange: [0, 1], outputRange: [.07, kind === "cloud" ? .22 : .14] }), transform: [{ translateX: wave.interpolate({ inputRange: [0, 1], outputRange: [-12 + i * 7, 18 + i * 7] }) }] }} />) : null}
+    {["cloud", "partly-cloudy", "rain", "storm", "thunder", "snow", "fog"].includes(kind) ? Array.from({ length: 3 }, (_, i) => <Animated.View key={`cloud${i}`} testID="ambient-cloud-volume" style={{ position: "absolute", left: -weatherRegion.width * .3, top: weatherRegion.height * ((kind === "fog" ? .18 : .02) + i * .22), width: weatherRegion.width * 1.6, height: weatherRegion.height * (kind === "fog" ? .25 : .4),
+      experimental_backgroundImage: `radial-gradient(ellipse at center, ${dark ? "#A6BFDA52" : "#FFFFFFC0"} 0%, ${dark ? "#A6BFDA00" : "#FFFFFF00"} 70%)`,
+      opacity: phase.interpolate({ inputRange: [0, .25, .6, 1], outputRange: (i % 2 ? [.10, .19, .12, .10] : [.18, .11, .24, .18]).map(value => dark ? value / 3 : value) }), transform: [{ translateX: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: [0, (i % 2 ? -1 : 1) * (30 + wind * 2), (i % 2 ? 1 : -1) * 18, 0] }) }, { translateY: phase.interpolate({ inputRange: [0, .4, 1], outputRange: [0, i % 2 ? -16 : 12, 0] }) }] }} />) : null}
     {Array.from({ length: particles }, (_, i) => {
       const snow = kind === "snow";
       // Several traversals inside a long common native clock, with invisible resets.
@@ -90,13 +90,16 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
       const contentY = scrollOffset ? Animated.add(scrollOffset, fallingY) : fallingY;
       let readWeight: Animated.AnimatedMultiplication<number> | number = 1;
       for (const area of readingAreas) {
-        if (x < area.x - 10 || x > area.x + area.width + 10) continue;
+        if (x < area.x - 24 || x > area.x + area.width + 24) continue;
         const inside = contentY.interpolate({ inputRange: [area.y - 12, area.y, area.y + area.height, area.y + area.height + 12], outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
         readWeight = Animated.multiply(readWeight, Animated.subtract(1, Animated.multiply(.965, inside)));
       }
-      return <Animated.View key={`particle${i}`} testID="ambient-weather-particle" style={{ position: "absolute", left: x, top: -14, width: snow ? 3 : 1, height: snow ? 3 : 12, borderRadius: snow ? 2 : 0, backgroundColor: dark ? "#D6E9F9" : "#568DAF", opacity: Animated.multiply(readWeight, phase.interpolate({ inputRange, outputRange: visibility.map(value => value * (snow ? .55 : .34)) })), transform: [{ translateY: fallingY }, { translateX: phase.interpolate({ inputRange: [0, .5, 1], outputRange: snow ? [-5, 8, -5] : [0, 3, 0] }) }] }} />;
+      return <Animated.View key={`particle${i}`} testID="ambient-weather-particle" style={{ position: "absolute", left: x, top: -14, width: snow ? 3 : 1, height: snow ? 3 : 12, borderRadius: snow ? 2 : 0, backgroundColor: dark ? "#D6E9F9" : "#568DAF", opacity: Animated.multiply(readWeight, phase.interpolate({ inputRange, outputRange: visibility.map(value => value * (snow ? .55 : .34)) })), transform: [{ translateY: fallingY }, { translateX: phase.interpolate({ inputRange: [0, .5, 1], outputRange: snow ? [-5, 8 + wind, -5] : [0, 3 + wind, 0] }) }] }} />;
     })}
-    {/* Provider storm means heavy rain; it does not prove lightning. */}
-    {kind === "storm" ? <Animated.View style={{ position: "absolute", inset: 0, backgroundColor: "#DDEAF8", opacity: phase.interpolate({ inputRange: [0, .73, .75, .79, 1], outputRange: [0, 0, .06, 0, 0] }) }} /> : null}
+    {/* Only explicit provider thunder evidence adds a slow, local cloud illumination. No flash. */}
+    {kind === "thunder" ? <Animated.View testID="ambient-thunder-cloud-light" style={{ position: "absolute", left: weatherRegion.width * .55, top: weatherRegion.height * .1, width: weatherRegion.width * .6, height: weatherRegion.height * .24,
+      experimental_backgroundImage: "radial-gradient(ellipse at center, #DDEAF850 0%, #DDEAF800 72%)",
+      opacity: phase.interpolate({ inputRange: [0, .25, .55, .8, 1], outputRange: dark ? [.008, .025, .01, .02, .008] : [.03, .10, .04, .08, .03] }),
+    }} /> : null}
   </View>;
 }

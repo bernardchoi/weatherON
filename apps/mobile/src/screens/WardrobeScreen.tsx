@@ -94,7 +94,7 @@ export function WardrobeScreen({
         {ownedItems.length === 0 ? (
           <View style={[styles.emptyState, Platform.OS === "ios" && ambientVisual.emptyState]}>
             {Platform.OS === "ios" ? <>
-              <Image source={require("../../../../assets/ambient-surface-runtime-v1/ui-outline/wardrobe-empty.png")} resizeMode="contain" accessibilityElementsHidden style={{ width: 128, height: 128, tintColor: theme.border, alignSelf: "center", marginVertical: 12 }} />
+              <Image source={require("../../../../assets/ambient-surface-runtime-v1/ui-outline/wardrobe-empty.png")} resizeMode="contain" accessibilityElementsHidden style={{ width: 96, height: 96, tintColor: theme.border, alignSelf: "center", marginVertical: 8 }} />
               <View style={{ alignItems: "center", gap: 6 }}>
                 <Text style={{ fontSize: 20, lineHeight: 28, fontWeight: "600", color: theme.text }}>아직 추가한 옷이 없음</Text>
                 <Text style={{ fontSize: 16, lineHeight: 24, color: theme.muted }}>프리셋에서 골라 추가해줘</Text>
@@ -423,8 +423,8 @@ const ambientVisual = StyleSheet.create({
   },
   "emptyState": {
     "alignItems": "stretch",
-    "gap": 20,
-    "paddingVertical": 30
+    "gap": 16,
+    "paddingVertical": 16
   },
   "emptyText": {
     "fontSize": 16,

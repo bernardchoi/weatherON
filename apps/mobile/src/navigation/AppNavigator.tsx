@@ -3,9 +3,10 @@ import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "../localization/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AmbientReadingContext, AmbientReadingSurface } from "../components/AmbientReadingSurface";
+import { AmbientReadingContext } from "../components/AmbientReadingSurface";
 import { ambientReadingTheme, ambientReadingRouteIds } from "../theme/ambientSurface";
-import { HomeAmbientHost } from "../components/HomeAmbientHost";
+import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
+import { AppAmbientSurface } from "../components/AppAmbientSurface";
 import { BottomNav } from "../components/BottomNav";
 import { AppButton } from "../components/AppButton";
 import { LaunchSplash } from "../components/LaunchSplash";
@@ -87,6 +88,11 @@ export function AppNavigator() {
   const presentationTheme = readingAmbient ? ambientReadingTheme(theme) : theme;
   const appBackgroundColor = presentationTheme.background;
   const fullHomeAmbient = Platform.OS === "ios" && route === "H1";
+  const ambientContext = route === "G2" ? "destination" : ["C1", "C4"].includes(route) ? "outfit" : ["H1", "H6"].includes(route) ? "origin" : "neutral";
+  const ambientWeather = ambientContext === "destination" ? appState.state.destinationWeatherById[appState.selectedDestinationPlace.id] ?? appState.state.destinationCare.destinationWeather : ambientContext === "outfit" ? appState.state.weather : appState.state.destinationCare.originWeather;
+  const ambientLocation = ambientContext === "destination" && ambientWeather.locationId === appState.selectedDestinationPlace.id
+    ? { locationId: ambientWeather.locationId, locationName: ambientWeather.locationName, countryCode: ambientWeather.countryCode, coordinate: appState.selectedDestinationPlace.coordinate, timezone: resolveWeatherTimeZone(ambientWeather.countryCode, appState.selectedDestinationPlace.timezone ?? ambientWeather.timezone) }
+    : appState.placeSearchOrigin;
   const contentBackground = fullHomeAmbient || readingAmbient ? "transparent" : appBackgroundColor;
 
   useEffect(() => {
@@ -369,8 +375,7 @@ export function AppNavigator() {
   return (
     <AppThemeProvider theme={presentationTheme}>
       <AmbientReadingContext.Provider value={readingAmbient}>
-      <HomeAmbientHost enabled={fullHomeAmbient} backgroundColor={appBackgroundColor} theme={theme} weather={appState.state.destinationCare.originWeather} location={appState.placeSearchOrigin} reliable={appState.state.weatherProvider.status === "ready" && !appState.state.weatherProvider.fallbackUsed && !appState.state.destinationCare.originWeather.stale && !appState.isWeatherLoading}>
-      {readingAmbient ? <AmbientReadingSurface theme={presentationTheme} routeId={route} /> : null}
+      <AppAmbientSurface routeId={route} enabled={Platform.OS === "ios" && !launchVisible} backgroundColor={appBackgroundColor} theme={theme} weather={ambientWeather} location={ambientLocation} reliable={ambientContext !== "neutral" && appState.state.weatherProvider.status === "ready" && !appState.state.weatherProvider.fallbackUsed && !ambientWeather.stale && !appState.isWeatherLoading}>
       <SafeAreaView
         accessibilityElementsHidden={launchVisible}
         importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
@@ -389,7 +394,7 @@ export function AppNavigator() {
         </View>
       </SafeAreaView>
       {launchVisible ? <LaunchSplash started={launchStarted} onReady={readyLaunch} onFinish={finishLaunch} /> : null}
-      </HomeAmbientHost>
+      </AppAmbientSurface>
       </AmbientReadingContext.Provider>
     </AppThemeProvider>
   );

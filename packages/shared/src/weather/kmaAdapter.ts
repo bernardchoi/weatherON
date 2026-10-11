@@ -25,6 +25,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
     countryCode: options.countryCode,
     observedAt: options.observedAt ?? toIsoLike(first.time, options.timezone),
     current: {
+      atmosphere: { conditionAvailable: firstBucket?.PTY !== undefined || firstBucket?.SKY !== undefined },
       tempC: first.tempC,
       feelsLikeC: calculateFeelsLikeC(first.tempC, firstHumidityPct, first.windMs),
       condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY),

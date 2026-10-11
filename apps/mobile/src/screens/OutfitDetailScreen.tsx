@@ -42,6 +42,10 @@ export function OutfitDetailScreen({
   const layout = useResponsiveLayout();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
   const usesWrappedItemGrid = items.length > 3;
+  // The approved detail board compares the complete set in one rail. Keep
+  // wrapping when width or text scale needs more room for unchanged labels.
+  const comparisonRail = ambient && layout.width >= 390 && fontScale <= 1.15 && items.length <= 4;
+  const comparisonImageHeight = layout.width >= 430 ? 116 : 104;
   const weatherReasons = buildWeatherReasons(state, theme);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const canSaveDirectly = accountLinked && termsRequiredAccepted;
@@ -106,7 +110,7 @@ export function OutfitDetailScreen({
     >
       {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
       <Section title={ambient ? state.outfit.decisionText : "오늘 입기 좋은 세트"} caption={ambient ? undefined : state.outfit.decisionText} titleStyle={ambient ? { fontSize: 23, lineHeight: 32, fontWeight: "700" } : undefined} accent="clear">
-        <View style={[styles.outfitRail, ambient && { columnGap: 12, rowGap: 18, alignItems: "flex-start" }]}>
+        <View style={[styles.outfitRail, ambient && { columnGap: 12, rowGap: 18, alignItems: "flex-start" }, comparisonRail && { flexWrap: "nowrap", columnGap: 10 }]}>
           {items.map(([slot, item]) => {
             const imageSource = getOutfitImageSource(item?.imageUrl);
             return item ? (
@@ -125,18 +129,19 @@ export function OutfitDetailScreen({
                     borderColor: theme.border,
                   },
                   ambient && { backgroundColor: "transparent", borderWidth: 0, padding: 0, justifyContent: "flex-start", width: fontScale > 1.5 ? "100%" : "47%", flexGrow: 0, flexShrink: 0, flexBasis: fontScale > 1.5 ? "100%" : "47%" },
+                  comparisonRail && { width: undefined, flexBasis: 0, flexGrow: 1 },
                 ]}
               >
                 <View
                   style={[
                     styles.outfitImageFrame,
-                    { height: ambient ? (layout.height >= 900 ? 168 : 150) : layout.outfitDetailImageHeight, backgroundColor: ambient ? "transparent" : theme.card },
+                    { height: ambient ? (comparisonRail ? comparisonImageHeight : layout.height >= 900 ? 168 : 150) : layout.outfitDetailImageHeight, backgroundColor: ambient ? "transparent" : theme.card },
                   ]}
                 >
                   {imageSource ? (
                     <Image
                       source={imageSource}
-                      style={[styles.outfitImage, { height: ambient ? (slot === "shoes" ? 108 : slot === "accessory" ? 100 : layout.height >= 900 ? 164 : 146) : Math.max(40, layout.outfitDetailImageHeight - 4) }]}
+                      style={[styles.outfitImage, { height: ambient ? (comparisonRail ? comparisonImageHeight * (slot === "shoes" ? 0.70 : slot === "accessory" ? 0.65 : 0.96) : slot === "shoes" ? 108 : slot === "accessory" ? 100 : layout.height >= 900 ? 164 : 146) : Math.max(40, layout.outfitDetailImageHeight - 4) }]}
                       resizeMode="contain"
                     />
                   ) : (
