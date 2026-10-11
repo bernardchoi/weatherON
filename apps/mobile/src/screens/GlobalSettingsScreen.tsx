@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { ambientUiIcons } from "../ambientAssets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
@@ -16,6 +16,8 @@ import {
 } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
+import { ambientPalette } from "../theme/ambientSurface";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
 
@@ -34,6 +36,7 @@ export function GlobalSettingsScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const ambient = Platform.OS === "ios";
 
   return (
     <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
@@ -44,7 +47,7 @@ export function GlobalSettingsScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.settingsContentGap,
+            gap: ambient ? 8 : layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -63,6 +66,7 @@ export function GlobalSettingsScreen({
                 lineHeight: layout.screenTitleLineHeight,
               },
               pageStyles.title,
+              ambient && ambientVisual.title,
             ]}
           >
             표시 설정
@@ -73,6 +77,7 @@ export function GlobalSettingsScreen({
 
         <AppListGroup>
           <AppListRow
+            ambientLayout="setting"
             icon={screenIcons.uv}
             title="온도"
             subtitle="날씨와 출발 비교"
@@ -88,6 +93,7 @@ export function GlobalSettingsScreen({
             )}
           />
           <AppListRow
+            ambientLayout="setting"
             icon={screenIcons.pin}
             title="거리"
             subtitle="검색과 이동 안내"
@@ -103,9 +109,24 @@ export function GlobalSettingsScreen({
               />
             )}
           />
+          {ambient ? <AppListRow
+            ambientLayout="setting"
+            icon={screenIcons.myDisplay}
+            title="테마"
+            subtitle="앱 전체 색상"
+            divider
+            right={<SegmentControl
+              label="테마"
+              options={(["system", "light", "dark"] as const).map((mode) => ({
+                label: getThemeModeLabel(mode),
+                active: themeMode === mode,
+                onPress: () => onSetThemeMode(mode),
+              }))}
+            />}
+          /> : null}
         </AppListGroup>
 
-        <View style={[[styles.themePanel, pageStyles.card, { backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.themePanel]}>
+        {!ambient ? <View style={[[styles.themePanel, pageStyles.card, { backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.themePanel]}>
           <View style={styles.themeCopy}>
             <Image source={screenIcons.myDisplay} style={[styles.themeIcon, { tintColor: theme.clear }]} resizeMode="contain" />
             <View>
@@ -122,12 +143,13 @@ export function GlobalSettingsScreen({
               onPress: () => onSetThemeMode(mode),
             }))}
           />
-        </View>
+        </View> : null}
 
         <Text style={[[styles.groupLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.groupLabel]}>화면</Text>
 
         <AppListGroup>
           <AppListRow
+            ambientLayout="setting"
             icon={screenIcons.settings}
             title="투명 효과 줄이기"
             subtitle={reducedTransparency ? "반투명 패널·탭 바를 단색으로 표시" : "기본 투명 효과 사용"}
@@ -158,12 +180,12 @@ export function GlobalSettingsScreen({
 
         <View
           accessibilityLabel="표시 설정 버전 정보"
-          style={styles.footerLinks}
+          style={[styles.footerLinks, ambient && ambientVisual.footerLinks]}
         >
           <Text style={[[styles.footerText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.footerText]}>WeatherON v1.0.0</Text>
         </View>
 
-        <View style={styles.bottomSpacer} />
+        {!ambient ? <View style={styles.bottomSpacer} /> : null}
       </ScrollView>
     </View>
   );
@@ -180,6 +202,11 @@ function SegmentControl({
 }) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const { width, fontScale } = useWindowDimensions();
+  const ambient = Platform.OS === "ios";
+  const stacked = ambient && (width < 390 || fontScale > 1.15);
+  const verticalOptions = stacked && (options.length > 2 || fontScale > 1.6);
+  const palette = ambientPalette(theme);
   return (
     <View
       style={[
@@ -189,6 +216,9 @@ function SegmentControl({
         layout.isShort && !fullWidth ? styles.segmentControlShort : null,
         { backgroundColor: theme.nav, borderColor: theme.border },
         androidMaterialSurface(theme, "surfaceContainer"),
+        ambient && { width: options.length > 2 ? 192 : 160, minHeight: 48, padding: 2, borderWidth: StyleSheet.hairlineWidth, backgroundColor: "transparent" },
+        ambient && (fullWidth || stacked) && { width: "100%" },
+        verticalOptions && { flexDirection: "column", alignItems: "stretch" },
       ]}
     >
       {options.map((option) => (
@@ -203,13 +233,15 @@ function SegmentControl({
             styles.segmentOption,
             option.active ? androidMaterialSurface(theme, "secondaryContainer") : null,
             { backgroundColor: option.active ? androidMaterialColor(theme, "secondaryContainer") : "transparent" },
+            ambient && { minHeight: 44, backgroundColor: option.active ? palette.selected : "transparent" },
+            verticalOptions && { flex: 0, paddingVertical: 8 },
           ]}
         >
           <Text
             style={[[
               styles.segmentText,
               { color: option.active ? androidMaterialColor(theme, "onSecondaryContainer") : theme.subtle },
-            ], Platform.OS === "ios" && ambientVisual.segmentText]}
+            ], ambient && ambientVisual.segmentText, ambient && { color: option.active ? theme.clear : theme.subtle }]}
           >
             {option.label}
           </Text>
@@ -222,8 +254,15 @@ function SegmentControl({
 function MaterialSwitch({ enabled }: { enabled: boolean }) {
   const theme = useAppTheme();
   const progress = React.useRef(new Animated.Value(enabled ? 1 : 0)).current;
+  const reducedMotion = useReducedMotion();
+  const iosReducedMotion = Platform.OS === "ios" ? reducedMotion : false;
 
   React.useEffect(() => {
+    if (iosReducedMotion !== false) {
+      progress.stopAnimation();
+      progress.setValue(enabled ? 1 : 0);
+      return;
+    }
     const animation = Animated.timing(progress, {
       toValue: enabled ? 1 : 0,
       duration: 160,
@@ -232,7 +271,7 @@ function MaterialSwitch({ enabled }: { enabled: boolean }) {
     });
     animation.start();
     return () => animation.stop();
-  }, [enabled, progress]);
+  }, [enabled, progress, iosReducedMotion]);
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, Platform.OS === "android" ? 18 : 20] });
   return (
@@ -252,7 +291,7 @@ function MaterialSwitch({ enabled }: { enabled: boolean }) {
         style={[
           styles.effectSwitchKnob,
           {
-            backgroundColor: enabled ? androidMaterialColor(theme, "onPrimary") : theme.subtle,
+            backgroundColor: Platform.OS === "ios" ? "#FFFFFF" : enabled ? androidMaterialColor(theme, "onPrimary") : theme.subtle,
             transform: [{ translateX }],
           },
         ]}
@@ -373,6 +412,8 @@ const styles = StyleSheet.create({
 
 // Approved iOS Ambient hierarchy; Android retains its existing presentation.
 const ambientVisual = StyleSheet.create({
+  title: { fontSize: 26, lineHeight: 34 },
+  footerLinks: { alignItems: "flex-start", marginTop: 24 },
   "themePanel": {
     "backgroundColor": "transparent",
     "borderWidth": 0,

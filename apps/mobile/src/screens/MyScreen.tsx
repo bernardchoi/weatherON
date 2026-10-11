@@ -12,6 +12,9 @@ import type { AccountProvider } from "../providers/accountAuth";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
+import type { AppLanguage } from "../localization/localePolicy";
 
 type MenuTone = "clear" | "gold" | "sky" | "warm";
 
@@ -33,6 +36,8 @@ export function MyScreen({
   const theme = useAppTheme();
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
+  const { language } = React.use(LocalizationContext);
+  const accountSize = layout.height >= 900 ? 120 : 104;
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
@@ -42,7 +47,7 @@ export function MyScreen({
   const locationState = getLocationState(locationReady, weatherLocationMode);
   const permissionTone: MenuTone =
     locationState.tone === "warm" ? "warm" : locationState.tone === "clear" && alertState.tone === "clear" ? "clear" : "sky";
-  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode);
+  const globalSettingsSummary = getGlobalSettingsSummary(temperatureUnit, distanceUnit, themeMode, ambient ? language : undefined);
   const recommendation = locationState.tone === "warm"
     ? { title: "날씨 위치 선택", body: "현재 위치를 허용하거나 수동 위치를 선택해요", action: "권한에서 설정", route: "M4" as const }
     : smartCareEnabled && !permissionReady
@@ -66,9 +71,10 @@ export function MyScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: ambient ? 12 : layout.settingsContentGap,
+            gap: ambient ? 8 : layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
+            ...(ambient ? { paddingBottom: 16 } : {}),
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -84,19 +90,20 @@ export function MyScreen({
                 lineHeight: layout.screenTitleLineHeight,
               },
               pageStyles.title,
+              ambient && ambientVisual.title,
             ]}
           >
             마이
           </Text>
         </View>
 
-        {ambient ? <View style={{ alignItems: "center", gap: 10, paddingVertical: 12 }}>
-          <View style={{ width: 88, height: 88, borderRadius: 44, alignItems: "center", justifyContent: "center", backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>
-            <Image source={ambientUiIcons.tabMy} style={{ width: 56, height: 56, tintColor: theme.muted }} resizeMode="contain" accessibilityElementsHidden />
+        {ambient ? <View style={ambientVisual.account}>
+          <View style={[ambientVisual.avatar, { width: accountSize, height: accountSize, backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
           </View>
           <Text style={{ fontSize: 24, lineHeight: 32, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
-          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 4 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} /></View>
+          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
         </View> : <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
@@ -151,7 +158,7 @@ export function MyScreen({
         ) : null}
 
         {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text> : null}
-        <AmbientControlSurface style={{ padding: 12, gap: 0 }}>
+        <AmbientControlSurface style={{ padding: ambient ? 8 : 12, gap: 0 }}>
           {ambient && recommendation ? <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${recommendation.title}, ${recommendation.action}`} onPress={() => onNavigate(recommendation.route)} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, paddingBottom: 16 }}>
             <Image source={recommendation.route === "M4" ? ambientUiIcons.location : ambientUiIcons.notifications} style={{ width: 28, height: 28, tintColor: theme.warm }} />
             <View style={{ flex: 1, gap: 4 }}>
@@ -164,15 +171,17 @@ export function MyScreen({
         <AppListGroup>
           <AppListRow
             contained={ambient}
+            ambientLayout="menu"
             icon={ambient ? ambientUiIcons.permissions : uiIconAssets.myPermissions}
             title="앱 권한 관리"
-            subtitle={`위치 ${locationState.status} · 알림 ${alertState.status}`}
+            subtitle={`위치 ${ambient ? translateText(locationState.status, language) : locationState.status} · 알림 ${ambient ? translateText(alertState.status, language) : alertState.status}`}
             value={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
             tone={permissionTone}
             onPress={() => onNavigate("M4")}
           />
           <AppListRow
             contained={ambient}
+            ambientLayout="menu"
             icon={ambient ? ambientUiIcons.notifications : uiIconAssets.myAlerts}
             title="스마트 알림 설정"
             subtitle={alertState.meta}
@@ -183,6 +192,7 @@ export function MyScreen({
           />
           <AppListRow
             contained={ambient}
+            ambientLayout="menu"
             icon={ambient ? ambientUiIcons.settings : uiIconAssets.myDisplay}
             title="표시 설정"
             subtitle={globalSettingsSummary}
@@ -198,7 +208,8 @@ export function MyScreen({
 
         <AppListGroup>
           <AppListRow
-            icon={uiIconAssets.myPolicy}
+            ambientLayout="menu"
+            icon={ambient ? ambientUiIcons.policyDocument : uiIconAssets.myPolicy}
             title="정책 및 법적 고지"
             subtitle="개인정보 · 약관 · 오픈소스"
             value="보기"
@@ -207,7 +218,7 @@ export function MyScreen({
           />
         </AppListGroup>
 
-        <Text style={[styles.appVersion, { color: theme.subtle }]}>WeatherON v1.0.0</Text>
+        <Text style={[styles.appVersion, { color: theme.subtle }, ambient && ambientVisual.version]}>WeatherON v1.0.0</Text>
 
       </ScrollView>
     </View>
@@ -263,10 +274,12 @@ function getGlobalSettingsSummary(
   temperatureUnit: P0ScreenProps["temperatureUnit"],
   distanceUnit: P0ScreenProps["distanceUnit"],
   themeMode: P0ScreenProps["themeMode"],
+  language?: AppLanguage,
 ) {
   const temperatureLabel = temperatureUnit === "celsius" ? "°C" : "°F";
   const distanceLabel = distanceUnit === "meter" ? "m" : "mi";
-  return `${temperatureLabel} · ${distanceLabel} · ${getThemeModeLabel(themeMode)}`;
+  const themeLabel = getThemeModeLabel(themeMode);
+  return `${temperatureLabel} · ${distanceLabel} · ${language ? translateText(themeLabel, language) : themeLabel}`;
 }
 
 function getThemeModeLabel(mode: P0ScreenProps["themeMode"]) {
@@ -301,6 +314,13 @@ function Chevron({ color }: { color: string }) {
     </View>
   );
 }
+
+const ambientVisual = StyleSheet.create({
+  title: { fontSize: 28, lineHeight: 36 },
+  account: { alignItems: "center", gap: 6, paddingVertical: 8 },
+  avatar: { borderRadius: radius.pill, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth },
+  version: { fontSize: 14, lineHeight: 20, fontWeight: "400" },
+});
 
 const styles = StyleSheet.create({
   shell: {

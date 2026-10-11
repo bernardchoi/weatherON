@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle } from "../localization/react-native";
 import { useAmbientReadingSurface } from "./AmbientReadingSurface";
 import { BackButton } from "./BackButton";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
@@ -18,12 +18,14 @@ const navClearancePadding = spacing.xl;
 
 type AppScreenProps = {
   title: string;
+  titleStyle?: StyleProp<TextStyle>;
   subtitle?: string;
   badge?: string;
   heroAction?: React.ReactNode;
   onBack?: () => void;
   showWordmark?: boolean;
   compactHeader?: boolean;
+  stackedHeader?: boolean;
   // 스크롤 밖에 고정하는 하단 영역. 저장/취소처럼 화면 어디서든 바로 눌러야 하는 주요 액션을 담는다 —
   // children으로 넣으면 콘텐츠가 많은 화면에서 스크롤 맨 끝까지 가야만 보이는 문제가 생긴다.
   footer?: React.ReactNode;
@@ -36,6 +38,7 @@ type AppScreenProps = {
 
 export function AppScreen({
   title,
+  titleStyle,
   subtitle,
   badge,
   heroAction,
@@ -46,6 +49,7 @@ export function AppScreen({
   contentPaddingBottom,
   headerBottomSpacing,
   compactHeader = false,
+  stackedHeader = false,
   children,
 }: AppScreenProps) {
   const theme = useAppTheme();
@@ -75,6 +79,7 @@ export function AppScreen({
             compactHeader ? styles.compactHero : null,
             inlineHeader ? styles.inlineHero : null,
             pageStyles.header,
+            stackedHeader && { flexDirection: "column", alignItems: "stretch" },
             {
               gap: inlineHeader ? spacing.xs : compactHeader ? spacing.sm : layout.screenHeaderGap,
               marginBottom: headerBottomSpacing,
@@ -82,7 +87,7 @@ export function AppScreen({
           ]}
         >
           {onBack ? (
-            <View style={compactHeader ? styles.compactBackButtonSlot : styles.backButtonSlot}>
+            <View style={[compactHeader ? styles.compactBackButtonSlot : styles.backButtonSlot, stackedHeader && { alignSelf: "flex-start" }]}>
               <BackButton onPress={onBack} />
             </View>
           ) : null}
@@ -96,6 +101,7 @@ export function AppScreen({
                   lineHeight: layout.screenTitleLineHeight,
                 },
                 pageStyles.title,
+                titleStyle,
               ]}
             >
               {title}

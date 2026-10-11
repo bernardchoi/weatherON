@@ -2,6 +2,8 @@
 import { uiIconAssets } from "./assets";
 import type { AppTheme } from "./theme/tokens";
 export const ambientUiIcons = {
+  // Code vector follows approved 24×24 / 1.75 outline grammar and core v3 document shape.
+  policyDocument: require("../../../assets/ambient-surface-runtime-v1/ui-outline/policy-document.png"),
   delete: require("../../../assets/ambient-surface-runtime-v1/ui-outline/delete.png"),
   wardrobe: require("../../../assets/ambient-surface-runtime-v1/ui-outline/wardrobe.png"),
   style: require("../../../assets/ambient-surface-runtime-v1/ui-outline/style.png"),

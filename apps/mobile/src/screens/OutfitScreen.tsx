@@ -11,6 +11,9 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { pageStyles } from "../theme/pageStyles";
 import { radius, spacing } from "../theme/tokens";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
+import type { AppLanguage } from "../localization/localePolicy";
 import { getConditionLabel } from "../utils/weatherPresentation";
 
 export function OutfitScreen({
@@ -23,6 +26,8 @@ export function OutfitScreen({
   const theme = useAppTheme();
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
+  const { language } = React.use(LocalizationContext);
+  const conditionLabel = ambient ? translateText(getConditionLabel(state.weather.current.condition), language) : getConditionLabel(state.weather.current.condition);
   const { fontScale } = useWindowDimensions();
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
@@ -32,16 +37,16 @@ export function OutfitScreen({
       : ownedItemCount > 0
       ? `내 옷장 ${ownedItemCount}개 반영 · 오늘 추천 중 ${ownedRecommendedCount}/${recommendedItems.length}개 보유`
       : "기본 옷장으로 먼저 골랐어요 · 내 옷을 더하면 추천이 더 나다워져요";
-  const weatherLine = !state.outfitContext ? getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition)
-    : !state.outfitContext.currentAvailable ? `온도 확인 필요 · ${getConditionLabel(state.weather.current.condition)}`
-    : state.outfitContext.reliable ? `현재 · ${Math.round(state.outfitContext.temperature!.value)}도 · ${getConditionLabel(state.weather.current.condition)}`
-    : `최근 관측 · ${Math.round(state.outfitContext.temperature!.value)}도 · ${getConditionLabel(state.weather.current.condition)}`;
+  const weatherLine = !state.outfitContext ? getWeatherLine(state.weather.current.feelsLikeC, state.weather.current.condition, ambient ? language : undefined)
+    : !state.outfitContext.currentAvailable ? `온도 확인 필요 · ${conditionLabel}`
+    : state.outfitContext.reliable ? `현재 · ${Math.round(state.outfitContext.temperature!.value)}도 · ${conditionLabel}`
+    : `최근 관측 · ${Math.round(state.outfitContext.temperature!.value)}도 · ${conditionLabel}`;
   return (
-      <AppScreen title="코디" subtitle={state.outfitContext?.temperature?.basis === "air" ? `${weatherLine} · 현재 기온 기준` : weatherLine} showWordmark={false} compactHeader contentGap={ambient ? 12 : layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={8}>
+      <AppScreen title="코디" titleStyle={ambient ? { fontSize: 28, lineHeight: 36, fontWeight: "700" } : undefined} subtitle={state.outfitContext?.temperature?.basis === "air" ? `${ambient ? translateText(weatherLine, language) : weatherLine} · 현재 기온 기준` : weatherLine} showWordmark={false} compactHeader contentGap={ambient ? 12 : layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={8}>
         <View style={{ gap: 12 }}>
           {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
           <Text style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{state.outfit.decisionText}</Text>
-          <OutfitGrid outfit={state.outfit} maxItems={4} dense singleRow={!ambient && layout.isShort} onItemPress={() => onNavigate("C4")} />
+          <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={() => onNavigate("C4")} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
           <AmbientControlSurface>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
@@ -49,11 +54,11 @@ export function OutfitScreen({
               <View style={[styles.advicePreviewRow, ambient && fontScale > 1.3 && { flexWrap: "wrap" }]}>
                 {ambient ? <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} /> : null}
                 <Text style={[pageStyles.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
-                <Text style={[pageStyles.compactCaption, { color: theme.text, flex: 1 }]}>{item.text}</Text>
+                <Text style={[pageStyles.compactCaption, { color: theme.text, flex: 1, minWidth: 0 }]}>{item.text}</Text>
               </View>
             </FeedbackPressable>
           ))}
-          <View style={[styles.actions, ambient && { alignItems: "center", justifyContent: "space-between", borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }]}>
+          <View style={[styles.actions, ambient && { alignItems: "center", ...(fontScale > 1.3 ? { flexDirection: "column", alignItems: "stretch" } : {}), justifyContent: "space-between", borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }]}>
             {ambient ? <>
               <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 자세히 보기" onPress={() => onNavigate("C4")} style={styles.readingAction}>
                 <Image source={ambientUiIcons.tabOutfit} style={{ width: 26, height: 26, tintColor: theme.clear }} />
@@ -71,11 +76,11 @@ export function OutfitScreen({
           </AmbientControlSurface>
         </View>
         <View style={[styles.criteriaStats, { gap: 8 }, ambient && fontScale > 1.3 && { flexDirection: "column" }]}>
-          <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
+          <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <Image source={ambientUiIcons.wardrobe} style={{ width: 26, height: 26, tintColor: theme.muted }} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>내 옷장</Text></View>
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
           </FeedbackPressable>
-          <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
+          <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <Image source={ambientUiIcons.style} style={{ width: 26, height: 26, tintColor: theme.muted }} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>스타일 기준</Text></View>
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>
@@ -84,8 +89,8 @@ export function OutfitScreen({
     );
 }
 
-function getWeatherLine(feelsLikeC: number, condition: string) {
-  return `${Math.round(feelsLikeC)}도 · ${getConditionLabel(condition)} · 오늘 몸이 느낄 날씨 기준`;
+function getWeatherLine(feelsLikeC: number, condition: string, language?: AppLanguage) {
+  return `${Math.round(feelsLikeC)}도 · ${language ? translateText(getConditionLabel(condition), language) : getConditionLabel(condition)} · 오늘 몸이 느낄 날씨 기준`;
 }
 
 function formatAdviceTime(value: string) {

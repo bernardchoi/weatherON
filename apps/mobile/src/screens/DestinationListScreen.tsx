@@ -1,3 +1,5 @@
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
 import { ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
@@ -120,6 +122,7 @@ export function DestinationListScreen({
                 lineHeight: layout.screenTitleLineHeight,
               },
               pageStyles.title,
+              Platform.OS === "ios" && { fontSize: 28, lineHeight: 36, fontWeight: "700" },
             ]}
           >
             출발
@@ -171,7 +174,7 @@ export function DestinationListScreen({
               style={[[styles.addDestinationRail, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.addDestinationRail]}
             >
               <Text style={[styles.addDestinationIcon, { color: theme.clear }]}>+</Text>
-              <Text style={[styles.addDestinationText, { color: theme.clear }]}>목적지 추가</Text>
+              <Text style={[styles.addDestinationText, { color: theme.clear }, Platform.OS === "ios" && { fontSize: 17, lineHeight: 24, fontWeight: "600" }]}>목적지 추가</Text>
             </FeedbackPressable>
             {savedDestinations.length >= 3 ? <Text style={[styles.limitHint, { color: theme.muted }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
           </View>
@@ -299,12 +302,13 @@ function EmptyBenefit({
 function AmbientDestinationSummary({ item, theme, permissionReady, selected, featured, onOpen }: {
   item: DestinationCardModel; theme: AppTheme; permissionReady: boolean; selected: boolean; featured: boolean; onOpen: () => void;
 }) {
+  const { language } = React.use(LocalizationContext);
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale > 1.3;
   const statusColor = getStatusColor(item.careEnabled, permissionReady, theme);
   const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 8, minHeight: 44 }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-      <Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} style={{ width: 28, height: 28, tintColor: selected ? theme.clear : theme.muted }} />
+      <View style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18, borderWidth: selected ? StyleSheet.hairlineWidth : 0, borderColor: theme.clear }}><Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} accessible={false} style={{ width: 28, height: 28, tintColor: selected ? theme.clear : theme.muted }} /></View>
       <View style={{ flex: 1, gap: 2 }}>
         <RawText style={{ fontSize: featured ? 22 : 18, lineHeight: featured ? 28 : 24, fontWeight: "700", color: theme.text }}>{item.title}</RawText>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -336,7 +340,7 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
     </View>
     <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
       <Text style={[pageStyles.caption, { color: item.tone === "warm" ? theme.warm : theme.muted, flexShrink: 1 }]}>{getDestinationActionText(item)}</Text>
-      <Text style={[pageStyles.caption, { color: theme.muted }]}>반복 · {item.repeatLabel}</Text>
+      <Text style={[pageStyles.caption, { color: theme.muted }]}>반복 · {translateText(item.repeatLabel, language)}</Text>
     </View>
   </FeedbackPressable>;
   return featured ? <AmbientControlSurface style={{ padding: 16 }}>{content}</AmbientControlSurface>

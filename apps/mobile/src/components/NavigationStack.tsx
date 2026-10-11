@@ -55,7 +55,7 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
         stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
         gestureEnabled={index > 0}
         onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
-        {ambientReadingRouteIds.includes(id) ? <AmbientReadingSurface theme={theme} viewport={{ top: -insets.top, height: windowHeight }} /> : null}
+        {ambientReadingRouteIds.includes(id) ? <AmbientReadingSurface theme={theme} viewport={{ top: -insets.top, height: windowHeight }} routeId={id} /> : null}
         {renderScreen(id)}
       </ScreenStackItem>)}
     </ScreenStack>

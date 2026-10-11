@@ -17,6 +17,7 @@ type AppButtonProps = {
   accessibilityLabel?: string;
   disabled?: boolean;
   hapticFeedback?: "automatic" | "none";
+  appearance?: "account";
 };
 
 export function AppButton({
@@ -28,8 +29,10 @@ export function AppButton({
   accessibilityLabel,
   disabled = false,
   hapticFeedback = "automatic",
+  appearance,
 }: AppButtonProps) {
   const theme = useAppTheme();
+  const accountAppearance = Platform.OS === "ios" && appearance === "account";
   const scale = useRef(new Animated.Value(1)).current;
   const reducedMotion = useReducedMotion();
   useEffect(() => { scale.stopAnimation(); scale.setValue(1); return () => scale.stopAnimation(); }, [reducedMotion, scale]);
@@ -79,7 +82,7 @@ export function AppButton({
       }}
       onPressIn={() => animateTo(0.97)}
       onPressOut={() => animateTo(1)}
-      style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null]}
+      style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null, accountAppearance && styles.accountShape]}
     >
       <Animated.View
         style={[
@@ -89,12 +92,13 @@ export function AppButton({
           Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
           resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : 1, transform: [{ scale }] },
+          accountAppearance && styles.accountShape,
         ]}
       >
-        {resolvedVariant !== "text" ? (
+        {resolvedVariant !== "text" && !accountAppearance ? (
           <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
         ) : null}
-        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? pageStyles.caption : null, { color }]}>{label}</Text>
+        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? pageStyles.caption : null, { color }, accountAppearance && (size === "sm" ? styles.accountLabelSmall : styles.accountLabel)]}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -112,6 +116,9 @@ function getButtonIcon(label: string): ImageSourcePropType {
 }
 
 const styles = StyleSheet.create({
+  accountShape: { borderRadius: radius.pill },
+  accountLabel: { fontSize: 18, lineHeight: 25, fontWeight: "600" },
+  accountLabelSmall: { fontSize: 16, lineHeight: 23, fontWeight: "500" },
   pressable: {
     borderRadius: radius.md,
   },

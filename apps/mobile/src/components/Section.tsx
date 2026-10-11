@@ -1,12 +1,13 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { StyleSheet, Text, View } from "../localization/react-native";
+import { StyleSheet, Text, View, type StyleProp, type TextStyle } from "../localization/react-native";
 import { useAmbientReadingSurface } from "./AmbientReadingSurface";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 type SectionProps = {
   title: string;
+  titleStyle?: StyleProp<TextStyle>;
   caption?: string;
   accent?: "clear" | "gold" | "sky" | "warm";
   compact?: boolean;
@@ -14,7 +15,7 @@ type SectionProps = {
   children: React.ReactNode;
 };
 
-export function Section({ title, caption, compact = false, contentGap, children }: SectionProps) {
+export function Section({ title, titleStyle, caption, compact = false, contentGap, children }: SectionProps) {
   const theme = useAppTheme();
   const ambient = useAmbientReadingSurface();
   return (
@@ -32,7 +33,7 @@ export function Section({ title, caption, compact = false, contentGap, children 
         <View style={[styles.header, compact ? styles.headerCompact : null]}>
 
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, pageStyles.sectionTitle, compact ? styles.titleCompact : null, { color: theme.text }]}>{title}</Text>
+            <Text style={[styles.title, pageStyles.sectionTitle, compact ? styles.titleCompact : null, { color: theme.text }, titleStyle]}>{title}</Text>
             {caption ? <Text style={[styles.caption, pageStyles.compactCaption, compact ? styles.captionCompact : null, { color: theme.muted }]} numberOfLines={ambient ? undefined : 1}>{caption}</Text> : null}
           </View>
         </View>

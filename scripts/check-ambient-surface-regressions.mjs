@@ -166,7 +166,9 @@ console.log('PASS: hidden Home stops motion/touch and native raster work; same-i
 const readingModule = loadTS(path.join(root,'apps/mobile/src/components/AmbientReadingSurface.tsx'), {
   react: { createContext: value => ({value}), useContext: ctx => ctx.value },
   'react/jsx-runtime': { jsx: (type,props) => ({type,props}) },
-  '../localization/react-native': { View: 'View', StyleSheet: {absoluteFill:{position:'absolute',top:0,right:0,bottom:0,left:0}} },
+  '../localization/react-native': { View: 'View', Image: 'Image', Platform: {OS:'ios'}, StyleSheet: {absoluteFill:{position:'absolute',top:0,right:0,bottom:0,left:0}} },
+  '../../../../assets/ambient-surface-runtime-v1/reading-account-light.png': 'account-light',
+  '../../../../assets/ambient-surface-runtime-v1/reading-account-dark.png': 'account-dark',
 });
 for (const name of ['light','dark']) for (const reducedTransparency of [false,true]) {
   const tree=readingModule.AmbientReadingSurface({theme:{name,reducedTransparency,background:'#123456'}});
@@ -178,6 +180,16 @@ for (const name of ['light','dark']) for (const reducedTransparency of [false,tr
   else assert.equal(parseGradient(material.experimental_backgroundImage).length,2);
 }
 console.log('PASS: reading surface native gradient parsing, both themes, opaque transparency fallback and no touch/accessibility interception.');
+for (const name of ['light','dark']) for (const routeId of ['M1','M3','M4','A4','C1','C4','G1','H1',undefined]) for (const reducedTransparency of [false,true]) {
+  const tree=readingModule.AmbientReadingSurface({theme:{name,reducedTransparency,background:'#123456'},routeId,viewport:{top:-59,height:844}});
+  const field=nodes(tree).find(n=>n.props?.testID==='ambient-account-static-field');
+  assert.equal(!!field,['M1','M3','M4','A4','C1','C4','G1'].includes(routeId)&&!reducedTransparency);
+  assert.equal(style(tree).top,-59);assert.equal(style(tree).height,844);
+  assert.equal(tree.props.pointerEvents,'none');assert.equal(tree.props.importantForAccessibility,'no-hide-descendants');
+  if(field){assert.equal(field.props.source,'account-'+name);assert.equal(field.props.resizeMode,'stretch');assert.equal(field.props.importantForAccessibility,'no-hide-descendants');assert.equal(style(tree).experimental_backgroundImage,undefined);}
+}
+console.log('PASS: static texture scoped to M1/M3/M4/A4/C1/C4/G1; full-window alignment; Reduce Transparency removes texture; decoration cannot own touch/focus.');
+
 for (const name of ['light','dark']) {
   const t=ambientTheme.ambientReadingTheme({name});
   const tree=readingModule.AmbientReadingSurface({theme:t});

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Platform, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { Image, Platform, StyleSheet, Text, RawText, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
 import { AmbientControlSurface } from "../components/AmbientControlSurface";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
@@ -15,6 +15,8 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
 import { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } from "../utils/outfitSaveCompletion";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
 import { formatDisplayClockTime } from "../localization/localization";
 
 const AI_RECOMPOSE_VISIBLE = false;
@@ -34,6 +36,8 @@ export function OutfitDetailScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const ambient = Platform.OS === "ios";
+  const { language } = React.use(LocalizationContext);
+  const localize = (copy: string) => ambient ? translateText(copy, language) : copy;
   const { fontScale } = useWindowDimensions();
   const layout = useResponsiveLayout();
   const items = Object.entries(state.outfit.items).filter((entry) => Boolean(entry[1]));
@@ -71,25 +75,27 @@ export function OutfitDetailScreen({
 
   const ownershipSummary = <>
           <View style={styles.recommendationHeader}>
-            <View style={[styles.recommendationIconWrap, { backgroundColor: theme.cardStrong }]}>
-              <Image source={uiIconAssets.check} style={[styles.recommendationIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+            <View style={[styles.recommendationIconWrap, { backgroundColor: theme.cardStrong }, ambient && { backgroundColor: "transparent", borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border, borderRadius: 20, width: 36, height: 36 }]}>
+              <Image source={ambient ? ambientUiIcons.check : uiIconAssets.check} style={[styles.recommendationIcon, { tintColor: theme.clear }, ambient && { width: 26, height: 26 }]} resizeMode="contain" />
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }, ambient && pageStyles.body]}>추천 품목 {state.outfit.preparation.totalItemCount}개 중 {state.outfit.preparation.ownedItemCount}개 보유</Text>
-              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{getOutfitVariantLabel(state.outfit.variant)} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.</Text>
+              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{localize(getOutfitVariantLabel(state.outfit.variant))} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.</Text>
             </View>
           </View>
           {state.outfit.preparation.missingItemNames.length > 0 ? (
-            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>추가 준비: {state.outfit.preparation.missingItemNames.join(", ")}</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>추가 준비: {state.outfit.preparation.missingItemNames.map(name => Object.values(state.outfit.items).some(item => item?.name === name && item.source === "photo") ? name : localize(name)).join(", ")}</Text>
           ) : null}
           {state.outfit.preparation.rainProtectionGaps.length > 0 ? (
-            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>온열 조건에 맞는 비 대응 품목이 부족해요: {state.outfit.preparation.rainProtectionGaps.map(getOutfitSlotLabel).join(", ")}. 별도 비 대비가 필요해요.</Text>
+            <Text style={[pageStyles.compactCaption, { color: theme.warm }]}>온열 조건에 맞는 비 대응 품목이 부족해요: {state.outfit.preparation.rainProtectionGaps.map(slot => localize(getOutfitSlotLabel(slot))).join(", ")}. 별도 비 대비가 필요해요.</Text>
           ) : null}
   </>;
 
   return (
     <AppScreen
       title="코디 상세"
+      titleStyle={ambient ? { fontSize: 26, lineHeight: 34, fontWeight: "700" } : undefined}
+      stackedHeader={ambient && (layout.width < 360 || fontScale > 1.3)}
       badge="추천 코디"
       onBack={onGoBack}
       showWordmark={false}
@@ -99,8 +105,8 @@ export function OutfitDetailScreen({
       contentPaddingBottom={0}
     >
       {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
-      <Section title={ambient ? state.outfit.decisionText : "오늘 입기 좋은 세트"} caption={ambient ? undefined : state.outfit.decisionText} accent="clear">
-        <View style={styles.outfitRail}>
+      <Section title={ambient ? state.outfit.decisionText : "오늘 입기 좋은 세트"} caption={ambient ? undefined : state.outfit.decisionText} titleStyle={ambient ? { fontSize: 23, lineHeight: 32, fontWeight: "700" } : undefined} accent="clear">
+        <View style={[styles.outfitRail, ambient && { columnGap: 12, rowGap: 18, alignItems: "flex-start" }]}>
           {items.map(([slot, item]) => {
             const imageSource = getOutfitImageSource(item?.imageUrl);
             return item ? (
@@ -118,28 +124,28 @@ export function OutfitDetailScreen({
                     backgroundColor: theme.cardMuted,
                     borderColor: theme.border,
                   },
-                  ambient && { backgroundColor: "transparent", borderWidth: 0, padding: 0, justifyContent: "flex-start", width: fontScale > 1.5 ? "100%" : "47%", flex: 0 },
+                  ambient && { backgroundColor: "transparent", borderWidth: 0, padding: 0, justifyContent: "flex-start", width: fontScale > 1.5 ? "100%" : "47%", flexGrow: 0, flexShrink: 0, flexBasis: fontScale > 1.5 ? "100%" : "47%" },
                 ]}
               >
                 <View
                   style={[
                     styles.outfitImageFrame,
-                    { height: ambient ? 150 : layout.outfitDetailImageHeight, backgroundColor: ambient ? "transparent" : theme.card },
+                    { height: ambient ? (layout.height >= 900 ? 168 : 150) : layout.outfitDetailImageHeight, backgroundColor: ambient ? "transparent" : theme.card },
                   ]}
                 >
                   {imageSource ? (
                     <Image
                       source={imageSource}
-                      style={[styles.outfitImage, { height: ambient ? (slot === "shoes" ? 100 : 146) : Math.max(40, layout.outfitDetailImageHeight - 4) }]}
+                      style={[styles.outfitImage, { height: ambient ? (slot === "shoes" ? 108 : slot === "accessory" ? 100 : layout.height >= 900 ? 164 : 146) : Math.max(40, layout.outfitDetailImageHeight - 4) }]}
                       resizeMode="contain"
                     />
                   ) : (
                     <Image source={uiIconAssets.shirt} style={[styles.outfitFallbackIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                   )}
                 </View>
-                <Text style={[styles.itemSlot, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={1}>{getOutfitSlotLabel(slot)}</Text>
-                <Text style={[pageStyles.compactCaption, { color: theme.text }]}>{item.name}</Text>
-                <View style={ambient ? { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 14, backgroundColor: theme.cardMuted, paddingHorizontal: 10, paddingVertical: 5 } : undefined}>
+                <Text style={[styles.itemSlot, pageStyles.compactCaption, { color: theme.clear }]} numberOfLines={ambient ? undefined : 1}>{getOutfitSlotLabel(slot)}</Text>
+                {ambient && item.source === "photo" ? <RawText style={[pageStyles.compactCaption, { color: theme.text, textAlign: "center" }]}>{item.name}</RawText> : <Text style={[pageStyles.compactCaption, { color: theme.text, textAlign: ambient ? "center" : undefined }]}>{item.name}</Text>}
+                <View style={ambient ? { flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "center", gap: 5, borderRadius: 14, backgroundColor: theme.cardMuted, paddingHorizontal: 10, paddingVertical: 5 } : undefined}>
                   {ambient ? <Image source={item.owned ? ambientUiIcons.check : ambientUiIcons.add} style={{ width: 16, height: 16, tintColor: item.owned ? theme.muted : theme.warm }} /> : null}
                   <Text style={[pageStyles.compactCaption, { color: item.owned ? theme.muted : theme.warm }]}>{item.owned ? "보유" : "추가 준비"}</Text>
                 </View>
@@ -147,7 +153,7 @@ export function OutfitDetailScreen({
             ) : null;
           })}
         </View>
-        {ambient ? <View style={{ gap: 12, paddingVertical: 12 }}>
+        {ambient ? <View style={{ gap: 12, paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>
           {ownershipSummary}
         </View> : null}
         <View style={[styles.detailHeading, ambient && { marginTop: 8 }]}>
@@ -163,7 +169,7 @@ export function OutfitDetailScreen({
                 key={item.time}
                 accessible
                 accessibilityLabel={`${formatAdviceTime(item.time)} ${ambient ? item.text : presentation.copy}`}
-                style={[styles.timeAdviceCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }, ambient && { flex: 0, width: "100%", backgroundColor: "transparent", borderWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 16, gap: 8 }]}
+                style={[styles.timeAdviceCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }, ambient && { flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: "100%", backgroundColor: "transparent", borderWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 16, gap: 8 }]}
               >
                 {ambient ? <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
                   <Image source={presentation.icon === uiIconAssets.rain ? ambientUiIcons.umbrella : presentation.icon === uiIconAssets.shirt ? ambientUiIcons.tabOutfit : ambientUiIcons.check} style={{ width: 28, height: 28, tintColor: presentation.color }} resizeMode="contain" />
@@ -187,7 +193,7 @@ export function OutfitDetailScreen({
           </> : <Text style={[pageStyles.sectionTitle, { color: theme.text }]}>날씨 근거</Text>}
           <View style={[styles.reasonGrid, ambient && { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", width: "100%", gap: 0 }]}>
             {weatherReasons.map((reason) => (
-              <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }, ambient && { flex: 0, width: "100%", backgroundColor: "transparent", borderWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 16, gap: 8 }]}>
+              <View key={reason.label} style={[styles.reasonTile, { backgroundColor: theme.card, borderColor: theme.border }, ambient && { flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: "100%", backgroundColor: "transparent", borderWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 16, gap: 8 }]}>
                 {ambient ? <>
                   <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                     <Image source={ambientUiIcons[reason.kind]} style={{ width: 26, height: 26, tintColor: theme.muted }} resizeMode="contain" />
@@ -234,7 +240,7 @@ export function OutfitDetailScreen({
           disabled={outfitSaved}
           size="sm"
         />
-        <View style={styles.actions}>
+        <View style={[styles.actions, ambient && fontScale > 1.3 && { flexDirection: "column", alignItems: "stretch" }]}>
           <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" variant="outlined" size="sm" />
           <AppButton label="아이템 추가" onPress={onOpenWardrobeAdd} tone="secondary" variant="outlined" size="sm" />
         </View>

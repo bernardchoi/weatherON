@@ -12,6 +12,7 @@ import { radius, spacing } from "../theme/tokens";
 type OutfitGridProps = {
   outfit: OutfitRecommendation;
   maxItems?: number;
+  mainVisual?: boolean;
   compact?: boolean;
   dense?: boolean;
   onePage?: boolean;
@@ -27,11 +28,11 @@ const slotLabel: Record<string, string> = {
   accessory: "소품",
 };
 
-export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, onePage = false, singleRow = false, onItemPress }: OutfitGridProps) {
+export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = false, dense = false, onePage = false, singleRow = false, onItemPress }: OutfitGridProps) {
   const theme = useAppTheme();
   const ambient = useAmbientReadingSurface();
-  const { width, fontScale } = useWindowDimensions();
-  const imageHeight = width < 390 ? 106 : 118;
+  const { width, height, fontScale } = useWindowDimensions();
+  const imageHeight = ambient && mainVisual ? height >= 900 ? 132 : width < 360 ? 112 : 124 : width < 390 ? 106 : 118;
   const entries = Object.entries(outfit.items)
     .filter(([, item]) => Boolean(item))
     .slice(0, maxItems);
@@ -85,7 +86,7 @@ export function OutfitGrid({ outfit, maxItems, compact = false, dense = false, o
                 />
               ) : null}
             </View>
-            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: ambient ? theme.muted : theme.clear }]} numberOfLines={1}>{slotLabel[slot] ?? "아이템"}</Text>
+            <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: ambient ? theme.muted : theme.clear }]} numberOfLines={ambient && mainVisual ? undefined : 1}>{slotLabel[slot] ?? "아이템"}</Text>
             {item.source === "photo" ? <RawText style={[styles.itemName,
                 { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }, ambient && { fontSize: 14, lineHeight: 19, textAlign: "center" }]}>{item.name}</RawText> : <Text style={[styles.itemName,
                 { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }, ambient && { fontSize: 14, lineHeight: 19, textAlign: "center" }]}>{item.name}</Text>}
