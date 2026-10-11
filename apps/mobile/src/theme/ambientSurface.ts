@@ -27,3 +27,10 @@ export function ambientReadingTheme(theme: AppTheme): AppTheme {
 }
 
 export const ambientReadingRouteIds: readonly string[] = ["C1", "C2", "C3", "C4", "M1", "G1", "P1", "G2", "H2", "H3", "H4", "H5", "H6", "H7", "M2", "M3", "M4", "A1", "A2", "A3", "A4", "R1", "R2", "O1", "O2", "O3", "O4", "O5", "O6", "O7"];
+
+// Approved Home base: shared color temperature, independent of weather/interaction layers.
+export function ambientBaseGradient(theme: AppTheme) {
+  return theme.name === "dark"
+    ? "radial-gradient(ellipse at 70% 44%, #153053 0%, #0F2948 44%, #0C223D 100%)"
+    : "radial-gradient(ellipse at 86% 8%, #C6DDF5 0%, #CCE1F6 24%, #D8EAFB 52%, #DDEFFC 75%, #EAF6FF 100%)";
+}

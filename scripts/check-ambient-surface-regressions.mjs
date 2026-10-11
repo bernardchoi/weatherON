@@ -170,25 +170,19 @@ const readingModule = loadTS(path.join(root,'apps/mobile/src/components/AmbientR
   '../../../../assets/ambient-surface-runtime-v1/reading-account-light.png': 'account-light',
   '../../../../assets/ambient-surface-runtime-v1/reading-account-dark.png': 'account-dark',
 });
-for (const name of ['light','dark']) for (const reducedTransparency of [false,true]) {
-  const tree=readingModule.AmbientReadingSurface({theme:{name,reducedTransparency,background:'#123456'}});
-  assert.equal(tree.props.pointerEvents,'none');
-  assert.equal(tree.props.accessibilityElementsHidden,true);
-  const material=style(tree);
-  assert.equal(material.backgroundColor,'#123456');
-  if(reducedTransparency) assert.equal(material.experimental_backgroundImage,undefined);
-  else assert.equal(parseGradient(material.experimental_backgroundImage).length,2);
-}
-console.log('PASS: reading surface native gradient parsing, both themes, opaque transparency fallback and no touch/accessibility interception.');
-for (const name of ['light','dark']) for (const routeId of ['M1','M3','M4','A4','C1','C4','G1','H1',undefined]) for (const reducedTransparency of [false,true]) {
-  const tree=readingModule.AmbientReadingSurface({theme:{name,reducedTransparency,background:'#123456'},routeId,viewport:{top:-59,height:844}});
-  const field=nodes(tree).find(n=>n.props?.testID==='ambient-account-static-field');
-  assert.equal(!!field,['M1','M3','M4','A4','C1','C4','G1'].includes(routeId)&&!reducedTransparency);
+for (const name of ['light','dark']) for (const routeId of ['M1','M3','M4','A4','C1','C2','C4','G1','H2',undefined]) for (const reducedTransparency of [false,true]) {
+  const theme={name,reducedTransparency,background:'#123456'};
+  const tree=readingModule.AmbientReadingSurface({theme,routeId,viewport:{top:-59,height:844}});
+  assert.equal(style(tree).experimental_backgroundImage,ambientTheme.ambientBaseGradient(theme),'all routes use approved Home base');
+  assert.equal(parseGradient(style(tree).experimental_backgroundImage).length,1);
+  assert.equal(nodes(tree).some(n=>n.type==='Image'),false,'no opaque per-route image can replace the common base');
+  const folds=nodes(tree).find(n=>n.props?.testID==='ambient-reading-folds');
+  assert.equal(!!folds,!reducedTransparency);
+  if(folds)assert.equal(parseGradient(style(folds).experimental_backgroundImage).length,2);
   assert.equal(style(tree).top,-59);assert.equal(style(tree).height,844);
   assert.equal(tree.props.pointerEvents,'none');assert.equal(tree.props.importantForAccessibility,'no-hide-descendants');
-  if(field){assert.equal(field.props.source,'account-'+name);assert.equal(field.props.resizeMode,'stretch');assert.equal(field.props.importantForAccessibility,'no-hide-descendants');assert.equal(style(tree).experimental_backgroundImage,undefined);}
 }
-console.log('PASS: static texture scoped to M1/M3/M4/A4/C1/C4/G1; full-window alignment; Reduce Transparency removes texture; decoration cannot own touch/focus.');
+console.log('PASS: all reading routes share Home base in both modes, viewport alignment, static-only folds, no input interception.');
 
 for (const name of ['light','dark']) {
   const t=ambientTheme.ambientReadingTheme({name});

@@ -97,14 +97,14 @@ export function AppListRow({
         accessibilityState={accessibilityState}
         android_ripple={androidMaterialRipple(theme)}
         onPress={onPress}
-        style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }, editorial && styles.ambientRow, stackControl && styles.stackedRow]}
+        style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }, editorial && styles.ambientRow, editorial && contained && styles.ambientContainedRow, stackControl && styles.stackedRow]}
       >
         {content}
       </FeedbackPressable>
     );
   }
 
-  return <View style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }, editorial && styles.ambientRow, stackControl && styles.stackedRow]}>{content}</View>;
+  return <View style={[styles.row, ambient && { paddingHorizontal: 0, paddingVertical: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, ambient && contained && { paddingHorizontal: 8, paddingVertical: 12, borderTopWidth: divider ? StyleSheet.hairlineWidth : 0 }, editorial && styles.ambientRow, editorial && contained && styles.ambientContainedRow, stackControl && styles.stackedRow]}>{content}</View>;
 }
 
 function Chevron({ color }: { color: string }) {
@@ -118,6 +118,8 @@ function Chevron({ color }: { color: string }) {
 
 const styles = StyleSheet.create({
   ambientRow: { minHeight: 76, paddingHorizontal: 0, paddingVertical: 12, gap: 12 },
+  // The surface contributes 8pt; preserve another 12pt inside the full-width touch row.
+  ambientContainedRow: { paddingHorizontal: 12 },
   ambientIconFrame: { width: 36, height: 40 },
   ambientIcon: { width: 32, height: 32 },
   ambientTitle: { fontSize: 17, lineHeight: 24, fontWeight: "600" },

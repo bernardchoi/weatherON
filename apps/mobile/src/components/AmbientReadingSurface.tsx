@@ -1,24 +1,24 @@
 import React, { createContext, useContext } from "react";
-import { Image, Platform, StyleSheet, View } from "../localization/react-native";
+import { StyleSheet, View } from "../localization/react-native";
 import type { AppTheme } from "../theme/tokens";
+import { ambientBaseGradient } from "../theme/ambientSurface";
 
 export const AmbientReadingContext = createContext(false);
 export const useAmbientReadingSurface = () => useContext(AmbientReadingContext);
-const accountFields = {
-  light: require("../../../../assets/ambient-surface-runtime-v1/reading-account-light.png"),
-  dark: require("../../../../assets/ambient-surface-runtime-v1/reading-account-dark.png"),
-};
 
-// Quiet shared material for reading routes. No weather meaning, clock or touch capture.
-export function AmbientReadingSurface({ theme, viewport, routeId }: { theme: AppTheme; viewport?: { top: number; height: number }; routeId?: string }) {
-  const accountField = Platform.OS === "ios" && ["M1", "M3", "M4", "A4", "C1", "C4", "G1"].includes(routeId ?? "");
-  return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }, !theme.reducedTransparency && !accountField && {
+// Same full-window Home base on every reading route. Quiet folds only: no weather,
+// Home content, clock, native animation, or touch capture is mounted here.
+export function AmbientReadingSurface({ theme, viewport }: { theme: AppTheme; viewport?: { top: number; height: number }; routeId?: string }) {
+  return <View testID="ambient-reading-base" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={[StyleSheet.absoluteFill, { backgroundColor: theme.background, overflow: "hidden" },
+      { experimental_backgroundImage: ambientBaseGradient(theme) },
+      viewport && { top: viewport.top, height: viewport.height, bottom: undefined }]}>
+    {!theme.reducedTransparency ? <View testID="ambient-reading-folds" style={[StyleSheet.absoluteFill, {
+      top: -80, bottom: -80, left: -60, right: -60,
+      opacity: theme.name === "dark" ? .34 : .50,
       experimental_backgroundImage: theme.name === "dark"
-        ? "radial-gradient(ellipse 140% 90% at 110% -20%, #B9CDEF12 0%, #B9CDEF00 75%), radial-gradient(ellipse 200% 125% at -30% -45%, #B9CDEF00 58%, #B9CDEF0A 63%, #B9CDEF00 70%)"
-        : "radial-gradient(ellipse 140% 90% at 110% -20%, #FFFFFFCC 0%, #FFFFFF00 75%), radial-gradient(ellipse 200% 125% at -30% -45%, #FFFFFF00 58%, #FFFFFFBB 63%, #FFFFFF00 70%)",
-    }, viewport && { top: viewport.top, height: viewport.height, bottom: undefined }]}>
-    {accountField && !theme.reducedTransparency ? <Image testID="ambient-account-static-field" source={accountFields[theme.name]} style={StyleSheet.absoluteFill}
-      resizeMode="stretch" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+        ? "radial-gradient(ellipse 250% 140% at -20% -40%, #8CABCA00 55%, #8CABCA0C 58%, #8CABCA42 60%, #8CABCA18 62%, #8CABCA00 68%), radial-gradient(ellipse 185% 120% at 140% 125%, #8CABCA00 38%, #8CABCA20 45%, #8CABCA0C 49%, #8CABCA00 57%)"
+        : "radial-gradient(ellipse 250% 140% at -20% -40%, #FFFFFF00 55%, #FFFFFF18 58%, #FFFFFFD0 60%, #FFFFFF44 62%, #FFFFFF00 68%), radial-gradient(ellipse 185% 120% at 140% 125%, #FFFFFF00 38%, #FFFFFF70 45%, #FFFFFF28 49%, #FFFFFF00 57%)",
+    }]} /> : null}
   </View>;
 }

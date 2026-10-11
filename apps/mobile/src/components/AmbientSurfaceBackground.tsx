@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, AppState, Easing, Platform, StyleSheet, View, useWindowDimensions } from "../localization/react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
-import { ambientPalette } from "../theme/ambientSurface";
+import { ambientBaseGradient, ambientPalette } from "../theme/ambientSurface";
 import { AmbientBaseFlow } from "./AmbientBaseFlow";
 import { AmbientTouchLayer } from "./AmbientTouchLayer";
 import type { AmbientReadRegion } from "../utils/ambientSky";
@@ -75,9 +75,7 @@ export function AmbientSurfaceBackground({ onScreen = true, theme, condition, wi
     {Platform.OS === "ios" ? <>
     <View style={[StyleSheet.absoluteFill, {
       // Keep the reading surface stable; only the faint wind field breathes.
-      experimental_backgroundImage: theme.name === "dark"
-        ? "radial-gradient(ellipse at 70% 44%, #153053 0%, #0F2948 44%, #0C223D 100%)"
-        : "radial-gradient(ellipse at 86% 8%, #C6DDF5 0%, #CCE1F6 24%, #D8EAFB 52%, #DDEFFC 75%, #EAF6FF 100%)",
+      experimental_backgroundImage: ambientBaseGradient(theme),
     }]} />
     <AmbientBaseFlow renderingEnabled={onScreen && active && !theme.reducedTransparency} phase={breath} dark={theme.name === "dark"} visible={fieldVisible} onPowerState={event => {
       onLowPowerChange?.(event.nativeEvent.lowPower);

@@ -6,7 +6,6 @@ import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from ".
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
 import { BottomSheet } from "./BottomSheet";
-import { AmbientControlSurface } from "./AmbientControlSurface";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { FeedbackPressable } from "./FeedbackPressable";
@@ -68,7 +67,6 @@ export function WardrobeFilterControls({
 
   return (
     <>
-      <AmbientControlSurface style={{ padding: 5 }}>
       <View style={[styles.filterSelectorRow, Platform.OS === "ios" && (width < 360 || fontScale > 1.3) && { flexDirection: "column" }]} >
         <WardrobeFilterSelect
           label="종류"
@@ -89,7 +87,6 @@ export function WardrobeFilterControls({
           onPress={() => setOpenFilter("purpose")}
         />
       </View>
-      </AmbientControlSurface>
 
       <BottomSheet
         visible={openFilter !== null}
@@ -117,11 +114,12 @@ export function WardrobeFilterControls({
                   selected ? { backgroundColor: theme.cardMuted } : null,
                 ], Platform.OS === "ios" && ambientVisual.filterOption]}
               >
+                {Platform.OS === "ios" ? <FilterSelectionMark value={value} active={selected} /> : null}
                 <Text style={[[styles.filterOptionText, { color: selected ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.filterOptionText]}>
                   {filterConfig.renderLabel(value)}
                 </Text>
-                {selected ? (
-                  <Image source={Platform.OS === "ios" ? ambientUiIcons.check : uiIconAssets.check} style={[styles.filterCheckIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+                {selected && Platform.OS !== "ios" ? (
+                  <Image source={uiIconAssets.check} style={[styles.filterCheckIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                 ) : null}
               </FeedbackPressable>
             );
@@ -158,13 +156,13 @@ function WardrobeFilterSelect({
           borderColor: active ? theme.clear : theme.border,
         },
       ], Platform.OS === "ios" && ambientVisual.filterSelect,
-        Platform.OS === "ios" && { borderWidth: 0, flexDirection: "row", alignItems: "center", gap: 6 }]}
+        Platform.OS === "ios" && { borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: active ? theme.cardStrong : "transparent" }]}
     >
-      {Platform.OS === "ios" ? <FilterSelectionMark value={value} active={active} /> : null}
-      <View style={styles.filterSelectCopy}>
+      <View style={[styles.filterSelectCopy, Platform.OS === "ios" && { flexDirection: "row", alignItems: "center", gap: 3 }]}>
         <Text style={[[styles.filterSelectLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.filterSelectLabel]}>{label}</Text>
         <Text style={[[styles.filterSelectValue, { color: active ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.filterSelectValue]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{value}</Text>
       </View>
+      {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 13, height: 13, tintColor: active ? theme.clear : theme.text }} /> : null}
     </FeedbackPressable>
   );
 }
@@ -303,17 +301,17 @@ const styles = StyleSheet.create({
 const ambientVisual = StyleSheet.create({
   "filterSelect": {
     "backgroundColor": "transparent",
-    "minHeight": 52,
+    "minHeight": 44,
     "borderRadius": 16
   },
   "filterSelectLabel": {
-    "fontSize": 14,
-    "lineHeight": 21,
-    "fontWeight": "400"
+    "fontSize": 13,
+    "lineHeight": 20,
+    "fontWeight": "500"
   },
   "filterSelectValue": {
-    "fontSize": 15,
-    "lineHeight": 22,
+    "fontSize": 13,
+    "lineHeight": 20,
     "fontWeight": "600"
   },
   "filterSheetTitle": {
@@ -331,7 +329,9 @@ const ambientVisual = StyleSheet.create({
   },
   "filterOption": {
     "minHeight": 56,
-    "paddingVertical": 16
+    "paddingVertical": 10,
+    "justifyContent": "flex-start",
+    "borderRadius": 18
   },
   "filterOptionText": {
     "fontSize": 16,

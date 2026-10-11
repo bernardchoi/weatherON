@@ -54,8 +54,8 @@ export function WardrobeScreen({
   return (
     <AppScreen
       title="내 옷장"
-      subtitle="보유한 옷을 확인하고 정리"
-      badge={`${ownedItems.length}개 보유`}
+      subtitle={Platform.OS === "ios" ? `${ownedItems.length}개 보유 · 보유한 옷을 확인하고 정리` : "보유한 옷을 확인하고 정리"}
+      badge={Platform.OS === "ios" ? undefined : `${ownedItems.length}개 보유`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
@@ -66,7 +66,7 @@ export function WardrobeScreen({
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
       ) : null}
 
-      <Section title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
+      <WardrobeSection title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
         <View
           style={[[
             styles.infoCard,
@@ -75,12 +75,12 @@ export function WardrobeScreen({
           ], Platform.OS === "ios" && ambientVisual.infoCard]}
         >
           <View style={styles.copy}>
-            <Text style={[[styles.title, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.title]}>{ownedItems.length}개 보유 중</Text>
+            {Platform.OS !== "ios" ? <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text> : null}
             <Text style={[[styles.itemMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.itemMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>
               {accountLinked ? "계정 연결됨 · 코디 추천에 반영" : "계정 연결 전 · 프리셋 추가 가능"}
             </Text>
           </View>
-          <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />
+          {Platform.OS === "ios" ? <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 보기" onPress={() => onNavigate("C1")} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}><Text style={{ color: theme.clear, fontSize: 16 }}>코디 보기 ›</Text></FeedbackPressable> : <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />}
         </View>
 
         <WardrobeFilterControls
@@ -93,7 +93,13 @@ export function WardrobeScreen({
         />
         {ownedItems.length === 0 ? (
           <View style={[styles.emptyState, Platform.OS === "ios" && ambientVisual.emptyState]}>
-            <Text style={[[styles.emptyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.emptyText]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>
+            {Platform.OS === "ios" ? <>
+              <Image source={require("../../../../assets/ambient-surface-runtime-v1/ui-outline/wardrobe-empty.png")} resizeMode="contain" accessibilityElementsHidden style={{ width: 128, height: 128, tintColor: theme.border, alignSelf: "center", marginVertical: 12 }} />
+              <View style={{ alignItems: "center", gap: 6 }}>
+                <Text style={{ fontSize: 20, lineHeight: 28, fontWeight: "600", color: theme.text }}>아직 추가한 옷이 없음</Text>
+                <Text style={{ fontSize: 16, lineHeight: 24, color: theme.muted }}>프리셋에서 골라 추가해줘</Text>
+              </View>
+            </> : <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>}
             <AppButton label="내 옷장에 추가" onPress={onOpenWardrobeAdd} tone="warning" />
           </View>
         ) : filteredItems.length === 0 ? (
@@ -126,9 +132,13 @@ export function WardrobeScreen({
             </Pressable>
           </View>
         )}
-      </Section>
+      </WardrobeSection>
     </AppScreen>
   );
+}
+
+function WardrobeSection({ children, ...props }: React.ComponentProps<typeof Section>) {
+  return Platform.OS === "ios" ? <View style={{ gap: 20 }}>{children}</View> : <Section {...props}>{children}</Section>;
 }
 
 function WardrobeItemCard({
@@ -412,6 +422,7 @@ const ambientVisual = StyleSheet.create({
     "rowGap": 24
   },
   "emptyState": {
+    "alignItems": "stretch",
     "gap": 20,
     "paddingVertical": 30
   },

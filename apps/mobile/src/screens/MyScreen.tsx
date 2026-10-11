@@ -159,7 +159,7 @@ export function MyScreen({
 
         {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text> : null}
         <AmbientControlSurface style={{ padding: ambient ? 8 : 12, gap: 0 }}>
-          {ambient && recommendation ? <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${recommendation.title}, ${recommendation.action}`} onPress={() => onNavigate(recommendation.route)} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, paddingBottom: 16 }}>
+          {ambient && recommendation ? <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${recommendation.title}, ${recommendation.action}`} onPress={() => onNavigate(recommendation.route)} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, paddingHorizontal: 12, paddingBottom: 16 }}>
             <Image source={recommendation.route === "M4" ? ambientUiIcons.location : ambientUiIcons.notifications} style={{ width: 28, height: 28, tintColor: theme.warm }} />
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={[pageStyles.body, { color: theme.text }]}>{recommendation.title}</Text>
