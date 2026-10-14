@@ -36,7 +36,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
       uvIndex: undefined,
     },
     hourly,
-    daily: buildDaily(hourly),
+    daily: buildDaily(hourly, grouped),
     source: "kma",
     stale: options.stale ?? false,
   };
@@ -62,7 +62,7 @@ function buildHourly(timeKey: string, bucket: KmaBucket): HourlyWeather {
   };
 }
 
-function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
+function buildDaily(hourly: HourlyWeather[], sourceBuckets: Record<string, KmaBucket>): DailyWeather[] | undefined {
   const grouped = hourly.reduce<Record<string, HourlyWeather[]>>((acc, item) => {
     const date = item.time.slice(0, 10);
     acc[date] = acc[date] ?? [];
@@ -73,7 +73,9 @@ function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
   if (dates.length === 0) return undefined;
   return dates.sort().map((date) => {
     const items = grouped[date];
+    const buckets = Object.entries(sourceBuckets).filter(([time]) => time.startsWith(date.replace(/-/g, ""))).map(([,bucket]) => bucket);
     return {
+      available: { minTemp: buckets.every(bucket => hasNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX)), maxTemp: buckets.every(bucket => hasNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX)), rainProbability: buckets.every(bucket => hasNumber(bucket.POP)) },
       date,
       minTempC: Math.min(...items.map((item) => item.tempC)),
       maxTempC: Math.max(...items.map((item) => item.tempC)),
@@ -144,4 +146,8 @@ function toNumber(value: string | number | undefined, fallback: number): number 
   if (value === undefined) return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function hasNumber(value: string | number | undefined): boolean {
+  return value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
 }

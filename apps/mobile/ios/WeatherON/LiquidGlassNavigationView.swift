@@ -320,7 +320,7 @@ final class HomePlanGlassSurfaceView: UIView {
       material.backgroundColor = .clear
     } else {
       material.effect = nil
-      material.backgroundColor = isDarkTheme ? UIColor(red: 35/255, green: 55/255, blue: 80/255, alpha: 1) : UIColor(red: 233/255, green: 241/255, blue: 248/255, alpha: 1)
+      material.backgroundColor = isDarkTheme ? UIColor(red: 26/255, green: 57/255, blue: 69/255, alpha: 1) : UIColor(red: 221/255, green: 239/255, blue: 242/255, alpha: 1)
     }
   }
 }

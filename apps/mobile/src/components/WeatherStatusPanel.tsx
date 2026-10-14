@@ -67,7 +67,7 @@ export function WeatherStatusPanel({ status, message, retryable, loading, onSetM
 
 function getPanelTone(theme: AppTheme, status: WeatherProviderMode, loading: boolean): string {
   if (loading) return theme.skyLite;
-  if (status === "ready") return theme.clear;
+  if (status === "ready") return theme.success;
   if (status === "error") return theme.alert;
   return theme.skyLite;
 }

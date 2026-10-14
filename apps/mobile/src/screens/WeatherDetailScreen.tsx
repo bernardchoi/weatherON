@@ -1,8 +1,10 @@
 import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import React from "react";
-import { AppState, Image, Platform, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { AppState, Image, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
+import { IosDailyForecastRow } from "../components/IosDailyForecastRow";
+import { dailyTemperatureScale, dailyValueAvailable, getIosDailyForecast } from "../utils/iosDailyForecast";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -21,6 +23,8 @@ import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils
 export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const { fontScale } = useWindowDimensions();
+  const expandedText = Platform.OS === "ios" && fontScale > 1.3;
   const [currentTimeMs, setCurrentTimeMs] = React.useState(() => Date.now());
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
@@ -30,11 +34,15 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
     timeZone: resolveWeatherTimeZone(weather.countryCode, placeSearchOrigin?.timezone),
   };
   const currentIsNight = isNightAtWeatherTime(new Date(currentTimeMs).toISOString(), daylightContext);
-  const daily = getDailyForecast(weather.daily, weather.hourly);
+  const legacyDaily = getDailyForecast(weather.daily, weather.hourly);
+  const daily = Platform.OS === "ios" ? getIosDailyForecast(weather.daily, weather.hourly, legacyDaily) : legacyDaily;
+  const displayedDaily = daily.slice(0, 7);
+  const temperatureScale = dailyTemperatureScale(displayedDaily);
   const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
   const uvIndex = Platform.OS === "android" ? null : getUvIndexSummary(current.uvIndex);
   const airQualityIndices = getAirQualityIndices(current, Platform.OS);
-  const weeklyPeak = daily.reduce<DailyWeather | null>((peak, item) => {
+  const weeklyPeak = (Platform.OS === "ios" ? displayedDaily : daily).reduce<DailyWeather | null>((peak, item) => {
+    if (Platform.OS === "ios" && !dailyValueAvailable(item, "rainProbability")) return peak;
     if (!peak) return item;
     return item.rainProbabilityPct > peak.rainProbabilityPct ? item : peak;
   }, null);
@@ -55,7 +63,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           styles.content,
           {
             maxWidth: layout.contentMaxWidth,
-            gap: layout.weatherContentGap,
+            gap: Platform.OS === "ios" ? Math.min(layout.weatherContentGap, 8) : layout.weatherContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -83,7 +91,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
             cardShadow(theme),
           ], Platform.OS === "ios" && ambientVisual.heroCard]}
         >
-          <View style={styles.heroMain}>
+          <View style={[styles.heroMain, expandedText && ambientVisual.heroMainExpanded]}>
             <View style={[[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.weatherIconBox]}>
               <Image
                 source={Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme)?.source ?? getConditionIcon(current.condition, currentIsNight) : getConditionIcon(current.condition, currentIsNight)}
@@ -91,9 +99,9 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
                 resizeMode="contain"
               />
             </View>
-            <View style={styles.heroCopy}>
+            <View style={[styles.heroCopy, expandedText && ambientVisual.heroCopyExpanded]}>
               <Text style={[[styles.heroTemp, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTemp]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
-              <Text style={[[styles.heroCondition, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroCondition]} numberOfLines={1}>
+              <Text style={[[styles.heroCondition, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroCondition]} numberOfLines={expandedText ? undefined : 1}>
                 {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
               </Text>
             </View>
@@ -135,12 +143,12 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
 
         <ForecastPanel
           title="주간 예보"
-          meta={weeklyPeak ? `${formatDateLabel(weeklyPeak.date)} 강수 ${weeklyPeak.rainProbabilityPct}%` : "일별 데이터 확인 중"}
+          meta={weeklyPeak ? `${formatDateLabel(weeklyPeak.date)} 강수 ${weeklyPeak.rainProbabilityPct}%` : Platform.OS === "ios" && displayedDaily.length ? "강수 확률 확인 중" : "일별 데이터 확인 중"}
           theme={theme}
         >
           <View style={styles.dailyList}>
-            {daily.slice(0, 7).map((item) => (
-              <DailyRow key={item.date} item={item} temperatureUnit={temperatureUnit} theme={theme} />
+            {displayedDaily.map((item) => (
+              Platform.OS === "ios" ? <IosDailyForecastRow key={item.date} item={item} scale={temperatureScale} dateLabel={formatDateLabel(item.date)} temperatureUnit={temperatureUnit} theme={theme} /> : <DailyRow key={item.date} item={item} temperatureUnit={temperatureUnit} theme={theme} />
             ))}
           </View>
         </ForecastPanel>
@@ -172,10 +180,11 @@ function WeatherFact({ icon, label, value, color, theme }: { icon: number; label
 }
 
 function UvSummaryBadge({ item, theme }: { item: LifestyleIndexItem; theme: AppTheme }) {
+  const { fontScale } = useWindowDimensions();
   const color = getTone(theme, item.tone);
   return (
     <View
-      style={[styles.uvBadge, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+      style={[styles.uvBadge, { backgroundColor: theme.cardMuted, borderColor: theme.border }, Platform.OS === "ios" && fontScale > 1.3 && ambientVisual.uvBadgeExpanded]}
       accessibilityLabel={`자외선 지수 ${item.value}, ${item.grade}`}
     >
       <View style={styles.uvBadgeLabelRow}>
@@ -232,7 +241,7 @@ function ForecastPanel({ title, meta, theme, children }: { title: string; meta: 
         cardShadow(theme),
       ], Platform.OS === "ios" && ambientVisual.panel]}
     >
-      <View style={styles.panelHeader}>
+      <View style={[styles.panelHeader, Platform.OS === "ios" && ambientVisual.panelHeader]}>
         <Text style={[[styles.panelTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.panelTitle]}>{title}</Text>
         <Text style={[[styles.panelMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.panelMeta]}>{meta}</Text>
       </View>
@@ -330,7 +339,7 @@ function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWea
       <Text style={[[styles.hourlyTime, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.hourlyTime]}>{formatTimeLabel(item.time)}</Text>
       <Image source={Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme)?.source ?? getConditionIcon(item.condition, isNight) : getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme)?.tintColor : color }]} resizeMode="contain" />
       <Text style={[styles.hourlyTemp, { color: theme.text }]}>{formatTemperature(item.tempC, temperatureUnit)}</Text>
-      <Text style={[[styles.hourlyRain, { color }], Platform.OS === "ios" && ambientVisual.hourlyRain]}>{item.rainProbabilityPct}%</Text>
+      <Text style={[[styles.hourlyRain, { color }], Platform.OS === "ios" && ambientVisual.hourlyRain]}>{Platform.OS === "ios" && (item.available?.rainProbability === false || !Number.isFinite(item.rainProbabilityPct)) ? "—" : `${item.rainProbabilityPct}%`}</Text>
     </View>
   );
 }
@@ -737,6 +746,10 @@ const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
 
 // Approved Ambient reading hierarchy; Android retains its original styles.
 const ambientVisual = StyleSheet.create({
+  heroMainExpanded: { flexWrap: "wrap", alignItems: "flex-start" },
+  heroCopyExpanded: { flexBasis: "100%", flexGrow: 0, flexShrink: 0 },
+  uvBadgeExpanded: { width: "auto", minWidth: 110, paddingHorizontal: 12 },
+  panelHeader: { flexWrap: "wrap", alignItems: "center", rowGap: 4 },
   "atmosphere": {
     "display": "none"
   },
@@ -746,8 +759,8 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 10,
+    "gap": 12
   },
   "weatherIconBox": {
     "backgroundColor": "transparent",
@@ -763,14 +776,14 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 10,
+    "gap": 12
   },
   "hourlyCard": {
     "backgroundColor": "transparent",
     "borderWidth": 0,
     "borderRadius": 0,
-    "paddingVertical": 14
+    "paddingVertical": 8
   },
   "indexCard": {
     "backgroundColor": "transparent",

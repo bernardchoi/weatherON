@@ -96,8 +96,8 @@ export function AppPermissionsScreen({
         >
           <Text style={[[styles.sectionLabel, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.sectionLabel]}>권한 상태</Text>
           {resultCopy ? (
-            <View style={[[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.resultStrip]}>
-              <Text style={[[styles.resultTitle, { color: resultCopy.tone === "warm" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.resultTitle]}>{resultCopy.title}</Text>
+            <View style={[[styles.resultStrip, { backgroundColor: theme.card, borderColor: resultCopy.tone === "warm" ? theme.warm : theme.success }], Platform.OS === "ios" && ambientVisual.resultStrip]}>
+              <Text style={[[styles.resultTitle, { color: resultCopy.tone === "warm" ? theme.warm : theme.success }], Platform.OS === "ios" && ambientVisual.resultTitle]}>{resultCopy.title}</Text>
               <Text style={[[styles.resultBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.resultBody]}>{resultCopy.body}</Text>
             </View>
           ) : null}
@@ -167,7 +167,7 @@ function PermissionCard({
   panelPadding: number;
   theme: AppTheme;
 }) {
-  const color = tone === "clear" ? theme.clear : tone === "gold" ? theme.gold : theme.warm;
+  const color = tone === "clear" ? theme.success : tone === "gold" ? theme.gold : theme.warm;
   const layout = useResponsiveLayout();
   const ambient = Platform.OS === "ios";
   const { fontScale } = useWindowDimensions();

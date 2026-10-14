@@ -17,6 +17,8 @@ export type HourlyWeather = {
 };
 
 export type DailyWeather = {
+  /** Field presence; numeric legacy fallbacks remain separate. */
+  available?: { minTemp: boolean; maxTemp: boolean; rainProbability: boolean };
   date: string;
   minTempC: number;
   /** 일최고 일반 기온 예보. 일최고 체감온도가 아님. */

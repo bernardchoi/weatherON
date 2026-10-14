@@ -7,6 +7,8 @@ import { HomeViewportContext } from "../components/HomeViewportContext";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Animated, AppState, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
+import { IosSelectionRow } from "../components/IosSelectionRow";
+import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { HomePlanMaterial } from "../components/HomePlanMaterial";
@@ -44,6 +46,11 @@ import { translateText } from "../localization/localization";
 const AmbientHomeScrollView = Platform.OS === "ios" ? Animated.ScrollView : ScrollView;
 const HOME_OUTFIT_CARD_VISIBLE = true;
 const HOME_OUTFIT_FALLBACK_IMAGE = "assets/outfits/weatheron-outfit-light-rain-jacket-v1.png";
+
+// Keep the native SVG module unevaluated on Android/web; their original text remains.
+const IosHomeWordmark = Platform.OS === "ios"
+  ? require("../components/IosHomeWordmark").IosHomeWordmark as typeof import("../components/IosHomeWordmark").IosHomeWordmark
+  : null;
 
 export function HomeScreen({
   state,
@@ -265,7 +272,7 @@ export function HomeScreen({
       >
         <View ref={readHeaderRef} onLayout={() => measureReadArea("header", readHeaderRef.current)} style={styles.topBar}>
           <View style={styles.iosLocationHeader}>
-            <RawText accessibilityLabel="WeatherON" style={[styles.homeWordmark, { color: theme.muted }]}>Weather<RawText style={{ color: ambientPalette(theme).wordmarkOn }}>ON</RawText></RawText>
+            {IosHomeWordmark ? <IosHomeWordmark theme={theme} /> : <RawText accessibilityLabel="WeatherON" style={[styles.homeWordmark, { color: theme.muted }]}>Weather<RawText style={{ color: ambientPalette(theme).wordmarkOn }}>ON</RawText></RawText>}
             <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName}, ${locationStatus.value}, 위치 변경`} onPress={() => onNavigate("H2")} style={styles.homeLocationAction}>
               <Image source={ambientUiIcons.location} style={{ width: 20, height: 20, tintColor: theme.muted }} />
               <RawText style={[styles.iosLocationName, { color: theme.text, flex: 1 }]} numberOfLines={2}>{currentLocationName}</RawText>
@@ -436,6 +443,7 @@ function DestinationSelectorCard({
   const hasDestinations = savedDestinations.length > 0;
   const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationId) ?? savedDestinations[0];
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const selectionFeedback = useConfirmedOptionFeedback(selectedDestination?.place.id ?? "");
   const tightLayout = isHomeTightLayout(layout);
   const reducedMotion = useReducedMotion();
 
@@ -480,14 +488,19 @@ function DestinationSelectorCard({
         </FeedbackPressable>
       )}
 
-      <BottomSheet visible={selectorOpen} onClose={() => setSelectorOpen(false)} accessibilityLabel="저장한 목적지 선택 시트">
+      <BottomSheet visible={selectorOpen} onClose={() => { selectionFeedback.cancel(); setSelectorOpen(false); }} accessibilityLabel="저장한 목적지 선택 시트">
         <View style={styles.destinationSheetHeader}>
           <Text style={[styles.destinationSheetTitle, { color: theme.text }]}>목적지 선택</Text>
           <Text style={[styles.destinationSheetCaption, { color: theme.muted }]}>저장한 {savedDestinations.length}곳 중 오늘 갈 곳을 선택</Text>
         </View>
-        <View style={[styles.destinationSheetList, { borderColor: theme.border }]}>
+        <View style={[styles.destinationSheetList, { borderColor: theme.border }, Platform.OS === "ios" && { borderWidth: 0, borderRadius: 0 }]}>
           {savedDestinations.map((destination, index) => {
             const selected = destination.place.id === selectedDestination.place.id;
+            if (Platform.OS === "ios") return <IosSelectionRow key={destination.place.id} rawLabel label={destination.place.name} description={[destination.label ? getDestinationLabelText(destination.label) : "", getDestinationSelectorMeta(destination.place)].filter(Boolean).join(" · ")} icon={getDestinationTypeIcon(destination.place)} selected={selected} last={index === savedDestinations.length - 1} onPress={() => {
+              selectionFeedback.request(destination.place.id);
+              setSelectorOpen(false);
+              onSelect(destination.place);
+            }} />;
             return (
               <FeedbackPressable
                 key={destination.place.id}
@@ -708,7 +721,7 @@ function getInfoAccent(theme: AppTheme): string {
 function getPackAccent(tone: ReturnType<typeof buildPackDecision>["packTone"], theme: AppTheme): string {
   if (tone === "sky") return getInfoAccent(theme);
   if (tone === "warm") return theme.warm;
-  return theme.clear;
+  return theme.success;
 }
 
 function subtractMinutes(time: string, minutes: number) {
@@ -886,7 +899,7 @@ function HomeOutfitPreviewCard({
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
     <FeedbackPressable onLayout={onReadingLayout} accessibilityLabel={Platform.OS === "ios" ? `${getDisplayLocationName(locationName)} 기준 코디. ${itemNames}. 코디 자세히 보기` : `오늘 입기 좋은 코디 ${outfit.decisionText}. ${title}`} accessibilityRole="button" onPress={onPress}
-      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? "#AEC9EA0C" : "#FFFFFF26" }]}>
+      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }]}>
       <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>
       <View style={styles.ambientOutfitHeading}>

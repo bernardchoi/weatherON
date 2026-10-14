@@ -80,7 +80,7 @@ export function LocationChangeScreen({
         onPress={onRequestCurrentLocation}
         style={[[
           styles.currentRow,
-          { backgroundColor: theme.cardStrong, borderColor: locationReady && weatherLocationMode === "auto" ? theme.clear : theme.border },
+          { backgroundColor: theme.cardStrong, borderColor: locationReady && weatherLocationMode === "auto" ? theme.success : theme.border },
           cardShadow(theme),
         ], Platform.OS === "ios" && ambientVisual.currentRow]}
       >
@@ -161,7 +161,7 @@ export function LocationChangeScreen({
       </Pressable>
 
       <View style={[styles.statusBox, { backgroundColor: theme.cardStrong }, cardShadow(theme)]}>
-        <Text style={[styles.statusTitle, { color: theme.clear }]}>{locationCopy.statusTitle}</Text>
+        <Text style={[styles.statusTitle, { color: theme.success }]}>{locationCopy.statusTitle}</Text>
         <Text style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>
           {isPlaceSearchLoading ? "검색 중" : `${state.weather.locationName} 기준 · ${locationCopy.statusBody(hasSavedDestinations, savedDestinations.length)}`}
         </Text>

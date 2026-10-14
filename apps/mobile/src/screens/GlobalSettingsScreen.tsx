@@ -17,6 +17,7 @@ import {
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
 import { ambientPalette } from "../theme/ambientSurface";
+import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
 const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
@@ -207,6 +208,7 @@ function SegmentControl({
   const stacked = ambient && (width < 390 || fontScale > 1.15);
   const verticalOptions = stacked && (options.length > 2 || fontScale > 1.6);
   const palette = ambientPalette(theme);
+  const feedback = useConfirmedOptionFeedback(options.find(option => option.active)?.label ?? "");
   return (
     <View
       style={[
@@ -228,7 +230,8 @@ function SegmentControl({
           accessibilityRole="button"
           accessibilityState={{ selected: option.active }}
           android_ripple={androidMaterialRipple(theme)}
-          onPress={option.onPress}
+          hapticFeedback={ambient ? "none" : "automatic"}
+          onPress={() => { feedback.request(option.label); option.onPress(); }}
           style={[
             styles.segmentOption,
             option.active ? androidMaterialSurface(theme, "secondaryContainer") : null,
@@ -245,6 +248,7 @@ function SegmentControl({
           >
             {option.label}
           </Text>
+          {verticalOptions && option.active ? <Image source={ambientUiIcons.check} accessible={false} style={{ width: 16, height: 16, tintColor: theme.clear }} /> : null}
         </FeedbackPressable>
       ))}
     </View>

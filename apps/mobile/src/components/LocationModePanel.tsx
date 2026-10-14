@@ -24,7 +24,7 @@ export function LocationModePanel({ mode, deviceLocationState, locationReady, on
     <View style={[styles.panel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.text }]}>위치 기준</Text>
-        <Text style={[styles.status, { color: theme.clear }]}>{getLocationStatusText(mode, deviceLocationState, locationReady)}</Text>
+        <Text style={[styles.status, { color: theme.success }]}>{getLocationStatusText(mode, deviceLocationState, locationReady)}</Text>
       </View>
       <View style={styles.modeRow}>
         {locationOptions.map((item) => {

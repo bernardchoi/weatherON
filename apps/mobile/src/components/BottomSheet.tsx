@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "../localization/react-native";
+import { Animated, Easing, Platform, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius, spacing } from "../theme/tokens";
+import { IosSelectionSheet } from "./IosSelectionSheet";
 import { IosGlassBackdrop } from "./IosGlassBackdrop";
 
 // 이 화면들의 안드로이드 실기기는 제스처 내비게이션 바가 하단 화면을 60~80px 정도 가린다.
@@ -18,7 +19,11 @@ type BottomSheetProps = {
   children: React.ReactNode;
 };
 
-export function BottomSheet({ visible, onClose, accessibilityLabel, children }: BottomSheetProps) {
+export function BottomSheet(props: BottomSheetProps) {
+  return Platform.OS === "ios" ? <IosSelectionSheet {...props} /> : <LegacyBottomSheet {...props} />;
+}
+
+function LegacyBottomSheet({ visible, onClose, accessibilityLabel, children }: BottomSheetProps) {
   const theme = useAppTheme();
   const { height: windowHeight } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);

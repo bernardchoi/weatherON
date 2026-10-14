@@ -89,25 +89,148 @@ for(const route of ['H5','O3','M2','H1','G1','C1']){
  assert.equal(stored,['H5','O3','M2'].includes(route)?context:null);
 }
 console.log('PASS: actual WeatherKit missing-field normalization and navigation callbacks/context replacement/back-entry/overlay lifecycle.');
-// Execute the actual iOS forecast JSX against changing snapshots and permissions.
-const rainSource=fs.readFileSync('apps/mobile/src/screens/IosRainForecastScreen.tsx','utf8');
-const rainAst=ts.createSourceFile('IosRainForecastScreen.tsx',rainSource,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-const rainFn=rainAst.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='IosRainForecastScreen');
-const rainCode=ts.transpileModule(rainFn.getText(rainAst).replace('export ', '')+'\nresult=IosRainForecastScreen(input);',{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const mode of ['light','dark'])for(const enabled of [true,false])for(const permitted of [true,false])for(const variant of ['valid','absent','removed','stale']){
- const destination=variant==='absent'?{...dest,hourly:[]}:variant==='stale'?{...dest,stale:true}:dest;
- const events=[];const ctx={result:null,React:{createElement:(type,props,...children)=>({type,props,children})},useAppTheme:()=>({name:mode,text:'#111',muted:'#666'}),useForecastNow:()=>now,...api,getDisplayLocationName:v=>v,styles:{row:{},toggle:{}},View:'View',Text:'Text',AppScreen:'AppScreen',FeedbackPressable:'FeedbackPressable',input:{state:{weather,destinationCare:{originWeather:weather},destinationWeatherById:variant==='removed'?{}:{destination}},rainForecastContext:context,onGoBack:()=>true,alertPreferences:{rainDetail:enabled},onToggleAlertPreference:key=>events.push(key),permissionReady:permitted,smartCareEnabled:true,onRequestPermissionGate:(...args)=>events.push(args)}};
- vm.runInNewContext(rainCode,ctx);const nodes=[];function visit(n){if(!n||typeof n!=='object')return;nodes.push(n);for(const c of n.children??[])Array.isArray(c)?c.forEach(visit):visit(c)}visit(ctx.result);
- const screen=nodes.find(n=>n.type==='AppScreen');assert.equal(screen.props.subtitle,variant==='removed'?'위치 확인 필요':'public-destination');
- const labels=nodes.filter(n=>n.props?.accessibilityLabel?.includes('강수확률'));assert.equal(labels.length,['absent','removed'].includes(variant)?0:2);
- const text=nodes.filter(n=>n.type==='Text').flatMap(n=>n.children.filter(v=>typeof v==='string')).join(' ');assert.doesNotMatch(text,/이후 외출 부담 낮음|강수 완화 예상|향후 1시간/);
- if(variant==='absent')assert.match(text,/시간별 미래 예보가 아니/);
- if(variant==='stale')assert.match(text,/최근 기준/);
- if(variant==='removed')assert.match(text,/선택한 위치/);
- const toggle=nodes.find(n=>n.type==='FeedbackPressable');toggle.props.onPress();assert.equal(events[0],'rainDetail');assert.equal(events.length,!enabled&&!permitted?2:1);
- if(events.length===2)assert.deepEqual(events[1],['notification','H5','rain']);
+// Load both actual H5 TSX modules. Only native UI/asset/theme/clock boundaries are mocked.
+// Re-render after invoking their real handlers so assertions cover stateful behavior.
+{
+  let hookState = [], hookCursor = 0, mode = 'light', fontScale = 1;
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }),
+    useState(initial) {
+      const index = hookCursor++;
+      if (!(index in hookState)) hookState[index] = initial;
+      return [hookState[index], next => { hookState[index] = typeof next === 'function' ? next(hookState[index]) : next; }];
+    },
+  };
+  const native = {
+    StyleSheet: { create: value => value, hairlineWidth: 1 },
+    useWindowDimensions: () => ({ fontScale }),
+    ...Object.fromEntries(['Image', 'Text', 'View', 'ScrollView'].map(name => [name, name])),
+  };
+  const moduleCache = new Map();
+  function loadRainModule(file) {
+    file = path.resolve(file);
+    if (moduleCache.has(file)) return moduleCache.get(file);
+    const module = { exports: {} };
+    const compiled = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: {
+      jsx: ts.JsxEmit.React, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
+    } }).outputText;
+    new Function('module', 'exports', 'require', compiled)(module, module.exports, id => {
+      if (id === 'react') return react;
+      if (id.endsWith('/localization/react-native')) return native;
+      if (id.endsWith('/AppThemeContext')) return { useAppTheme: () => ({ name: mode, text: '#111', muted: '#777', border: '#aaa', card: '#ddd', gold: '#a40', sky: '#578' }) };
+      if (id.endsWith('/FeedbackPressable')) return { FeedbackPressable: 'FeedbackPressable' };
+      if (id.endsWith('/AppScreen')) return { AppScreen: 'AppScreen' };
+      if (id.endsWith('/useForecastNow')) return { useForecastNow: () => now };
+      if (id.endsWith('/assets')) return { uiIconAssets: { drop: 'drop', myAlerts: 'alerts' } };
+      if (id.endsWith('/locationDisplay')) return { getDisplayLocationName: name => name };
+      const base = path.resolve(path.dirname(file), id);
+      return loadRainModule(fs.existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`);
+    });
+    moduleCache.set(file, module.exports);
+    return module.exports;
+  }
+  const { IosRainForecastScreen } = loadRainModule('apps/mobile/src/screens/IosRainForecastScreen.tsx');
+  const chart = loadRainModule('apps/mobile/src/screens/IosRainForecastChart.tsx');
+  function flatten(node, result = []) {
+    if (Array.isArray(node)) { node.forEach(child => flatten(child, result)); return result; }
+    if (!node || typeof node !== 'object') return result;
+    if (typeof node.type === 'function') return flatten(node.type({ ...node.props, children: node.children }), result);
+    result.push(node);
+    node.children?.forEach(child => flatten(child, result));
+    return result;
+  }
+  function render(props) { hookCursor = 0; return flatten(IosRainForecastScreen(props)); }
+  const byId = (nodes, id) => nodes.find(node => node.props.testID === id);
+  const buttons = nodes => nodes.filter(node => node.props.testID?.startsWith('rain-hour-'));
+  const text = nodes => nodes.filter(node => node.type === 'Text').flatMap(node => node.children.filter(child => typeof child === 'string')).join(' ');
+  function propsFor(destination, options = {}) {
+    const events = [];
+    return { events, props: {
+      state: { weather, destinationCare: { originWeather: weather }, destinationWeatherById: destination ? { destination } : {} },
+      rainForecastContext: context, onGoBack() {}, alertPreferences: { rainDetail: options.enabled ?? false },
+      onToggleAlertPreference: key => events.push(key), permissionReady: options.permitted ?? true,
+      smartCareEnabled: options.smartCareEnabled ?? true, onRequestPermissionGate: (...args) => events.push(args),
+    } };
+  }
+  for (mode of ['light', 'dark']) for (fontScale of [1, 1.6, 2]) {
+    for (const enabled of [true, false]) for (const permitted of [true, false]) {
+      for (const variant of ['valid', 'absent', 'removed', 'stale']) {
+        hookState = [];
+        const destination = variant === 'removed' ? undefined : variant === 'absent' ? { ...dest, hourly: [] } : variant === 'stale' ? { ...dest, stale: true } : dest;
+        const { props, events } = propsFor(destination, { enabled, permitted });
+        let nodes = render(props);
+        assert.equal(nodes.find(node => node.type === 'AppScreen').props.subtitle, variant === 'removed' ? '위치 확인 필요' : 'public-destination');
+        assert.doesNotMatch(text(nodes), /이후 외출 부담 낮음|강수 완화 예상|향후 1시간/);
+        assert.match(text(nodes), /이후 비 그침은 확인되지/);
+        if (variant === 'absent') assert.match(text(nodes), /시간별 미래 예보가 아니/);
+        if (variant === 'stale') assert.match(text(nodes), /최근 기준/);
+        if (variant === 'removed') assert.match(text(nodes), /선택한 위치/);
+        // Two supplied hours plus the missing 11:00 interval must all remain selectable.
+        assert.equal(buttons(nodes).length, ['absent', 'removed'].includes(variant) ? 0 : 3);
+        const toggle = byId(nodes, 'rain-alert-toggle');
+        assert.equal(toggle.props.accessibilityRole, 'switch');
+        assert.equal(toggle.props.accessibilityState.checked, enabled);
+        toggle.props.onPress();
+        assert.deepEqual(events, !enabled && !permitted ? ['rainDetail', ['notification', 'H5', 'rain']] : ['rainDetail']);
+        if (['absent', 'removed'].includes(variant)) continue;
+        const ids = buttons(nodes).map(node => node.props.testID);
+        assert.match(byId(nodes, 'rain-selected-detail').props.accessibilityLabel, /10\/10 10:00, 강수확률 70%, 시간당 강수량 0.5mm/);
+        assert.ok(!byId(nodes, 'rain-details-table'));
+        byId(nodes, ids[1]).props.onPress(); nodes = render(props);
+        assert.match(byId(nodes, 'rain-selected-detail').props.accessibilityLabel, /11:00–10\/10 12:00, 예보 미확인/);
+        assert.doesNotMatch(byId(nodes, 'rain-selected-detail').props.accessibilityLabel, /0mm|0%/);
+        assert.equal(buttons(nodes).filter(node => node.props.accessibilityState.selected).length, 1);
+        byId(nodes, ids[2]).props.onPress(); nodes = render(props);
+        assert.match(byId(nodes, 'rain-selected-detail').props.accessibilityLabel, /12:00, 강수확률 0%, 시간당 강수량 0mm/);
+        byId(nodes, 'rain-details-toggle').props.onPress(); nodes = render(props);
+        assert.equal(byId(nodes, 'rain-details-toggle').props.accessibilityState.expanded, true);
+        const rows = flatten(byId(nodes, 'rain-details-table')).filter(node => node.props.accessibilityLabel);
+        assert.equal(rows.length, 3);
+        assert.match(rows[0].props.accessibilityLabel, /70%.*0.5mm/);
+        assert.match(rows[1].props.accessibilityLabel, /예보 미확인/);
+        assert.match(rows[2].props.accessibilityLabel, /0%.*0mm/);
+        byId(nodes, 'rain-details-toggle').props.onPress(); nodes = render(props);
+        assert.ok(!byId(nodes, 'rain-details-table'));
+        nodes.find(node => node.type === 'ScrollView').props.onLayout({ nativeEvent: { layout: { width: 294 } } });
+        nodes = render(props);
+        const width = buttons(nodes)[0].props.style.width;
+        assert.ok(width >= 44 * fontScale);
+        assert.ok(Math.abs(294 / width - Math.round(294 / width)) < 1e-6);
+        assert.equal(nodes.find(node => node.type === 'ScrollView').props.snapToInterval, width);
+      }
+    }
+  }
+  // Partial edge hours, a multi-hour gap and a supplied zero are distinct data states.
+  const mixed = { ...dest, hourly: [
+    { ...hour('2026-10-10T10:00'), available: { rainProbability: false, precipitation: false } },
+    hour('2026-10-10T11:00', 22, 80, 0),
+    hour('2026-10-10T14:00', 22, 70, 3),
+    { ...hour('2026-10-10T15:00'), precipitationMm: NaN },
+  ] };
+  hookState = [];
+  const mixedProps = propsFor(mixed).props;
+  let mixedNodes = render(mixedProps);
+  assert.equal(buttons(mixedNodes).length, 5);
+  assert.equal(buttons(mixedNodes).filter(node => /예보 미확인/.test(node.props.accessibilityLabel)).length, 3);
+  assert.match(byId(mixedNodes, 'rain-selected-detail').props.accessibilityLabel, /예보 미확인/);
+  buttons(mixedNodes)[1].props.onPress(); mixedNodes = render(mixedProps);
+  assert.match(byId(mixedNodes, 'rain-selected-detail').props.accessibilityLabel, /80%.*0mm/);
+  buttons(mixedNodes)[2].props.onPress(); mixedNodes = render(mixedProps);
+  assert.match(byId(mixedNodes, 'rain-selected-detail').props.accessibilityLabel, /12:00–10\/10 14:00, 예보 미확인/);
+  // An updated snapshot removes the selected hour: selection must fall back to an existing slot.
+  buttons(mixedNodes)[3].props.onPress();
+  const replacement = propsFor({ ...dest, hourly: [hour('2026-10-10T10:00', 22, 20, 0)] }).props;
+  assert.match(byId(render(replacement), 'rain-selected-detail').props.accessibilityLabel, /10:00.*20%.*0mm/);
+  for (const destination of [{ ...dest, source: 'fallback' }, { ...dest, locationUnverified: true }]) {
+    hookState = []; assert.equal(buttons(render(propsFor(destination).props)).length, 0);
+  }
+  for (const targetAt of ['2026-10-10T08:30:00+09:00', '2026-10-11T10:30:00+09:00']) {
+    hookState = []; const props = propsFor(dest).props; props.rainForecastContext = { ...context, targetAt };
+    assert.equal(buttons(render(props)).length, 0);
+  }
+  for (const maximum of [0, .01, 1, 1.01, 2, 3, 10, 60, 300]) assert.ok(chart.rainAmountCeiling(maximum) >= Math.max(1, maximum));
+  console.log('PASS: actual H5 screen + chart modules — selection/reselection, expanded exact rows, alert permissions, missing vs zero, independent probability, stale/removed/out-of-range contexts, both themes, 1–2x type and whole-column touch targets. Native rendering remains separate QA.');
 }
-console.log('PASS: actual iOS forecast JSX — identical destination context, removed/no-hourly/stale states and original alert permission callbacks in both themes.');
 
 assert.match(api.buildOutingCheck(weather,undefined,now),/출발·도착 시간을 확인/);
 assert.equal(api.buildRainForecast(weather,{...context,targetAt:'2026-10-10T08:30:00+09:00'},now).bars.length,0);
@@ -202,11 +325,11 @@ for(const os of ['ios','android'])for(const version of [25,27])for(const availab
  const exports={};const rn={Platform:{OS:os,Version:version},UIManager:{getViewManagerConfig:()=>available},View:'View',requireNativeComponent:()=> 'NativeGlass',StyleSheet:{absoluteFill:{position:'absolute'},create:v=>v}};
  const mockReact={createElement:(type,props,...children)=>({type,props,children})};
  vm.runInNewContext(materialCode,{exports,require:id=>id==='react'?{__esModule:true,default:mockReact}:rn});
- const rendered=exports.HomePlanMaterial({theme:{name:mode,reducedTransparency}});
+ const rendered=exports.HomePlanMaterial({theme:{name:mode,reducedTransparency,card:mode==='light'?'#EEF7F9':'#173642'}});
  if(os==='android'){assert.equal(rendered,null);continue;}
  assert.equal(rendered.type,version>=26&&available&&!reducedTransparency?'NativeGlass':'View');
  assert.equal(rendered.props.pointerEvents,'none');assert.equal(rendered.props.accessibilityElementsHidden,true);
- if(rendered.type==='View')assert.match(rendered.props.style[1].backgroundColor,/^#[A-F0-9]{6}$/);
+ if(rendered.type==='View'){assert.match(rendered.props.style[1].backgroundColor,/^#[A-F0-9]{6}$/);assert.equal(rendered.props.style[1].backgroundColor,mode==='light'?'#EEF7F9':'#173642');}
 }
 assert.doesNotMatch(home,/시간별 강수 ·/);
 assert.ok(home.includes('layout.width < 390 || fontScale > 1.3'));

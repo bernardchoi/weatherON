@@ -1,3 +1,6 @@
+import { Platform } from "../localization/react-native";
+import { brandPalettes } from "./brandPalette";
+
 export type AppThemeName = "dark" | "light";
 
 export type AppTheme = {
@@ -16,6 +19,10 @@ export type AppTheme = {
   cardSoft: string;
   cardMuted: string;
   clear: string;
+  actionFill: string;
+  success: string;
+  materialTint: string;
+  wordmarkOn: string;
   gold: string;
   sky: string;
   skyLite: string;
@@ -27,9 +34,10 @@ export type AppTheme = {
   border: string;
   shadow: string;
   onAccent: string;
+  onAlert: string;
 };
 
-export const appThemes: Record<AppThemeName, AppTheme> = {
+export const androidAppThemes: Record<AppThemeName, AppTheme> = {
   dark: {
     name: "dark",
     reducedTransparency: false,
@@ -43,6 +51,11 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     cardSoft: "#16557F",
     cardMuted: "rgba(126,204,255,0.12)",
     clear: "#5DE2C2",
+    actionFill: "#5DE2C2",
+    success: "#5DE2C2",
+    materialTint: "#D8F3FF",
+    wordmarkOn: "#E6B98D",
+    onAlert: "#FFFFFF",
     gold: "#FFC758",
     sky: "#58BFFF",
     skyLite: "#D8F3FF",
@@ -68,6 +81,11 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     cardSoft: "#EAF3FA",
     cardMuted: "rgba(31,78,121,0.08)",
     clear: "#007F73",
+    actionFill: "#007F73",
+    success: "#007F73",
+    materialTint: "#1D6DA8",
+    wordmarkOn: "#9E6449",
+    onAlert: "#FFFFFF",
     gold: "#C2410C",
     // 2026-07-07 대비 실측: #237BBD 텍스트는 sky-soft 칩 배경(자기 색 9~13% 틴트) 위에서 3.8~4.0:1로 WCAG AA 4.5:1 미달.
     // #1D6DA8로 조정해 흰 배경/카드/자기 틴트 배경 전 구간에서 4.5:1 이상 확보.
@@ -83,6 +101,74 @@ export const appThemes: Record<AppThemeName, AppTheme> = {
     onAccent: "#FFFFFF",
   },
 };
+
+export const iosAppThemes: Record<AppThemeName, AppTheme> = {
+  dark: {
+    name: "dark",
+    reducedTransparency: false,
+    dynamicColorEnabled: false,
+    background: brandPalettes.dark.background,
+    backgroundAlt: brandPalettes.dark.backgroundAlt,
+    nav: "rgba(16,43,56,0.97)",
+    navBorder: brandPalettes.dark.border,
+    card: brandPalettes.dark.surface,
+    cardStrong: brandPalettes.dark.surface,
+    cardSoft: brandPalettes.dark.elevated,
+    cardMuted: brandPalettes.dark.surface,
+    success: "#5DE2C2",
+    materialTint: brandPalettes.dark.materialTint,
+    wordmarkOn: brandPalettes.dark.wordmarkOn,
+    clear: brandPalettes.dark.action,
+    actionFill: brandPalettes.dark.action,
+    gold: brandPalettes.dark.actionLabel,
+    sky: "#58BFFF",
+    skyLite: "#D8F3FF",
+    warm: "#FF9A66",
+    alert: "#FF9A94",
+    text: brandPalettes.dark.text,
+    muted: brandPalettes.dark.muted,
+    subtle: brandPalettes.dark.muted,
+    border: brandPalettes.dark.border,
+    shadow: "rgba(0,16,22,0.48)",
+    onAccent: brandPalettes.dark.background,
+    onAlert: brandPalettes.dark.background,
+  },
+  light: {
+    name: "light",
+    reducedTransparency: false,
+    dynamicColorEnabled: false,
+    background: brandPalettes.light.background,
+    backgroundAlt: brandPalettes.light.backgroundAlt,
+    nav: "rgba(233,246,248,0.94)",
+    navBorder: brandPalettes.light.border,
+    card: brandPalettes.light.surface,
+    cardStrong: brandPalettes.light.surface,
+    cardSoft: brandPalettes.light.elevated,
+    cardMuted: brandPalettes.light.surface,
+    success: "#006D63",
+    materialTint: brandPalettes.light.materialTint,
+    wordmarkOn: brandPalettes.light.wordmarkOn,
+    clear: brandPalettes.light.actionLabel,
+    actionFill: brandPalettes.light.action,
+    gold: brandPalettes.light.actionLabel,
+    // 2026-07-07 대비 실측: #237BBD 텍스트는 sky-soft 칩 배경(자기 색 9~13% 틴트) 위에서 3.8~4.0:1로 WCAG AA 4.5:1 미달.
+    // #1D6DA8로 조정해 흰 배경/카드/자기 틴트 배경 전 구간에서 4.5:1 이상 확보.
+    sky: "#1A6399",
+    skyLite: "#1A6399",
+    warm: "#B43F28",
+    alert: "#B42318",
+    text: brandPalettes.light.text,
+    muted: brandPalettes.light.muted,
+    subtle: brandPalettes.light.muted,
+    border: brandPalettes.light.border,
+    shadow: "rgba(24,56,68,0.16)",
+    onAccent: "#FFFFFF",
+    onAlert: "#FFFFFF",
+  },
+};
+
+// Existing Android/web presentation stays byte-for-byte equivalent by color role.
+export const appThemes = Platform.OS === "ios" ? iosAppThemes : androidAppThemes;
 
 export const appColors = {
   navy: appThemes.dark.background,
@@ -125,7 +211,7 @@ export function colorWithAlpha(color: string, alpha: number): string {
 
 export function semanticColor(theme: AppTheme, role: SemanticColorRole): string {
   if (role === "surfacePassive") {
-    return theme.name === "light" ? theme.cardSoft : colorWithAlpha(theme.skyLite, 0.1);
+    return theme.name === "light" ? theme.cardSoft : colorWithAlpha(theme.materialTint, 0.1);
   }
   if (role === "surfaceSelected") {
     return theme.name === "light" ? colorWithAlpha(theme.gold, 0.1) : colorWithAlpha(theme.text, 0.1);
@@ -133,7 +219,7 @@ export function semanticColor(theme: AppTheme, role: SemanticColorRole): string 
   if (role === "accentTint") return colorWithAlpha(theme.gold, theme.name === "light" ? 0.1 : 0.12);
   if (role === "accentBorder") return colorWithAlpha(theme.gold, theme.name === "light" ? 0.32 : 0.4);
   if (role === "infoTint") return colorWithAlpha(theme.sky, theme.name === "light" ? 0.1 : 0.14);
-  if (role === "successTint") return colorWithAlpha(theme.clear, theme.name === "light" ? 0.1 : 0.16);
+  if (role === "successTint") return colorWithAlpha(theme.success, theme.name === "light" ? 0.1 : 0.16);
   if (role === "outlineSoft") return colorWithAlpha(theme.text, theme.name === "light" ? 0.12 : 0.12);
   if (role === "outlineStrong") return colorWithAlpha(theme.text, theme.name === "light" ? 0.24 : 0.18);
   if (role === "imagePlaceholder") return colorWithAlpha(theme.text, theme.name === "light" ? 0.06 : 0.08);
@@ -149,7 +235,7 @@ export function getToneColor(theme: AppTheme, tone: ToneColor): string {
   if (tone === "gold") return theme.gold;
   if (tone === "sky") return theme.sky;
   if (tone === "warm") return theme.warm;
-  return theme.clear;
+  return theme.success;
 }
 
 function parseHexColor(color: string) {
@@ -186,6 +272,12 @@ export function resolveAppTheme(
     : baseTheme;
 
   if (!reducedTransparency) return configuredTheme;
+
+  if (Platform.OS === "ios") return {
+    ...configuredTheme, reducedTransparency: true,
+    nav: configuredTheme.background, navBorder: configuredTheme.border,
+    cardMuted: configuredTheme.card, shadow: configuredTheme.name === "dark" ? "#001016" : "#183844",
+  };
 
   // 반투명 패널·탭 바·보조 텍스트·구분선을 불투명 표면으로 바꾼다.
   // 개별 화면마다 조건을 두지 않아도 테마 토큰을 쓰는 모든 화면에 즉시 적용된다.

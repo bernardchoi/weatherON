@@ -39,7 +39,7 @@ export function AccountManagementScreen({
   const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결 완료" : needsTerms ? "확인 필요" : "게스트";
   const primaryLabel = needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
-  const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
+  const primaryTone = accountReady ? theme.success : needsTerms ? theme.gold : theme.sky;
   const showPrimaryAction = accountLinked && !accountReady;
   const ConfirmationContent = ambient ? ScrollView : React.Fragment;
   const isProcessing = accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in";
@@ -75,7 +75,7 @@ export function AccountManagementScreen({
               paddingHorizontal: layout.accountPanelPadding,
               paddingVertical: layout.isShort ? 10 : 12,
               backgroundColor: theme.card,
-              borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border,
+              borderColor: accountReady ? theme.success : needsTerms ? theme.gold : theme.border,
             },
           ], Platform.OS === "ios" && ambientVisual.profileCard]}
         >
@@ -170,7 +170,7 @@ export function AccountManagementScreen({
                     <Text style={[[styles.dialogButtonText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.dialogButtonText]}>취소</Text>
                   </Pressable>
                   <Pressable accessibilityRole="button" accessibilityState={{ busy: isProcessing, disabled: isProcessing }} disabled={isProcessing} onPress={() => void confirmDangerAction()} style={[styles.dialogButton, ambient && [ambientVisual.dialogButton, fontScale > 1.15 && { flexGrow: 0, flexShrink: 0 }], { backgroundColor: theme.alert, borderColor: theme.alert }]}>
-                    {isProcessing ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.confirmButtonText, ambient && ambientVisual.dialogButtonText]}>{dangerConfirm === "delete" ? "탈퇴하기" : "로그아웃"}</Text>}
+                    {isProcessing ? <ActivityIndicator color={theme.onAlert} /> : <Text style={[styles.confirmButtonText, { color: theme.onAlert }, ambient && ambientVisual.dialogButtonText]}>{dangerConfirm === "delete" ? "탈퇴하기" : "로그아웃"}</Text>}
                   </Pressable>
                 </View>
               </ConfirmationContent>

@@ -6,6 +6,8 @@ import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
+import { IosSelectionRow } from "../components/IosSelectionRow";
+import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
@@ -74,6 +76,8 @@ export function DestinationCareScreen({
   const selectedDestinationLabel = selectedSavedDestination?.label ?? null;
   const timeBasis = selectedDestinationSchedulePreference.timeBasis;
   const selectedTargetTime = selectedDestinationSchedulePreference.targetArrivalTime;
+  const timeBasisFeedback = useConfirmedOptionFeedback(timeBasis);
+  const timeFeedback = useConfirmedOptionFeedback(selectedTargetTime);
   const travelMinutes = care.departureAdvice?.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes;
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
@@ -85,6 +89,7 @@ export function DestinationCareScreen({
     ? typeof travelMinutes === "number" ? addMinutesToTime(selectedTargetTime, travelMinutes) : undefined
     : selectedTargetTime;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
+  const transportFeedback = useConfirmedOptionFeedback(selectedDestinationSchedulePreference.transportMode);
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
@@ -232,8 +237,8 @@ export function DestinationCareScreen({
         </LocalizedView>
 
         {justSaved ? (
-          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
-            <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
+          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.success }, cardShadow(theme), pageStyles.card]}>
+            <Text style={[styles.savedBannerTitle, { color: theme.success }]}>목적지 저장 완료</Text>
             <Text style={[styles.savedBannerBody, { color: theme.muted }]}>아래 출발 시간과 날씨 비교가 이 목적지 기준으로 계산됨</Text>
           </View>
         ) : null}
@@ -460,7 +465,7 @@ export function DestinationCareScreen({
 
       <BottomSheet
         visible={arrivalEditorOpen}
-        onClose={() => setArrivalEditorOpen(false)}
+        onClose={() => { timeBasisFeedback.cancel(); timeFeedback.cancel(); setArrivalEditorOpen(false); }}
         accessibilityLabel="출발 또는 도착 시각 선택 시트"
       >
         <Text style={[styles.sheetTitle, { color: theme.text }]}>시간 기준과 시각</Text>
@@ -474,7 +479,8 @@ export function DestinationCareScreen({
                 accessibilityLabel={`${label} 기준 선택${selected ? ", 현재 선택됨" : ""}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => onSetDestinationTimeBasis(basis)}
+                hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"}
+                onPress={() => { timeBasisFeedback.request(basis); onSetDestinationTimeBasis(basis); }}
                 style={[styles.timeBasisOption, { backgroundColor: selected ? `${theme.gold}18` : theme.cardMuted, borderColor: selected ? theme.gold : theme.border }]}
               >
                 <Text style={[styles.timeBasisOptionText, { color: selected ? theme.gold : theme.text }]}>{label}</Text>
@@ -486,7 +492,7 @@ export function DestinationCareScreen({
           label={timeBasis === "arrival" ? "도착 희망" : "출발 희망"}
           value={selectedTargetTime}
           caption={timeBasis === "arrival" ? "5분 단위 스크롤 선택" : "이동 시간 기준 도착 예정 시간 계산"}
-          onSelectTime={onSetDestinationTargetArrivalTime}
+          onSelectTime={(time) => { timeFeedback.request(time); onSetDestinationTargetArrivalTime(time); }}
           theme={theme}
         />
         <FeedbackPressable
@@ -501,7 +507,7 @@ export function DestinationCareScreen({
 
       <BottomSheet
         visible={transportSelectorOpen}
-        onClose={() => setTransportSelectorOpen(false)}
+        onClose={() => { transportFeedback.cancel(); setTransportSelectorOpen(false); }}
         accessibilityLabel="이동수단 선택 시트"
       >
         <Text style={[styles.sheetTitle, { color: theme.text }]}>이동수단 선택</Text>
@@ -510,6 +516,7 @@ export function DestinationCareScreen({
           walkUnavailable={walkUnavailable}
           routeTimingReady={routeTimingReady}
           onSetTransportMode={(mode) => {
+            transportFeedback.request(mode);
             setTransportSelectorOpen(false);
             onSetDestinationTransportMode(mode);
           }}
@@ -703,6 +710,7 @@ function TimeWheel({
             accessibilityLabel={`${option}${suffix} 선택`}
             accessibilityRole="button"
             accessibilityState={{ selected }}
+            hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"}
             onPress={() => onSelect(option)}
             style={[styles.timeWheelOption, { backgroundColor: selected ? `${theme.gold}18` : "transparent" }]}
           >
@@ -738,8 +746,8 @@ function TransportDropdown({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-      {transportOptions.map((option) => {
+    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }, Platform.OS === "ios" && { backgroundColor: "transparent", borderWidth: 0, borderRadius: 0, padding: 0, gap: 0 }]}>
+      {transportOptions.map((option, index) => {
         const selected = transportMode === option.mode;
         const disabled = option.mode === "walk" && walkUnavailable;
         const caption = disabled
@@ -749,6 +757,7 @@ function TransportDropdown({
               ? "경로 API 확인 전 기본값 · 직접 선택하면 바로 반영됨"
               : "선택해도 Google 지도 등 외부 경로 확인 필요"
             : option.caption;
+        if (Platform.OS === "ios") return <IosSelectionRow key={option.mode} label={option.label} description={caption} icon={option.mode === "walk" ? uiIconAssets.shoe : option.mode === "transit" ? uiIconAssets.placeTransit : ambientUiIcons.tabDepart} selected={selected} disabled={disabled} last={index === transportOptions.length - 1} onPress={() => onSetTransportMode(option.mode)} />;
         return (
           <FeedbackPressable
             key={option.mode}

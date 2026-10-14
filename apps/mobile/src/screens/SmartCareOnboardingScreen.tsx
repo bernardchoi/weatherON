@@ -123,7 +123,7 @@ export function SmartCareOnboardingScreen({
           styles.notificationPrompt,
           {
             backgroundColor: theme.cardStrong,
-            borderColor: permissionReady ? theme.clear : theme.border,
+            borderColor: permissionReady ? theme.success : theme.border,
             minHeight: layout.onboardingCompactRowMinHeight,
             padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
           },
@@ -137,7 +137,7 @@ export function SmartCareOnboardingScreen({
           <Text style={[[styles.notificationTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.notificationTitle]}>{permissionReady ? "필요한 알림을 받을 준비 끝" : notificationSkipped ? "알림은 원할 때 켤 수 있어요" : "비 오기 전, 나서기 전에 알려드릴게요"}</Text>
           <Text style={[[styles.notificationBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.notificationBody]}>{permissionReady ? "중요한 변화만 한 번씩 가볍게 알려드려요" : notificationSkipped ? "알림 설정에서 언제든 바꿀 수 있어요" : "선택한 상황에 맞춰 꼭 필요한 소식만 전해드려요"}</Text>
         </View>
-        <Text style={[[styles.notificationStatus, { color: permissionReady ? theme.clear : notificationSkipped ? theme.gold : theme.sky }], Platform.OS === "ios" && ambientVisual.notificationStatus]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
+        <Text style={[[styles.notificationStatus, { color: permissionReady ? theme.success : notificationSkipped ? theme.gold : theme.sky }], Platform.OS === "ios" && ambientVisual.notificationStatus]}>{permissionReady ? "켜짐" : notificationSkipped ? "보류" : "선택"}</Text>
       </View>
 
     </AppScreen>

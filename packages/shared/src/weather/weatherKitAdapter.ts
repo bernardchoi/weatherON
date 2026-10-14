@@ -75,6 +75,7 @@ function buildDaily(payload: WeatherKitResponse, timeZone: string): DailyWeather
   const days = payload.forecastDaily?.days ?? [];
   if (days.length === 0) return undefined;
   return days.map((day) => ({
+    available: { minTemp: Number.isFinite(day.temperatureMin), maxTemp: Number.isFinite(day.temperatureMax), rainProbability: Number.isFinite(day.precipitationChance) },
     date: day.forecastStart ? toLocalDateString(day.forecastStart, timeZone) : "",
     minTempC: day.temperatureMin ?? payload.currentWeather?.temperature ?? 0,
     maxTempC: day.temperatureMax ?? payload.currentWeather?.temperature ?? 0,

@@ -23,11 +23,11 @@ assert.match(stateSource.slice(localRestoreEnd, remoteRestoreStart), /if \(!appS
 assert.match(stateSource, /return \{\n    appStateHydrated,/u);
 
 const storyboard = readFileSync("apps/mobile/ios/WeatherON/SplashScreen.storyboard", "utf8");
-assert.match(storyboard, /firstAttribute="width" constant="108"/u);
-assert.match(storyboard, /firstAttribute="height" constant="108"/u);
+assert.match(storyboard, /firstAttribute="width" constant="180"/u);
+assert.match(storyboard, /firstAttribute="height" constant="124"/u);
 assert.match(storyboard, /firstAttribute="centerX"/u);
 assert.match(storyboard, /firstAttribute="centerY"/u);
-const images = JSON.parse(readFileSync("apps/mobile/ios/WeatherON/Images.xcassets/SplashScreenLogo.imageset/Contents.json", "utf8")).images;
+const images = JSON.parse(readFileSync("apps/mobile/ios/WeatherON/Images.xcassets/SplashCloud02.imageset/Contents.json", "utf8")).images;
 assert.ok(images.some((image) => image.appearances?.some((appearance) => appearance.value === "dark")));
 assert.match(navigatorSource, /if \(!launchReady && !appState\.storageLoadError\) return/u);
 

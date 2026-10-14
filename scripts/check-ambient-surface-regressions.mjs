@@ -118,14 +118,15 @@ for(const name of ['onTouchStartCapture','onTouchMoveCapture','onTouchEndCapture
 for(const q of [h,reduced,touch,dry,rain,heavy,wind])q.unmount();
 // Conservative contrast bound: assume every layer's brightest point overlaps.
 // This exceeds the actual drawing but prevents a touch highlight washing out labels.
-const ambientTheme=loadTS(path.join(root,'apps/mobile/src/theme/ambientSurface.ts'),{});
+const ambientTheme=loadTS(path.join(root,'apps/mobile/src/theme/ambientSurface.ts'),{'../localization/react-native':{Platform:{OS:'ios'}}});
 const palette=ambientTheme.ambientPalette;
+const appThemes=loadTS(path.join(root,"apps/mobile/src/theme/tokens.ts"),{"../localization/react-native":{Platform:{OS:"ios"}}}).appThemes;
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const luminance=c=>c.map(v=>v/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[0.2126,0.7152,0.0722][i],0);
 const composite=(background,color,opacity)=>{const alpha=((color>>>24)&255)/255*opacity;return [16,8,0].map((shift,i)=>((color>>>shift)&255)*alpha+background[i]*(1-alpha));};
 for(const name of ['dark','light']) for(const condition of ['clear','cloud','rain','snow','storm','thunder','fog']) {
   const q=await harness().initialize({theme:{name,reducedTransparency:false},windMs:12,touchPulse:1,condition,daylight:{phase:'day',season:'autumn'}});
-  const p={...palette({name}), muted:ambientTheme.ambientHomeTheme({name},true).muted, accent:ambientTheme.ambientHomeTheme({name},true).clear, accentLabel:ambientTheme.ambientHomeTheme({name},true).gold};let background=rgb(p.background);
+  const p={...palette({name}), muted:ambientTheme.ambientHomeTheme(appThemes[name],true).muted, accent:ambientTheme.ambientHomeTheme(appThemes[name],true).clear, accentLabel:ambientTheme.ambientHomeTheme(appThemes[name],true).gold};let background=rgb(p.background);
   for(const s of gradients(q)) {
     const opacity=typeof s.opacity==='number'?s.opacity:s.opacity?.interpolation?Math.max(...s.opacity.interpolation.outputRange):1;
     for(const layer of parseGradient(s.experimental_backgroundImage).toReversed()) {
@@ -185,7 +186,7 @@ for (const name of ['light','dark']) for (const routeId of ['M1','M3','M4','A4',
 console.log('PASS: all reading routes share Home base in both modes, viewport alignment, static-only folds, no input interception.');
 
 for (const name of ['light','dark']) {
-  const t=ambientTheme.ambientReadingTheme({name});
+  const t=ambientTheme.ambientReadingTheme(appThemes[name]);
   const tree=readingModule.AmbientReadingSurface({theme:t});
   let background=rgb(t.background);
   for (const layer of parseGradient(style(tree).experimental_backgroundImage).toReversed()) {

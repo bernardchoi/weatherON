@@ -3,6 +3,8 @@ import * as Crypto from "expo-crypto";
 import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import type { Purpose, Season, WardrobeCategory, WardrobeItem, WeatherTag } from "@weatheron/shared";
 import { ambientUiIcons } from "../ambientAssets";
+import { IosSelectionRow } from "./IosSelectionRow";
+import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { BottomSheet } from "./BottomSheet";
 import { AppButton } from "./AppButton";
 import { AppScreen } from "./AppScreen";
@@ -208,7 +210,7 @@ export function WardrobePhotoRegistration({
         </View>
         {!canUseNativePhoto ? <Text style={[[styles.message, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.message]}>사진 등록은 iOS·Android 앱에서 확인 가능</Text> : null}
         <View style={[[styles.statusCard, { backgroundColor: theme.cardStrong, borderColor: analysis?.quality === "retake" ? theme.warm : theme.border }], Platform.OS === "ios" && ambientVisual.statusCard]}>
-          <Text style={[[styles.statusTitle, { color: status === "error" || analysis?.quality === "retake" ? theme.warm : theme.clear }], Platform.OS === "ios" && ambientVisual.statusTitle]}>
+          <Text style={[[styles.statusTitle, { color: status === "error" || analysis?.quality === "retake" ? theme.warm : theme.success }], Platform.OS === "ios" && ambientVisual.statusTitle]}>
             {getStatusTitle(status, analysis)}
           </Text>
           <Text style={[[styles.message, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.message]}>{message}</Text>
@@ -239,7 +241,7 @@ export function WardrobePhotoRegistration({
                 style={[[styles.input, { color: theme.text, backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.input]}
                 maxLength={30}
               />
-              <ChoiceRow label="옷 종류" values={categories} selected={[draft.category]} labelFor={getWardrobeCategoryLabel} onToggle={(category) => { draftEdited.current = true; setDraft((current) => ({ ...current, category })); }} />
+              <ChoiceRow multiple={false} label="옷 종류" values={categories} selected={[draft.category]} labelFor={getWardrobeCategoryLabel} onToggle={(category) => { draftEdited.current = true; setDraft((current) => ({ ...current, category })); }} />
               <ChoiceRow label="입는 계절" values={seasons} selected={draft.seasons} labelFor={getPhotoTagLabel} onToggle={(season) => { draftEdited.current = true; setDraft((current) => ({ ...current, seasons: toggleValue(current.seasons, season) })); }} />
               <ChoiceRow label="입는 상황" values={purposes} selected={draft.purposes} labelFor={getPhotoTagLabel} onToggle={(purpose) => { draftEdited.current = true; setDraft((current) => ({ ...current, purposes: toggleValue(current.purposes, purpose) })); }} />
               <ChoiceRow label="어울리는 날씨" values={weatherTags} selected={draft.weatherTags} labelFor={getPhotoTagLabel} onToggle={(weatherTag) => { draftEdited.current = true; setDraft((current) => ({ ...current, weatherTags: toggleValue(current.weatherTags, weatherTag) })); }} />
@@ -258,40 +260,47 @@ function ChoiceRow<T extends string>({
   selected,
   labelFor,
   onToggle,
+  multiple = true,
 }: {
   label: string;
   values: readonly T[];
   selected: readonly T[];
   labelFor: (value: T) => string;
   onToggle: (value: T) => void;
+  multiple?: boolean;
 }) {
   const theme = useAppTheme();
   const [open, setOpen] = React.useState(false);
+  const feedback = useConfirmedOptionFeedback([...selected].sort().join("|"));
   return (
     <>
       <Pressable accessibilityRole="button" accessibilityLabel={`${label}, ${selected.map(labelFor).join(", ")}`} accessibilityState={{ expanded: open }} onPress={() => setOpen(true)} style={[[styles.selectRow, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.selectRow]}>
         <Text style={[[styles.fieldLabel, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.fieldLabel]}>{label}</Text>
         <Text style={[[styles.selectValue, { color: theme.text }], Platform.OS === "ios" && ambientVisual.selectValue]}>{selected.map(labelFor).join(" · ")}　›</Text>
       </Pressable>
-      <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel={label}>
+      <BottomSheet visible={open} onClose={() => { feedback.cancel(); setOpen(false); }} accessibilityLabel={label}>
         <FieldLabel label={label} />
-        <View style={[styles.choiceRow, Platform.OS === "ios" && ambientVisual.choiceRow]}>
-          {values.map((value) => {
+        <View style={[styles.choiceRow, Platform.OS === "ios" && [ambientVisual.choiceRow, { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", gap: 0 }]]}>
+          {values.map((value, index) => {
             const active = selected.includes(value);
+            if (Platform.OS === "ios") return <IosSelectionRow key={value} label={labelFor(value)} icon={ambientUiIcons.style} selected={active} last={index === values.length - 1} onPress={() => {
+              feedback.request((multiple ? toggleValue([...selected], value) : [value]).sort().join("|"));
+              onToggle(value);
+            }} />;
             return (
               <Pressable
                 key={value}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 onPress={() => onToggle(value)}
-                style={[[styles.choice, { backgroundColor: active ? theme.cardStrong : theme.cardMuted, borderColor: active ? theme.clear : theme.border }], Platform.OS === "ios" && ambientVisual.choice]}
+                style={[[styles.choice, { backgroundColor: active ? theme.cardStrong : theme.cardMuted, borderColor: active ? theme.clear : theme.border }]]}
               >
-                <Text style={[[styles.choiceText, { color: active ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.choiceText]}>{labelFor(value)}</Text>
+                <Text style={[[styles.choiceText, { color: active ? theme.clear : theme.text }]]}>{labelFor(value)}</Text>
               </Pressable>
             );
           })}
         </View>
-        <AppButton label="선택 완료" onPress={() => setOpen(false)} tone="secondary" />
+        <AppButton label="선택 완료" onPress={() => { feedback.cancel(); setOpen(false); }} tone="secondary" hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"} />
       </BottomSheet>
     </>
   );

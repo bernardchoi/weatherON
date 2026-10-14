@@ -11,6 +11,6 @@ const NativeMaterial = supported && UIManager.getViewManagerConfig("HomePlanGlas
 export function HomePlanMaterial({ theme }: { theme: AppTheme }) {
   if (Platform.OS !== "ios") return null;
   if (NativeMaterial && !theme.reducedTransparency) return <NativeMaterial testID="home-plan-native-glass" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" isDarkTheme={theme.name === "dark"} style={styles.fill} />;
-  return <View testID="home-plan-tonal-fallback" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.fill, { backgroundColor: theme.name === "dark" ? "#233750" : "#E9F1F8" }]} />;
+  return <View testID="home-plan-tonal-fallback" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.fill, { backgroundColor: theme.card }]} />;
 }
 const styles = StyleSheet.create({ fill: { ...StyleSheet.absoluteFill, borderRadius: 24 } });

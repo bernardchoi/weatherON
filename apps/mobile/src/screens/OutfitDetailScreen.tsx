@@ -504,7 +504,7 @@ function getTimeAdvicePresentation(rainProbabilityPct: number, tempC: number, th
   if (tempC < 18) {
     return { copy: "겉옷을 더해요", icon: uiIconAssets.shirt, color: theme.gold };
   }
-  return { copy: "지금 세트 그대로", icon: uiIconAssets.check, color: theme.clear };
+  return { copy: "지금 세트 그대로", icon: uiIconAssets.check, color: theme.success };
 }
 
 function formatWindSpeed(value: number) {

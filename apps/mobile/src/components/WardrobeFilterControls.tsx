@@ -1,14 +1,17 @@
 import React from "react";
-import { Animated, Easing, Platform, Image, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
 import { uiIconAssets } from "../assets";
 import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import { IosSelectionRow } from "./IosSelectionRow";
 import { BottomSheet } from "./BottomSheet";
-import { useReducedMotion } from "../hooks/useReducedMotion";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { FeedbackPressable } from "./FeedbackPressable";
+
+// Keep the SVG module outside the Android evaluation path.
+const CategoryIcon = Platform.OS === "ios" ? (require("./WardrobeCategoryIcon") as typeof import("./WardrobeCategoryIcon")).WardrobeCategoryIcon : null;
 
 const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
 const seasons = ["all", "spring", "summer", "fall", "winter"] as const;
@@ -58,7 +61,7 @@ export function WardrobeFilterControls({
   }, [categoryFilter, seasonFilter, purposeFilter]);
 
   const selectFilterValue = (value: string) => {
-    if (Platform.OS === "ios" && openFilter && value !== filterConfig.activeValue) pendingSelection.current = { filter: openFilter, value };
+    pendingSelection.current = Platform.OS === "ios" && openFilter && value !== filterConfig.activeValue ? { filter: openFilter, value } : null;
     if (openFilter === "category") onCategoryChange(value as WardrobeCategoryFilter);
     if (openFilter === "season") onSeasonChange(value as WardrobeSeasonFilter);
     if (openFilter === "purpose") onPurposeChange(value as WardrobePurposeFilter);
@@ -100,25 +103,25 @@ export function WardrobeFilterControls({
         <View style={[[styles.filterOptionList, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.filterOptionList]}>
           {filterConfig.values.map((value, index) => {
             const selected = filterConfig.activeValue === value;
+            if (Platform.OS === "ios" && CategoryIcon) return <IosSelectionRow key={value} label={filterConfig.renderLabel(value)} icon={openFilter === "season" ? ambientUiIcons.temperature : openFilter === "purpose" ? ambientUiIcons.tabDepart : <CategoryIcon category={value as WardrobeCategoryFilter} color={selected ? theme.clear : theme.muted} />} selected={selected} last={index === filterConfig.values.length - 1} onPress={() => selectFilterValue(value)} />;
             return (
               <FeedbackPressable
                 key={value}
                 accessibilityLabel={`${filterConfig.renderLabel(value)} 필터${selected ? ", 현재 선택됨" : ""}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"}
+                hapticFeedback="automatic"
                 onPress={() => selectFilterValue(value)}
                 style={[[
                   styles.filterOption,
                   index < filterConfig.values.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
                   selected ? { backgroundColor: theme.cardMuted } : null,
-                ], Platform.OS === "ios" && ambientVisual.filterOption]}
+                ]]}
               >
-                {Platform.OS === "ios" ? <FilterSelectionMark value={value} active={selected} /> : null}
-                <Text style={[[styles.filterOptionText, { color: selected ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.filterOptionText]}>
+                <Text style={[[styles.filterOptionText, { color: selected ? theme.clear : theme.text }]]}>
                   {filterConfig.renderLabel(value)}
                 </Text>
-                {selected && Platform.OS !== "ios" ? (
+                {selected ? (
                   <Image source={uiIconAssets.check} style={[styles.filterCheckIcon, { tintColor: theme.clear }]} resizeMode="contain" />
                 ) : null}
               </FeedbackPressable>
@@ -165,26 +168,6 @@ function WardrobeFilterSelect({
       {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 13, height: 13, tintColor: active ? theme.clear : theme.text }} /> : null}
     </FeedbackPressable>
   );
-}
-
-function FilterSelectionMark({ value, active }: { value: string; active: boolean }) {
-  const theme = useAppTheme();
-  const reducedMotion = useReducedMotion();
-  const progress = React.useRef(new Animated.Value(1)).current;
-  const previous = React.useRef(value);
-  React.useEffect(() => {
-    const changed = previous.current !== value;
-    previous.current = value;
-    progress.stopAnimation();
-    if (!changed || reducedMotion !== false) { progress.setValue(1); return; }
-    progress.setValue(0);
-    Animated.timing(progress, { toValue: 1, duration: 160, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-    return () => progress.stopAnimation();
-  }, [value, reducedMotion, progress]);
-  return <Animated.View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={{ width: 20, height: 20, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: active ? theme.clear : "transparent", borderWidth: 1, borderColor: active ? theme.clear : theme.border, transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }] }}>
-    {active ? <Image source={ambientUiIcons.check} style={{ width: 13, height: 13, tintColor: theme.onAccent }} /> : null}
-  </Animated.View>;
 }
 
 function getCategoryFilterLabel(value: WardrobeCategoryFilter) {

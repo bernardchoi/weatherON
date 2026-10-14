@@ -37,7 +37,7 @@ export function AppButton({
   const reducedMotion = useReducedMotion();
   useEffect(() => { scale.stopAnimation(); scale.setValue(1); return () => scale.stopAnimation(); }, [reducedMotion, scale]);
   const resolvedVariant = variant ?? (tone === "secondary" ? "tonal" : "filled");
-  const filledColor = tone === "warning" ? theme.gold : theme.clear;
+  const filledColor = tone === "warning" ? theme.gold : theme.actionFill;
   const foregroundColor = tone === "warning" ? theme.gold : tone === "primary" ? theme.clear : theme.text;
   const backgroundColor = resolvedVariant === "filled"
     ? filledColor

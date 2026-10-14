@@ -91,6 +91,7 @@ function buildDaily(payload: OpenMeteoResponse): DailyWeather[] | undefined {
   const times = daily?.time ?? [];
   if (times.length === 0) return undefined;
   return times.map((date, index) => ({
+    available: { minTemp: Number.isFinite(daily?.temperature_2m_min?.[index]), maxTemp: Number.isFinite(daily?.temperature_2m_max?.[index]), rainProbability: Number.isFinite(daily?.precipitation_probability_max?.[index]) },
     date,
     minTempC: daily?.temperature_2m_min?.[index] ?? payload.current?.temperature_2m ?? 0,
     maxTempC: daily?.temperature_2m_max?.[index] ?? payload.current?.temperature_2m ?? 0,

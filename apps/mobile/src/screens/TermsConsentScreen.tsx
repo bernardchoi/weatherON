@@ -151,9 +151,9 @@ export function TermsConsentScreen({ gate, authStatus, authMessage, accepted, on
         ))}
       </View>
 
-      <View style={[[styles.actionPanel, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.clear : theme.border }], Platform.OS === "ios" && ambientVisual.actionPanel]}>
+      <View style={[[styles.actionPanel, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.cardStrong, borderColor: requiredAccepted ? theme.success : theme.border }], Platform.OS === "ios" && ambientVisual.actionPanel]}>
         <View style={styles.actionCopy}>
-          <Text style={[styles.gateTitle, pageStyles.sectionTitle, { color: requiredAccepted ? theme.clear : theme.gold }]}>{gateLabel}</Text>
+          <Text style={[styles.gateTitle, pageStyles.sectionTitle, { color: requiredAccepted ? theme.success : theme.gold }]}>{gateLabel}</Text>
           <Text style={[[styles.body, pageStyles.caption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>
             {gate?.selectedDestinationName ? `${gate.selectedDestinationName} 저장 후 ${returnLabel} 화면으로 돌아가요` : `${returnLabel} 화면으로 돌아가요`}
           </Text>

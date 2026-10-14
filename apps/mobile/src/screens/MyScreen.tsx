@@ -115,7 +115,7 @@ export function MyScreen({
               gap: layout.isShort ? spacing.sm : spacing.md,
               padding: layout.settingsPanelPadding,
               backgroundColor: theme.card,
-              borderColor: isAccountReady ? theme.clear : theme.border,
+              borderColor: isAccountReady ? theme.success : theme.border,
             },
             cardShadow(theme),
         pageStyles.card,
@@ -125,11 +125,11 @@ export function MyScreen({
             style={[
               styles.avatar,
               layout.isShort ? styles.avatarShort : null,
-              { backgroundColor: theme.card, borderColor: isAccountReady ? theme.clear : theme.sky },
+              { backgroundColor: theme.card, borderColor: isAccountReady ? theme.success : theme.sky },
               pageStyles.quietIcon,
             ]}
           >
-            <PersonGlyph color={isAccountReady ? theme.clear : theme.sky} />
+            <PersonGlyph color={isAccountReady ? theme.success : theme.sky} />
           </View>
           <View style={styles.profileCopy}>
             <Text style={[styles.profileName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>

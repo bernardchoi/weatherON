@@ -898,6 +898,7 @@ await build({
     "expo-sqlite",
     "expo-status-bar",
     "expo-web-browser",
+    "react-native-svg",
   ],
   logLevel: "silent",
 });

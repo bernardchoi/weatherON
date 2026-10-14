@@ -50,8 +50,8 @@ export function WeatherSummary({
             {destinationReady ? "나서기 전, 달라지는 것만 먼저 볼게요" : "가는 곳을 더하면 날씨 차이까지 보여드림"}
           </Text>
         </View>
-        <View style={[styles.diffPill, { backgroundColor: comparison.tone === "warm" ? `${theme.warm}20` : `${theme.clear}20` }]}>
-          <Text style={[styles.diffPillText, { color: comparison.tone === "warm" ? theme.warm : theme.clear }]}>{comparison.label}</Text>
+        <View style={[styles.diffPill, { backgroundColor: comparison.tone === "warm" ? `${theme.warm}20` : `${theme.success}20` }]}>
+          <Text style={[styles.diffPillText, { color: comparison.tone === "warm" ? theme.warm : theme.success }]}>{comparison.label}</Text>
         </View>
       </View>
       <View style={styles.sourceRow}>

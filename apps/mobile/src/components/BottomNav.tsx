@@ -184,7 +184,7 @@ export function BottomNav({ activeRoute, onNavigate, transparentBackground = fal
           ]}
         >
           {isIos ? (
-            <IosGlassBackdrop theme={theme} role="dock" overlayColor={theme.name === "dark" ? "#24446C55" : "#D5EAFE55"} style={styles.iosDockBackdrop} />
+            <IosGlassBackdrop theme={theme} role="dock" overlayColor={`${theme.cardStrong}55`} style={styles.iosDockBackdrop} />
           ) : null}
           {useNativeSurface ? (
             <LiquidGlassNavigationSurface activeIndex={activeIndex} isDarkTheme={theme.name === "dark"}
