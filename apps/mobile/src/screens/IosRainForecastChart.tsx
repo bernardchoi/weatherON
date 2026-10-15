@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -76,7 +76,8 @@ export function IosRainForecastChart({ weather, context, now, forecast }: { weat
           const active = slot.at === selected.at;
           const hour = slot.hour;
           const boundary = index > 0 && date(slot.at) !== date(slots[index - 1].at);
-          return <FeedbackPressable key={slot.at} testID={`rain-hour-${slot.at}`} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={label(slot)} accessibilityHint="선택한 시간의 정확한 예보를 표시합니다" hapticFeedback="none" onPress={() => setSelectedAt(slot.at)} style={{ width: columnWidth, alignItems: "stretch" }}>
+          // Plot coordinates and grid lines must not scale during touch feedback.
+          return <Pressable key={slot.at} testID={`rain-hour-${slot.at}`} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={label(slot)} accessibilityHint="선택한 시간의 정확한 예보를 표시합니다" onPress={() => setSelectedAt(slot.at)} style={{ width: columnWidth, alignItems: "stretch" }}>
             <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <View style={{ height: dateHeight, justifyContent: "center", alignItems: "center" }}><Text style={{ color: theme.muted, fontSize: 11 }}>{boundary ? date(slot.at) : ""}</Text></View>
               <View style={{ height: amountHeight, justifyContent: "flex-end", alignItems: "center", backgroundColor: active ? theme.card : "transparent" }}>
@@ -91,7 +92,7 @@ export function IosRainForecastChart({ weather, context, now, forecast }: { weat
                 {hour ? <View style={{ width: "45%", height: `${hour.rainProbabilityPct}%`, borderWidth: hour.rainProbabilityPct ? 1.5 : 0, borderColor: theme.text, backgroundColor: "transparent" }} /> : <Text style={{ color: theme.muted }}>?</Text>}
               </View>
             </View>
-          </FeedbackPressable>;
+          </Pressable>;
         })}
       </ScrollView>
     </View>

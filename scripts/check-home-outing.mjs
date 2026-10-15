@@ -104,7 +104,7 @@ console.log('PASS: actual WeatherKit missing-field normalization and navigation 
   const native = {
     StyleSheet: { create: value => value, hairlineWidth: 1 },
     useWindowDimensions: () => ({ fontScale }),
-    ...Object.fromEntries(['Image', 'Text', 'View', 'ScrollView'].map(name => [name, name])),
+    ...Object.fromEntries(['Image', 'Text', 'View', 'ScrollView', 'Pressable'].map(name => [name, name])),
   };
   const moduleCache = new Map();
   function loadRainModule(file) {
