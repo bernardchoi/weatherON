@@ -94,8 +94,8 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           <View style={[styles.heroMain, expandedText && ambientVisual.heroMainExpanded]}>
             <View style={[[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.weatherIconBox]}>
               <Image
-                source={Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme)?.source ?? getConditionIcon(current.condition, currentIsNight) : getConditionIcon(current.condition, currentIsNight)}
-                style={[styles.weatherIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme)?.tintColor : getConditionColor(current.condition, theme, currentIsNight) }]}
+                source={Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme, "hero")?.source ?? getConditionIcon(current.condition, currentIsNight) : getConditionIcon(current.condition, currentIsNight)}
+                style={[styles.weatherIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme, "hero")?.tintColor : getConditionColor(current.condition, theme, currentIsNight) }]}
                 resizeMode="contain"
               />
             </View>

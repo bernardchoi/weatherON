@@ -1,0 +1,52 @@
+{
+  "name": "WeatherON filled surface v3",
+  "repository": "weatherON",
+  "baseline_commit": "1a6f3958a2b1a23d86312ffd9c939aa1b4a8f320",
+  "baseline": "Ambient Surface Final v1 2026-10-09; cloud v2 unavailable locally",
+  "icons": {
+    "sun": "맑음",
+    "cloud": "흐림",
+    "partly-cloudy": "구름 조금",
+    "night": "맑은 밤",
+    "rain": "비",
+    "snow": "눈",
+    "hail": "우박",
+    "thunder": "뇌우",
+    "fog": "안개",
+    "wind": "바람",
+    "tab-home": "홈",
+    "tab-outfit": "코디",
+    "tab-depart": "출발",
+    "tab-my": "마이",
+    "wardrobe": "옷장",
+    "location": "위치"
+  },
+  "palette": {
+    "light": {
+      "bg": "#E9F6F8",
+      "ink": "#183844",
+      "muted": "#49656F",
+      "back": "#547F94",
+      "front": "#4B9EAD",
+      "cloud": "#547F94",
+      "sun": "#FFC650",
+      "info": "#1A6399",
+      "action": "#DA3622",
+      "pale": "#D5EAEC"
+    },
+    "dark": {
+      "bg": "#102B38",
+      "ink": "#F4F8F8",
+      "muted": "#C4DCE3",
+      "back": "#4097AA",
+      "front": "#B6D0DA",
+      "cloud": "#F4F8F8",
+      "sun": "#FFCC59",
+      "info": "#58BFFF",
+      "action": "#FFB52E",
+      "pale": "#244854"
+    }
+  },
+  "svg_count": 72,
+  "runtime_modified": false
+}

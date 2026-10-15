@@ -109,8 +109,8 @@ export function TomorrowBriefScreen({
             ], Platform.OS === "ios" && ambientVisual.weatherIconFrame]}
           >
             <Image
-              source={Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme)?.source ?? getConditionIcon(tomorrow.weather.current.condition) : getConditionIcon(tomorrow.weather.current.condition)}
-              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme)?.tintColor : weatherTone }]}
+              source={Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero")?.source ?? getConditionIcon(tomorrow.weather.current.condition) : getConditionIcon(tomorrow.weather.current.condition)}
+              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero")?.tintColor : weatherTone }]}
               resizeMode="contain"
             />
           </View>

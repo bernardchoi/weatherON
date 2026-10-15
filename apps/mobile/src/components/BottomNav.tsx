@@ -13,7 +13,8 @@ import {
 } from "../localization/react-native";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
-import { ambientUiIcons, ambientSelectedTabs } from "../ambientAssets";
+import { ambientSelectedTabs } from "../ambientAssets";
+import { filledV3Tabs } from "../filledV3Assets";
 import { ambientPalette } from "../theme/ambientSurface";
 import { bottomNavRoutes, type P0RouteId } from "../navigation/routes";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -388,18 +389,26 @@ function TabIcon({
   color: ColorValue;
   useHighContrastSize: boolean;
 }) {
-  const source = getTabIconSource(route, active);
+  const theme = useAppTheme();
+  const key = route === "H1" ? "tab-home" : route === "C1" ? "tab-outfit" : route === "G1" ? "tab-depart" : route === "M1" ? "tab-my" : undefined;
+  const filledSource = Platform.OS === "ios" && key ? filledV3Tabs[active ? "selected" : "compact"][theme.name][key] : undefined;
+  const source = filledSource ?? getTabIconSource(route, active);
   return (
     <Image
       source={source}
-      style={[styles.iconImage, useHighContrastSize ? styles.iosDarkIconImage : null, { tintColor: color }]}
+      style={[styles.iconImage, useHighContrastSize ? styles.iosDarkIconImage : null, { tintColor: filledSource ? undefined : color }]}
       resizeMode="contain"
     />
   );
 }
 
 function getTabIconSource(route: P0RouteId, active: boolean) {
-  const icons = active ? ambientSelectedTabs : ambientUiIcons;
+  const icons = active ? ambientSelectedTabs : {
+    tabHome: require("../../../../assets/ambient-surface-runtime-v1/ui-outline/tab-home.png"),
+    tabOutfit: require("../../../../assets/ambient-surface-runtime-v1/ui-outline/tab-outfit.png"),
+    tabDepart: require("../../../../assets/ambient-surface-runtime-v1/ui-outline/tab-depart.png"),
+    tabMy: require("../../../../assets/ambient-surface-runtime-v1/ui-outline/tab-my.png"),
+  };
   if (route === "H1") return icons.tabHome;
   if (route === "C1") return icons.tabOutfit;
   if (route === "G1") return icons.tabDepart;

@@ -5,8 +5,8 @@ import { ambientUiIcons } from "../ambientAssets";
 import { uiIconAssets } from "../assets";
 import type { WardrobeCategoryFilter } from "./WardrobeFilterControls";
 
-// The existing Ambient shirt and app shoe are reused. New glyphs share the
-// Ambient 24-unit grid, 1.75 stroke, round caps/joins and unfilled silhouette.
+// V3 provides the shirt silhouette; shoe and categories absent from v3 retain
+// their existing distinct glyphs instead of borrowing another category's meaning.
 // Category labels remain the accessible names on the containing selection row.
 export function WardrobeCategoryIcon({ category, color, size = 22 }: {
   category: WardrobeCategoryFilter; color: string; size?: number;
