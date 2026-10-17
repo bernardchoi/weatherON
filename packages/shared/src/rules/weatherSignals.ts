@@ -42,7 +42,7 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
   const uvIndex = snapshot.current.uvIndex;
   const pm10 = snapshot.current.pm10;
   const pm25 = snapshot.current.pm25;
-  const isRainy = snapshot.current.condition === "rain" || maxRainProbability >= 60 || maxPrecipitation >= 1;
+  const isRainy = ["rain", "storm", "sleet", "hail", "storm-hail", "mixed"].includes(snapshot.current.condition) || maxRainProbability >= 60 || maxPrecipitation >= 1;
   const isHeavyRain = maxPrecipitation >= 5;
   const isWindy = maxWind >= 7;
   const isHighUv = typeof uvIndex === "number" && uvIndex >= 6;

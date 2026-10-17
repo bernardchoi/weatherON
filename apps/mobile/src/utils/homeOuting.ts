@@ -107,6 +107,9 @@ export function getCurrentWeatherFeature(weather: WeatherSnapshot, reliable: boo
   const c = weather.current;
   if (c.condition === "storm") return "현재 강한 비가 내려요";
   if (c.condition === "snow") return "현재 눈이 내려요";
+  if (c.condition === "sleet") return "현재 진눈깨비가 내려요";
+  if (c.condition === "hail" || c.condition === "storm-hail") return c.condition === "storm-hail" ? "현재 뇌우와 우박 신호가 있어요" : "현재 우박 신호가 있어요";
+  if (c.condition === "mixed") return "현재 비와 눈이 섞여 내려요";
   if (c.precipitationMm > 0 || c.condition === "rain") return "현재 비가 내려요";
   if (c.windMs >= 7) return "현재 바람이 강해요";
   if (c.condition === "dust") return "현재 먼지 신호가 있어요";
@@ -141,16 +144,18 @@ export function buildHomePreparation(weather: WeatherSnapshot | undefined, targe
   const condition = hour ? available("condition") ? hour.condition : undefined : current.condition;
   // Probability and amount describe precipitation, not its phase. Known snow wins.
   const snowy = condition === "snow";
+  const frozenPrecipitation = condition === "sleet" || condition === "hail" || condition === "storm-hail" || condition === "mixed";
   const rainy = condition === "rain" || condition === "storm";
-  const precipitationPossible = snowy || rainy || (rainProbability ?? 0) >= 50 || (precipitation ?? 0) > 0;
+  const precipitationPossible = snowy || frozenPrecipitation || rainy || (rainProbability ?? 0) >= 50 || (precipitation ?? 0) > 0;
   const status = isForecast ? ["temp", "wind", "rainProbability", "precipitation"].some(field => !available(field as "temp")) ? "일부 예보 미확인" : ""
     : targetAt ? "선택 시각 예보 없음 · 현재 기준" : "도착 시각 미확인 · 현재 기준";
   const basis = isForecast ? "목적지 도착 무렵" : "목적지 현재 날씨";
-  const evidence = precipitationPossible ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : snowy ? "눈 소식 있어요" : rainy ? "비 소식 있어요" : "강수 가능성이 있어요"
+  const evidence = precipitationPossible ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : snowy ? "눈 소식 있어요" : frozenPrecipitation ? "얼음·혼합 강수 소식 있어요" : rainy ? "비 소식 있어요" : "강수 가능성이 있어요"
     : wind !== undefined && wind >= 7 ? `바람 ${wind.toFixed(1)}m/s`
     : temp !== undefined ? `${!isForecast && hasFeelsLike(weather!) ? "현재 체감" : "기온"} ${temperature(temp)}` : "";
   let copy = "편한 차림으로,\n기분 좋게 나가요.";
   if (snowy) copy = wind !== undefined && wind >= 8 ? "눈과 바람이 겹쳐요.\n미끄럼 적은 신발로 나가요." : isForecast ? "눈 소식이 있어요.\n미끄럼 적은 신발로 나가요." : "지금 가는 곳에 눈이 와요.\n미끄럼 적은 신발로 나가요.";
+  else if (frozenPrecipitation) copy = condition === "hail" || condition === "storm-hail" ? "우박 신호가 있어요.\n실외 이동을 잠시 피하고 확인해요." : "얼음·혼합 강수 소식이에요.\n방수와 미끄럼에 대비해요.";
   else if (rainy && wind !== undefined && wind >= 8) copy = "비와 바람이 겹쳐요.\n방수 겉옷을 챙겨요.";
   else if (rainy) copy = isForecast ? "비 소식이 있어요.\n우산 하나 챙겨 나가요." : "지금 가는 곳에 비가 와요.\n우산을 챙겨봐요.";
   else if (precipitationPossible) copy = wind !== undefined && wind >= 8 ? "강수와 강한 바람에 대비해요.\n젖지 않을 겉옷을 챙겨요." : "강수 가능성이 있어요.\n젖지 않을 겉옷을 챙겨요.";

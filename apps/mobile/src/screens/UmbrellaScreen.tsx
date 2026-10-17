@@ -1,4 +1,4 @@
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import React, { useEffect } from "react";
 import { Platform, Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
@@ -567,12 +567,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
-  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
-  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
-  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
-  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
-} : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 // Approved Ambient reading hierarchy; Android retains its original styles.
 const ambientVisual = StyleSheet.create({

@@ -34,7 +34,7 @@ const js = ts.transpileModule(readFileSync("apps/mobile/src/components/WeatherBa
 }).outputText;
 new Function("exports", "require", "setTimeout", "clearTimeout", js)(exports, (name) => {
   if (name === "react") return React;
-  if (name === "react-native") return native;
+  if (name === "react-native" || name.endsWith("localization/react-native")) return native;
   if (name.endsWith("useReducedMotion")) return { useReducedMotion: () => reduced };
   throw new Error(name);
 }, () => 1, () => {});

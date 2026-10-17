@@ -154,17 +154,20 @@ export const runtimeWeatherProvider = createWeatherProvider();
 export const fixtureWeatherProvider = createWeatherProvider(fixtureWeatherClient, { preferKma: true });
 
 export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback"): WeatherProviderResult {
+  const conditionProfile = Platform.OS === "ios" ? "ambient-v3" : "legacy";
   const current = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: defaultSeoulWeatherLocation.locationId,
     locationName: defaultSeoulWeatherLocation.locationName,
     countryCode: "KR",
     stale: true,
+    conditionProfile,
   }));
   const destination = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: "kr-gangneung-beach",
     locationName: "강릉 안목해변",
     countryCode: "KR",
     stale: true,
+    conditionProfile,
   }));
 
   return {
@@ -189,7 +192,9 @@ async function fetchWeatherSnapshot(
   if (!isValidIanaTimeZone(location.timezone) || (location.countryCode === "GLOBAL" && location.timezone === "UTC")) {
     throw new Error("Weather location requires a resolved IANA timezone");
   }
-  if ((options.platform ?? Platform.OS) === "ios") {
+  const ios = (options.platform ?? Platform.OS) === "ios";
+  const conditionProfile = ios ? "ambient-v3" : "legacy";
+  if (ios) {
     if (typeof client.fetchWeatherKitForecast !== "function") {
       throw new Error("WeatherKit client is not configured for iOS");
     }
@@ -206,6 +211,7 @@ async function fetchWeatherSnapshot(
       countryCode: location.countryCode,
       timezone: location.timezone,
       stale,
+      conditionProfile,
     });
   }
   if (shouldUseKmaForecast(location, options.preferKma)) {
@@ -220,12 +226,13 @@ async function fetchWeatherSnapshot(
         countryCode: location.countryCode,
         timezone: "+09:00",
         stale,
+        conditionProfile,
       }));
     } catch {
-      return fetchOpenMeteoSnapshot(client, location, stale);
+      return fetchOpenMeteoSnapshot(client, location, stale, conditionProfile);
     }
   }
-  return fetchOpenMeteoSnapshot(client, location, stale);
+  return fetchOpenMeteoSnapshot(client, location, stale, conditionProfile);
 }
 
 async function resolveCurrentWeatherSnapshot(
@@ -274,6 +281,7 @@ async function fetchOpenMeteoSnapshot(
   client: WeatherClient,
   location: WeatherLocationPreset,
   stale: boolean,
+  conditionProfile: "legacy" | "ambient-v3" = "legacy",
 ): Promise<WeatherSnapshot> {
   const payload = await client.fetchOpenMeteoForecast({
     latitude: location.coordinate.latitude,
@@ -286,6 +294,7 @@ async function fetchOpenMeteoSnapshot(
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale,
+    conditionProfile,
   }));
 }
 
@@ -384,6 +393,7 @@ function buildFallbackSnapshotForLocation(location: WeatherLocationPreset): Weat
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale: true,
+    conditionProfile: Platform.OS === "ios" ? "ambient-v3" : "legacy",
   }));
 }
 

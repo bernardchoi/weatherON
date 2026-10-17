@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import type { WeatherSnapshot } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { buildRainForecast, forecastHours, forecastTime, type ForecastHour, type RainForecastContext } from "../utils/homeOuting";
@@ -54,7 +55,7 @@ export function IosRainForecastChart({ weather, context, now, forecast }: { weat
     : `${forecastTime(slot.at, weather)}–${forecastTime(slot.end, weather)}, 예보 미확인`;
   return <View style={styles.section}>
     <View style={styles.heading}>
-      <Image source={uiIconAssets.drop} style={[styles.icon, { tintColor: theme.text }]} accessibilityElementsHidden importantForAccessibility="no" />
+      <Image source={Platform.OS === "ios" ? ambientUiIcons.droplet : uiIconAssets.drop} style={[styles.icon, { tintColor: theme.text }]} accessibilityElementsHidden importantForAccessibility="no" />
       <Text style={[styles.sectionTitle, { color: theme.text }]}>시간별 강수량</Text>
       <Text style={{ color: theme.muted }}>mm · 1시간</Text>
     </View>

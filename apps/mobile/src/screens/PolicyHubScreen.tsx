@@ -1,6 +1,7 @@
 import React from "react";
 import { Platform, Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { BackButton } from "../components/BackButton";
 import { pageStyles } from "../theme/pageStyles";
 import type { P0ScreenProps } from "../navigation/types";
@@ -10,10 +11,10 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyRows: { type: PolicyDocumentType; icon: number; title: string; body: string }[] = [
-  { type: "privacy", icon: uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
-  { type: "terms", icon: uiIconAssets.policyTerms, title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
-  { type: "location", icon: uiIconAssets.policyLocation, title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
-  { type: "open-source", icon: uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
+  { type: "privacy", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
+  { type: "terms", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyTerms, title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
+  { type: "location", icon: Platform.OS === "ios" ? ambientUiIcons.location : uiIconAssets.policyLocation, title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
+  { type: "open-source", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
 ];
 
 export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProps) {

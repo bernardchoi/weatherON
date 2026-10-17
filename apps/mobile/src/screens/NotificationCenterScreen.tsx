@@ -1,4 +1,4 @@
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import React, { useMemo } from "react";
 import { Platform, Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
@@ -85,12 +85,7 @@ const styles = StyleSheet.create({
   compactSection: { borderTopWidth: 1, paddingTop: spacing.md, gap: spacing.xs }, compactHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: spacing.sm }, compactTitle: { fontSize: 16 }, compactDetail: { fontSize: 12, fontWeight: "700", textAlign: "right" }, compactRow: { fontSize: 13, lineHeight: 20 }, clearHistory: { alignSelf: "center", minHeight: 36, justifyContent: "center", paddingHorizontal: spacing.sm, marginTop: spacing.sm }, clearHistoryText: { fontSize: 12, textDecorationLine: Platform.OS === "ios" ? "none" : "underline" },
 });
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
-  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
-  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
-  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
-  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
-} : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 // Approved Ambient reading hierarchy; Android retains its original styles.
 const ambientVisual = StyleSheet.create({

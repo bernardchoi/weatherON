@@ -104,6 +104,7 @@ console.log('PASS: actual WeatherKit missing-field normalization and navigation 
   const native = {
     StyleSheet: { create: value => value, hairlineWidth: 1 },
     useWindowDimensions: () => ({ fontScale }),
+    Platform: { OS: 'ios' },
     ...Object.fromEntries(['Image', 'Text', 'View', 'ScrollView', 'Pressable'].map(name => [name, name])),
   };
   const moduleCache = new Map();
@@ -122,6 +123,7 @@ console.log('PASS: actual WeatherKit missing-field normalization and navigation 
       if (id.endsWith('/AppScreen')) return { AppScreen: 'AppScreen' };
       if (id.endsWith('/useForecastNow')) return { useForecastNow: () => now };
       if (id.endsWith('/assets')) return { uiIconAssets: { drop: 'drop', myAlerts: 'alerts' } };
+      if (id.endsWith('/ambientAssets')) return { ambientUiIcons: { droplet: 'filled-drop', notifications: 'filled-alerts' } };
       if (id.endsWith('/locationDisplay')) return { getDisplayLocationName: name => name };
       const base = path.resolve(path.dirname(file), id);
       return loadRainModule(fs.existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`);
@@ -239,13 +241,13 @@ assert.match(api.buildRainForecast(weather,{...context,targetAt:'2026-10-10T08:3
 const { DatabaseSync } = await import('node:sqlite');
 const storageSource=fs.readFileSync('apps/mobile/src/providers/appStorage.ts','utf8');
 const storageAst=ts.createSourceFile('appStorage.ts',storageSource,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
-const selectedFunctions=['ensureWeatherSnapshotColumns','writeWeatherSnapshot','readWeatherSnapshotFromRow','hourlyPresence','weatherPresence','readWeatherPresence','objectRecord','arrayValue','textValue','numberValue','boolValue','removeUndefined'];
+const selectedFunctions=['ensureWeatherSnapshotColumns','writeWeatherSnapshot','readWeatherSnapshotFromRow','hourlyPresence','weatherPresence','readWeatherPresence','objectRecord','arrayValue','textValue','numberValue','boolValue','removeUndefined','defaultStoredCondition'];
 const storageCode=storageAst.statements.filter(n=>ts.isFunctionDeclaration(n)&&selectedFunctions.includes(n.name?.text)).map(n=>n.getText(storageAst)).join('\n');
 const sqlite=new DatabaseSync(':memory:');
 for(const sql of storageSource.match(/CREATE TABLE IF NOT EXISTS weather_(?:snapshots|hourly|daily)\s*\([\s\S]*?;/g))sqlite.exec(sql);
 sqlite.exec("CREATE TABLE user_settings (key TEXT PRIMARY KEY, value TEXT); INSERT INTO user_settings VALUES ('preserve','existing-value')");
 const database={getAllAsync:async(sql,...params)=>sqlite.prepare(sql).all(...params),runAsync:async(sql,...params)=>sqlite.prepare(sql).run(...params)};
-const storageBoundary={JSON,Array,Object,Set};vm.runInNewContext(ts.transpileModule(storageCode,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,storageBoundary);
+const storageBoundary={JSON,Array,Object,Set,Platform:{OS:'ios'}};vm.runInNewContext(ts.transpileModule(storageCode,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,storageBoundary);
 await storageBoundary.ensureWeatherSnapshotColumns(database);
 await storageBoundary.ensureWeatherSnapshotColumns(database);
 assert.equal(sqlite.prepare('SELECT value FROM user_settings').get().value,'existing-value');
@@ -265,6 +267,11 @@ await storageBoundary.writeWeatherSnapshot(database,'destination',0,{...partial,
 restored=await storageBoundary.readWeatherSnapshotFromRow(database,sqlite.prepare("SELECT * FROM weather_snapshots WHERE role='destination'").get());assert.equal(restored.current.feelsLikeAvailable,false);assert.equal(restored.locationUnverified,true);assert.equal(restored.hourly[0].available.precipitation,false);
 await storageBoundary.writeWeatherSnapshot(database,'destination',1,{...dest,current:{...dest.current,tempAvailable:true,windAvailable:true},hourly:[{...dest.hourly[0],available:{...dest.hourly[0].available,condition:true}}]},now);
 restored=await storageBoundary.readWeatherSnapshotFromRow(database,sqlite.prepare("SELECT * FROM weather_snapshots WHERE role='destination' AND seq=1").get());assert.equal(restored.current.tempAvailable,true);assert.equal(restored.current.windAvailable,true);assert.equal(restored.hourly[0].available.condition,true);
+await storageBoundary.writeWeatherSnapshot(database,'missing-condition',0,{...weather,current:{...weather.current,condition:undefined},hourly:[{...weather.hourly[0],condition:undefined}],daily:[{date:'2026-10-11',minTempC:10,maxTempC:20,rainProbabilityPct:0,precipitationMm:0,windMs:2,condition:undefined}]},now);
+row=sqlite.prepare("SELECT * FROM weather_snapshots WHERE role='missing-condition'").get();assert.equal(row.condition,'unknown');assert.equal(sqlite.prepare("SELECT condition FROM weather_hourly WHERE role='missing-condition'").get().condition,'unknown');assert.equal(sqlite.prepare("SELECT condition FROM weather_daily WHERE role='missing-condition'").get().condition,'unknown');
+storageBoundary.Platform.OS='android';
+await storageBoundary.writeWeatherSnapshot(database,'android-missing-condition',0,{...weather,current:{...weather.current,condition:undefined},hourly:[{...weather.hourly[0],condition:undefined}],daily:[{date:'2026-10-11',minTempC:10,maxTempC:20,rainProbabilityPct:0,precipitationMm:0,windMs:2,condition:undefined}]},now);
+row=sqlite.prepare("SELECT * FROM weather_snapshots WHERE role='android-missing-condition'").get();assert.equal(row.condition,'clear');assert.equal(sqlite.prepare("SELECT condition FROM weather_hourly WHERE role='android-missing-condition'").get().condition,'clear');assert.equal(sqlite.prepare("SELECT condition FROM weather_daily WHERE role='android-missing-condition'").get().condition,'clear');
 sqlite.close();console.log('PASS: actual SQLite additive/idempotent presence migration, existing data preservation, observed/hourly field-presence round trip and legacy/malformed cache unknowns.');
 // Latest user direction: one friendly action based on destination conditions, readable evidence below.
 const preparation=api.buildHomePreparation;

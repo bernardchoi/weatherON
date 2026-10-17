@@ -1,6 +1,7 @@
 // 앱 상태·알림 상태·날씨 결과의 영속화(읽기/쓰기)와 저장값 정규화.
 // 저장소가 손상되거나 구버전 형식이어도 앱이 깨지지 않도록 모든 필드를 타입 가드로 걸러 읽는다.
 import { presetWardrobe, type PlaceSearchResult, type WardrobeItem } from "@weatheron/shared";
+import { Platform } from "../localization/react-native";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
 import { toStoredWardrobePhotoUri } from "../utils/wardrobePhotoUri";
 import type { OfficialSpecialAlert, WeatherProviderResult } from "../providers/weatherProvider";
@@ -151,9 +152,9 @@ function hasSameWeatherSnapshotLocations(left: WeatherProviderResult["destinatio
 export function normalizePersistedWeatherProviderResult(value: unknown): WeatherProviderResult | null {
   if (!isWeatherProviderResult(value)) return null;
   return {
-    current: markPersistedWeatherSnapshotStale(value.current),
-    destination: markPersistedWeatherSnapshotStale(value.destination),
-    destinationSnapshots: value.destinationSnapshots.filter(isWeatherSnapshot).map(markPersistedWeatherSnapshotStale),
+    current: normalizePersistedSnapshotForPlatform(markPersistedWeatherSnapshotStale(value.current)),
+    destination: normalizePersistedSnapshotForPlatform(markPersistedWeatherSnapshotStale(value.destination)),
+    destinationSnapshots: value.destinationSnapshots.filter(isWeatherSnapshot).map(markPersistedWeatherSnapshotStale).map(normalizePersistedSnapshotForPlatform),
     officialSpecialAlert: createInactiveOfficialSpecialAlert(),
     status: "stale",
     message: "최근 저장 예보 기준 추천",
@@ -190,6 +191,24 @@ function markPersistedWeatherSnapshotStale(snapshot: WeatherProviderResult["curr
   };
 }
 
+function normalizePersistedSnapshotForPlatform(snapshot: WeatherProviderResult["current"]): WeatherProviderResult["current"] {
+  if (Platform.OS !== "android") return snapshot;
+  return {
+    ...snapshot,
+    current: { ...snapshot.current, condition: legacyAndroidCondition(snapshot.current.condition) },
+    hourly: snapshot.hourly.map((item) => ({ ...item, condition: legacyAndroidCondition(item.condition) })),
+    daily: snapshot.daily?.map((item) => ({ ...item, condition: legacyAndroidCondition(item.condition) })),
+  };
+}
+
+function legacyAndroidCondition(condition: string): WeatherProviderResult["current"]["current"]["condition"] {
+  if (condition === "sleet") return "snow";
+  if (condition === "hail" || condition === "unknown") return "clear";
+  if (condition === "storm-hail") return "storm";
+  if (condition === "mixed") return "rain";
+  return condition as WeatherProviderResult["current"]["current"]["condition"];
+}
+
 function isWeatherSnapshot(value: unknown): value is WeatherProviderResult["current"] {
   if (!value || typeof value !== "object") return false;
   const record = value as Partial<WeatherProviderResult["current"]>;
@@ -213,7 +232,7 @@ function isWeatherCurrent(value: unknown): value is WeatherProviderResult["curre
   return (
     typeof record.tempC === "number" &&
     typeof record.feelsLikeC === "number" &&
-    (record.condition === "clear" || record.condition === "cloud" || record.condition === "rain" || record.condition === "snow" || record.condition === "storm" || record.condition === "dust") &&
+    (record.condition === "clear" || record.condition === "cloud" || record.condition === "rain" || record.condition === "snow" || record.condition === "sleet" || record.condition === "hail" || record.condition === "storm-hail" || record.condition === "mixed" || record.condition === "storm" || record.condition === "dust" || record.condition === "unknown") &&
     typeof record.precipitationMm === "number" &&
     typeof record.rainProbabilityPct === "number" &&
     typeof record.windMs === "number" &&

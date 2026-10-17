@@ -1,4 +1,4 @@
-import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import { buildTomorrowWeather } from "../utils/tomorrowWeather";
 import React, { useEffect, useState } from "react";
 import { Platform, Image, LocalizedView, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from "../localization/react-native";
@@ -50,6 +50,8 @@ export function TomorrowBriefScreen({
   const outfitItems = Object.entries(outfit.items).filter((entry): entry is [string, NonNullable<typeof entry[1]>] => Boolean(entry[1]));
   const outfitPreview = outfitItems.find(([, item]) => Boolean(item.imageUrl))?.[1];
   const weatherTone = getConditionColor(tomorrow.weather.current.condition, theme);
+  const nativeWeatherIcon = Platform.OS === "ios"
+    ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero") : undefined;
   const rainTone = getRainTone(tomorrow.summary.rainProbabilityPct, theme);
   const weatherHeadline = getTomorrowWeatherHeadline(tomorrow.summary.rainProbabilityPct, tomorrow.weather.current.condition);
   const umbrellaAction = getUmbrellaActionShort(umbrella.level);
@@ -109,8 +111,8 @@ export function TomorrowBriefScreen({
             ], Platform.OS === "ios" && ambientVisual.weatherIconFrame]}
           >
             <Image
-              source={Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero")?.source ?? getConditionIcon(tomorrow.weather.current.condition) : getConditionIcon(tomorrow.weather.current.condition)}
-              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero")?.tintColor : weatherTone }]}
+              source={nativeWeatherIcon?.source ?? getConditionIcon(tomorrow.weather.current.condition)}
+              style={[styles.weatherIcon, layout.isShort ? styles.weatherIconShort : null, { tintColor: nativeWeatherIcon?.tintColor ?? weatherTone }]}
               resizeMode="contain"
             />
           </View>
@@ -596,12 +598,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
-  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
-  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
-  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
-  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
-} : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 // Approved Ambient reading hierarchy; Android retains its original styles.
 const ambientVisual = StyleSheet.create({

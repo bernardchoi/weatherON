@@ -10,7 +10,7 @@ import { BottomSheet } from "./BottomSheet";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { FeedbackPressable } from "./FeedbackPressable";
 
-// Keep the SVG module outside the Android evaluation path.
+// Keep the raster category module outside the Android evaluation path.
 const CategoryIcon = Platform.OS === "ios" ? (require("./WardrobeCategoryIcon") as typeof import("./WardrobeCategoryIcon")).WardrobeCategoryIcon : null;
 
 const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;

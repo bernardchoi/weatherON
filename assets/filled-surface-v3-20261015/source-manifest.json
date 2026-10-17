@@ -11,6 +11,9 @@
     "rain": "비",
     "snow": "눈",
     "hail": "우박",
+    "sleet": "진눈깨비",
+    "mixed": "비와 눈",
+    "unknown": "날씨 확인 중",
     "thunder": "뇌우",
     "fog": "안개",
     "wind": "바람",
@@ -47,6 +50,11 @@
       "pale": "#244854"
     }
   },
-  "svg_count": 72,
-  "runtime_modified": false
+  "svg_count": 105,
+  "approved_weather_tab_svg_count": 72,
+  "weather_state_svg_count": 12,
+  "layered_ui_svg_count": 21,
+  "layered_ui_source": "scripts/build-filled-v3-ui-icons.mjs",
+  "weather_state_source": "scripts/build-filled-v3-weather-states.mjs",
+  "runtime_modified": true
 }

@@ -1,4 +1,5 @@
 type SQLiteDatabase = import("expo-sqlite").SQLiteDatabase;
+import { Platform } from "../localization/react-native";
 
 type SQLiteExecutor = Pick<SQLiteDatabase, "getAllAsync" | "getFirstAsync" | "runAsync">;
 
@@ -1054,7 +1055,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     textValue(snapshot.observedAt) ?? "",
     numberValue(current.tempC),
     numberValue(current.feelsLikeC),
-    textValue(current.condition) ?? "clear",
+    textValue(current.condition) ?? defaultStoredCondition(),
     numberValue(current.precipitationMm),
     numberValue(current.rainProbabilityPct),
     numberValue(current.windMs),
@@ -1080,7 +1081,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
       numberValue(hourly.rainProbabilityPct),
       numberValue(hourly.precipitationMm),
       numberValue(hourly.windMs),
-      textValue(hourly.condition) ?? "clear",
+      textValue(hourly.condition) ?? defaultStoredCondition(),
     );
   }
   for (const [index, item] of arrayValue(snapshot.daily).entries()) {
@@ -1096,9 +1097,14 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
       numberValue(daily.rainProbabilityPct),
       numberValue(daily.precipitationMm),
       numberValue(daily.windMs),
-      textValue(daily.condition) ?? "clear",
+      textValue(daily.condition) ?? defaultStoredCondition(),
     );
   }
+}
+
+function defaultStoredCondition() {
+  // Android retains the legacy cache fallback; iOS alone exposes an unknown state.
+  return Platform.OS === "ios" ? "unknown" : "clear";
 }
 
 async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {

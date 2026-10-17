@@ -1,6 +1,9 @@
 export type CountryCode = "KR" | "JP" | "GLOBAL";
 
-export type WeatherCondition = "clear" | "cloud" | "rain" | "snow" | "storm" | "dust";
+// These are presentation-safe, provider-neutral states. Do not collapse frozen or
+// unknown precipitation into rain/snow: the distinction changes footwear and
+// trip-preparation guidance.
+export type WeatherCondition = "clear" | "cloud" | "rain" | "snow" | "sleet" | "hail" | "storm-hail" | "mixed" | "storm" | "dust" | "unknown";
 
 export type WeatherSource = "kma" | "openmeteo" | "weatherkit" | "cache" | "fallback";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Platform, Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
@@ -12,7 +12,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 export function OnboardingDestinationScreen({
   selectedDestinationPlace,

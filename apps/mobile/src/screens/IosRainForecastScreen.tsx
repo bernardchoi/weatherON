@@ -1,8 +1,9 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Platform, StyleSheet, Text, View } from "../localization/react-native";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useForecastNow } from "../hooks/useForecastNow";
@@ -30,7 +31,7 @@ export function IosRainForecastScreen({ state, rainForecastContext, onGoBack, al
       if (!enabled && !permissionReady) onRequestPermissionGate("notification", "H5", "rain");
     }} style={[styles.toggle, { borderColor: theme.border }]}>
       <View style={styles.toggleHeading}>
-        <Image source={uiIconAssets.myAlerts} style={{ width: 22, height: 22, tintColor: theme.text }} accessibilityElementsHidden importantForAccessibility="no" />
+        <Image source={Platform.OS === "ios" ? ambientUiIcons.notifications : uiIconAssets.myAlerts} style={{ width: 22, height: 22, tintColor: theme.text }} accessibilityElementsHidden importantForAccessibility="no" />
         <Text style={{ color: theme.text, flex: 1, fontSize: 16 }}>강수 예보 알림</Text>
         <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.track, { borderColor: theme.muted, backgroundColor: enabled ? theme.gold : theme.card }]}>
           <View style={[styles.knob, { backgroundColor: enabled ? theme.onAccent : theme.text, alignSelf: enabled ? "flex-end" : "flex-start" }]} />

@@ -8,7 +8,7 @@ const animations=[];
 const React={createElement:(type,props,...children)=>({type,props:props??{},children}),useState:v=>[v,()=>{}],useRef:v=>({current:v})};
 class Value {constructor(value){this.value=value;}stopAnimation(){}setValue(value){this.value=value;}}
 const flat=v=>Array.isArray(v)?Object.assign({},...v.map(flat)):v??{};
-const rn={View:'View',Text:'Text',Image:'Image',ScrollView:'ScrollView',Pressable:'Pressable',useWindowDimensions:()=>({fontScale:1}),StyleSheet:{create:v=>v,flatten:flat,hairlineWidth:.5},Easing:{out:v=>v,cubic:1},Animated:{Value,createAnimatedComponent:v=>`Animated(${v})`,timing(value,config){animations.push(config);return {start(){value.setValue(config.toValue);}}}}};
+const rn={View:'View',Text:'Text',Image:'Image',ScrollView:'ScrollView',Pressable:'Pressable',Platform:{OS:'ios'},useWindowDimensions:()=>({fontScale:1}),StyleSheet:{create:v=>v,flatten:flat,hairlineWidth:.5},Easing:{out:v=>v,cubic:1},Animated:{Value,createAnimatedComponent:v=>`Animated(${v})`,timing(value,config){animations.push(config);return {start(){value.setValue(config.toValue);}}}}};
 const times=[0,3600000], bars=times.map((at,i)=>({at,precipitationMm:i+1,rainProbabilityPct:50}));
 const cache=new Map();
 function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};new Function('module','exports','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.React,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText)(m,m.exports,id=>{
@@ -18,6 +18,7 @@ function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(
  if(id.endsWith('/interactionFeedback'))return {triggerImportantActionHaptic(){}};
  if(id.endsWith('/AppThemeContext'))return {useAppTheme:()=>({text:'#123',muted:'#456',card:'#def',border:'#789',sky:'#abc',gold:'#a80'})};
  if(id.endsWith('/assets'))return {uiIconAssets:{drop:'drop'}};
+ if(id.endsWith('/ambientAssets'))return {ambientUiIcons:{droplet:'filled-droplet'}};
  if(id.endsWith('/homeOuting'))return {forecastHours:()=>bars,forecastTime:at=>`10/10 ${at===0?'09:00':'10:00'}`};
  if(id.endsWith('/FeedbackPressable'))return load(path.resolve(path.dirname(file),id+'.tsx'));
  throw Error('Unmocked boundary '+id);

@@ -28,7 +28,7 @@ const cache=new Map();function load(relative){const file=path.resolve(relative);
  if(id==='react-native-safe-area-context')return {useSafeAreaInsets:()=>({top:24,bottom:24})};
  if(id.endsWith('/AppThemeContext'))return {useAppTheme:()=>theme};if(id.endsWith('/useReducedMotion'))return {useReducedMotion:()=>reduceMotion};
  if(id.endsWith('/confirmedInteractionFeedback'))return {triggerConfirmedSelectionHaptic:()=>haptics++};
- if(id.endsWith('/ambientAssets'))return {ambientUiIcons:{check:'check',tabOutfit:'existing-shirt'}};
+ if(id.endsWith('/ambientAssets'))return {ambientUiIcons:{check:'check',tabOutfit:'existing-shirt',wardrobeAll:'all',wardrobeOuter:'outer',wardrobeBottom:'bottom',wardrobeShoes:'shoes',wardrobeAccessory:'accessory'}};
  if(id.endsWith('/HomePlanMaterial'))return {HomePlanMaterial:'NativeOrOpaqueMaterial'};
  if(id.endsWith('/FeedbackPressable'))return {FeedbackPressable:'FeedbackPressable'};
  throw Error('Unmocked boundary '+id);
@@ -93,7 +93,7 @@ for(const selected of [true,false])for(const disabled of [true,false]){const tre
 console.log('PASS selection UI: confirmed-only iOS feedback; rejected/same/cancel/Android silent; sheet dismiss and interrupted close/reopen; Reduce Motion/unknown immediate; single shared material; disabled/selected accessibility and wrapping touch rows. Native visuals remain separate QA.');
 
 // Verify every real category option produces a distinct, appropriately sized
-// glyph. Both existing rasters and the new native SVG paths remain decorative.
+// glyph. Filled raster variants remain decorative.
 const Icon=load('apps/mobile/src/components/WardrobeCategoryIcon.tsx').WardrobeCategoryIcon;
 const Filter=load('apps/mobile/src/components/WardrobeFilterControls.tsx').WardrobeFilterControls;
 const filterTest=runner(Filter), filterProps={categoryFilter:'all',seasonFilter:'all',purposeFilter:'all',onCategoryChange(){},onSeasonChange(){},onPurposeChange(){}};
@@ -108,7 +108,7 @@ for(const row of rows){const category=row.props.icon.props.category;const glyph=
 }
 assert.equal(signatures.size,6);
 filterTest.dispose();
-console.log('PASS wardrobe categories: actual six-option mapping, six distinct glyphs, existing shirt/shoe reuse, 16/22 sizes and selected/unselected light/dark color forwarding.');
+console.log('PASS wardrobe categories: actual six-option mapping, six distinct filled glyphs, 16/22 sizes and selected/unselected light/dark color forwarding.');
 
 // UIVisualEffectView must not inherit partial alpha from any ancestor.
 // Apple documents that offscreen composition can suppress the native effect.

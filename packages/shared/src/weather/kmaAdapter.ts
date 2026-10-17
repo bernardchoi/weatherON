@@ -13,7 +13,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
   const grouped = groupByForecastTime(items);
   const hourly = Object.entries(grouped)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([timeKey, bucket]) => buildHourly(timeKey, bucket));
+    .map(([timeKey, bucket]) => buildHourly(timeKey, bucket, options.conditionProfile));
   const first = hourly[0];
   const firstBucket = grouped[Object.keys(grouped).sort()[0]];
   const firstHumidityPct = toNumber(firstBucket?.REH, 0);
@@ -28,7 +28,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
       atmosphere: { conditionAvailable: firstBucket?.PTY !== undefined || firstBucket?.SKY !== undefined },
       tempC: first.tempC,
       feelsLikeC: calculateFeelsLikeC(first.tempC, firstHumidityPct, first.windMs),
-      condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY),
+      condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY, options.conditionProfile),
       precipitationMm: first.precipitationMm,
       rainProbabilityPct: first.rainProbabilityPct,
       windMs: first.windMs,
@@ -51,14 +51,14 @@ function groupByForecastTime(items: KmaForecastItem[]): Record<string, KmaBucket
   }, {});
 }
 
-function buildHourly(timeKey: string, bucket: KmaBucket): HourlyWeather {
+function buildHourly(timeKey: string, bucket: KmaBucket, conditionProfile: WeatherNormalizeOptions["conditionProfile"]): HourlyWeather {
   return {
     time: formatKmaTime(timeKey),
     tempC: toNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX, 0),
     rainProbabilityPct: toNumber(bucket.POP, 0),
     precipitationMm: parseKmaPrecipitation(bucket.PCP),
     windMs: toNumber(bucket.WSD, 0),
-    condition: conditionFromKma(bucket.PTY, bucket.SKY),
+    condition: conditionFromKma(bucket.PTY, bucket.SKY, conditionProfile),
   };
 }
 
@@ -88,7 +88,7 @@ function buildDaily(hourly: HourlyWeather[], sourceBuckets: Record<string, KmaBu
 }
 
 function selectDailyCondition(items: HourlyWeather[]): HourlyWeather["condition"] {
-  const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
+  const priority = ["storm-hail", "storm", "hail", "sleet", "mixed", "snow", "rain", "dust", "cloud", "clear", "unknown"];
   return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
 }
 

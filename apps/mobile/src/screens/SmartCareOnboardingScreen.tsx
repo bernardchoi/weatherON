@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
@@ -13,7 +13,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 const scenarios: { value: SmartCareScenario; title: string; body: string; icon: number }[] = [
   { value: "commute", title: "출근·등교", body: "아침에 나설 시간과 비 소식부터 챙겨드림", icon: screenIcons.depart },

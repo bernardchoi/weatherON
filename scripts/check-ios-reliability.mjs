@@ -296,7 +296,7 @@ oldJob.resolve(payload(1, now - 10_000)); await oldRequest;
 assert.equal((await racingWeather.getSnapshots("error", options)).current.current.tempC, 30, "late older observation cannot poison cache");
 
 const persistedApi = load("apps/mobile/src/state/persistedAppState.ts", ["shouldKeepPersistedWeatherResult", "savePersistedWeatherProviderResult", "readPersistedWeatherProviderResult"], {
-  readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.equal(value, partial); }, weatherProviderResultStorageKey: "weather",
+  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.equal(value, partial); }, weatherProviderResultStorageKey: "weather",
 });
 assert.equal(persistedApi.shouldKeepPersistedWeatherResult(partial, { ...partial, current: old }), false);
 persistedApi.savePersistedWeatherProviderResult(partial);

@@ -59,6 +59,7 @@ const sqlite = {
   },
 };
 const storage = load("apps/mobile/src/providers/appStorage.ts", {
+  "../localization/react-native": { Platform: { OS: "ios" } },
   "expo-file-system/legacy": { documentDirectory: "file:///mock/Documents/", getInfoAsync: async () => ({ exists: false }) },
   "expo-sqlite": { openDatabaseAsync: async () => {
     if (failOpen) { failOpen = false; throw new Error("temporarily unavailable"); }

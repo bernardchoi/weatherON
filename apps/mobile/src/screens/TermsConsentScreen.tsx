@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Platform, Image, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
-import { ambientUiIcons } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { getRouteLabel } from "../navigation/routeLabels";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
@@ -11,7 +11,7 @@ import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing, type AppTheme } from "../theme/tokens";
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, uv: ambientUiIcons.temperature, clearNight: ambientUiIcons.temperature, pin: ambientUiIcons.location, shirt: ambientUiIcons.tabOutfit, depart: ambientUiIcons.tabDepart, rain: ambientUiIcons.umbrella, umbrella: ambientUiIcons.umbrella, myAlerts: ambientUiIcons.notifications, myDisplay: ambientUiIcons.settings, settings: ambientUiIcons.settings, tabMy: ambientUiIcons.tabMy, check: ambientUiIcons.check } : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 type TermsConsentScreenProps = {
   gate: AccountGateState | null;

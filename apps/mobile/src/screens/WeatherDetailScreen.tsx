@@ -1,4 +1,4 @@
-import { ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
+import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import React from "react";
 import { AppState, Image, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import type { DailyWeather, HourlyWeather } from "@weatheron/shared";
@@ -34,6 +34,8 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
     timeZone: resolveWeatherTimeZone(weather.countryCode, placeSearchOrigin?.timezone),
   };
   const currentIsNight = isNightAtWeatherTime(new Date(currentTimeMs).toISOString(), daylightContext);
+  const nativeWeatherIcon = Platform.OS === "ios"
+    ? ambientWeatherIcon(current.condition, currentIsNight, theme, "hero") : undefined;
   const legacyDaily = getDailyForecast(weather.daily, weather.hourly);
   const daily = Platform.OS === "ios" ? getIosDailyForecast(weather.daily, weather.hourly, legacyDaily) : legacyDaily;
   const displayedDaily = daily.slice(0, 7);
@@ -94,8 +96,8 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           <View style={[styles.heroMain, expandedText && ambientVisual.heroMainExpanded]}>
             <View style={[[styles.weatherIconBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.weatherIconBox]}>
               <Image
-                source={Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme, "hero")?.source ?? getConditionIcon(current.condition, currentIsNight) : getConditionIcon(current.condition, currentIsNight)}
-                style={[styles.weatherIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(current.condition, currentIsNight, theme, "hero")?.tintColor : getConditionColor(current.condition, theme, currentIsNight) }]}
+                source={nativeWeatherIcon?.source ?? getConditionIcon(current.condition, currentIsNight)}
+                style={[styles.weatherIcon, { tintColor: nativeWeatherIcon?.tintColor ?? getConditionColor(current.condition, theme, currentIsNight) }]}
                 resizeMode="contain"
               />
             </View>
@@ -323,6 +325,7 @@ function getTone(theme: AppTheme, tone: ToneColor): string {
 
 function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWeather; isNight: boolean; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
   const color = getConditionColor(item.condition, theme, isNight);
+  const icon = Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme) : undefined;
   const layout = useResponsiveLayout();
   return (
     <View
@@ -337,7 +340,7 @@ function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWea
       ], Platform.OS === "ios" && ambientVisual.hourlyCard]}
     >
       <Text style={[[styles.hourlyTime, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.hourlyTime]}>{formatTimeLabel(item.time)}</Text>
-      <Image source={Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme)?.source ?? getConditionIcon(item.condition, isNight) : getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme)?.tintColor : color }]} resizeMode="contain" />
+      <Image source={icon?.source ?? getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: icon?.tintColor ?? color }]} resizeMode="contain" />
       <Text style={[styles.hourlyTemp, { color: theme.text }]}>{formatTemperature(item.tempC, temperatureUnit)}</Text>
       <Text style={[[styles.hourlyRain, { color }], Platform.OS === "ios" && ambientVisual.hourlyRain]}>{Platform.OS === "ios" && (item.available?.rainProbability === false || !Number.isFinite(item.rainProbabilityPct)) ? "—" : `${item.rainProbabilityPct}%`}</Text>
     </View>
@@ -346,10 +349,11 @@ function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWea
 
 function DailyRow({ item, temperatureUnit, theme }: { item: DailyWeather; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
   const color = getConditionColor(item.condition, theme);
+  const icon = Platform.OS === "ios" ? ambientWeatherIcon(item.condition, false, theme) : undefined;
   return (
     <View style={[styles.dailyRow, { borderColor: theme.border }]}>
       <View style={styles.dailyDay}>
-        <Image source={Platform.OS === "ios" ? ambientWeatherIcon(item.condition, false, theme)?.source ?? getConditionIcon(item.condition) : getConditionIcon(item.condition)} style={[styles.dailyIcon, { tintColor: Platform.OS === "ios" ? ambientWeatherIcon(item.condition, false, theme)?.tintColor : color }]} resizeMode="contain" />
+        <Image source={icon?.source ?? getConditionIcon(item.condition)} style={[styles.dailyIcon, { tintColor: icon?.tintColor ?? color }]} resizeMode="contain" />
         <Text style={[styles.dailyDate, { color: theme.text }]}>{formatDateLabel(item.date)}</Text>
       </View>
       <Text style={[[styles.dailyCondition, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.dailyCondition]}>{getConditionLabel(item.condition)}</Text>
@@ -393,7 +397,7 @@ function getDailyForecast(daily: DailyWeather[] | undefined, hourly: HourlyWeath
 }
 
 function selectCondition(items: HourlyWeather[]) {
-  const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
+  const priority = ["storm-hail", "storm", "hail", "sleet", "mixed", "snow", "rain", "dust", "cloud", "clear", "unknown"];
   return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
 }
 
@@ -737,12 +741,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets,
-  pin: ambientUiIcons.location, clock: ambientUiIcons.time, depart: ambientUiIcons.tabDepart,
-  umbrella: ambientUiIcons.umbrella, shirt: ambientUiIcons.tabOutfit, check: ambientUiIcons.check,
-  settings: ambientUiIcons.settings, rain: ambientUiIcons.umbrella, drop: ambientUiIcons.droplet,
-  humidity: ambientUiIcons.droplet, wind: ambientUiIcons.wind,
-} : uiIconAssets;
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 // Approved Ambient reading hierarchy; Android retains its original styles.
 const ambientVisual = StyleSheet.create({
