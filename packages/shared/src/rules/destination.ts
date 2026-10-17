@@ -35,6 +35,7 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
     locationName: input.destinationWeather.locationName,
     shoesLevel: shoesAdvice.level,
     umbrellaLevel: umbrellaAdvice.level,
+    prioritizeShelter: umbrellaAdvice.prioritizeShelter,
     weather: input.destinationWeather,
   });
 
@@ -82,9 +83,11 @@ function buildNextAlertText(input: {
   locationName: string;
   shoesLevel: DestinationCare["shoesAdvice"]["level"];
   umbrellaLevel: DestinationCare["umbrellaAdvice"]["level"];
+  prioritizeShelter?: boolean;
   weather: WeatherSnapshot;
 }): string {
   if (!input.careOn) return `${input.locationName} 목적지 케어 꺼짐`;
+  if (input.prioritizeShelter) return `${input.locationName} 우박 신호 · 실외 이동을 보류하고 안전 확인 우선`;
 
   const maxRainProbabilityPct = Math.max(input.weather.current.rainProbabilityPct, ...input.weather.hourly.map((hour) => hour.rainProbabilityPct));
   const maxWindMs = Math.max(input.weather.current.windMs, ...input.weather.hourly.map((hour) => hour.windMs));

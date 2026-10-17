@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -10,6 +10,8 @@ import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../th
 export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferences, onToggleAlertPreference, permissionReady, smartCareEnabled, onRequestPermissionGate }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const { width, fontScale } = useWindowDimensions();
+  const compactFacts = width < 390 || fontScale > 1.35;
   const rainAlertEnabled = alertPreferences.rainDetail;
   const rainBars = useMemo(() => buildRainBars(state.weather), [state.weather]);
   const chartColors = getRainChartColors(theme);
@@ -66,7 +68,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferenc
               </Text>
             </View>
           </View>
-          <View style={styles.rainDecisionStrip}>
+          <View style={[styles.rainDecisionStrip, compactFacts && styles.rainDecisionStripCompact]}>
             <RainFact icon={uiIconAssets.clock} label="시작" value={hasRain ? rainStart : "없음"} color={theme.sky} theme={theme} />
             <RainFact icon={uiIconAssets.drop} label="최대" value={`${peakAmount}mm`} color={theme.warm} theme={theme} />
             <RainFact icon={uiIconAssets.check} label="완화" value={hasRain ? rainEnd : "해당 없음"} color={theme.clear} theme={theme} />
@@ -81,7 +83,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferenc
             onToggleAlertPreference("rainDetail");
             if (!rainAlertEnabled && !permissionReady) onRequestPermissionGate("notification", "H5", "rain");
           }}
-          style={[styles.togglePanel, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
+          style={[styles.togglePanel, compactFacts && styles.togglePanelCompact, { backgroundColor: toggleColors.panel, borderColor: toggleColors.border }]}
         >
           <View style={styles.toggleCopy}>
             <Text style={[styles.toggleLabel, { color: toggleColors.accent }]}>강수 알림</Text>
@@ -155,7 +157,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferenc
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`우산 추천 보기, ${umbrella.title}`}
+          accessibilityLabel={`${umbrella.prioritizeShelter ? "실외 이동 안내" : "우산 추천"} 보기, ${umbrella.title}`}
           onPress={() => onNavigate("H4")}
           style={[styles.umbrellaCard, { backgroundColor: theme.cardStrong, borderColor: getUmbrellaCardColor(umbrella.level, theme) }, cardShadow(theme)]}
         >
@@ -163,7 +165,7 @@ export function RainTimelineScreen({ state, onGoBack, onNavigate, alertPreferenc
             <Image source={uiIconAssets.umbrella} style={[styles.umbrellaIcon, { tintColor: getUmbrellaCardColor(umbrella.level, theme) }]} resizeMode="contain" />
           </View>
           <View style={styles.umbrellaCopy}>
-            <Text style={[styles.umbrellaLabel, { color: getUmbrellaCardColor(umbrella.level, theme) }]}>우산 추천</Text>
+            <Text style={[styles.umbrellaLabel, { color: getUmbrellaCardColor(umbrella.level, theme) }]}>{umbrella.prioritizeShelter ? "실외 이동 안내" : "우산 추천"}</Text>
             <Text style={[styles.umbrellaTitle, { color: theme.text }]}>{umbrella.title}</Text>
             <Text style={[styles.umbrellaBody, { color: theme.muted }]} numberOfLines={2}>{umbrella.reason}</Text>
           </View>
@@ -347,12 +349,14 @@ function getUmbrellaCardColor(level: P0ScreenProps["state"]["umbrella"]["level"]
 }
 
 function getUmbrellaGuideText(start: string, hasRain: boolean, umbrella: P0ScreenProps["state"]["umbrella"]) {
+  if (umbrella.prioritizeShelter) return "우박 신호 · 실외 이동 보류";
   if (umbrella.level === "none") return "우산 없이 이동 가능";
   if (!hasRain) return umbrella.title;
   return `${start} 이후 외출 시 ${umbrella.title}`;
 }
 
 function getDepartureGuideText(start: string, hasRain: boolean, umbrella: P0ScreenProps["state"]["umbrella"]) {
+  if (umbrella.prioritizeShelter) return "실외 이동을 잠시 피하고 최신 예보 확인";
   if (umbrella.level === "none") return "현재 강수 신호 낮음";
   if (!hasRain) return "외출 전 최신 강수 확인";
   return `${start} 전 이동 여유 확인`;
@@ -440,6 +444,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.xs,
   },
+  rainDecisionStripCompact: { flexDirection: "column" },
   rainFact: {
     flex: 1,
     minHeight: 50,
@@ -630,6 +635,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
   },
+  togglePanelCompact: { alignItems: "flex-start", flexDirection: "column" },
   toggleCopy: {
     flex: 1,
     minWidth: 0,

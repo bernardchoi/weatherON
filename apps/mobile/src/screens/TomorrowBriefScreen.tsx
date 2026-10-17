@@ -54,7 +54,7 @@ export function TomorrowBriefScreen({
     ? ambientWeatherIcon(tomorrow.weather.current.condition, false, theme, "hero") : undefined;
   const rainTone = getRainTone(tomorrow.summary.rainProbabilityPct, theme);
   const weatherHeadline = getTomorrowWeatherHeadline(tomorrow.summary.rainProbabilityPct, tomorrow.weather.current.condition);
-  const umbrellaAction = getUmbrellaActionShort(umbrella.level);
+  const umbrellaAction = umbrella.prioritizeShelter ? "실외 이동 보류" : getUmbrellaActionShort(umbrella.level);
 
   return (
     <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
@@ -274,6 +274,7 @@ function getUmbrellaActionShort(level: ReturnType<typeof recommendUmbrella>["lev
 }
 
 function getTomorrowWeatherHeadline(rainProbabilityPct: number, condition: string) {
+  if (condition === "hail" || condition === "storm-hail") return "실외 이동을 잠시 피해야 해요";
   if (rainProbabilityPct >= 60) return "우산이 필요한 하루예요";
   if (rainProbabilityPct >= 30) return "가벼운 우산이 있으면 좋아요";
   if (condition === "clear") return "햇살 좋은 외출 날이에요";

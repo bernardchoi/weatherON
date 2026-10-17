@@ -29,16 +29,18 @@ import { translateText } from "../localization/localization";
 
 type BottomNavProps = {
   transparentBackground?: boolean;
+  placement?: "bottom" | "side";
   activeRoute: P0RouteId;
   onNavigate: (route: P0RouteId) => void;
 };
 
-export function BottomNav({ activeRoute, onNavigate, transparentBackground = false }: BottomNavProps) {
+export function BottomNav({ activeRoute, onNavigate, transparentBackground = false, placement = "bottom" }: BottomNavProps) {
   const theme = useAppTheme();
   const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
   const isIos = Platform.OS === "ios";
-  const useNativeSurface = hasNativeLiquidGlassNavigationSurface && !theme.reducedTransparency;
+  const sideRail = placement === "side";
+  const useNativeSurface = !sideRail && hasNativeLiquidGlassNavigationSurface && !theme.reducedTransparency;
   const activeTabRoute = getActiveTabRoute(activeRoute);
   const activeIndex = Math.max(0, bottomNavRoutes.findIndex((route) => route.id === activeTabRoute));
   const reducedMotion = useReducedMotion();
@@ -161,23 +163,25 @@ export function BottomNav({ activeRoute, onNavigate, transparentBackground = fal
   };
 
   return (
-    <View style={[styles.dockWrap, { backgroundColor: isIos && transparentBackground ? "transparent" : activeTabRoute === "H1" ? ambientPalette(theme).background : theme.background }]}>
+    <View style={[styles.dockWrap, sideRail && styles.railWrap, { backgroundColor: isIos && transparentBackground ? "transparent" : activeTabRoute === "H1" ? ambientPalette(theme).background : theme.background }]}>
       <View
         style={[
           styles.dockFrame,
-          isIos ? styles.iosDockFrame : styles.androidDockFrame,
+          sideRail && styles.railFrame,
+          isIos ? sideRail ? styles.railIosDockFrame : styles.iosDockFrame : styles.androidDockFrame,
           {
             maxWidth: layout.bottomNavMaxWidth,
-            paddingHorizontal: layout.bottomNavHorizontalPadding,
+            paddingHorizontal: sideRail ? 8 : layout.bottomNavHorizontalPadding,
           },
         ]}
       >
         <View
           ref={dockRef}
           onLayout={handleDockLayout}
-          {...(useNativeSurface || !isIos ? {} : dragResponder.panHandlers)}
+          {...(useNativeSurface || !isIos || sideRail ? {} : dragResponder.panHandlers)}
           style={[
             styles.dock,
+            sideRail && styles.rail,
             isIos ? styles.iosDock : styles.androidDock,
             navigationBackground,
             isIos ? { borderRadius: 42, borderWidth: StyleSheet.hairlineWidth, borderColor: colorWithAlpha(ambientPalette(theme).muted, 0.28), shadowOpacity: 0.1, shadowRadius: 16 } : null,
@@ -193,7 +197,7 @@ export function BottomNav({ activeRoute, onNavigate, transparentBackground = fal
                 const route = bottomNavRoutes[nativeEvent.index];
                 if (route) onNavigate(route.id);
               }} />
-          ) : isIos && dockWidth > 2 ? (
+          ) : isIos && !sideRail && dockWidth > 2 ? (
             <Animated.View pointerEvents="none" style={{ position: "absolute", top: 4, height: Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8), left: ((dockWidth - 2) / bottomNavRoutes.length - Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8)) / 2, width: Math.min(74, (dockWidth - 2) / bottomNavRoutes.length - 8), transform: [{ translateX: selectionX }] }}>
               <View style={[StyleSheet.absoluteFill, { borderRadius: 40, borderWidth: 0, backgroundColor: iosColors.activeBackground, borderColor: iosColors.activeBorder }]} />
             </Animated.View>
@@ -209,6 +213,7 @@ export function BottomNav({ activeRoute, onNavigate, transparentBackground = fal
                 label={label}
                 accessibilityLabel={translateText(`${route.label} 탭`, language)}
                 active={active}
+                sideRail={sideRail}
                 nativeSurface={useNativeSurface}
                 onPress={() => onNavigate(route.id)}
               >
@@ -335,6 +340,7 @@ function TabButton({
   label,
   accessibilityLabel,
   active,
+  sideRail,
   onPress,
   children,
 }: {
@@ -342,6 +348,7 @@ function TabButton({
   nativeSurface: boolean;
   accessibilityLabel: string;
   active: boolean;
+  sideRail: boolean;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -356,6 +363,8 @@ function TabButton({
       onPress={onPress}
       style={[
         styles.item,
+        sideRail && styles.railItem,
+        sideRail && active ? styles.railActiveItem : null,
         Platform.OS === "android" ? styles.androidItem : null,
       ]}
     >
@@ -420,6 +429,11 @@ const styles = StyleSheet.create({
   dockWrap: {
     marginTop: 8,
   },
+  railWrap: {
+    width: 92,
+    marginTop: 0,
+    paddingVertical: 8,
+  },
   dockFrame: {
     width: "100%",
     alignSelf: "center",
@@ -428,6 +442,11 @@ const styles = StyleSheet.create({
     height: 82,
     marginBottom: 12,
   },
+  railFrame: {
+    flex: 1,
+    width: "100%",
+  },
+  railIosDockFrame: { flex: 1, marginBottom: 0 },
   androidDockFrame: {
     height: 78,
     marginBottom: 8,
@@ -439,6 +458,10 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     borderWidth: 1,
     overflow: "hidden",
+  },
+  rail: {
+    flexDirection: "column",
+    borderRadius: 28,
   },
   iosDock: {
     borderRadius: 32,
@@ -456,6 +479,15 @@ const styles = StyleSheet.create({
     gap: 2,
     minHeight: 58,
     position: "relative",
+  },
+  railItem: {
+    width: "100%",
+    minHeight: 64,
+    flex: 1,
+    borderRadius: 20,
+  },
+  railActiveItem: {
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   iconContainer: {
     width: 42,

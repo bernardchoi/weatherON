@@ -126,6 +126,78 @@ final class LiquidGlassNavigationSurfaceView: UIView {
   }
 }
 
+// UIKit exposes iPhone Duo reserved regions from iOS 27.1. This invisible RN
+// view reports the frames in its own coordinate space. Earlier systems report
+// an empty list, so the JS layout keeps its existing safe-area behavior.
+@objc(ReservedRegionObserverView)
+final class ReservedRegionObserverViewManager: RCTViewManager {
+  override func view() -> UIView! { ReservedRegionObserverSurfaceView() }
+  @objc override static func requiresMainQueueSetup() -> Bool { true }
+}
+
+final class ReservedRegionObserverSurfaceView: UIView {
+  @objc var onRegionsChange: RCTDirectEventBlock? { didSet { reportRegionsIfNeeded(force: true) } }
+  private var lastSignature = ""
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    backgroundColor = .clear
+    isUserInteractionEnabled = false
+    isAccessibilityElement = false
+    accessibilityElementsHidden = true
+  }
+
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    reportRegionsIfNeeded(force: true)
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    reportRegionsIfNeeded()
+  }
+
+  override func safeAreaInsetsDidChange() {
+    super.safeAreaInsetsDidChange()
+    reportRegionsIfNeeded()
+  }
+
+  override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    super.traitCollectionDidChange(previousTraitCollection)
+    reportRegionsIfNeeded()
+  }
+
+  private func reportRegionsIfNeeded(force: Bool = false) {
+    let regions = payloadRegions()
+    let signature = regions.map { region in
+      "\(region["kind"] ?? ""):\(region["x"] ?? 0):\(region["y"] ?? 0):\(region["width"] ?? 0):\(region["height"] ?? 0)"
+    }.joined(separator: "|")
+    guard force || signature != lastSignature else { return }
+    lastSignature = signature
+    onRegionsChange?(["regions": regions])
+  }
+
+  private func payloadRegions() -> [[String: Any]] {
+    guard #available(iOS 27.1, *) else { return [] }
+    return payload(for: .occlusion, kind: "occlusion") + payload(for: .division, kind: "division")
+  }
+
+  @available(iOS 27.1, *)
+  private func payload(for kind: UIView.ReservedRegion.Kind, kind kindName: String) -> [[String: Any]] {
+    reservedRegions(kind: kind).map { region in
+      [
+        "kind": kindName,
+        "x": region.frame.minX,
+        "y": region.frame.minY,
+        "width": region.frame.width,
+        "height": region.frame.height,
+      ]
+    }
+  }
+}
+
 
 // Non-repeating, runtime light density for the same ambient wind field.
 // No screenshot/texture tile, frame timer, network or device sensor is used.

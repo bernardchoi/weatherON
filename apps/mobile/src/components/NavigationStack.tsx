@@ -42,13 +42,17 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
     <HomeViewportContext.Provider value={viewportHeight}>
     <ScreenStack key={next[0]} style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
+        // Native stack controllers must not regress from active (2) to
+        // transitioning (1) while a new detail screen is pushed. Keep each
+        // retained controller active and let UIKit own the complete pop swipe.
         key={id} screenId={id} activityState={2}
         style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: "transparent" }}
         headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
         stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
         gestureEnabled={index > 0}
+        fullScreenSwipeEnabled={index > 0}
         onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
-        <View style={[styles.fill, { opacity: id === route ? 1 : 0 }]} pointerEvents={id === route ? "auto" : "none"} accessibilityElementsHidden={id !== route} importantForAccessibility={id === route ? "auto" : "no-hide-descendants"}>
+        <View style={styles.fill} pointerEvents={id === route ? "auto" : "none"} accessibilityElementsHidden={id !== route} importantForAccessibility={id === route ? "auto" : "no-hide-descendants"}>
           {renderScreen(id)}
         </View>
       </ScreenStackItem>)}

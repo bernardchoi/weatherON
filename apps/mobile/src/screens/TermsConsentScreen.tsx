@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderLeftWidth: 2,
+    borderLeftWidth: 0,
   },
   actionCopy: {
     gap: 4,

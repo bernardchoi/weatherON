@@ -6,6 +6,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { cardShadow, radius, semanticColor, spacing } from "../theme/tokens";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { useResponsiveLayout } from "../theme/responsiveLayout";
 
 type FilterId = "all" | "sports" | "outdoor" | "season" | "culture";
 
@@ -86,6 +87,7 @@ export function DestinationHubScreen({
   onSelectDestinationPlace,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const layout = useResponsiveLayout();
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const visibleDestinations = useMemo(
     () => destinationCards.filter((card) => activeFilter === "all" || card.filter === activeFilter),
@@ -99,15 +101,15 @@ export function DestinationHubScreen({
 
   return (
     <View style={[styles.shell, { backgroundColor: theme.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.atmosphere, { backgroundColor: theme.backgroundAlt }]} />
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, { maxWidth: layout.contentMaxWidth, paddingHorizontal: layout.screenHorizontalPadding, paddingTop: layout.weatherTopPadding, paddingBottom: layout.destinationAddScrollBottomPadding, gap: layout.destinationContentGap }]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.atmosphere, { height: Math.min(520, Math.max(260, layout.height * 0.55)), backgroundColor: theme.backgroundAlt }]} />
 
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>목적지</Text>
           <Text style={[styles.subtitle, { color: theme.subtle }]}>저장한 목적지별 자동 케어와 준비 가이드</Text>
         </View>
 
-        <View style={styles.filterRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow} style={styles.filterScroll}>
           {filters.map((filter) => {
             const active = activeFilter === filter.id;
             return (
@@ -124,7 +126,7 @@ export function DestinationHubScreen({
               </FeedbackPressable>
             );
           })}
-        </View>
+        </ScrollView>
 
         <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
           <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
@@ -132,15 +134,15 @@ export function DestinationHubScreen({
         </View>
 
         <View style={[styles.stateCard, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme)]}>
-          <View style={styles.stateHeader}>
+          <View style={[styles.stateHeader, (layout.isNarrow || layout.isShort) && styles.stateHeaderCompact]}>
             <View style={styles.stateCopy}>
               <Text style={[styles.eyebrow, { color: theme.clear }]}>DESTINATION CARE</Text>
               <Text style={[styles.stateText, { color: theme.text }]}>저장 목적지 기준으로 출발 전 알림 후보를 보여줌</Text>
             </View>
-            <View style={[styles.countPill, { backgroundColor: theme.cardMuted }]}>
+            <View style={[styles.countPill, (layout.isNarrow || layout.isShort) && styles.countPillCompact, { backgroundColor: theme.cardMuted }]}>
               <Text style={[styles.countText, { color: theme.gold }]}>{visibleDestinations.length}곳</Text>
             </View>
-            <Pressable accessibilityRole="button" onPress={() => onNavigate("P1")} style={[styles.addPill, { backgroundColor: theme.gold }]}>
+            <Pressable accessibilityRole="button" accessibilityLabel="목적지 추가" onPress={() => onNavigate("P1")} style={[styles.addPill, (layout.isNarrow || layout.isShort) && styles.addPillCompact, { backgroundColor: theme.gold }]}>
               <Text style={[styles.addPillText, { color: theme.onAccent }]}>추가</Text>
             </Pressable>
           </View>
@@ -165,7 +167,7 @@ export function DestinationHubScreen({
                   cardShadow(theme),
                 ]}
               >
-                <Image source={card.image} style={[styles.destinationImage, { backgroundColor: semanticColor(theme, "imagePlaceholder") }]} resizeMode="cover" />
+                <Image source={card.image} style={[styles.destinationImage, { width: layout.isNarrow ? 62 : 74, height: layout.isNarrow ? 52 : 58, backgroundColor: semanticColor(theme, "imagePlaceholder") }]} resizeMode="cover" />
                 <View style={styles.destinationCopy}>
                   <View style={styles.destinationTitleRow}>
                     <CategoryMiniIcon category={card.place.category} color={card.accent === "warm" ? theme.warm : theme.clear} />
@@ -279,9 +281,8 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
     minHeight: "100%",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 118,
+    width: "100%",
+    alignSelf: "center",
   },
   atmosphere: {
     position: "absolute",
@@ -310,6 +311,9 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: "row",
     gap: 6,
+    paddingHorizontal: 1,
+  },
+  filterScroll: {
     marginHorizontal: -1,
   },
   filterButton: {
@@ -338,6 +342,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
+  stateHeaderCompact: { flexWrap: "wrap" },
+  countPillCompact: { marginLeft: 0 },
+  addPillCompact: { marginLeft: "auto" },
   stateCopy: {
     flex: 1,
     gap: 6,

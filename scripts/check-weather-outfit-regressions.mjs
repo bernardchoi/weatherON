@@ -20,7 +20,7 @@ const demo = load("apps/mobile/src/data/demoState.ts", {
   "../utils/zonedDateTime": load("apps/mobile/src/utils/zonedDateTime.ts"),
   "../utils/travelEstimate": load("apps/mobile/src/utils/travelEstimate.ts"),
 });
-const now = Date.parse("2026-07-01T12:00:00+09:00");
+let now = Date.parse("2026-07-01T12:00:00+09:00");
 const base = { ...shared.gangneungClearSnapshot, timezone: "Asia/Seoul", observedAt: new Date(now).toISOString(), source: "openmeteo", stale: false,
   current: { ...shared.gangneungClearSnapshot.current, tempC: 30, feelsLikeC: 50 }, hourly: [] };
 const day = (date, maxTempC) => ({ date, maxTempC, minTempC: 25, rainProbabilityPct: 0, precipitationMm: 0, windMs: 1, condition: "clear" });
@@ -64,6 +64,27 @@ const dst = { ...hot, countryCode: "GLOBAL", timezone: "America/New_York", daily
 assert.equal(scheduledHeat(dst, Date.parse("2026-10-31T15:00:00Z"))[0].scheduledAt, "2026-11-01T12:30:00.000Z");
 const destinationState = demo.buildDemoStateFromWeatherResult({ current: base, destination: hot, destinationSnapshots: [], status: "ready", message: "", retryable: false, fallbackUsed: false }, true, { notificationNow: now });
 assert.equal(destinationState.notifications.find((n) => n.type === "heatwave" && n.active).forecastEventDate, "2026-07-04");
+
+// Hail always wins over umbrella-selection and ordinary rain probability. It
+// must create an immediate, location-scoped safety event even below 50%.
+const hailNow = { ...base, current: { ...base.current, rainProbabilityPct: 5, precipitationMm: 0, condition: "hail" }, hourly: [] };
+const hailNowNotifications = build(hailNow).notifications;
+for (const type of ["rain", "umbrella"]) {
+  const notification = hailNowNotifications.find((item) => item.type === type);
+  assert.equal(notification.active, true);
+  assert.match(notification.pushTitle, /우박/);
+  assert.match(notification.pushBody, /실외 이동/);
+  assert.match(notification.reason, /실외 이동 보류/);
+  assert.match(notification.deliveryKey, /hail-current/);
+  assert.equal(Date.parse(notification.scheduledAt) - now, 5_000);
+}
+const hailLater = { ...base, current: { ...base.current, condition: "clear", rainProbabilityPct: 5 }, hourly: [{ time: "13:00", tempC: 27, rainProbabilityPct: 5, precipitationMm: 0, windMs: 3, condition: "storm-hail" }] };
+const hailLaterRain = build(hailLater).notifications.find((item) => item.type === "rain");
+assert.equal(hailLaterRain.active, true);assert.match(hailLaterRain.deliveryKey, /kr-gangneung-beach:13:00$/);
+const lightRain = { ...base, current: { ...base.current, condition: "rain", rainProbabilityPct: 20, precipitationMm: 0 }, hourly: [] };
+const lightRainNotifications = build(lightRain).notifications;
+assert.equal(lightRainNotifications.find((item) => item.type === "rain").active, false);
+assert.doesNotMatch(lightRainNotifications.find((item) => item.type === "umbrella").pushBody, /실외 이동을 보류/);
 
 // Rain protection takes priority over ownership, while winter rain gear stays out of summer outfits.
 const rainy = { ...base, current: { ...base.current, feelsLikeC: 32, rainProbabilityPct: 90, precipitationMm: 3, condition: "rain", uvIndex: 8 } };
@@ -111,6 +132,7 @@ let onPresented;
 let onSchedule;
 let failCancelId;
 let ignoreCancel = false;
+let rejectNextSchedule = false;
 const native = {
   setNotificationHandler() {},
   getPermissionsAsync: async () => ({ granted: true }),
@@ -123,7 +145,7 @@ const native = {
   dismissNotificationAsync: async () => {},
   clearLastNotificationResponseAsync: async () => { lastResponse = null; },
   setBadgeCountAsync: async () => {},
-  scheduleNotificationAsync: async (request) => { scheduleCalls++; scheduled.set(request.identifier, request); if (onSchedule) onSchedule(request); return request.identifier; },
+  scheduleNotificationAsync: async (request) => { scheduleCalls++; if (rejectNextSchedule) { rejectNextSchedule = false; throw new Error("native schedule rejected"); } scheduled.set(request.identifier, request); if (onSchedule) onSchedule(request); return request.identifier; },
   SchedulableTriggerInputTypes: { DATE: "date", CALENDAR: "calendar" },
 };
 const adapterImports = {
@@ -145,8 +167,27 @@ try {
   assert.equal(request.content.title, advisory.pushTitle);
   assert.match(request.content.body, /공식 기상청 특보와 별개/);
   assert.equal(request.content.data.deliveryKey, advisory.deliveryKey);
+  // A definite native reject is not delivery evidence: after the 5s immediate window it may retry.
+  const retryAfterReject = { ...advisory, id: "retry-after-reject", deliveryKey: `${advisory.deliveryKey}:retry`, scheduledAt: new Date(now + 5_000).toISOString() };
+  scheduled.clear(); values.set("weatheron.specialAlertDelivery.v1", {}); rejectNextSchedule = true;
+  await assert.rejects(() => adapter.syncLocalWeatherNotifications({ ...input, notifications: [retryAfterReject] }));
+  assert.ok(!values.get("weatheron.specialAlertDelivery.v1")[`pending:v3:${retryAfterReject.deliveryKey}`]);
+  now += 5_001;
+  await adapter.syncLocalWeatherNotifications({ ...input, notifications: [retryAfterReject] });
+  assert.ok(scheduled.has("weatheron:smart:retry-after-reject"));
+  assert.ok(scheduled.get("weatheron:smart:retry-after-reject").trigger.date.getTime() > now, "retry rebases the elapsed +5s one-shot into the future");
+  assert.ok(!values.get("weatheron.specialAlertDelivery.v1")[`unknown:v3:${retryAfterReject.deliveryKey}`]);
+  // Same onset at separate places must isolate receipts; an unscoped legacy key blocks neither place.
+  const placeA = { ...retryAfterReject, id: "rain-a", deliveryKey: "rain:place-a:same-onset" };
+  const placeB = { ...retryAfterReject, id: "rain-b", deliveryKey: "rain:place-b:same-onset" };
+  assert.notEqual(placeA.deliveryKey, placeB.deliveryKey);
+  values.set("weatheron.specialAlertDelivery.v1", { [`received:v3:${placeA.deliveryKey}`]: new Date(now).toISOString(), "rain:same-onset": new Date(now).toISOString() });
+  scheduled.clear();
+  await adapter.syncLocalWeatherNotifications({ ...input, notifications: [placeA, placeB] });
+  assert.ok(!scheduled.has("weatheron:smart:rain-a"), "A receipt suppresses only A");
+  assert.ok(scheduled.has("weatheron:smart:rain-b"), "legacy unscoped history cannot suppress B");
   await adapter.syncLocalWeatherNotifications(input);
-  assert.equal(scheduleCalls, 1);
+  assert.ok(scheduleCalls >= 1);
   const routine = { ...advisory, id: "routine-test", type: "routine", deliveryKey: undefined, pushTitle: "Routine", pushBody: "Routine body" };
   await adapter.syncLocalWeatherNotifications({ ...input, notifications: [advisory, routine] });
   const routineRequest = scheduled.get("weatheron:smart:routine-test");

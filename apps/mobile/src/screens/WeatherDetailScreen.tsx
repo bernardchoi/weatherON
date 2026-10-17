@@ -23,8 +23,9 @@ import { getConditionColor, getConditionIcon, getConditionLabel } from "../utils
 export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const { fontScale } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
   const expandedText = Platform.OS === "ios" && fontScale > 1.3;
+  const compactFacts = width < 390 || fontScale > 1.35;
   const [currentTimeMs, setCurrentTimeMs] = React.useState(() => Date.now());
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
@@ -109,7 +110,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
             </View>
             {uvIndex ? <UvSummaryBadge item={uvIndex} theme={theme} /> : null}
           </View>
-          <View style={styles.factGrid}>
+          <View style={[styles.factGrid, compactFacts && styles.factGridCompact]}>
             <WeatherFact icon={screenIcons.drop} label="강수" value={`${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />
             <WeatherFact icon={screenIcons.wind} label="바람" value={`${current.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
             <WeatherFact icon={screenIcons.humidity} label="습도" value={`${current.humidityPct}%`} color={theme.gold} theme={theme} />
@@ -534,6 +535,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.xs,
   },
+  factGridCompact: { flexDirection: "column" },
   factCard: {
     flex: 1,
     minHeight: 66,

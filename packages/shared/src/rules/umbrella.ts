@@ -6,6 +6,9 @@ export function recommendUmbrella(weather: WeatherSnapshot): RecommendationState
   const signals = getWeatherSignals(weather);
   const maxPrecipitation = Math.max(weather.current.precipitationMm, ...weather.hourly.map((hour) => hour.precipitationMm));
   const maxRainProbability = Math.max(weather.current.rainProbabilityPct, ...weather.hourly.map((hour) => hour.rainProbabilityPct));
+  if ([weather.current.condition, ...weather.hourly.map((hour) => hour.condition)].some((condition) => condition === "hail" || condition === "storm-hail")) {
+    return { level: "required", title: "실내 대기 우선", reason: "우박 신호가 있어 우산 종류보다 실외 이동을 잠시 보류하고 안전을 확인하는 것이 우선", prioritizeShelter: true };
+  }
 
   if (!signals.isRainy && maxRainProbability < 40) {
     return {

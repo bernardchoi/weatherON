@@ -473,7 +473,7 @@ function withScheduledNotificationTimes(
       return {
         ...notification,
         scheduledAt: new Date(scheduledAt).toISOString(),
-        deliveryKey: `${notification.id}:${rainEvent.key}`,
+        deliveryKey: `${notification.id}:${encodeURIComponent(weather.locationId)}:${rainEvent.key}`,
       };
     }
     if (notification.type === "heatwave" && notification.active) {
@@ -501,11 +501,18 @@ function getNextDailyReminderAt(nowMs: number, timeZone: string, hour: number, m
 }
 
 function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string): { timestamp: number; key: string } | null {
+  const isHail = (condition: string) => condition === "hail" || condition === "storm-hail";
+  // Current hail has no future hourly onset to wait for. Keep it inside the
+  // short native lead window so the safety message can surface immediately.
+  if (isHail(weather.current.condition)) {
+    return { timestamp: nowMs, key: `hail-current:${weather.observedAt}` };
+  }
   const forecastHours = weather.hourly
     .map((hour) => ({
       timestamp: getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone),
       key: hour.time,
       rainProbabilityPct: hour.rainProbabilityPct,
+      condition: hour.condition,
     }))
     .filter((item) => Number.isFinite(item.timestamp))
     .sort((left, right) => left.timestamp - right.timestamp);
@@ -513,8 +520,10 @@ function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string)
     const previous = forecastHours[index - 1];
     return (
       item.timestamp >= nowMs &&
-      item.rainProbabilityPct >= RAIN_NOTIFICATION_THRESHOLD_PCT &&
-      (!previous || previous.rainProbabilityPct < RAIN_NOTIFICATION_THRESHOLD_PCT)
+      (isHail(item.condition)
+        ? !previous || !isHail(previous.condition)
+        : item.rainProbabilityPct >= RAIN_NOTIFICATION_THRESHOLD_PCT &&
+          (!previous || previous.rainProbabilityPct < RAIN_NOTIFICATION_THRESHOLD_PCT))
     );
   }) ?? null;
 }

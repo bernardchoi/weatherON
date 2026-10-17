@@ -79,7 +79,7 @@ export function GlobalSettingsScreen({
         <AppListGroup>
           <AppListRow
             ambientLayout="setting"
-            icon={screenIcons.uv}
+            icon={ambient ? ambientUiIcons.temperature : screenIcons.uv}
             title="온도"
             subtitle="날씨와 출발 비교"
             tone="gold"
@@ -112,7 +112,7 @@ export function GlobalSettingsScreen({
           />
           {ambient ? <AppListRow
             ambientLayout="setting"
-            icon={screenIcons.myDisplay}
+            icon={ambientUiIcons.theme}
             title="테마"
             subtitle="앱 전체 색상"
             divider
@@ -151,7 +151,7 @@ export function GlobalSettingsScreen({
         <AppListGroup>
           <AppListRow
             ambientLayout="setting"
-            icon={screenIcons.settings}
+            icon={ambient ? ambientUiIcons.transparency : screenIcons.settings}
             title="투명 효과 줄이기"
             subtitle={reducedTransparency ? "반투명 패널·탭 바를 단색으로 표시" : "기본 투명 효과 사용"}
             tone="sky"
@@ -284,10 +284,11 @@ function MaterialSwitch({ enabled }: { enabled: boolean }) {
         styles.effectSwitchTrack,
         Platform.OS === "android" ? styles.effectSwitchTrackAndroid : null,
         {
-          backgroundColor: enabled
+          backgroundColor: Platform.OS === "ios" ? (enabled ? theme.clear : theme.cardMuted) : enabled
             ? androidMaterialColor(theme, "primary")
             : androidMaterialColor(theme, "surfaceContainerHigh"),
-          borderColor: enabled ? androidMaterialColor(theme, "primary") : androidMaterialColor(theme, "outlineVariant"),
+          borderColor: Platform.OS === "ios" ? (enabled ? theme.clear : theme.subtle) : enabled ? androidMaterialColor(theme, "primary") : androidMaterialColor(theme, "outlineVariant"),
+          borderWidth: Platform.OS === "ios" ? 1 : undefined,
         },
       ]}
     >
@@ -295,7 +296,7 @@ function MaterialSwitch({ enabled }: { enabled: boolean }) {
         style={[
           styles.effectSwitchKnob,
           {
-            backgroundColor: Platform.OS === "ios" ? "#FFFFFF" : enabled ? androidMaterialColor(theme, "onPrimary") : theme.subtle,
+            backgroundColor: Platform.OS === "ios" ? (enabled ? "#FFFFFF" : theme.text) : enabled ? androidMaterialColor(theme, "onPrimary") : theme.subtle,
             transform: [{ translateX }],
           },
         ]}

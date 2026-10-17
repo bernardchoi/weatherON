@@ -318,6 +318,22 @@ assert.equal(destinationSuccess.current.source, "fallback");
 assert.equal(destinationSuccess.destination.current.tempC, 18);
 assert.equal(destinationSuccess.destination.stale, false);
 
+// The standard iOS build has no WeatherKit method unless a proxy is configured.
+// It must use Open-Meteo rather than rendering an immutable fallback, and a
+// user refresh must bypass an otherwise fresh current snapshot.
+const openMeteoPayload = {
+  current: { time: new Date(now).toISOString(), temperature_2m: 19, apparent_temperature: 18, weather_code: 1, wind_speed_10m: 9 },
+  hourly: { time: [new Date(now).toISOString()], temperature_2m: [19], precipitation_probability: [0], precipitation: [0], wind_speed_10m: [9], weather_code: [1] },
+};
+let openMeteoCalls = 0;
+const openMeteoOnly = createWeatherProvider({ fetchOpenMeteoForecast: async () => { openMeteoCalls++; return openMeteoPayload; } });
+const openMeteoResult = await openMeteoOnly.getSnapshots("ready", options);
+assert.equal(openMeteoResult.current.source, "openmeteo", "iOS falls back to the configured Open-Meteo client");
+assert.equal(openMeteoResult.destination.source, "openmeteo");
+assert.equal(openMeteoCalls, 2);
+await openMeteoOnly.getSnapshots("ready", { ...options, currentSnapshot: openMeteoResult.current, forceRefresh: true });
+assert.equal(openMeteoCalls, 4, "manual refresh refetches a fresh iOS current snapshot");
+
 // Execute the hook's production weather effect. Late progressive/final results
 // from an old location must not update UI, loading, refs, or persistent cache.
 const hook = stripTypeScriptTypes(read("apps/mobile/src/state/useWeatherOnAppState.ts"));
@@ -326,7 +342,7 @@ const effectEnd = hook.indexOf("\n  }, [", effectStart);
 const effectBody = hook.slice(effectStart + "  useEffect(() => {".length, effectEnd);
 const hookJobs = [], shown = [], persistedWrites = [], loading = [];
 const hookContext = {
-  weatherRefreshAttemptAtRef: { current: 0 },
+  weatherRefreshAttemptAtRef: { current: 0 }, weatherRequestSequenceRef: { current: 0 }, weatherRequestInFlightRef: { current: false }, manualWeatherRefreshTickRef: { current: null },
   appStateHydrated: true, setIsWeatherLoading: (value) => loading.push(value),
   getActiveWeatherLocation: (_, manual) => manual, weatherLocationMode: "manual", manualWeatherLocation: home, deviceWeatherLocation: null,
   savedDestinationWeatherLocations: [away], fallbackDestinationWeatherLocation: away,
@@ -352,5 +368,10 @@ assert.equal(shown.at(-1).current.locationId, "away");
 hookJobs[1].resolve(latestResult); await flush();
 assert.equal(loading.at(-1), false);
 newCleanup();
+hookContext.weatherRefreshTick = 1;
+hookContext.manualWeatherRefreshTickRef.current = 1;
+const forcedCleanup = effect(...Object.values(hookContext));
+assert.equal(hookJobs.at(-1).opts.forceRefresh, true, "hook marks an explicit refresh as a forced network request");
+forcedCleanup();
 console.log("Weather hook: obsolete progressive/final responses cannot update UI or persistence.");
 console.log("iOS reliability checks passed (native boundaries mocked; migration SQL executed by Node SQLite).");

@@ -53,6 +53,8 @@ export type WeatherProviderOptions = {
   destinationLocations?: WeatherLocationPreset[];
   language?: "ko" | "en" | "ja";
   cachedSnapshots?: WeatherSnapshot[];
+  /** A user or foreground refresh must not silently reuse a fresh current snapshot. */
+  forceRefresh?: boolean;
   onUpdate?: (result: WeatherProviderResult) => void;
 };
 
@@ -83,9 +85,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
   return {
     async getSnapshots(mode = "ready", options = {}) {
       const ios = (createOptions.platform ?? Platform.OS) === "ios";
-      for (const snapshot of options.cachedSnapshots ?? []) {
-        if (!ios || snapshot.source === "weatherkit") remember(snapshot);
-      }
+      for (const snapshot of options.cachedSnapshots ?? []) remember(snapshot);
       const stale = mode === "stale";
       const fallback = mode === "fallback";
       const currentLocation = fallback ? defaultSeoulWeatherLocation : options.currentLocation ?? seongsuWeatherLocation;
@@ -119,13 +119,13 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         // or the separate official-alert endpoint. The caller guards its lifecycle.
         if (!pending.has(currentLocation.locationId)) options.onUpdate?.(result());
       };
-      const supplied = ios && options.currentSnapshot?.source !== "weatherkit" ? undefined : options.currentSnapshot;
+      const supplied = options.currentSnapshot;
       await Promise.all([
         ...locations.map(async (location) => {
           const cachedAtStart = cache.get(location.locationId);
           try {
             const snapshot = location.locationId === currentLocation.locationId
-              ? await resolveCurrentWeatherSnapshot(client, location, supplied, stale, createOptions, options.language)
+              ? await resolveCurrentWeatherSnapshot(client, location, supplied, stale, createOptions, options.language, options.forceRefresh)
               : await fetchWeatherSnapshot(client, location, stale, createOptions, options.language);
             snapshots.set(location.locationId, remember(snapshot));
           } catch {
@@ -194,10 +194,7 @@ async function fetchWeatherSnapshot(
   }
   const ios = (options.platform ?? Platform.OS) === "ios";
   const conditionProfile = ios ? "ambient-v3" : "legacy";
-  if (ios) {
-    if (typeof client.fetchWeatherKitForecast !== "function") {
-      throw new Error("WeatherKit client is not configured for iOS");
-    }
+  if (ios && typeof client.fetchWeatherKitForecast === "function") {
     const payload = await client.fetchWeatherKitForecast({
       latitude: location.coordinate.latitude,
       longitude: location.coordinate.longitude,
@@ -242,7 +239,9 @@ async function resolveCurrentWeatherSnapshot(
   stale: boolean,
   options: WeatherProviderCreateOptions,
   language?: WeatherProviderOptions["language"],
+  forceRefresh = false,
 ): Promise<WeatherSnapshot> {
+  if (forceRefresh) return fetchWeatherSnapshot(client, location, stale, options, language);
   if (!currentSnapshot) return fetchWeatherSnapshot(client, location, stale, options, language);
   if (currentSnapshot.locationId !== location.locationId) return fetchWeatherSnapshot(client, location, stale, options, language);
   const age = Date.now() - Date.parse(currentSnapshot.observedAt);
@@ -368,7 +367,7 @@ function getPendingSnapshot(snapshot: WeatherSnapshot | undefined, location: Wea
     return buildFallbackSnapshotForLocation(location);
   }
   const age = snapshot ? Date.now() - Date.parse(snapshot.observedAt) : NaN;
-  if (preserveFresh && snapshot?.source === "weatherkit" && !snapshot.stale && !snapshot.locationUnverified
+  if (preserveFresh && snapshot && snapshot.source !== "fallback" && !snapshot.stale && !snapshot.locationUnverified
     && snapshot.locationId === location.locationId && snapshot.countryCode === location.countryCode
     && snapshot.timezone === location.timezone && Number.isFinite(age) && age >= 0 && age < 15 * 60_000) return snapshot;
   return markSnapshotStale(snapshot, location);

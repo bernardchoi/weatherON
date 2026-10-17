@@ -7,6 +7,7 @@ export type RecommendationState = {
   level: RecommendationLevel;
   title: string;
   reason: string;
+  prioritizeShelter?: boolean;
 };
 
 export type DestinationAlertCondition = {

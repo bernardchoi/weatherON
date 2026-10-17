@@ -1,6 +1,6 @@
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Image, Platform, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
 import { AmbientControlSurface } from "../components/AmbientControlSurface";
 import { AppButton } from "../components/AppButton";
@@ -36,8 +36,11 @@ export function MyScreen({
   const theme = useAppTheme();
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
+  const { fontScale } = useWindowDimensions();
   const { language } = React.use(LocalizationContext);
-  const accountSize = layout.height >= 900 ? 120 : 104;
+  const accountSize = fontScale > 1.4 ? 88 : layout.height >= 900 ? 120 : 104;
+  const profileTitleFontSize = fontScale > 1.5 ? 21 : 24;
+  const profileTitleLineHeight = fontScale > 1.5 ? 29 : 32;
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
@@ -74,7 +77,7 @@ export function MyScreen({
             gap: ambient ? 8 : layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
-            ...(ambient ? { paddingBottom: 16 } : {}),
+            ...(ambient ? { paddingBottom: 24 } : {}),
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -101,7 +104,7 @@ export function MyScreen({
           <View style={[ambientVisual.avatar, { width: accountSize, height: accountSize, backgroundColor: theme.card, borderColor: theme.border }]}>
             <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
           </View>
-          <Text style={{ fontSize: 24, lineHeight: 32, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
+          <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
           <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
         </View> : <FeedbackPressable

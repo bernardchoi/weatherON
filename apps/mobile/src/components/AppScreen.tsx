@@ -71,6 +71,9 @@ export function AppScreen({
             gap: contentGap ?? layout.screenContentGap,
           },
         ]}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
 
         <View
