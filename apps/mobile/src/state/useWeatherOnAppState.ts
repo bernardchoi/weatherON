@@ -58,14 +58,12 @@ import {
 } from "../providers/localNotifications";
 import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
 import {
-  getDepartureLiveActivityStatus,
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
   getDepartureWeatherGuidance,
   getDepartureWeatherGuidanceKind,
   syncAutomaticDepartureLiveActivity,
   type DepartureLiveActivityInput,
-  type DepartureLiveActivityStatus,
 } from "../providers/departureLiveActivity";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 import { addMinutesToTime, getZonedDateTimeParts } from "../utils/zonedDateTime";
@@ -242,9 +240,8 @@ export function useWeatherOnAppState() {
   // Selection is editor/preview state. Keep the Home counterpart pinned to a
   // separately committed id until a user explicitly saves or toggles a trip.
   const [committedDepartureDestinationId, setCommittedDepartureDestinationId] = useState<string | null>(null);
-  // The native Activity is authoritative if it already exists. The persisted
-  // intent is an app-side fallback for the period before native status arrives.
-  const [nativeDepartureActivityStatus, setNativeDepartureActivityStatus] = useState<DepartureLiveActivityStatus | null>(null);
+  const [departureActivityReplacementDestinationId, setDepartureActivityReplacementDestinationId] = useState<string | null>(null);
+  const departureActivitySyncRevisionRef = useRef(0);
   const [recentlyRemovedDestination, setRecentlyRemovedDestination] = useState<SavedDestination | null>(null);
   const [destinationLimitNotice, setDestinationLimitNotice] = useState(false);
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
@@ -709,17 +706,12 @@ export function useWeatherOnAppState() {
   // value it renders must follow the explicit committed Activity owner, not
   // the destination currently open in the editor.
   const homeDepartureDestination = useMemo(() => {
-    const nativeDestination = (nativeDepartureActivityStatus?.active || nativeDepartureActivityStatus?.scheduled)
-      ? savedDestinations.find((destination) => (
-        destination.careEnabled && destination.place.id === nativeDepartureActivityStatus.destinationId
-      )) ?? null
-      : null;
-    return nativeDestination ?? resolveDepartureActivityHomeDestination(
+    return resolveDepartureActivityHomeDestination(
       smartCareEnabled,
       committedDepartureDestinationId,
       savedDestinations,
     );
-  }, [committedDepartureDestinationId, nativeDepartureActivityStatus, savedDestinations, smartCareEnabled]);
+  }, [committedDepartureDestinationId, savedDestinations, smartCareEnabled]);
 
   const homeState = useMemo(() => {
     const activeDestination = homeDepartureDestination;
@@ -1091,6 +1083,7 @@ export function useWeatherOnAppState() {
         const guidanceKind = getDepartureWeatherGuidanceKind(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs);
         return {
           destinationId: destination.place.id,
+          replaceExistingActivity: departureActivityReplacementDestinationId === destination.place.id,
           destinationName: destination.place.name,
           departureAt,
           departureTimeLabel: formatDisplayTime(departureAt, destination.place.timezone),
@@ -1103,6 +1096,7 @@ export function useWeatherOnAppState() {
     });
   }, [
     activeWeatherLocation.countryCode,
+    departureActivityReplacementDestinationId,
     departureActivityIntentDestinationId,
     localePolicy.language,
     nowMinuteTick,
@@ -1134,6 +1128,7 @@ export function useWeatherOnAppState() {
   useEffect(() => {
     if (!appStateHydrated) return;
     let active = true;
+    const syncRevision = ++departureActivitySyncRevisionRef.current;
     let activationTimer: ReturnType<typeof setTimeout> | null = null;
     const syncActivity = async () => {
       if (activationTimer) clearTimeout(activationTimer);
@@ -1141,12 +1136,19 @@ export function useWeatherOnAppState() {
       // A confirmed trip can temporarily lack an arrival/departure estimate.
       // Preserve an existing Activity until the replacement has valid input.
       if (automaticDepartureActivityInput === undefined) {
-        const status = await getDepartureLiveActivityStatus();
-        if (active) setNativeDepartureActivityStatus(status);
         return;
       }
       const status = await syncAutomaticDepartureLiveActivity(automaticDepartureActivityInput);
-      if (active) setNativeDepartureActivityStatus(status);
+      if (
+        active &&
+        departureActivitySyncRevisionRef.current === syncRevision &&
+        automaticDepartureActivityInput?.replaceExistingActivity &&
+        status.destinationId === automaticDepartureActivityInput.destinationId
+      ) {
+        setDepartureActivityReplacementDestinationId((currentDestinationId) => (
+          currentDestinationId === automaticDepartureActivityInput.destinationId ? null : currentDestinationId
+        ));
+      }
       if (!active || status.automaticStartSupported || !automaticDepartureActivityInput) return;
       const delay = getDepartureLiveActivityActivationDelay(automaticDepartureActivityInput.departureAt);
       if (delay !== null && delay > 0) {
@@ -1835,9 +1837,10 @@ export function useWeatherOnAppState() {
     setUseDestinationWeather(false);
     // A direct Home choice supersedes an older native owner. The reconciliation
     // effect will replace or end that Activity from the new saved trip.
-    setNativeDepartureActivityStatus(null);
+    departureActivitySyncRevisionRef.current += 1;
     setDepartureActivityIntentDestinationId(savedDestination.careEnabled ? savedDestination.place.id : null);
     setCommittedDepartureDestinationId(savedDestination.careEnabled ? savedDestination.place.id : null);
+    setDepartureActivityReplacementDestinationId(savedDestination.careEnabled ? savedDestination.place.id : null);
   }, [selectDestinationPlace]);
 
   const saveSelectedDestination = useCallback((careEnabled = true) => {

@@ -5,6 +5,8 @@ export type DepartureGuidanceKind = "rain-wind" | "rain" | "wind" | "clear";
 
 export type DepartureLiveActivityInput = {
   destinationId: string;
+  /** A direct Home choice may replace an older saved system countdown. */
+  replaceExistingActivity?: boolean;
   destinationName: string;
   departureAt: string;
   departureTimeLabel: string;

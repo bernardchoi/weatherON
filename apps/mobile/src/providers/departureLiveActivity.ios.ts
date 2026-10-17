@@ -146,7 +146,8 @@ async function performAutomaticDepartureLiveActivitySync(
   if (
     (status.active || status.scheduled) &&
     status.destinationId &&
-    status.destinationId !== input.destinationId
+    status.destinationId !== input.destinationId &&
+    !input.replaceExistingActivity
   ) {
     return status;
   }
