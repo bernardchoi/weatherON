@@ -26,7 +26,10 @@ const icons = {
   theme: svg("밝기와 어둠 테마", [circle(32, 32, 25, .38), layer("M32 7a25 25 0 0 1 0 50Z", .76), circle(24, 24, 7, .62), rect(43, 37, 6, 12, 3, .54)]),
   transparency: svg("투명 효과 줄이기", [rect(8, 10, 36, 36, 9, .34), rect(18, 18, 38, 38, 9, .72), rect(22, 22, 30, 30, 7), rect(12, 48, 31, 6, 3, .5)]),
   settings: svg("설정", [layer("M27 5h10l3 8 8 3 7-4 6 10-6 6v8l6 6-6 10-7-4-8 3-3 8H27l-3-8-8-3-7 4-6-10 6-6v-8l-6-6 6-10 7 4 8-3Z", .42), layer("M28 5h8l3 9 9 3 7-4 5 8-6 6v10l6 6-5 8-7-4-9 3-3 9h-8l-3-9-9-3-7 4-5-8 6-6V27l-6-6 5-8 7 4 9-3Z"), circle(32, 32, 10, .5), circle(32, 32, 6)]),
-  style: svg("스타일 기준", [rect(8, 12, 48, 7, 3.5, .36), rect(8, 29, 48, 7, 3.5, .54), rect(8, 46, 48, 7, 3.5, .36), circle(24, 15.5, 9, .7), circle(42, 32.5, 9, .7), circle(20, 49.5, 9, .7), circle(24, 15.5, 5), circle(42, 32.5, 5), circle(20, 49.5, 5)]),
+  // Three clearly separated tracks preserve the slider meaning at 26pt. The darker
+  // cores and inset knobs give the shallow surfaces a crisp edge without turning
+  // the symbol into a stroked control.
+  style: svg("스타일 기준", [rect(7, 10, 50, 10, 5, .38), rect(7, 27, 50, 10, 5, .56), rect(7, 44, 50, 10, 5, .38), rect(10, 13, 44, 4, 2, .62), rect(10, 30, 44, 4, 2, .76), rect(10, 47, 44, 4, 2, .62), circle(24, 15, 10, .76), circle(42, 32, 10, .82), circle(20, 49, 10, .76), circle(24, 15, 5.5), circle(42, 32, 5.5), circle(20, 49, 5.5)]),
   temperature: svg("기온", [rect(24, 7, 16, 35, 8, .42), circle(32, 45, 14, .55), rect(26, 7, 12, 36, 6), circle(32, 45, 11), rect(30, 18, 4, 27, 2, .42)]),
   time: svg("시간", [circle(32, 32, 27, .42), circle(32, 32, 24), rect(29, 15, 6, 20, 3, .5), rect(30, 30, 19, 6, 3, .72), circle(32, 32, 5)]),
   umbrella: svg("우산", [layer("M7 33a25 25 0 0 1 50 0c-8-3-16-4-25-4S15 30 7 33Z", .4), layer("M5 34a27 27 0 0 1 54 0c-9-3-18-4-27-4S14 31 5 34Z"), rect(29, 29, 6, 22, 3, .56), layer("M35 49a7 7 0 0 1-14 0h6a1 1 0 0 0 2 0Z", .74), rect(29, 6, 6, 10, 3, .54)]),
@@ -113,7 +116,9 @@ for (const [name, value] of Object.entries(icons)) {
   mkdirSync(path.dirname(pngFile), { recursive: true });
   mkdirSync(path.join(root, "previews"), { recursive: true });
   writeFileSync(svgFile, value);
-  await render(pngFile, value);
+  // This empty-state symbol is displayed at 96pt. Keep a 3x derivative while
+  // the other UI symbols remain within their 192px 3x budget.
+  await render(pngFile, value, name === "wardrobe-empty" ? 288 : 192);
 }
-await buildPreviews();
-console.log(`Rendered ${Object.keys(icons).length} layered UI SVGs, PNG derivatives, and light/dark previews.`);
+if (process.env.FILLED_V3_SKIP_PREVIEWS !== "1") await buildPreviews();
+console.log(`Rendered ${Object.keys(icons).length} layered UI SVGs and PNG derivatives${process.env.FILLED_V3_SKIP_PREVIEWS === "1" ? "" : ", plus light/dark previews"}.`);

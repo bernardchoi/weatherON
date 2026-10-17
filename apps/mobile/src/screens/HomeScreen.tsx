@@ -72,7 +72,7 @@ export function HomeScreen({
   onOpenRainForecast,
   onSetWeatherProviderMode,
   onRefreshWeather,
-  onSelectDestinationPlace,
+  onSelectHomeDestinationPlace,
 }: P0ScreenProps) {
   const theme = ambientHomeTheme(useAppTheme(), Platform.OS === "ios");
   const ambientInsets = useSafeAreaInsets();
@@ -357,7 +357,7 @@ export function HomeScreen({
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
             theme={theme}
-            onSelect={(place) => onSelectDestinationPlace(place)}
+            onSelect={onSelectHomeDestinationPlace}
             onAdd={() => onNavigate("P1")}
           />
           </View>

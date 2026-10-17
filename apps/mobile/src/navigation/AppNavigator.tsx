@@ -305,6 +305,7 @@ export function AppNavigator() {
     onDismissDestinationLimitNotice: appState.dismissDestinationLimitNotice,
     onSearchPlaces: appState.searchPlaces,
     onSelectDestinationPlace: appState.selectDestinationPlace,
+    onSelectHomeDestinationPlace: appState.selectHomeDestinationPlace,
     onMarkNotificationRead: appState.markNotificationRead,
     onMarkAllNotificationsRead: appState.markAllNotificationsRead,
     onClearNotificationHistory: appState.clearNotificationHistory,

@@ -9,7 +9,20 @@ const uiFiles=files.filter(file=>file.startsWith('ui/'));
 assert.equal(files.length,107);
 assert.equal(uiFiles.length,uiIcons.length);
 assert.deepEqual(uiFiles.sort(),uiIcons.map(name=>`ui/${name}.png`).sort());
-for(const file of files){const b=fs.readFileSync(root+'/png/'+file);assert.equal(b.toString('hex',0,8),'89504e470d0a1a0a');assert.equal(b.readUInt32BE(16),192);assert.equal(b.readUInt32BE(20),192);assert.ok(fs.existsSync(root+'/svg/'+file.replace('.png','.svg')));}
+const requiredPoints={
+ 'ui/style.png':26,
+ 'ui/wardrobe-empty.png':96,
+ 'compact/light/tab-my.png':88,
+ 'compact/dark/tab-my.png':88,
+};
+for(const file of files){
+ const b=fs.readFileSync(root+'/png/'+file);
+ const requiredPixels=(requiredPoints[file]??64)*3;
+ assert.equal(b.toString('hex',0,8),'89504e470d0a1a0a');
+ assert.ok(b.readUInt32BE(16)>=requiredPixels,`${file} needs at least ${requiredPixels}px for its largest iOS point size`);
+ assert.ok(b.readUInt32BE(20)>=requiredPixels,`${file} needs at least ${requiredPixels}px for its largest iOS point size`);
+ assert.ok(fs.existsSync(root+'/svg/'+file.replace('.png','.svg')));
+}
 for(const name of uiIcons){
  const source=fs.readFileSync(`${root}/svg/ui/${name}.svg`,'utf8');
  assert.match(source,/viewBox="0 0 64 64"/);assert.match(source,/fill-opacity=/);
@@ -72,6 +85,14 @@ const settings=fs.readFileSync('apps/mobile/src/screens/GlobalSettingsScreen.tsx
 assert.match(settings,/icon=\{ambient \? ambientUiIcons\.temperature : screenIcons\.uv\}/);
 assert.match(settings,/icon=\{ambient \? ambientUiIcons\.transparency : screenIcons\.settings\}/);
 assert.match(settings,/icon=\{ambientUiIcons\.theme\}/);
+const outfit=fs.readFileSync('apps/mobile/src/screens/OutfitScreen.tsx','utf8');
+assert.match(outfit,/StyleCriteriaIcon color=\{theme\.muted\} size=\{26\}/);
+const styleCriteriaIcon=fs.readFileSync('apps/mobile/src/components/StyleCriteriaIcon.tsx','utf8');
+assert.match(styleCriteriaIcon,/viewBox="0 0 64 64"/);assert.match(styleCriteriaIcon,/Circle/);assert.match(styleCriteriaIcon,/Rect/);
+const wardrobeScreen=fs.readFileSync('apps/mobile/src/screens/WardrobeScreen.tsx','utf8');
+assert.match(wardrobeScreen,/source=\{ambientUiIcons\.wardrobeEmpty\}[\s\S]*width: 96, height: 96/);
+const accountConnect=fs.readFileSync('apps/mobile/src/screens/AccountConnectScreen.tsx','utf8');
+assert.match(accountConnect,/source=\{ambientUiIcons\.tabMy\}[\s\S]*width: 88, height: 88/);
 for(const mode of ['light','dark'])for(const preview of ['filled-ui','filled-ui-small'])assert.ok(fs.existsSync(`${root}/previews/${preview}-${mode}.png`));
 for(const mode of ['light','dark'])for(const preview of ['filled-weather-states','filled-weather-states-small'])assert.ok(fs.existsSync(`${root}/previews/${preview}-${mode}.png`));
 console.log('PASS v3: 72 approved weather/tab derivatives + 12 distinct precipitation/unknown derivatives + 23 layered UI derivatives; iOS mappings, untouched Android runtime tabs, category distinction, and accessibility wiring.');

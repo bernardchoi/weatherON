@@ -1816,6 +1816,30 @@ export function useWeatherOnAppState() {
     setUseDestinationWeather(false);
   }, []);
 
+  // Home's saved-destination picker is an explicit trip choice, unlike a
+  // search result or editor preview. Commit it immediately so the Home card,
+  // its time/weather payload, and the reconciled Activity all move together.
+  const selectHomeDestinationPlace = useCallback((place: PlaceSearchResult) => {
+    const normalizedPlace = normalizePlaceSearchResultCategory(place);
+    const savedDestination = savedDestinationsRef.current.find((item) => item.place.id === normalizedPlace.id);
+    if (!savedDestination) {
+      selectDestinationPlace(normalizedPlace);
+      return;
+    }
+    selectedDestinationPlaceIdRef.current = normalizedPlace.id;
+    setSelectedDestinationPlace(savedDestination.place);
+    setPreviewDestinationSchedulePreference(savedDestination.schedulePreference);
+    setPreviewDestinationAlertCondition(savedDestination.alertCondition);
+    setPreviewDestinationCareEnabled(savedDestination.careEnabled);
+    setDestinationSelectionReady(true);
+    setUseDestinationWeather(false);
+    // A direct Home choice supersedes an older native owner. The reconciliation
+    // effect will replace or end that Activity from the new saved trip.
+    setNativeDepartureActivityStatus(null);
+    setDepartureActivityIntentDestinationId(savedDestination.careEnabled ? savedDestination.place.id : null);
+    setCommittedDepartureDestinationId(savedDestination.careEnabled ? savedDestination.place.id : null);
+  }, [selectDestinationPlace]);
+
   const saveSelectedDestination = useCallback((careEnabled = true) => {
     const current = savedDestinationsRef.current;
     if (!canSaveDestination(current, selectedDestinationPlace.id)) {
@@ -2388,6 +2412,7 @@ export function useWeatherOnAppState() {
     dismissDestinationLimitNotice: () => setDestinationLimitNotice(false),
     searchPlaces,
     selectDestinationPlace,
+    selectHomeDestinationPlace,
     markNotificationRead,
     markAllNotificationsRead,
     clearNotificationHistory,
