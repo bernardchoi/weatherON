@@ -1,3 +1,4 @@
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
@@ -5,6 +6,8 @@ import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
+import { IosSelectionRow } from "../components/IosSelectionRow";
+import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { BottomSheet } from "../components/BottomSheet";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { IosGlassBackdrop } from "../components/IosGlassBackdrop";
@@ -73,6 +76,8 @@ export function DestinationCareScreen({
   const selectedDestinationLabel = selectedSavedDestination?.label ?? null;
   const timeBasis = selectedDestinationSchedulePreference.timeBasis;
   const selectedTargetTime = selectedDestinationSchedulePreference.targetArrivalTime;
+  const timeBasisFeedback = useConfirmedOptionFeedback(timeBasis);
+  const timeFeedback = useConfirmedOptionFeedback(selectedTargetTime);
   const travelMinutes = care.departureAdvice?.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes;
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
@@ -84,6 +89,7 @@ export function DestinationCareScreen({
     ? typeof travelMinutes === "number" ? addMinutesToTime(selectedTargetTime, travelMinutes) : undefined
     : selectedTargetTime;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
+  const transportFeedback = useConfirmedOptionFeedback(selectedDestinationSchedulePreference.transportMode);
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [arrivalEditorOpen, setArrivalEditorOpen] = useState(false);
@@ -194,7 +200,7 @@ export function DestinationCareScreen({
   }, [departureActivityMatchesCurrentPlan, departureActivityStatus.departureAt]);
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -202,7 +208,7 @@ export function DestinationCareScreen({
           {
             width: "100%",
             maxWidth: layout.contentMaxWidth,
-            gap: layout.isShort ? spacing.md : spacing.lg,
+            gap: Platform.OS === "ios" ? 12 : layout.isShort ? spacing.md : spacing.lg,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
           },
@@ -214,7 +220,7 @@ export function DestinationCareScreen({
           <BackButton onPress={() => onNavigate("G1")} />
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
-              <Image source={uiIconAssets.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
+              <Image source={screenIcons.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
               <RawText style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</RawText>
             </View>
             <Text style={[styles.subtitle, pageStyles.caption, { color: theme.subtle }]}>
@@ -223,7 +229,7 @@ export function DestinationCareScreen({
           </View>
         </View>
 
-        <LocalizedView accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[styles.placeImageFrame, { borderColor: theme.border }]}>
+        <LocalizedView accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[[styles.placeImageFrame, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.placeImageFrame]}>
           <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
           <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
             <Text style={[styles.generatedImageBadgeText, pageStyles.caption, { color: theme.subtle }]}>장소 이미지</Text>
@@ -231,14 +237,14 @@ export function DestinationCareScreen({
         </LocalizedView>
 
         {justSaved ? (
-          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.clear }, cardShadow(theme), pageStyles.card]}>
-            <Text style={[styles.savedBannerTitle, { color: theme.clear }]}>목적지 저장 완료</Text>
+          <View style={[styles.savedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.success }, cardShadow(theme), pageStyles.card]}>
+            <Text style={[styles.savedBannerTitle, { color: theme.success }]}>목적지 저장 완료</Text>
             <Text style={[styles.savedBannerBody, { color: theme.muted }]}>아래 출발 시간과 날씨 비교가 이 목적지 기준으로 계산됨</Text>
           </View>
         ) : null}
 
         {destinationSaved ? (
-          <View style={[styles.labelPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+          <View style={[[styles.labelPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.labelPanel]}>
             <View style={styles.labelCopy}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>목적지 라벨</Text>
               <Text style={[styles.labelHint, { color: theme.subtle }]}>집 또는 회사를 지정</Text>
@@ -252,12 +258,12 @@ export function DestinationCareScreen({
         ) : null}
 
         <View
-          style={[
+          style={[[
             styles.carePanel,
             { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.border },
             cardShadow(theme),
             pageStyles.card,
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.carePanel]}
         >
         <View style={[styles.decisionPanel, pageStyles.unboxed]}>
           <View style={styles.decisionHeader}>
@@ -284,13 +290,13 @@ export function DestinationCareScreen({
             </View>
           </View>
           <View
-            style={[
+            style={[[
               styles.routeSummaryStrip,
               { backgroundColor: theme.cardMuted, borderColor: "transparent" },
-            ]}
+            ], Platform.OS === "ios" && ambientVisual.routeSummaryStrip]}
           >
             <SummaryChip
-              icon={uiIconAssets.pin}
+              icon={screenIcons.pin}
               label="출발지"
               value={placeSearchOrigin?.locationName ?? "선택 필요"}
               meta={placeSearchOrigin ? "위치 변경" : "직접 선택"}
@@ -301,7 +307,7 @@ export function DestinationCareScreen({
               minHeight={layout.destinationCareSummaryMinHeight}
             />
             <SummaryChip
-              icon={uiIconAssets.clock}
+              icon={screenIcons.clock}
               label={timeBasis === "departure" ? "출발 시간" : "도착 목표"}
               value={selectedTargetTime}
               meta={departureReady
@@ -314,7 +320,7 @@ export function DestinationCareScreen({
               minHeight={layout.destinationCareSummaryMinHeight}
             />
             <SummaryChip
-              icon={uiIconAssets.depart}
+              icon={screenIcons.depart}
               label="이동수단"
               value={transportLabel}
               meta={movementTimeLabel}
@@ -335,7 +341,7 @@ export function DestinationCareScreen({
           />
         </View>
 
-        <View style={[styles.detailPanel, pageStyles.unboxed, styles.embeddedSection, { borderColor: theme.border }]}>
+        <View style={[[styles.detailPanel, pageStyles.unboxed, styles.embeddedSection, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.detailPanel]}>
           <FeedbackPressable
             accessibilityLabel={detailPanelOpen ? "알림 일정 닫기" : "알림 일정 열기"}
             accessibilityRole="button"
@@ -377,19 +383,19 @@ export function DestinationCareScreen({
         </View>
 
         <View style={styles.quickActions}>
-          <View style={[styles.quickActionRow, { borderColor: theme.border }]}>
+          <View style={[[styles.quickActionRow, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.quickActionRow]}>
             <FeedbackPressable
               accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
               accessibilityRole="button"
               onPress={() => void openDirections()}
-              style={[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }]}
+              style={[[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.quickAction]}
             >
-              <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }]}>
-                <Image source={uiIconAssets.depart} style={[styles.quickActionIcon, { tintColor: theme.clear }]} resizeMode="contain" />
+              <View style={[[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }], Platform.OS === "ios" && ambientVisual.quickActionIconFrame]}>
+                <Image source={screenIcons.depart} style={[[styles.quickActionIcon, { tintColor: theme.clear }], Platform.OS === "ios" && ambientVisual.quickActionIcon]} resizeMode="contain" />
               </View>
               <View style={styles.quickActionCopy}>
-                <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>{directionsLabel}</Text>
-                <Text style={[styles.quickActionMeta, { color: theme.subtle }]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
+                <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={1}>{directionsLabel}</Text>
+                <Text style={[[styles.quickActionMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
               </View>
               <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
             </FeedbackPressable>
@@ -397,14 +403,14 @@ export function DestinationCareScreen({
             {Platform.OS === "ios" || Platform.OS === "android" ? (
               <View
                 accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
-                style={[styles.quickAction, { backgroundColor: theme.cardMuted }]}
+                style={[[styles.quickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.quickAction]}
               >
-                <View style={[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }]}>
-                  <Image source={uiIconAssets.clock} style={[styles.quickActionIcon, { tintColor: theme.gold }]} resizeMode="contain" />
+                <View style={[[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }], Platform.OS === "ios" && ambientVisual.quickActionIconFrame]}>
+                  <Image source={screenIcons.clock} style={[[styles.quickActionIcon, { tintColor: theme.gold }], Platform.OS === "ios" && ambientVisual.quickActionIcon]} resizeMode="contain" />
                 </View>
                 <View style={styles.quickActionCopy}>
-                  <Text style={[styles.quickActionTitle, { color: theme.text }]} numberOfLines={1}>자동 카운트다운</Text>
-                  <Text style={[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }]} numberOfLines={1}>{liveActivityMeta}</Text>
+                  <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={1}>자동 카운트다운</Text>
+                  <Text style={[[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={1}>{liveActivityMeta}</Text>
                 </View>
               </View>
             ) : null}
@@ -417,19 +423,19 @@ export function DestinationCareScreen({
         </View>
         </View>
 
-        <View style={[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
+        <View style={[[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.outfitPanel]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
-              <Text style={[styles.outfitTitle, { color: theme.text }]} numberOfLines={1}>{destinationOutfit.decisionText}</Text>
-              <Text style={[styles.outfitReason, { color: theme.muted }]} numberOfLines={1}>{destinationOutfitReason}</Text>
+              <Text style={[[styles.outfitTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitTitle]} numberOfLines={1}>{destinationOutfit.decisionText}</Text>
+              <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]} numberOfLines={1}>{destinationOutfitReason}</Text>
             </View>
             <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>
               <Text style={[styles.outfitMatchText, { color: theme.clear }]}>보유 {destinationOutfit.preparation.ownedItemCount}/{destinationOutfit.preparation.totalItemCount}</Text>
             </View>
           </View>
           <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow />
-          {destinationOutfit.preparation.missingItemNames.length > 0 ? <Text style={[styles.outfitReason, { color: theme.warm }]}>추가 준비: {destinationOutfit.preparation.missingItemNames.join(", ")}</Text> : null}
+          {destinationOutfit.preparation.missingItemNames.length > 0 ? <Text style={[[styles.outfitReason, { color: theme.warm }], Platform.OS === "ios" && ambientVisual.outfitReason]}>추가 준비: {destinationOutfit.preparation.missingItemNames.join(", ")}</Text> : null}
         </View>
 
         {destinationSaved ? (
@@ -442,7 +448,7 @@ export function DestinationCareScreen({
               onRemoveSavedDestination(selectedDestinationPlace.id);
               onNavigate("G1");
             }}
-            style={[styles.deleteDestinationButton, { backgroundColor: theme.cardStrong, borderColor: theme.warm }]}
+            style={[[styles.deleteDestinationButton, { backgroundColor: theme.cardStrong, borderColor: theme.warm }], Platform.OS === "ios" && ambientVisual.deleteDestinationButton]}
           >
             <Text style={[styles.deleteDestinationTitle, { color: theme.warm }]}>목적지 삭제</Text>
             <Text style={[styles.deleteDestinationBody, { color: theme.muted }]}>삭제 후 출발 목록에서 바로 복구 가능</Text>
@@ -459,7 +465,7 @@ export function DestinationCareScreen({
 
       <BottomSheet
         visible={arrivalEditorOpen}
-        onClose={() => setArrivalEditorOpen(false)}
+        onClose={() => { timeBasisFeedback.cancel(); timeFeedback.cancel(); setArrivalEditorOpen(false); }}
         accessibilityLabel="출발 또는 도착 시각 선택 시트"
       >
         <Text style={[styles.sheetTitle, { color: theme.text }]}>시간 기준과 시각</Text>
@@ -473,7 +479,8 @@ export function DestinationCareScreen({
                 accessibilityLabel={`${label} 기준 선택${selected ? ", 현재 선택됨" : ""}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => onSetDestinationTimeBasis(basis)}
+                hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"}
+                onPress={() => { timeBasisFeedback.request(basis); onSetDestinationTimeBasis(basis); }}
                 style={[styles.timeBasisOption, { backgroundColor: selected ? `${theme.gold}18` : theme.cardMuted, borderColor: selected ? theme.gold : theme.border }]}
               >
                 <Text style={[styles.timeBasisOptionText, { color: selected ? theme.gold : theme.text }]}>{label}</Text>
@@ -485,7 +492,7 @@ export function DestinationCareScreen({
           label={timeBasis === "arrival" ? "도착 희망" : "출발 희망"}
           value={selectedTargetTime}
           caption={timeBasis === "arrival" ? "5분 단위 스크롤 선택" : "이동 시간 기준 도착 예정 시간 계산"}
-          onSelectTime={onSetDestinationTargetArrivalTime}
+          onSelectTime={(time) => { timeFeedback.request(time); onSetDestinationTargetArrivalTime(time); }}
           theme={theme}
         />
         <FeedbackPressable
@@ -500,7 +507,7 @@ export function DestinationCareScreen({
 
       <BottomSheet
         visible={transportSelectorOpen}
-        onClose={() => setTransportSelectorOpen(false)}
+        onClose={() => { transportFeedback.cancel(); setTransportSelectorOpen(false); }}
         accessibilityLabel="이동수단 선택 시트"
       >
         <Text style={[styles.sheetTitle, { color: theme.text }]}>이동수단 선택</Text>
@@ -509,6 +516,7 @@ export function DestinationCareScreen({
           walkUnavailable={walkUnavailable}
           routeTimingReady={routeTimingReady}
           onSetTransportMode={(mode) => {
+            transportFeedback.request(mode);
             setTransportSelectorOpen(false);
             onSetDestinationTransportMode(mode);
           }}
@@ -575,25 +583,25 @@ function SummaryChip({
   onPress: () => void;
   minHeight: number;
 }) {
-  const glassSurface = iosGlassSurface(theme, "chip", { nativeBackdrop: true });
+  const glassSurface = Platform.OS === "ios" ? undefined : iosGlassSurface(theme, "chip", { nativeBackdrop: true });
   return (
     <FeedbackPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onPress}
-      style={[
+      style={[[
         styles.summaryChip,
         { minHeight },
         glassSurface ? [styles.summaryChipGlass, glassSurface] : null,
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.summaryChip]}
     >
       {glassSurface ? <IosGlassBackdrop theme={theme} role="chip" style={styles.summaryChipBackdrop} /> : null}
-      <View style={[styles.summaryIconFrame, { backgroundColor: `${color}18` }]}>
-        <Image source={icon} style={[styles.summaryIcon, { tintColor: color }]} resizeMode="contain" />
+      <View style={[[styles.summaryIconFrame, { backgroundColor: `${color}18` }], Platform.OS === "ios" && ambientVisual.summaryIconFrame]}>
+        <Image source={icon} style={[[styles.summaryIcon, { tintColor: color }], Platform.OS === "ios" && ambientVisual.summaryIcon]} resizeMode="contain" />
       </View>
-      <Text numberOfLines={1} style={[styles.summaryLabel, pageStyles.compactCaption, { color: theme.subtle }]}>{label}</Text>
-      <Text numberOfLines={1} style={[styles.summaryValue, pageStyles.body, { color: theme.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[styles.summaryMeta, pageStyles.compactCaption, { color }]}>{meta}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryLabel, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.summaryLabel]}>{label}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryValue, pageStyles.body, { color: theme.text }], Platform.OS === "ios" && ambientVisual.summaryValue]}>{value}</Text>
+      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryMeta, pageStyles.compactCaption, { color }], Platform.OS === "ios" && ambientVisual.summaryMeta]}>{meta}</Text>
     </FeedbackPressable>
   );
 }
@@ -702,6 +710,7 @@ function TimeWheel({
             accessibilityLabel={`${option}${suffix} 선택`}
             accessibilityRole="button"
             accessibilityState={{ selected }}
+            hapticFeedback={Platform.OS === "ios" ? "none" : "automatic"}
             onPress={() => onSelect(option)}
             style={[styles.timeWheelOption, { backgroundColor: selected ? `${theme.gold}18` : "transparent" }]}
           >
@@ -737,8 +746,8 @@ function TransportDropdown({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-      {transportOptions.map((option) => {
+    <View style={[styles.transportDropdownPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }, Platform.OS === "ios" && { backgroundColor: "transparent", borderWidth: 0, borderRadius: 0, padding: 0, gap: 0 }]}>
+      {transportOptions.map((option, index) => {
         const selected = transportMode === option.mode;
         const disabled = option.mode === "walk" && walkUnavailable;
         const caption = disabled
@@ -748,6 +757,7 @@ function TransportDropdown({
               ? "경로 API 확인 전 기본값 · 직접 선택하면 바로 반영됨"
               : "선택해도 Google 지도 등 외부 경로 확인 필요"
             : option.caption;
+        if (Platform.OS === "ios") return <IosSelectionRow key={option.mode} label={option.label} description={caption} icon={option.mode === "walk" ? uiIconAssets.shoe : option.mode === "transit" ? uiIconAssets.placeTransit : ambientUiIcons.tabDepart} selected={selected} disabled={disabled} last={index === transportOptions.length - 1} onPress={() => onSetTransportMode(option.mode)} />;
         return (
           <FeedbackPressable
             key={option.mode}
@@ -793,15 +803,15 @@ function RepeatSchedulePanel({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+    <View style={[[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.settingsPanel]}>
       <View style={styles.settingsRow}>
         <View style={styles.settingsRowMain}>
-          <View style={[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }]}>
-            <Image source={uiIconAssets.clock} style={[styles.settingsIcon, { tintColor: repeatEnabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
+          <View style={[[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }], Platform.OS === "ios" && ambientVisual.settingsIconFrame]}>
+            <Image source={screenIcons.clock} style={[styles.settingsIcon, { tintColor: repeatEnabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
           </View>
           <View style={styles.settingsCopy}>
-            <Text style={[styles.settingsLabel, { color: repeatEnabled ? theme.clear : theme.subtle }]}>반복 요일</Text>
-            <Text style={[styles.settingsValue, { color: theme.text }]} numberOfLines={1}>{repeatSummary}</Text>
+            <Text style={[[styles.settingsLabel, { color: repeatEnabled ? theme.clear : theme.subtle }], Platform.OS === "ios" && ambientVisual.settingsLabel]}>반복 요일</Text>
+            <Text style={[[styles.settingsValue, { color: theme.text }], Platform.OS === "ios" && ambientVisual.settingsValue]} numberOfLines={1}>{repeatSummary}</Text>
           </View>
         </View>
         <FeedbackPressable
@@ -1688,4 +1698,175 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "800",
   },
+});
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "carePanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 0,
+    "gap": 12
+  },
+  "labelPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 8,
+    "gap": 8
+  },
+  "outfitPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 12,
+    "gap": 12
+  },
+  "detailPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 8,
+    "gap": 12
+  },
+  "placeImageFrame": {
+    "height": 88,
+    "borderRadius": 18
+  },
+  "routeSummaryStrip": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "flexDirection": "column",
+    "gap": 0
+  },
+  "summaryChip": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 10,
+    "flex": 0,
+    "width": "100%",
+    "minHeight": 64,
+    "flexDirection": "row",
+    "alignItems": "center",
+    "flexWrap": "wrap",
+    "gap": 4
+  },
+  "summaryLabel": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500",
+    "flexGrow": 1
+  },
+  "summaryValue": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500",
+    "maxWidth": "65%"
+  },
+  "summaryMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400",
+    "flexBasis": "100%",
+    "paddingLeft": 36
+  },
+  "summaryIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "summaryIcon": {
+    "width": 26,
+    "height": 26
+  },
+  "quickActionRow": {
+    "flexDirection": "column",
+    "gap": 0
+  },
+  "quickAction": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18,
+    "flex": 0,
+    "minHeight": 64
+  },
+  "quickActionIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "quickActionIcon": {
+    "width": 26,
+    "height": 26
+  },
+  "quickActionTitle": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "quickActionMeta": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "settingsPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0
+  },
+  "settingsIconFrame": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "settingsLabel": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "settingsValue": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "outfitTitle": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "outfitReason": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "deleteDestinationButton": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "borderBottomWidth": 0.5,
+    "paddingVertical": 18
+  }
 });

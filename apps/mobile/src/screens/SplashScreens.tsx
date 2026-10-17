@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { brandAssets } from "../assets";
 import { AnimatedBrandMark } from "../components/AnimatedBrandMark";
 import { OnboardingFooter } from "../components/OnboardingFooter";
@@ -50,7 +50,7 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
       style={[
         styles.root,
         {
-          backgroundColor: theme.background,
+          backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background,
           paddingHorizontal: layout.screenHorizontalPadding,
         },
       ]}
@@ -58,6 +58,7 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
       <View
         style={[
           styles.skyGlow,
+          Platform.OS === "ios" && { display: "none" },
           {
             backgroundColor: theme.backgroundAlt,
             bottom: layout.splashGlowBottom,
@@ -70,11 +71,12 @@ function SplashFrame({ description, primaryLabel, onPrimary, secondaryLabel, onS
 
       <View style={[styles.center, { maxWidth: layout.splashContentMaxWidth, gap: layout.isShort || layout.isNarrow ? spacing.sm : spacing.md }]}>
         <View style={[styles.iconShadow, { shadowColor: theme.shadow }]}>
-          <AnimatedBrandMark size={layout.splashIconSize} />
+          {Platform.OS === "ios" ? <Image accessible={false} source={theme.name === "dark" ? require("../../../../assets/ambient-surface-runtime-v1/hero/dark/partly-cloudy.png") : require("../../../../assets/ambient-surface-runtime-v1/hero/light/partly-cloudy.png")} style={{ width: layout.splashIconSize, height: layout.splashIconSize }} resizeMode="contain" /> : <AnimatedBrandMark size={layout.splashIconSize} />}
         </View>
         <Image
           source={theme.name === "light" ? brandAssets.wordmarkLight : brandAssets.wordmarkDark}
           style={{
+            display: Platform.OS === "ios" ? "none" : "flex",
             width: layout.splashWordmarkWidth,
             height: layout.splashWordmarkHeight,
             marginTop: layout.isShort || layout.isNarrow ? spacing.sm : spacing.md,

@@ -45,7 +45,7 @@ function getBackgroundColor(theme: AppTheme, role: IosGlassRole): string {
   }
 
   if (theme.name === "light") {
-    if (role === "buttonPrimary") return colorWithAlpha(theme.clear, 0.32);
+    if (role === "buttonPrimary") return colorWithAlpha(theme.actionFill, 0.32);
     if (role === "buttonSecondary") return colorWithAlpha(theme.card, 0.58);
     if (role === "dock") return colorWithAlpha(theme.card, 0.5);
     if (role === "tabItem") return colorWithAlpha(theme.card, 0.48);
@@ -59,16 +59,16 @@ function getBackgroundColor(theme: AppTheme, role: IosGlassRole): string {
     return colorWithAlpha(theme.card, 0.64);
   }
 
-  if (role === "buttonPrimary") return colorWithAlpha(theme.clear, 0.26);
-  if (role === "buttonSecondary") return colorWithAlpha(theme.skyLite, 0.16);
-  if (role === "dock") return colorWithAlpha(theme.skyLite, 0.18);
-  if (role === "tabItem") return colorWithAlpha(theme.skyLite, 0.19);
-  if (role === "chip") return colorWithAlpha(theme.skyLite, 0.15);
-  if (role === "input") return colorWithAlpha(theme.skyLite, 0.14);
-  if (role === "sheetHeader") return colorWithAlpha(theme.skyLite, 0.14);
-  if (role === "grabber") return colorWithAlpha(theme.skyLite, 0.58);
+  if (role === "buttonPrimary") return colorWithAlpha(theme.actionFill, 0.26);
+  if (role === "buttonSecondary") return colorWithAlpha(theme.materialTint, 0.16);
+  if (role === "dock") return colorWithAlpha(theme.materialTint, 0.18);
+  if (role === "tabItem") return colorWithAlpha(theme.materialTint, 0.19);
+  if (role === "chip") return colorWithAlpha(theme.materialTint, 0.15);
+  if (role === "input") return colorWithAlpha(theme.materialTint, 0.14);
+  if (role === "sheetHeader") return colorWithAlpha(theme.materialTint, 0.14);
+  if (role === "grabber") return colorWithAlpha(theme.materialTint, 0.58);
   if (role === "weather") return colorWithAlpha(theme.card, 0.74);
-  if (role === "control") return colorWithAlpha(theme.skyLite, 0.16);
+  if (role === "control") return colorWithAlpha(theme.materialTint, 0.16);
   if (role === "sheet") return colorWithAlpha(theme.card, 0.74);
   return colorWithAlpha(theme.card, 0.68);
 }

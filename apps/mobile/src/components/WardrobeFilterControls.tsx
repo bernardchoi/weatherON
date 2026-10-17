@@ -1,11 +1,17 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { ambientUiIcons } from "../ambientAssets";
 import { uiIconAssets } from "../assets";
 import { formatOutfitTags, getOutfitTagLabel, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { radius, spacing } from "../theme/tokens";
+import { IosSelectionRow } from "./IosSelectionRow";
 import { BottomSheet } from "./BottomSheet";
+import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { FeedbackPressable } from "./FeedbackPressable";
+
+// Keep the raster category module outside the Android evaluation path.
+const CategoryIcon = Platform.OS === "ios" ? (require("./WardrobeCategoryIcon") as typeof import("./WardrobeCategoryIcon")).WardrobeCategoryIcon : null;
 
 const categories = ["all", "outer", "top", "bottom", "shoes", "accessory"] as const;
 const seasons = ["all", "spring", "summer", "fall", "winter"] as const;
@@ -43,8 +49,19 @@ export function WardrobeFilterControls({
   const theme = useAppTheme();
   const [openFilter, setOpenFilter] = React.useState<WardrobeFilterId | null>(null);
   const filterConfig = getFilterConfig(openFilter, categoryFilter, seasonFilter, purposeFilter);
+  const { width, fontScale } = useWindowDimensions();
+  const pendingSelection = React.useRef<{ filter: WardrobeFilterId; value: string } | null>(null);
+  React.useEffect(() => {
+    const pending = pendingSelection.current;
+    if (!pending) return;
+    const actual = pending.filter === "category" ? categoryFilter : pending.filter === "season" ? seasonFilter : purposeFilter;
+    if (actual !== pending.value) return;
+    pendingSelection.current = null;
+    triggerConfirmedSelectionHaptic();
+  }, [categoryFilter, seasonFilter, purposeFilter]);
 
   const selectFilterValue = (value: string) => {
+    pendingSelection.current = Platform.OS === "ios" && openFilter && value !== filterConfig.activeValue ? { filter: openFilter, value } : null;
     if (openFilter === "category") onCategoryChange(value as WardrobeCategoryFilter);
     if (openFilter === "season") onSeasonChange(value as WardrobeSeasonFilter);
     if (openFilter === "purpose") onPurposeChange(value as WardrobePurposeFilter);
@@ -53,7 +70,7 @@ export function WardrobeFilterControls({
 
   return (
     <>
-      <View style={styles.filterSelectorRow}>
+      <View style={[styles.filterSelectorRow, Platform.OS === "ios" && (width < 360 || fontScale > 1.3) && { flexDirection: "column" }]} >
         <WardrobeFilterSelect
           label="종류"
           value={getCategoryFilterLabel(categoryFilter)}
@@ -76,30 +93,32 @@ export function WardrobeFilterControls({
 
       <BottomSheet
         visible={openFilter !== null}
-        onClose={() => setOpenFilter(null)}
+        onClose={() => { pendingSelection.current = null; setOpenFilter(null); }}
         accessibilityLabel={`${filterConfig.label} 필터 선택 시트`}
       >
         <View style={styles.filterSheetHeader}>
-          <Text style={[styles.filterSheetTitle, { color: theme.text }]}>{filterConfig.label} 필터</Text>
-          <Text style={[styles.filterSheetCaption, { color: theme.muted }]}>1개를 선택하면 바로 목록에 반영됨</Text>
+          <Text style={[[styles.filterSheetTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.filterSheetTitle]}>{filterConfig.label} 필터</Text>
+          <Text style={[[styles.filterSheetCaption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.filterSheetCaption]}>1개를 선택하면 바로 목록에 반영됨</Text>
         </View>
-        <View style={[styles.filterOptionList, { borderColor: theme.border }]}>
+        <View style={[[styles.filterOptionList, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.filterOptionList]}>
           {filterConfig.values.map((value, index) => {
             const selected = filterConfig.activeValue === value;
+            if (Platform.OS === "ios" && CategoryIcon) return <IosSelectionRow key={value} label={filterConfig.renderLabel(value)} icon={openFilter === "season" ? ambientUiIcons.temperature : openFilter === "purpose" ? ambientUiIcons.tabDepart : <CategoryIcon category={value as WardrobeCategoryFilter} color={selected ? theme.clear : theme.muted} />} selected={selected} last={index === filterConfig.values.length - 1} onPress={() => selectFilterValue(value)} />;
             return (
               <FeedbackPressable
                 key={value}
                 accessibilityLabel={`${filterConfig.renderLabel(value)} 필터${selected ? ", 현재 선택됨" : ""}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                hapticFeedback="automatic"
                 onPress={() => selectFilterValue(value)}
-                style={[
+                style={[[
                   styles.filterOption,
                   index < filterConfig.values.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
                   selected ? { backgroundColor: theme.cardMuted } : null,
-                ]}
+                ]]}
               >
-                <Text style={[styles.filterOptionText, { color: selected ? theme.clear : theme.text }]}>
+                <Text style={[[styles.filterOptionText, { color: selected ? theme.clear : theme.text }]]}>
                   {filterConfig.renderLabel(value)}
                 </Text>
                 {selected ? (
@@ -131,19 +150,22 @@ function WardrobeFilterSelect({
       accessibilityLabel={`${label} 필터, 현재 ${value}, 선택 목록 열기`}
       accessibilityHint="화면 아래에서 선택 목록이 열림"
       accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={[
+      style={[[
         styles.filterSelect,
         {
           backgroundColor: active ? theme.cardStrong : theme.cardMuted,
           borderColor: active ? theme.clear : theme.border,
         },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.filterSelect,
+        Platform.OS === "ios" && { borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: active ? theme.cardStrong : "transparent" }]}
     >
-      <View style={styles.filterSelectCopy}>
-        <Text style={[styles.filterSelectLabel, { color: theme.subtle }]}>{label}</Text>
-        <Text style={[styles.filterSelectValue, { color: active ? theme.clear : theme.text }]} numberOfLines={1}>{value}</Text>
+      <View style={[styles.filterSelectCopy, Platform.OS === "ios" && { flexDirection: "row", alignItems: "center", gap: 3 }]}>
+        <Text style={[[styles.filterSelectLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.filterSelectLabel]}>{label}</Text>
+        <Text style={[[styles.filterSelectValue, { color: active ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.filterSelectValue]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{value}</Text>
       </View>
+      {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 13, height: 13, tintColor: active ? theme.clear : theme.text }} /> : null}
     </FeedbackPressable>
   );
 }
@@ -256,4 +278,47 @@ const styles = StyleSheet.create({
     width: 17,
     height: 17,
   },
+});
+
+// iOS Ambient image-led wardrobe; original Android layout is retained.
+const ambientVisual = StyleSheet.create({
+  "filterSelect": {
+    "backgroundColor": "transparent",
+    "minHeight": 44,
+    "borderRadius": 16
+  },
+  "filterSelectLabel": {
+    "fontSize": 13,
+    "lineHeight": 20,
+    "fontWeight": "500"
+  },
+  "filterSelectValue": {
+    "fontSize": 13,
+    "lineHeight": 20,
+    "fontWeight": "600"
+  },
+  "filterSheetTitle": {
+    "fontSize": 21,
+    "lineHeight": 29,
+    "fontWeight": "600"
+  },
+  "filterSheetCaption": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "filterOptionList": {
+    "borderWidth": 0
+  },
+  "filterOption": {
+    "minHeight": 56,
+    "paddingVertical": 10,
+    "justifyContent": "flex-start",
+    "borderRadius": 18
+  },
+  "filterOptionText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

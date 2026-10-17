@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, View } from "../localization/react-native";
+import { Image, Platform, StyleSheet, View } from "../localization/react-native";
+import { ambientUiIcons } from "../ambientAssets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -26,7 +27,7 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
       style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface]}
     >
       {glassSurface ? <IosGlassBackdrop theme={theme} role="control" style={styles.glassBackdrop} /> : null}
-      <ChevronLeft color={theme.text} />
+      {Platform.OS === "ios" ? <Image source={ambientUiIcons.back} accessible={false} style={[styles.filledChevron, { tintColor: theme.text }]} resizeMode="contain" /> : <ChevronLeft color={theme.text} />}
     </FeedbackPressable>
   );
 }
@@ -57,6 +58,10 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     justifyContent: "center",
+  },
+  filledChevron: {
+    width: 22,
+    height: 22,
   },
   chevronLeftTop: {
     position: "absolute",

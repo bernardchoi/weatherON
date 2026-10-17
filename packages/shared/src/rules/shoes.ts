@@ -14,6 +14,14 @@ export function recommendShoes(weather: WeatherSnapshot, destinationCategory?: D
     };
   }
 
+  if (weather.current.condition === "sleet" || weather.current.condition === "hail" || weather.current.condition === "storm-hail" || weather.current.condition === "mixed") {
+    return {
+      level: "recommended",
+      title: "미끄럼 방지 방수 신발",
+      reason: "얼음 알갱이 또는 젖은 노면 신호가 있어 접지력과 방수가 중요",
+    };
+  }
+
   if (signals.isRainy) {
     return {
       level: "recommended",

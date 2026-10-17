@@ -3,6 +3,10 @@ import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "../localization/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AmbientReadingContext } from "../components/AmbientReadingSurface";
+import { ambientReadingTheme, ambientReadingRouteIds } from "../theme/ambientSurface";
+import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
+import { AppAmbientSurface } from "../components/AppAmbientSurface";
 import { BottomNav } from "../components/BottomNav";
 import { AppButton } from "../components/AppButton";
 import { LaunchSplash } from "../components/LaunchSplash";
@@ -15,6 +19,7 @@ import { OutfitDetailScreen } from "../screens/OutfitDetailScreen";
 import { WardrobeScreen } from "../screens/WardrobeScreen";
 import { WardrobePresetScreen } from "../screens/WardrobePresetScreen";
 import { UmbrellaScreen } from "../screens/UmbrellaScreen";
+import { IosRainForecastScreen } from "../screens/IosRainForecastScreen";
 import { RainTimelineScreen } from "../screens/RainTimelineScreen";
 import { WeatherDetailScreen } from "../screens/WeatherDetailScreen";
 import { TomorrowBriefScreen } from "../screens/TomorrowBriefScreen";
@@ -58,6 +63,7 @@ import { appColors, resolveAppTheme } from "../theme/tokens";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
+  const [rainForecastContext, setRainForecastContext] = React.useState<import("../utils/homeOuting").RainForecastContext | null>(null);
   const [launchVisible, setLaunchVisible] = React.useState(true);
   const [launchReady, setLaunchReady] = React.useState(false);
   const [launchStarted, setLaunchStarted] = React.useState(false);
@@ -73,8 +79,21 @@ export function AppNavigator() {
     appState.dynamicColorEnabled,
   );
   const route = isLaunchHiddenRoute(appState.route) ? "H1" : appState.route;
+  useEffect(() => {
+    // Permission/settings overlays can return to the same forecast. Other entries start fresh.
+    if (!["H5", "O3", "M2"].includes(route)) setRainForecastContext(null);
+  }, [route]);
   const bottomNavActiveRoute = getBottomNavActiveRoute(route, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4);
-  const appBackgroundColor = theme.background;
+  const readingAmbient = Platform.OS === "ios" && ambientReadingRouteIds.includes(route);
+  const presentationTheme = readingAmbient ? ambientReadingTheme(theme) : theme;
+  const appBackgroundColor = presentationTheme.background;
+  const fullHomeAmbient = Platform.OS === "ios" && route === "H1";
+  const ambientContext = route === "G2" ? "destination" : ["C1", "C4"].includes(route) ? "outfit" : ["H1", "H6"].includes(route) ? "origin" : "neutral";
+  const ambientWeather = ambientContext === "destination" ? appState.state.destinationWeatherById[appState.selectedDestinationPlace.id] ?? appState.state.destinationCare.destinationWeather : ambientContext === "outfit" ? appState.state.weather : appState.state.destinationCare.originWeather;
+  const ambientLocation = ambientContext === "destination" && ambientWeather.locationId === appState.selectedDestinationPlace.id
+    ? { locationId: ambientWeather.locationId, locationName: ambientWeather.locationName, countryCode: ambientWeather.countryCode, coordinate: appState.selectedDestinationPlace.coordinate, timezone: resolveWeatherTimeZone(ambientWeather.countryCode, appState.selectedDestinationPlace.timezone ?? ambientWeather.timezone) }
+    : appState.placeSearchOrigin;
+  const contentBackground = fullHomeAmbient || readingAmbient ? "transparent" : appBackgroundColor;
 
   useEffect(() => {
     if (!appState.appStateHydrated && !appState.storageLoadError) return;
@@ -135,6 +154,11 @@ export function AppNavigator() {
 
   const screenProps = {
     state: appState.state,
+    rainForecastContext,
+    onOpenRainForecast: (context: import("../utils/homeOuting").RainForecastContext) => {
+      setRainForecastContext(context);
+      appState.navigate("H5");
+    },
     useDestinationWeather: appState.useDestinationWeather,
     umbrellaReviewed: appState.umbrellaReviewed,
     smartCareEnabled: appState.smartCareEnabled,
@@ -151,6 +175,7 @@ export function AppNavigator() {
     selectedDestinationSchedulePreference: appState.selectedDestinationSchedulePreference,
     selectedDestinationTravelEstimate: appState.selectedDestinationTravelEstimate,
     selectedDestinationDepartureAt: appState.selectedDestinationDepartureAt,
+    selectedDestinationTargetAt: appState.selectedDestinationTargetAt,
     selectedDestinationPlace: appState.selectedDestinationPlace,
     destinationSelectionReady: appState.destinationSelectionReady,
     placeSearchQuery: appState.placeSearchQuery,
@@ -191,7 +216,10 @@ export function AppNavigator() {
     outfitSaved: appState.outfitSaved,
     accountGateResult: appState.accountGateResult,
     permissionGateResult: appState.permissionGateResult,
-    onNavigate: appState.navigate,
+    onNavigate: (nextRoute: AppRouteId) => {
+      setRainForecastContext(null);
+      appState.navigate(nextRoute);
+    },
     onGoBack: appState.goBack,
     onOpenAlertSettings: appState.openAlertSettings,
     onReturnFromAlertSettings: appState.returnFromAlertSettings,
@@ -279,7 +307,7 @@ export function AppNavigator() {
       {route === "C3" ? <WardrobePresetScreen {...screenProps} /> : null}
       {route === "C4" ? <OutfitDetailScreen {...screenProps} /> : null}
       {route === "H4" ? <UmbrellaScreen {...screenProps} /> : null}
-      {route === "H5" ? <RainTimelineScreen {...screenProps} /> : null}
+      {route === "H5" ? (Platform.OS === "ios" ? <IosRainForecastScreen {...screenProps} /> : <RainTimelineScreen {...screenProps} />) : null}
       {route === "H6" ? <WeatherDetailScreen {...screenProps} /> : null}
       {route === "H7" ? <TomorrowBriefScreen {...screenProps} /> : null}
       {route === "H3" ? <NotificationCenterScreen {...screenProps} /> : null}
@@ -345,27 +373,29 @@ export function AppNavigator() {
   </>);
 
   return (
-    <AppThemeProvider theme={theme}>
-      <View style={{ flex: 1, backgroundColor: appBackgroundColor }}>
+    <AppThemeProvider theme={presentationTheme}>
+      <AmbientReadingContext.Provider value={readingAmbient}>
+      <AppAmbientSurface routeId={route} enabled={Platform.OS === "ios" && !launchVisible} backgroundColor={appBackgroundColor} theme={theme} weather={ambientWeather} location={ambientLocation} reliable={ambientContext !== "neutral" && appState.state.weatherProvider.status === "ready" && !appState.state.weatherProvider.fallbackUsed && !ambientWeather.stale && !appState.isWeatherLoading}>
       <SafeAreaView
         accessibilityElementsHidden={launchVisible}
         importantForAccessibility={launchVisible ? "no-hide-descendants" : "auto"}
         pointerEvents={launchVisible ? "none" : "auto"}
         edges={["top", "right", "bottom", "left"]}
-        style={[styles.safeArea, { backgroundColor: appBackgroundColor }]}
+        style={[styles.safeArea, { backgroundColor: contentBackground }]}
       >
         <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
-        <View style={[styles.root, { backgroundColor: appBackgroundColor }]}>
+        <View style={[styles.root, { backgroundColor: contentBackground }]}>
         <NavigationStack route={route} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}
           backRoute={appState.canGoBack && !isPrimaryTabRoute(route) ? appState.backRoute : undefined}
           onGoBack={appState.goBack} renderScreen={renderScreen} />
           {(isLaunchVisibleP0Route(route) && route !== "G6") || route === "A4" || route === "R1" || route === "R2" || (route === "O4" && appState.styleProfileReturnRoute) ? (
-            <BottomNav activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
+            <BottomNav transparentBackground={fullHomeAmbient || readingAmbient} activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
           ) : null}
         </View>
       </SafeAreaView>
       {launchVisible ? <LaunchSplash started={launchStarted} onReady={readyLaunch} onFinish={finishLaunch} /> : null}
-      </View>
+      </AppAmbientSurface>
+      </AmbientReadingContext.Provider>
     </AppThemeProvider>
   );
 }

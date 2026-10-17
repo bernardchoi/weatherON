@@ -42,6 +42,8 @@ import type { AccountProfile } from "../providers/accountAuth";
 
 export type P0ScreenProps = {
   state: DemoState;
+  rainForecastContext?: import("../utils/homeOuting").RainForecastContext | null;
+  onOpenRainForecast?: (context: import("../utils/homeOuting").RainForecastContext) => void;
   useDestinationWeather: boolean;
   umbrellaReviewed: boolean;
   smartCareEnabled: boolean;
@@ -58,6 +60,7 @@ export type P0ScreenProps = {
   selectedDestinationSchedulePreference: DestinationSchedulePreference;
   selectedDestinationTravelEstimate: DestinationTravelEstimate;
   selectedDestinationDepartureAt?: string;
+  selectedDestinationTargetAt?: string;
   selectedDestinationPlace: PlaceSearchResult;
   destinationSelectionReady: boolean;
   placeSearchQuery: string;

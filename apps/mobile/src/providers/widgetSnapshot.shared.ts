@@ -182,12 +182,12 @@ function getOutfitSummary(outfit: OutfitRecommendation): string {
 function getOutfitItems(outfit: OutfitRecommendation): WeatheronWidgetOutfitItem[] {
   return [
     outfit.items.outer ? { category: "outer", name: localizeWardrobeName(outfit.items.outer) } : undefined,
-    { category: "top", name: localizeWardrobeName(outfit.items.top) },
-    { category: "bottom", name: localizeWardrobeName(outfit.items.bottom) },
-    { category: "shoes", name: localizeWardrobeName(outfit.items.shoes) },
+    outfit.items.top ? { category: "top", name: localizeWardrobeName(outfit.items.top) } : undefined,
+    outfit.items.bottom ? { category: "bottom", name: localizeWardrobeName(outfit.items.bottom) } : undefined,
+    outfit.items.shoes ? { category: "shoes", name: localizeWardrobeName(outfit.items.shoes) } : undefined,
   ].filter((item): item is WeatheronWidgetOutfitItem => Boolean(item));
 }
 
-function localizeWardrobeName(item: OutfitRecommendation["items"]["top"]): string {
+function localizeWardrobeName(item: NonNullable<OutfitRecommendation["items"]["top"]>): string {
   return item.source === "preset" ? translateText(item.name) : item.name;
 }

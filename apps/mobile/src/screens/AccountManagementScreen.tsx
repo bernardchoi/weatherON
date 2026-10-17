@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
@@ -9,6 +10,9 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+
+const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
 export function AccountManagementScreen({
   accountLinked,
@@ -23,6 +27,9 @@ export function AccountManagementScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const ambient = Platform.OS === "ios";
+  const reducedMotion = useReducedMotion();
+  const { fontScale } = useWindowDimensions();
   const [dangerConfirm, setDangerConfirm] = useState<"logout" | "delete" | null>(null);
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
@@ -32,8 +39,9 @@ export function AccountManagementScreen({
   const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결 완료" : needsTerms ? "확인 필요" : "게스트";
   const primaryLabel = needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
-  const primaryTone = accountReady ? theme.clear : needsTerms ? theme.gold : theme.sky;
+  const primaryTone = accountReady ? theme.success : needsTerms ? theme.gold : theme.sky;
   const showPrimaryAction = accountLinked && !accountReady;
+  const ConfirmationContent = ambient ? ScrollView : React.Fragment;
   const isProcessing = accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in";
 
   const requestConnect = () => onRequireAccount("account-connect", "A4");
@@ -50,14 +58,16 @@ export function AccountManagementScreen({
   return (
     <AppScreen
       title="계정 관리"
+      titleStyle={ambient ? ambientVisual.title : undefined}
       subtitle="연결 상태와 계정 데이터를 관리해요"
       onBack={() => onNavigate("M1")}
       compactHeader
-      contentGap={layout.accountContentGap}
+      stackedHeader={ambient && (layout.width < 360 || fontScale > 1.15)}
+      contentGap={ambient ? 16 : layout.accountContentGap}
       contentPaddingTop={layout.weatherTopPadding}
     >
         <View
-          style={[
+          style={[[
             styles.profileCard,
             pageStyles.card,
             {
@@ -65,23 +75,23 @@ export function AccountManagementScreen({
               paddingHorizontal: layout.accountPanelPadding,
               paddingVertical: layout.isShort ? 10 : 12,
               backgroundColor: theme.card,
-              borderColor: accountReady ? theme.clear : needsTerms ? theme.gold : theme.border,
+              borderColor: accountReady ? theme.success : needsTerms ? theme.gold : theme.border,
             },
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.profileCard]}
         >
-          <View style={[styles.profileVisual, { backgroundColor: theme.cardStrong }]}>
-            <Image source={uiIconAssets.tabMy} style={[styles.accountIcon, { tintColor: theme.sky }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />
+          <View style={[[styles.profileVisual, { backgroundColor: theme.cardStrong }], ambient && [ambientVisual.profileVisual, { backgroundColor: theme.card, borderColor: theme.border }]]}>
+            <Image source={screenIcons.tabMy} style={[[styles.accountIcon, { tintColor: theme.sky }], Platform.OS === "ios" && ambientVisual.accountIcon]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />
             <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
-          <View style={styles.profileCopy}>
-            <View style={styles.profileTitleRow}>
-              <Text style={[styles.profileTitle, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
-              <View style={[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }]}>
-                <Text style={[styles.statusPillText, { color: primaryTone }]}>{statusLabel}</Text>
+          <View style={[styles.profileCopy, Platform.OS === "ios" && ambientVisual.profileCopy]}>
+            <View style={[styles.profileTitleRow, Platform.OS === "ios" && ambientVisual.profileTitleRow]}>
+              <Text style={[[styles.profileTitle, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.profileTitle]} numberOfLines={ambient ? undefined : 1}>{profileTitle}</Text>
+              <View style={[[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }], Platform.OS === "ios" && ambientVisual.statusPill]}>
+                <Text style={[[styles.statusPillText, { color: primaryTone }], Platform.OS === "ios" && ambientVisual.statusPillText]}>{statusLabel}</Text>
               </View>
             </View>
-            <Text style={[styles.profileMeta, pageStyles.caption, { color: theme.subtle }]} numberOfLines={2}>{profileMeta}</Text>
-            {accountAuthMessage ? <Text accessibilityLiveRegion="polite" selectable style={[styles.profileMeta, pageStyles.caption, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }]} numberOfLines={2}>{accountAuthMessage}</Text> : null}
+            <Text style={[[styles.profileMeta, pageStyles.caption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.profileMeta]} numberOfLines={ambient ? undefined : 2}>{profileMeta}</Text>
+            {accountAuthMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.profileMeta, pageStyles.caption, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }], Platform.OS === "ios" && ambientVisual.profileMeta]} numberOfLines={ambient ? undefined : 2}>{accountAuthMessage}</Text> : null}
           </View>
         </View>
 
@@ -90,12 +100,12 @@ export function AccountManagementScreen({
             accessibilityLabel={primaryAccessibilityLabel}
             accessibilityRole="button"
             onPress={handlePrimaryAccountAction}
-            style={({ pressed }) => [styles.primaryRow, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]}
+            style={({ pressed }) => [[styles.primaryRow, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border, opacity: pressed ? 0.72 : 1 }], Platform.OS === "ios" && ambientVisual.primaryRow]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: `${primaryTone}18` }]}>
-              <Image source={uiIconAssets.policyTerms} style={[styles.actionIconImage, { tintColor: primaryTone }]} resizeMode="contain" />
+            <View style={[[styles.actionIcon, { backgroundColor: `${primaryTone}18` }], Platform.OS === "ios" && ambientVisual.actionIcon]}>
+              <Image source={ambient ? ambientUiIcons.policyDocument : screenIcons.policyTerms} style={[styles.actionIconImage, { tintColor: primaryTone }, ambient && ambientVisual.policyIcon]} resizeMode="contain" accessible={false} />
             </View>
-            <Text style={[styles.primaryText, pageStyles.sectionTitle, { color: theme.text }]}>{primaryLabel}</Text>
+            <Text style={[[styles.primaryText, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.primaryText]}>{primaryLabel}</Text>
             <ChevronRight color={theme.subtle} />
           </Pressable>
         ) : null}
@@ -105,59 +115,65 @@ export function AccountManagementScreen({
             accessibilityLabel="정책 및 법적 고지 보기"
             accessibilityRole="button"
             onPress={() => onNavigate("R1")}
-            style={({ pressed }) => [styles.policyRow, { opacity: pressed ? 0.72 : 1 }]}
+            style={({ pressed }) => [[styles.policyRow, { opacity: pressed ? 0.72 : 1 }], ambient && [ambientVisual.policyRow, { borderColor: theme.border }]]}
           >
-            <Image source={uiIconAssets.myPolicy} style={[styles.policyIcon, { tintColor: theme.sky }]} resizeMode="contain" />
-            <Text style={[styles.policyText, { color: theme.muted }]}>정책 및 법적 고지</Text>
+            <Image source={ambient ? ambientUiIcons.policyDocument : screenIcons.myPolicy} style={[[styles.policyIcon, { tintColor: ambient ? theme.text : theme.sky }], Platform.OS === "ios" && ambientVisual.policyIcon]} resizeMode="contain" accessible={false} />
+            {ambient ? <View style={{ flex: 1, gap: 4 }}>
+              <Text style={[[styles.policyText, { color: ambient ? theme.text : theme.muted }], Platform.OS === "ios" && ambientVisual.policyText]}>정책 및 법적 고지</Text>
+              <Text style={[ambientVisual.policySubtitle, { color: theme.muted }]}>개인정보 · 약관 · 오픈소스</Text>
+            </View> : <Text style={[styles.policyText, { color: theme.muted }]}>정책 및 법적 고지</Text>}
             <ChevronRight color={theme.subtle} />
           </Pressable>
         ) : null}
 
         {accountLinked ? (
-          <View style={styles.accountActions}>
+          <View style={[styles.accountActions, ambient && ambientVisual.accountActions]}>
             <FeedbackPressable
               accessibilityLabel="로그아웃"
               accessibilityRole="button"
+              hapticFeedback={ambient ? "none" : "automatic"}
               disabled={isProcessing}
               onPress={() => setDangerConfirm("logout")}
-              style={[styles.logoutButton, { backgroundColor: theme.cardMuted, borderColor: theme.border, opacity: isProcessing ? 0.55 : 1 }]}
+              style={({ pressed }) => [styles.logoutButton, { backgroundColor: theme.cardMuted, borderColor: theme.border, opacity: isProcessing ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && ambientVisual.logoutButton]}
             >
-              <Text style={[styles.smallButtonText, { color: theme.text }]}>로그아웃</Text>
+              <Text style={[[styles.smallButtonText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.smallButtonText]}>로그아웃</Text>
             </FeedbackPressable>
             <Pressable
               accessibilityLabel="회원 탈퇴"
               accessibilityRole="button"
               disabled={isProcessing}
               onPress={() => setDangerConfirm("delete")}
-              style={({ pressed }) => [styles.deleteButton, { opacity: isProcessing ? 0.55 : pressed ? 0.72 : 1 }]}
+              style={({ pressed }) => [styles.deleteButton, { opacity: isProcessing ? 0.55 : pressed ? 0.72 : 1 }, ambient && ambientVisual.deleteButton]}
             >
-              <Text style={[styles.deleteButtonText, { color: theme.alert }]}>회원 탈퇴</Text>
+              <Text style={[[styles.deleteButtonText, { color: theme.alert }], Platform.OS === "ios" && ambientVisual.deleteButtonText]}>회원 탈퇴</Text>
             </Pressable>
           </View>
         ) : null}
 
         <View style={styles.bottomSpacer} />
 
-        <Modal visible={dangerConfirm !== null} transparent animationType="fade" onRequestClose={() => { if (!isProcessing) setDangerConfirm(null); }}>
+        <Modal visible={dangerConfirm !== null} transparent animationType={ambient && reducedMotion !== false ? "none" : "fade"} onRequestClose={() => { if (!isProcessing) setDangerConfirm(null); }}>
           <View style={styles.modalBackdrop}>
-            <View accessibilityViewIsModal style={[styles.confirmDialog, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-              <Text style={[styles.confirmTitle, { color: theme.text }]}>{dangerConfirm === "delete" ? "회원 탈퇴" : "로그아웃"}</Text>
-              <Text selectable style={[styles.confirmBody, { color: theme.muted }]}>
-                {dangerConfirm === "delete"
-                  ? "서버 계정 데이터와 이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제돼요. 되돌릴 수 없어요."
-                  : "이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제되고 계정 연결이 해제돼요. 서버 계정은 유지돼요."}
-              </Text>
-              {accountAuthMessage ? (
-                <Text accessibilityLiveRegion="polite" selectable style={[styles.confirmError, { color: theme.alert }]}>{accountAuthMessage}</Text>
-              ) : null}
-              <View style={styles.confirmActions}>
-                <Pressable accessibilityRole="button" disabled={isProcessing} onPress={() => setDangerConfirm(null)} style={[styles.dialogButton, { borderColor: theme.border, opacity: isProcessing ? 0.5 : 1 }]}>
-                  <Text style={[styles.dialogButtonText, { color: theme.text }]}>취소</Text>
-                </Pressable>
-                <Pressable accessibilityRole="button" accessibilityState={{ busy: isProcessing, disabled: isProcessing }} disabled={isProcessing} onPress={() => void confirmDangerAction()} style={[styles.dialogButton, { backgroundColor: theme.alert, borderColor: theme.alert }]}>
-                  {isProcessing ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.confirmButtonText}>{dangerConfirm === "delete" ? "탈퇴하기" : "로그아웃"}</Text>}
-                </Pressable>
-              </View>
+            <View accessibilityViewIsModal style={[styles.confirmDialog, pageStyles.card, { backgroundColor: theme.cardStrong, borderColor: theme.border }, ambient && { maxHeight: "100%", padding: 0 }]}>
+              <ConfirmationContent {...(ambient ? { style: { flexShrink: 1 }, contentContainerStyle: { padding: spacing.lg, gap: spacing.md } } : {})}>
+                <Text style={[[styles.confirmTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.confirmTitle]}>{dangerConfirm === "delete" ? "회원 탈퇴" : "로그아웃"}</Text>
+                <Text selectable style={[[styles.confirmBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.confirmBody]}>
+                  {dangerConfirm === "delete"
+                    ? "서버 계정 데이터와 이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제돼요. 되돌릴 수 없어요."
+                    : "이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제되고 계정 연결이 해제돼요. 서버 계정은 유지돼요."}
+                </Text>
+                {accountAuthMessage ? (
+                  <Text accessibilityLiveRegion="polite" selectable style={[[styles.confirmError, { color: theme.alert }], Platform.OS === "ios" && ambientVisual.confirmError]}>{accountAuthMessage}</Text>
+                ) : null}
+                <View style={[styles.confirmActions, ambient && fontScale > 1.15 && { flexDirection: "column" }]}>
+                  <Pressable accessibilityRole="button" disabled={isProcessing} onPress={() => setDangerConfirm(null)} style={[styles.dialogButton, ambient && [ambientVisual.dialogButton, fontScale > 1.15 && { flexGrow: 0, flexShrink: 0 }], { borderColor: theme.border, opacity: isProcessing ? 0.5 : 1 }]}>
+                    <Text style={[[styles.dialogButtonText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.dialogButtonText]}>취소</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityState={{ busy: isProcessing, disabled: isProcessing }} disabled={isProcessing} onPress={() => void confirmDangerAction()} style={[styles.dialogButton, ambient && [ambientVisual.dialogButton, fontScale > 1.15 && { flexGrow: 0, flexShrink: 0 }], { backgroundColor: theme.alert, borderColor: theme.alert }]}>
+                    {isProcessing ? <ActivityIndicator color={theme.onAlert} /> : <Text style={[styles.confirmButtonText, { color: theme.onAlert }, ambient && ambientVisual.dialogButtonText]}>{dangerConfirm === "delete" ? "탈퇴하기" : "로그아웃"}</Text>}
+                  </Pressable>
+                </View>
+              </ConfirmationContent>
             </View>
           </View>
         </Modal>
@@ -180,7 +196,7 @@ function getProviderConnectedTitle(provider: AccountProvider) {
 
 function ChevronRight({ color }: { color: string }) {
   return (
-    <View style={styles.chevronRight} accessibilityElementsHidden>
+    <View style={[styles.chevronRight, Platform.OS === "ios" && ambientVisual.chevronRight]} accessibilityElementsHidden>
       <View style={[styles.chevronRightTop, { backgroundColor: color }]} />
       <View style={[styles.chevronRightBottom, { backgroundColor: color }]} />
     </View>
@@ -321,4 +337,141 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     transform: [{ rotate: "-45deg" }, { translateY: 3 }],
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  title: { fontSize: 26, lineHeight: 34, fontWeight: "700" },
+  policySubtitle: { fontSize: 14, lineHeight: 21, fontWeight: "400" },
+  accountActions: { gap: 18 },
+  logoutButton: { minHeight: 52, paddingVertical: 12, borderRadius: radius.pill, backgroundColor: "transparent" },
+  deleteButton: { minHeight: 48, paddingVertical: 10, alignSelf: "stretch" },
+  dialogButton: { flexBasis: "auto", paddingVertical: 10, paddingHorizontal: 10 },
+  "profileCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 10,
+    "flexDirection": "column",
+    "alignItems": "center"
+  },
+  "profileVisual": {
+    "borderWidth": StyleSheet.hairlineWidth,
+    "shadowOpacity": 0,
+    "width": 80,
+    "height": 80
+  },
+  "accountIcon": {
+    "width": 48,
+    "height": 48
+  },
+  "profileTitleRow": {
+    "flexDirection": "column",
+    "alignItems": "center",
+    "gap": 8
+  },
+  "profileTitle": {
+    "fontSize": 22,
+    "lineHeight": 30,
+    "textAlign": "center",
+    "fontWeight": "700"
+  },
+  "profileMeta": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "textAlign": "center",
+    "fontWeight": "400"
+  },
+  "profileCopy": {
+    "flex": 0,
+    "alignSelf": "stretch",
+    "alignItems": "center",
+    "gap": 8
+  },
+  "statusPill": {
+    "borderWidth": StyleSheet.hairlineWidth,
+    "minHeight": 28,
+    "paddingVertical": 3,
+    "shadowOpacity": 0
+  },
+  "statusPillText": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "policyRow": {
+    "paddingVertical": 20,
+    "paddingHorizontal": 0,
+    "borderTopWidth": StyleSheet.hairlineWidth,
+    "borderBottomWidth": StyleSheet.hairlineWidth,
+    "minHeight": 76,
+    "gap": 12
+  },
+  "policyIcon": {
+    "width": 32,
+    "height": 32
+  },
+  "policyText": {
+    "flex": 0,
+    "fontSize": 17,
+    "lineHeight": 24,
+    "fontWeight": "600"
+  },
+  "primaryRow": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "primaryText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "actionIcon": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "shadowOpacity": 0
+  },
+  "smallButtonText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "deleteButtonText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "chevronRight": {
+    "display": "none"
+  },
+  "confirmTitle": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "confirmBody": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "confirmError": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "dialogButtonText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

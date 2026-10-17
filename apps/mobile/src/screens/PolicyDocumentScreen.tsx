@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
@@ -91,7 +91,7 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentRet
   const returnLabel = policyDocumentReturnRoute === "A3" ? "약관 동의로 돌아가기" : "정책 목록으로 돌아가기";
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, { width: "100%", maxWidth: layout.contentMaxWidth, gap: layout.settingsContentGap, paddingHorizontal: layout.screenHorizontalPadding, paddingTop: layout.weatherTopPadding }]}
@@ -103,29 +103,29 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentRet
         </View>
 
         <View style={[styles.documentMeta, { borderBottomColor: theme.border }]}>
-          <Text style={[styles.summary, { color: theme.muted }]}>{isOpenSource ? "현재 앱의 직접 런타임 의존성" : document.summary}</Text>
-          {!isOpenSource && document.effectiveDate ? <Text style={[styles.date, { color: theme.subtle }]}>시행일 {document.effectiveDate}</Text> : null}
+          <Text style={[[styles.summary, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.summary]}>{isOpenSource ? "현재 앱의 직접 런타임 의존성" : document.summary}</Text>
+          {!isOpenSource && document.effectiveDate ? <Text style={[[styles.date, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.date]}>시행일 {document.effectiveDate}</Text> : null}
         </View>
 
-        <View style={[styles.documentBody, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+        <View style={[[styles.documentBody, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.documentBody]}>
           {(isOpenSource ? openSourceGroups : document.points).map((point, index) => (
-            <View key={point} style={[styles.paragraph, index > 0 ? { borderTopColor: theme.border, borderTopWidth: StyleSheet.hairlineWidth } : null]}>
-              <Text style={[styles.paragraphNumber, { color: theme.gold }]}>{index + 1}</Text>
-              <Text selectable style={[styles.paragraphText, { color: theme.text }]}>{point}</Text>
+            <View key={point} style={[[styles.paragraph, index > 0 ? { borderTopColor: theme.border, borderTopWidth: StyleSheet.hairlineWidth } : null], Platform.OS === "ios" && ambientVisual.paragraph]}>
+              <Text style={[[styles.paragraphNumber, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.paragraphNumber]}>{index + 1}</Text>
+              <Text selectable style={[[styles.paragraphText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.paragraphText]}>{point}</Text>
             </View>
           ))}
         </View>
 
         {isOpenSource ? (
-          <View style={[styles.licensePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
+          <View style={[[styles.licensePanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.licensePanel]}>
             <Pressable accessibilityRole="button" accessibilityState={{ expanded: licenseExpanded }} onPress={() => setLicenseExpanded((current) => !current)} style={styles.licenseButton}>
-              <Text style={[styles.licenseButtonText, { color: theme.sky }]}>{licenseExpanded ? "MIT 라이선스 전문 닫기" : "MIT 라이선스 전문 보기"}</Text>
+              <Text style={[[styles.licenseButtonText, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.licenseButtonText]}>{licenseExpanded ? "MIT 라이선스 전문 닫기" : "MIT 라이선스 전문 보기"}</Text>
             </Pressable>
-            {licenseExpanded ? <Text selectable style={[styles.licenseText, { color: theme.muted }]}>{mitLicense}</Text> : null}
+            {licenseExpanded ? <Text selectable style={[[styles.licenseText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.licenseText]}>{mitLicense}</Text> : null}
           </View>
         ) : null}
 
-        <View style={styles.actions}>
+        <View style={[styles.actions, Platform.OS === "ios" && ambientVisual.actions]}>
           <AppButton label={returnLabel} accessibilityLabel={returnLabel} onPress={onReturnFromPolicyDocument} />
           <AppButton label="MY로 이동" accessibilityLabel="MY로 이동" onPress={() => onNavigate("M1")} tone="secondary" />
         </View>
@@ -152,4 +152,64 @@ const styles = StyleSheet.create({
   licenseButtonText: { fontSize: 14, lineHeight: 19, fontWeight: "900" },
   licenseText: { padding: spacing.md, paddingTop: 0, fontSize: 13, lineHeight: 20, fontWeight: "500" },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "documentBody": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0
+  },
+  "paragraph": {
+    "paddingHorizontal": 0,
+    "paddingVertical": 22,
+    "gap": 14
+  },
+  "paragraphText": {
+    "fontSize": 16,
+    "lineHeight": 27,
+    "fontWeight": "400"
+  },
+  "paragraphNumber": {
+    "fontSize": 16,
+    "lineHeight": 27,
+    "fontWeight": "600",
+    "width": 28
+  },
+  "summary": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "date": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "licensePanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0
+  },
+  "licenseText": {
+    "fontSize": 15,
+    "lineHeight": 25,
+    "fontWeight": "400"
+  },
+  "licenseButtonText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "actions": {
+    "flexDirection": "column",
+    "gap": 12
+  }
 });

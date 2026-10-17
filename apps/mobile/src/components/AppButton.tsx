@@ -1,5 +1,6 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, StyleSheet, Text } from "../localization/react-native";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { uiIconAssets } from "../assets";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { androidMaterialColor, androidMaterialRipple, androidMaterialSurface } from "../theme/androidMaterial";
@@ -15,6 +16,8 @@ type AppButtonProps = {
   size?: "md" | "sm";
   accessibilityLabel?: string;
   disabled?: boolean;
+  hapticFeedback?: "automatic" | "none";
+  appearance?: "account";
 };
 
 export function AppButton({
@@ -25,11 +28,16 @@ export function AppButton({
   size = "md",
   accessibilityLabel,
   disabled = false,
+  hapticFeedback = "automatic",
+  appearance,
 }: AppButtonProps) {
   const theme = useAppTheme();
+  const accountAppearance = Platform.OS === "ios" && appearance === "account";
   const scale = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useReducedMotion();
+  useEffect(() => { scale.stopAnimation(); scale.setValue(1); return () => scale.stopAnimation(); }, [reducedMotion, scale]);
   const resolvedVariant = variant ?? (tone === "secondary" ? "tonal" : "filled");
-  const filledColor = tone === "warning" ? theme.gold : theme.clear;
+  const filledColor = tone === "warning" ? theme.gold : theme.actionFill;
   const foregroundColor = tone === "warning" ? theme.gold : tone === "primary" ? theme.clear : theme.text;
   const backgroundColor = resolvedVariant === "filled"
     ? filledColor
@@ -51,6 +59,8 @@ export function AppButton({
   // 그룹화된 보조 chrome에만 쓰고 버튼은 불투명 색상을 유지한다.
 
   const animateTo = (toValue: number) => {
+    scale.stopAnimation();
+    if (reducedMotion !== false) return scale.setValue(1);
     Animated.timing(scale, {
       toValue,
       duration: 110,
@@ -67,12 +77,12 @@ export function AppButton({
       disabled={disabled}
       hitSlop={size === "sm" ? 5 : undefined}
       onPress={() => {
-        triggerImportantActionHaptic(accessibilityLabel ?? label);
+        if (hapticFeedback === "automatic") triggerImportantActionHaptic(accessibilityLabel ?? label);
         onPress();
       }}
       onPressIn={() => animateTo(0.97)}
       onPressOut={() => animateTo(1)}
-      style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null]}
+      style={[styles.pressable, Platform.OS === "android" ? styles.pressableAndroid : null, accountAppearance && styles.accountShape]}
     >
       <Animated.View
         style={[
@@ -82,12 +92,13 @@ export function AppButton({
           Platform.OS === "android" && size === "sm" ? styles.buttonSmAndroid : null,
           resolvedVariant === "tonal" ? androidMaterialSurface(theme, "secondaryContainer") : null,
           { backgroundColor, borderColor, opacity: disabled ? 0.48 : 1, transform: [{ scale }] },
+          accountAppearance && styles.accountShape,
         ]}
       >
-        {resolvedVariant !== "text" ? (
+        {resolvedVariant !== "text" && !accountAppearance ? (
           <Image source={icon} style={[styles.icon, size === "sm" ? styles.iconSm : null, { tintColor: color }]} resizeMode="contain" />
         ) : null}
-        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? pageStyles.caption : null, { color }]}>{label}</Text>
+        <Text style={[styles.label, size === "sm" ? styles.labelSm : null, size === "sm" ? pageStyles.caption : null, { color }, accountAppearance && (size === "sm" ? styles.accountLabelSmall : styles.accountLabel)]}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -105,6 +116,9 @@ function getButtonIcon(label: string): ImageSourcePropType {
 }
 
 const styles = StyleSheet.create({
+  accountShape: { borderRadius: radius.pill },
+  accountLabel: { fontSize: 18, lineHeight: 25, fontWeight: "600" },
+  accountLabelSmall: { fontSize: 16, lineHeight: 23, fontWeight: "500" },
   pressable: {
     borderRadius: radius.md,
   },

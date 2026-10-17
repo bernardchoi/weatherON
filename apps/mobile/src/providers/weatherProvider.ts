@@ -95,7 +95,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         : getUniqueDestinationLocations(destinationLocation, options.destinationLocations);
       const locations = getUniqueDestinationLocations(currentLocation, destinationLocations);
       const snapshots = new Map(locations.map((location) => [
-        location.locationId, markSnapshotStale(cache.get(location.locationId), location),
+        location.locationId, getPendingSnapshot(cache.get(location.locationId), location, ios && mode === "ready"),
       ]));
       const pending = new Set(locations.map((location) => location.locationId));
       const failed = new Set<string>();
@@ -122,6 +122,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
       const supplied = ios && options.currentSnapshot?.source !== "weatherkit" ? undefined : options.currentSnapshot;
       await Promise.all([
         ...locations.map(async (location) => {
+          const cachedAtStart = cache.get(location.locationId);
           try {
             const snapshot = location.locationId === currentLocation.locationId
               ? await resolveCurrentWeatherSnapshot(client, location, supplied, stale, createOptions, options.language)
@@ -129,7 +130,12 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
             snapshots.set(location.locationId, remember(snapshot));
           } catch {
             failed.add(location.locationId);
-            snapshots.set(location.locationId, markSnapshotStale(cache.get(location.locationId), location));
+            const cachedNow = cache.get(location.locationId);
+            const failedSnapshot = markSnapshotStale(cachedNow, location);
+            snapshots.set(location.locationId, failedSnapshot);
+            // A later retry must not briefly revive a snapshot whose refresh
+            // failed. Do not invalidate a newer concurrent successful result.
+            if (ios && cachedNow && cachedNow === cachedAtStart) cache.set(location.locationId, failedSnapshot);
           }
           pending.delete(location.locationId);
           publish();
@@ -148,17 +154,20 @@ export const runtimeWeatherProvider = createWeatherProvider();
 export const fixtureWeatherProvider = createWeatherProvider(fixtureWeatherClient, { preferKma: true });
 
 export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback"): WeatherProviderResult {
+  const conditionProfile = Platform.OS === "ios" ? "ambient-v3" : "legacy";
   const current = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: defaultSeoulWeatherLocation.locationId,
     locationName: defaultSeoulWeatherLocation.locationName,
     countryCode: "KR",
     stale: true,
+    conditionProfile,
   }));
   const destination = markSnapshotFallback(normalizeOpenMeteoWeather(openMeteoFixture, {
     locationId: "kr-gangneung-beach",
     locationName: "강릉 안목해변",
     countryCode: "KR",
     stale: true,
+    conditionProfile,
   }));
 
   return {
@@ -183,7 +192,9 @@ async function fetchWeatherSnapshot(
   if (!isValidIanaTimeZone(location.timezone) || (location.countryCode === "GLOBAL" && location.timezone === "UTC")) {
     throw new Error("Weather location requires a resolved IANA timezone");
   }
-  if ((options.platform ?? Platform.OS) === "ios") {
+  const ios = (options.platform ?? Platform.OS) === "ios";
+  const conditionProfile = ios ? "ambient-v3" : "legacy";
+  if (ios) {
     if (typeof client.fetchWeatherKitForecast !== "function") {
       throw new Error("WeatherKit client is not configured for iOS");
     }
@@ -200,6 +211,7 @@ async function fetchWeatherSnapshot(
       countryCode: location.countryCode,
       timezone: location.timezone,
       stale,
+      conditionProfile,
     });
   }
   if (shouldUseKmaForecast(location, options.preferKma)) {
@@ -214,12 +226,13 @@ async function fetchWeatherSnapshot(
         countryCode: location.countryCode,
         timezone: "+09:00",
         stale,
+        conditionProfile,
       }));
     } catch {
-      return fetchOpenMeteoSnapshot(client, location, stale);
+      return fetchOpenMeteoSnapshot(client, location, stale, conditionProfile);
     }
   }
-  return fetchOpenMeteoSnapshot(client, location, stale);
+  return fetchOpenMeteoSnapshot(client, location, stale, conditionProfile);
 }
 
 async function resolveCurrentWeatherSnapshot(
@@ -268,6 +281,7 @@ async function fetchOpenMeteoSnapshot(
   client: WeatherClient,
   location: WeatherLocationPreset,
   stale: boolean,
+  conditionProfile: "legacy" | "ambient-v3" = "legacy",
 ): Promise<WeatherSnapshot> {
   const payload = await client.fetchOpenMeteoForecast({
     latitude: location.coordinate.latitude,
@@ -280,6 +294,7 @@ async function fetchOpenMeteoSnapshot(
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale,
+    conditionProfile,
   }));
 }
 
@@ -344,6 +359,21 @@ function getUniqueDestinationLocations(
   });
 }
 
+// A pending request is not evidence that a recently observed snapshot is stale.
+// Keep only the same verified iOS location while refreshing; failures still use
+// markSnapshotStale below, and consumers validate their selected forecast time.
+function getPendingSnapshot(snapshot: WeatherSnapshot | undefined, location: WeatherLocationPreset, preserveFresh: boolean): WeatherSnapshot {
+  if (preserveFresh && snapshot && (snapshot.locationId !== location.locationId
+    || snapshot.countryCode !== location.countryCode || snapshot.timezone !== location.timezone)) {
+    return buildFallbackSnapshotForLocation(location);
+  }
+  const age = snapshot ? Date.now() - Date.parse(snapshot.observedAt) : NaN;
+  if (preserveFresh && snapshot?.source === "weatherkit" && !snapshot.stale && !snapshot.locationUnverified
+    && snapshot.locationId === location.locationId && snapshot.countryCode === location.countryCode
+    && snapshot.timezone === location.timezone && Number.isFinite(age) && age >= 0 && age < 15 * 60_000) return snapshot;
+  return markSnapshotStale(snapshot, location);
+}
+
 function markSnapshotStale(snapshot: WeatherSnapshot | undefined, location?: WeatherLocationPreset): WeatherSnapshot {
   // 캐시가 없거나(snapshot undefined) 캐시된 지역과 요청 지역이 다르면, 다른 지역의
   // 실측 데이터를 새 지역 이름표로 relabel하지 말고 픽스처 기반 폴백을 만들어야 한다.
@@ -363,6 +393,7 @@ function buildFallbackSnapshotForLocation(location: WeatherLocationPreset): Weat
     locationName: location.locationName,
     countryCode: location.countryCode,
     stale: true,
+    conditionProfile: Platform.OS === "ios" ? "ambient-v3" : "legacy",
   }));
 }
 

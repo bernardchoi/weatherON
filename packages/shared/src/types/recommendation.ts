@@ -24,9 +24,9 @@ export type OutfitRecommendation = {
   weatherSnapshotId: string;
   items: {
     outer?: WardrobeItem;
-    top: WardrobeItem;
-    bottom: WardrobeItem;
-    shoes: WardrobeItem;
+    top?: WardrobeItem;
+    bottom?: WardrobeItem;
+    shoes?: WardrobeItem;
     accessory?: WardrobeItem;
   };
   /** 추천된 품목의 보유 상태. 날씨 적합도/정확도 점수가 아님. */

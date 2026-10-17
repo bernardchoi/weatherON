@@ -10,10 +10,33 @@ function sourceFunction(path, name) {
 }
 const path = 'apps/mobile/src/components/NavigationStack.tsx';
 const stackSource = readFileSync(path, 'utf8');
-assert.match(stackSource, /<View style=\{styles\.fill\}>[\s\S]*<ScreenStack style=\{StyleSheet\.absoluteFill\}>/,
+assert.match(stackSource, /<View style=\{styles\.fill\}[^>]*>[\s\S]*<ScreenStack[^>]*style=\{StyleSheet\.absoluteFill\}>/,
   'native stack must fill a flex-sized wrapper');
 assert.match(stackSource, /<ScreenStackItem[\s\S]*style=\{StyleSheet\.absoluteFill\}/,
   'native screen items must fill the stack viewport');
+assert.match(stackSource, /<ScreenStack key=\{next\[0\]\}/, 'primary tab resets the native controller to remove transparent snapshots');
+// Execute the route wrappers: inactive content must be invisible and non-interactive.
+const jsx = (type, props) => ({type, props});
+const nativeMocks = {View:'View',StyleSheet:{absoluteFill:{},create:x=>x},Platform:{OS:'ios'}};
+const module = {exports:{}};
+const js = ts.transpileModule(stackSource, {compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+const boundaries = {'react':{useRef:v=>({current:v}),useState:v=>[typeof v==='function'?v():v,()=>{}]},'react/jsx-runtime':{jsx,jsxs:jsx},'../localization/react-native':nativeMocks,'react-native-screens':{ScreenStack:'Stack',ScreenStackItem:'Item'},'../hooks/useReducedMotion':{useReducedMotion:()=>false},'./ScreenTransition':{},'./HomeViewportContext':{HomeViewportContext:{Provider:'Viewport'}}};
+new Function('require','module','exports',js)(id=>{assert.ok(id in boundaries,id);return boundaries[id]},module,module.exports);
+const nodes=n=>!n||typeof n!=='object'?[]:Array.isArray(n)?n.flatMap(nodes):[n,...nodes(n.props?.children)];
+for(const [route,backRoute] of [['A4','M1'],['R1','A4'],['H1',undefined]]) {
+ const root=module.exports.NavigationStack({route,backRoute,onGoBack(){},renderScreen:id=>id});
+ const tree=typeof root.type==='function'?root.type(root.props):root;
+ const items=nodes(tree).filter(n=>n.type==='Item');
+ assert.equal(items.length,backRoute?2:1);
+ for(const item of items){const active=item.props.screenId===route,wrapper=item.props.children;
+  assert.equal(item.props.contentStyle.backgroundColor,'transparent','one shared root remains visible');
+  assert.equal(Object.assign({},...wrapper.props.style).opacity,active?1:0,'inactive route cannot leak content');
+  assert.equal(wrapper.props.pointerEvents,active?'auto':'none');
+  assert.equal(wrapper.props.accessibilityElementsHidden,!active);
+  assert.equal(wrapper.props.importantForAccessibility,active?'auto':'no-hide-descendants');
+ }
+}
+assert.doesNotMatch(stackSource, /<AmbientReadingSurface/, 'no second reading canvas');
 const reconcile = new Function(`${sourceFunction(path,'reconcileScreenStack')} return reconcileScreenStack;`)();
 let stack = ['M1'];
 stack = reconcile(stack, 'A4', 'M1');
@@ -51,8 +74,8 @@ function findBack(node) {
 findBack(stateAst);
 assert.ok(backExpression && backCallback);
 const getBackRoute=new Function(`${sourceFunction('apps/mobile/src/state/appStateHelpers.ts','getBackRoute')} return getBackRoute;`)();
-const dynamicBack=new Function('route','gate','permissionGate','policyHubReturnRoute','styleProfileReturnRoute','destinationAddReturnRoute','isOverlayReturnRouteId','overlayReturnRoutes','getBackRoute', `return (${backExpression});`);
-const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4','C1','G1',r=>r==='H4',{H4:'C1'},getBackRoute);
+const dynamicBack=new Function('route','gate','permissionGate','policyHubReturnRoute','policyDocumentReturnRoute','styleProfileReturnRoute','destinationAddReturnRoute','isOverlayReturnRouteId','overlayReturnRoutes','getBackRoute', `return (${backExpression});`);
+const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4','R1','C1','G1',r=>r==='H4',{H4:'C1'},getBackRoute);
 for (const [from,to] of [['A4','M1'],['A2','C1'],['O3','M4'],['R2','R1'],['R1','A4'],['O4','C1'],['H4','C1']]) assert.equal(resolveBack(from),to);
 for (const route of ['A4','A2','O3','H1']) {
   let destination,accountCleared=false,permissionCleared=false;

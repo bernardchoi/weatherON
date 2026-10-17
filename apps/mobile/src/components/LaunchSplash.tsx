@@ -1,11 +1,19 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, View } from "../localization/react-native";
+import { Animated, Easing, Platform, StyleSheet, View } from "../localization/react-native";
 import { brandAssets } from "../assets";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { AnimatedBrandMark } from "./AnimatedBrandMark";
 
-export function LaunchSplash({ started, onReady, onFinish }: {
+const IosLaunchSplash = Platform.OS === "ios"
+  ? require("./IosLaunchSplash").IosLaunchSplash as typeof import("./IosLaunchSplash").IosLaunchSplash
+  : null;
+
+export function LaunchSplash(props: { started: boolean; onReady: () => void; onFinish: () => void }) {
+  return IosLaunchSplash ? <IosLaunchSplash {...props} /> : <LegacyLaunchSplash {...props} />;
+}
+
+function LegacyLaunchSplash({ started, onReady, onFinish }: {
   started: boolean;
   onReady: () => void;
   onFinish: () => void;

@@ -21,6 +21,7 @@
           "style": "light"
         }
       ],
+      "./plugins/withWeatheronIosBrandSplash",
       [
         "expo-splash-screen",
         {
@@ -31,6 +32,16 @@
           "dark": {
             "backgroundColor": "#071E33",
             "image": "../../assets/icon/icon-dark-512.png"
+          },
+          "ios": {
+            "backgroundColor": "#E9F6F8",
+            "image": "../../assets/splash/ios-brand-02/cloud-first-light.png",
+            "imageWidth": 180,
+            "resizeMode": "contain",
+            "dark": {
+              "backgroundColor": "#102B38",
+              "image": "../../assets/splash/ios-brand-02/cloud-first-dark.png"
+            }
           }
         }
       ],
@@ -58,7 +69,9 @@
       "version": "1.0.0",
       "supportsTablet": false,
       "usesAppleSignIn": true,
-      "entitlements": { "aps-environment": "development" },
+      "entitlements": {
+        "aps-environment": "development"
+      },
       "bundleIdentifier": "com.weatheron.mobile",
       "icon": {
         "light": "../../assets/icon/icon-light-v2-1024.png",
@@ -66,7 +79,11 @@
       },
       "infoPlist": {
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleLocalizations": ["ko", "en", "ja"],
+        "CFBundleLocalizations": [
+          "ko",
+          "en",
+          "ja"
+        ],
         "NSLocationWhenInUseUsageDescription": "WeatherON uses your location to provide local weather and recommendations for getting ready to go out.",
         "NSMotionUsageDescription": "WeatherON uses motion data to adapt weather effects and transitions to your device and accessibility settings.",
         "NSCameraUsageDescription": "WeatherON uses the camera so you can photograph clothes you own and add them to your wardrobe and outfit recommendations.",

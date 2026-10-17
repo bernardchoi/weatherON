@@ -1,4 +1,5 @@
 type SQLiteDatabase = import("expo-sqlite").SQLiteDatabase;
+import { Platform } from "../localization/react-native";
 
 type SQLiteExecutor = Pick<SQLiteDatabase, "getAllAsync" | "getFirstAsync" | "runAsync">;
 
@@ -111,6 +112,7 @@ type WeatherSnapshotRow = {
   timezone: string | null;
   temp_c: number;
   feels_like_c: number;
+  provider_presence_json: string | null;
   condition: string;
   precipitation_mm: number;
   rain_probability_pct: number;
@@ -978,6 +980,7 @@ async function readWeatherSnapshot(database: SQLiteExecutor, role: string, seq: 
 }
 
 async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: WeatherSnapshotRow): Promise<Record<string, unknown>> {
+  const presence = readWeatherPresence(row.provider_presence_json);
   const hourly = await database.getAllAsync<HourlyWeatherRow>(
     "SELECT * FROM weather_hourly WHERE role = ? AND snapshot_seq = ? ORDER BY seq",
     row.role,
@@ -990,6 +993,7 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
   );
   return removeUndefined({
     id: row.snapshot_id ?? undefined,
+    locationUnverified: typeof presence.locationUnverified === "boolean" ? presence.locationUnverified : undefined,
     locationId: row.location_id,
     locationName: row.location_name,
     countryCode: row.country_code,
@@ -998,6 +1002,9 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
     current: {
       tempC: row.temp_c,
       feelsLikeC: row.feels_like_c,
+      feelsLikeAvailable: typeof presence.feelsLikeAvailable === "boolean" ? presence.feelsLikeAvailable : undefined,
+      tempAvailable: typeof presence.tempAvailable === "boolean" ? presence.tempAvailable : undefined,
+      windAvailable: typeof presence.windAvailable === "boolean" ? presence.windAvailable : undefined,
       condition: row.condition,
       precipitationMm: row.precipitation_mm,
       rainProbabilityPct: row.rain_probability_pct,
@@ -1009,6 +1016,7 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
     },
     hourly: hourly.map((item) => ({
       time: item.time,
+      available: hourlyPresence(objectRecord(arrayValue(presence.hourly).find(value => objectRecord(value).time === item.time)).available),
       tempC: item.temp_c,
       rainProbabilityPct: item.rain_probability_pct,
       precipitationMm: item.precipitation_mm,
@@ -1036,8 +1044,8 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     `INSERT INTO weather_snapshots (
       role, seq, snapshot_id, location_id, location_name, country_code, observed_at,
       temp_c, feels_like_c, condition, precipitation_mm, rain_probability_pct, wind_ms, humidity_pct, uv_index, pm10, pm2_5,
-      source, stale, updated_at, timezone
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      source, stale, updated_at, timezone, provider_presence_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     role,
     seq,
     textValue(snapshot.id) ?? null,
@@ -1047,7 +1055,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     textValue(snapshot.observedAt) ?? "",
     numberValue(current.tempC),
     numberValue(current.feelsLikeC),
-    textValue(current.condition) ?? "clear",
+    textValue(current.condition) ?? defaultStoredCondition(),
     numberValue(current.precipitationMm),
     numberValue(current.rainProbabilityPct),
     numberValue(current.windMs),
@@ -1059,6 +1067,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
     boolValue(snapshot.stale) ? 1 : 0,
     now,
     textValue(snapshot.timezone) ?? null,
+    weatherPresence(snapshot),
   );
   for (const [index, item] of arrayValue(snapshot.hourly).entries()) {
     const hourly = objectRecord(item);
@@ -1072,7 +1081,7 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
       numberValue(hourly.rainProbabilityPct),
       numberValue(hourly.precipitationMm),
       numberValue(hourly.windMs),
-      textValue(hourly.condition) ?? "clear",
+      textValue(hourly.condition) ?? defaultStoredCondition(),
     );
   }
   for (const [index, item] of arrayValue(snapshot.daily).entries()) {
@@ -1088,14 +1097,20 @@ async function writeWeatherSnapshot(database: SQLiteExecutor, role: string, seq:
       numberValue(daily.rainProbabilityPct),
       numberValue(daily.precipitationMm),
       numberValue(daily.windMs),
-      textValue(daily.condition) ?? "clear",
+      textValue(daily.condition) ?? defaultStoredCondition(),
     );
   }
+}
+
+function defaultStoredCondition() {
+  // Android retains the legacy cache fallback; iOS alone exposes an unknown state.
+  return Platform.OS === "ios" ? "unknown" : "clear";
 }
 
 async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {
   const rows = await database.getAllAsync<TableInfoRow>("PRAGMA table_info(weather_snapshots)");
   const columns = new Set(rows.map((row) => row.name));
+  if (!columns.has("provider_presence_json")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN provider_presence_json TEXT");
   if (!columns.has("timezone")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN timezone TEXT");
   if (!columns.has("pm10")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm10 REAL");
   if (!columns.has("pm2_5")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm2_5 REAL");
@@ -1291,4 +1306,27 @@ function removeUndefined<T extends Record<string, unknown>>(record: T): T {
     if (value !== undefined) acc[key] = value;
     return acc;
   }, {}) as T;
+}
+
+// Only source-presence booleans and existing hourly keys are cached; never infer missing values.
+function hourlyPresence(value: unknown) {
+  const fields = objectRecord(value);
+  if (!["temp", "rainProbability", "precipitation", "wind"].every(key => typeof fields[key] === "boolean")) return undefined;
+  return { temp: fields.temp as boolean, rainProbability: fields.rainProbability as boolean, precipitation: fields.precipitation as boolean, wind: fields.wind as boolean, ...(typeof fields.condition === "boolean" ? { condition: fields.condition } : {}) };
+}
+function weatherPresence(snapshot: Record<string, unknown>) {
+  const current = objectRecord(snapshot.current);
+  return JSON.stringify({
+    feelsLikeAvailable: typeof current.feelsLikeAvailable === "boolean" ? current.feelsLikeAvailable : undefined,
+    tempAvailable: typeof current.tempAvailable === "boolean" ? current.tempAvailable : undefined,
+    windAvailable: typeof current.windAvailable === "boolean" ? current.windAvailable : undefined,
+    locationUnverified: typeof snapshot.locationUnverified === "boolean" ? snapshot.locationUnverified : undefined,
+    hourly: arrayValue(snapshot.hourly).map(value => {
+      const hour = objectRecord(value);
+      return { time: textValue(hour.time), available: hourlyPresence(hour.available) };
+    }),
+  });
+}
+function readWeatherPresence(value: string | null) {
+  try { return objectRecord(JSON.parse(value ?? "{}")); } catch { return {}; }
 }

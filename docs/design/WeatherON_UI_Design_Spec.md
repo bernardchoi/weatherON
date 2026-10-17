@@ -1,5 +1,7 @@
 # WeatherON UI 통합 디자인 스펙
 
+> 2026-10-12 iOS-only palette update: the color tables in this older specification are historical. Current iOS app palette and semantic role mapping: [Shared Brand Palette](WeatherON_BRAND_PALETTE_2026-10-12.md). Original static references remain unchanged.
+
 Version 1.0 · 2026-07-03 · Source of Truth
 
 ---

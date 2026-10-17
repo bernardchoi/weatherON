@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, Pressable, RawText, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, Pressable, RawText, StyleSheet, Text, useWindowDimensions, View } from "../localization/react-native";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -47,13 +48,14 @@ export function WardrobeScreen({
     const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
     return categoryMatch && seasonMatch && purposeMatch;
   });
-  const wardrobeItemWidth = layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const { fontScale } = useWindowDimensions();
+  const wardrobeItemWidth = Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
 
   return (
     <AppScreen
       title="내 옷장"
-      subtitle="보유한 옷을 확인하고 정리"
-      badge={`${ownedItems.length}개 보유`}
+      subtitle={Platform.OS === "ios" ? `${ownedItems.length}개 보유 · 보유한 옷을 확인하고 정리` : "보유한 옷을 확인하고 정리"}
+      badge={Platform.OS === "ios" ? undefined : `${ownedItems.length}개 보유`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
@@ -64,21 +66,21 @@ export function WardrobeScreen({
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
       ) : null}
 
-      <Section title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
+      <WardrobeSection title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
         <View
-          style={[
+          style={[[
             styles.infoCard,
             layout.isShort || layout.isNarrow ? styles.infoCardShort : null,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
-          ]}
+          ], Platform.OS === "ios" && ambientVisual.infoCard]}
         >
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text>
-            <Text style={[styles.itemMeta, { color: theme.muted }]} numberOfLines={1}>
+            {Platform.OS !== "ios" ? <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text> : null}
+            <Text style={[[styles.itemMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.itemMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>
               {accountLinked ? "계정 연결됨 · 코디 추천에 반영" : "계정 연결 전 · 프리셋 추가 가능"}
             </Text>
           </View>
-          <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />
+          {Platform.OS === "ios" ? <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 보기" onPress={() => onNavigate("C1")} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}><Text style={{ color: theme.clear, fontSize: 16 }}>코디 보기 ›</Text></FeedbackPressable> : <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" size="sm" />}
         </View>
 
         <WardrobeFilterControls
@@ -90,14 +92,20 @@ export function WardrobeScreen({
           onPurposeChange={setPurposeFilter}
         />
         {ownedItems.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>
+          <View style={[styles.emptyState, Platform.OS === "ios" && ambientVisual.emptyState]}>
+            {Platform.OS === "ios" ? <>
+              <Image source={ambientUiIcons.wardrobeEmpty} resizeMode="contain" accessibilityElementsHidden style={{ width: 96, height: 96, tintColor: theme.border, alignSelf: "center", marginVertical: 8 }} />
+              <View style={{ alignItems: "center", gap: 6 }}>
+                <Text style={{ fontSize: 20, lineHeight: 28, fontWeight: "600", color: theme.text }}>아직 추가한 옷이 없음</Text>
+                <Text style={{ fontSize: 16, lineHeight: 24, color: theme.muted }}>프리셋에서 골라 추가해줘</Text>
+              </View>
+            </> : <Text style={[styles.emptyText, { color: theme.muted }]}>아직 추가한 옷이 없음 · 프리셋에서 골라 추가해줘</Text>}
             <AppButton label="내 옷장에 추가" onPress={onOpenWardrobeAdd} tone="warning" />
           </View>
         ) : filteredItems.length === 0 ? (
-          <Text style={[styles.emptyText, { color: theme.muted }]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
+          <Text style={[[styles.emptyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.emptyText]}>조건에 맞는 옷이 없음 · 필터를 초기화해줘</Text>
         ) : (
-          <View style={[styles.grid, { gap: layout.outfitCardGap }]}>
+          <View style={[[styles.grid, { gap: layout.outfitCardGap }], Platform.OS === "ios" && ambientVisual.grid]}>
             {filteredItems.map((item) => (
               <WardrobeItemCard
                 key={item.id}
@@ -120,13 +128,17 @@ export function WardrobeScreen({
               ]}
             >
               <Text style={[styles.addMark, { color: theme.subtle }]}>+</Text>
-              <Text style={[styles.itemMeta, { color: theme.subtle }]}>추가</Text>
+              <Text style={[[styles.itemMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.itemMeta]}>추가</Text>
             </Pressable>
           </View>
         )}
-      </Section>
+      </WardrobeSection>
     </AppScreen>
   );
+}
+
+function WardrobeSection({ children, ...props }: React.ComponentProps<typeof Section>) {
+  return Platform.OS === "ios" ? <View style={{ gap: 20 }}>{children}</View> : <Section {...props}>{children}</Section>;
 }
 
 function WardrobeItemCard({
@@ -141,10 +153,11 @@ function WardrobeItemCard({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const imageSource = getOutfitImageSource(item.imageUrl);
-  const wardrobeItemWidth = layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const { fontScale } = useWindowDimensions();
+  const wardrobeItemWidth = Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
   return (
     <View
-      style={[
+      style={[[
         styles.card,
         {
           width: wardrobeItemWidth,
@@ -152,24 +165,24 @@ function WardrobeItemCard({
           backgroundColor: theme.cardMuted,
           borderColor: theme.clear,
         },
-      ]}
+      ], Platform.OS === "ios" && ambientVisual.card]}
     >
-      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={styles.cardMain}>
-        <View style={[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }]}>
-          {imageSource ? <Image source={imageSource} style={styles.itemImage} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[styles.itemName, { color: theme.text }]}>{item.name}</RawText> : <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>}
+      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={[styles.cardMain, Platform.OS === "ios" && ambientVisual.cardMain]}>
+        <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell]}>
+          {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
         </View>
-        {item.source === "photo" ? <RawText style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</RawText> : <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>{item.name}</Text>}
-        <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text>
+        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</Text>}
+        <Text style={[[styles.itemMeta, styles.cardMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.itemMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </FeedbackPressable>
       <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
         accessibilityRole="button"
         onPress={onRemove}
         hitSlop={2}
-        style={styles.deleteButton}
+        style={[styles.deleteButton, Platform.OS === "ios" && ambientVisual.deleteButton]}
       >
-        <View style={[styles.deleteButtonSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }]}>
-          <Image source={uiIconAssets.trash} style={[styles.deleteIcon, { tintColor: theme.warm }]} resizeMode="contain" />
+        <View style={[[styles.deleteButtonSurface, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.deleteButtonSurface]}>
+          <Image source={Platform.OS === "ios" ? ambientUiIcons.delete : uiIconAssets.trash} style={[[styles.deleteIcon, { tintColor: theme.warm }], Platform.OS === "ios" && ambientVisual.deleteIcon]} resizeMode="contain" />
         </View>
       </FeedbackPressable>
     </View>
@@ -187,10 +200,10 @@ function RemovedItemBanner({
   theme: AppTheme;
 }) {
   return (
-    <View style={[styles.removedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.warm }]}>
+    <View style={[[styles.removedBanner, { backgroundColor: theme.cardStrong, borderColor: theme.warm }], Platform.OS === "ios" && ambientVisual.removedBanner]}>
       <View style={styles.removedCopy}>
-        <Text style={[styles.removedTitle, { color: theme.warm }]}>옷 삭제됨</Text>
-        <Text style={[styles.itemMeta, { color: theme.muted }]}>{itemName}을 다시 복구할 수 있어요</Text>
+        <Text style={[[styles.removedTitle, { color: theme.warm }], Platform.OS === "ios" && ambientVisual.removedTitle]}>옷 삭제됨</Text>
+        <Text style={[[styles.itemMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.itemMeta]}>{itemName}을 다시 복구할 수 있어요</Text>
       </View>
       <Pressable
         accessibilityLabel={`${itemName} 복구`}
@@ -198,7 +211,7 @@ function RemovedItemBanner({
         onPress={onRestore}
         style={[styles.restoreButton, { backgroundColor: theme.gold }]}
       >
-        <Text style={[styles.restoreButtonText, { color: theme.onAccent }]}>복구</Text>
+        <Text style={[[styles.restoreButtonText, { color: theme.onAccent }], Platform.OS === "ios" && ambientVisual.restoreButtonText]}>복구</Text>
       </Pressable>
     </View>
   );
@@ -338,4 +351,104 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
   },
+});
+
+// iOS Ambient image-led wardrobe; original Android layout is retained.
+const ambientVisual = StyleSheet.create({
+  "infoCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "itemMeta": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "card": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "overflow": "visible"
+  },
+  "cardMain": {
+    "paddingHorizontal": 0,
+    "paddingTop": 34,
+    "gap": 8
+  },
+  "imageWell": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "height": 132
+  },
+  "itemImage": {
+    "width": "94%",
+    "height": "94%"
+  },
+  "itemName": {
+    "fontSize": 15,
+    "lineHeight": 22,
+    "fontWeight": "600"
+  },
+  "cardMeta": {
+    "paddingRight": 0
+  },
+  "deleteButton": {
+    "bottom": undefined,
+    "top": 0
+  },
+  "deleteButtonSurface": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "deleteIcon": {
+    "width": 20,
+    "height": 20
+  },
+  "grid": {
+    "rowGap": 24
+  },
+  "emptyState": {
+    "alignItems": "stretch",
+    "gap": 16,
+    "paddingVertical": 16
+  },
+  "emptyText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "removedBanner": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 16,
+    "gap": 16
+  },
+  "removedTitle": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "restoreButtonText": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  }
 });

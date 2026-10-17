@@ -1,5 +1,9 @@
 import type { CountryCode, WeatherSnapshot } from "../types/weather";
 
+// The expanded precipitation vocabulary is an iOS Ambient Surface rollout.
+// Non-iOS consumers keep their existing provider results until explicitly opted in.
+export type WeatherConditionMappingProfile = "legacy" | "ambient-v3";
+
 export type WeatherLocationInput = {
   locationId: string;
   locationName: string;
@@ -10,6 +14,7 @@ export type WeatherLocationInput = {
 export type WeatherNormalizeOptions = WeatherLocationInput & {
   observedAt?: string;
   stale?: boolean;
+  conditionProfile?: WeatherConditionMappingProfile;
 };
 
 export type KmaForecastItem = {

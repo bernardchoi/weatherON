@@ -16,8 +16,8 @@ export function normalizeWeatherKitWeather(
   }
 
   const observedAt = options.observedAt ?? current.asOf ?? current.metadata?.reportedTime ?? current.metadata?.readTime ?? new Date(0).toISOString();
-  const hourly = buildHourly(payload, options.timezone, observedAt);
-  const daily = buildDaily(payload, options.timezone);
+  const hourly = buildHourly(payload, options.timezone, observedAt, options.conditionProfile);
+  const daily = buildDaily(payload, options.timezone, options.conditionProfile);
   const currentPrecipitationMm = hourly[0]?.precipitationMm ?? current.precipitationIntensity ?? 0;
 
   return {
@@ -28,9 +28,17 @@ export function normalizeWeatherKitWeather(
     timezone: options.timezone,
     observedAt,
     current: {
+      atmosphere: {
+        kind: current.conditionCode?.toLowerCase().includes("thunder") ? "thunder" : current.conditionCode?.toLowerCase().includes("fog") ? "fog" : undefined,
+        conditionAvailable: Boolean(current.conditionCode?.trim()),
+        precipitationMm: Number.isFinite(current.precipitationIntensity) ? current.precipitationIntensity : undefined,
+      },
+      tempAvailable: Number.isFinite(current.temperature),
+      windAvailable: Number.isFinite(current.windSpeed),
       tempC: current.temperature ?? hourly[0]?.tempC ?? 0,
+      feelsLikeAvailable: Number.isFinite(current.temperatureApparent),
       feelsLikeC: current.temperatureApparent ?? current.temperature ?? hourly[0]?.tempC ?? 0,
-      condition: conditionFromWeatherKit(current.conditionCode),
+      condition: conditionFromWeatherKit(current.conditionCode, options.conditionProfile),
       precipitationMm: currentPrecipitationMm,
       rainProbabilityPct: hourly[0]?.rainProbabilityPct ?? (currentPrecipitationMm > 0 ? 80 : 0),
       windMs: current.windSpeed === undefined ? hourly[0]?.windMs ?? 0 : kmhToMs(current.windSpeed),
@@ -48,31 +56,33 @@ export function normalizeWeatherKitWeather(
 // 지역 로컬시각 문자열(YYYY-MM-DDTHH:mm)을 hourly[].time/daily[].date에 넣고, 화면 쪽
 // formatHour/getDateKey 등은 이를 그대로 로컬시각으로 가정해 정규식으로 파싱한다.
 // 여기서 로컬 문자열로 변환해두지 않으면 UTC 시각이 로컬시각처럼 표시된다(KST 기준 9시간 오차).
-function buildHourly(payload: WeatherKitResponse, timeZone: string, observedAt?: string): HourlyWeather[] {
+function buildHourly(payload: WeatherKitResponse, timeZone: string, observedAt?: string, conditionProfile?: WeatherNormalizeOptions["conditionProfile"]): HourlyWeather[] {
   const observedHourMs = getHourStartMs(observedAt);
   return (payload.forecastHourly?.hours ?? [])
     .filter((hour) => isCurrentOrFutureHour(hour.forecastStart, observedHourMs))
     .map((hour) => ({
+      available: { temp: Number.isFinite(hour.temperature), rainProbability: Number.isFinite(hour.precipitationChance), precipitation: Number.isFinite(hour.precipitationAmount), wind: Number.isFinite(hour.windSpeed), condition: typeof hour.conditionCode === "string" && hour.conditionCode.length > 0 },
       time: hour.forecastStart ? toLocalTimeString(hour.forecastStart, timeZone) : "",
       tempC: hour.temperature ?? payload.currentWeather?.temperature ?? 0,
       rainProbabilityPct: ratioToPct(hour.precipitationChance),
       precipitationMm: hour.precipitationAmount ?? 0,
       windMs: kmhToMs(hour.windSpeed ?? payload.currentWeather?.windSpeed ?? 0),
-      condition: conditionFromWeatherKit(hour.conditionCode ?? payload.currentWeather?.conditionCode),
+      condition: conditionFromWeatherKit(hour.conditionCode ?? payload.currentWeather?.conditionCode, conditionProfile),
     }));
 }
 
-function buildDaily(payload: WeatherKitResponse, timeZone: string): DailyWeather[] | undefined {
+function buildDaily(payload: WeatherKitResponse, timeZone: string, conditionProfile?: WeatherNormalizeOptions["conditionProfile"]): DailyWeather[] | undefined {
   const days = payload.forecastDaily?.days ?? [];
   if (days.length === 0) return undefined;
   return days.map((day) => ({
+    available: { minTemp: Number.isFinite(day.temperatureMin), maxTemp: Number.isFinite(day.temperatureMax), rainProbability: Number.isFinite(day.precipitationChance) },
     date: day.forecastStart ? toLocalDateString(day.forecastStart, timeZone) : "",
     minTempC: day.temperatureMin ?? payload.currentWeather?.temperature ?? 0,
     maxTempC: day.temperatureMax ?? payload.currentWeather?.temperature ?? 0,
     rainProbabilityPct: ratioToPct(day.precipitationChance),
     precipitationMm: day.precipitationAmount ?? 0,
     windMs: kmhToMs(day.windSpeedAvg ?? day.windSpeed ?? payload.currentWeather?.windSpeed ?? 0),
-    condition: conditionFromWeatherKit(day.conditionCode ?? payload.currentWeather?.conditionCode),
+    condition: conditionFromWeatherKit(day.conditionCode ?? payload.currentWeather?.conditionCode, conditionProfile),
   }));
 }
 

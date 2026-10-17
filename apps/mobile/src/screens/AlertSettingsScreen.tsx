@@ -1,6 +1,7 @@
+import { ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useState } from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "../components/BackButton";
 import { isNotificationQaBuild } from "../config/buildVariant";
 import type { P0RouteId } from "../navigation/routes";
@@ -80,7 +81,7 @@ export function AlertSettingsScreen({
   };
 
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -100,7 +101,7 @@ export function AlertSettingsScreen({
           <BackButton onPress={goBack} />
           <View style={styles.headerCopy}>
             <Text
-              style={[
+              style={[[
                 styles.title,
                 {
                   color: theme.text,
@@ -108,7 +109,7 @@ export function AlertSettingsScreen({
                   lineHeight: layout.screenTitleLineHeight,
                 },
                 pageStyles.title,
-              ]}
+              ], Platform.OS === "ios" && ambientVisual.title]}
               numberOfLines={1}
             >
               스마트 알림 설정
@@ -153,13 +154,13 @@ export function AlertSettingsScreen({
             onPress={onToggleSmartCare}
             style={[styles.heroToggleRow, { padding: layout.settingsPanelPadding }]}
           >
-            <View style={[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }]}>
+            <View style={[[styles.heroIcon, { borderColor: `${theme.gold}55`, backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.heroIcon]}>
               <BellGlyph color={theme.gold} />
             </View>
             <View style={styles.heroCopy}>
               <Text style={[styles.heroKicker, { color: theme.gold }]}>내 일상에 맞춰</Text>
-              <Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={1}>{alertReadiness.title}</Text>
-              <Text style={[styles.heroBody, pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{alertReadiness.body}</Text>
+              <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]} numberOfLines={1}>{alertReadiness.title}</Text>
+              <Text style={[[styles.heroBody, pageStyles.compactCaption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroBody]} numberOfLines={1}>{alertReadiness.body}</Text>
             </View>
             <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
               <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
@@ -177,8 +178,8 @@ export function AlertSettingsScreen({
           </View>
         ) : null}
 
-        <View style={[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card]}>
-          <Text style={[styles.groupLabel, { color: theme.subtle }]}>어떤 순간을 챙길까요?</Text>
+        <View style={[[styles.settingsCard, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.settingsCard]}>
+          <Text style={[[styles.groupLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.groupLabel]}>어떤 순간을 챙길까요?</Text>
           {!permissionReady ? (
             <View style={[styles.permissionNotice, { backgroundColor: `${theme.warm}16`, borderColor: `${theme.warm}55` }]}>
               <View style={styles.permissionNoticeCopy}>
@@ -287,7 +288,7 @@ export function AlertSettingsScreen({
             ) : null}
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
-              <Text style={[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
+              <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
             </View>
             </View>
           ) : null}
@@ -384,14 +385,14 @@ function AlertSummaryRow({
       onPress={onPress}
       style={[styles.alertSummaryRow, { borderBottomColor: theme.border }]}
     >
-      <View style={[styles.alertSummaryIcon, { backgroundColor: `${color}16` }]}>
+      <View style={[[styles.alertSummaryIcon, { backgroundColor: `${color}16` }], Platform.OS === "ios" && ambientVisual.alertSummaryIcon]}>
         <AlertIcon type={icon} color={color} />
       </View>
       <View style={styles.alertSummaryCopy}>
-        <Text style={[styles.alertSummaryTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.alertSummaryBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+        <Text style={[[styles.alertSummaryTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.alertSummaryTitle]}>{title}</Text>
+        <Text style={[[styles.alertSummaryBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.alertSummaryBody]} numberOfLines={1}>{body}</Text>
       </View>
-      <View style={[styles.alertSummaryStatus, { backgroundColor: `${color}20` }]}>
+      <View style={[[styles.alertSummaryStatus, { backgroundColor: `${color}20` }], Platform.OS === "ios" && ambientVisual.alertSummaryStatus]}>
         <Text style={[styles.statusPillText, { color }]}>{status}</Text>
       </View>
     </Container>
@@ -425,7 +426,7 @@ function AdvancedToggleRow({
     >
       <View style={styles.advancedCopy}>
         <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+        <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={1}>{body}</Text>
       </View>
       <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
         <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />
@@ -435,6 +436,7 @@ function AdvancedToggleRow({
 }
 
 function AlertIcon({ type, color }: { type: "bell" | "rain" | "sun" | "route"; color: string }) {
+  if (Platform.OS === "ios") return <Image source={type === "rain" ? ambientUiIcons.umbrella : type === "sun" ? ambientUiIcons.tabOutfit : type === "route" ? ambientUiIcons.tabDepart : ambientUiIcons.notifications} style={{ width: 28, height: 28, tintColor: color }} resizeMode="contain" accessibilityElementsHidden />;
   if (type === "rain") return <RainGlyph color={color} />;
   if (type === "sun") return <SunGlyph color={color} />;
   if (type === "route") return <RouteGlyph color={color} />;
@@ -1124,4 +1126,64 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     transform: [{ rotate: "-45deg" }, { translateY: 3 }],
   },
+});
+
+// Approved Ambient reading hierarchy; Android retains its original styles.
+const ambientVisual = StyleSheet.create({
+  "settingsCard": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "paddingHorizontal": 0,
+    "paddingVertical": 18,
+    "gap": 16
+  },
+  "heroIcon": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "alertSummaryIcon": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "alertSummaryStatus": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0
+  },
+  "alertSummaryTitle": {
+    "fontSize": 16,
+    "lineHeight": 23,
+    "fontWeight": "500"
+  },
+  "alertSummaryBody": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "title": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "heroTitle": {
+    "fontSize": 21,
+    "lineHeight": 28,
+    "fontWeight": "700"
+  },
+  "heroBody": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "advancedLineBody": {
+    "fontSize": 14,
+    "lineHeight": 20,
+    "fontWeight": "400"
+  },
+  "groupLabel": {
+    "fontSize": 18,
+    "lineHeight": 25,
+    "fontWeight": "600"
+  }
 });

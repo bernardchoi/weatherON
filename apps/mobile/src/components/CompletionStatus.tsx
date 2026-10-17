@@ -58,15 +58,15 @@ export function CompletionStatus({ visible, title, message, compact = false }: C
       style={[
         styles.card,
         compact && styles.cardCompact,
-        { backgroundColor: theme.cardStrong, borderColor: theme.clear, shadowColor: theme.shadow, opacity: progress, transform: [{ scale }] },
+        { backgroundColor: theme.cardStrong, borderColor: theme.success, shadowColor: theme.shadow, opacity: progress, transform: [{ scale }] },
         cardShadow(theme),
       ]}
     >
-      <View style={[styles.mark, compact && styles.markCompact, { backgroundColor: `${theme.clear}18` }]}>
-        <Image source={uiIconAssets.check} style={[styles.icon, compact && styles.iconCompact, { tintColor: theme.clear }]} resizeMode="contain" />
+      <View style={[styles.mark, compact && styles.markCompact, { backgroundColor: `${theme.success}18` }]}>
+        <Image source={uiIconAssets.check} style={[styles.icon, compact && styles.iconCompact, { tintColor: theme.success }]} resizeMode="contain" />
       </View>
       <View style={styles.copy}>
-        <Text style={[styles.title, compact && styles.titleCompact, { color: theme.clear }]}>{title}</Text>
+        <Text style={[styles.title, compact && styles.titleCompact, { color: theme.success }]}>{title}</Text>
         <Text style={[styles.message, compact && styles.messageCompact, { color: theme.muted }]} numberOfLines={compact ? 1 : undefined}>{message}</Text>
       </View>
     </Animated.View>

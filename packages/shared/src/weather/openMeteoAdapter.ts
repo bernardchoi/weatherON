@@ -8,8 +8,8 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     throw new Error("Open-Meteo payload has no current weather");
   }
 
-  const hourly = buildHourly(payload);
-  const daily = buildDaily(payload);
+  const hourly = buildHourly(payload, options.conditionProfile);
+  const daily = buildDaily(payload, options.conditionProfile);
   const precipitationMm = current.precipitation ?? current.rain ?? current.showers ?? current.snowfall ?? 0;
 
   return {
@@ -20,9 +20,14 @@ export function normalizeOpenMeteoWeather(payload: OpenMeteoResponse, options: W
     timezone: options.timezone,
     observedAt: options.observedAt ?? current.time ?? new Date(0).toISOString(),
     current: {
+      atmosphere: {
+        kind: [95, 96, 99].includes(current.weather_code ?? -1) ? "thunder" : [45, 48].includes(current.weather_code ?? -1) ? "fog" : undefined,
+        conditionAvailable: Number.isFinite(current.weather_code),
+        precipitationMm: [current.precipitation, current.rain, current.showers, current.snowfall].some(Number.isFinite) ? precipitationMm : undefined,
+      },
       tempC: current.temperature_2m ?? hourly[0]?.tempC ?? 0,
       feelsLikeC: current.apparent_temperature ?? current.temperature_2m ?? hourly[0]?.tempC ?? 0,
-      condition: conditionFromOpenMeteo(current.weather_code),
+      condition: conditionFromOpenMeteo(current.weather_code, options.conditionProfile),
       precipitationMm,
       rainProbabilityPct: hourly[0]?.rainProbabilityPct ?? (precipitationMm > 0 ? 80 : 0),
       windMs: kmhToMs(current.wind_speed_10m ?? 0),
@@ -68,7 +73,7 @@ function getCurrentHourlyHumidity(payload: OpenMeteoResponse): number | undefine
   return humidityValues[0];
 }
 
-function buildHourly(payload: OpenMeteoResponse): HourlyWeather[] {
+function buildHourly(payload: OpenMeteoResponse, conditionProfile: WeatherNormalizeOptions["conditionProfile"]): HourlyWeather[] {
   const hourly = payload.hourly;
   const times = hourly?.time ?? [];
   return times.map((time, index) => ({
@@ -77,22 +82,23 @@ function buildHourly(payload: OpenMeteoResponse): HourlyWeather[] {
     rainProbabilityPct: hourly?.precipitation_probability?.[index] ?? 0,
     precipitationMm: hourly?.precipitation?.[index] ?? 0,
     windMs: kmhToMs(hourly?.wind_speed_10m?.[index] ?? payload.current?.wind_speed_10m ?? 0),
-    condition: conditionFromOpenMeteo(hourly?.weather_code?.[index] ?? payload.current?.weather_code),
+    condition: conditionFromOpenMeteo(hourly?.weather_code?.[index] ?? payload.current?.weather_code, conditionProfile),
   }));
 }
 
-function buildDaily(payload: OpenMeteoResponse): DailyWeather[] | undefined {
+function buildDaily(payload: OpenMeteoResponse, conditionProfile: WeatherNormalizeOptions["conditionProfile"]): DailyWeather[] | undefined {
   const daily = payload.daily;
   const times = daily?.time ?? [];
   if (times.length === 0) return undefined;
   return times.map((date, index) => ({
+    available: { minTemp: Number.isFinite(daily?.temperature_2m_min?.[index]), maxTemp: Number.isFinite(daily?.temperature_2m_max?.[index]), rainProbability: Number.isFinite(daily?.precipitation_probability_max?.[index]) },
     date,
     minTempC: daily?.temperature_2m_min?.[index] ?? payload.current?.temperature_2m ?? 0,
     maxTempC: daily?.temperature_2m_max?.[index] ?? payload.current?.temperature_2m ?? 0,
     rainProbabilityPct: daily?.precipitation_probability_max?.[index] ?? 0,
     precipitationMm: daily?.precipitation_sum?.[index] ?? 0,
     windMs: kmhToMs(daily?.wind_speed_10m_max?.[index] ?? payload.current?.wind_speed_10m ?? 0),
-    condition: conditionFromOpenMeteo(daily?.weather_code?.[index] ?? payload.current?.weather_code),
+    condition: conditionFromOpenMeteo(daily?.weather_code?.[index] ?? payload.current?.weather_code, conditionProfile),
   }));
 }
 

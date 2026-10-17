@@ -1,6 +1,7 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
+import { ambientUiIcons } from "../ambientAssets";
 import { BackButton } from "../components/BackButton";
 import { pageStyles } from "../theme/pageStyles";
 import type { P0ScreenProps } from "../navigation/types";
@@ -10,17 +11,17 @@ import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing } from "../theme/tokens";
 
 const policyRows: { type: PolicyDocumentType; icon: number; title: string; body: string }[] = [
-  { type: "privacy", icon: uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
-  { type: "terms", icon: uiIconAssets.policyTerms, title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
-  { type: "location", icon: uiIconAssets.policyLocation, title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
-  { type: "open-source", icon: uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
+  { type: "privacy", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyPrivacy, title: "개인정보처리방침", body: "위치·목적지·앱 사용 데이터" },
+  { type: "terms", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyTerms, title: "이용약관", body: "게스트·계정 연결·저장 기능 기준" },
+  { type: "location", icon: Platform.OS === "ios" ? ambientUiIcons.location : uiIconAssets.policyLocation, title: "위치기반서비스 이용약관", body: "현재 위치와 목적지 기반 안내" },
+  { type: "open-source", icon: Platform.OS === "ios" ? ambientUiIcons.policyDocument : uiIconAssets.policyOss, title: "오픈소스 라이선스", body: "Expo·React Native·SDK 고지" },
 ];
 
 export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   return (
-    <View style={[styles.shell, { backgroundColor: theme.background }]}>
+    <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -40,27 +41,27 @@ export function PolicyHubScreen({ onOpenPolicyDocument, onGoBack }: P0ScreenProp
           <Text style={[styles.screenTitle, pageStyles.title, { color: theme.text, fontSize: layout.screenTitleFontSize, lineHeight: layout.screenTitleLineHeight }]}>정책 및 법적 고지</Text>
         </View>
 
-        <View style={[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)]}>
+        <View style={[[styles.documentPanel, { backgroundColor: theme.cardStrong, borderColor: theme.border }, cardShadow(theme)], Platform.OS === "ios" && ambientVisual.documentPanel]}>
           {policyRows.map((item, index) => (
             <Pressable
               accessibilityLabel={`${item.title}, ${item.body}`}
               accessibilityRole="button"
               key={item.type}
               onPress={() => onOpenPolicyDocument(item.type)}
-              style={[
+              style={[[
                 styles.documentRow,
                 { minHeight: layout.accountPolicyRowMinHeight, padding: layout.accountPanelPadding },
                 index < policyRows.length - 1 ? { borderBottomColor: theme.border, borderBottomWidth: 1 } : null,
-              ]}
+              ], Platform.OS === "ios" && ambientVisual.documentRow]}
             >
               <View style={styles.iconBox}>
-                <Image source={item.icon} style={[styles.iconImage, { tintColor: theme.sky }]} resizeMode="contain" />
+                <Image source={item.icon} style={[[styles.iconImage, { tintColor: theme.sky }], Platform.OS === "ios" && ambientVisual.iconImage]} resizeMode="contain" />
               </View>
               <View style={styles.copy}>
-                <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-                <Text style={[styles.body, { color: theme.muted }]}>{item.body}</Text>
+                <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{item.title}</Text>
+                <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]}>{item.body}</Text>
               </View>
-              <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>
+              <Text style={[[styles.chevron, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.chevron]}>›</Text>
             </Pressable>
           ))}
         </View>
@@ -131,4 +132,38 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "800",
   },
+});
+
+// Approved iOS Ambient hierarchy; Android retains its existing presentation.
+const ambientVisual = StyleSheet.create({
+  "documentPanel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderRadius": 0,
+    "shadowOpacity": 0,
+    "elevation": 0,
+    "paddingHorizontal": 0
+  },
+  "documentRow": {
+    "paddingHorizontal": 0,
+    "paddingVertical": 24,
+    "gap": 16
+  },
+  "iconImage": {
+    "width": 30,
+    "height": 30
+  },
+  "title": {
+    "fontSize": 16,
+    "lineHeight": 24,
+    "fontWeight": "500"
+  },
+  "body": {
+    "fontSize": 14,
+    "lineHeight": 21,
+    "fontWeight": "400"
+  },
+  "chevron": {
+    "display": "none"
+  }
 });

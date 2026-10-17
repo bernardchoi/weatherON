@@ -13,7 +13,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
   const grouped = groupByForecastTime(items);
   const hourly = Object.entries(grouped)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([timeKey, bucket]) => buildHourly(timeKey, bucket));
+    .map(([timeKey, bucket]) => buildHourly(timeKey, bucket, options.conditionProfile));
   const first = hourly[0];
   const firstBucket = grouped[Object.keys(grouped).sort()[0]];
   const firstHumidityPct = toNumber(firstBucket?.REH, 0);
@@ -25,9 +25,10 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
     countryCode: options.countryCode,
     observedAt: options.observedAt ?? toIsoLike(first.time, options.timezone),
     current: {
+      atmosphere: { conditionAvailable: firstBucket?.PTY !== undefined || firstBucket?.SKY !== undefined },
       tempC: first.tempC,
       feelsLikeC: calculateFeelsLikeC(first.tempC, firstHumidityPct, first.windMs),
-      condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY),
+      condition: conditionFromKma(firstBucket?.PTY, firstBucket?.SKY, options.conditionProfile),
       precipitationMm: first.precipitationMm,
       rainProbabilityPct: first.rainProbabilityPct,
       windMs: first.windMs,
@@ -35,7 +36,7 @@ export function normalizeKmaWeather(payload: KmaForecastResponse | KmaForecastIt
       uvIndex: undefined,
     },
     hourly,
-    daily: buildDaily(hourly),
+    daily: buildDaily(hourly, grouped),
     source: "kma",
     stale: options.stale ?? false,
   };
@@ -50,18 +51,18 @@ function groupByForecastTime(items: KmaForecastItem[]): Record<string, KmaBucket
   }, {});
 }
 
-function buildHourly(timeKey: string, bucket: KmaBucket): HourlyWeather {
+function buildHourly(timeKey: string, bucket: KmaBucket, conditionProfile: WeatherNormalizeOptions["conditionProfile"]): HourlyWeather {
   return {
     time: formatKmaTime(timeKey),
     tempC: toNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX, 0),
     rainProbabilityPct: toNumber(bucket.POP, 0),
     precipitationMm: parseKmaPrecipitation(bucket.PCP),
     windMs: toNumber(bucket.WSD, 0),
-    condition: conditionFromKma(bucket.PTY, bucket.SKY),
+    condition: conditionFromKma(bucket.PTY, bucket.SKY, conditionProfile),
   };
 }
 
-function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
+function buildDaily(hourly: HourlyWeather[], sourceBuckets: Record<string, KmaBucket>): DailyWeather[] | undefined {
   const grouped = hourly.reduce<Record<string, HourlyWeather[]>>((acc, item) => {
     const date = item.time.slice(0, 10);
     acc[date] = acc[date] ?? [];
@@ -72,7 +73,9 @@ function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
   if (dates.length === 0) return undefined;
   return dates.sort().map((date) => {
     const items = grouped[date];
+    const buckets = Object.entries(sourceBuckets).filter(([time]) => time.startsWith(date.replace(/-/g, ""))).map(([,bucket]) => bucket);
     return {
+      available: { minTemp: buckets.every(bucket => hasNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX)), maxTemp: buckets.every(bucket => hasNumber(bucket.TMP ?? bucket.TMN ?? bucket.TMX)), rainProbability: buckets.every(bucket => hasNumber(bucket.POP)) },
       date,
       minTempC: Math.min(...items.map((item) => item.tempC)),
       maxTempC: Math.max(...items.map((item) => item.tempC)),
@@ -85,7 +88,7 @@ function buildDaily(hourly: HourlyWeather[]): DailyWeather[] | undefined {
 }
 
 function selectDailyCondition(items: HourlyWeather[]): HourlyWeather["condition"] {
-  const priority = ["storm", "snow", "rain", "dust", "cloud", "clear"];
+  const priority = ["storm-hail", "storm", "hail", "sleet", "mixed", "snow", "rain", "dust", "cloud", "clear", "unknown"];
   return priority.find((condition) => items.some((item) => item.condition === condition)) ?? items[0]?.condition ?? "cloud";
 }
 
@@ -143,4 +146,8 @@ function toNumber(value: string | number | undefined, fallback: number): number 
   if (value === undefined) return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function hasNumber(value: string | number | undefined): boolean {
+  return value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
 }

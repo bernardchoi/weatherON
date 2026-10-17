@@ -51,6 +51,6 @@ function formatTomorrowDate(value: string) {
 }
 
 function toCondition(value: string): WeatherSnapshot["current"]["condition"] {
-  if (value === "clear" || value === "cloud" || value === "rain" || value === "snow" || value === "storm" || value === "dust") return value;
-  return "cloud";
+  if (value === "clear" || value === "cloud" || value === "rain" || value === "snow" || value === "sleet" || value === "hail" || value === "storm-hail" || value === "mixed" || value === "storm" || value === "dust" || value === "unknown") return value;
+  return "unknown";
 }

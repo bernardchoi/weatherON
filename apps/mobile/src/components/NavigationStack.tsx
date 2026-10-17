@@ -2,9 +2,9 @@ import React, { useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "../localization/react-native";
 import { ScreenStack, ScreenStackItem } from "react-native-screens";
 import type { AppRouteId } from "../navigation/routes";
-import { useAppTheme } from "../theme/AppThemeContext";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { ScreenTransition } from "./ScreenTransition";
+import { HomeViewportContext } from "./HomeViewportContext";
 
 export function reconcileScreenStack(stack: AppRouteId[], route: AppRouteId, backRoute?: AppRouteId): AppRouteId[] {
   if (stack.at(-1) === route) return stack;
@@ -31,25 +31,29 @@ export function NavigationStack(props: Props) {
 }
 
 function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
-  const theme = useAppTheme();
+  const [viewportHeight, setViewportHeight] = useState(0);
   const reducedMotion = useReducedMotion();
   const [stack, setStack] = useState<AppRouteId[]>(() => backRoute && backRoute !== route ? [backRoute, route] : [route]);
   const next = reconcileScreenStack(stack, route, backRoute);
   if (next !== stack) setStack(next);
   const routeRef = useRef(route);
   routeRef.current = route;
-  return <View style={styles.fill}>
-    <ScreenStack style={StyleSheet.absoluteFill}>
+  return <View style={styles.fill} onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}>
+    <HomeViewportContext.Provider value={viewportHeight}>
+    <ScreenStack key={next[0]} style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
         key={id} screenId={id} activityState={2}
-        style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: theme.background }}
+        style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: "transparent" }}
         headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
         stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
         gestureEnabled={index > 0}
         onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
-        {renderScreen(id)}
+        <View style={[styles.fill, { opacity: id === route ? 1 : 0 }]} pointerEvents={id === route ? "auto" : "none"} accessibilityElementsHidden={id !== route} importantForAccessibility={id === route ? "auto" : "no-hide-descendants"}>
+          {renderScreen(id)}
+        </View>
       </ScreenStackItem>)}
     </ScreenStack>
+    </HomeViewportContext.Provider>
   </View>;
 }
 

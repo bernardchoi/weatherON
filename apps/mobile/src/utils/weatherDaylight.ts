@@ -13,6 +13,22 @@ export type WeatherDaylightContext = {
 
 const officialZenith = 90.833;
 
+export type AmbientDaylight = { phase: "day" | "night" | "twilight" | "unknown"; season: "spring" | "summer" | "autumn" | "winter" | "neutral" };
+
+// Existing local solar calculation, not a new observation/API. Missing or polar
+// solar events keep sky effects neutral; calendar season is not current weather.
+export function getAmbientDaylight(date: Date, context: WeatherDaylightContext): AmbientDaylight {
+  const coordinate = context.coordinate;
+  if (!coordinate || !isValidCoordinate(coordinate) || !context.timeZone) return { phase: "unknown", season: "neutral" };
+  const events = getSolarEvents(date, coordinate, context.timeZone);
+  const month = getZonedDateTimeParts(date, context.timeZone).month;
+  const seasonalMonth = coordinate.latitude < 0 ? (month + 5) % 12 + 1 : month;
+  const season = Math.abs(coordinate.latitude) < 23.5 ? "neutral" : seasonalMonth >= 3 && seasonalMonth <= 5 ? "spring" : seasonalMonth >= 6 && seasonalMonth <= 8 ? "summer" : seasonalMonth >= 9 && seasonalMonth <= 11 ? "autumn" : "winter";
+  if (!events) return { phase: "unknown", season };
+  const twilight = Math.min(Math.abs(date.getTime() - events.sunrise.getTime()), Math.abs(date.getTime() - events.sunset.getTime())) <= 30 * 60_000;
+  return { phase: twilight ? "twilight" : date < events.sunrise || date >= events.sunset ? "night" : "day", season };
+}
+
 export function isNightAtWeatherTime(
   value: string,
   context: WeatherDaylightContext,

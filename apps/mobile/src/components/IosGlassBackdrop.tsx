@@ -33,11 +33,11 @@ function getIntensity(role: IosGlassRole): number {
 }
 
 function getOverlayColor(theme: AppTheme, role: IosGlassRole): string {
-  if (role === "buttonPrimary") return colorWithAlpha(theme.clear, theme.name === "light" ? 0.24 : 0.2);
+  if (role === "buttonPrimary") return colorWithAlpha(theme.actionFill, theme.name === "light" ? 0.24 : 0.2);
   if (role === "buttonSecondary") return colorWithAlpha(theme.card, theme.name === "light" ? 0.12 : 0.08);
   if (role === "sheet") return colorWithAlpha(theme.card, theme.name === "light" ? 0.18 : 0.14);
   if (role === "dock" || role === "bar") return colorWithAlpha(theme.card, theme.name === "light" ? 0.14 : 0.1);
-  return colorWithAlpha(theme.name === "light" ? theme.card : theme.skyLite, theme.name === "light" ? 0.12 : 0.09);
+  return colorWithAlpha(theme.name === "light" ? theme.card : theme.materialTint, theme.name === "light" ? 0.12 : 0.09);
 }
 
 const styles = StyleSheet.create({
