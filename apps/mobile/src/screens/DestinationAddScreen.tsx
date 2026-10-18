@@ -1,3 +1,4 @@
+import { getPlaceSearchQueryAlias } from "@weatheron/shared";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Platform, Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
@@ -45,14 +46,14 @@ export function DestinationAddScreen({
   const canUseSavedDestination = destinationSaved && (selectedFromResults || selectedFromNearbyPlaces);
   const canUseSelectedDestination = selectedFromResults || selectedFromNearbyPlaces;
   const resultCount = getResultCountLabel(placeSearchStatus, placeSearchResults.length, hasQuery, isPlaceSearchLoading);
-  const resultSortLabel = getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
+  const resultSortLabel = Platform.OS === "ios" && hasInput ? "관련성 높은 순" : getResultSortLabel(deviceLocationState.location, placeSearchOrigin, state.weather.countryCode);
   const searchGlassSurface = Platform.OS === "ios" ? undefined : iosGlassSurface(theme, "input", { nativeBackdrop: true });
   const searchControlGlass = Platform.OS === "ios" ? undefined : iosGlassSurface(theme, "control", { nativeBackdrop: true });
   const ctaLabel = getPrimaryActionLabel(canUseSavedDestination, canUseSelectedDestination, hasQuery);
   const canClearSearch = placeSearchQuery.length > 0 && placeSearchResults.length === 0 && placeSearchStatus !== "loading";
   const duplicateNameCounts = getDuplicateNameCounts(placeSearchResults);
   const visibleResults = React.useMemo(
-    () => sortPlaceSearchResults(placeSearchResults, placeSearchQuery, placeSearchOrigin),
+    () => sortPlaceSearchResults(placeSearchResults, Platform.OS === "ios" ? getPlaceSearchQueryAlias(placeSearchQuery) : placeSearchQuery, placeSearchOrigin, Platform.OS === "ios"),
     [placeSearchOrigin, placeSearchQuery, placeSearchResults],
   );
   const displayedPlaces = hasInput ? visibleResults : nearbyPlaces;
@@ -79,6 +80,7 @@ export function DestinationAddScreen({
     const origin = placeSearchOrigin;
     void runtimePlaceSearchClient.searchPlaces({
       query: getNearbyRecommendationQuery(origin.countryCode),
+      sort: "distance",
       countryCode: origin.countryCode,
       locale: getDeviceSearchLocale(),
       origin: origin.coordinate,
@@ -127,7 +129,7 @@ export function DestinationAddScreen({
           <BackButton onPress={onReturnFromDestinationAdd} />
           <View style={styles.headerCopy}>
             <Text style={[styles.title, pageStyles.title, { color: theme.text }]}>목적지 추가</Text>
-            <Text style={[styles.subtitle, { color: theme.subtle }]}>장소를 고르면 케어 기준이 맞춰짐</Text>
+            <Text style={[styles.subtitle, { color: theme.subtle }]}>{Platform.OS === "ios" ? "장소를 고르면 출발 날씨를 확인할 수 있어요" : "장소를 고르면 케어 기준이 맞춰짐"}</Text>
           </View>
         </View>
 
@@ -155,7 +157,7 @@ export function DestinationAddScreen({
             style={[[styles.input, { color: theme.text }], Platform.OS === "ios" && ambientVisual.input]}
             value={placeSearchQuery}
           />
-          {searchControlGlass && placeSearchQuery.length > 0 ? (
+          {(Platform.OS === "ios" || searchControlGlass) && placeSearchQuery.length > 0 ? (
             <FeedbackPressable
               accessibilityLabel="목적지 검색어 지우기"
               accessibilityRole="button"

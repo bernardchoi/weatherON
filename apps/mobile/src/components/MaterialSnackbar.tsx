@@ -74,10 +74,10 @@ export function MaterialSnackbar({
       useNativeDriver: true,
     });
     enter.start();
-    const timer = setTimeout(dismiss, duration);
+    const timer = duration > 0 ? setTimeout(dismiss, duration) : undefined;
 
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       enter.stop();
     };
   }, [dismiss, duration, progress]);
@@ -107,6 +107,7 @@ export function MaterialSnackbar({
           <Text style={[styles.message, { color: foreground }]} numberOfLines={1}>{message}</Text>
           {supportingText ? <Text style={[styles.supportingText, { color: foreground }]} numberOfLines={1}>{supportingText}</Text> : null}
         </View>
+        {duration === 0 ? <FeedbackPressable accessibilityRole="button" accessibilityLabel="알림 닫기" onPress={dismiss} style={styles.action}><Text style={{ color: foreground }}>닫기</Text></FeedbackPressable> : null}
         {actionLabel && onAction ? (
           <FeedbackPressable
             accessibilityLabel={actionLabel}

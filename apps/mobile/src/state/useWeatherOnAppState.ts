@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { createNotificationSync } from "../providers/notificationSync";
 import { AppState, Platform } from "../localization/react-native";
 import type { PlaceSearchResult, WardrobeItem } from "@weatheron/shared";
-import { presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
+import { getPlaceSearchQueryAlias, presetWardrobe, recommendOutfit, recommendUmbrella, type UserPreferenceProfile } from "@weatheron/shared";
 import { buildDemoStateFromWeatherResult } from "../data/demoState";
 import { isLaunchHiddenRoute, isP0Route, type AppRouteId, type P0RouteId } from "../navigation/routes";
 import {
@@ -1394,7 +1394,7 @@ export function useWeatherOnAppState() {
     const previousRoute = previousRouteRef.current;
     previousRouteRef.current = route;
     if (previousRoute && previousRoute !== "P1" && route === "P1") resetPlaceSearch();
-    if (previousRoute === "G1" && route !== "G1") dismissRemovedDestination();
+    if (Platform.OS !== "ios" && previousRoute === "G1" && route !== "G1") dismissRemovedDestination();
   }, [dismissRemovedDestination, resetPlaceSearch, route]);
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
@@ -1796,7 +1796,7 @@ export function useWeatherOnAppState() {
         origin: searchOrigin?.coordinate,
       });
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
-      setPlaceSearchResults(sortPlaceSearchResults(results, query, searchOrigin));
+      setPlaceSearchResults(sortPlaceSearchResults(results, Platform.OS === "ios" ? getPlaceSearchQueryAlias(query) : query, searchOrigin, Platform.OS === "ios"));
       setPlaceSearchStatus(results.length > 0 ? "ready" : "empty");
     } catch {
       if (placeSearchRequestSeqRef.current !== requestSeq) return;
@@ -2030,7 +2030,7 @@ export function useWeatherOnAppState() {
     setDestinationLimitNotice(false);
     if (recentlyRemovedDestinationTimerRef.current) clearTimeout(recentlyRemovedDestinationTimerRef.current);
     setRecentlyRemovedDestination({ ...removedDestination, savedAtLabel: "방금 삭제", changeStatus: "removed" });
-    recentlyRemovedDestinationTimerRef.current = setTimeout(() => {
+    if (Platform.OS !== "ios") recentlyRemovedDestinationTimerRef.current = setTimeout(() => {
       recentlyRemovedDestinationTimerRef.current = null;
       setRecentlyRemovedDestination(null);
     }, 4000);

@@ -1,6 +1,7 @@
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
+import { buildHomePreparation, forecastAt, forecastTime, snapshotReliable } from "../utils/homeOuting";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Platform, Image, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
@@ -28,6 +29,7 @@ import { useIsNightHour } from "../utils/useIsNightHour";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 
 type DestinationCardModel = {
+  actionText?: string;
   weatherCondition: string | null;
   weatherNotice: string | null;
   weatherAvailable: boolean;
@@ -198,7 +200,7 @@ export function DestinationListScreen({
           actionLabel="복구"
           onAction={onRestoreRemovedDestination}
           onDismiss={onDismissRemovedDestination}
-          duration={3800}
+          duration={Platform.OS === "ios" ? 0 : 3800}
         />
       ) : destinationLimitNotice ? (
         <MaterialSnackbar
@@ -342,7 +344,7 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
     {selected ? <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border, paddingTop: 8, gap: 4, minHeight: stacked ? undefined : 52 }}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 6 }}>
         <Image source={item.warningKind === "wind" ? ambientUiIcons.wind : ambientUiIcons.umbrella} accessible={false} style={{ width: 20, height: 20, tintColor: theme.clear }} />
-        <Text style={[pageStyles.caption, { flex: 1, color: theme.text }]}>{item.weatherNotice ? "최신 날씨 확인 후 출발을 준비해 주세요" : getDestinationActionText(item)}</Text>
+        <Text style={[pageStyles.caption, { flex: 1, color: theme.text }]}>{item.weatherNotice ? item.weatherNotice : getDestinationActionText(item)}</Text>
       </View>
       <Text style={[pageStyles.caption, { color: getStatusColor(item.careEnabled, permissionReady, theme) }]}>{getAlertPillLabel(item.careEnabled, permissionReady)} · {translateText(item.repeatLabel, language)}</Text>
     </View> : null}
@@ -475,8 +477,16 @@ function buildDestinationCards(
 
   return savedDestinations.map((destination) => {
     const destinationWeather = destinationWeatherById[destination.place.id] ?? care.destinationWeather;
-    const destinationRain = Math.max(destinationWeather.current.rainProbabilityPct, ...destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
-    const destinationWind = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
+    const destinationRainLegacy = Math.max(destinationWeather.current.rainProbabilityPct, ...destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
+    const destinationWindLegacy = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
+    const travel = originAvailable ? getTravelMinutesForTransport(destination.travelEstimate, destination.schedulePreference.transportMode, care.originWeather.countryCode, destination.place.countryCode, care.originWeather.locationId) : undefined;
+    const scheduled = getRouteArrivalTimeIso(destination.schedulePreference.targetArrivalTime, destination.place.timezone, Date.now(), destination.schedulePreference.repeatEnabled, destination.schedulePreference.repeatDays);
+    const arrivalAt = scheduled && (destination.schedulePreference.timeBasis === "arrival" || typeof travel === "number") ? new Date(Date.parse(scheduled) + (destination.schedulePreference.timeBasis === "departure" ? travel! * 60_000 : 0)).toISOString() : undefined;
+    const hour = forecastAt(destinationWeather, arrivalAt);
+    const available = Boolean(destinationWeatherById[destination.place.id]) && snapshotReliable(destinationWeather) && hour && (destinationWeather.source !== "weatherkit" || (hour.available?.rainProbability && hour.available.wind));
+    const destinationRain = Platform.OS === "ios" ? available ? hour!.rainProbabilityPct : 0 : destinationRainLegacy;
+    const destinationWind = Platform.OS === "ios" ? available ? hour!.windMs : 0 : destinationWindLegacy;
+    const preparation = buildHomePreparation(destinationWeather, arrivalAt, true);
     const warning = buildDestinationWarning(destination.place.name, destinationRain, destinationWind, destination.alertCondition);
     const warningKind = destinationRain >= destination.alertCondition.rainThresholdPct
       ? "rain"
@@ -488,6 +498,7 @@ function buildDestinationCards(
 
     return {
       ...getDestinationWeatherPresentation(destinationWeatherById[destination.place.id]),
+      ...(Platform.OS === "ios" ? { weatherNotice: !available ? "도착 시각 예보 확인 필요" : null, actionText: available ? `${forecastTime(Date.parse(arrivalAt!), destinationWeather)} 도착 무렵 · ${preparation.evidence || preparation.copy.replace(/\n/g, " ")}` : "도착 시각 예보 확인 필요" } : {}),
       id: destination.place.id,
       title: destination.place.name,
       area: getAreaLabel(destination.place),
@@ -607,6 +618,7 @@ function trimAdministrativeSuffix(value: string) {
 }
 
 function getDestinationActionText(item: DestinationCardModel) {
+  if (item.actionText) return item.actionText;
   if (item.warningKind === "rain") return `우산 준비 · ${item.rainPct}`;
   if (item.warningKind === "wind") return "바람막이 확인";
   if (!item.careEnabled) return "알림 켜기";

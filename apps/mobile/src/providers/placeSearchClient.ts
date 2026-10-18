@@ -6,11 +6,13 @@ import {
   getWeatherRuntimeConfig,
   isLocalWeatherProxyUrl,
 } from "../config/weatherEnv";
+import { Platform } from "../localization/react-native";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
 import { fetchJsonWithTimeout, normalizeBaseUrl, PROXY_TOKEN_HEADER } from "../utils/httpJson";
 import { getLocalePolicy } from "../localization/localization";
 
 export type SearchPlacesParams = {
+  sort?: "accuracy" | "distance";
   query: string;
   countryCode?: "KR" | "JP" | "GLOBAL";
   locale?: string;
@@ -77,6 +79,7 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
     async searchPlaces(params) {
       const url = new URL("/places/search", normalizeBaseUrl(options.apiBaseUrl));
       url.searchParams.set("q", params.query);
+      if (params.sort || Platform.OS === "ios") url.searchParams.set("sort", params.sort ?? "accuracy");
       if (params.countryCode) url.searchParams.set("countryCode", params.countryCode);
       if (params.origin) {
         url.searchParams.set("latitude", String(params.origin.latitude));
@@ -92,7 +95,7 @@ export function createProxyPlaceSearchClient(options: ProxyPlaceSearchClientOpti
         fetchImpl: options.fetchImpl,
       });
       return localizePlaceSearchResults(
-        normalizeDestinationCategories(mergePlaceSearchResults(getCuratedPlaceMatches(params.query, params.countryCode, language), timezoneSafeResults)),
+        normalizeDestinationCategories(timezoneSafeResults),
         language,
       );
     },
@@ -281,7 +284,7 @@ function inferPlaceCategory(place: OpenMeteoGeocodingPlace): PlaceSearchResult["
   const value = `${place.name ?? ""} ${place.feature_code ?? ""}`.toLowerCase();
   if (value.includes("airport") || value.includes("공항")) return "airport";
   if (value.includes("beach") || value.includes("해변")) return "beach";
-  if (value.includes("mount") || value.includes("산")) return "mountain";
+  if (value.includes("mount") || /(?:^|[>\s])(?:산|등산)(?:$|[>\s])/.test(value)) return "mountain";
   return "custom";
 }
 

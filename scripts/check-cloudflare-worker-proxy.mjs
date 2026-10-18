@@ -164,9 +164,13 @@ async function checkGlobalTimezoneResolution() {
   try {
     const first = await fetchWorkerJson("/places/search?q=Codex%20Timezone%20One&countryCode=GLOBAL", timezoneEnv);
     const second = await fetchWorkerJson("/places/search?q=Codex%20Timezone%20Two&countryCode=GLOBAL", timezoneEnv);
+    assert.equal(first[0]?.name, "Codex Timezone One", "a city component must not replace the searched landmark name");
     assert.equal(first[0]?.timezone, "America/New_York", "missing global timezone should resolve from coordinates");
     assert.equal(second[0]?.timezone, "America/New_York", "resolved timezone should remain stable");
     assert.equal(timezoneRequestCount, 1, "coordinate timezone lookup should use its long-lived cache");
+    const tokyo = await fetchWorkerJson("/places/search?q=Tokyo%20Station&language=en", timezoneEnv);
+    assert.equal(tokyo.length, 1, "successful Google search must not append the same curated station");
+    assert.equal(tokyo[0]?.provider, "google");
   } finally {
     globalThis.fetch = originalFetch;
   }

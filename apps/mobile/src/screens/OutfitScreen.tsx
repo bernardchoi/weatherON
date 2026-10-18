@@ -23,6 +23,7 @@ export function OutfitScreen({
   selectedStyles,
   wardrobeItems,
   onNavigate,
+  onRefreshWeather,
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const ambient = Platform.OS === "ios";
@@ -47,6 +48,7 @@ export function OutfitScreen({
         <View style={{ gap: ambient ? 10 : 12 }}>
           {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
           <Text style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{state.outfit.decisionText}</Text>
+          {ambient && state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.currentAvailable) ? <AppButton label="날씨 다시 확인" onPress={onRefreshWeather} tone="secondary" size="sm" /> : null}
           <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={() => onNavigate("C4")} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
           <AmbientControlSurface>

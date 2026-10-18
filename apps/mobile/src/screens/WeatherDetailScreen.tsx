@@ -1,3 +1,4 @@
+import { forecastTime, snapshotReliable } from "../utils/homeOuting";
 import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import React from "react";
 import { AppState, Image, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
@@ -29,6 +30,9 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
   const [currentTimeMs, setCurrentTimeMs] = React.useState(() => Date.now());
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
+  const ios = Platform.OS === "ios";
+  const present = (value: number, flag?: boolean) => weather.source !== "fallback" && !weather.locationUnverified && Number.isFinite(value) && flag !== false && (weather.source !== "weatherkit" || flag === true);
+  const temperatureText = (value: number, flag?: boolean) => ios && !present(value, flag) ? "—" : formatTemperature(value, temperatureUnit);
   const hourly = getHourlyForecast(weather);
   const daylightContext: WeatherDaylightContext = {
     coordinate: placeSearchOrigin?.coordinate,
@@ -41,7 +45,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
   const daily = Platform.OS === "ios" ? getIosDailyForecast(weather.daily, weather.hourly, legacyDaily) : legacyDaily;
   const displayedDaily = daily.slice(0, 7);
   const temperatureScale = dailyTemperatureScale(displayedDaily);
-  const rainyHour = hourly.find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
+  const rainyHour = (ios ? hourly.slice(0, 12) : hourly).find((item) => item.rainProbabilityPct >= 50 || item.precipitationMm > 0);
   const uvIndex = Platform.OS === "android" ? null : getUvIndexSummary(current.uvIndex);
   const airQualityIndices = getAirQualityIndices(current, Platform.OS);
   const weeklyPeak = (Platform.OS === "ios" ? displayedDaily : daily).reduce<DailyWeather | null>((peak, item) => {
@@ -103,17 +107,18 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
               />
             </View>
             <View style={[styles.heroCopy, expandedText && ambientVisual.heroCopyExpanded]}>
-              <Text style={[[styles.heroTemp, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTemp]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+              <Text style={[[styles.heroTemp, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTemp]}>{temperatureText(current.tempC, current.tempAvailable)}</Text>
               <Text style={[[styles.heroCondition, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroCondition]} numberOfLines={expandedText ? undefined : 1}>
-                {getConditionLabel(current.condition)} · 체감 {formatTemperature(current.feelsLikeC, temperatureUnit)}
+                {getConditionLabel(current.condition)} · 체감 {temperatureText(current.feelsLikeC, current.feelsLikeAvailable)}
               </Text>
             </View>
             {uvIndex ? <UvSummaryBadge item={uvIndex} theme={theme} /> : null}
           </View>
+          {ios ? <Text style={{ color: theme.muted }}>{snapshotReliable(weather, currentTimeMs) ? "관측" : "최근 자료 · 최신 확인 필요"} · {forecastTime(Date.parse(weather.observedAt), weather)}</Text> : null}
           <View style={[styles.factGrid, compactFacts && styles.factGridCompact]}>
-            <WeatherFact icon={screenIcons.drop} label="강수" value={`${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />
-            <WeatherFact icon={screenIcons.wind} label="바람" value={`${current.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
-            <WeatherFact icon={screenIcons.humidity} label="습도" value={`${current.humidityPct}%`} color={theme.gold} theme={theme} />
+            <WeatherFact icon={screenIcons.drop} label="강수" value={ios && !present(current.rainProbabilityPct, current.rainProbabilityAvailable) ? "—" : `${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />
+            <WeatherFact icon={screenIcons.wind} label="바람" value={ios && !present(current.windMs, current.windAvailable) ? "—" : `${current.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
+            <WeatherFact icon={screenIcons.humidity} label="습도" value={ios && !present(current.humidityPct, current.humidityAvailable) ? "—" : `${current.humidityPct}%`} color={theme.gold} theme={theme} />
           </View>
         </View>
 
@@ -133,7 +138,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
 
         <ForecastPanel
           title="시간별 예보"
-          meta={rainyHour ? `${formatTimeLabel(rainyHour.time)} 강수 ${rainyHour.rainProbabilityPct}%` : "강수 신호 낮음"}
+          meta={rainyHour ? `${ios ? rainyHour.time.slice(5, 10).replace("-", "/") + " " : ""}${formatTimeLabel(rainyHour.time)} 강수 ${rainyHour.rainProbabilityPct}%` : hourly.length ? hourly.slice(0, 12).some(h => h.available?.rainProbability === false || h.available?.precipitation === false) ? "표시 구간 일부 예보 미확인" : "표시 구간 강수 신호 낮음" : "시간별 예보 없음"}
           theme={theme}
         >
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourlyList}>
@@ -342,7 +347,7 @@ function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWea
     >
       <Text style={[[styles.hourlyTime, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.hourlyTime]}>{formatTimeLabel(item.time)}</Text>
       <Image source={icon?.source ?? getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: icon?.tintColor ?? color }]} resizeMode="contain" />
-      <Text style={[styles.hourlyTemp, { color: theme.text }]}>{formatTemperature(item.tempC, temperatureUnit)}</Text>
+      <Text style={[styles.hourlyTemp, { color: theme.text }]}>{Platform.OS === "ios" && (item.available?.temp === false || !Number.isFinite(item.tempC)) ? "—" : formatTemperature(item.tempC, temperatureUnit)}</Text>
       <Text style={[[styles.hourlyRain, { color }], Platform.OS === "ios" && ambientVisual.hourlyRain]}>{Platform.OS === "ios" && (item.available?.rainProbability === false || !Number.isFinite(item.rainProbabilityPct)) ? "—" : `${item.rainProbabilityPct}%`}</Text>
     </View>
   );
@@ -368,6 +373,7 @@ function DailyRow({ item, temperatureUnit, theme }: { item: DailyWeather; temper
 
 function getHourlyForecast(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]): HourlyWeather[] {
   if (weather.hourly.length > 0) return weather.hourly;
+  if (Platform.OS === "ios") return [];
   return [{
     time: weather.observedAt,
     tempC: weather.current.tempC,

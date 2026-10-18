@@ -269,6 +269,7 @@ function getDestinationNotificationTiming(
   originWeather: Pick<WeatherSnapshot, "locationId" | "countryCode">,
   nowMs: number,
 ): DestinationNotificationTiming | null {
+  if (weather.locationUnverified || weather.stale || weather.source === "fallback") return null;
   const schedule = destination.schedulePreference;
   const targetArrivalTime = schedule?.targetArrivalTime;
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;

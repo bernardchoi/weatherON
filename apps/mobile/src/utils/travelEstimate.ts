@@ -22,6 +22,8 @@ export function isUnverifiedInternationalRoute(
   }
   if (originCountryCode !== destinationCountryCode) return true;
   if (destinationCountryCode === "KR") return false;
+  // GLOBAL groups different countries, so only a provider-confirmed route can establish travel time.
+  if (destinationCountryCode === "GLOBAL") return estimate.status !== "ready";
   return estimate.status !== "ready" && estimate.status !== "fallback";
 }
 
