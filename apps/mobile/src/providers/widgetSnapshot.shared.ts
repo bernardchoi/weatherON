@@ -35,7 +35,7 @@ export type WeatheronWidgetLocationSnapshot = {
   condition: WeatherSnapshot["current"]["condition"];
   conditionLabel: string;
   rainProbabilityPct: number;
-  humidityPct: number;
+  humidityPct?: number;
   windMs: number;
   umbrellaNeeded: boolean;
   outerNeeded: boolean;
@@ -103,7 +103,9 @@ export function createWeatheronWidgetLocationSnapshot(
     condition: weather.current.condition,
     conditionLabel: translateText(getConditionLabel(weather.current.condition)),
     rainProbabilityPct: Math.round(weather.current.rainProbabilityPct),
-    humidityPct: Math.round(weather.current.humidityPct),
+    humidityPct: weather.current.humidityAvailable === false || typeof weather.current.humidityPct !== "number"
+      ? undefined
+      : Math.round(weather.current.humidityPct),
     windMs: Math.round(weather.current.windMs * 10) / 10,
     umbrellaNeeded: umbrella.level !== "none",
     outerNeeded: Boolean(outfit.items.outer),

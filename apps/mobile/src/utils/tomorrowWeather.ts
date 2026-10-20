@@ -17,13 +17,23 @@ export function buildTomorrowWeather(weather: WeatherSnapshot, now = new Date())
       ...weather,
       observedAt: `${summary.date}T09:00:00`,
       current: {
-        ...weather.current,
+        // This is a forecast-only recommendation input. Do not start from
+        // today's current observation: UV, humidity, and air quality are all
+        // time-sensitive and would otherwise produce tomorrow guidance from
+        // stale values. WeatherKit's daily contract provides maxUvIndex; its
+        // daily forecast does not provide humidity or particulate forecasts.
         tempC: midpointTemperature,
         feelsLikeC: midpointTemperature,
+        tempAvailable: summary.available?.minTemp !== false && summary.available?.maxTemp !== false,
+        feelsLikeAvailable: false,
+        humidityAvailable: false,
+        rainProbabilityAvailable: summary.available?.rainProbability !== false,
+        windAvailable: Number.isFinite(summary.windMs),
         condition: toCondition(summary.condition),
         precipitationMm: summary.precipitationMm,
         rainProbabilityPct: summary.rainProbabilityPct,
         windMs: summary.windMs,
+        uvIndex: finiteNumberOrUndefined(summary.maxUvIndex),
       },
       hourly: matchingHours,
       daily: [summary],
@@ -53,4 +63,8 @@ function formatTomorrowDate(value: string) {
 function toCondition(value: string): WeatherSnapshot["current"]["condition"] {
   if (value === "clear" || value === "cloud" || value === "rain" || value === "snow" || value === "sleet" || value === "hail" || value === "storm-hail" || value === "mixed" || value === "storm" || value === "dust" || value === "unknown") return value;
   return "unknown";
+}
+
+function finiteNumberOrUndefined(value: number | undefined): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }

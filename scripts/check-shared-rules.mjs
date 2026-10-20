@@ -265,6 +265,17 @@ await writeFile(
         countryCode: "KR",
         timezone: "Asia/Seoul",
       }),
+      weatherkitNonFiniteDailyUv: normalizeWeatherKitWeather({
+        ...weatherKitFixture,
+        forecastDaily: {
+          days: [{ ...weatherKitFixture.forecastDaily.days[0], maxUvIndex: Infinity }],
+        },
+      }, {
+        locationId: "kr-seoul-seongsu",
+        locationName: "서울 성수동",
+        countryCode: "KR",
+        timezone: "Asia/Seoul",
+      }),
       weatherkitCurrentHour: normalizeWeatherKitWeather({
         ...weatherKitFixture,
         currentWeather: {
@@ -357,6 +368,7 @@ await writeFile(
     const { createWeatherProvider, fixtureWeatherProvider } = await import("../apps/mobile/src/providers/weatherProvider.ts");
     const { getFeelsLikeMessage } = await import("../apps/mobile/src/utils/feelsLikeMessage.ts");
     const { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } = await import("../apps/mobile/src/utils/outfitSaveCompletion.ts");
+    const { buildTomorrowWeather } = await import("../apps/mobile/src/utils/tomorrowWeather.ts");
     const { getConditionIcon } = await import("../apps/mobile/src/utils/weatherPresentation.ts");
     const { uiIconAssets } = await import("../apps/mobile/src/assets.ts");
     const { isNightAtForecastTime, isNightAtWeatherTime, resolveWeatherTimeZone } = await import("../apps/mobile/src/utils/weatherDaylight.ts");
@@ -370,7 +382,7 @@ await writeFile(
     const { getDestinationDirectionsUrl } = await import("../apps/mobile/src/utils/destinationDirections.ts");
     const { getPlaceSearchOrigin, getRouteArrivalTimeIso } = await import("../apps/mobile/src/state/appStateHelpers.ts");
     const { createDateAtTimeInZone, getMinutesUntilTimeInZone } = await import("../apps/mobile/src/utils/zonedDateTime.ts");
-    const { kmaForecastFixture, openMeteoFixture, recommendUmbrella, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
+    const { defaultPreferenceProfile, kmaForecastFixture, openMeteoFixture, presetWardrobe, recommendOutfit, recommendUmbrella, searchFixturePlaces, seongsuRainSnapshot, weatherKitFixture } = await import("../packages/shared/src/index.ts");
 
     const requestedUrls = [];
     const fakeFetch = async (url) => {
@@ -704,6 +716,53 @@ await writeFile(
       },
     }).searchPlaces({ query: "Los Angeles", countryCode: "GLOBAL", locale: "en-US" });
 
+    const tomorrowNow = new Date("2026-10-20T12:00:00Z");
+    const tomorrowDaily = {
+      date: "2026-10-21", minTempC: 18, maxTempC: 24, rainProbabilityPct: 0,
+      precipitationMm: 0, windMs: 2, condition: "clear",
+    };
+    const tomorrowInput = {
+      ...seongsuRainSnapshot,
+      timezone: "Asia/Seoul",
+      observedAt: "2026-10-20T12:00:00Z",
+      source: "weatherkit",
+      current: {
+        ...seongsuRainSnapshot.current,
+        tempC: 22, feelsLikeC: 22, condition: "clear", precipitationMm: 0,
+        rainProbabilityPct: 0, windMs: 2, humidityPct: 92, uvIndex: 8, pm10: 100, pm25: 60,
+      },
+      hourly: [],
+      daily: [tomorrowDaily],
+    };
+    const tomorrowChangedCurrent = {
+      ...tomorrowInput,
+      current: { ...tomorrowInput.current, humidityPct: 10, uvIndex: 0, pm10: 1, pm25: 1 },
+    };
+    const tomorrowWithoutObservations = buildTomorrowWeather(tomorrowInput, tomorrowNow);
+    const tomorrowWithChangedToday = buildTomorrowWeather(tomorrowChangedCurrent, tomorrowNow);
+    const tomorrowWithDailyUv = buildTomorrowWeather({
+      ...tomorrowInput,
+      daily: [{ ...tomorrowDaily, maxUvIndex: 7 }],
+    }, tomorrowNow);
+    const tomorrowWithZeroDailyUv = buildTomorrowWeather({
+      ...tomorrowInput,
+      daily: [{ ...tomorrowDaily, maxUvIndex: 0 }],
+    }, tomorrowNow);
+    const tomorrowWithNonFiniteDailyUv = buildTomorrowWeather({
+      ...tomorrowInput,
+      daily: [{ ...tomorrowDaily, maxUvIndex: Infinity }],
+    }, tomorrowNow);
+    const tomorrowRain = buildTomorrowWeather({
+      ...tomorrowInput,
+      daily: [{ ...tomorrowDaily, condition: "rain", rainProbabilityPct: 70, precipitationMm: 1.2 }],
+    }, tomorrowNow);
+    if (!tomorrowWithoutObservations || !tomorrowWithChangedToday || !tomorrowWithDailyUv || !tomorrowWithZeroDailyUv || !tomorrowWithNonFiniteDailyUv || !tomorrowRain) {
+      throw new Error("tomorrow forecast fixtures must resolve");
+    }
+    const tomorrowOutfit = recommendOutfit(tomorrowWithoutObservations.weather, defaultPreferenceProfile, presetWardrobe);
+    const tomorrowChangedOutfit = recommendOutfit(tomorrowWithChangedToday.weather, defaultPreferenceProfile, presetWardrobe);
+    const tomorrowUvOutfit = recommendOutfit(tomorrowWithDailyUv.weather, defaultPreferenceProfile, presetWardrobe);
+
     export const demoResults = {
       missingTimezonePlaces,
       cachedTimezonePlaces,
@@ -785,6 +844,17 @@ await writeFile(
       thresholdRainNotifications: thresholdRainDemo.notifications,
       cappedNotifications,
       quietHoursNotifications,
+      tomorrowWithoutObservations,
+      tomorrowWithChangedToday,
+      tomorrowWithDailyUv,
+      tomorrowWithZeroDailyUv,
+      tomorrowWithNonFiniteDailyUv,
+      tomorrowOutfit,
+      tomorrowChangedOutfit,
+      tomorrowUvOutfit,
+      tomorrowZeroUvOutfit: recommendOutfit(tomorrowWithZeroDailyUv.weather, defaultPreferenceProfile, presetWardrobe),
+      tomorrowRainOutfit: recommendOutfit(tomorrowRain.weather, defaultPreferenceProfile, presetWardrobe),
+      tomorrowRainUmbrella: recommendUmbrella(tomorrowRain.weather),
       current: await buildDemoState(false),
       destination: await buildDemoState(true),
       departureBasis: buildDemoStateFromWeatherResult(destinationTestResult, false, {
@@ -1050,6 +1120,8 @@ assert.equal(results.weatherkit.current.humidityPct, 70);
 assert.equal(results.weatherkit.hourly[1].condition, "rain");
 assert.equal(results.weatherkit.hourly[0].time, "2026-06-26T18:00");
 assert.equal(results.weatherkit.daily[0].rainProbabilityPct, 65);
+assert.equal(results.weatherkit.daily[0].maxUvIndex, 7);
+assert.equal(results.weatherkitNonFiniteDailyUv.daily[0].maxUvIndex, undefined);
 assert.deepEqual(
   results.weatherkitCurrentHour.hourly.map((item) => item.time),
   ["2026-08-23T08:00", "2026-08-23T09:00"],
@@ -1090,6 +1162,21 @@ assert.equal(demoResults.outfitSaveCompletionDurationMs, 3_000);
 assert.equal(demoResults.outfitSaveCompletionOnTransition, true);
 assert.equal(demoResults.outfitSaveCompletionAfterAccountFlow, true);
 assert.equal(demoResults.outfitSaveCompletionForPersistedSave, false);
+assert.equal(demoResults.tomorrowWithoutObservations.weather.current.uvIndex, undefined);
+assert.equal(demoResults.tomorrowWithoutObservations.weather.current.pm10, undefined);
+assert.equal(demoResults.tomorrowWithoutObservations.weather.current.pm25, undefined);
+assert.equal(demoResults.tomorrowWithoutObservations.weather.current.humidityPct, undefined);
+assert.equal(demoResults.tomorrowWithoutObservations.weather.current.humidityAvailable, false);
+assert.deepEqual(demoResults.tomorrowOutfit, demoResults.tomorrowChangedOutfit);
+assert.deepEqual(demoResults.tomorrowOutfit.reasons, demoResults.tomorrowChangedOutfit.reasons);
+assert.ok(!demoResults.tomorrowOutfit.reasons.some((reason) => /자외선|마스크|습도/.test(reason)));
+assert.equal(demoResults.tomorrowWithDailyUv.weather.current.uvIndex, 7);
+assert.ok(demoResults.tomorrowUvOutfit.reasons.some((reason) => reason.includes("자외선 지수 7")));
+assert.equal(demoResults.tomorrowWithZeroDailyUv.weather.current.uvIndex, 0);
+assert.ok(!demoResults.tomorrowZeroUvOutfit.reasons.some((reason) => reason.includes("자외선")));
+assert.equal(demoResults.tomorrowWithNonFiniteDailyUv.weather.current.uvIndex, undefined);
+assert.ok(demoResults.tomorrowRainOutfit.reasons.some((reason) => reason.includes("비 올 가능성 70%")));
+assert.notEqual(demoResults.tomorrowRainUmbrella.level, "none");
 for (const key of ["cloudyDayIcon", "cloudyNightIcon", "clearNightIcon", "clearDayIcon"]) assert.equal(demoResults[key], true, key);
 assert.equal(demoResults.seoulSummerNight, true);
 assert.equal(demoResults.seoulSummerDay, false);

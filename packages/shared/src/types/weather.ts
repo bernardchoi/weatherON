@@ -29,6 +29,8 @@ export type DailyWeather = {
   rainProbabilityPct: number;
   precipitationMm: number;
   windMs: number;
+  /** Daily peak UV forecast when the provider supplies it. */
+  maxUvIndex?: number;
   condition: WeatherCondition | string;
 };
 
@@ -55,7 +57,8 @@ export type WeatherSnapshot = {
     precipitationMm: number;
     rainProbabilityPct: number;
     windMs: number;
-    humidityPct: number;
+    /** Omitted when a synthesized forecast has no humidity prediction. */
+    humidityPct?: number;
     uvIndex?: number;
     pm10?: number;
     pm25?: number;

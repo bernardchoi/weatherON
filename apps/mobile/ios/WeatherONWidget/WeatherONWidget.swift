@@ -98,7 +98,7 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
   let condition: String
   let conditionLabel: String
   let rainProbabilityPct: Int
-  let humidityPct: Int
+  let humidityPct: Int?
   let windMs: Double
   let umbrellaNeeded: Bool
   let outerNeeded: Bool
@@ -158,7 +158,7 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     condition: String,
     conditionLabel: String,
     rainProbabilityPct: Int,
-    humidityPct: Int,
+    humidityPct: Int?,
     windMs: Double,
     umbrellaNeeded: Bool,
     outerNeeded: Bool,
@@ -215,7 +215,7 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     condition = try values.decodeIfPresent(String.self, forKey: .condition) ?? "cloud"
     conditionLabel = try values.decodeIfPresent(String.self, forKey: .conditionLabel) ?? "날씨 확인 중"
     rainProbabilityPct = try values.decodeIfPresent(Int.self, forKey: .rainProbabilityPct) ?? 0
-    humidityPct = try values.decodeIfPresent(Int.self, forKey: .humidityPct) ?? 0
+    humidityPct = try values.decodeIfPresent(Int.self, forKey: .humidityPct)
     windMs = try values.decodeIfPresent(Double.self, forKey: .windMs) ?? 0
     umbrellaNeeded = try values.decodeIfPresent(Bool.self, forKey: .umbrellaNeeded) ?? false
     outerNeeded = try values.decodeIfPresent(Bool.self, forKey: .outerNeeded) ?? false
@@ -1350,7 +1350,7 @@ private struct WeatherONMetricStrip: View {
   var body: some View {
     HStack(spacing: 5) {
       WeatherONMetric(symbol: "drop.fill", value: "\(location.rainProbabilityPct)%", palette: palette)
-      WeatherONMetric(symbol: "humidity.fill", value: "\(location.humidityPct)%", palette: palette)
+      WeatherONMetric(symbol: "humidity.fill", value: location.humidityPct.map { "\($0)%" } ?? "—", palette: palette)
       WeatherONMetric(symbol: "wind", value: String(format: "%.1f", location.windMs), palette: palette)
     }
   }
@@ -1760,7 +1760,7 @@ private extension WeatherONWidgetStore {
       condition: legacy.condition,
       conditionLabel: legacy.conditionLabel,
       rainProbabilityPct: legacy.advice.contains("우산 O") ? 60 : 0,
-      humidityPct: 0,
+      humidityPct: nil,
       windMs: 0,
       umbrellaNeeded: legacy.advice.contains("우산 O"),
       outerNeeded: legacy.advice.contains("외투 O"),

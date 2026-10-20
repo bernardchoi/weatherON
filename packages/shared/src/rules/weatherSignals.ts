@@ -50,7 +50,7 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
     snapshot.current.condition === "dust" ||
     (typeof pm10 === "number" && pm10 > 80) ||
     (typeof pm25 === "number" && pm25 > 35);
-  const isHumid = snapshot.current.humidityPct >= 70;
+  const isHumid = snapshot.current.humidityAvailable !== false && typeof snapshot.current.humidityPct === "number" && snapshot.current.humidityPct >= 70;
   const isHot =
     snapshot.current.feelsLikeC >= 27 ||
     snapshot.current.tempC >= 29 ||

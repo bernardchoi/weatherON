@@ -5,6 +5,7 @@ import { stripTypeScriptTypes } from "node:module";
 const read = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
 const state = read("apps/mobile/src/state/useWeatherOnAppState.ts");
 const widget = read("apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift");
+const weatherDetail = read("apps/mobile/src/screens/WeatherDetailScreen.tsx");
 const nativePath = "apps/mobile/modules/weatheron-widget-data/ios/WeatheronWidgetDataModule.swift";
 const native = read(nativePath);
 // Syntax parsing only, not a TypeScript typecheck. Requires Node >= 22.13.
@@ -90,17 +91,20 @@ runEffect(snapshotMarker, snapshotContext);
 assert.equal(snapshotSaves, 1, "Android loading behavior is preserved");
 
 let onChange;
+let foregroundRefreshes = 0;
 const lifecycleContext = {
   AppState: { addEventListener: (_, callback) => { onChange = callback; return { remove() {} }; } },
   appLifecycleStateRef: { current: "background" },
   widgetSnapshotContentKeyRef: { current: "delivered" }, widgetLocationsKeyRef: { current: "delivered" },
-  setWeatherRefreshTick: () => {},
+  weatherRequestInFlightRef: { current: false }, foregroundWeatherRefreshAtRef: { current: 0 },
+  setWeatherRefreshTick: (update) => { foregroundRefreshes++; update(0); },
   localNotificationSync: { retry() {} },
 };
 runEffect('const previousState = appLifecycleStateRef.current;', lifecycleContext);
 onChange("active");
 assert.equal(lifecycleContext.widgetSnapshotContentKeyRef.current, "");
 assert.equal(lifecycleContext.widgetLocationsKeyRef.current, "");
+assert.equal(foregroundRefreshes, 1, "foreground recovery must request one bounded refresh");
 
 const serializers = await loadTS("apps/mobile/src/providers/widgetSnapshot.shared.ts", `
 const resolveWeatherTimeZone = (_, zone) => zone;
@@ -119,6 +123,11 @@ assert.equal(snapshot.observedAt, weather.observedAt);
 assert.equal(snapshot.travelMinutes, 13, "a fractional route must not reject the entire Swift store");
 assert.equal(serializers.createWeatheronWidgetLocationSnapshot(weather, outfit, { level: "none" }, { travelMinutes: NaN }).travelMinutes, undefined);
 assert.equal(serializers.createWeatheronWidgetStoreSnapshot(snapshot, []).current, snapshot);
+const unknownHumiditySnapshot = serializers.createWeatheronWidgetLocationSnapshot({
+  ...weather,
+  current: { ...weather.current, humidityPct: undefined, humidityAvailable: false },
+}, outfit, { level: "none" });
+assert.equal(unknownHumiditySnapshot.humidityPct, undefined, "unknown humidity must not serialize as 0%");
 
 // Native contracts only: these checks do NOT execute or compile Swift/WidgetKit.
 for (const path of ["apps/mobile/ios/WeatherON/WeatherON.entitlements", "apps/mobile/ios/WeatherON/WeatherONRelease.entitlements", "apps/mobile/ios/WeatherONWidget/WeatherONWidget.entitlements"]) {
@@ -126,6 +135,10 @@ for (const path of ["apps/mobile/ios/WeatherON/WeatherON.entitlements", "apps/mo
 }
 assert.ok(native.includes('widgetKind = "WeatherONLocationWidgetV4"'));
 assert.ok(widget.includes('let kind = "WeatherONLocationWidgetV4"'));
+assert.ok(widget.includes("let humidityPct: Int?"));
+assert.ok(widget.includes("humidityPct = try values.decodeIfPresent(Int.self, forKey: .humidityPct)"));
+assert.ok(widget.includes('location.humidityPct.map { "\\($0)%" } ?? "—"'));
+assert.ok(weatherDetail.includes('value={!present(current.humidityPct, current.humidityAvailable) ? "—"'));
 assert.ok(native.includes('Function("saveLocations")'));
 assert.ok(widget.includes("if let locations = WeatherONStoreReader.locations() { return locations }"));
 assert.ok(widget.includes("return identifiers.map { id in"), "unresolved installed selections must retain their IDs");

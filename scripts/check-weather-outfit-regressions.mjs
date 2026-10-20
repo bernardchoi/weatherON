@@ -15,9 +15,20 @@ function load(path, imports = {}) {
   });
   return exports;
 }
+const zonedDateTime = load("apps/mobile/src/utils/zonedDateTime.ts");
+const homeOuting = load("apps/mobile/src/utils/homeOuting.ts", {
+  "@weatheron/shared": shared,
+  "./zonedDateTime": zonedDateTime,
+});
+const umbrellaRainSignals = load("apps/mobile/src/utils/umbrellaRainSignals.ts", {
+  "@weatheron/shared": shared,
+  "./homeOuting": homeOuting,
+});
 const demo = load("apps/mobile/src/data/demoState.ts", {
   "@weatheron/shared": shared, "../providers/weatherProvider": {},
-  "../utils/zonedDateTime": load("apps/mobile/src/utils/zonedDateTime.ts"),
+  "../localization/react-native": { Platform: { OS: "ios" } },
+  "../utils/umbrellaRainSignals": umbrellaRainSignals,
+  "../utils/zonedDateTime": zonedDateTime,
   "../utils/travelEstimate": load("apps/mobile/src/utils/travelEstimate.ts"),
 });
 let now = Date.parse("2026-07-01T12:00:00+09:00");

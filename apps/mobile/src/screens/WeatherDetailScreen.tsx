@@ -31,7 +31,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
   const weather = state.destinationCare.originWeather;
   const current = weather.current;
   const ios = Platform.OS === "ios";
-  const present = (value: number, flag?: boolean) => weather.source !== "fallback" && !weather.locationUnverified && Number.isFinite(value) && flag !== false && (weather.source !== "weatherkit" || flag === true);
+  const present = (value: number | undefined, flag?: boolean) => weather.source !== "fallback" && !weather.locationUnverified && Number.isFinite(value) && flag !== false && (weather.source !== "weatherkit" || flag === true);
   const temperatureText = (value: number, flag?: boolean) => ios && !present(value, flag) ? "—" : formatTemperature(value, temperatureUnit);
   const hourly = getHourlyForecast(weather);
   const daylightContext: WeatherDaylightContext = {
@@ -118,7 +118,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           <View style={[styles.factGrid, compactFacts && styles.factGridCompact]}>
             <WeatherFact icon={screenIcons.drop} label="강수" value={ios && !present(current.rainProbabilityPct, current.rainProbabilityAvailable) ? "—" : `${current.rainProbabilityPct}%`} color={theme.sky} theme={theme} />
             <WeatherFact icon={screenIcons.wind} label="바람" value={ios && !present(current.windMs, current.windAvailable) ? "—" : `${current.windMs.toFixed(1)}m/s`} color={theme.clear} theme={theme} />
-            <WeatherFact icon={screenIcons.humidity} label="습도" value={ios && !present(current.humidityPct, current.humidityAvailable) ? "—" : `${current.humidityPct}%`} color={theme.gold} theme={theme} />
+            <WeatherFact icon={screenIcons.humidity} label="습도" value={!present(current.humidityPct, current.humidityAvailable) ? "—" : `${current.humidityPct}%`} color={theme.gold} theme={theme} />
           </View>
         </View>
 
