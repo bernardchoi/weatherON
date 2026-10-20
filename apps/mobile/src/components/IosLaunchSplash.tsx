@@ -12,7 +12,8 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
 }) {
   const theme = useAppTheme();
   const reduced = useReducedMotion();
-  const [policyFallback, setPolicyFallback] = React.useState(false);
+  const [appIsActive, setAppIsActive] = React.useState(() => AppState.currentState === "active");
+  const [accessibilityTimedOut, setAccessibilityTimedOut] = React.useState(false);
   const cloud = useRef(new Animated.Value(0)).current;
   const sun = useRef(new Animated.Value(0)).current;
   const glow = useRef(new Animated.Value(0)).current;
@@ -21,6 +22,7 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
   const opacity = useRef(new Animated.Value(1)).current;
   const played = useRef(false), finished = useRef(false), ready = useRef(false);
   const mounted = useRef(true), backgrounded = useRef(false);
+  const hasBeenActive = useRef(AppState.currentState === "active");
   const animation = useRef<Animated.CompositeAnimation | null>(null);
   const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbacks = useRef({ onReady, onFinish });
@@ -42,34 +44,57 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
 
   useEffect(() => {
     mounted.current = true;
-    if (AppState.currentState && AppState.currentState !== "active") backgrounded.current = true;
+    // iOS commonly reports `inactive` while the app is still starting. Only a
+    // real background transition should permanently consume this one-shot view.
+    if (AppState.currentState === "background") backgrounded.current = true;
     // Strict effect remounts must not replay or strand a cancelled launch.
     if (played.current && !finished.current) finish();
-    const policy = setTimeout(() => setPolicyFallback(true), timing.policyFallback);
     const layout = setTimeout(signalReady, timing.readyFallback);
     const subscription = AppState.addEventListener("change", state => {
-      if (state !== "active") {
+      if (state === "active") {
+        hasBeenActive.current = true;
+        setAppIsActive(true);
+        return;
+      }
+      setAppIsActive(false);
+      if (state === "background") {
         backgrounded.current = true;
         if (played.current) finish();
+      } else if (state === "inactive" && hasBeenActive.current && played.current) {
+        // A later interruption is safe to dismiss, but launch-time inactive is
+        // not evidence that the app was backgrounded.
+        finish();
       }
     });
     return () => {
       mounted.current = false;
-      clearTimeout(policy); clearTimeout(layout);
+      clearTimeout(layout);
       if (watchdog.current) clearTimeout(watchdog.current);
       animation.current?.stop(); subscription.remove();
     };
   }, [finish, signalReady]);
 
   useEffect(() => {
-    if (!started || played.current || (reduced === null && !policyFallback)) return;
+    if (reduced !== null) return;
+    // A broken native query must not hold the launch view forever. This is
+    // deliberately much longer than the old 200ms shortcut and falls back to
+    // the same non-geometric presentation used for confirmed Reduce Motion.
+    const fallback = setTimeout(() => setAccessibilityTimedOut(true), timing.accessibilityFallback);
+    return () => clearTimeout(fallback);
+  }, [reduced]);
+
+  useEffect(() => {
+    // Do not make a fast accessibility guess: wait for a confirmed setting or
+    // the bounded accessibility-safe fallback, then play once while active.
+    const useReducedPresentation = reduced === true || (reduced === null && accessibilityTimedOut);
+    if (!started || !appIsActive || played.current || (reduced === null && !accessibilityTimedOut)) return;
     played.current = true;
     if (backgrounded.current) { finish(); return; }
     const ease = Easing.out(Easing.cubic);
     const run = (value: Animated.Value, duration: number, native = true) => Animated.timing(value, {
       toValue: 1, duration, easing: ease, useNativeDriver: native, isInteraction: false,
     });
-    if (reduced !== false || theme.reducedTransparency) {
+    if (useReducedPresentation) {
       // A short opacity-only substitute, not a second geometry animation.
       brandOpacity.setValue(0); cloud.setValue(1); sun.setValue(1); reveal.setValue(1);
       animation.current = Animated.sequence([
@@ -92,7 +117,7 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
     watchdog.current = setTimeout(finish, timing.watchdog);
     animation.current.start(({ finished: completed }) => { if (completed) finish(); });
     // Ownership cleanup is separate: theme/callback changes never restart the scene.
-  }, [started, reduced, policyFallback, theme.reducedTransparency, cloud, sun, glow, reveal, opacity, brandOpacity, finish]);
+  }, [started, appIsActive, reduced, accessibilityTimedOut, theme.reducedTransparency, cloud, sun, glow, reveal, opacity, brandOpacity, finish]);
 
   const dark = theme.name === "dark";
   const sunColor = parts.sun[theme.name];

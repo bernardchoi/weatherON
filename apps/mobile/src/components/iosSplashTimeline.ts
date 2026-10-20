@@ -9,7 +9,7 @@ export const iosSplashTimeline = {
   reducedFadeIn: 100,
   reducedHold: 40,
   reducedFadeOut: 120,
-  policyFallback: 200,
+  accessibilityFallback: 1200,
   readyFallback: 500,
   watchdog: 2100,
 } as const;
