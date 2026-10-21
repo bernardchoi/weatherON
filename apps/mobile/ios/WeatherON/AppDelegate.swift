@@ -17,6 +17,15 @@ class AppDelegate: ExpoAppDelegate {
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
+#if !targetEnvironment(simulator)
+    // Bridgeless React Native reads bundle configuration before the delegate's
+    // bundle URL. Point physical-device builds at the same embedded bundle so
+    // Debug launches remain standalone when Metro is unavailable.
+    if let embeddedBundleURL = delegate.bundleURL() {
+      factory.bundleConfiguration = RCTBundleConfiguration(bundleFilePath: embeddedBundleURL)
+    }
+#endif
+
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 

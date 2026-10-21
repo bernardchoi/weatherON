@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text } from "../localization/react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { BackHandler, Linking, Platform, StatusBar, StyleSheet, useColorScheme, View, Text, useWindowDimensions } from "../localization/react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AmbientReadingContext } from "../components/AmbientReadingSurface";
 import { ambientReadingTheme, ambientReadingRouteIds } from "../theme/ambientSurface";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 import { AppAmbientSurface } from "../components/AppAmbientSurface";
 import { BottomNav } from "../components/BottomNav";
+import { ReservedRegionObserver } from "../components/ReservedRegionObserver";
 import { AppButton } from "../components/AppButton";
 import { LaunchSplash } from "../components/LaunchSplash";
 import { NavigationStack } from "../components/NavigationStack";
@@ -60,9 +61,24 @@ import { AppEntrySplashScreen, OnboardingSplashScreen } from "../screens/SplashS
 import { useWeatherOnAppState } from "../state/useWeatherOnAppState";
 import { AppThemeProvider } from "../theme/AppThemeContext";
 import { appColors, resolveAppTheme } from "../theme/tokens";
+import { resolveNavigationContainerLayout, resolveResponsiveLayout, ResponsiveLayoutContext } from "../theme/responsiveLayout";
+import { equalReservedRegions, resolveReservedContentRegion, type ReservedRegion } from "../theme/reservedRegionLayout";
 
 export function AppNavigator() {
   const appState = useWeatherOnAppState();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const [reservedRegions, setReservedRegions] = React.useState<ReservedRegion[]>([]);
+  const safeWindowWidth = Math.max(0, width - insets.left - insets.right);
+  const safeWindowHeight = Math.max(0, height - insets.top - insets.bottom);
+  const reservedContentRegion = resolveReservedContentRegion(safeWindowWidth, safeWindowHeight, reservedRegions);
+  const navigationContainer = resolveNavigationContainerLayout(reservedContentRegion.width, reservedContentRegion.height);
+  const layout = resolveResponsiveLayout(navigationContainer.contentWidth, navigationContainer.availableHeight, {
+    useSideNavigation: navigationContainer.useSideNavigation,
+  });
+  const handleReservedRegionsChange = React.useCallback((nextRegions: ReservedRegion[]) => {
+    setReservedRegions((currentRegions) => equalReservedRegions(currentRegions, nextRegions) ? currentRegions : nextRegions);
+  }, []);
   const [rainForecastContext, setRainForecastContext] = React.useState<import("../utils/homeOuting").RainForecastContext | null>(null);
   const [launchVisible, setLaunchVisible] = React.useState(true);
   const [launchReady, setLaunchReady] = React.useState(false);
@@ -94,6 +110,26 @@ export function AppNavigator() {
     ? { locationId: ambientWeather.locationId, locationName: ambientWeather.locationName, countryCode: ambientWeather.countryCode, coordinate: appState.selectedDestinationPlace.coordinate, timezone: resolveWeatherTimeZone(ambientWeather.countryCode, appState.selectedDestinationPlace.timezone ?? ambientWeather.timezone) }
     : appState.placeSearchOrigin;
   const contentBackground = fullHomeAmbient || readingAmbient ? "transparent" : appBackgroundColor;
+  const showPrimaryNavigation = shouldShowPrimaryNavigation(route, appState.styleProfileReturnRoute);
+  // Custom navigation does not inherit UIKit's Duo rail placement. Opt into a
+  // rail only from the live container size, never a device name or orientation.
+  const useSideNavigation = Platform.OS === "ios" && layout.useSideNavigation && showPrimaryNavigation;
+  const renderPrimaryNavigation = (navigationRoute: AppRouteId, placement: "bottom" | "side" = "bottom") => {
+    const styleProfileReturnRoute = navigationRoute === "O4" ? appState.styleProfileReturnRoute : null;
+    if (!shouldShowPrimaryNavigation(navigationRoute, styleProfileReturnRoute)) return null;
+    const navigationReadingAmbient = Platform.OS === "ios" && ambientReadingRouteIds.includes(navigationRoute);
+    const navigationFullHomeAmbient = Platform.OS === "ios" && navigationRoute === "H1";
+    return (
+      <BottomNav
+        key={`primary-navigation-${navigationRoute}`}
+        placement={placement}
+        transparentBackground={navigationFullHomeAmbient || navigationReadingAmbient}
+        activeRoute={navigationRoute === "O4" ? styleProfileReturnRoute! : getBottomNavActiveRoute(navigationRoute, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4)}
+        onNavigate={appState.navigate}
+      />
+    );
+  };
+  const primaryNavigation = showPrimaryNavigation ? renderPrimaryNavigation(route, useSideNavigation ? "side" : "bottom") : null;
 
   useEffect(() => {
     if (!appState.appStateHydrated && !appState.storageLoadError) return;
@@ -269,6 +305,7 @@ export function AppNavigator() {
     onDismissDestinationLimitNotice: appState.dismissDestinationLimitNotice,
     onSearchPlaces: appState.searchPlaces,
     onSelectDestinationPlace: appState.selectDestinationPlace,
+    onSelectHomeDestinationPlace: appState.selectHomeDestinationPlace,
     onMarkNotificationRead: appState.markNotificationRead,
     onMarkAllNotificationsRead: appState.markAllNotificationsRead,
     onClearNotificationHistory: appState.clearNotificationHistory,
@@ -285,6 +322,17 @@ export function AppNavigator() {
     onDeleteAccount: appState.deleteAccount,
   };
 
+  // The Home surface reflects the committed Live Activity trip. Destination
+  // editor props intentionally remain selected-preview state for every other
+  // route, so scope the owner-specific values to Home only.
+  const homeScreenProps = {
+    ...screenProps,
+    selectedDestinationSchedulePreference: appState.homeDestinationSchedulePreference,
+    selectedDestinationDepartureAt: appState.homeDestinationDepartureAt,
+    selectedDestinationTargetAt: appState.homeDestinationTargetAt,
+    selectedDestinationPlace: appState.homeDestinationPlace,
+  };
+
   if (appState.storageLoadError && !appState.appStateHydrated) {
     return (
       <AppThemeProvider theme={theme}>
@@ -298,9 +346,9 @@ export function AppNavigator() {
     );
   }
 
-  const renderScreen = (route: AppRouteId) => (<>
+  const renderRouteContent = (route: AppRouteId) => (<>
       {route === "A1" ? <AppEntrySplashScreen {...screenProps} /> : null}
-      {route === "H1" ? <HomeScreen {...screenProps} /> : null}
+      {route === "H1" ? <HomeScreen {...homeScreenProps} state={appState.homeState} /> : null}
       {route === "H2" ? <LocationChangeScreen {...screenProps} /> : null}
       {route === "C1" ? <OutfitScreen {...screenProps} /> : null}
       {route === "C2" ? <WardrobeScreen {...screenProps} /> : null}
@@ -372,6 +420,16 @@ export function AppNavigator() {
       ) : null}
   </>);
 
+  // On iPhone the dock belongs to each native controller. Keeping it as a
+  // sibling of ScreenStack lets UIKit move only the body during an interactive
+  // pop. The rail stays outside the stack on wide iOS layouts.
+  const renderScreen = (screenRoute: AppRouteId) => (
+    <View style={styles.stackPage}>
+      {renderRouteContent(screenRoute)}
+      {Platform.OS === "ios" && !useSideNavigation ? renderPrimaryNavigation(screenRoute) : null}
+    </View>
+  );
+
   return (
     <AppThemeProvider theme={presentationTheme}>
       <AmbientReadingContext.Provider value={readingAmbient}>
@@ -384,14 +442,27 @@ export function AppNavigator() {
         style={[styles.safeArea, { backgroundColor: contentBackground }]}
       >
         <SystemBars backgroundColor={appBackgroundColor} isDarkTheme={theme.name === "dark"} />
-        <View style={[styles.root, { backgroundColor: contentBackground }]}>
-        <NavigationStack route={route} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}
-          backRoute={appState.canGoBack && !isPrimaryTabRoute(route) ? appState.backRoute : undefined}
-          onGoBack={appState.goBack} renderScreen={renderScreen} />
-          {(isLaunchVisibleP0Route(route) && route !== "G6") || route === "A4" || route === "R1" || route === "R2" || (route === "O4" && appState.styleProfileReturnRoute) ? (
-            <BottomNav transparentBackground={fullHomeAmbient || readingAmbient} activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute} onNavigate={appState.navigate} />
-          ) : null}
-        </View>
+        <ReservedRegionObserver onRegionsChange={handleReservedRegionsChange} />
+        <ResponsiveLayoutContext.Provider value={layout}>
+          <View style={[
+            styles.root,
+            useSideNavigation && styles.rootWithRail,
+            reservedContentRegion.avoidsReservedRegion ? {
+              flex: 0,
+              width: reservedContentRegion.width,
+              height: reservedContentRegion.height,
+              marginLeft: reservedContentRegion.x,
+              marginTop: reservedContentRegion.y,
+            } : null,
+            { backgroundColor: contentBackground },
+          ]}>
+            {useSideNavigation ? primaryNavigation : null}
+            <NavigationStack key="route-stack" route={route} variant={isPrimaryTabRoute(route) ? "tab" : "detail"}
+              backRoute={appState.canGoBack && !isPrimaryTabRoute(route) ? appState.backRoute : undefined}
+              onGoBack={appState.goBack} renderScreen={renderScreen} />
+            {Platform.OS !== "ios" && !useSideNavigation ? primaryNavigation : null}
+          </View>
+        </ResponsiveLayoutContext.Provider>
       </SafeAreaView>
       {launchVisible ? <LaunchSplash started={launchStarted} onReady={readyLaunch} onFinish={finishLaunch} /> : null}
       </AppAmbientSurface>
@@ -402,6 +473,10 @@ export function AppNavigator() {
 
 function isPrimaryTabRoute(route: AppRouteId) {
   return route === "H1" || route === "C1" || route === "G1" || route === "M1";
+}
+
+function shouldShowPrimaryNavigation(route: AppRouteId, styleProfileReturnRoute: P0RouteId | null) {
+  return (isLaunchVisibleP0Route(route) && route !== "G6") || route === "A4" || route === "R1" || route === "R2" || (route === "O4" && styleProfileReturnRoute);
 }
 
 function SystemBars({ backgroundColor, isDarkTheme }: { backgroundColor: string; isDarkTheme: boolean }) {
@@ -441,5 +516,11 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: appColors.navy,
+  },
+  rootWithRail: {
+    flexDirection: "row",
+  },
+  stackPage: {
+    flex: 1,
   },
 });

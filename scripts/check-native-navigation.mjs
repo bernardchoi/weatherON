@@ -14,8 +14,10 @@ assert.match(stackSource, /<View style=\{styles\.fill\}[^>]*>[\s\S]*<ScreenStack
   'native stack must fill a flex-sized wrapper');
 assert.match(stackSource, /<ScreenStackItem[\s\S]*style=\{StyleSheet\.absoluteFill\}/,
   'native screen items must fill the stack viewport');
+assert.match(stackSource, /fullScreenSwipeEnabled=\{index > 0\}/,
+  'iOS detail controllers explicitly keep native full-screen back swipe enabled');
 assert.match(stackSource, /<ScreenStack key=\{next\[0\]\}/, 'primary tab resets the native controller to remove transparent snapshots');
-// Execute the route wrappers: inactive content must be invisible and non-interactive.
+// Native stack owns iOS visibility during an interactive pop; React only gates input/a11y.
 const jsx = (type, props) => ({type, props});
 const nativeMocks = {View:'View',StyleSheet:{absoluteFill:{},create:x=>x},Platform:{OS:'ios'}};
 const module = {exports:{}};
@@ -29,8 +31,9 @@ for(const [route,backRoute] of [['A4','M1'],['R1','A4'],['H1',undefined]]) {
  const items=nodes(tree).filter(n=>n.type==='Item');
  assert.equal(items.length,backRoute?2:1);
  for(const item of items){const active=item.props.screenId===route,wrapper=item.props.children;
+  assert.equal(item.props.activityState,2,'retained native controllers stay active; iOS rejects a 2→1 lifecycle regression during push');
   assert.equal(item.props.contentStyle.backgroundColor,'transparent','one shared root remains visible');
-  assert.equal(Object.assign({},...wrapper.props.style).opacity,active?1:0,'inactive route cannot leak content');
+  assert.equal(wrapper.props.style.opacity,undefined,'manual opacity must not split the native header/body transition');
   assert.equal(wrapper.props.pointerEvents,active?'auto':'none');
   assert.equal(wrapper.props.accessibilityElementsHidden,!active);
   assert.equal(wrapper.props.importantForAccessibility,active?'auto':'no-hide-descendants');
@@ -61,6 +64,8 @@ function visit(node) {
 }
 visit(nav);
 assert.equal(dockCount,1,'all routes must share one mounted tab bar');
+assert.match(readFileSync(navPath,'utf8'), /Platform\.OS === "ios" && !useSideNavigation \? renderPrimaryNavigation\(screenRoute\) : null/,
+  'iPhone dock is rendered inside each native screen so it moves with interactive pop');
 console.log('Native navigation: MY/account/policy push-pop, gesture cancellation identity, tab reset, contextual back targets and persistent dock passed');
 const statePath='apps/mobile/src/state/useWeatherOnAppState.ts';
 const stateSource=readFileSync(statePath,'utf8');

@@ -151,6 +151,7 @@ export type P0ScreenProps = {
   onDismissDestinationLimitNotice: () => void;
   onSearchPlaces: (query: string) => void;
   onSelectDestinationPlace: (place: PlaceSearchResult) => void;
+  onSelectHomeDestinationPlace: (place: PlaceSearchResult) => void;
   onMarkNotificationRead: (id: string) => void;
   onMarkAllNotificationsRead: () => void;
   onClearNotificationHistory: () => void;

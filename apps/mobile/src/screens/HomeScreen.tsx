@@ -22,6 +22,7 @@ import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
+import { getRouteArrivalTimeIso } from "../state/appStateHelpers";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -71,7 +72,7 @@ export function HomeScreen({
   onOpenRainForecast,
   onSetWeatherProviderMode,
   onRefreshWeather,
-  onSelectDestinationPlace,
+  onSelectHomeDestinationPlace,
 }: P0ScreenProps) {
   const theme = ambientHomeTheme(useAppTheme(), Platform.OS === "ios");
   const ambientInsets = useSafeAreaInsets();
@@ -125,6 +126,26 @@ export function HomeScreen({
   const unreadNotificationCount = notificationHistoryUnreadCount(notificationHistory, readNotificationIds);
   const destinationReady = state.hasDestination;
   const homeDecision = buildHomeDecision(state.destinationCare, destinationReady, temperatureUnit);
+  // Native transitions can keep a previously rendered screen alive for a
+  // moment. Use the state payload as the single source for the Home trip so
+  // its place, schedule and weather never come from different destinations.
+  const homeDestination = savedDestinations.find((destination) => (
+    destination.place.id === state.destinationCare.destinationId
+  )) ?? null;
+  const homeDestinationPlace = homeDestination?.place ?? selectedDestinationPlace;
+  const homeSchedulePreference = homeDestination?.schedulePreference ?? selectedDestinationSchedulePreference;
+  const homeTargetAt = getRouteArrivalTimeIso(
+    homeSchedulePreference.targetArrivalTime,
+    homeDestinationPlace.timezone,
+    Date.now(),
+    homeSchedulePreference.repeatEnabled,
+    homeSchedulePreference.repeatDays,
+  ) ?? selectedDestinationTargetAt;
+  const homeDepartureAt = homeSchedulePreference.timeBasis === "departure"
+    ? homeTargetAt
+    : homeTargetAt && typeof state.destinationCare.departureAdvice?.travelMinutes === "number" && typeof state.destinationCare.departureAdvice?.bufferMinutes === "number"
+      ? new Date(new Date(homeTargetAt).getTime() - (state.destinationCare.departureAdvice.travelMinutes + state.destinationCare.departureAdvice.bufferMinutes) * 60_000).toISOString()
+      : selectedDestinationDepartureAt;
   const currentWeather = state.destinationCare.originWeather;
   const todayMinMax = getTodayMinMax(currentWeather);
   const rawCurrentLocationName = getDisplayLocationName(currentWeather.locationName);
@@ -159,12 +180,12 @@ export function HomeScreen({
   const forecastNow = useForecastNow();
   const outingWeather = destinationReady ? state.destinationCare.destinationWeather : currentWeather;
   const travel = state.destinationCare.departureAdvice?.travelMinutes;
-  const departureMs = selectedDestinationDepartureAt ? Date.parse(selectedDestinationDepartureAt) : NaN;
-  const targetMs = selectedDestinationSchedulePreference.timeBasis === "arrival"
-    ? selectedDestinationTargetAt ? Date.parse(selectedDestinationTargetAt) : NaN
+  const departureMs = homeDepartureAt ? Date.parse(homeDepartureAt) : NaN;
+  const targetMs = homeSchedulePreference.timeBasis === "arrival"
+    ? homeTargetAt ? Date.parse(homeTargetAt) : NaN
     : typeof travel === "number" && ["ready", "fallback"].includes(state.destinationCare.departureAdvice?.travelStatus ?? "") ? departureMs + travel * 60_000 : NaN;
   const targetAt = destinationReady && Number.isFinite(targetMs) ? new Date(targetMs).toISOString() : undefined;
-  const basisLabel = destinationReady ? selectedDestinationSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
+  const basisLabel = destinationReady ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
@@ -183,18 +204,18 @@ export function HomeScreen({
   const departureSummary = getHomeDepartureSummary(
     state.destinationCare,
     destinationReady,
-    selectedDestinationDepartureAt,
+    homeDepartureAt,
     Date.now(),
-    selectedDestinationSchedulePreference.timeBasis,
+    homeSchedulePreference.timeBasis,
   );
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
   const showDepartureExplanation = destinationReady && (!/^\d{2}:\d{2}$/.test(departureSummary.value) || state.destinationCare.departureAdvice?.travelStatus === "fallback");
-  const departureSummaryLabel = selectedDestinationSchedulePreference.timeBasis === "departure"
+  const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
   const refreshMessage = isWeatherLoading ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
-  const selectedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
+  const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
   const refreshFromPull = useCallback(() => {
     pullRefreshObservedLoadingRef.current = false;
@@ -295,7 +316,7 @@ export function HomeScreen({
             feelsLikeAvailable={hasFeelsLike(currentWeather)}
             isNight={isNight}
             companionMessage={companionMessage}
-            companionBasis={Platform.OS === "ios" ? `${preparation.basis === "목적지 도착 무렵" && selectedDestinationSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}` : undefined}
+            companionBasis={Platform.OS === "ios" ? `${preparation.basis === "목적지 도착 무렵" && homeSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}` : undefined}
             weatherStatus={Platform.OS === "ios" && !snapshotReliable(currentWeather, forecastNow) ? "최근 정보" : undefined}
             currentLocationName={currentLocationName}
             todayMinMax={todayMinMax}
@@ -336,7 +357,7 @@ export function HomeScreen({
             savedDestinations={savedDestinations}
             selectedDestinationId={selectedDestination?.place.id}
             theme={theme}
-            onSelect={(place) => onSelectDestinationPlace(place)}
+            onSelect={onSelectHomeDestinationPlace}
             onAdd={() => onNavigate("P1")}
           />
           </View>
@@ -352,7 +373,7 @@ export function HomeScreen({
                   <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
                   <View style={Platform.OS === "ios" ? styles.ambientDepartureInline : { flex: 1, minWidth: 0 }}>
                     {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummaryLabel}</Text> : null}
-                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? selectedDestinationSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
+                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? homeSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
                   </View>
                 </View>
                 {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
@@ -646,7 +667,7 @@ function buildHomeDecision(
     rainBody: destinationReady ? rainWindow.body : rainWindow.body,
     rainCompactTitle: rainWindow.compactTitle,
     rainCompactBody: rainWindow.compactBody,
-    ...buildPackDecision(destinationReady ? care.destinationWeather.current : care.originWeather.current),
+    ...buildPackDecision(destinationReady ? care.destinationWeather : care.originWeather),
   };
 }
 
@@ -701,14 +722,15 @@ function buildRainWindow(care: P0ScreenProps["state"]["destinationCare"]) {
   };
 }
 
-function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"]) {
-  if (weather.rainProbabilityPct >= 50 || weather.precipitationMm > 0) {
+function buildPackDecision(weather: P0ScreenProps["state"]["destinationCare"]["originWeather"]) {
+  if ([weather.current.condition, ...weather.hourly.map((hour) => hour.condition)].some((condition) => condition === "hail" || condition === "storm-hail")) return { packTitle: "실외 이동 보류", packBody: "우박 신호 · 실내 대기 우선", packIcon: uiIconAssets.cloud, packTone: "warm" as const, packFocus: "outfit" as const };
+  if (weather.current.rainProbabilityPct >= 50 || weather.current.precipitationMm > 0) {
     return { packTitle: "우산", packBody: "비 오기 전 챙기기", packIcon: uiIconAssets.umbrella, packTone: "sky" as const, packFocus: "umbrella" as const };
   }
-  if (weather.windMs >= 7) {
+  if (weather.current.windMs >= 7) {
     return { packTitle: "바람막이", packBody: "바람 막아줄 한 겹", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
-  if (weather.feelsLikeC <= 5) {
+  if (weather.current.feelsLikeC <= 5) {
     return { packTitle: "겉옷", packBody: "쌀쌀함 막아줄 한 겹", packIcon: uiIconAssets.shirt, packTone: "warm" as const, packFocus: "outfit" as const };
   }
   return { packTitle: "가볍게", packBody: "가벼운 차림이면 충분", packIcon: uiIconAssets.check, packTone: "clear" as const, packFocus: "outfit" as const };

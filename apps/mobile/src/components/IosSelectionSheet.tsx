@@ -2,8 +2,10 @@ import React from "react";
 import { Animated, Easing, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppTheme } from "../theme/AppThemeContext";
+import { equalReservedRegions, resolveReservedContentRegion, type ReservedRegion } from "../theme/reservedRegionLayout";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { HomePlanMaterial } from "./HomePlanMaterial";
+import { ReservedRegionObserver } from "./ReservedRegionObserver";
 
 // Reuses the existing iOS 26 UIGlassEffect manager. Older OS / missing manager /
 // Reduce Transparency use HomePlanMaterial's opaque theme surface, never blur.
@@ -13,7 +15,21 @@ export function IosSelectionSheet({ visible, onClose, accessibilityLabel, childr
   const theme = useAppTheme();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const [reservedRegions, setReservedRegions] = React.useState<ReservedRegion[]>([]);
+  const reservedContentRegion = resolveReservedContentRegion(width, height, reservedRegions);
+  const bottomReserve = Math.max(insets.bottom, 12);
+  const availableLeft = Math.max(insets.left, reservedContentRegion.x);
+  const availableRight = Math.min(width - insets.right, reservedContentRegion.x + reservedContentRegion.width);
+  const availableTop = Math.max(insets.top, reservedContentRegion.y);
+  const availableBottom = Math.min(height - bottomReserve, reservedContentRegion.y + reservedContentRegion.height);
+  const panelWidth = Math.max(0, availableRight - availableLeft - 24);
+  const panelCenterX = (availableLeft + availableRight) / 2;
+  const panelMaxHeight = Math.max(120, availableBottom - availableTop - 24);
+  const panelBottomMargin = Math.max(bottomReserve, height - availableBottom);
+  const handleReservedRegionsChange = React.useCallback((nextRegions: ReservedRegion[]) => {
+    setReservedRegions((currentRegions) => equalReservedRegions(currentRegions, nextRegions) ? currentRegions : nextRegions);
+  }, []);
   const [mounted, setMounted] = React.useState(visible);
   const [panelHeight, setPanelHeight] = React.useState(height);
   const travel = panelHeight + Math.max(insets.bottom, 12) + 2;
@@ -100,18 +116,19 @@ export function IosSelectionSheet({ visible, onClose, accessibilityLabel, childr
     if (latest.current.visible && phase.current !== "closing") settle(true);
   }}>
     <View style={styles.layer}>
+      <ReservedRegionObserver onRegionsChange={handleReservedRegionsChange} />
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#000000", opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 0.24] }) }]}>
         <Pressable accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.fill} onPress={dismiss} />
       </Animated.View>
       {/* Keep native glass ancestors at full alpha; fade only the separate scrim. */}
-      <Animated.View onLayout={event => { if (phase.current !== "closing") setPanelHeight(event.nativeEvent.layout.height); }} onAccessibilityEscape={dismiss} accessibilityViewIsModal accessibilityLabel={content.current.accessibilityLabel} style={[styles.panel, { maxHeight: Math.max(120, height - insets.top - Math.max(insets.bottom, 12) - 24), marginBottom: Math.max(insets.bottom, 12), borderColor: theme.border, transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [travel, 0] }) }] }]}>
+      <Animated.View onLayout={event => { if (phase.current !== "closing") setPanelHeight(event.nativeEvent.layout.height); }} onAccessibilityEscape={dismiss} accessibilityViewIsModal accessibilityLabel={content.current.accessibilityLabel} style={[styles.panel, { width: panelWidth, maxWidth: 560, maxHeight: panelMaxHeight, marginBottom: panelBottomMargin, borderColor: theme.border, transform: [{ translateX: panelCenterX - width / 2 }, { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [travel, 0] }) }] }]}>
         <HomePlanMaterial theme={theme} />
         <View style={styles.header}>
           <View pointerEvents="none" accessible={false} style={[styles.handle, { backgroundColor: theme.subtle }]} />
           <View {...pan.panHandlers} testID="selection-sheet-drag-handle" accessible={false} style={styles.dragHandle} />
           <Pressable accessibilityRole="button" accessibilityLabel="닫기" onPress={dismiss} style={styles.close}><Text style={{ color: theme.clear, fontSize: 16, fontWeight: "600" }}>닫기</Text></Pressable>
         </View>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} showsVerticalScrollIndicator>
+        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.content} showsVerticalScrollIndicator>
           {content.current.children}
         </ScrollView>
       </Animated.View>
@@ -120,7 +137,7 @@ export function IosSelectionSheet({ visible, onClose, accessibilityLabel, childr
 }
 const styles = StyleSheet.create({
   fill: { flex: 1 }, layer: { flex: 1, justifyContent: "flex-end" },
-  panel: { marginHorizontal: 12, borderRadius: 24, borderWidth: 1, overflow: "hidden", flexShrink: 1 },
+  panel: { alignSelf: "center", borderRadius: 24, borderWidth: 1, overflow: "hidden", flexShrink: 1 },
   header: { minHeight: 48, alignItems: "center", justifyContent: "center" },
   dragHandle: { position: "absolute", left: 0, top: 0, bottom: 0, right: 72 },
   handle: { width: 36, height: 4, borderRadius: 2, opacity: 0.45 },

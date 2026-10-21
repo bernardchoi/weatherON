@@ -5,6 +5,7 @@ import {
   defaultPreferenceProfile,
   evaluateNotificationRules,
   RAIN_NOTIFICATION_THRESHOLD_PCT,
+  UMBRELLA_FORECAST_WINDOW_HOURS,
   type UserPreferenceProfile,
   presetWardrobe,
   recommendOutfit,
@@ -20,6 +21,8 @@ import type {
   WeatherSnapshot,
 } from "@weatheron/shared";
 import { runtimeWeatherProvider } from "../providers/weatherProvider";
+import { Platform } from "../localization/react-native";
+import { getUmbrellaForecastHours } from "../utils/umbrellaRainSignals";
 import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
 import {
   addZonedCalendarDays,
@@ -93,7 +96,15 @@ export function buildDemoStateFromWeatherResult(
   const wardrobe = options.wardrobe?.length ? options.wardrobe : presetWardrobe;
   const preferenceProfile = options.preferenceProfile ?? defaultPreferenceProfile;
   const outfit = recommendOutfit(activeWeather, preferenceProfile, wardrobe);
-  const umbrella = recommendUmbrella(activeWeather);
+  // The iOS umbrella screen intentionally renders the first six hours only.
+  // Keep recommendation and chart on that same horizon without changing the
+  // established Android/all-forecast behavior.
+  const umbrella = recommendUmbrella(
+    activeWeather,
+    Platform.OS === "ios"
+      ? { forecastWindowHours: UMBRELLA_FORECAST_WINDOW_HOURS, forecastHours: getUmbrellaForecastHours(activeWeather) }
+      : undefined,
+  );
   const baseNotificationRules = defaultNotificationRules.filter((rule) => rule.type !== "destination");
   const notificationNow = options.notificationNow ?? Date.now();
   const notificationTimeZone = activeWeather.timezone
@@ -474,7 +485,7 @@ function withScheduledNotificationTimes(
       return {
         ...notification,
         scheduledAt: new Date(scheduledAt).toISOString(),
-        deliveryKey: `${notification.id}:${rainEvent.key}`,
+        deliveryKey: `${notification.id}:${encodeURIComponent(weather.locationId)}:${rainEvent.key}`,
       };
     }
     if (notification.type === "heatwave" && notification.active) {
@@ -502,11 +513,18 @@ function getNextDailyReminderAt(nowMs: number, timeZone: string, hour: number, m
 }
 
 function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string): { timestamp: number; key: string } | null {
+  const isHail = (condition: string) => condition === "hail" || condition === "storm-hail";
+  // Current hail has no future hourly onset to wait for. Keep it inside the
+  // short native lead window so the safety message can surface immediately.
+  if (isHail(weather.current.condition)) {
+    return { timestamp: nowMs, key: `hail-current:${weather.observedAt}` };
+  }
   const forecastHours = weather.hourly
     .map((hour) => ({
       timestamp: getWeatherHourTimestamp(hour.time, weather.observedAt, timeZone),
       key: hour.time,
       rainProbabilityPct: hour.rainProbabilityPct,
+      condition: hour.condition,
     }))
     .filter((item) => Number.isFinite(item.timestamp))
     .sort((left, right) => left.timestamp - right.timestamp);
@@ -514,8 +532,10 @@ function getRainEvent(weather: WeatherSnapshot, nowMs: number, timeZone: string)
     const previous = forecastHours[index - 1];
     return (
       item.timestamp >= nowMs &&
-      item.rainProbabilityPct >= RAIN_NOTIFICATION_THRESHOLD_PCT &&
-      (!previous || previous.rainProbabilityPct < RAIN_NOTIFICATION_THRESHOLD_PCT)
+      (isHail(item.condition)
+        ? !previous || !isHail(previous.condition)
+        : item.rainProbabilityPct >= RAIN_NOTIFICATION_THRESHOLD_PCT &&
+          (!previous || previous.rainProbabilityPct < RAIN_NOTIFICATION_THRESHOLD_PCT))
     );
   }) ?? null;
 }

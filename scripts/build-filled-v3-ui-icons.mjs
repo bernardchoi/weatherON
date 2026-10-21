@@ -23,8 +23,13 @@ const icons = {
   notifications: svg("알림", [layer("M16 43h32l-4-9V25a12 12 0 0 0-24 0v9Z", .4), layer("M12 45h40q4 0 4-4 0-2-2-5l-5-8V24a17 17 0 0 0-34 0v4l-5 8q-2 3-2 5 0 4 4 4Z"), layer("M24 51c2 8 14 8 16 0Z", .72), rect(29, 5, 6, 8, 3, .6)]),
   permissions: svg("권한 관리", [layer("M32 5 10 14v16c0 15 10 24 22 30 12-6 22-15 22-30V14Z", .42), layer("M32 5 52 14v16c0 13-9 22-20 28V32l14-11V15Z", .7), layer("M32 5 12 14v16c0 13 9 22 20 28V32L18 21v-6Z"), layer("m21 33 8 8 15-16 5 5-18 19q-2 2-5 0l-10-10Z", .76)]),
   "policy-document": svg("정책 및 법적 고지", [layer("M14 5h24l12 12v38a5 5 0 0 1-5 5H14a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5Z", .42), layer("M14 5h22v13h14v37a5 5 0 0 1-5 5H14a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5Z"), layer("M36 5v13h14Z", .66), rect(18, 28, 25, 5, 2.5, .45), rect(18, 39, 24, 5, 2.5, .62), rect(18, 50, 16, 5, 2.5, .45)]),
+  theme: svg("밝기와 어둠 테마", [circle(32, 32, 25, .38), layer("M32 7a25 25 0 0 1 0 50Z", .76), circle(24, 24, 7, .62), rect(43, 37, 6, 12, 3, .54)]),
+  transparency: svg("투명 효과 줄이기", [rect(8, 10, 36, 36, 9, .34), rect(18, 18, 38, 38, 9, .72), rect(22, 22, 30, 30, 7), rect(12, 48, 31, 6, 3, .5)]),
   settings: svg("설정", [layer("M27 5h10l3 8 8 3 7-4 6 10-6 6v8l6 6-6 10-7-4-8 3-3 8H27l-3-8-8-3-7 4-6-10 6-6v-8l-6-6 6-10 7 4 8-3Z", .42), layer("M28 5h8l3 9 9 3 7-4 5 8-6 6v10l6 6-5 8-7-4-9 3-3 9h-8l-3-9-9-3-7 4-5-8 6-6V27l-6-6 5-8 7 4 9-3Z"), circle(32, 32, 10, .5), circle(32, 32, 6)]),
-  style: svg("스타일 기준", [rect(8, 12, 48, 7, 3.5, .36), rect(8, 29, 48, 7, 3.5, .54), rect(8, 46, 48, 7, 3.5, .36), circle(24, 15.5, 9, .7), circle(42, 32.5, 9, .7), circle(20, 49.5, 9, .7), circle(24, 15.5, 5), circle(42, 32.5, 5), circle(20, 49.5, 5)]),
+  // Three clearly separated tracks preserve the slider meaning at 26pt. The darker
+  // cores and inset knobs give the shallow surfaces a crisp edge without turning
+  // the symbol into a stroked control.
+  style: svg("스타일 기준", [rect(7, 10, 50, 10, 5, .38), rect(7, 27, 50, 10, 5, .56), rect(7, 44, 50, 10, 5, .38), rect(10, 13, 44, 4, 2, .62), rect(10, 30, 44, 4, 2, .76), rect(10, 47, 44, 4, 2, .62), circle(24, 15, 10, .76), circle(42, 32, 10, .82), circle(20, 49, 10, .76), circle(24, 15, 5.5), circle(42, 32, 5.5), circle(20, 49, 5.5)]),
   temperature: svg("기온", [rect(24, 7, 16, 35, 8, .42), circle(32, 45, 14, .55), rect(26, 7, 12, 36, 6), circle(32, 45, 11), rect(30, 18, 4, 27, 2, .42)]),
   time: svg("시간", [circle(32, 32, 27, .42), circle(32, 32, 24), rect(29, 15, 6, 20, 3, .5), rect(30, 30, 19, 6, 3, .72), circle(32, 32, 5)]),
   umbrella: svg("우산", [layer("M7 33a25 25 0 0 1 50 0c-8-3-16-4-25-4S15 30 7 33Z", .4), layer("M5 34a27 27 0 0 1 54 0c-9-3-18-4-27-4S14 31 5 34Z"), rect(29, 29, 6, 22, 3, .56), layer("M35 49a7 7 0 0 1-14 0h6a1 1 0 0 0 2 0Z", .74), rect(29, 6, 6, 10, 3, .54)]),
@@ -51,7 +56,7 @@ async function render(file, value, size = 192, color = "#183844") {
 }
 
 async function buildPreviews() {
-  const names = ["umbrella", "droplet", "temperature", "time", "settings", "notifications", "permissions", "policy-document", "style", "delete", "wardrobe-outer", "wardrobe-bottom", "wardrobe-shoes", "wardrobe-accessory", "check", "add"];
+  const names = ["umbrella", "droplet", "temperature", "theme", "transparency", "time", "settings", "notifications", "permissions", "policy-document", "style", "delete", "wardrobe-outer", "wardrobe-bottom", "wardrobe-shoes", "wardrobe-accessory", "check", "add"];
   for (const [mode, palette] of Object.entries(modes)) {
     const width = 960, cell = 120, rows = Math.ceil(names.length / 8), height = 90 + rows * 132;
     const canvas = createCanvas(width, height);
@@ -77,7 +82,7 @@ async function buildPreviews() {
   }
   for (const [mode, palette] of Object.entries(modes)) {
     const sizes = [16, 22, 28];
-    const names = ["umbrella", "droplet", "temperature", "time", "settings", "permissions", "policy-document", "wardrobe-outer", "wardrobe-bottom", "wardrobe-shoes", "wardrobe-accessory", "check"];
+    const names = ["umbrella", "droplet", "temperature", "theme", "transparency", "time", "settings", "permissions", "policy-document", "wardrobe-outer", "wardrobe-bottom", "wardrobe-shoes", "wardrobe-accessory", "check"];
     const canvas = createCanvas(960, 440);
     const context = canvas.getContext("2d");
     context.fillStyle = palette.background;
@@ -111,7 +116,9 @@ for (const [name, value] of Object.entries(icons)) {
   mkdirSync(path.dirname(pngFile), { recursive: true });
   mkdirSync(path.join(root, "previews"), { recursive: true });
   writeFileSync(svgFile, value);
-  await render(pngFile, value);
+  // This empty-state symbol is displayed at 96pt. Keep a 3x derivative while
+  // the other UI symbols remain within their 192px 3x budget.
+  await render(pngFile, value, name === "wardrobe-empty" ? 288 : 192);
 }
-await buildPreviews();
-console.log(`Rendered ${Object.keys(icons).length} layered UI SVGs, PNG derivatives, and light/dark previews.`);
+if (process.env.FILLED_V3_SKIP_PREVIEWS !== "1") await buildPreviews();
+console.log(`Rendered ${Object.keys(icons).length} layered UI SVGs and PNG derivatives${process.env.FILLED_V3_SKIP_PREVIEWS === "1" ? "" : ", plus light/dark previews"}.`);

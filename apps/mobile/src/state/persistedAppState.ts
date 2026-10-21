@@ -60,6 +60,8 @@ export type PersistedAppState = {
   photoWardrobeItems: WardrobeItem[];
   selectedWardrobeItemId: string;
   savedDestinations: SavedDestination[];
+  /** Saved care trip that owns the automatic departure Live Activity. */
+  departureActivityIntentDestinationId: string | null;
   selectedDestinationPlace: PlaceSearchResult;
   previewDestinationCareEnabled: boolean;
   previewDestinationAlertCondition: DestinationAlertCondition;
@@ -100,7 +102,9 @@ export async function readPersistedWeatherProviderResult(
   const value = await readAppValue<unknown>(weatherProviderResultStorageKey);
   const result = value ? normalizePersistedWeatherProviderResult(value) : null;
   // A missing destination must not invalidate a persisted successful current
-  // location. Still reject other providers when iOS requires WeatherKit.
+  // location. iOS may use either the configured WeatherKit proxy or the
+  // built-in Open-Meteo client, so callers only filter when they explicitly
+  // require a particular source.
   return result && (!requiredSource || [result.current, result.destination, ...result.destinationSnapshots]
     .every((snapshot) => snapshot.source === requiredSource || snapshot.source === "fallback")) ? result : null;
 }
@@ -274,6 +278,12 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     : [];
   const defaultSelectedDestinationPlace = savedDestinations[0]?.place ?? getDefaultDestinationPlace();
   const selectedDestinationPlace = normalizeSelectedDestinationPlace(record.selectedDestinationPlace, savedDestinations, defaultSelectedDestinationPlace);
+  const departureActivityIntentDestinationId = typeof record.departureActivityIntentDestinationId === "string"
+    && savedDestinations.some((destination) => destination.place.id === record.departureActivityIntentDestinationId && destination.careEnabled)
+    ? record.departureActivityIntentDestinationId
+    : savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id && destination.careEnabled)?.place.id
+      ?? savedDestinations.find((destination) => destination.careEnabled)?.place.id
+      ?? null;
   const notificationState = normalizeNotificationState({
     readNotificationIds: record.readNotificationIds,
     notificationHistory: record.notificationHistory,
@@ -302,6 +312,7 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     photoWardrobeItems: normalizePhotoWardrobeItems(record.photoWardrobeItems),
     selectedWardrobeItemId: typeof record.selectedWardrobeItemId === "string" ? record.selectedWardrobeItemId : presetWardrobe[0]?.id ?? "",
     savedDestinations,
+    departureActivityIntentDestinationId,
     selectedDestinationPlace,
     previewDestinationCareEnabled: record.previewDestinationCareEnabled !== false,
     previewDestinationAlertCondition: normalizeDestinationAlertCondition(record.previewDestinationAlertCondition),

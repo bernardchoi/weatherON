@@ -22,7 +22,10 @@ export const DEFAULT_KMA_LIFESTYLE_INDEX_URL = "https://apis.data.go.kr/1360000/
 export const DEFAULT_KMA_SPECIAL_ALERT_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 export const DEFAULT_OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const DEFAULT_OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
-export const DEFAULT_WEATHER_TIMEOUT_MS = 8000;
+// A seven-day Open-Meteo response can exceed eight seconds on a mobile
+// connection even when the service is healthy. Keep the request bounded, but
+// allow a normal slow response to replace the stale snapshot.
+export const DEFAULT_WEATHER_TIMEOUT_MS = 15_000;
 
 export function getWeatherRuntimeConfig(): WeatherRuntimeConfig {
   return {

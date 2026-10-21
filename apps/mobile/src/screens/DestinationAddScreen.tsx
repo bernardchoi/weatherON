@@ -121,6 +121,7 @@ export function DestinationAddScreen({
         ]}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
       >
 

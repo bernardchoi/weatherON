@@ -5,6 +5,10 @@ RCT_EXPORT_VIEW_PROPERTY(isDarkTheme, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTDirectEventBlock)
 @end
 
+@interface RCT_EXTERN_MODULE(ReservedRegionObserverView, RCTViewManager)
+RCT_EXPORT_VIEW_PROPERTY(onRegionsChange, RCTDirectEventBlock)
+@end
+
 @interface RCT_EXTERN_MODULE(AmbientSurfaceTextureView, RCTViewManager)
 RCT_EXPORT_VIEW_PROPERTY(renderingEnabled, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(isDarkTheme, BOOL)

@@ -1,11 +1,25 @@
-import type { HourlyWeather, WeatherSnapshot } from "@weatheron/shared";
+import { UMBRELLA_FORECAST_WINDOW_HOURS, type HourlyWeather, type WeatherSnapshot } from "@weatheron/shared";
+import { forecastHours } from "./homeOuting";
+
+const hourMs = 60 * 60 * 1000;
 
 export type UmbrellaRainSignal = HourlyWeather & {
   signalPercent: number;
 };
 
-export function buildUmbrellaRainSignals(weather: WeatherSnapshot, limit = 6): UmbrellaRainSignal[] {
-  const hourly = weather.hourly.slice(0, limit).map((hour) => ({ ...hour }));
+// The chart and the recommendation share the same timestamp-resolved window.
+// An elapsed provider hour therefore cannot influence an unseen future chart.
+export function getUmbrellaForecastHours(weather: WeatherSnapshot, limit = UMBRELLA_FORECAST_WINDOW_HOURS): HourlyWeather[] {
+  const observedAt = Date.parse(weather.observedAt);
+  if (!Number.isFinite(observedAt)) return [];
+  return forecastHours(weather)
+    .filter((hour) => hour.at + hourMs > observedAt)
+    .slice(0, limit)
+    .map(({ at: _at, ...hour }) => hour);
+}
+
+export function buildUmbrellaRainSignals(weather: WeatherSnapshot, limit = UMBRELLA_FORECAST_WINDOW_HOURS): UmbrellaRainSignal[] {
+  const hourly = getUmbrellaForecastHours(weather, limit).map((hour) => ({ ...hour }));
   const currentAsHour: HourlyWeather = {
     time: weather.observedAt,
     tempC: weather.current.tempC,

@@ -1025,6 +1025,7 @@ async function readWeatherSnapshotFromRow(database: SQLiteExecutor, row: Weather
     })),
     daily: daily.length > 0 ? daily.map((item) => ({
       date: item.date,
+      available: dailyPresence(objectRecord(arrayValue(presence.daily).find(value => objectRecord(value).date === item.date)).available),
       minTempC: item.min_temp_c,
       maxTempC: item.max_temp_c,
       rainProbabilityPct: item.rain_probability_pct,
@@ -1314,6 +1315,11 @@ function hourlyPresence(value: unknown) {
   if (!["temp", "rainProbability", "precipitation", "wind"].every(key => typeof fields[key] === "boolean")) return undefined;
   return { temp: fields.temp as boolean, rainProbability: fields.rainProbability as boolean, precipitation: fields.precipitation as boolean, wind: fields.wind as boolean, ...(typeof fields.condition === "boolean" ? { condition: fields.condition } : {}) };
 }
+function dailyPresence(value: unknown) {
+  const fields = objectRecord(value);
+  if (!["minTemp", "maxTemp", "rainProbability"].every(key => typeof fields[key] === "boolean")) return undefined;
+  return { minTemp: fields.minTemp as boolean, maxTemp: fields.maxTemp as boolean, rainProbability: fields.rainProbability as boolean, ...(typeof fields.condition === "boolean" ? { condition: fields.condition } : {}) };
+}
 function weatherPresence(snapshot: Record<string, unknown>) {
   const current = objectRecord(snapshot.current);
   return JSON.stringify({
@@ -1324,6 +1330,14 @@ function weatherPresence(snapshot: Record<string, unknown>) {
     hourly: arrayValue(snapshot.hourly).map(value => {
       const hour = objectRecord(value);
       return { time: textValue(hour.time), available: hourlyPresence(hour.available) };
+    }),
+    daily: arrayValue(snapshot.daily).map(value => {
+      const day = objectRecord(value);
+      const fields = objectRecord(day.available);
+      const available = ["minTemp", "maxTemp", "rainProbability"].every(key => typeof fields[key] === "boolean")
+        ? { minTemp: fields.minTemp as boolean, maxTemp: fields.maxTemp as boolean, rainProbability: fields.rainProbability as boolean, ...(typeof fields.condition === "boolean" ? { condition: fields.condition } : {}) }
+        : undefined;
+      return { date: textValue(day.date), available };
     }),
   });
 }

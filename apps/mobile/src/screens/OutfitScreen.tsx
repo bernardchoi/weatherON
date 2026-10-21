@@ -6,6 +6,7 @@ import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import { OutfitGrid } from "../components/OutfitGrid";
+import { StyleCriteriaIcon } from "../components/StyleCriteriaIcon";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
@@ -83,7 +84,7 @@ export function OutfitScreen({
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
           </FeedbackPressable>
           <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <Image source={ambientUiIcons.style} style={{ width: 26, height: 26, tintColor: theme.muted }} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>스타일 기준</Text></View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <StyleCriteriaIcon color={theme.muted} size={26} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>스타일 기준</Text></View>
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>
         </View>

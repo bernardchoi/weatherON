@@ -90,17 +90,25 @@ runEffect(snapshotMarker, snapshotContext);
 assert.equal(snapshotSaves, 1, "Android loading behavior is preserved");
 
 let onChange;
+let foregroundRefreshes = 0;
 const lifecycleContext = {
   AppState: { addEventListener: (_, callback) => { onChange = callback; return { remove() {} }; } },
   appLifecycleStateRef: { current: "background" },
   widgetSnapshotContentKeyRef: { current: "delivered" }, widgetLocationsKeyRef: { current: "delivered" },
-  setWeatherRefreshTick: () => {},
+  Date: { now: () => 1_000_000 },
+  weatherRequestInFlightRef: { current: false },
+  foregroundWeatherRefreshAtRef: { current: 0 },
+  setWeatherRefreshTick: () => { foregroundRefreshes++; },
   localNotificationSync: { retry() {} },
 };
 runEffect('const previousState = appLifecycleStateRef.current;', lifecycleContext);
 onChange("active");
 assert.equal(lifecycleContext.widgetSnapshotContentKeyRef.current, "");
 assert.equal(lifecycleContext.widgetLocationsKeyRef.current, "");
+assert.equal(foregroundRefreshes, 1);
+onChange("inactive");
+onChange("active");
+assert.equal(foregroundRefreshes, 1, "a foreground bounce must not trigger another weather request during cooldown");
 
 const serializers = await loadTS("apps/mobile/src/providers/widgetSnapshot.shared.ts", `
 const resolveWeatherTimeZone = (_, zone) => zone;

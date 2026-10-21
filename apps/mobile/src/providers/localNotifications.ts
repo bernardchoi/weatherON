@@ -113,7 +113,9 @@ async function syncLocalWeatherNotificationsNow(options: {
   }
 
   const desiredNotifications = applyLocalNotificationPolicy(
-    options.notifications.filter((item) => !isDeliverySuppressed(deliveryRecords, item.deliveryKey)),
+    options.notifications
+      .filter((item) => !isDeliverySuppressed(deliveryRecords, item.deliveryKey))
+      .map(rebaseElapsedOneShot),
     { reducedInterruptions: options.reducedInterruptions ?? true },
   );
   const scheduledByIdentifier = new Map(scheduledNotifications.map((request) => [request.identifier, request]));
@@ -133,8 +135,8 @@ async function syncLocalWeatherNotificationsNow(options: {
   });
   // Journal attempts before native scheduling: a crash cannot turn an overdue attempt into a resend.
   await writeSpecialAlertDeliveryRecords(deliveryRecords);
-  const scheduledResults = await Promise.allSettled(eligibleNotifications
-    .filter((item) => !preservedIdentifiers.has(getSmartNotificationIdentifier(item)))
+  const notificationsToSchedule = eligibleNotifications.filter((item) => !preservedIdentifiers.has(getSmartNotificationIdentifier(item)));
+  const scheduledResults = await Promise.allSettled(notificationsToSchedule
     .map((item) => Notifications.scheduleNotificationAsync({
       identifier: getSmartNotificationIdentifier(item),
       content: {
@@ -149,6 +151,14 @@ async function syncLocalWeatherNotificationsNow(options: {
       trigger: getNotificationTrigger(Notifications, item),
     })));
   const failedSchedule = scheduledResults.find((result) => result.status === "rejected");
+  if (failedSchedule) {
+    scheduledResults.forEach((result, index) => {
+      if (result.status === "rejected" && notificationsToSchedule[index]?.deliveryKey) {
+        delete deliveryRecords[`${pendingRecordPrefix}${notificationsToSchedule[index].deliveryKey}`];
+      }
+    });
+    await writeSpecialAlertDeliveryRecords(deliveryRecords);
+  }
   if (failedSchedule?.status === "rejected") throw failedSchedule.reason;
 
   const finalScheduled = await readNativeScheduledNotifications(Notifications);
@@ -164,6 +174,15 @@ async function syncLocalWeatherNotificationsNow(options: {
     status: scheduledCount === desiredIdentifiers.size && [...desiredIdentifiers].every((id) => finalIdentifiers.has(id)) ? "scheduled" : "verification-failed",
     scheduledCount,
   };
+}
+
+// A native scheduling rejection leaves no delivery evidence. The retry queue may
+// run after a short one-shot lead time has elapsed, so reserve a fresh future
+// trigger rather than treating that definite rejection as an unknown delivery.
+function rebaseElapsedOneShot<T extends LocalNotificationInput>(item: T): T {
+  if (item.type === "routine" || item.type === "bedtime" || !item.scheduledAt) return item;
+  if (Date.parse(item.scheduledAt) > Date.now()) return item;
+  return { ...item, scheduledAt: new Date(Date.now() + 5_000).toISOString() };
 }
 
 export async function scheduleLocalNotificationTest(options: {

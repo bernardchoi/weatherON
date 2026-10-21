@@ -29,6 +29,8 @@ export const ambientUiIcons = {
   expand: require("../../../assets/filled-surface-v3-20261015/png/ui/expand.png"),
   add: require("../../../assets/filled-surface-v3-20261015/png/ui/add.png"),
   temperature: require("../../../assets/filled-surface-v3-20261015/png/ui/temperature.png"),
+  theme: require("../../../assets/filled-surface-v3-20261015/png/ui/theme.png"),
+  transparency: require("../../../assets/filled-surface-v3-20261015/png/ui/transparency.png"),
   uv: require("../../../assets/filled-surface-v3-20261015/png/ui/uv.png"),
   wind: require("../../../assets/filled-surface-v3-20261015/png/compact/light/wind.png"),
   droplet: require("../../../assets/filled-surface-v3-20261015/png/ui/droplet.png"),

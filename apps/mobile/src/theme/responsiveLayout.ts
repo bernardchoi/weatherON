@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useWindowDimensions } from "../localization/react-native";
 
 export type AppWidthClass = "narrow" | "compact" | "regular";
@@ -14,6 +14,10 @@ export type ResponsiveLayout = {
   isRegular: boolean;
   isShort: boolean;
   isTablet: boolean;
+  /** A semantic, current-container width state. It is not a device check. */
+  isWide: boolean;
+  /** Reserve a rail only when the currently available container can support it. */
+  useSideNavigation: boolean;
   screenHorizontalPadding: number;
   screenContentGap: number;
   screenHeaderGap: number;
@@ -107,15 +111,54 @@ export const responsiveLayoutBreakpoints = {
   regularWidth: 430,
   shortHeight: 700,
   tabletWidth: 744,
+  wideNavigationWidth: 600,
 } as const;
 
-export function resolveResponsiveLayout(width: number, height: number): ResponsiveLayout {
+/** The rail is a stable control width; the body keeps its own semantic minimum. */
+export const sideNavigationRailWidth = 92;
+export const sideNavigationMinimumContentWidth = responsiveLayoutBreakpoints.wideNavigationWidth;
+
+export type NavigationContainerLayout = {
+  availableWidth: number;
+  availableHeight: number;
+  contentWidth: number;
+  useSideNavigation: boolean;
+};
+
+/**
+ * Calculate against the safe-area-adjusted container rather than a device model.
+ * A rail is enabled only when it leaves the body with the same minimum width it
+ * would need without a rail.
+ */
+export function resolveNavigationContainerLayout(
+  width: number,
+  height: number,
+  horizontalInsets = 0,
+  verticalInsets = 0,
+): NavigationContainerLayout {
+  const availableWidth = Math.max(0, width - Math.max(0, horizontalInsets));
+  const availableHeight = Math.max(0, height - Math.max(0, verticalInsets));
+  const useSideNavigation = availableWidth >= sideNavigationRailWidth + sideNavigationMinimumContentWidth && availableHeight >= 480;
+
+  return {
+    availableWidth,
+    availableHeight,
+    contentWidth: Math.max(0, availableWidth - (useSideNavigation ? sideNavigationRailWidth : 0)),
+    useSideNavigation,
+  };
+}
+
+export function resolveResponsiveLayout(width: number, height: number, options: { useSideNavigation?: boolean } = {}): ResponsiveLayout {
   const safeWidth = Math.max(0, width);
   const safeHeight = Math.max(0, height);
   const isNarrow = safeWidth < responsiveLayoutBreakpoints.narrowWidth;
   const isRegular = safeWidth >= responsiveLayoutBreakpoints.regularWidth;
   const isShort = safeHeight < responsiveLayoutBreakpoints.shortHeight;
   const isTablet = safeWidth >= responsiveLayoutBreakpoints.tabletWidth;
+  const isWide = safeWidth >= responsiveLayoutBreakpoints.wideNavigationWidth;
+  // A Duo pose, a resizable simulator, or mirroring can all change the window
+  // while the app is running. This deliberately describes available space only.
+  const useSideNavigation = options.useSideNavigation ?? (isWide && safeHeight >= 480);
   const isNarrowPhone = safeWidth <= 360;
   const homeUltraCompact = safeHeight <= 760 || (safeWidth <= 375 && safeHeight <= 812);
   const homeTabletCompact = isTablet && safeHeight <= 900;
@@ -135,6 +178,8 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
     isRegular,
     isShort,
     isTablet,
+    isWide,
+    useSideNavigation,
     screenHorizontalPadding,
     screenContentGap: isShort ? 12 : isTablet ? 20 : isRegular ? 18 : isNarrow ? 14 : 16,
     screenHeaderGap: isShort ? 12 : isNarrow ? 18 : 24,
@@ -224,7 +269,12 @@ export function resolveResponsiveLayout(width: number, height: number): Responsi
   };
 }
 
+/** AppNavigator supplies the post-safe-area/post-rail body size to every screen. */
+export const ResponsiveLayoutContext = createContext<ResponsiveLayout | null>(null);
+
 export function useResponsiveLayout(): ResponsiveLayout {
   const { width, height } = useWindowDimensions();
-  return useMemo(() => resolveResponsiveLayout(width, height), [height, width]);
+  const containerLayout = useContext(ResponsiveLayoutContext);
+  const windowLayout = useMemo(() => resolveResponsiveLayout(width, height), [height, width]);
+  return containerLayout ?? windowLayout;
 }

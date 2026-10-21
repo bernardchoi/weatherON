@@ -136,6 +136,22 @@ async function performAutomaticDepartureLiveActivitySync(
     return status;
   }
 
+  // A persisted intent can predate the currently scheduled native Activity
+  // (for example after browsing another saved destination). This guard must
+  // run before the auto-window branch below: outside the window, that branch
+  // would otherwise end the existing trip before we get to preserve it.
+  // Ordinary previews stay read-only with respect to the system countdown; a
+  // future deliberate replacement needs an explicit native start rather than
+  // this background reconciliation.
+  if (
+    (status.active || status.scheduled) &&
+    status.destinationId &&
+    status.destinationId !== input.destinationId &&
+    !input.replaceExistingActivity
+  ) {
+    return status;
+  }
+
   if (!status.automaticStartSupported && !isDepartureLiveActivityAutoWindow(input.departureAt)) {
     if (status.active || status.scheduled) {
       await endDepartureLiveActivity();

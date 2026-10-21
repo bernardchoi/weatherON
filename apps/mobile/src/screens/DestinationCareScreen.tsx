@@ -1,7 +1,7 @@
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
@@ -66,6 +66,8 @@ export function DestinationCareScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const { width, fontScale } = useWindowDimensions();
+  const compactControls = width < 390 || fontScale > 1.15;
   const care = state.destinationCare;
   const destinationWeather = state.destinationWeatherById[selectedDestinationPlace.id] ?? care.destinationWeather;
   const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
@@ -126,6 +128,13 @@ export function DestinationCareScreen({
     selectedDestinationDepartureAt &&
     Math.abs(new Date(departureActivityStatus.departureAt).getTime() - new Date(selectedDestinationDepartureAt).getTime()) < 1000,
   );
+  // Browsing an unsaved destination is deliberately not an Activity update.
+  // Keep the committed trip's countdown visible instead of implying that the
+  // preview cancelled it.
+  const departureActivityPreservedForOtherDestination =
+    (departureActivityStatus.active || departureActivityStatus.scheduled) &&
+    Boolean(departureActivityStatus.destinationId) &&
+    departureActivityStatus.destinationId !== selectedDestinationPlace.id;
   const movementTimeLabel = routeTimingReady
     ? selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${travelMinutes}분` : `${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
@@ -141,6 +150,10 @@ export function DestinationCareScreen({
       : departureActivityStatus.scheduled
         ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 시작 예약됨`
         : `${departureTime}까지 표시 중`
+    : departureActivityPreservedForOtherDestination
+      ? departureActivityStatus.scheduled
+        ? "기존 카운트다운이 예약된 상태예요 · 이 프리뷰는 아직 적용 안 됨"
+        : "기존 카운트다운이 진행 중이에요 · 이 프리뷰는 아직 적용 안 됨"
     : destinationCareEnabled && departureActivityStatus.supported && !departureActivityStatus.enabled
       ? "설정에서 허용 필요"
       : destinationCareEnabled && departureReady
@@ -271,7 +284,7 @@ export function DestinationCareScreen({
           ], Platform.OS === "ios" && ambientVisual.carePanel]}
         >
         <View style={[styles.decisionPanel, pageStyles.unboxed]}>
-          <View style={styles.decisionHeader}>
+          <View style={[styles.decisionHeader, compactControls && styles.decisionHeaderCompact]}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>
@@ -298,7 +311,7 @@ export function DestinationCareScreen({
             style={[[
               styles.routeSummaryStrip,
               { backgroundColor: theme.cardMuted, borderColor: "transparent" },
-            ], Platform.OS === "ios" && ambientVisual.routeSummaryStrip]}
+            ], compactControls && styles.routeSummaryStripCompact, Platform.OS === "ios" && ambientVisual.routeSummaryStrip]}
           >
             <SummaryChip
               icon={screenIcons.pin}
@@ -391,7 +404,7 @@ export function DestinationCareScreen({
         </View>
 
         <View style={styles.quickActions}>
-          <View style={[[styles.quickActionRow, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.quickActionRow]}>
+          <View style={[[styles.quickActionRow, { borderColor: theme.border }], compactControls && styles.quickActionRowCompact, Platform.OS === "ios" && ambientVisual.quickActionRow]}>
             <FeedbackPressable
               accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
               accessibilityRole="button"
@@ -442,7 +455,7 @@ export function DestinationCareScreen({
               <Text style={[styles.outfitMatchText, { color: theme.clear }]}>보유 {destinationOutfit.preparation.ownedItemCount}/{destinationOutfit.preparation.totalItemCount}</Text>
             </View>
           </View>
-          <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow />
+          <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow={!compactControls} />
           {destinationOutfit.preparation.missingItemNames.length > 0 ? <Text style={[[styles.outfitReason, { color: theme.warm }], Platform.OS === "ios" && ambientVisual.outfitReason]}>추가 준비: {destinationOutfit.preparation.missingItemNames.join(", ")}</Text> : null}
         </View>
 
@@ -1101,6 +1114,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.md,
   },
+  decisionHeaderCompact: { flexWrap: "wrap" },
   decisionTop: {
     flexDirection: "row",
     alignItems: "stretch",
@@ -1181,6 +1195,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 0,
   },
+  routeSummaryStripCompact: { flexDirection: "column" },
   quickActions: {
     gap: 6,
   },
@@ -1195,6 +1210,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  quickActionRowCompact: { flexDirection: "column" },
   quickAction: {
     flex: 1,
     minWidth: 0,

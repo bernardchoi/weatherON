@@ -23,7 +23,7 @@ Xcode 설치 버전과 Cloud 실행 버전은 별개이며, Workflow 환경에�
 - Branch: `main`
 - Archive configuration: `Release`
 - App version: `1.0.0`
-- Current source build number: `40`
+- Current source build number: `41`
 - Next distributed build number: App Store Connect의 최신 번호보다 큰 값
 
 The shared scheme and CocoaPods lockfile are committed. Xcode Cloud runs

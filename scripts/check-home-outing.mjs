@@ -6,7 +6,7 @@ function load(file) {const m={exports:{}};new Function('module','exports','requi
 const api=load('apps/mobile/src/utils/homeOuting.ts');
 const now=Date.parse('2026-10-10T09:10:00+09:00');
 const hour=(time,temp=22,rain=0,amount=0,wind=2)=>({time,tempC:temp,rainProbabilityPct:rain,precipitationMm:amount,windMs:wind,condition:'clear',available:{temp:true,rainProbability:true,precipitation:true,wind:true}});
-const weather={locationId:'origin',locationName:'public-origin',countryCode:'KR',timezone:'Asia/Seoul',observedAt:new Date(now).toISOString(),source:'weatherkit',stale:false,current:{tempC:22,feelsLikeC:21,feelsLikeAvailable:true,precipitationMm:0,rainProbabilityPct:0,windMs:2,condition:'clear'},hourly:[hour('2026-10-10T09:00'),hour('2026-10-10T10:00',18,70,0.5),hour('2026-10-10T12:00',17)]};
+const weather={locationId:'origin',locationName:'public-origin',countryCode:'KR',timezone:'Asia/Seoul',observedAt:new Date(now).toISOString(),source:'weatherkit',stale:false,current:{tempC:22,feelsLikeC:21,feelsLikeAvailable:true,precipitationMm:0,rainProbabilityPct:0,windMs:2,condition:'clear'},hourly:[hour('2026-10-10T09:00'),hour('2026-10-10T10:00',18,70,0.5),hour('2026-10-10T12:00',17)],daily:[{date:'2026-10-10',minTempC:0,maxTempC:0,rainProbabilityPct:0,precipitationMm:0,windMs:2,condition:'clear',available:{minTemp:false,maxTemp:true,rainProbability:false}}]};
 const target='2026-10-10T10:30:00+09:00';
 assert.match(api.buildOutingCheck(weather,target,now),/우산/);
 assert.match(api.buildOutingCheck(weather,'2026-10-10T11:30:00+09:00',now),/아직 없어요/);
@@ -241,7 +241,7 @@ assert.match(api.buildRainForecast(weather,{...context,targetAt:'2026-10-10T08:3
 const { DatabaseSync } = await import('node:sqlite');
 const storageSource=fs.readFileSync('apps/mobile/src/providers/appStorage.ts','utf8');
 const storageAst=ts.createSourceFile('appStorage.ts',storageSource,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
-const selectedFunctions=['ensureWeatherSnapshotColumns','writeWeatherSnapshot','readWeatherSnapshotFromRow','hourlyPresence','weatherPresence','readWeatherPresence','objectRecord','arrayValue','textValue','numberValue','boolValue','removeUndefined','defaultStoredCondition'];
+const selectedFunctions=['ensureWeatherSnapshotColumns','writeWeatherSnapshot','readWeatherSnapshotFromRow','hourlyPresence','dailyPresence','weatherPresence','readWeatherPresence','objectRecord','arrayValue','textValue','numberValue','boolValue','removeUndefined','defaultStoredCondition'];
 const storageCode=storageAst.statements.filter(n=>ts.isFunctionDeclaration(n)&&selectedFunctions.includes(n.name?.text)).map(n=>n.getText(storageAst)).join('\n');
 const sqlite=new DatabaseSync(':memory:');
 for(const sql of storageSource.match(/CREATE TABLE IF NOT EXISTS weather_(?:snapshots|hourly|daily)\s*\([\s\S]*?;/g))sqlite.exec(sql);
@@ -256,6 +256,8 @@ let row=sqlite.prepare("SELECT * FROM weather_snapshots WHERE role='current'").g
 let restored=await storageBoundary.readWeatherSnapshotFromRow(database,row);
 assert.equal(restored.current.feelsLikeC,21);assert.equal(restored.current.feelsLikeAvailable,true);assert.equal(api.hasFeelsLike(restored),true);
 assert.deepEqual(JSON.parse(JSON.stringify(restored.hourly[0].available)),weather.hourly[0].available);
+assert.deepEqual(JSON.parse(JSON.stringify(restored.daily[0].available)),weather.daily[0].available);
+assert.equal(restored.daily[0].minTempC,0);assert.equal(restored.daily[0].maxTempC,0);assert.equal(restored.daily[0].rainProbabilityPct,0);
 assert.equal(api.buildRainForecast(restored,null,now).bars.length,3);
 const metadata=JSON.parse(row.provider_presence_json);assert.equal(Object.hasOwn(metadata,'coordinate'),false);assert.equal(Object.hasOwn(metadata,'account'),false);
 sqlite.prepare("UPDATE weather_snapshots SET provider_presence_json=NULL WHERE role='current'").run();

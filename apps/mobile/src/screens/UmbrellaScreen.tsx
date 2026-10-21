@@ -24,7 +24,8 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
   const peakWindow = getPeakRainWindow(rainBars);
   const peakRainProbability = getUmbrellaPeakRainProbability(rainBars);
   const windSpeed = getUmbrellaPeakWindSpeed(rainBars);
-  const umbrellaOptions = getUmbrellaOptions(umbrella.level, windSpeed);
+  const prioritizeShelter = umbrella.prioritizeShelter === true;
+  const umbrellaOptions = prioritizeShelter ? [] : getUmbrellaOptions(umbrella.level, windSpeed);
   const recommendedOption = umbrellaOptions.find((item) => item.recommended) ?? umbrellaOptions[0];
 
   useEffect(() => {
@@ -88,7 +89,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               </Pressable>
             </View>
             <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]} numberOfLines={2}>{umbrella.title}</Text>
-            <Text style={[[styles.heroMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroMeta]} numberOfLines={1}>{peakWindow} · {recommendedOption.title}</Text>
+            <Text style={[[styles.heroMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroMeta]} numberOfLines={1}>{prioritizeShelter ? `${peakWindow} · 실외 이동 보류` : `${peakWindow} · ${recommendedOption?.title}`}</Text>
           </View>
         </View>
 
@@ -133,7 +134,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
           </View>
         </Panel>
 
-        <Panel title="우산 종류 비교" theme={theme}>
+        {prioritizeShelter ? <Panel title="실외 이동 안내" theme={theme}><View testID="umbrella-shelter-priority" accessibilityLabel="우박 신호로 실외 이동 보류" style={[styles.shelterCard, { backgroundColor: `${theme.gold}12`, borderColor: `${theme.gold}55` }]}><Text style={[styles.shelterTitle, { color: theme.gold }]}>우산 종류 선택 보류</Text><Text style={[styles.shelterReason, { color: theme.text }]}>{umbrella.reason}</Text></View></Panel> : <Panel title="우산 종류 비교" theme={theme}>
           <View style={styles.optionGrid}>
             {umbrellaOptions.map((item) => (
               <View
@@ -162,7 +163,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
               </View>
             ))}
           </View>
-        </Panel>
+        </Panel>}
 
       </ScrollView>
     </View>
@@ -411,6 +412,23 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  shelterCard: {
+    width: "100%",
+    gap: spacing.xs,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+  },
+  shelterTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+  shelterReason: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "700",
   },
   clockGlyph: {
     width: 16,

@@ -128,7 +128,8 @@ export function evaluateNotificationRules(
   const destinationCondition = options.destinationAlertCondition ?? defaultDestinationAlertCondition;
   const destinationShoes = destinationWeather ? recommendShoes(destinationWeather, options.destinationCategory) : undefined;
   const weatherAlertSignals = getWeatherAlertSignals(weather, options);
-  const rainNotificationActive = getMaxRainProbabilityPct(weather) >= RAIN_NOTIFICATION_THRESHOLD_PCT;
+  const hailRisk = hasHailRisk(weather);
+  const rainNotificationActive = getMaxRainProbabilityPct(weather) >= RAIN_NOTIFICATION_THRESHOLD_PCT || hailRisk;
 
   return rules.map((rule) => {
     const destinationSignals =
@@ -151,20 +152,21 @@ export function evaluateNotificationRules(
     return {
       ...rule,
       active,
-      title: getRuleTitle(rule),
+      title: getRuleTitle(rule, umbrella.prioritizeShelter),
       reason: getRuleReason(rule, active, umbrella.title, shoes.title, {
         destinationCondition,
         destinationSignals,
         destinationShoesTitle: destinationShoes?.title,
         destinationWeather,
         weatherAlertSignal,
+        prioritizeShelter: umbrella.prioritizeShelter,
       }),
       pushTitle: rule.type === "heatwave" && weatherAlertSignal
         ? `${weatherAlertSignal.eventDate}부터 고온 예보가 있어요`
-        : getPushTitle(rule),
+        : getPushTitle(rule, umbrella.prioritizeShelter),
       pushBody: getPushBody(rule, active, {
         destinationSignals,
-        weatherAlertSignal,
+        weatherAlertSignal, prioritizeShelter: umbrella.prioritizeShelter,
       }),
       forecastEventDate: rule.type === "heatwave" ? weatherAlertSignal?.eventDate : undefined,
       deliveryKey,
@@ -203,7 +205,8 @@ function isRuleActive(
   return false;
 }
 
-function getRuleTitle(rule: NotificationRule): string {
+function getRuleTitle(rule: NotificationRule, prioritizeShelter = false): string {
+  if (prioritizeShelter && rule.type === "umbrella") return "실외 이동 안내";
   const titleByType: Record<NotificationRule["type"], string> = {
     routine: "아침 준비",
     rain: "강수 알림",
@@ -228,6 +231,7 @@ function getRuleReason(
     destinationShoesTitle?: string;
     destinationWeather?: WeatherSnapshot;
     weatherAlertSignal?: WeatherAlertSignal;
+    prioritizeShelter?: boolean;
   },
 ): string {
   if (!active) {
@@ -240,6 +244,7 @@ function getRuleReason(
   }
   if (rule.type === "routine") return "오늘 준비 카드 확인 가능";
   if (rule.type === "bedtime") return "내일 날씨·코디·우산 준비 확인";
+  if (context.prioritizeShelter && (rule.type === "rain" || rule.type === "umbrella")) return "우박 신호가 있어 실외 이동 보류 우선";
   if (rule.type === "rain") return "비 시작 전 미리 알림";
   if (rule.type === "heatwave" || rule.type === "heavy-rain") return context.weatherAlertSignal?.reason ?? "특보 기준 예보 확인 대기";
   if (rule.type === "shoes") return shoesTitle;
@@ -247,7 +252,8 @@ function getRuleReason(
   return umbrellaTitle;
 }
 
-function getPushTitle(rule: NotificationRule): string {
+function getPushTitle(rule: NotificationRule, prioritizeShelter = false): string {
+  if (prioritizeShelter && (rule.type === "rain" || rule.type === "umbrella")) return "우박 신호가 있어요";
   const titleByType: Record<NotificationRule["type"], string> = {
     routine: "오늘 아침, 가볍게 준비해요",
     rain: "우산 챙길 시간이에요",
@@ -267,9 +273,11 @@ function getPushBody(
   context: {
     destinationSignals?: DestinationAlertSignals;
     weatherAlertSignal?: WeatherAlertSignal;
+    prioritizeShelter?: boolean;
   },
 ): string {
   if (!active) return "날씨가 바뀌면 필요한 순간 알려드릴게요";
+  if (context.prioritizeShelter && (rule.type === "rain" || rule.type === "umbrella")) return "우산 종류보다 실외 이동을 보류하고 안전을 확인해요";
   if (rule.type === "routine") return "지금 날씨에 맞춘 아침 준비를 확인해봐요";
   if (rule.type === "bedtime") return "내일 날씨와 코디를 미리 확인해봐요";
   if (rule.type === "rain") return "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요";
@@ -277,6 +285,7 @@ function getPushBody(
   if (rule.type === "shoes") return "오늘은 미끄럽지 않은 편한 신발이 좋아요";
   if (rule.type === "heatwave") return `${context.weatherAlertSignal?.reason ?? "고온 예보 확인"} · 물을 챙겨요. 공식 기상청 특보와 별개인 앱 안내예요`;
   if (rule.type === "heavy-rain") return "이동 전 우산과 안전한 경로를 확인해요";
+  if (context.destinationSignals?.hailRisk) return "우박 신호가 있어 실외 이동을 보류하고 안전을 확인해요";
   if (context.destinationSignals?.rainExceeded) return "가는 길에 비가 올 수 있어요. 우산을 챙겨요";
   if (context.destinationSignals?.windExceeded) return "가는 길 바람이 강할 수 있어요. 가벼운 겉옷을 챙겨요";
   if (context.destinationSignals?.shoesRecommended) return "가는 길이 젖거나 미끄러울 수 있어요. 편한 신발을 신어요";
@@ -445,6 +454,7 @@ function getDateOffsetDays(previous: string, next: string): number {
 
 type DestinationAlertSignals = {
   active: boolean;
+  hailRisk: boolean;
   rainExceeded: boolean;
   windExceeded: boolean;
   shoesRecommended: boolean;
@@ -462,9 +472,11 @@ function getDestinationAlertSignals(
   const rainExceeded = maxRainProbabilityPct >= condition.rainThresholdPct;
   const windExceeded = maxWindMs >= condition.windThresholdMs;
   const shoesRecommended = shoesLevel === "recommended";
+  const hailRisk = hasHailRisk(weather);
 
   return {
-    active: rainExceeded || windExceeded || shoesRecommended,
+    active: hailRisk || rainExceeded || windExceeded || shoesRecommended,
+    hailRisk,
     rainExceeded,
     windExceeded,
     shoesRecommended,
@@ -483,6 +495,7 @@ function getDestinationActiveReason(
   shoesTitle: string | undefined,
 ): string {
   if (!signals) return "목적지 날씨 확인 후 대기";
+  if (signals.hailRisk) return "우박 신호 · 실외 이동 보류와 안전 확인 우선";
   if (signals.rainExceeded) return `강수 ${Math.round(signals.maxRainProbabilityPct)}% · 출발 ${condition.leadTimeMinutes}분 전 알림`;
   if (signals.windExceeded) return `바람 ${signals.maxWindMs.toFixed(1)}m/s · 출발 ${condition.leadTimeMinutes}분 전 알림`;
   if (signals.shoesRecommended) return `목적지 날씨 변화 · 출발 ${condition.leadTimeMinutes}분 전 알림`;
@@ -491,4 +504,9 @@ function getDestinationActiveReason(
 
 function formatDestinationCondition(condition: DestinationAlertCondition): string {
   return `강수 ${condition.rainThresholdPct}% · ${condition.leadTimeMinutes}분 전 · 바람 ${condition.windThresholdMs}m/s`;
+}
+
+function hasHailRisk(weather: WeatherSnapshot): boolean {
+  return [weather.current.condition, ...weather.hourly.map((hour) => hour.condition)]
+    .some((condition) => condition === "hail" || condition === "storm-hail");
 }
