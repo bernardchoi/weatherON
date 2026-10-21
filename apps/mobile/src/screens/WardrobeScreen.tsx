@@ -15,7 +15,7 @@ import {
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { radius, spacing, type AppTheme } from "../theme/tokens";
+import { radius, semanticColor, spacing, type AppTheme } from "../theme/tokens";
 import { getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
 
@@ -168,7 +168,7 @@ function WardrobeItemCard({
       ], Platform.OS === "ios" && ambientVisual.card]}
     >
       <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={[styles.cardMain, Platform.OS === "ios" && ambientVisual.cardMain]}>
-        <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell]}>
+        <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell, { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md }]}>
           {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
         </View>
         {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</Text>}

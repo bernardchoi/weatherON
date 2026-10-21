@@ -12,9 +12,10 @@ export function recommendOutfit(
   wardrobe: WardrobeItem[],
   options?: { temperature: { value: number; basis: "feelsLike" | "air" } | null },
 ): OutfitRecommendation {
-  // Opt-in for the iOS today scope; legacy/destination callers retain their policy.
-  const temperatureAvailable = !options || options.temperature !== null;
-  const temperatureLabel = options?.temperature?.basis === "air" ? "현재 기온" : "체감";
+  const temperatureAvailable = options ? options.temperature !== null
+    : (weather.current.tempAvailable !== false && Number.isFinite(weather.current.tempC))
+      || (weather.current.feelsLikeAvailable !== false && Number.isFinite(weather.current.feelsLikeC));
+  const temperatureLabel = options?.temperature?.basis === "air" ? "현재 기온" : weather.current.feelsLikeAvailable === false ? "기온" : "체감";
   if (options) weather = { ...weather, current: { ...weather.current,
     feelsLikeC: options.temperature?.value ?? NaN,
     tempC: weather.current.tempAvailable === false || (weather.source === "weatherkit" && weather.current.tempAvailable !== true) ? NaN : weather.current.tempC } };
@@ -73,22 +74,27 @@ function buildDecisionText(signals: ReturnType<typeof getWeatherSignals>, temper
 
 function buildReasons(weather: WeatherSnapshot, signals: ReturnType<typeof getWeatherSignals>, hasOuter: boolean, hasAccessory: boolean, temperatureLabel = "체감", temperatureAvailable = true): string[] {
   const reasons: string[] = [];
+  const temperature = Math.round(weather.current.feelsLikeAvailable === false ? weather.current.tempC : weather.current.feelsLikeC);
+  if (signals.isCold) reasons.push(
+    signals.minTempC < (weather.current.feelsLikeAvailable === false ? weather.current.tempC : weather.current.feelsLikeC)
+      ? `최저 ${Math.round(signals.minTempC)}도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요`
+      : `${temperatureLabel} ${temperature}도라 따뜻한 한 겹 더 챙겨요`,
+  );
   if (signals.isRainy) reasons.push(`비 올 가능성 ${signals.maxRainProbabilityPct}%라 우산 챙겨두면 좋아요`);
   if (signals.isPoorAirQuality) reasons.push(buildAirQualityReason(signals));
   if (signals.isHighUv && typeof signals.uvIndex === "number") reasons.push(`자외선 지수 ${Math.round(signals.uvIndex)}라 모자나 선크림을 챙기면 좋아요`);
-  if (signals.isWindy && signals.needsLightLayer) reasons.push(`바람이 ${signals.maxWindMs.toFixed(1)}m/s라 얇은 겉옷이 있으면 좋아요`);
+  if (signals.isWindy && signals.needsLightLayer && !signals.isCold) reasons.push(`바람이 ${signals.maxWindMs.toFixed(1)}m/s라 얇은 겉옷이 있으면 좋아요`);
   if (signals.isHot) {
     reasons.push(
       signals.isHumid
-        ? `${temperatureLabel} ${weather.current.feelsLikeC}도에 습도 ${weather.current.humidityPct}%라 통풍이 잘되는 옷이 좋아요`
-        : `${temperatureLabel} ${weather.current.feelsLikeC}도라 바람 잘 통하는 소재가 좋아요`,
+        ? `${temperatureLabel} ${temperature}도에 습도 ${weather.current.humidityPct}%라 통풍이 잘되는 옷이 좋아요`
+        : `${temperatureLabel} ${temperature}도라 바람 잘 통하는 소재가 좋아요`,
     );
   }
-  if (signals.isCold) reasons.push(`${temperatureLabel} ${weather.current.feelsLikeC}도라 따뜻한 한 겹 더 챙겨요`);
-  if (signals.needsLightLayer && signals.tempSwingC >= 7) {
-    reasons.push(`최저 ${signals.minTempC}도까지 내려가 얇게 걸칠 옷이 있으면 좋아요`);
+  if (!signals.isCold && signals.needsLightLayer && signals.tempSwingC >= 7) {
+    reasons.push(`최저 ${Math.round(signals.minTempC)}도까지 내려가 얇게 걸칠 옷이 있으면 좋아요`);
   } else if (signals.isHot && signals.tempSwingC >= 8) {
-    reasons.push(`일교차는 ${signals.tempSwingC}도지만 낮 더위를 고려해 긴 겉옷은 뺐어요`);
+    reasons.push(`일교차는 ${Math.round(signals.tempSwingC)}도지만 낮 더위를 고려해 긴 겉옷은 뺐어요`);
   }
   if (hasOuter) reasons.push("날씨가 바뀌어도 편하도록 겉옷을 함께 골랐어요");
   if (hasAccessory) reasons.push(buildAccessoryReason(signals));
@@ -122,6 +128,8 @@ function getTimeAdviceText(weather: WeatherSnapshot, hour: WeatherSnapshot["hour
   if (weather.current.pm25 !== undefined && weather.current.pm25 > 35) return "오래 걷는 시간엔 마스크 함께";
   if (weather.current.pm10 !== undefined && weather.current.pm10 > 80) return "먼지 많은 시간엔 마스크 함께";
   if (weather.current.uvIndex !== undefined && weather.current.uvIndex >= 6 && hour.tempC >= 24) return "햇빛 강한 시간엔 모자 함께";
+  if (hour.available?.temp === false || !Number.isFinite(hour.tempC)) return "기온을 확인한 뒤 옷차림을 조절해요";
+  if (hour.tempC <= 8) return "추운 시간대엔 보온 겉옷과 따뜻한 상의 함께";
   if (hour.tempC >= 30) return "더운 시간대엔 가볍게";
   return "지금 차림 그대로 좋아요";
 }

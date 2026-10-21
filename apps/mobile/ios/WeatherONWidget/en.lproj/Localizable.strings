@@ -61,3 +61,10 @@
 "widget.guidance.as-of" = "As of %@";
 "widget.guidance.unknown-time" = "Time unavailable";
 "widget.guidance.accessibility" = "Outfit, preparation and route, app snapshot";
+
+"condition.sleet" = "Sleet";
+"condition.hail" = "Hail";
+"condition.storm-hail" = "Heavy hail";
+"condition.mixed" = "Mixed precipitation";
+"condition.unknown" = "Weather unavailable";
+"condition.fog" = "Fog";

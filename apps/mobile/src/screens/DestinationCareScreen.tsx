@@ -24,6 +24,7 @@ import { toUserPreferenceProfile } from "../utils/preferenceProfile";
 import { addMinutesToTime } from "../utils/zonedDateTime";
 import { formatTemperature } from "../utils/units";
 import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
+import { getRouteArrivalTimeIso } from "../state/appStateHelpers";
 import {
   departureLiveActivityAutoLeadMinutes,
   endDepartureLiveActivity,
@@ -81,8 +82,12 @@ export function DestinationCareScreen({
   const travelMinutes = care.departureAdvice?.travelMinutes;
   const bufferMinutes = care.departureAdvice?.bufferMinutes;
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
-  const targetTimeReady = Boolean(selectedDestinationDepartureAt)
-    && new Date(selectedDestinationDepartureAt ?? 0).getTime() > Date.now();
+  const targetTimeReady = selectedDestinationDepartureAt
+    ? new Date(selectedDestinationDepartureAt).getTime() > Date.now()
+    : timeBasis === "arrival" && !routeTimingReady && Boolean(getRouteArrivalTimeIso(
+        selectedTargetTime, selectedDestinationPlace.timezone, Date.now(),
+        selectedDestinationSchedulePreference.repeatEnabled, selectedDestinationSchedulePreference.repeatDays,
+      ));
   const departureReady = targetTimeReady && (timeBasis === "departure" || routeTimingReady);
   const departureTime = timeBasis === "departure" ? selectedTargetTime : getRecommendedDepartureTime(care);
   const targetArrivalTime = timeBasis === "departure"
@@ -331,6 +336,9 @@ export function DestinationCareScreen({
               minHeight={layout.destinationCareSummaryMinHeight}
             />
           </View>
+          {Platform.OS === "ios" && selectedDestinationPlace.countryCode !== "KR" ? (
+            <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>시간은 목적지 현지 시각 기준이에요.</Text>
+          ) : null}
           <RepeatSchedulePanel
             repeatEnabled={repeatEnabled}
             repeatDays={repeatDays}
@@ -428,7 +436,7 @@ export function DestinationCareScreen({
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
               <Text style={[[styles.outfitTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitTitle]} numberOfLines={1}>{destinationOutfit.decisionText}</Text>
-              <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]} numberOfLines={1}>{destinationOutfitReason}</Text>
+              <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]}>{destinationOutfitReason}</Text>
             </View>
             <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>
               <Text style={[styles.outfitMatchText, { color: theme.clear }]}>보유 {destinationOutfit.preparation.ownedItemCount}/{destinationOutfit.preparation.totalItemCount}</Text>

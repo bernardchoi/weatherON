@@ -8,6 +8,7 @@ export function sortPlaceSearchResults(
   places: PlaceSearchResult[],
   query: string,
   origin?: SearchOrigin | null,
+  relevanceFirst = false,
 ): PlaceSearchResult[] {
   return places
     .map((place, index) => ({
@@ -19,6 +20,7 @@ export function sortPlaceSearchResults(
     .sort((a, b) => {
       if (!origin) return a.textRank - b.textRank || a.index - b.index;
       return (
+        (relevanceFirst ? a.textRank - b.textRank : 0) ||
         a.distanceMeters - b.distanceMeters ||
         a.textRank - b.textRank ||
         a.index - b.index

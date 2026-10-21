@@ -185,7 +185,7 @@ export function TomorrowBriefScreen({
           </View>
           <View style={styles.outfitCopy}>
             <Text style={[[styles.outfitDecision, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitDecision]} numberOfLines={1}>{toFriendlyOutfitHeadline(outfitDecision)}</Text>
-            <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]} numberOfLines={1}>{outfitReason}</Text>
+            <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]}>{outfitReason}</Text>
           </View>
         </View>
         <LocalizedView style={styles.outfitItems} accessibilityLabel="추천 코디 구성">
@@ -284,7 +284,7 @@ function getTomorrowWeatherHeadline(rainProbabilityPct: number, condition: strin
 
 function toFriendlyOutfitHeadline(value: string) {
   if (/비|방수/u.test(value)) return "비 와도 산뜻하게 나가요";
-  if (/추위|한파|두꺼운/u.test(value)) return "따뜻하게 챙겨 입어요";
+  if (/추위|한파|두꺼운|쌀쌀|따뜻/u.test(value)) return "따뜻하게 챙겨 입어요";
   if (/더위|시원/u.test(value)) return "가볍고 시원하게 입어요";
   return "내일 날씨에 딱 맞는 조합";
 }

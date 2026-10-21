@@ -1,4 +1,5 @@
 import Foundation
+import WeatherKit
 
 actor Probe {
   var calls = 0
@@ -23,6 +24,12 @@ actor Probe {
   }
   static func expect(_ condition: Bool, _ message: String) { precondition(condition, message) }
   static func main() async throws {
+    for (condition, expected): (WeatherCondition, String) in [
+      (.clear, "clear"), (.cloudy, "cloud"), (.rain, "rain"), (.snow, "snow"),
+      (.sleet, "sleet"), (.hail, "hail"), (.wintryMix, "mixed"), (.haze, "dust"), (.strongStorms, "storm")
+    ] {
+      expect(WeatherONNativeWeather.condition(condition) == expected, "native weather must use the app's precipitation icon vocabulary")
+    }
     let now = Date(timeIntervalSince1970: 1_800_000_000)
     let old = now.addingTimeInterval(-7200)
     let location = WeatherONNativeLocation(id: "home", latitude: 37, longitude: 127, timeZone: "Asia/Seoul")

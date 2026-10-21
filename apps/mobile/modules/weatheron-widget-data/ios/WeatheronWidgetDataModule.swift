@@ -1,12 +1,14 @@
 import ActivityKit
 import ExpoModulesCore
 import Foundation
+import OSLog
 import WidgetKit
 
 private let appGroupIdentifier = "group.com.weatheron.mobile"
 private let widgetSnapshotKey = "weatheron.widget.store.v2"
 private let widgetSnapshotRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
 private let widgetKind = "WeatherONLocationWidgetV4"
+private let widgetLogger = Logger(subsystem: "com.weatheron.mobile", category: "WidgetSync")
 private let departureActivityLeadTime: TimeInterval = 60 * 60
 private let departureActivityRecoveryGrace: TimeInterval = 2 * 60
 
@@ -150,7 +152,10 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
 
   private func saveWidgetJSON(_ json: String, key: String, relativePath: String) -> Bool {
     guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier),
-          let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return false }
+          let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
+      widgetLogger.error("Widget App Group is unavailable")
+      return false
+    }
     let data = Data(json.utf8)
     guard (try? JSONSerialization.jsonObject(with: data)) != nil else { return false }
     let fileURL = container.appendingPathComponent(relativePath, isDirectory: false)
@@ -164,9 +169,11 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       // JS deduplicates successful deliveries. Request before returning so suspension
       // cannot strand a delayed work item; identical data can retry a lost reload.
       WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+      widgetLogger.notice("Widget shared data delivered: \(key, privacy: .public)")
       return true
     } catch {
       // Do not acknowledge an unwritten snapshot: the app will retry.
+      widgetLogger.error("Widget shared file write failed: \(error.localizedDescription, privacy: .private)")
       return false
     }
   }

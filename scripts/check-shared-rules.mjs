@@ -559,6 +559,19 @@ await writeFile(
     ], { reducedInterruptions: true });
     const gangneungPlace = searchFixturePlaces("강릉")[0];
     const jamsilPlace = searchFixturePlaces("잠실")[0];
+    const verifiedDestinationResult = await fixtureWeatherProvider.getSnapshots("ready");
+    const verifiedJamsil = { ...verifiedDestinationResult.destination, locationId: jamsilPlace.id, locationName: jamsilPlace.name, locationUnverified: false };
+    const destinationTestResult = { ...verifiedDestinationResult, destinationSnapshots: [...verifiedDestinationResult.destinationSnapshots, verifiedJamsil] };
+    for (const unavailable of [{ locationUnverified: true }, { stale: true }, { source: "fallback" }]) {
+      const result = buildDemoStateFromWeatherResult({ ...destinationTestResult, destinationSnapshots: [{ ...verifiedJamsil, ...unavailable }] }, false, {
+        notificationNow: Date.parse("2026-06-26T06:00:00+09:00"),
+        savedDestinations: [{ place: jamsilPlace, careEnabled: true,
+          alertCondition: { rainThresholdPct: 10, leadTimeMinutes: 30, windThresholdMs: 5 },
+          schedulePreference: { timeBasis: "departure", targetArrivalTime: "09:00", transportMode: "auto", repeatEnabled: false, repeatDays: [] },
+        }],
+      });
+      if (result.notifications.some(item => item.type === "destination" && (item.active || item.scheduledAt))) throw new Error("unverified, stale or fallback destination weather must not schedule an alert");
+    }
     const globalPlace = searchFixturePlaces("Central Park")[0];
     const toWeatherLocation = (place) => place.countryCode === "KR"
       ? createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id)
@@ -647,6 +660,15 @@ await writeFile(
       },
     }).searchPlaces({ query: "unknown", countryCode: "GLOBAL", locale: "en-US" });
     const proxyTimezoneLookupUrls = [];
+    const proxyTokyo = await createProxyPlaceSearchClient({
+      apiBaseUrl: "https://weatheron.test",
+      fetchImpl: async () => new Response(JSON.stringify([{
+        id: "google-tokyo", name: "Tokyo Station", address: "Tokyo", category: "custom",
+        countryCode: "JP", coordinate: { latitude: 35.6812996, longitude: 139.7670658 },
+        timezone: "Asia/Tokyo", provider: "google",
+      }])),
+    }).searchPlaces({ query: "Tokyo Station", locale: "en-US" });
+    if (proxyTokyo.length !== 1 || proxyTokyo[0].provider !== "google") throw new Error("proxy client must not re-add curated duplicates");
     const legacyProxyTimezonePlaces = await createProxyPlaceSearchClient({
       apiBaseUrl: "https://weatheron.test",
       timezoneLookupUrl: "https://forecast.test/forecast",
@@ -765,7 +787,7 @@ await writeFile(
       quietHoursNotifications,
       current: await buildDemoState(false),
       destination: await buildDemoState(true),
-      departureBasis: await buildDemoState(false, "ready", {
+      departureBasis: buildDemoStateFromWeatherResult(destinationTestResult, false, {
         notificationNow: new Date("2026-06-26T06:00:00+09:00").getTime(),
         savedDestinations: [{
           place: jamsilPlace,
@@ -775,7 +797,7 @@ await writeFile(
           travelEstimate: { travelMinutes: 45, travelProvider: "fallback", travelStatus: "ready" },
         }],
       }),
-      multiDestination: await buildDemoState(false, "ready", {
+      multiDestination: buildDemoStateFromWeatherResult(destinationTestResult, false, {
         notificationNow: new Date("2026-06-26T06:00:00+09:00").getTime(),
         savedDestinations: [
           {
@@ -994,7 +1016,7 @@ assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.act
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushTitle === "우산 챙길 시간이에요"));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushBody === "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요"));
 assert.ok(results.notifications.some((item) => item.id === "routine-morning" && item.pushTitle === "오늘 아침, 가볍게 준비해요"));
-assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.4.0");
+assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.5.0");
 assert.ok(results.highUvOutfit.reasons.some((reason) => reason.includes("자외선 지수 8")));
 assert.equal(results.highUvOutfit.items.accessory.name, "네이비 볼캡");
 assert.ok(results.dustyOutfit.reasons.some((reason) => reason.includes("초미세 39")));

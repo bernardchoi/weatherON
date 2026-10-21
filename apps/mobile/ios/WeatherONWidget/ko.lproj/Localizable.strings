@@ -11,3 +11,10 @@
 "widget.guidance.as-of" = "%@ 기준";
 "widget.guidance.unknown-time" = "기준 시각 없음";
 "widget.guidance.accessibility" = "코디·준비물·경로, 앱 스냅샷";
+
+"condition.sleet" = "진눈깨비";
+"condition.hail" = "우박";
+"condition.storm-hail" = "강한 우박";
+"condition.mixed" = "혼합 강수";
+"condition.unknown" = "날씨 확인 중";
+"condition.fog" = "안개";

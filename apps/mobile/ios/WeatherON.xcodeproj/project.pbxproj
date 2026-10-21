@@ -28,6 +28,7 @@
 		A11C27010000000000000003 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A11C27010000000000000023 /* Localizable.strings */; };
 		A11C28010000000000000001 /* WeatherONNativeWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C28010000000000000002 /* WeatherONNativeWeather.swift */; };
 		A11C28110000000000000005 /* WeatherON-Ambient-B.icon in Resources */ = {isa = PBXBuildFile; fileRef = A11C28110000000000000015 /* WeatherON-Ambient-B.icon */; };
+		A11C28200000000000000001 /* AmbientIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A11C28200000000000000002 /* AmbientIcons.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +89,7 @@
 		A11C27010000000000000019 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A11C28010000000000000002 /* WeatherONNativeWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherONNativeWeather.swift; sourceTree = "<group>"; };
 		A11C28110000000000000015 /* WeatherON-Ambient-B.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; name = "WeatherON-Ambient-B.icon"; path = "WeatherON/WeatherON-Ambient-B.icon"; sourceTree = "<group>"; };
+		A11C28200000000000000002 /* AmbientIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = AmbientIcons.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				66E183A2E9C6CFA0A076F389 /* WeatherONWidget.swift */,
+				A11C28200000000000000002 /* AmbientIcons.xcassets */,
 				A11C28010000000000000002 /* WeatherONNativeWeather.swift */,
 				A11C26010000000000000013 /* WeatherONDepartureLiveActivity.swift */,
 				A11C26010000000000000014 /* WeatherONDepartureActivityAttributes.swift */,
@@ -318,6 +321,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A11C27010000000000000003 /* Localizable.strings in Resources */,
+				A11C28200000000000000001 /* AmbientIcons.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

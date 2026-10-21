@@ -3,6 +3,9 @@
 // 서버(Node/Worker)는 배포 경계상 이 TS를 임포트할 수 없어 동일 테이블을
 // apps/server/src/proxyCore.mjs에 유지한다. 수정 시 함께 갱신할 것.
 export const placeSearchQueryAliases: Record<string, string> = {
+  "seoul station": "서울역",
+  "seoulstation": "서울역",
+  "서울 역": "서울역",
   "잠실": "잠실야구장",
   "jamsil": "Jamsil Baseball Stadium",
   "jamsil baseball stadium": "잠실야구장",

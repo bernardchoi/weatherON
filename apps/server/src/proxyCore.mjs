@@ -280,18 +280,19 @@ async function searchPlaces(params, readEnvValue) {
   const countryCode = normalizeCountryCode(params.get("countryCode")) ?? inferPlaceSearchCountryCode(searchQuery);
   const language = normalizeSearchLanguage(params.get("language") ?? params.get("locale"));
   const origin = readOptionalSearchOrigin(params);
+  const relevanceFirst = params.get("sort") === "accuracy";
   if (query.trim().length < 2) return [];
 
   const originKey = origin ? formatCoordinateKey(origin) : "none";
   return fetchCachedJson(
     placeSearchCache,
-    `places:${countryCode}:${language}:${originKey}:${query.trim().toLowerCase()}`,
+    `places:${countryCode}:${language}:${relevanceFirst ? "accuracy" : "distance"}:${originKey}:${query.trim().toLowerCase()}`,
     readNumberEnv(readEnvValue, "PLACE_CACHE_TTL_MS", DEFAULT_PLACE_CACHE_TTL_MS),
     async () => {
       const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
       try {
         if (countryCode === "KR" && readEnvValue("KAKAO_REST_API_KEY")) {
-          const places = mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, origin, readEnvValue));
+          const places = mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, relevanceFirst ? undefined : origin, readEnvValue));
           return sortPlacesByDistance(await ensurePlaceTimezones(places, readEnvValue), origin);
         }
         if (getGoogleMapsApiKey(readEnvValue)) {
@@ -299,7 +300,7 @@ async function searchPlaces(params, readEnvValue) {
             await searchGooglePlaces(searchQuery, countryCode, language, readEnvValue),
             language,
           );
-          return ensurePlaceTimezones(mergePlaceSearchResults(curatedResults, googleResults), readEnvValue);
+          return ensurePlaceTimezones(googleResults.length ? googleResults : curatedResults, readEnvValue);
         }
       } catch (error) {
         console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
@@ -413,7 +414,7 @@ async function searchGooglePlaces(query, countryCode, language, readEnvValue) {
   }
   return (payload.results ?? []).slice(0, 5).map((item) => ({
     id: `google-${item.place_id}`,
-    name: getGooglePlaceName(item),
+    name: getGooglePlaceName(item, query),
     address: item.formatted_address,
     category: inferPlaceCategory(`${item.types?.join(" ")} ${item.formatted_address}`),
     countryCode: countryCode === "JP" ? "JP" : "GLOBAL",
@@ -480,11 +481,11 @@ function getGoogleMapsApiKey(readEnvValue) {
   return readEnvValue("GOOGLE_MAPS_API_KEY") ?? readEnvValue("GOOGLE_GEOCODING_API_KEY");
 }
 
-function getGooglePlaceName(item) {
+function getGooglePlaceName(item, query) {
   const firstNamedComponent = item.address_components?.find((component) =>
-    component.types?.some((type) => ["point_of_interest", "establishment", "premise", "route", "locality"].includes(type)),
+    component.types?.some((type) => ["point_of_interest", "establishment", "premise"].includes(type)),
   );
-  return firstNamedComponent?.long_name ?? item.formatted_address?.split(",")[0] ?? "Google Maps result";
+  return firstNamedComponent?.long_name ?? query.trim();
 }
 
 async function estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue) {
@@ -799,6 +800,9 @@ function getPlaceSearchQueryAlias(query) {
 // TS(shared)와 서버(mjs)는 배포 경계(Docker가 apps/server만 복사)로 사본을 유지한다.
 // 수정 시 packages/shared/src/fixtures/placeSearchAliases.ts와 함께 갱신할 것.
 const placeSearchQueryAliases = {
+  "seoul station": "서울역",
+  "seoulstation": "서울역",
+  "서울 역": "서울역",
   "잠실": "잠실야구장",
   "jamsil": "Jamsil Baseball Stadium",
   "jamsil baseball stadium": "잠실야구장",
@@ -993,7 +997,7 @@ function inferPlaceCategory(value) {
   const text = value.toLowerCase();
   if (text.includes("beach") || text.includes("해변") || text.includes("바다")) return "beach";
   if (text.includes("stadium") || text.includes("야구") || text.includes("sports") || text.includes("스포츠")) return "sports";
-  if (text.includes("mountain") || text.includes("산")) return "mountain";
+  if (text.includes("mountain") || /(?:^|[>\s])(?:산|등산)(?:$|[>\s])/.test(text)) return "mountain";
   if (text.includes("airport") || text.includes("공항")) return "airport";
   if (text.includes("hotel") || text.includes("호텔")) return "hotel";
   if (text.includes("school") || text.includes("학교")) return "school";

@@ -7,7 +7,7 @@ import { getOutfitImageSource } from "../assets";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
-import { radius, spacing } from "../theme/tokens";
+import { radius, semanticColor, spacing } from "../theme/tokens";
 
 type OutfitGridProps = {
   outfit: OutfitRecommendation;
@@ -67,7 +67,8 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
                 singleRow ? styles.imageWellSingleRow : null,
                 { backgroundColor: theme.cardMuted },
                 { height: singleRow ? 54 : 100, borderRadius: 18 },
-                ambient && { height: imageHeight, width: "100%", backgroundColor: "transparent", borderRadius: 0, justifyContent: "flex-end" },
+                ambient && { height: imageHeight, width: "100%" },
+                { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md, padding: spacing.xs },
               ]}
             >
               {imageSource ? (
@@ -79,8 +80,8 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
                     dense ? styles.itemImageDense : null,
                     onePage ? styles.itemImageOnePage : null,
                     singleRow ? styles.itemImageSingleRow : null,
-                    { height: singleRow ? 50 : 94 },
-                    ambient && { height: slot === "shoes" ? imageHeight * 0.70 : slot === "accessory" ? imageHeight * 0.65 : imageHeight - 4, width: slot === "bottom" ? "74%" : "92%" },
+                    { height: singleRow ? 42 : 86 },
+                    ambient && { height: slot === "shoes" ? imageHeight * 0.70 : slot === "accessory" ? imageHeight * 0.65 : imageHeight - spacing.md, width: slot === "bottom" ? "74%" : "92%" },
                   ]}
                   resizeMode="contain"
                 />

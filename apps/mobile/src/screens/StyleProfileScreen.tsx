@@ -1,14 +1,12 @@
 import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { Section } from "../components/Section";
-import { StatusPill } from "../components/StatusPill";
 import type { P0ScreenProps } from "../navigation/types";
 import type { AgeBand, FitPreference, StyleGender } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
-import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { radius, semanticColor, spacing } from "../theme/tokens";
 
 const genderOptions: { value: StyleGender; label: string }[] = [
   { value: "all", label: "공통" },
@@ -25,7 +23,6 @@ const fitOptions: { value: FitPreference; label: string }[] = [
 const styleTags = ["미니멀", "캐주얼", "스트릿", "포멀", "아웃도어", "페미닌", "스포티", "클래식"];
 
 export function StyleProfileScreen({
-  styleProfileSaved,
   styleGender,
   ageBand,
   fitPreference,
@@ -40,8 +37,7 @@ export function StyleProfileScreen({
   onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const layout = useResponsiveLayout();
-  const topTags = selectedStyles.slice(0, 2);
+  const { fontScale } = useWindowDimensions();
   const isEditing = onboardingCompleted;
   const primarySaveLabel = isEditing ? "저장하고 코디로" : "다음";
   const primaryReturnTo = onboardingCompleted ? "C1" : "O5";
@@ -53,10 +49,13 @@ export function StyleProfileScreen({
       badge={isEditing ? undefined : "1 / 3"}
       onBack={isEditing ? onGoBack : undefined}
       showWordmark={false}
+      compactHeader={isEditing}
+      stackedHeader={fontScale > 1.3}
+      contentGap={spacing.xs}
       footer={
-        <View style={{ gap: layout.isShort ? spacing.xs : spacing.sm }}>
-          <AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" />
-          {isEditing ? <AppButton label="취소" onPress={() => onNavigate("C1")} tone="secondary" variant="outlined" /> : null}
+        <View style={[styles.actions, fontScale > 1.3 && { flexDirection: "column" }]}>
+          {isEditing ? <View style={styles.cancelAction}><AppButton label="취소" onPress={() => onNavigate("C1")} tone="secondary" variant="text" size="sm" /></View> : null}
+          <View style={styles.saveAction}><AppButton label={primarySaveLabel} onPress={() => onSaveStyleProfile(primaryReturnTo)} tone="warning" /></View>
         </View>
       }
     >
@@ -67,73 +66,48 @@ export function StyleProfileScreen({
       ) : null}
 
       <Section title="스타일 태그" caption="오늘 입을 옷의 무드를 정함" accent="gold">
-        <OptionGrid>
+        <OptionGrid columns={3}>
           {styleTags.slice(0, 5).map((item) => (
             <ChoiceButton key={item} label={item} selected={selectedStyles.includes(item)} onPress={() => onToggleStyleTag(item)} />
           ))}
         </OptionGrid>
       </Section>
 
-      <Section title="추천 기준" caption="추천 보정에 쓰는 성별·연령대·핏 기준">
-        <View style={{ gap: layout.isShort ? spacing.sm : spacing.md }}>
-          <CriterionGroup label="성별 기준">
-            {genderOptions.map((item) => (
-              <ChoiceButton key={item.value} label={item.label} selected={item.value === styleGender} onPress={() => onSetStyleGender(item.value)} />
-            ))}
-          </CriterionGroup>
-          <CriterionGroup label="연령대">
-            {ageOptions.map((item) => (
-              <ChoiceButton key={item} label={item} selected={item === ageBand} onPress={() => onSetAgeBand(item)} />
-            ))}
-          </CriterionGroup>
-          <CriterionGroup label="핏">
-            {fitOptions.map((item) => (
-              <ChoiceButton key={item.value} label={item.label} selected={item.value === fitPreference} onPress={() => onSetFitPreference(item.value)} />
-            ))}
-          </CriterionGroup>
-        </View>
-      </Section>
-
-      <Section title="현재 선택 기준" caption={`${selectedStyles.length}개 태그 · ${getGenderLabel(styleGender)} · ${ageBand}`} accent="clear">
-        <View
-          style={[[
-            styles.summaryCard,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-              padding: layout.onboardingPanelPadding,
-            },
-            cardShadow(theme),
-          ], Platform.OS === "ios" && ambientVisual.summaryCard]}
-        >
-          <View style={styles.summaryHeader}>
-            <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>
-              {topTags.length ? topTags.join(" · ") : "스타일 미선택"}
-            </Text>
-            <StatusPill label={styleProfileSaved ? "저장됨" : "편집중"} tone={styleProfileSaved ? "clear" : "gold"} />
-          </View>
-          <View style={styles.pillRow}>
-            <StatusPill label={getGenderLabel(styleGender)} tone="clear" />
-            <StatusPill label={getFitLabel(fitPreference)} tone="sky" />
-            <StatusPill label={ageBand} tone="gold" />
-          </View>
-        </View>
-      </Section>
-
+      <View style={{ gap: spacing.xl }}>
+        <CriterionGroup label="성별 기준" columns={3}>
+          {genderOptions.map((item) => (
+            <ChoiceButton key={item.value} label={item.label} selected={item.value === styleGender} onPress={() => onSetStyleGender(item.value)} />
+          ))}
+        </CriterionGroup>
+        <CriterionGroup label="연령대" columns={3}>
+          {ageOptions.map((item) => (
+            <ChoiceButton key={item} label={item} selected={item === ageBand} onPress={() => onSetAgeBand(item)} />
+          ))}
+        </CriterionGroup>
+        <CriterionGroup label="핏">
+          {fitOptions.map((item) => (
+            <ChoiceButton key={item.value} label={item.label} selected={item.value === fitPreference} onPress={() => onSetFitPreference(item.value)} />
+          ))}
+        </CriterionGroup>
+      </View>
     </AppScreen>
   );
 }
 
-function OptionGrid({ children }: { children: React.ReactNode }) {
-  return <View style={styles.optionGrid}>{children}</View>;
+function OptionGrid({ children, columns = 2 }: { children: React.ReactNode; columns?: 2 | 3 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const threeColumns = columns === 3 && width >= 360 && fontScale <= 1.3;
+  return <View style={styles.optionGrid}>{React.Children.map(children, child => (
+    <View style={{ width: threeColumns ? "33.333333%" : "50%", paddingHorizontal: spacing.xs / 2 }}>{child}</View>
+  ))}</View>;
 }
 
-function CriterionGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function CriterionGroup({ label, children, columns }: { label: string; children: React.ReactNode; columns?: 2 | 3 }) {
   const theme = useAppTheme();
   return (
-    <View style={[styles.criterionGroup, Platform.OS === "ios" && ambientVisual.criterionGroup]}>
-      <Text style={[[styles.criterionLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.criterionLabel]}>{label}</Text>
-      <OptionGrid>{children}</OptionGrid>
+    <View style={styles.criterionGroup}>
+      <Text style={[styles.criterionLabel, { color: theme.muted }]}>{label}</Text>
+      <OptionGrid columns={columns}>{children}</OptionGrid>
     </View>
   );
 }
@@ -145,22 +119,14 @@ function ChoiceButton({ label, selected, onPress }: { label: string; selected: b
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[[
+      style={[
         styles.choice,
-        { backgroundColor: selected ? theme.gold : theme.cardMuted, borderColor: selected ? theme.gold : theme.border },
-      ], Platform.OS === "ios" && ambientVisual.choice]}
+        { backgroundColor: selected ? semanticColor(theme, "accentTint") : semanticColor(theme, "surfacePassive"), borderColor: selected ? theme.gold : theme.border },
+      ]}
     >
-      <Text style={[[styles.choiceText, { color: selected ? theme.onAccent : theme.muted }], Platform.OS === "ios" && ambientVisual.choiceText]}>{label}</Text>
+      <Text style={[[styles.choiceText, { color: selected ? theme.text : theme.muted }], Platform.OS === "ios" && ambientVisual.choiceText]}>{label}</Text>
     </Pressable>
   );
-}
-
-function getFitLabel(value: FitPreference) {
-  return fitOptions.find((item) => item.value === value)?.label ?? "스탠다드";
-}
-
-function getGenderLabel(value: StyleGender) {
-  return genderOptions.find((item) => item.value === value)?.label ?? "공통";
 }
 
 const styles = StyleSheet.create({
@@ -173,89 +139,44 @@ const styles = StyleSheet.create({
     width: "34%",
     height: "100%",
   },
-  copy: {
-    flex: 1,
-    gap: 5,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "900",
-  },
   optionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
+    rowGap: spacing.xs,
+    marginHorizontal: -spacing.xs / 2,
   },
   criterionGroup: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   criterionLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
   choice: {
+    flex: 1,
     minHeight: 44,
+    alignItems: "center",
+    paddingVertical: spacing.sm,
     justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
   choiceText: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    fontWeight: "600",
   },
-  summaryCard: {
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  summaryHeader: {
+  actions: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.sm,
   },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
+  cancelAction: { flex: 1, width: "100%", justifyContent: "center" },
+  saveAction: { flex: 2, width: "100%" },
 });
 
-// Approved iOS Ambient hierarchy; Android retains its existing presentation.
 const ambientVisual = StyleSheet.create({
-  "summaryCard": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "borderRadius": 0,
-    "shadowOpacity": 0,
-    "elevation": 0,
-    "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
-  },
-  "criterionGroup": {
-    "gap": 16,
-    "paddingVertical": 12
-  },
-  "criterionLabel": {
-    "fontSize": 16,
-    "lineHeight": 24,
-    "fontWeight": "500"
-  },
-  "choiceText": {
-    "fontSize": 15,
-    "lineHeight": 22,
-    "fontWeight": "600"
-  },
-  "title": {
-    "fontSize": 16,
-    "lineHeight": 24,
-    "fontWeight": "500"
-  },
-  "choice": {
-    "minHeight": 48,
-    "paddingHorizontal": 18
-  }
+  choiceText: { fontSize: 15, lineHeight: 22, fontWeight: "600" },
 });

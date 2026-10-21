@@ -2,17 +2,16 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-private let departureNavy = Color(red: 7 / 255, green: 30 / 255, blue: 51 / 255)
-private let departureCard = Color(red: 16 / 255, green: 61 / 255, blue: 95 / 255)
-private let departureGold = Color(red: 242 / 255, green: 169 / 255, blue: 46 / 255)
-private let departureSky = Color(red: 81 / 255, green: 172 / 255, blue: 230 / 255)
+private let departurePalette = WeatherONWidgetPalette(colorScheme: .dark)
+private let departureGold = departurePalette.accent
+private let departureSky = departurePalette.secondaryText
 
 struct WeatherONDepartureLiveActivity: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: WeatherONDepartureActivityAttributes.self) { context in
       WeatherONDepartureLockScreenView(context: context)
         .widgetURL(URL(string: context.attributes.deepLink))
-        .activityBackgroundTint(departureNavy)
+        .activityBackgroundTint(departurePalette.backgroundColors[0])
         .activitySystemActionForegroundColor(.white)
     } dynamicIsland: { context in
       DynamicIsland {
@@ -64,7 +63,7 @@ struct WeatherONDepartureLiveActivity: Widget {
 
 private struct WeatherONDepartureExpandedLabel: View {
   var body: some View {
-    Label("출발까지", systemImage: "clock.fill")
+    WeatherONAmbientLabel(title: weatherONDepartureLocalized("출발까지"), symbol: "clock.fill", size: 12)
       .font(.caption2.weight(.semibold))
       .foregroundStyle(departureGold)
       .lineLimit(1)
@@ -87,7 +86,7 @@ private struct WeatherONDepartureExpandedSummary: View {
         .minimumScaleFactor(0.78)
 
       HStack(spacing: 10) {
-        Label(guidance, systemImage: guidanceSymbol ?? "figure.walk.departure")
+        WeatherONAmbientLabel(title: guidance, symbol: guidanceSymbol ?? "figure.walk.departure", size: 14)
           .font(.caption.weight(.medium))
           .foregroundStyle(departureSky)
           .lineLimit(1)
@@ -96,7 +95,7 @@ private struct WeatherONDepartureExpandedSummary: View {
 
         Spacer(minLength: 6)
 
-        Label(departureTimeLabel, systemImage: "clock.fill")
+        WeatherONAmbientLabel(title: departureTimeLabel, symbol: "clock.fill", size: 14)
           .font(.subheadline.weight(.semibold).monospacedDigit())
           .foregroundStyle(departureGold)
           .lineLimit(1)
@@ -110,14 +109,16 @@ private struct WeatherONDepartureGuidanceIcon: View {
   let symbol: String?
 
   var body: some View {
-    Image(systemName: symbol ?? "figure.walk.departure")
+    WeatherONAmbientIcon(symbol: symbol ?? "figure.walk.departure", size: 16)
       .foregroundStyle(departureGold)
       .accessibilityLabel("출발 날씨 안내")
   }
 }
 
 private struct WeatherONDepartureLockScreenView: View {
+  @Environment(\.colorScheme) private var colorScheme
   let context: ActivityViewContext<WeatherONDepartureActivityAttributes>
+  private var palette: WeatherONWidgetPalette { WeatherONWidgetPalette(colorScheme: colorScheme) }
 
   private var displayedGuidance: String {
     context.isStale ? weatherONDepartureLocalized("출발 정보가 만료됐어요") : weatherONDepartureGuidance(kind: context.state.guidanceKind, fallback: context.state.guidance)
@@ -132,11 +133,11 @@ private struct WeatherONDepartureLockScreenView: View {
       HStack(alignment: .firstTextBaseline, spacing: 10) {
         VStack(alignment: .leading, spacing: 3) {
           Text("WEATHERON · 출발 카운트다운")
-            .font(.caption2.bold())
-            .foregroundStyle(departureSky)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(palette.secondaryText)
           Text(context.attributes.destinationName)
-            .font(.title3.bold())
-            .foregroundStyle(.white)
+            .font(.title3.weight(.medium))
+            .foregroundStyle(palette.primaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.68)
             .allowsTightening(true)
@@ -146,28 +147,28 @@ private struct WeatherONDepartureLockScreenView: View {
           departureAt: context.attributes.departureAt,
           isStale: context.isStale,
           isCompleted: context.state.isCompleted,
-          style: .lockScreen
+          style: .lockScreen,
+          tint: palette.accent
         )
       }
 
       HStack(spacing: 12) {
-        Label(context.state.departureTimeLabel ?? context.attributes.departureTimeLabel, systemImage: "clock.fill")
-          .font(.subheadline.bold())
-          .foregroundStyle(departureGold)
+        WeatherONAmbientLabel(title: context.state.departureTimeLabel ?? context.attributes.departureTimeLabel, symbol: "clock.fill", size: 15)
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(palette.accent)
         Rectangle()
-          .fill(Color.white.opacity(0.18))
+          .fill(palette.cardBorder)
           .frame(width: 1, height: 18)
-        Label(
-          displayedGuidance,
-          systemImage: displayedGuidanceSymbol
-        )
+        WeatherONAmbientLabel(title: displayedGuidance, symbol: displayedGuidanceSymbol, size: 15)
           .font(.caption)
-          .foregroundStyle(.white.opacity(0.88))
+          .foregroundStyle(palette.secondaryText)
           .lineLimit(2)
       }
     }
-    .padding(16)
-    .background(departureCard.opacity(0.34))
+    .padding(18)
+    .background {
+      LinearGradient(colors: palette.backgroundColors, startPoint: .bottomLeading, endPoint: .topTrailing)
+    }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       String(format: weatherONDepartureLocalized("activity.accessibility.lock"), context.attributes.destinationName, context.isStale ? weatherONDepartureLocalized("출발 정보 만료") : weatherONDepartureLocalized("출발까지 남은 시간"), context.state.departureTimeLabel ?? context.attributes.departureTimeLabel, displayedGuidance)
@@ -186,6 +187,7 @@ private struct WeatherONDepartureCountdown: View {
   let isStale: Bool
   let isCompleted: Bool
   let style: Style
+  var tint: Color = departureGold
 
   private var showsHours: Bool {
     style == .lockScreen
@@ -206,7 +208,7 @@ private struct WeatherONDepartureCountdown: View {
       }
     }
       .font(countdownFont)
-      .foregroundStyle(departureGold)
+      .foregroundStyle(tint)
       .lineLimit(1)
       .minimumScaleFactor(0.7)
       .frame(maxWidth: maximumWidth, alignment: .trailing)

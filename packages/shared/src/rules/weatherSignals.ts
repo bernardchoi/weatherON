@@ -1,6 +1,7 @@
 import type { HourlyWeather, WeatherSnapshot } from "../types/weather";
 import type { OutfitVariant } from "../types/recommendation";
 import type { Season } from "../types/wardrobe";
+import { getForecastLocalDate, isValidIanaTimeZone } from "../weather/timezone";
 
 export type ThermalProfile = "hot" | "warm" | "mild" | "cool" | "cold";
 
@@ -31,9 +32,18 @@ export type WeatherSignals = {
 
 export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
   const hours = snapshot.hourly.length > 0 ? snapshot.hourly : [currentAsHour(snapshot)];
-  const temps = hours.map((hour) => hour.tempC);
-  const minTempC = Math.min(snapshot.current.tempC, ...temps);
-  const maxTempC = Math.max(snapshot.current.tempC, ...temps);
+  const temps = hours.filter(hour => hour.available?.temp !== false).map(hour => hour.tempC);
+  // A scoped forecast keeps its daily extremes even when hourly coverage is missing.
+  const date = isValidIanaTimeZone(snapshot.timezone) ? getForecastLocalDate(snapshot.observedAt, snapshot.timezone) : "";
+  const day = snapshot.daily?.find(day => day.date === date);
+  if (day && day.available?.minTemp !== false) temps.push(day.minTempC);
+  if (day && day.available?.maxTemp !== false) temps.push(day.maxTempC);
+  if (snapshot.current.tempAvailable !== false) temps.push(snapshot.current.tempC);
+  const validTemps = temps.filter(Number.isFinite);
+  const minTempC = validTemps.length ? Math.min(...validTemps) : NaN;
+  const maxTempC = validTemps.length ? Math.max(...validTemps) : NaN;
+  const tempC = snapshot.current.tempAvailable === false ? NaN : snapshot.current.tempC;
+  const feelsLikeC = snapshot.current.feelsLikeAvailable === false ? tempC : snapshot.current.feelsLikeC;
   const tempSwingC = maxTempC - minTempC;
   const rainyHours = hours.filter((hour) => hour.rainProbabilityPct >= 60 || hour.precipitationMm >= 1);
   const maxPrecipitation = Math.max(snapshot.current.precipitationMm, ...hours.map((hour) => hour.precipitationMm));
@@ -52,19 +62,19 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
     (typeof pm25 === "number" && pm25 > 35);
   const isHumid = snapshot.current.humidityPct >= 70;
   const isHot =
-    snapshot.current.feelsLikeC >= 27 ||
-    snapshot.current.tempC >= 29 ||
-    (maxTempC >= 31 && snapshot.current.feelsLikeC >= 22) ||
-    (isHumid && snapshot.current.feelsLikeC >= 26);
-  const isCold = snapshot.current.feelsLikeC <= 5;
-  const thermalProfile = getThermalProfile(snapshot, minTempC, maxTempC, isHot, isCold);
+    feelsLikeC >= 27 ||
+    tempC >= 29 ||
+    (maxTempC >= 31 && feelsLikeC >= 22) ||
+    (isHumid && feelsLikeC >= 26);
+  const isCold = feelsLikeC <= 8 || maxTempC <= 12 || (minTempC <= 8 && maxTempC <= 18);
+  const thermalProfile = getThermalProfile(feelsLikeC, minTempC, maxTempC, isHot, isCold);
   const recommendedSeasons = getRecommendedSeasons(thermalProfile);
   const needsLightLayer =
     !isHot &&
     (isCold ||
-      snapshot.current.feelsLikeC <= 18 ||
+      feelsLikeC <= 18 ||
       (maxTempC < 29 && minTempC <= 17 && tempSwingC >= 7) ||
-      (isWindy && snapshot.current.feelsLikeC < 24));
+      (isWindy && feelsLikeC < 24));
 
   return {
     minTempC,
@@ -93,16 +103,16 @@ export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
 }
 
 function getThermalProfile(
-  snapshot: WeatherSnapshot,
+  feelsLikeC: number,
   minTempC: number,
   maxTempC: number,
   isHot: boolean,
   isCold: boolean,
 ): ThermalProfile {
-  if (isCold || maxTempC <= 10) return "cold";
+  if (isCold) return "cold";
   if (isHot) return "hot";
-  if (snapshot.current.feelsLikeC <= 16 || minTempC <= 10) return "cool";
-  if (snapshot.current.feelsLikeC >= 23 || maxTempC >= 27) return "warm";
+  if (feelsLikeC <= 16 || minTempC <= 10) return "cool";
+  if (feelsLikeC >= 23 || maxTempC >= 27) return "warm";
   return "mild";
 }
 
@@ -117,7 +127,7 @@ function getRecommendedSeasons(profile: ThermalProfile): Season[] {
 function currentAsHour(snapshot: WeatherSnapshot): HourlyWeather {
   return {
     time: snapshot.observedAt,
-    tempC: snapshot.current.tempC,
+    tempC: snapshot.current.tempAvailable === false ? NaN : snapshot.current.tempC,
     rainProbabilityPct: snapshot.current.rainProbabilityPct,
     precipitationMm: snapshot.current.precipitationMm,
     windMs: snapshot.current.windMs,

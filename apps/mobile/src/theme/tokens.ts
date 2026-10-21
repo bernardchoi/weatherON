@@ -196,6 +196,7 @@ export type SemanticColorRole =
   | "outlineSoft"
   | "outlineStrong"
   | "imagePlaceholder"
+  | "outfitImageSurface"
   | "scrim"
   | "glassHighlight"
   | "glassBorder"
@@ -222,6 +223,7 @@ export function semanticColor(theme: AppTheme, role: SemanticColorRole): string 
   if (role === "successTint") return colorWithAlpha(theme.success, theme.name === "light" ? 0.1 : 0.16);
   if (role === "outlineSoft") return colorWithAlpha(theme.text, theme.name === "light" ? 0.12 : 0.12);
   if (role === "outlineStrong") return colorWithAlpha(theme.text, theme.name === "light" ? 0.24 : 0.18);
+  if (role === "outfitImageSurface") return colorWithAlpha(theme.text, theme.name === "light" ? 0.08 : 0.24);
   if (role === "imagePlaceholder") return colorWithAlpha(theme.text, theme.name === "light" ? 0.06 : 0.08);
   if (role === "scrim") return theme.name === "light" ? colorWithAlpha(theme.text, 0.32) : colorWithAlpha(theme.background, 0.48);
   if (role === "glassHighlight") return colorWithAlpha(theme.name === "light" ? theme.card : theme.text, theme.name === "light" ? 0.64 : 0.18);

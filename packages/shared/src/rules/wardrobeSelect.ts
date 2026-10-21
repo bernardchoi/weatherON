@@ -64,7 +64,8 @@ function isThermallyCompatible(item: WardrobeItem, signals: WeatherSignals): boo
     return !item.weatherTags.includes("cold");
   }
   if (signals.thermalProfile === "cold") {
-    return item.seasons.includes("winter") && !item.weatherTags.includes("heat");
+    return item.seasons.includes("winter") && !item.weatherTags.includes("heat")
+      && (!["outer", "top"].includes(item.category) || item.weatherTags.includes("cold"));
   }
   if (signals.thermalProfile === "cool") {
     return !item.weatherTags.includes("heat");

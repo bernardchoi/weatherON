@@ -779,8 +779,12 @@ private struct WeatherONWidgetView: View {
     Group {
       if !entry.hasSharedSnapshot {
         VStack(alignment: .leading, spacing: 8) {
+          Image(systemName: "arrow.triangle.2.circlepath")
+            .font(.title2.weight(.light))
+            .foregroundStyle(palette.rain)
           Text("WeatherON").font(.headline)
           Text("앱에서 업데이트").font(.subheadline)
+            .foregroundStyle(palette.secondaryText)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .padding(16)
@@ -799,6 +803,7 @@ private struct WeatherONWidgetView: View {
       WeatherONWidgetFooter(entry: entry, compact: family == .systemSmall)
     }
     }
+    .foregroundStyle(palette.primaryText)
     .widgetURL(entry.location.deepLinkURL)
     .weatherONWidgetBackground(
       condition: entry.location.condition,
@@ -889,7 +894,7 @@ private struct WeatherONWidgetFooter: View {
   private var guidance: some View {
     Text("\(weatherONLocalized("widget.guidance.scope")) · \(basis)")
       .font(.system(size: 9))
-      .foregroundStyle(colorScheme == .dark ? Color.white : Color(red: 20 / 255, green: 32 / 255, blue: 51 / 255))
+      .foregroundStyle(WeatherONWidgetPalette(colorScheme: colorScheme).secondaryText)
       .lineLimit(2)
       .fixedSize(horizontal: false, vertical: true)
       .accessibilityLabel(Text("\(weatherONLocalized("widget.guidance.accessibility")), \(basis)"))
@@ -907,7 +912,7 @@ private struct WeatherONSmallView: View {
       HStack(alignment: .center, spacing: 6) {
         VStack(alignment: .leading, spacing: 0) {
           Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 32, weight: .bold, design: .rounded))
+            .font(.system(size: 32, weight: .semibold, design: .default))
             .tracking(-2)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -924,7 +929,7 @@ private struct WeatherONSmallView: View {
             size: 24
           )
           Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
-            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .font(.system(size: 11, weight: .semibold, design: .default))
             .foregroundStyle(palette.secondaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -958,7 +963,7 @@ private struct WeatherONMediumView: View {
         Spacer(minLength: 4)
         HStack(alignment: .center, spacing: 8) {
           Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 34, weight: .bold, design: .rounded))
+            .font(.system(size: 34, weight: .semibold, design: .default))
             .tracking(-2)
             .lineLimit(1)
             .minimumScaleFactor(0.85)
@@ -970,7 +975,7 @@ private struct WeatherONMediumView: View {
           )
         }
         Text(String(format: weatherONLocalized("widget.feels.condition"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit), weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel)))
-          .font(.system(size: 11, weight: .semibold, design: .rounded))
+          .font(.system(size: 11, weight: .medium, design: .default))
           .foregroundStyle(palette.secondaryText)
           .lineLimit(1)
         Spacer(minLength: 5)
@@ -1005,31 +1010,24 @@ private struct WeatherONLargeView: View {
       WeatherONHeader(entry: entry, palette: palette, compact: false)
 
       HStack(spacing: 10) {
-        HStack(spacing: 10) {
-          Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
-            .font(.system(size: 44, weight: .bold, design: .rounded))
-            .tracking(-2)
-            .lineLimit(1)
-            .minimumScaleFactor(0.78)
-            .allowsTightening(true)
-            .fixedSize(horizontal: true, vertical: false)
-            .layoutPriority(2)
-          VStack(alignment: .leading, spacing: 3) {
-            Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
-              .font(.system(size: 16, weight: .bold, design: .rounded))
+        VStack(alignment: .leading, spacing: 3) {
+          HStack(spacing: 6) {
+            Text(weatherONTemperature(entry.location.temperatureC, unit: entry.localization.temperatureUnit))
+              .font(.system(size: entry.location.isDestination ? 32 : 44, weight: .medium))
+              .tracking(-2)
               .lineLimit(1)
-              .minimumScaleFactor(0.8)
-            Text(String(format: weatherONLocalized("widget.feels"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit)))
-              .font(.system(size: 11, weight: .semibold, design: .rounded))
-              .foregroundStyle(palette.secondaryText)
+              .minimumScaleFactor(0.78)
+            Spacer(minLength: 0)
+            WeatherONConditionGlyph(condition: entry.location.condition,
+              isNight: entry.location.isNight(at: entry.date), palette: palette, size: 30)
           }
-          Spacer(minLength: 0)
-          WeatherONConditionGlyph(
-            condition: entry.location.condition,
-            isNight: entry.location.isNight(at: entry.date),
-            palette: palette,
-            size: 40
-          )
+          Text(weatherONConditionLabel(entry.location.condition, fallback: entry.location.conditionLabel))
+            .font(.system(size: 13, weight: .medium))
+            .lineLimit(1)
+          Text(String(format: weatherONLocalized("widget.feels"), weatherONTemperature(entry.location.feelsLikeC, unit: entry.localization.temperatureUnit)))
+            .font(.system(size: 11))
+            .foregroundStyle(palette.secondaryText)
+            .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
 
@@ -1064,14 +1062,13 @@ private struct WeatherONHeader: View {
 
   var body: some View {
     HStack(spacing: 5) {
-      Image(systemName: entry.location.isDestination ? "mappin.and.ellipse" : "location.fill")
-        .font(.system(size: compact ? 10 : 11, weight: .bold))
+      WeatherONAmbientIcon(symbol: "location.fill", size: compact ? 12 : 14)
       Text(entry.location.locationName)
-        .font(.system(size: compact ? 12 : 13, weight: .bold, design: .rounded))
+        .font(.system(size: compact ? 12 : 13, weight: .semibold, design: .default))
         .lineLimit(1)
       Spacer(minLength: 4)
       Text(entry.hasSharedSnapshot ? updateLabel : "앱에서 업데이트")
-        .font(.system(size: compact ? 8 : 9, weight: .semibold, design: .rounded))
+        .font(.system(size: compact ? 8 : 9, weight: .medium, design: .default))
         .lineLimit(1)
     }
     .foregroundStyle(palette.secondaryText)
@@ -1099,15 +1096,12 @@ private struct WeatherONConditionGlyph: View {
   let size: CGFloat
 
   var body: some View {
-    ZStack {
-      Circle().fill(palette.accent.opacity(0.18))
-      Image(systemName: weatherSymbol(condition, isNight: isNight))
-        .font(.system(size: size * 0.50, weight: .semibold))
-        .symbolRenderingMode(.monochrome)
-        .foregroundStyle(palette.accent)
-    }
-    .frame(width: size, height: size)
-    .accessibilityHidden(true)
+    Image("ambient-weather-" + weatherONWeatherAsset(condition, isNight: isNight))
+      .renderingMode(.original)
+      .resizable()
+      .scaledToFit()
+      .frame(width: size, height: size)
+      .accessibilityHidden(true)
   }
 }
 
@@ -1134,10 +1128,9 @@ private struct WeatherONPreparationTile: View {
 
   var body: some View {
     VStack(spacing: 2) {
-      Image(systemName: symbol)
-        .font(.system(size: compact ? 11 : 13, weight: .semibold))
+      WeatherONAmbientIcon(symbol: symbol, size: compact ? 14 : 17)
       Text("\(title) \(isNeeded ? "O" : "X")")
-        .font(.system(size: compact ? 8 : 9, weight: .bold, design: .rounded))
+        .font(.system(size: compact ? 8 : 9, weight: .semibold, design: .default))
         .lineLimit(1)
         .minimumScaleFactor(0.75)
     }
@@ -1157,7 +1150,7 @@ private struct WeatherONSmallDestinationStrip: View {
 
   var body: some View {
     HStack(spacing: 4) {
-      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: weatherONClock(location.departureTime, localization: localization), label: weatherONLocalized("departure"), palette: palette)
+      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: weatherONClock(location.departureTime, localization: localization), label: weatherONLocalized("출발"), palette: palette)
       WeatherONCompactFact(symbol: outfitSymbol(location.outfitVariant), value: "코디", label: "추천", palette: palette)
       WeatherONCompactFact(symbol: "umbrella.fill", value: location.umbrellaNeeded ? "O" : "X", label: "우산", palette: palette)
     }
@@ -1172,9 +1165,9 @@ private struct WeatherONCompactFact: View {
 
   var body: some View {
     VStack(spacing: 1) {
-      Image(systemName: symbol).font(.system(size: 10, weight: .semibold))
-      Text(value).font(.system(size: 9, weight: .bold, design: .rounded)).lineLimit(1)
-      Text(label).font(.system(size: 7, weight: .semibold, design: .rounded)).foregroundStyle(palette.secondaryText)
+      WeatherONAmbientIcon(symbol: symbol, size: 13)
+      Text(value).font(.system(size: 9, weight: .semibold, design: .default)).lineLimit(1)
+      Text(label).font(.system(size: 7, weight: .medium, design: .default)).foregroundStyle(palette.secondaryText)
     }
     .frame(maxWidth: .infinity)
     .frame(height: 34)
@@ -1191,12 +1184,12 @@ private struct WeatherONScheduleCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: compact ? 4 : 7) {
       HStack {
-        Label("이동 계획", systemImage: transportSymbol(location.transportMode))
-          .font(.system(size: compact ? 9 : 11, weight: .bold, design: .rounded))
+        WeatherONAmbientLabel(title: "이동 계획", symbol: transportSymbol(location.transportMode), size: compact ? 12 : 14)
+          .font(.system(size: compact ? 9 : 11, weight: .semibold, design: .default))
         Spacer(minLength: 2)
         if let travelMinutes = location.travelMinutes {
           Text(String(format: weatherONLocalized("%lld분"), Int64(travelMinutes)))
-            .font(.system(size: compact ? 8 : 10, weight: .semibold, design: .rounded))
+            .font(.system(size: compact ? 8 : 10, weight: .medium, design: .default))
             .foregroundStyle(palette.secondaryText)
         }
       }
@@ -1204,11 +1197,11 @@ private struct WeatherONScheduleCard: View {
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         VStack(alignment: .leading, spacing: 1) {
           Text(weatherONClock(location.departureTime, localization: localization))
-            .font(.system(size: compact ? 16 : 21, weight: .bold, design: .rounded))
+            .font(.system(size: compact ? 16 : 21, weight: .semibold, design: .default))
             .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            .minimumScaleFactor(0.55)
           Text("출발")
-            .font(.system(size: 8, weight: .semibold, design: .rounded))
+            .font(.system(size: 8, weight: .medium, design: .default))
             .foregroundStyle(palette.secondaryText)
         }
         Image(systemName: "arrow.right")
@@ -1216,11 +1209,11 @@ private struct WeatherONScheduleCard: View {
           .foregroundStyle(palette.accent)
         VStack(alignment: .leading, spacing: 1) {
           Text(weatherONClock(location.arrivalTime, localization: localization))
-            .font(.system(size: compact ? 14 : 18, weight: .bold, design: .rounded))
+            .font(.system(size: compact ? 14 : 18, weight: .semibold, design: .default))
             .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            .minimumScaleFactor(0.55)
           Text("도착")
-            .font(.system(size: 8, weight: .semibold, design: .rounded))
+            .font(.system(size: 8, weight: .medium, design: .default))
             .foregroundStyle(palette.secondaryText)
         }
       }
@@ -1240,23 +1233,22 @@ private struct WeatherONOutfitCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: compact ? 3 : 8) {
       HStack {
-        Label("추천 코디", systemImage: outfitSymbol(location.outfitVariant))
-          .font(.system(size: compact ? 9 : 11, weight: .bold, design: .rounded))
+        WeatherONAmbientLabel(title: "추천 코디", symbol: outfitSymbol(location.outfitVariant), size: compact ? 12 : 14)
+          .font(.system(size: compact ? 9 : 11, weight: .semibold, design: .default))
         Spacer(minLength: 2)
         Text(String(format: weatherONLocalized("%lld개"), Int64(location.outfitItems.count)))
-          .font(.system(size: 8, weight: .semibold, design: .rounded))
+          .font(.system(size: 8, weight: .medium, design: .default))
           .foregroundStyle(palette.secondaryText)
       }
 
       HStack(spacing: compact ? 5 : 8) {
         ForEach(location.outfitItems.prefix(compact ? 3 : 4)) { item in
           VStack(spacing: 3) {
-            Image(systemName: outfitItemSymbol(item.category))
-              .font(.system(size: compact ? 11 : 14, weight: .semibold))
+            WeatherONAmbientIcon(symbol: outfitItemSymbol(item.category), size: compact ? 16 : 20)
               .foregroundStyle(palette.accent)
             if !compact {
               Text(item.name)
-                .font(.system(size: 8, weight: .semibold, design: .rounded))
+                .font(.system(size: 8, weight: .medium, design: .default))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             }
@@ -1267,7 +1259,7 @@ private struct WeatherONOutfitCard: View {
 
       if compact {
         Text(location.outfitSummary.isEmpty ? "코디 준비 중" : location.outfitSummary)
-          .font(.system(size: 8, weight: .semibold, design: .rounded))
+          .font(.system(size: 8, weight: .medium, design: .default))
           .foregroundStyle(palette.secondaryText)
           .lineLimit(1)
       }
@@ -1291,7 +1283,7 @@ private struct WeatherONHourlyStrip: View {
       ForEach(Array(location.hourly.prefix(limit))) { hour in
         VStack(spacing: 4) {
           Text(compactHour(hour.time))
-            .font(.system(size: 8, weight: .semibold, design: .rounded))
+            .font(.system(size: 8, weight: .medium, design: .default))
             .foregroundStyle(palette.secondaryText)
           if compact {
             HStack(spacing: 3) {
@@ -1312,30 +1304,22 @@ private struct WeatherONHourlyStrip: View {
     .weatherONCard(palette: palette, highlighted: false)
   }
 
-  @ViewBuilder private func condition(_ hour: WeatherONHourlySnapshot) -> some View {
-    let image = Image(systemName: weatherSymbol(
-      hour.condition,
-      isNight: location.isNight(for: hour.time, relativeTo: referenceDate)
-    ))
-    if compact {
-      image.resizable().scaledToFit().frame(width: 13, height: 12)
-        .foregroundStyle(palette.accent)
-    } else {
-      image.font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(palette.accent)
-    }
+  private func condition(_ hour: WeatherONHourlySnapshot) -> some View {
+    WeatherONConditionGlyph(condition: hour.condition,
+      isNight: location.isNight(for: hour.time, relativeTo: referenceDate),
+      palette: palette, size: compact ? 16 : 22)
   }
 
   private func temperature(_ hour: WeatherONHourlySnapshot) -> some View {
     Text(weatherONTemperature(hour.temperatureC, unit: localization.temperatureUnit))
-      .font(.system(size: 10, weight: .bold, design: .rounded))
+      .font(.system(size: 10, weight: .semibold, design: .default))
       .lineLimit(1)
   }
 
   @ViewBuilder private func precipitation(_ hour: WeatherONHourlySnapshot) -> some View {
     if hour.rainProbabilityPct > 0 {
       Text("\(hour.rainProbabilityPct)%")
-        .font(.system(size: 7, weight: .bold, design: .rounded))
+        .font(.system(size: 7, weight: .semibold, design: .default))
         .foregroundStyle(palette.rain)
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
@@ -1363,8 +1347,8 @@ private struct WeatherONMetric: View {
 
   var body: some View {
     HStack(spacing: 3) {
-      Image(systemName: symbol).font(.system(size: 9, weight: .semibold))
-      Text(value).font(.system(size: 8, weight: .bold, design: .rounded)).lineLimit(1)
+      WeatherONAmbientIcon(symbol: symbol, size: 11)
+      Text(value).font(.system(size: 8, weight: .semibold, design: .default)).lineLimit(1)
     }
     .foregroundStyle(palette.secondaryText)
     .frame(maxWidth: .infinity)
@@ -1414,78 +1398,71 @@ private struct WeatherONWeatherBackdrop: View {
   var body: some View {
     GeometryReader { proxy in
       ZStack {
-        LinearGradient(colors: palette.backgroundColors, startPoint: .topLeading, endPoint: .bottomTrailing)
-
-        Circle()
-          .fill(palette.accent.opacity(0.16))
-          .frame(width: proxy.size.width * 0.72)
-          .blur(radius: 18)
-          .offset(
-            x: proxy.size.width * (visualPhase.isMultiple(of: 2) ? 0.38 : 0.30),
-            y: -proxy.size.height * 0.34
-          )
-
-        weatherDecoration(size: proxy.size)
+        RadialGradient(colors: palette.backgroundColors.reversed(),
+          center: .topTrailing, startRadius: 0, endRadius: max(proxy.size.width, proxy.size.height))
+        Ellipse()
+          .fill(palette.rain.opacity(0.10))
+          .frame(width: proxy.size.width * 1.1, height: proxy.size.height * 0.8)
+          .blur(radius: 28)
+          .offset(x: proxy.size.width * 0.3, y: proxy.size.height * 0.3)
       }
       .clipped()
-    }
-  }
-
-  @ViewBuilder
-  private func weatherDecoration(size: CGSize) -> some View {
-    switch condition {
-    case "clear":
-      Image(systemName: isNight ? "moon.stars.fill" : "sun.max.fill")
-        .font(.system(size: min(size.width, size.height) * 0.48))
-        .foregroundStyle(palette.accent.opacity(0.10))
-        .offset(x: size.width * 0.30, y: -size.height * 0.22)
-    case "rain", "storm":
-      ZStack {
-        Image(systemName: condition == "storm" ? "cloud.bolt.rain.fill" : "cloud.rain.fill")
-          .font(.system(size: min(size.width, size.height) * 0.48))
-          .foregroundStyle(palette.accent.opacity(0.11))
-          .offset(x: size.width * 0.26, y: -size.height * 0.20)
-        ForEach(0..<8, id: \.self) { index in
-          Capsule()
-            .fill(palette.rain.opacity(0.10))
-            .frame(width: 2, height: 18)
-            .rotationEffect(.degrees(18))
-            .offset(
-              x: -size.width * 0.48 + CGFloat(index) * size.width * 0.15 + CGFloat(visualPhase * 4),
-              y: size.height * 0.32 + CGFloat((index + visualPhase).isMultiple(of: 2) ? 10 : -8)
-            )
-        }
-      }
-    case "snow":
-      ForEach(0..<12, id: \.self) { index in
-        Circle()
-          .fill(Color.white.opacity(0.14))
-          .frame(width: CGFloat(3 + index % 3), height: CGFloat(3 + index % 3))
-          .offset(
-            x: -size.width * 0.45 + CGFloat(index % 6) * size.width * 0.18,
-            y: -size.height * 0.35 + CGFloat(index / 6) * size.height * 0.52 + CGFloat(visualPhase * 5)
-          )
-      }
-    case "dust":
-      ForEach(0..<9, id: \.self) { index in
-        Circle()
-          .fill(palette.accent.opacity(0.09))
-          .frame(width: CGFloat(10 + index % 4 * 5), height: CGFloat(10 + index % 4 * 5))
-          .offset(
-            x: -size.width * 0.42 + CGFloat(index % 5) * size.width * 0.21,
-            y: -size.height * 0.25 + CGFloat(index / 5) * size.height * 0.56
-          )
-      }
-    default:
-      Image(systemName: "cloud.fill")
-        .font(.system(size: min(size.width, size.height) * 0.56))
-        .foregroundStyle(palette.accent.opacity(0.09))
-        .offset(x: size.width * 0.28, y: -size.height * 0.18)
+      .accessibilityHidden(true)
     }
   }
 }
 
-private struct WeatherONWidgetPalette {
+// Reuse app silhouettes; system-only actions without app artwork retain their symbols.
+struct WeatherONAmbientIcon: View {
+  let symbol: String
+  var size: CGFloat = 16
+
+  var body: some View {
+    Group {
+      if let name = assetName {
+        Image("ambient-ui-" + name).renderingMode(.template).resizable().scaledToFit()
+      } else {
+        Image(systemName: symbol).resizable().scaledToFit()
+      }
+    }
+    .frame(width: size, height: size)
+    .accessibilityHidden(true)
+  }
+
+  private var assetName: String? {
+    switch symbol {
+    case "location.fill", "mappin.and.ellipse": return "location"
+    case "umbrella.fill": return "umbrella"
+    case "tshirt.fill", "person.crop.square.fill": return "outfit"
+    case "jacket.fill", "scarf.fill": return "outer"
+    case "figure.stand.dress.line.vertical.figure": return "bottom"
+    case "shoe.2.fill": return "shoes"
+    case "figure.walk": return "walk"
+    case "tram.fill": return "transit"
+    case "car.fill", "figure.walk.departure": return "depart"
+    case "clock.fill", "exclamationmark.clock.fill": return "time"
+    case "drop.fill", "humidity.fill": return "droplet"
+    case "wind": return "wind"
+    case "sun.max.fill": return "temperature"
+    default: return nil
+    }
+  }
+}
+
+struct WeatherONAmbientLabel: View {
+  let title: String
+  let symbol: String
+  var size: CGFloat = 14
+
+  var body: some View {
+    Label { Text(LocalizedStringKey(title)) } icon: {
+      WeatherONAmbientIcon(symbol: symbol, size: size)
+    }
+  }
+}
+
+// Native counterpart of theme/brandPalette.ts; shared with Live Activity.
+struct WeatherONWidgetPalette {
   let primaryText: Color
   let secondaryText: Color
   let accent: Color
@@ -1496,72 +1473,19 @@ private struct WeatherONWidgetPalette {
   let highlightedCardBorder: Color
   let backgroundColors: [Color]
 
-  init(colorScheme: ColorScheme, condition: String, isNight: Bool) {
-    let isDark = colorScheme == .dark
-    // React Native theme/tokens.ts와 같은 브랜드 팔레트. WidgetKit 확장에서는 TS 토큰을 직접 가져올 수 없음.
-    let darkBackground = Color(red: 7 / 255, green: 30 / 255, blue: 51 / 255)
-    let darkBackgroundAlt = Color(red: 14 / 255, green: 74 / 255, blue: 117 / 255)
-    let darkCard = Color(red: 16 / 255, green: 61 / 255, blue: 95 / 255)
-    let darkCardStrong = Color(red: 11 / 255, green: 46 / 255, blue: 73 / 255)
-    let darkCardSoft = Color(red: 22 / 255, green: 85 / 255, blue: 127 / 255)
-    let darkGold = Color(red: 1, green: 199 / 255, blue: 88 / 255)
-    let darkSky = Color(red: 88 / 255, green: 191 / 255, blue: 1)
-    let darkSkyLite = Color(red: 216 / 255, green: 243 / 255, blue: 1)
-    let darkWarm = Color(red: 1, green: 154 / 255, blue: 102 / 255)
-    let darkText = Color(red: 246 / 255, green: 251 / 255, blue: 1)
-
-    let lightBackground = Color(red: 245 / 255, green: 249 / 255, blue: 252 / 255)
-    let lightBackgroundAlt = Color(red: 215 / 255, green: 234 / 255, blue: 247 / 255)
-    let lightCard = Color.white
-    let lightCardSoft = Color(red: 234 / 255, green: 243 / 255, blue: 250 / 255)
-    let lightGold = Color(red: 194 / 255, green: 65 / 255, blue: 12 / 255)
-    let lightSky = Color(red: 29 / 255, green: 109 / 255, blue: 168 / 255)
-    let lightWarm = Color(red: 200 / 255, green: 74 / 255, blue: 47 / 255)
-    let lightText = Color(red: 20 / 255, green: 32 / 255, blue: 51 / 255)
-
-    primaryText = isDark ? darkText : lightText
-    secondaryText = isDark ? darkSkyLite.opacity(0.90) : lightText.opacity(0.80)
-    rain = isDark ? darkSky : lightSky
-    cardBackground = isDark ? darkCard.opacity(0.78) : lightCard.opacity(0.76)
-    cardBorder = isDark ? darkSkyLite.opacity(0.16) : lightText.opacity(0.12)
-
-    switch condition {
-    case "clear":
-      if isNight {
-        accent = isDark ? darkSkyLite : lightSky
-        backgroundColors = isDark
-          ? [darkBackground, darkCardStrong]
-          : [lightBackgroundAlt, lightCardSoft]
-      } else {
-        accent = isDark ? darkGold : lightGold
-        backgroundColors = isDark
-          ? [darkBackground, darkBackgroundAlt]
-          : [lightBackground, lightBackgroundAlt]
-      }
-    case "rain", "storm":
-      accent = rain
-      backgroundColors = isDark
-        ? [darkBackground, darkCard]
-        : [lightBackgroundAlt, lightCardSoft]
-    case "snow":
-      accent = isDark ? darkSkyLite : lightSky
-      backgroundColors = isDark
-        ? [darkCardStrong, darkCardSoft]
-        : [lightCardSoft, lightBackgroundAlt]
-    case "dust":
-      accent = isDark ? darkWarm : lightWarm
-      backgroundColors = isDark
-        ? [darkCardStrong, darkBackgroundAlt]
-        : [lightBackground, lightCardSoft]
-    default:
-      accent = isDark ? darkSky : lightSky
-      backgroundColors = isDark
-        ? [darkBackground, darkCard]
-        : [lightBackground, lightCardSoft]
-    }
-
-    highlightedCard = accent.opacity(isDark ? 0.16 : 0.12)
-    highlightedCardBorder = accent.opacity(isDark ? 0.40 : 0.32)
+  init(colorScheme: ColorScheme, condition: String = "cloud", isNight: Bool = false) {
+    let dark = colorScheme == .dark
+    primaryText = dark ? Color(red: 244/255, green: 248/255, blue: 248/255) : Color(red: 24/255, green: 56/255, blue: 68/255)
+    secondaryText = dark ? Color(red: 196/255, green: 220/255, blue: 227/255) : Color(red: 73/255, green: 101/255, blue: 111/255)
+    accent = dark ? Color(red: 255/255, green: 209/255, blue: 122/255) : Color(red: 170/255, green: 44/255, blue: 31/255)
+    rain = dark ? Color(red: 126/255, green: 196/255, blue: 208/255) : Color(red: 45/255, green: 113/255, blue: 128/255)
+    cardBackground = dark ? Color(red: 26/255, green: 57/255, blue: 69/255).opacity(0.72) : Color(red: 244/255, green: 250/255, blue: 251/255).opacity(0.60)
+    cardBorder = dark ? Color(red: 61/255, green: 96/255, blue: 109/255) : Color(red: 184/255, green: 210/255, blue: 216/255)
+    highlightedCard = cardBackground
+    highlightedCardBorder = cardBorder
+    backgroundColors = dark
+      ? [Color(red: 16/255, green: 43/255, blue: 56/255), Color(red: 33/255, green: 65/255, blue: 76/255)]
+      : [Color(red: 233/255, green: 246/255, blue: 248/255), Color(red: 213/255, green: 234/255, blue: 236/255)]
   }
 }
 
@@ -1585,24 +1509,23 @@ private extension View {
   func weatherONCard(palette: WeatherONWidgetPalette, highlighted: Bool) -> some View {
     background(
       highlighted ? palette.highlightedCard : palette.cardBackground,
-      in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+      in: RoundedRectangle(cornerRadius: 16, style: .continuous)
     )
     .overlay {
-      RoundedRectangle(cornerRadius: 11, style: .continuous)
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
         .stroke(highlighted ? palette.highlightedCardBorder : palette.cardBorder, lineWidth: 0.5)
     }
   }
 }
 
-private func weatherSymbol(_ condition: String, isNight: Bool = false) -> String {
+private func weatherONWeatherAsset(_ condition: String, isNight: Bool = false) -> String {
   switch condition {
-  case "clear": return isNight ? "moon.stars.fill" : "sun.max.fill"
-  case "cloud": return "cloud.fill"
-  case "rain": return "cloud.rain.fill"
-  case "snow": return "cloud.snow.fill"
-  case "storm": return "cloud.bolt.rain.fill"
-  case "dust": return "aqi.medium"
-  default: return isNight ? "cloud.moon.fill" : "cloud.sun.fill"
+  case "clear": return isNight ? "night" : "sun"
+  case "cloud", "rain", "snow", "sleet", "hail", "mixed", "fog": return condition
+  case "storm-hail": return "hail"
+  case "storm": return "heavy-rain"
+  case "dust": return "wind"
+  default: return "unknown"
   }
 }
 

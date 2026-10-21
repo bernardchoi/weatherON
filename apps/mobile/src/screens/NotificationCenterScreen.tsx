@@ -10,11 +10,13 @@ import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, colorWithAlpha, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatDisplayDate, translateText } from "../localization/localization";
+import { applyLocalNotificationPolicy } from "../providers/notificationPolicy";
+import { shouldScheduleLocalNotification } from "../state/appStateHelpers";
 
 type InboxItem = { id: string; title: string; route?: P0RouteId; observedAt: string; receivedAt?: string; readAt?: string };
 
 export function NotificationCenterScreen({
-  state, savedDestinations, readNotificationIds, notificationHistory, permissionReady,
+  state, savedDestinations, readNotificationIds, notificationHistory, permissionReady, smartCareEnabled, alertPreferences,
   onMarkNotificationRead, onMarkAllNotificationsRead, onClearNotificationHistory, onOpenNotificationDeepLink, onNavigate, onGoBack,
 }: P0ScreenProps) {
   const theme = useAppTheme();
@@ -22,7 +24,10 @@ export function NotificationCenterScreen({
   const inbox = useMemo(() => buildInbox(notificationHistory), [notificationHistory]);
   const readIds = useMemo(() => new Set(readNotificationIds), [readNotificationIds]);
   const unread = inbox.filter((item) => !readIds.has(item.id) && !item.readAt);
-  const scheduled = state.notifications.filter((item) => item.active && item.scheduledAt && Date.parse(item.scheduledAt) > Date.now()).sort((a, b) => Date.parse(a.scheduledAt!) - Date.parse(b.scheduledAt!));
+  const scheduled = permissionReady && smartCareEnabled ? applyLocalNotificationPolicy(
+    state.notifications.filter((item) => shouldScheduleLocalNotification(item, alertPreferences)),
+    { reducedInterruptions: alertPreferences.quietHours },
+  ) : [];
   const conditions = state.notifications.filter((item) => item.active && !item.scheduledAt);
 
   return <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
@@ -56,7 +61,7 @@ function NotificationRow({ item, read, targetExists, theme, onOpen, onRead }: { 
     <View style={[[styles.iconBox, { backgroundColor: colorWithAlpha(presentation.color, theme.name === "light" ? 0.1 : 0.14) }], Platform.OS === "ios" && ambientVisual.iconBox]}><Image source={uiIconAssets[presentation.icon]} style={[styles.icon, { tintColor: presentation.color }]} resizeMode="contain" /></View>
     <View style={styles.rowCopy}>
       <Pressable accessibilityLabel={item.title + ", " + target + " 열기"} accessibilityRole="button" disabled={!item.route} onPress={onOpen} style={styles.rowMain}><View style={styles.titleLine}>{!read ? <LocalizedView accessibilityLabel="읽지 않은 알림" style={[styles.unreadDot, { backgroundColor: theme.sky }]} /> : null}<Text style={[[styles.rowTitle, { color: theme.text, opacity: past ? 0.78 : 1 }], Platform.OS === "ios" && ambientVisual.rowTitle]} numberOfLines={2}>{item.title}</Text></View><Text style={[[styles.rowMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.rowMeta]} numberOfLines={1}>{formatMeta(item.route, target, timestamp)}</Text>{past ? <Text style={[styles.pastLabel, { color: theme.subtle }]}>지난 알림</Text> : null}</Pressable>
-      <View style={styles.rowActions}>{item.route ? <Text style={[styles.openHint, { color: presentation.color }]}>{targetExists ? "보기" : "목록 보기"}</Text> : null}{!read ? <Pressable accessibilityLabel={item.title + " 읽음 표시"} accessibilityRole="button" onPress={onRead} hitSlop={8}><Text style={[styles.readAction, { color: theme.subtle }]}>읽음 표시</Text></Pressable> : null}</View>
+      <View style={styles.rowActions}>{item.route ? <Pressable accessibilityLabel={target} accessibilityRole="button" onPress={onOpen} hitSlop={8}><Text style={[styles.openHint, { color: presentation.color }]}>{targetExists ? "보기" : "목록 보기"}</Text></Pressable> : null}{!read ? <Pressable accessibilityLabel={item.title + " 읽음 표시"} accessibilityRole="button" onPress={onRead} hitSlop={8}><Text style={[styles.readAction, { color: theme.subtle }]}>읽음 표시</Text></Pressable> : null}</View>
     </View>
   </View>;
 }

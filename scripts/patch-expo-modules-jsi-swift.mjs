@@ -36,6 +36,10 @@ const files = [
 
 let patchedCount = 0;
 
+// Expo Constants otherwise skips app.config generation when PROJECT_DIR contains spaces.
+patchFile(join(process.cwd(), "node_modules", "expo-constants", "scripts", "get-app-config-ios.sh"),
+  (source) => source.replace('$(basename $PROJECT_DIR)', '$(basename "$PROJECT_DIR")'));
+
 function patchFile(filePath, transform) {
   if (!existsSync(filePath)) {
     return;

@@ -12,7 +12,7 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { radius, spacing } from "../theme/tokens";
+import { radius, semanticColor, spacing } from "../theme/tokens";
 import { getOutfitSlotLabel, getOutfitVariantLabel } from "../utils/outfitLabels";
 import { outfitSaveCompletionDurationMs, shouldShowOutfitSaveCompletion } from "../utils/outfitSaveCompletion";
 import { LocalizationContext } from "../localization/LocalizationProvider";
@@ -44,7 +44,7 @@ export function OutfitDetailScreen({
   const usesWrappedItemGrid = items.length > 3;
   // The approved detail board compares the complete set in one rail. Keep
   // wrapping when width or text scale needs more room for unchanged labels.
-  const comparisonRail = ambient && layout.width >= 390 && fontScale <= 1.15 && items.length <= 4;
+  const comparisonRail = ambient && layout.width >= 390 && fontScale <= 1.15 && items.length <= 2;
   const comparisonImageHeight = layout.width >= 430 ? 116 : 104;
   const weatherReasons = buildWeatherReasons(state, theme);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
@@ -84,7 +84,7 @@ export function OutfitDetailScreen({
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }, ambient && pageStyles.body]}>추천 품목 {state.outfit.preparation.totalItemCount}개 중 {state.outfit.preparation.ownedItemCount}개 보유</Text>
-              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{localize(getOutfitVariantLabel(state.outfit.variant))} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.</Text>
+              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{ambient ? "현재 날씨로 고른 옷 중 내 옷장에 있는 항목을 표시해요." : `${localize(getOutfitVariantLabel(state.outfit.variant))} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.`}</Text>
             </View>
           </View>
           {state.outfit.preparation.missingItemNames.length > 0 ? (
@@ -135,7 +135,7 @@ export function OutfitDetailScreen({
                 <View
                   style={[
                     styles.outfitImageFrame,
-                    { height: ambient ? (comparisonRail ? comparisonImageHeight : layout.height >= 900 ? 168 : 150) : layout.outfitDetailImageHeight, backgroundColor: ambient ? "transparent" : theme.card },
+                    { height: ambient ? (comparisonRail ? comparisonImageHeight : layout.height >= 900 ? 168 : 150) : layout.outfitDetailImageHeight, backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md },
                   ]}
                 >
                   {imageSource ? (

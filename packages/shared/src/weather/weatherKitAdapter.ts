@@ -34,6 +34,8 @@ export function normalizeWeatherKitWeather(
         precipitationMm: Number.isFinite(current.precipitationIntensity) ? current.precipitationIntensity : undefined,
       },
       tempAvailable: Number.isFinite(current.temperature),
+      humidityAvailable: Number.isFinite(current.humidity ?? getCurrentHourlyHumidity(payload)),
+      rainProbabilityAvailable: hourly[0]?.available?.rainProbability === true,
       windAvailable: Number.isFinite(current.windSpeed),
       tempC: current.temperature ?? hourly[0]?.tempC ?? 0,
       feelsLikeAvailable: Number.isFinite(current.temperatureApparent),

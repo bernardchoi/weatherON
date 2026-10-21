@@ -181,10 +181,14 @@ enum WeatherONNativeWeather {
     switch value {
     case .clear, .mostlyClear, .hot, .frigid: return "clear"
     case .rain, .heavyRain, .drizzle, .freezingRain, .freezingDrizzle, .sunShowers: return "rain"
-    case .snow, .heavySnow, .blizzard, .blowingSnow, .flurries, .sunFlurries, .sleet, .wintryMix, .hail: return "snow"
+    case .snow, .heavySnow, .blizzard, .blowingSnow, .flurries, .sunFlurries: return "snow"
+    case .sleet: return "sleet"
+    case .hail: return "hail"
+    case .wintryMix: return "mixed"
     case .thunderstorms, .isolatedThunderstorms, .scatteredThunderstorms, .strongStorms, .tropicalStorm, .hurricane: return "storm"
-    case .blowingDust, .smoky: return "dust"
-    default: return "cloud"
+    case .blowingDust, .smoky, .haze: return "dust"
+    case .cloudy, .mostlyCloudy, .partlyCloudy, .foggy, .breezy, .windy: return "cloud"
+    default: return "unknown"
     }
   }
 }

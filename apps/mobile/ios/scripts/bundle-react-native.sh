@@ -48,4 +48,9 @@ if [[ -n "$HERMES_CLI_PATH" && ! -x "$HERMES_CLI_PATH" ]]; then
 fi
 
 react_native_xcode_script="$("$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'")"
-bash "$react_native_xcode_script"
+# Expo devtools require Metro; wired Debug uses the embedded production JS runtime.
+if [[ "$CONFIGURATION" = *Debug* && "$PLATFORM_NAME" == "iphoneos" ]]; then
+  CONFIGURATION=Release bash "$react_native_xcode_script"
+else
+  bash "$react_native_xcode_script"
+fi

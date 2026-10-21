@@ -11,7 +11,7 @@ export function buildTomorrowWeather(weather: WeatherSnapshot, now = new Date())
   if (!summary) return null;
 
   const matchingHours = weather.hourly.filter((item) => getDateKey(item.time, weather.timezone) === summary.date);
-  const midpointTemperature = Math.round((summary.minTempC + summary.maxTempC) / 2);
+  const midpointTemperature = (summary.minTempC + summary.maxTempC) / 2;
   return {
     weather: {
       ...weather,
@@ -19,7 +19,14 @@ export function buildTomorrowWeather(weather: WeatherSnapshot, now = new Date())
       current: {
         ...weather.current,
         tempC: midpointTemperature,
-        feelsLikeC: midpointTemperature,
+        feelsLikeC: NaN,
+        feelsLikeAvailable: false,
+        tempAvailable: summary.available?.minTemp !== false && summary.available?.maxTemp !== false && Number.isFinite(midpointTemperature),
+        humidityPct: NaN,
+        humidityAvailable: false,
+        uvIndex: undefined,
+        pm10: undefined,
+        pm25: undefined,
         condition: toCondition(summary.condition),
         precipitationMm: summary.precipitationMm,
         rainProbabilityPct: summary.rainProbabilityPct,

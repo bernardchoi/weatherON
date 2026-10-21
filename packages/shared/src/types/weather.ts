@@ -48,6 +48,8 @@ export type WeatherSnapshot = {
     feelsLikeC: number;
     feelsLikeAvailable?: boolean;
     tempAvailable?: boolean;
+    humidityAvailable?: boolean;
+    rainProbabilityAvailable?: boolean;
     windAvailable?: boolean;
     condition: WeatherCondition;
     precipitationMm: number;

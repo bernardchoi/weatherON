@@ -16,6 +16,7 @@ widget_group.set_path("WeatherONWidget")
 
 swift_file_paths = [
   "WeatherONWidget.swift",
+  "WeatherONNativeWeather.swift",
   "WeatherONDepartureLiveActivity.swift",
   "../../modules/weatheron-widget-data/ios/WeatherONDepartureActivityAttributes.swift",
 ]
@@ -25,6 +26,12 @@ swift_file_paths.each do |file_path|
   unless widget_target.source_build_phase.files_references.include?(swift_file)
     widget_target.source_build_phase.add_file_reference(swift_file, true)
   end
+end
+
+icons = widget_group.files.find { |file| file.path == "AmbientIcons.xcassets" }
+icons ||= widget_group.new_file("AmbientIcons.xcassets")
+unless widget_target.resources_build_phase.files_references.include?(icons)
+  widget_target.resources_build_phase.add_file_reference(icons, true)
 end
 
 unless app_target.dependencies.any? { |dependency| dependency.target == widget_target }
@@ -43,7 +50,7 @@ widget_target.build_configurations.each do |configuration|
   settings = configuration.build_settings
   settings["APPLICATION_EXTENSION_API_ONLY"] = "YES"
   settings["CODE_SIGN_ENTITLEMENTS"] = "WeatherONWidget/WeatherONWidget.entitlements"
-  settings["CURRENT_PROJECT_VERSION"] = "22"
+  settings["CURRENT_PROJECT_VERSION"] = app_target.build_configurations.find { |config| config.name == configuration.name }.build_settings["CURRENT_PROJECT_VERSION"]
   settings["GENERATE_INFOPLIST_FILE"] = "NO"
   settings["INFOPLIST_FILE"] = "WeatherONWidget/Info.plist"
   settings["IPHONEOS_DEPLOYMENT_TARGET"] = "17.0"

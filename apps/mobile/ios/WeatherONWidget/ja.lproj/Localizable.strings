@@ -17,3 +17,10 @@
 "widget.guidance.as-of" = "%@時点";
 "widget.guidance.unknown-time" = "基準時刻なし";
 "widget.guidance.accessibility" = "コーデ・持ち物・経路、アプリのスナップショット";
+
+"condition.sleet" = "みぞれ";
+"condition.hail" = "ひょう";
+"condition.storm-hail" = "強いひょう";
+"condition.mixed" = "雨雪混合";
+"condition.unknown" = "天気を確認中";
+"condition.fog" = "霧";
