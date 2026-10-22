@@ -49,7 +49,8 @@ async function registerAutomaticEnd(raw: string): Promise<DepartureLiveActivityS
   if (!status.active && !status.scheduled) return status;
   const native = JSON.parse(raw) as Record<string, unknown>;
   const token = typeof native.pushToken === "string" ? native.pushToken : "";
-  if (!token) return { ...status, automaticEndScheduled: false };
+  // A pending iOS activity can await its token before registration is possible.
+  if (!token) return { ...status, automaticEndScheduled: status.scheduled ? undefined : false };
   const key = `${status.activityId}:${token}:${status.departureAt}`;
   if (registeredToken === key) return { ...status, automaticEndScheduled: true };
   let pending = pendingRegistrations.get(key);

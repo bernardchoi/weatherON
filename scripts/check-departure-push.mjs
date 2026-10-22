@@ -97,7 +97,15 @@ new Function('exports','require',compile('apps/mobile/src/providers/departureLiv
     endDepartureActivity:async()=>{ends++;nativeStatus={supported:true,enabled:true,active:false,automaticStartSupported:true};return true;},
   }};
 });
-assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false);
+const tokenReadyStatus = nativeStatus;
+nativeStatus = { ...nativeStatus, active: false, scheduled: true, pushToken: '' };
+assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,undefined,'pending token must not be reported as registration failure or success');
+assert.equal(requests,0,'pending token must not send an invalid registration');
+nativeStatus = { ...nativeStatus, active: true, scheduled: false };
+assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false,'active activity without token must remain unconfirmed');
+nativeStatus = { ...tokenReadyStatus, active: false, scheduled: true };
+assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false,'a real registration failure must remain visible for scheduled activities');
+nativeStatus = tokenReadyStatus;
 fail=false;
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,true);
 await bridge.getDepartureLiveActivityStatus();assert.equal(requests,2);
