@@ -53,7 +53,7 @@ export function OutfitScreen({
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
           <AmbientControlSurface>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
-            <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => onNavigate("C4")} style={[styles.advicePreview, { minHeight: 44, backgroundColor: ambient ? "transparent" : theme.card, borderBottomWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
+            <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => onNavigate("C4")} style={[styles.advicePreview, { minHeight: 44, backgroundColor: ambient ? "transparent" : theme.card }]}>
               <View style={[styles.advicePreviewRow, ambient && fontScale > 1.3 && { flexWrap: "wrap" }]}>
                 {ambient ? <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} /> : null}
                 <Text style={[pageStyles.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>

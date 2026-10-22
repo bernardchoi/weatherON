@@ -193,6 +193,10 @@ private struct WeatherONDepartureCountdown: View {
     style == .lockScreen
   }
 
+  private var showsExpandedStatus: Bool {
+    style == .expanded && (isCompleted || isStale)
+  }
+
   var body: some View {
     Group {
       if isCompleted {
@@ -209,9 +213,11 @@ private struct WeatherONDepartureCountdown: View {
     }
       .font(countdownFont)
       .foregroundStyle(tint)
-      .lineLimit(1)
+      .lineLimit(showsExpandedStatus ? 2 : 1)
+      .multilineTextAlignment(.trailing)
       .minimumScaleFactor(0.7)
       .frame(maxWidth: maximumWidth, alignment: .trailing)
+      .fixedSize(horizontal: false, vertical: showsExpandedStatus)
       .accessibilityLabel(
         isCompleted ? "출발 시각 도달" : isStale ? "출발 시각 지남, 정보 만료" : "출발까지 남은 시간"
       )
@@ -237,7 +243,7 @@ private struct WeatherONDepartureCountdown: View {
     case .compact:
       return 46
     case .expanded:
-      return 68
+      return showsExpandedStatus ? 120 : 68
     case .lockScreen:
       return nil
     }

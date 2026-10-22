@@ -330,11 +330,27 @@ async function estimateRoute(params, readEnvValue) {
     readNumberEnv(readEnvValue, "ROUTE_CACHE_TTL_MS", DEFAULT_ROUTE_CACHE_TTL_MS),
     async () => {
       try {
+        if (transportMode === "transit" && (arrivalTime || departureTime) && originCountryCode === destinationCountryCode && getGoogleMapsApiKey(readEnvValue)) {
+          return await estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, departureTime, readEnvValue);
+        }
         if (transportMode === "transit" && shouldUseKakaoRoute(originCountryCode, destinationCountryCode) && readEnvValue("KAKAO_REST_API_KEY")) {
           return await estimateKakaoTransitRoute(origin, destination, originName, destinationName, readEnvValue);
         }
         if (shouldUseKakaoRoute(originCountryCode, destinationCountryCode) && readEnvValue("KAKAO_REST_API_KEY")) {
-          return await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue);
+          if (arrivalTime) {
+            const target = Date.parse(arrivalTime);
+            let minutes = (await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue)).travelMinutes;
+            for (let attempt = 0; attempt < 4; attempt += 1) {
+              const candidate = new Date(target - minutes * 60000).toISOString();
+              const estimate = await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue, candidate);
+              if (estimate.travelMinutes <= minutes) {
+                return { ...estimate, travelMinutes: minutes, message: "도착 목표에서 역산한 출발 시간 기준 교통 추정" };
+              }
+              minutes = estimate.travelMinutes;
+            }
+            throw new Error("Arrival-time driving estimate did not converge");
+          }
+          return await estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue, departureTime);
         }
         if (shouldUseGoogleRoute(originCountryCode, destinationCountryCode) && getGoogleMapsApiKey(readEnvValue)) {
           return await estimateGoogleRoute(origin, destination, destinationCountryCode, transportMode, arrivalTime, departureTime, readEnvValue);
@@ -488,8 +504,15 @@ function getGooglePlaceName(item, query) {
   return firstNamedComponent?.long_name ?? query.trim();
 }
 
-async function estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue) {
-  const url = new URL(readEnvValue("KAKAO_DIRECTIONS_URL") ?? DEFAULT_KAKAO_DIRECTIONS_URL);
+async function estimateKakaoRoute(origin, destination, originName, destinationName, readEnvValue, departureTime) {
+  if (departureTime && Date.parse(departureTime) <= Date.now()) throw new Error("Selected driving departure is in the past");
+  const url = new URL(departureTime
+    ? readEnvValue("KAKAO_FUTURE_DIRECTIONS_URL") ?? "https://apis-navi.kakaomobility.com/v1/future/directions"
+    : readEnvValue("KAKAO_DIRECTIONS_URL") ?? DEFAULT_KAKAO_DIRECTIONS_URL);
+  if (departureTime) {
+    const koreaTime = new Date(Date.parse(departureTime) + 9 * 60 * 60 * 1000);
+    url.searchParams.set("departure_time", koreaTime.toISOString().slice(0, 16).replace(/[-T:]/g, ""));
+  }
   url.searchParams.set("origin", `${origin.longitude},${origin.latitude},name=${originName}`);
   url.searchParams.set("destination", `${destination.longitude},${destination.latitude},name=${destinationName}`);
   url.searchParams.set("priority", "TIME");
@@ -510,7 +533,7 @@ async function estimateKakaoRoute(origin, destination, originName, destinationNa
     status: "ready",
     travelMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
-    message: "현재 교통 기준 추정 · 선택 시간대 미반영",
+    message: departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정 · 선택 시간대 미반영",
   };
 }
 

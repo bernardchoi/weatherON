@@ -136,13 +136,13 @@ export function DestinationCareScreen({
     Boolean(departureActivityStatus.destinationId) &&
     departureActivityStatus.destinationId !== selectedDestinationPlace.id;
   const movementTimeLabel = routeTimingReady
-    ? selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${travelMinutes}분` : `${travelMinutes}분`
+    ? `약 ${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
   const decisionEyebrow = timeBasis === "departure" ? "도착 판단" : "출발 판단";
   const departureDecision = departureReady
     ? timeBasis === "departure"
-      ? targetArrivalTime ? `${targetArrivalTime} 도착 예정` : "도착 시간 확인 전"
-      : selectedDestinationTravelEstimate.status === "fallback" ? `예상 ${departureTime} 출발` : `${departureTime} 출발 권장`
+      ? targetArrivalTime ? `약 ${targetArrivalTime} 도착 추정` : "도착 시간 확인 전"
+      : `약 ${departureTime} 출발 추정`
     : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const liveActivityMeta = departureActivityMatchesDestination
     ? departureActivityStatus.automaticEndScheduled === false
@@ -289,6 +289,7 @@ export function DestinationCareScreen({
               <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>
               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
+              {selectedDestinationTravelEstimate.message.includes("미반영") ? <Text style={[pageStyles.caption, { color: theme.muted }]}>선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.</Text> : null}
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
                 {departureReady
                   ? timeBasis === "departure"
@@ -329,7 +330,7 @@ export function DestinationCareScreen({
               label={timeBasis === "departure" ? "출발 시간" : "도착 목표"}
               value={selectedTargetTime}
               meta={departureReady
-                ? timeBasis === "departure" ? targetArrivalTime ? `도착 예정 ${targetArrivalTime}` : "도착 확인 전" : `${departureTime} 출발`
+                ? timeBasis === "departure" ? targetArrivalTime ? `도착 추정 약 ${targetArrivalTime}` : "도착 확인 전" : `${departureTime} 출발`
                 : "시간 변경"}
               color={theme.sky}
               theme={theme}

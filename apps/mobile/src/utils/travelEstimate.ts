@@ -45,7 +45,8 @@ export function getTravelMinutesForTransport(
   if (isUnverifiedInternationalRoute(estimate, originCountryCode, destinationCountryCode, currentOriginPlaceId)) return undefined;
   if (estimate.status === "idle" || estimate.status === "loading" || estimate.status === "error") return undefined;
   if (estimate.status === "fallback" && estimate.distanceMeters <= 0) return undefined;
-  const baseMinutes = estimate.travelMinutes || 35;
+  if (!Number.isFinite(estimate.travelMinutes) || estimate.travelMinutes <= 0) return undefined;
+  const baseMinutes = Math.ceil(estimate.travelMinutes);
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   if (transportMode === "walk") {
     if (distanceKm > maxWalkableDestinationDistanceKm) return baseMinutes;

@@ -411,3 +411,10 @@ try {
 
 } finally { Date.now = originalNow; }
 console.log("Weather/outfit regressions passed: original four fixes plus pending content/time/location/timezone replacement, stable inputs, unrelated recurring preservation, exact presented-event identity, receipt dedupe, v3 migration, unknown/cancelled state, failed OS reads, restart, partial cancellation and in-flight receipt races (native mock).");
+
+const travelTiming = load("apps/mobile/src/utils/travelEstimate.ts");
+for (const travelMinutes of [0, -1, NaN, Infinity]) {
+  assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), undefined);
+}
+assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes: 51, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), 51);
+assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes: 51.2, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), 52);

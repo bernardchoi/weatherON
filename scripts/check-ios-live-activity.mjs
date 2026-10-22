@@ -43,6 +43,10 @@ assert.match(liveActivity, /timerInterval: Date\(\)\.\.\.max\(Date\(\), departur
 assert.match(liveActivity, /case compact/u);
 assert.match(liveActivity, /case expanded/u);
 assert.match(liveActivity, /case lockScreen/u);
+assert.match(liveActivity, /style == \.expanded && \(isCompleted \|\| isStale\)/u);
+assert.match(liveActivity, /\.lineLimit\(showsExpandedStatus \? 2 : 1\)/u);
+assert.match(liveActivity, /\.fixedSize\(horizontal: false, vertical: showsExpandedStatus\)/u);
+assert.match(liveActivity, /case \.expanded:\s*return showsExpandedStatus \? 120 : 68/u);
 assert.match(liveActivity, /WeatherONDepartureGuidanceIcon/u);
 assert.doesNotMatch(liveActivity, /location\.north\.fill/u);
 assert.doesNotMatch(liveActivity, /Image\(systemName: "timer"\)/u);
