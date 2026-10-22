@@ -2,6 +2,7 @@ import type { OutfitRecommendation } from "../types/recommendation";
 import type { UserPreferenceProfile } from "../types/profile";
 import type { WardrobeItem } from "../types/wardrobe";
 import type { WeatherSnapshot } from "../types/weather";
+import { validTemperature, validMeasure, thermalPreparation } from "./thermalJudgment";
 import { OUTFIT_RULE_VERSION } from "./constants";
 import { getWeatherSignals } from "./weatherSignals";
 import { selectWardrobeItem } from "./wardrobeSelect";
@@ -12,13 +13,14 @@ export function recommendOutfit(
   wardrobe: WardrobeItem[],
   options?: { temperature: { value: number; basis: "feelsLike" | "air" } | null },
 ): OutfitRecommendation {
-  const temperatureAvailable = options ? options.temperature !== null
-    : (weather.current.tempAvailable !== false && Number.isFinite(weather.current.tempC))
-      || (weather.current.feelsLikeAvailable !== false && Number.isFinite(weather.current.feelsLikeC));
-  const temperatureLabel = options?.temperature?.basis === "air" ? "현재 기온" : weather.current.feelsLikeAvailable === false ? "기온" : "체감";
-  if (options) weather = { ...weather, current: { ...weather.current,
-    feelsLikeC: options.temperature?.value ?? NaN,
-    tempC: weather.current.tempAvailable === false || (weather.source === "weatherkit" && weather.current.tempAvailable !== true) ? NaN : weather.current.tempC } };
+  const air = validTemperature(weather.current.tempC, weather.current.tempAvailable !== false && (weather.source !== "weatherkit" || weather.current.tempAvailable === true));
+  const apparent = validTemperature(weather.current.feelsLikeC, weather.current.feelsLikeAvailable !== false && (weather.source !== "weatherkit" || weather.current.feelsLikeAvailable === true));
+  const selected = options ? options.temperature : undefined;
+  const selectedApparent = options ? selected?.basis === "feelsLike" ? validTemperature(selected.value) : NaN : apparent;
+  const temperatureAvailable = options ? selected != null && Number.isFinite(validTemperature(selected.value)) : Number.isFinite(air) || Number.isFinite(apparent);
+  const temperatureLabel = selected?.basis === "air" ? "현재 기온" : Number.isFinite(selectedApparent) ? "체감" : "기온";
+  weather = { ...weather, current: { ...weather.current, tempC: air, tempAvailable: Number.isFinite(air),
+    feelsLikeC: selectedApparent, feelsLikeAvailable: Number.isFinite(selectedApparent) } };
   const signals = getWeatherSignals(weather);
   const top = temperatureAvailable ? selectWardrobeItem(wardrobe, "top", signals, profile) : undefined;
   const bottom = temperatureAvailable ? selectWardrobeItem(wardrobe, "bottom", signals, profile) : undefined;
@@ -60,27 +62,39 @@ function shouldUseAccessory(signals: ReturnType<typeof getWeatherSignals>): bool
 }
 
 function buildDecisionText(signals: ReturnType<typeof getWeatherSignals>, temperatureAvailable = true): string {
-  if (signals.isHeavyRain) return "비가 세요. 방수 차림으로 편하게 나가요";
-  if (signals.isRainy) return "비 소식 있어요. 우산과 방수 신발 챙겨요";
+  const thermal = thermalPreparation(signals.thermal).copy;
+  if (signals.isRainy) {
+    const protection = getPrecipitationPreparation(signals);
+    return `${protection}${signals.isWindy && ["snow", "ice", "hail"].includes(signals.precipitationKind) ? "\n강한 바람도 있어요. 바람을 막는 겉옷을 준비해요." : ""}${signals.isCold || signals.isHot ? `\n${thermal}` : ""}`;
+  }
+  if (signals.isWindy) return `${signals.needsLightLayer ? "바람이 강해요. 바람을 막는 겉옷을 준비해요." : "바람이 강해요. 날아갈 물건을 정리해요."}\n${thermal}`;
+  if (signals.isCold || signals.isHot) return thermal;
   if (signals.isPoorAirQuality) return "먼지가 있어요. 마스크까지 챙기면 좋아요";
-  if (signals.isHighUv && signals.isHot) return "햇빛이 강하고 더워요. 가볍게 가리고 나가요";
   if (signals.isHighUv) return "햇빛이 강해요. 모자나 선크림 챙겨요";
   if (!temperatureAvailable) return "온도를 확인한 뒤 옷차림을 추천해요";
-  if (signals.isHot) return "더운 날이에요. 바람 잘 통하는 차림이 좋아요";
-  if (signals.isCold) return "쌀쌀해요. 따뜻한 한 겹 더 챙겨요";
-  if (signals.needsLightLayer) return "서늘한 시간대가 있어요. 가벼운 겹옷이 좋아요";
-  return "오늘은 가볍게, 편한 차림으로 나가요";
+  return thermal;
+}
+
+function getPrecipitationPreparation(signals: ReturnType<typeof getWeatherSignals>): string {
+  return signals.precipitationKind === "hail" ? "우박 신호가 있어요. 실외 이동을 잠시 피하고 확인해요."
+      : signals.precipitationKind === "ice" ? "얼음·혼합 강수 소식이에요. 방수와 미끄럼에 대비해요."
+      : signals.precipitationKind === "snow" ? "눈 소식이 있어요. 미끄럼 적은 방수 신발을 챙겨요."
+      : signals.isWindy ? "강수와 강한 바람에 대비해요. 방수 겉옷과 신발을 챙겨요."
+      : "강수 소식이 있어요. 방수 신발과 우산을 준비해요.";
+
 }
 
 function buildReasons(weather: WeatherSnapshot, signals: ReturnType<typeof getWeatherSignals>, hasOuter: boolean, hasAccessory: boolean, temperatureLabel = "체감", temperatureAvailable = true): string[] {
   const reasons: string[] = [];
-  const temperature = Math.round(weather.current.feelsLikeAvailable === false ? weather.current.tempC : weather.current.feelsLikeC);
+  const temperature = Math.round(signals.thermal.temperature);
   if (signals.isCold) reasons.push(
-    signals.minTempC < (weather.current.feelsLikeAvailable === false ? weather.current.tempC : weather.current.feelsLikeC)
+    Number.isFinite(signals.minTempC) && (!Number.isFinite(signals.thermal.temperature) || signals.minTempC < signals.thermal.temperature)
       ? `최저 ${Math.round(signals.minTempC)}도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요`
       : `${temperatureLabel} ${temperature}도라 따뜻한 한 겹 더 챙겨요`,
   );
-  if (signals.isRainy) reasons.push(`비 올 가능성 ${signals.maxRainProbabilityPct}%라 우산 챙겨두면 좋아요`);
+  if (signals.isRainy) reasons.push(signals.precipitationKind === "rain" && Number.isFinite(signals.maxRainProbabilityPct)
+    ? `비 올 가능성 ${signals.maxRainProbabilityPct}%라 우산 챙겨두면 좋아요`
+    : getPrecipitationPreparation(signals));
   if (signals.isPoorAirQuality) reasons.push(buildAirQualityReason(signals));
   if (signals.isHighUv && typeof signals.uvIndex === "number") reasons.push(`자외선 지수 ${Math.round(signals.uvIndex)}라 모자나 선크림을 챙기면 좋아요`);
   if (signals.isWindy && signals.needsLightLayer && !signals.isCold) reasons.push(`바람이 ${signals.maxWindMs.toFixed(1)}m/s라 얇은 겉옷이 있으면 좋아요`);
@@ -124,12 +138,15 @@ function buildAccessoryReason(signals: ReturnType<typeof getWeatherSignals>): st
 }
 
 function getTimeAdviceText(weather: WeatherSnapshot, hour: WeatherSnapshot["hourly"][number]): string {
-  if (hour.rainProbabilityPct >= 60) return "비 오는 시간대엔 우산 함께";
-  if (weather.current.pm25 !== undefined && weather.current.pm25 > 35) return "오래 걷는 시간엔 마스크 함께";
-  if (weather.current.pm10 !== undefined && weather.current.pm10 > 80) return "먼지 많은 시간엔 마스크 함께";
-  if (weather.current.uvIndex !== undefined && weather.current.uvIndex >= 6 && hour.tempC >= 24) return "햇빛 강한 시간엔 모자 함께";
-  if (hour.available?.temp === false || !Number.isFinite(hour.tempC)) return "기온을 확인한 뒤 옷차림을 조절해요";
-  if (hour.tempC <= 8) return "추운 시간대엔 보온 겉옷과 따뜻한 상의 함께";
-  if (hour.tempC >= 30) return "더운 시간대엔 가볍게";
-  return "지금 차림 그대로 좋아요";
+  const available = (field: "temp" | "wind" | "rainProbability" | "precipitation" | "condition") => hour.available?.[field] !== false && (weather.source !== "weatherkit" || hour.available?.[field] === true);
+  const air = validTemperature(hour.tempC, available("temp"));
+  const scoped: WeatherSnapshot = { ...weather, observedAt: hour.time, daily: undefined, hourly: [], current: {
+    tempC: air, tempAvailable: Number.isFinite(air), feelsLikeC: NaN, feelsLikeAvailable: false,
+    windMs: validMeasure(hour.windMs, available("wind")), windAvailable: available("wind"),
+    rainProbabilityPct: validMeasure(hour.rainProbabilityPct, available("rainProbability"), 100), rainProbabilityAvailable: available("rainProbability"),
+    precipitationMm: validMeasure(hour.precipitationMm, available("precipitation")),
+    condition: available("condition") ? hour.condition as WeatherSnapshot["current"]["condition"] : "unknown",
+    humidityPct: NaN, humidityAvailable: false,
+  } };
+  return buildDecisionText(getWeatherSignals(scoped), Number.isFinite(air));
 }

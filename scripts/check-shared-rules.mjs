@@ -1016,11 +1016,11 @@ assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.act
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushTitle === "우산 챙길 시간이에요"));
 assert.ok(results.notifications.some((item) => item.id === "rain-1h" && item.pushBody === "곧 비가 올 수 있어요. 나가기 전 우산만 챙겨요"));
 assert.ok(results.notifications.some((item) => item.id === "routine-morning" && item.pushTitle === "오늘 아침, 가볍게 준비해요"));
-assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.5.0");
+assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.6.0");
 assert.ok(results.highUvOutfit.reasons.some((reason) => reason.includes("자외선 지수 8")));
 assert.equal(results.highUvOutfit.items.accessory.name, "네이비 볼캡");
 assert.ok(results.dustyOutfit.reasons.some((reason) => reason.includes("초미세 39")));
-assert.ok(results.dustyOutfit.timeAdvice.some((item) => item.text.includes("마스크")));
+assert.ok(results.dustyOutfit.timeAdvice.every((item) => !item.text.includes("마스크")), "current air quality is not an hourly air-quality forecast");
 assert.ok(results.notifications.every((item) => item.ruleVersion !== results.outfit.ruleVersion));
 assert.ok(results.destinationNotificationsStrict.some((item) => item.id === "destination-change" && !item.active && item.reason.includes("강수 70%")));
 assert.ok(results.destinationNotificationsWind.some((item) => item.id === "destination-change" && item.active && item.reason.includes("출발 30분 전")));

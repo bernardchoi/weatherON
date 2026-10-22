@@ -1,3 +1,4 @@
+import { judgePreparationConditions, judgeThermal, validMeasure, validTemperature } from "./thermalJudgment";
 import type { HourlyWeather, WeatherSnapshot } from "../types/weather";
 import type { OutfitVariant } from "../types/recommendation";
 import type { Season } from "../types/wardrobe";
@@ -6,6 +7,8 @@ import { getForecastLocalDate, isValidIanaTimeZone } from "../weather/timezone";
 export type ThermalProfile = "hot" | "warm" | "mild" | "cool" | "cold";
 
 export type WeatherSignals = {
+  precipitationKind: "hail" | "ice" | "snow" | "rain" | "possible";
+  thermal: ReturnType<typeof judgeThermal>;
   minTempC: number;
   maxTempC: number;
   tempSwingC: number;
@@ -32,51 +35,51 @@ export type WeatherSignals = {
 
 export function getWeatherSignals(snapshot: WeatherSnapshot): WeatherSignals {
   const hours = snapshot.hourly.length > 0 ? snapshot.hourly : [currentAsHour(snapshot)];
-  const temps = hours.filter(hour => hour.available?.temp !== false).map(hour => hour.tempC);
+  const temps = hours.filter(hour => hour.available?.temp !== false && (snapshot.source !== "weatherkit" || hour.available?.temp === true)).map(hour => validTemperature(hour.tempC));
   // A scoped forecast keeps its daily extremes even when hourly coverage is missing.
   const date = isValidIanaTimeZone(snapshot.timezone) ? getForecastLocalDate(snapshot.observedAt, snapshot.timezone) : "";
   const day = snapshot.daily?.find(day => day.date === date);
-  if (day && day.available?.minTemp !== false) temps.push(day.minTempC);
-  if (day && day.available?.maxTemp !== false) temps.push(day.maxTempC);
-  if (snapshot.current.tempAvailable !== false) temps.push(snapshot.current.tempC);
+  if (day && day.available?.minTemp !== false) temps.push(validTemperature(day.minTempC));
+  if (day && day.available?.maxTemp !== false) temps.push(validTemperature(day.maxTempC));
+  if (snapshot.current.tempAvailable !== false && (snapshot.source !== "weatherkit" || snapshot.current.tempAvailable === true)) temps.push(validTemperature(snapshot.current.tempC));
   const validTemps = temps.filter(Number.isFinite);
   const minTempC = validTemps.length ? Math.min(...validTemps) : NaN;
   const maxTempC = validTemps.length ? Math.max(...validTemps) : NaN;
-  const tempC = snapshot.current.tempAvailable === false ? NaN : snapshot.current.tempC;
-  const feelsLikeC = snapshot.current.feelsLikeAvailable === false ? tempC : snapshot.current.feelsLikeC;
+  const tempC = validTemperature(snapshot.current.tempC, snapshot.current.tempAvailable !== false && (snapshot.source !== "weatherkit" || snapshot.current.tempAvailable === true));
+  const feelsLikeC = validTemperature(snapshot.current.feelsLikeC, snapshot.current.feelsLikeAvailable !== false && (snapshot.source !== "weatherkit" || snapshot.current.feelsLikeAvailable === true));
   const tempSwingC = maxTempC - minTempC;
-  const rainyHours = hours.filter((hour) => hour.rainProbabilityPct >= 60 || hour.precipitationMm >= 1);
-  const maxPrecipitation = Math.max(snapshot.current.precipitationMm, ...hours.map((hour) => hour.precipitationMm));
-  const maxRainProbability = Math.max(snapshot.current.rainProbabilityPct, ...hours.map((hour) => hour.rainProbabilityPct));
-  const maxWind = Math.max(snapshot.current.windMs, ...hours.map((hour) => hour.windMs));
-  const uvIndex = snapshot.current.uvIndex;
-  const pm10 = snapshot.current.pm10;
-  const pm25 = snapshot.current.pm25;
-  const isRainy = ["rain", "storm", "sleet", "hail", "storm-hail", "mixed"].includes(snapshot.current.condition) || maxRainProbability >= 60 || maxPrecipitation >= 1;
+  const known = (field: "wind" | "rainProbability" | "precipitation", hour: HourlyWeather) => hour.available?.[field] !== false && (snapshot.source !== "weatherkit" || hour.available?.[field] === true);
+  const maximum = (values: number[]) => values.some(Number.isFinite) ? Math.max(...values.filter(Number.isFinite)) : NaN;
+  const rainyHours = hours.filter(hour => validMeasure(hour.rainProbabilityPct, known("rainProbability", hour), 100) >= 50 || validMeasure(hour.precipitationMm, known("precipitation", hour)) > 0);
+  const maxPrecipitation = maximum([validMeasure(snapshot.current.precipitationMm), ...hours.map(hour => validMeasure(hour.precipitationMm, known("precipitation", hour)))]);
+  const maxRainProbability = maximum([validMeasure(snapshot.current.rainProbabilityPct, snapshot.current.rainProbabilityAvailable !== false, 100), ...hours.map(hour => validMeasure(hour.rainProbabilityPct, known("rainProbability", hour), 100))]);
+  const maxWind = maximum([validMeasure(snapshot.current.windMs, snapshot.current.windAvailable !== false && (snapshot.source !== "weatherkit" || snapshot.current.windAvailable === true)), ...hours.map(hour => validMeasure(hour.windMs, known("wind", hour)))]);
+  const optionalMeasure = (value: number | undefined) => value !== undefined && Number.isFinite(validMeasure(value)) ? value : undefined;
+  const uvIndex = optionalMeasure(snapshot.current.uvIndex);
+  const pm10 = optionalMeasure(snapshot.current.pm10);
+  const pm25 = optionalMeasure(snapshot.current.pm25);
+  const conditions = [snapshot.current.condition, ...hours.filter(hour => hour.available?.condition !== false && (snapshot.source !== "weatherkit" || hour.available?.condition === true)).map(hour => hour.condition)];
+  const conditionsJudgment = judgePreparationConditions({ conditions, wind: maxWind, probability: maxRainProbability, precipitation: maxPrecipitation });
+  const precipitationKind = conditionsJudgment.phase;
+  const isRainy = conditionsJudgment.wet;
   const isHeavyRain = maxPrecipitation >= 5;
-  const isWindy = maxWind >= 7;
+  const isWindy = conditionsJudgment.windy;
   const isHighUv = typeof uvIndex === "number" && uvIndex >= 6;
   const isPoorAirQuality =
     snapshot.current.condition === "dust" ||
     (typeof pm10 === "number" && pm10 > 80) ||
     (typeof pm25 === "number" && pm25 > 35);
-  const isHumid = snapshot.current.humidityPct >= 70;
-  const isHot =
-    feelsLikeC >= 27 ||
-    tempC >= 29 ||
-    (maxTempC >= 31 && feelsLikeC >= 22) ||
-    (isHumid && feelsLikeC >= 26);
-  const isCold = feelsLikeC <= 8 || maxTempC <= 12 || (minTempC <= 8 && maxTempC <= 18);
-  const thermalProfile = getThermalProfile(feelsLikeC, minTempC, maxTempC, isHot, isCold);
+  const isHumid = snapshot.current.humidityAvailable !== false && validMeasure(snapshot.current.humidityPct, true, 100) >= 70;
+  const thermal = judgeThermal({ air: tempC, apparent: feelsLikeC, min: minTempC, max: maxTempC, humid: isHumid, wind: maxWind });
+  const isHot = thermal.hot;
+  const isCold = thermal.cold;
+  const thermalProfile = getThermalProfile(thermal.temperature, minTempC, maxTempC, isHot, isCold);
   const recommendedSeasons = getRecommendedSeasons(thermalProfile);
-  const needsLightLayer =
-    !isHot &&
-    (isCold ||
-      feelsLikeC <= 18 ||
-      (maxTempC < 29 && minTempC <= 17 && tempSwingC >= 7) ||
-      (isWindy && feelsLikeC < 24));
+  const needsLightLayer = thermal.lightLayer;
 
   return {
+    precipitationKind,
+    thermal,
     minTempC,
     maxTempC,
     tempSwingC,
@@ -127,7 +130,7 @@ function getRecommendedSeasons(profile: ThermalProfile): Season[] {
 function currentAsHour(snapshot: WeatherSnapshot): HourlyWeather {
   return {
     time: snapshot.observedAt,
-    tempC: snapshot.current.tempAvailable === false ? NaN : snapshot.current.tempC,
+    tempC: validTemperature(snapshot.current.tempC, snapshot.current.tempAvailable !== false && (snapshot.source !== "weatherkit" || snapshot.current.tempAvailable === true)),
     rainProbabilityPct: snapshot.current.rainProbabilityPct,
     precipitationMm: snapshot.current.precipitationMm,
     windMs: snapshot.current.windMs,

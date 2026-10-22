@@ -31,18 +31,42 @@ export function subscribeLocalePolicy(listener: Listener): () => void {
 
 export function translateText(value: string, language = snapshot.language): string {
   if (language === "ko" || !/[가-힣]/u.test(value)) return value;
-  const catalog = catalogs[language];
   const leading = value.match(/^\s*/u)?.[0] ?? "";
   const trailing = value.match(/\s*$/u)?.[0] ?? "";
   const source = value.trim();
-  const exact = catalog[source];
-  if (exact) return `${leading}${exact}${trailing}`;
-  for (const pattern of getPatterns(language)) {
-    const match = source.match(pattern.source);
-    if (!match) continue;
-    return `${leading}${fillPlaceholders(pattern.target, match.slice(1), language)}${trailing}`;
+  const known = translateKnown(source, language);
+  if (known !== undefined) return `${leading}${known}${trailing}`;
+  // Rule guidance composes independently translated warning and clothing blocks.
+  // Match the longest known block first; retain unknown Korean verbatim so a
+  // missing translation cannot replace a warning with optimistic generic copy.
+  const lines = source.split("\n");
+  if (lines.length > 1) {
+    const translated: string[] = [];
+    for (let start = 0; start < lines.length;) {
+      let end = lines.length;
+      let match: string | undefined;
+      for (; end > start; end--) {
+        const candidate = lines.slice(start, end).join("\n");
+        if (start === 0 && end === lines.length) continue;
+        const result = translateKnown(candidate, language);
+        if (result !== undefined && !/[가-힣]/u.test(result)) { match = result; break; }
+      }
+      translated.push(match ?? lines[start]);
+      start = match === undefined ? start + 1 : end;
+    }
+    return `${leading}${translated.join("\n")}${trailing}`;
   }
   return value;
+}
+
+function translateKnown(source: string, language: Exclude<AppLanguage, "ko">): string | undefined {
+  const exact = catalogs[language][source];
+  if (exact) return exact;
+  for (const pattern of getPatterns(language)) {
+    const match = source.match(pattern.source);
+    if (match) return fillPlaceholders(pattern.target, match.slice(1), language);
+  }
+  return undefined;
 }
 
 export function translateAccessibility(value?: string, language?: AppLanguage): string | undefined {
@@ -96,7 +120,7 @@ function getPatterns(language: Exclude<AppLanguage, "ko">) {
   const patterns = Object.entries(catalogs[language])
     .filter(([key]) => /\{\d+\}/u.test(key))
     .map(([key, target]) => ({
-      source: new RegExp(`^${escapeRegExp(key).replace(/\\\{\d+\\\}/gu, "(.+?)")}$`, "u"),
+      source: new RegExp(`^${escapeRegExp(key).replace(/\\\{\d+\\\}/gu, "([\\s\\S]+?)")}$`, "u"),
       target,
     }))
     .sort((left, right) => right.source.source.length - left.source.source.length);
@@ -108,7 +132,7 @@ function fillPlaceholders(target: string, values: string[], language: AppLanguag
   const template = target.startsWith("plural:")
     ? target.slice("plural:".length).split("|")[new Intl.PluralRules(language).select(Number(values[0])) === "one" ? 0 : 1]
     : target;
-  return template.replace(/\{(\d+)\}/gu, (_, index: string) => values[Number(index)] ?? "");
+  return template.replace(/\{(\d+)\}/gu, (_, index: string) => translateText(values[Number(index)] ?? "", language));
 }
 
 function escapeRegExp(value: string): string {

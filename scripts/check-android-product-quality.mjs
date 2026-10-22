@@ -754,7 +754,7 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "목적지 강수",
   "오늘 챙길 것",
   "오늘 입기 좋은 코디",
-  "getHomeOutfitCopy(outfit.variant, packTitle)",
+  "getHomeOutfitTitle(outfit.decisionText)",
   "getHeroTemperatureRange",
   "최고 ",
   "onNavigate(\"C1\")",

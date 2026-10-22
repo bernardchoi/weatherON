@@ -844,7 +844,7 @@ function HomeDecisionHero({
           {Platform.OS !== "ios" && weatherIcon ? <Image accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize, marginHorizontal: 12 }} /> : null}
         </FeedbackPressable>
         <HomeValueTransition value={companionMessage}>
-          {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 20, marginBottom: 8 }}>{companionBasis ?  <Text style={{ color: theme.muted, fontSize: 17, lineHeight: 24 }}>{companionBasis}</Text> : null}<Text ref={companionReadRef} onLayout={() => onReadingRegion?.("companion", companionReadRef.current)} style={[styles.iosCompanion, { color: theme.text, fontSize: 26, lineHeight: 34 }]}>{iosCompanionCopy}</Text></View> : <Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text>}
+          {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 20, marginBottom: 8 }}>{companionBasis ?  <Text style={{ color: theme.muted, fontSize: 17, lineHeight: 24 }}>{companionBasis}</Text> : null}<Text lineBreakStrategyIOS="hangul-word" ref={companionReadRef} onLayout={() => onReadingRegion?.("companion", companionReadRef.current)} style={[styles.iosCompanion, { color: theme.text, fontSize: 26, lineHeight: 34 }]}>{iosCompanionCopy}</Text></View> : <Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text>}
         </HomeValueTransition>
         {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>
           체감 {formatTemperature(current.feelsLikeC, temperatureUnit)} · 강수 {current.rainProbabilityPct}%
@@ -912,8 +912,7 @@ function HomeOutfitPreviewCard({
   const tightLayout = isHomeTightLayout(layout);
   const { fontScale } = useWindowDimensions();
   const imageSource = getHomeOutfitPreviewImage(outfit);
-  const compactCopy = getHomeOutfitCopy(outfit.variant, packTitle);
-  const title = getHomeOutfitTitle(compactCopy.title);
+  const title = getHomeOutfitTitle(outfit.decisionText);
   const itemNames = Object.values(outfit.items).filter(Boolean).map(item => translateText(item!.name)).join(" + ");
   // The approved Home composition pairs the recommended layer and footwear;
   // both remain actual recommendation items, never the board's example clothing.
@@ -942,13 +941,6 @@ function HomeOutfitPreviewCard({
       {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{title}</Text> : null}
     </FeedbackPressable>
   );
-}
-
-function getHomeOutfitCopy(variant: P0ScreenProps["state"]["outfit"]["variant"], fallback: string) {
-  if (variant === "rain") return { title: "비 소식 있어요.\n우산과 방수 신발 챙겨요", body: "방수 신발이면 더 좋아요" };
-  if (variant === "heat") return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
-  if (variant === "cold") return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
-  return { title: variant === "formal" ? fallback : "오늘은 가볍게 나가요", body: "편한 차림이면 충분해요" };
 }
 
 function getHomeOutfitTitle(copy: string) {
