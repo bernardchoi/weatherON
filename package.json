@@ -105,6 +105,7 @@
     "check:android-release-consistency": "node scripts/check-android-release-consistency.mjs",
     "dev:weather-server": "node apps/server/src/index.mjs",
     "check:ios-native-modules": "node scripts/check-ios-native-modules.mjs",
+    "check:ios-release-signing": "node scripts/check-ios-release-signing.mjs",
     "check:ios-service-env": "node scripts/check-ios-service-env.mjs",
     "check:ios-service-env-regression": "node scripts/check-ios-service-env.mjs --self-test",
     "check:ios-deep-links": "node scripts/check-ios-deep-links.mjs"

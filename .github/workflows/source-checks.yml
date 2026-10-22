@@ -47,6 +47,7 @@ jobs:
         run: npm run check:android-product-quality
       - name: Check core regressions
         run: |
+          npm run check:ios-release-signing
           node scripts/check-ios-reliability.mjs
           node scripts/check-correctness-batch.mjs
           node scripts/check-weather-outfit-regressions.mjs
