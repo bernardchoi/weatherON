@@ -22,7 +22,7 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
   const opacity = useRef(new Animated.Value(1)).current;
   const played = useRef(false), finished = useRef(false), ready = useRef(false);
   const mounted = useRef(true), backgrounded = useRef(false);
-  const hasBeenActive = useRef(AppState.currentState === "active");
+  const readyFrame = useRef<number | null>(null);
   const animation = useRef<Animated.CompositeAnimation | null>(null);
   const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbacks = useRef({ onReady, onFinish });
@@ -33,6 +33,18 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
     ready.current = true;
     callbacks.current.onReady();
   }, []);
+  const scheduleReady = useCallback(() => {
+    if (ready.current || !mounted.current || readyFrame.current !== null) return;
+    // Layout means the React tree exists, not that Core Animation has drawn it.
+    // Hold the native first frame through two display callbacks so its handoff
+    // cannot expose Home before this opaque SVG overlay has been committed.
+    readyFrame.current = requestAnimationFrame(() => {
+      readyFrame.current = requestAnimationFrame(() => {
+        readyFrame.current = null;
+        signalReady();
+      });
+    });
+  }, [signalReady]);
   const finish = useCallback(() => {
     if (finished.current || !mounted.current) return;
     finished.current = true;
@@ -49,10 +61,9 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
     if (AppState.currentState === "background") backgrounded.current = true;
     // Strict effect remounts must not replay or strand a cancelled launch.
     if (played.current && !finished.current) finish();
-    const layout = setTimeout(signalReady, timing.readyFallback);
+    const layout = setTimeout(scheduleReady, timing.readyFallback);
     const subscription = AppState.addEventListener("change", state => {
       if (state === "active") {
-        hasBeenActive.current = true;
         setAppIsActive(true);
         return;
       }
@@ -60,19 +71,19 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
       if (state === "background") {
         backgrounded.current = true;
         if (played.current) finish();
-      } else if (state === "inactive" && hasBeenActive.current && played.current) {
-        // A later interruption is safe to dismiss, but launch-time inactive is
-        // not evidence that the app was backgrounded.
-        finish();
       }
     });
     return () => {
       mounted.current = false;
       clearTimeout(layout);
+      if (readyFrame.current !== null) {
+        cancelAnimationFrame(readyFrame.current);
+        readyFrame.current = null;
+      }
       if (watchdog.current) clearTimeout(watchdog.current);
       animation.current?.stop(); subscription.remove();
     };
-  }, [finish, signalReady]);
+  }, [finish, scheduleReady]);
 
   useEffect(() => {
     if (reduced !== null) return;
@@ -121,7 +132,7 @@ export function IosLaunchSplash({ started, onReady, onFinish }: {
 
   const dark = theme.name === "dark";
   const sunColor = parts.sun[theme.name];
-  return <Animated.View testID="ios-brand-splash" onLayout={signalReady} accessible accessibilityLabel="WeatherON 시작 중" accessibilityRole="text"
+  return <Animated.View testID="ios-brand-splash" onLayout={scheduleReady} accessible accessibilityLabel="WeatherON 시작 중" accessibilityRole="text"
     style={[styles.root, { backgroundColor: theme.background, opacity }]}>
     <Animated.View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.brand, { opacity: brandOpacity }]}>
       <View style={styles.scene}>
