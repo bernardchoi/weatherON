@@ -282,6 +282,36 @@ const arrival=preparation(rainKnown,target,true,now);
 assert.match(arrival.copy,/우산/);assert.equal(arrival.basis,'목적지 도착 무렵');assert.equal(arrival.evidence,'강수확률 70%');assert.equal(arrival.rainEvidence,true);
 const futureCool={...dest,current:{...dest.current,feelsLikeC:33},hourly:[hour('2026-10-10T10:00',17)]};
 const cool=preparation(futureCool,target,true,now);assert.match(cool.copy,/한 겹/);assert.equal(cool.evidence,'기온 17°C');assert.doesNotMatch(cool.evidence,/체감/);assert.doesNotMatch(cool.copy,/물 한 병/);
+// Build 56 feedback: changing origin temperature must not override the arrival forecast.
+const temperatureCases = [
+ [-10, /포근한 겉옷/], [0, /포근한 겉옷/], [5, /포근한 겉옷/],
+ [5.01, /가볍게 걸칠 한 겹/], [17, /가볍게 걸칠 한 겹/], [18, /가볍게 걸칠 한 겹/],
+ [18.01, /편한 차림/], [25, /편한 차림/], [29.99, /편한 차림/],
+ [30, /물 한 병/], [40, /물 한 병/],
+];
+for (const source of ['weatherkit', 'openmeteo']) for (const [temp, expected] of temperatureCases) {
+ const snapshot = {...dest, source, current: {...dest.current, tempC: 16, feelsLikeC: 16}, hourly: [hour('2026-10-10T10:00', temp)]};
+ const result = preparation(snapshot, target, true, now);
+ assert.match(result.copy, expected, `${source}: arrival ${temp}C`);
+ assert.equal(result.basis, '목적지 도착 무렵');
+ assert.equal(result.evidence, `기온 ${Math.round(temp)}°C`);
+ assert.equal(preparation({...snapshot, current: {...snapshot.current, tempC: 40, feelsLikeC: 40}}, target, true, now).copy, result.copy);
+ const fahrenheit = preparation(snapshot, target, true, now, value => `${Math.round(value * 9 / 5 + 32)}°F`);
+ assert.equal(fahrenheit.copy, result.copy);
+ assert.equal(fahrenheit.evidence, `기온 ${Math.round(temp * 9 / 5 + 32)}°F`);
+ // With no selected-hour coverage, the explicitly labelled current reading takes over.
+ const current = {...snapshot, hourly: [], current: {...snapshot.current, tempC: temp, feelsLikeC: temp, tempAvailable: true}};
+ assert.match(preparation(current, target, true, now).copy, expected);
+ assert.match(preparation(current, target, true, now).status, /선택 시각 예보 없음/);
+}
+for (const temp of [NaN, Infinity, -Infinity]) {
+ const missing = {...dest, hourly: [hour('2026-10-10T10:00', temp)]};
+ const result = preparation(missing, target, true, now);
+ assert.doesNotMatch(result.copy, /한 겹|겉옷|물 한 병/);
+ assert.equal(result.evidence, '');
+ assert.match(result.status, /예보 없음/);
+}
+console.log('PASS: Build 56 feedback temperature matrix — cold/light-layer/mild/hot boundaries, arrival vs current changes, two providers, Celsius/Fahrenheit and unavailable temperatures.');
 const windyMissing={...dest,hourly:[{...hour('2026-10-10T10:00',17,70,1,12),condition:'rain',available:{temp:true,rainProbability:true,precipitation:true,wind:false,condition:true}}]};
 assert.match(preparation(windyMissing,target,true,now).copy,/우산/);assert.doesNotMatch(preparation(windyMissing,target,true,now).copy,/바람|방수/);assert.match(preparation(windyMissing,target,true,now).status,/일부/);
 const windyReal={...windyMissing,hourly:[{...windyMissing.hourly[0],available:{temp:true,rainProbability:true,precipitation:true,wind:true,condition:true}}]};assert.match(preparation(windyReal,target,true,now).copy,/방수/);
