@@ -45,6 +45,12 @@ export type WeatheronWidgetLocationSnapshot = {
   outfitVariant: OutfitRecommendation["variant"];
   observedAt: string;
   hourly: WeatheronWidgetHourlySnapshot[];
+  departureAt?: string;
+  arrivalAt?: string;
+  durationSeconds?: number;
+  bufferSeconds?: number;
+  routeMessage?: string;
+  routeUpdatedAt?: string;
   departureTime?: string;
   arrivalTime?: string;
   travelMinutes?: number;
@@ -77,6 +83,12 @@ type WidgetLocationOptions = {
     longitude: number;
   };
   timeZone?: string;
+  departureAt?: string;
+  arrivalAt?: string;
+  durationSeconds?: number;
+  bufferSeconds?: number;
+  routeMessage?: string;
+  routeUpdatedAt?: string;
   departureTime?: string;
   arrivalTime?: string;
   travelMinutes?: number;
@@ -118,11 +130,17 @@ export function createWeatheronWidgetLocationSnapshot(
       condition: hour.condition,
       rainProbabilityPct: Math.round(hour.rainProbabilityPct),
     })),
+    departureAt: options.departureAt,
+    arrivalAt: options.arrivalAt,
+    durationSeconds: options.durationSeconds,
+    bufferSeconds: options.bufferSeconds,
+    routeMessage: options.routeMessage,
+    routeUpdatedAt: options.routeUpdatedAt,
     departureTime: options.departureTime,
     arrivalTime: options.arrivalTime,
     // Swift decodes this field as Int; live route providers may return fractions.
     travelMinutes: typeof options.travelMinutes === "number" && Number.isFinite(options.travelMinutes)
-      ? Math.round(options.travelMinutes)
+      ? Math.ceil(options.travelMinutes)
       : undefined,
     transportMode: options.transportMode,
     deepLink: options.deepLink ?? weatheronWidgetDeepLink,

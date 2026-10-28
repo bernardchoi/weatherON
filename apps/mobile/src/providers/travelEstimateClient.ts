@@ -22,6 +22,7 @@ export type TravelEstimateParams = {
   originCountryCode?: "KR" | "JP" | "GLOBAL";
   destinationCountryCode?: "KR" | "JP" | "GLOBAL";
   transportMode?: DestinationTransportMode;
+  arrivalBufferSeconds?: number;
   arrivalTime?: string;
   departureTime?: string;
 };
@@ -51,6 +52,20 @@ export type TravelEstimateResult = {
   distanceMeters: number;
   message: string;
   updatedAt: string;
+  durationSeconds?: number;
+  transportMode?: DestinationTransportMode;
+  timingBasis?: "predicted" | "current" | "route" | "distance" | "unavailable";
+  departureAt?: string;
+  arrivalAt?: string;
+  requestArrivalTime?: string;
+  requestDepartureTime?: string;
+  targetArrivalAt?: string;
+  bufferSeconds?: number;
+  expiresAt?: string;
+  cacheStatus?: "fresh" | "cached" | "stale";
+  arrivalFeasible?: boolean;
+  searchStatus?: string;
+  failureReason?: string;
   routeOptions?: TravelRouteOption[];
 };
 
@@ -69,13 +84,15 @@ export const fallbackTravelEstimateClient: TravelEstimateClient = {
   async estimateRoute(params) {
     return {
       ...estimateFallbackRoute(params),
+      transportMode: params.transportMode ?? "auto",
+      timingBasis: params.transportMode === "transit" ? "unavailable" : "distance",
       updatedAt: new Date().toISOString(),
     };
   },
 };
 
 export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClientOptions): TravelEstimateClient {
-  const timeoutMs = options.timeoutMs ?? DEFAULT_WEATHER_TIMEOUT_MS;
+  const timeoutMs = Math.max(15000, options.timeoutMs ?? DEFAULT_WEATHER_TIMEOUT_MS);
 
   return {
     async estimateRoute(params) {
@@ -89,12 +106,15 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       if (params.transportMode) url.searchParams.set("transportMode", params.transportMode);
       if (params.departureTime) url.searchParams.set("departureTime", params.departureTime);
       if (params.arrivalTime) url.searchParams.set("arrivalTime", params.arrivalTime);
+      if (params.arrivalBufferSeconds !== undefined) url.searchParams.set("arrivalBufferSeconds", String(params.arrivalBufferSeconds));
       const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
-      const result = await fetchJson<Omit<TravelEstimateResult, "updatedAt">>(url, timeoutMs, options.fetchImpl, headers);
+      const result = await fetchJson<TravelEstimateResult>(url, timeoutMs, options.fetchImpl, headers);
+      if (!["ready", "fallback", "error"].includes(result.status) || !["kakao", "kakao-transit", "google", "google-transit", "fallback"].includes(result.provider) || !Number.isFinite(result.durationSeconds ?? result.travelMinutes * 60) || (result.durationSeconds ?? result.travelMinutes * 60) < 0 || (result.durationSeconds ?? result.travelMinutes * 60) > 7 * 86400 || !Number.isFinite(result.distanceMeters) || result.distanceMeters < 0) throw new Error("Invalid route response");
       return {
         ...result,
-        message: result.status === "ready" ? getRouteEstimateMessage(result.provider, params) : result.message,
-        updatedAt: new Date().toISOString(),
+        // Server query timestamps and prediction provenance survive cache reads.
+        updatedAt: result.updatedAt ?? "",
+        durationSeconds: result.durationSeconds ?? result.travelMinutes * 60,
       };
     },
   };
@@ -125,18 +145,17 @@ function estimateFallbackRoute(params: TravelEstimateParams): Omit<TravelEstimat
   const directDistanceMeters = getDistanceMeters(params.origin, params.destination);
   const sameCountry = originCountryCode === destinationCountryCode;
   const distanceMeters = Math.round(directDistanceMeters * (destinationCountryCode === "KR" ? 1.35 : sameCountry ? 1.25 : 1));
-  const travelMinutes =
-    destinationCountryCode === "KR"
-      ? Math.max(15, Math.ceil((distanceMeters / 1000 / 32) * 60))
-      : sameCountry
-        ? Math.max(10, Math.ceil((distanceMeters / 1000 / 28) * 60))
-        : getInternationalFallbackTravelMinutes(destinationCountryCode);
+  const travelMinutes = params.transportMode === "walk"
+    ? Math.ceil(directDistanceMeters / (4500 / 60))
+    : destinationCountryCode === "KR" ? Math.ceil((distanceMeters / 1000 / 32) * 60)
+    : sameCountry ? Math.ceil((distanceMeters / 1000 / 28) * 60) : getInternationalFallbackTravelMinutes(destinationCountryCode);
   return {
     provider: "fallback",
-    status: "fallback",
-    travelMinutes,
-    distanceMeters,
-    message: sameCountry ? "현지 좌표 거리 기반 추정" : "국가 간 경로 확인 필요",
+    status: params.transportMode === "transit" ? "error" : "fallback",
+    travelMinutes: params.transportMode === "transit" ? 0 : travelMinutes,
+    durationSeconds: params.transportMode === "transit" ? 0 : travelMinutes * 60,
+    distanceMeters: params.transportMode === "walk" ? Math.round(directDistanceMeters) : distanceMeters,
+    message: params.transportMode === "transit" ? "대중교통 경로 조회 필요" : params.transportMode === "walk" ? "직선 거리·시속 4.5km 기준 대략 추정" : sameCountry ? "현지 좌표 거리 기반 대략 추정" : "국가 간 경로 확인 필요",
   };
 }
 
@@ -161,12 +180,4 @@ function formatCoordinate(coordinate: TravelEstimateCoordinate): string {
 
 function toRadians(value: number): number {
   return (value * Math.PI) / 180;
-}
-
-function getRouteEstimateMessage(provider: TravelEstimateProvider, params: TravelEstimateParams): string {
-  if (provider === "kakao") return "현재 교통 기준 추정 · 선택 시간대 미반영";
-  if (provider === "kakao-transit") return "대중교통 경로 추정 · 선택 시간대 미반영";
-  if (provider === "google-transit") return params.arrivalTime || params.departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정";
-  if (params.arrivalTime) return "현재 교통 기준 추정 · 선택 도착 시간 미반영";
-  return params.departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정";
 }

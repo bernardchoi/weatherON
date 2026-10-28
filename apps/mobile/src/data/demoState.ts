@@ -28,11 +28,12 @@ import {
   addZonedCalendarDays,
   addMinutesToTime,
   createDateAtTimeInZone,
-  getWeekdayForZonedDate,
   getZonedDateTimeParts,
   parseDateTimeInZone,
 } from "../utils/zonedDateTime";
-import { getTravelMinutesForTransport } from "../utils/travelEstimate";
+import type { TravelEstimateResult } from "../providers/travelEstimateClient";
+import { getDestinationTiming } from "../state/appStateHelpers";
+import { getTravelMinutesForTransport, formatRouteClock } from "../utils/travelEstimate";
 
 export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
 
@@ -48,7 +49,7 @@ export type DemoStateOptions = {
   notificationNow?: number;
 };
 
-export type DestinationScheduleInput = {
+export type DestinationScheduleInput = Partial<TravelEstimateResult> & {
   timeBasis?: "arrival" | "departure";
   targetArrivalTime: string;
   originPlaceId?: string;
@@ -69,7 +70,7 @@ export type DestinationNotificationInput = {
   schedulePreference?: Pick<DestinationScheduleInput, "timeBasis" | "targetArrivalTime" | "transportMode" | "repeatEnabled" | "repeatDays">;
   // 저장된 목적지는 실제 TravelEstimateResult(provider/status 필드명)를, 미저장 임시 목적지는
   // DestinationScheduleInput(travelProvider/travelStatus 필드명)을 그대로 재사용해 넘기므로 두 필드명을 모두 허용한다.
-  travelEstimate?: Pick<DestinationScheduleInput, "originPlaceId" | "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
+  travelEstimate?: Partial<TravelEstimateResult> & Pick<DestinationScheduleInput, "originPlaceId" | "travelMinutes" | "distanceMeters" | "travelProvider" | "travelStatus"> & {
     provider?: DestinationScheduleInput["travelProvider"];
     status?: DestinationScheduleInput["travelStatus"];
   };
@@ -157,6 +158,24 @@ export function buildDemoStateFromWeatherResult(
     travelProvider: options.destinationSchedule?.travelProvider,
     travelStatus: options.destinationSchedule?.travelStatus,
   });
+
+  const scheduleInput = options.destinationSchedule;
+  const timing = scheduleInput && options.destination ? getDestinationTiming(
+    { ...scheduleInput, travelMinutes: scheduleInput.travelMinutes ?? 0, distanceMeters: scheduleInput.distanceMeters ?? 0, status: scheduleInput.status ?? scheduleInput.travelStatus ?? "idle", provider: scheduleInput.provider ?? scheduleInput.travelProvider },
+    { timeBasis: scheduleInput.timeBasis ?? "arrival", targetArrivalTime: scheduleInput.targetArrivalTime, transportMode: scheduleInput.transportMode ?? "auto", repeatEnabled: scheduleInput.repeatEnabled ?? false, repeatDays: scheduleInput.repeatDays ?? [] },
+    options.destination.timezone, options.notificationNow ?? Date.now(), weatherProviderResult.current.countryCode, options.destination.countryCode, weatherProviderResult.current.locationId,
+  ) : undefined;
+  if (destinationCare.departureAdvice) {
+    Object.assign(destinationCare.departureAdvice, {
+      departureAt: timing?.departureAt, arrivalAt: timing?.arrivalAt, nowArrivalAt: timing?.nowArrivalAt, targetAt: timing?.targetAt,
+      durationSeconds: timing?.durationSeconds, bufferMinutes: timing ? timing.bufferSeconds / 60 : undefined,
+      recommendedDepartureTime: timing ? formatRouteClock(timing.departureAt, options.destination!.timezone) : undefined,
+      travelMinutes: timing ? Math.ceil(timing.durationSeconds / 60) : undefined,
+      routeMessage: scheduleInput?.cacheStatus === "stale" ? `이전 조회 결과 · ${scheduleInput.message}` : scheduleInput?.message,
+      routeUpdatedAt: scheduleInput?.updatedAt,
+      targetArrivalTime: timing && scheduleInput?.timeBasis === "departure" ? formatRouteClock(timing.arrivalAt, options.destination!.timezone) : scheduleInput?.targetArrivalTime,
+    });
+  }
 
   return {
     hasDestination,
@@ -252,7 +271,8 @@ function buildDestinationNotifications(
       title: `${destination.place.name} 알림`,
       pushTitle: `${destination.place.name} 가는 길, 미리 살펴봐요`,
       active: Boolean(timing && notification.active),
-      reason: timing && notification.active ? notification.reason : "도착 희망시간 기준 예보 확인 대기",
+      reason: timing && notification.active ? `${notification.reason} · ${destination.travelEstimate?.message ?? "이동시간 근거 확인 필요"}${destination.travelEstimate?.cacheStatus === "stale" ? " · 이전 조회 결과" : ""}` : "도착 희망시간 기준 예보 확인 대기",
+      pushBody: `${notification.pushBody} · ${destination.travelEstimate?.message ?? "이동시간 근거 확인 필요"}${destination.travelEstimate?.cacheStatus === "stale" ? " · 이전 조회 결과" : ""}`,
       scheduledAt: timing && notification.active ? timing.scheduledAt.toISOString() : undefined,
     };
   });
@@ -274,88 +294,18 @@ function getDestinationNotificationTiming(
   const targetArrivalTime = schedule?.targetArrivalTime;
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
-  if (schedule?.timeBasis === "departure") {
-    const departureAt = getNextDepartureAt(
-      targetArrivalTime,
-      schedule.repeatEnabled ?? false,
-      schedule.repeatDays ?? [],
-      nowMs,
-      destination.alertCondition.leadTimeMinutes,
-      destination.place.timezone,
-    );
-    if (!departureAt || !getWeatherAtDeparture(weather, departureAt, destination.place.timezone)) return null;
-    return {
-      departureAt,
-      scheduledAt: new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60_000),
-    };
-  }
-
-  const travelMinutes = getTravelMinutes(
-    schedule?.transportMode,
-    destination.travelEstimate,
-    originWeather.countryCode,
-    destination.place.countryCode,
-    originWeather.locationId,
+  const estimate = destination.travelEstimate;
+  if (!estimate) return null;
+  const timing = getDestinationTiming(
+    { ...estimate, provider: estimate.provider ?? estimate.travelProvider, status: estimate.status ?? estimate.travelStatus ?? "idle", travelMinutes: estimate.travelMinutes ?? 0, distanceMeters: estimate.distanceMeters ?? 0 },
+    { timeBasis: schedule.timeBasis ?? "arrival", targetArrivalTime, transportMode: schedule.transportMode ?? "auto", repeatEnabled: schedule.repeatEnabled ?? false, repeatDays: schedule.repeatDays ?? [] },
+    destination.place.timezone, nowMs, originWeather.countryCode, destination.place.countryCode, originWeather.locationId,
   );
-  if (typeof travelMinutes !== "number") return null;
-  const arrivalAt = getNextArrivalAt(
-    targetArrivalTime,
-    schedule?.repeatEnabled ?? false,
-    schedule?.repeatDays ?? [],
-    nowMs,
-    travelMinutes,
-    destination.alertCondition.leadTimeMinutes,
-    destination.place.timezone,
-  );
-  if (!arrivalAt) return null;
-  const bufferMinutes = getAutoBufferMinutes(arrivalAt.getTime() - nowMs, travelMinutes);
-  const departureAt = new Date(arrivalAt.getTime() - (travelMinutes + bufferMinutes) * 60_000);
-  const scheduledAt = new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60_000);
-  if (scheduledAt.getTime() <= nowMs) return null;
-  if (!getWeatherAtDeparture(weather, departureAt, destination.place.timezone)) return null;
+  if (!timing) return null;
+  const departureAt = new Date(timing.departureAt);
+  const scheduledAt = new Date(departureAt.getTime() - destination.alertCondition.leadTimeMinutes * 60000);
+  if (scheduledAt.getTime() <= nowMs || !getWeatherAtDeparture(weather, departureAt, destination.place.timezone)) return null;
   return { departureAt, scheduledAt };
-}
-
-function getNextDepartureAt(
-  targetDepartureTime: string,
-  repeatEnabled: boolean,
-  repeatDays: DestinationScheduleInput["repeatDays"],
-  nowMs: number,
-  leadTimeMinutes: number,
-  timeZone: string,
-): Date | null {
-  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
-  const maxOffset = repeatEnabled ? 7 : 0;
-  for (let offset = 0; offset <= maxOffset; offset += 1) {
-    const departureDate = addZonedCalendarDays(nowParts, offset);
-    if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(departureDate))) continue;
-    const departureAt = createDateAtTimeInZone(departureDate, targetDepartureTime, timeZone);
-    if (departureAt.getTime() - leadTimeMinutes * 60_000 > nowMs) return departureAt;
-  }
-  return null;
-}
-
-function getNextArrivalAt(
-  targetArrivalTime: string,
-  repeatEnabled: boolean,
-  repeatDays: DestinationScheduleInput["repeatDays"],
-  nowMs: number,
-  travelMinutes: number,
-  leadTimeMinutes: number,
-  timeZone: string,
-): Date | null {
-  const nowParts = getZonedDateTimeParts(new Date(nowMs), timeZone);
-  const maxOffset = repeatEnabled ? 7 : 0;
-  for (let offset = 0; offset <= maxOffset; offset += 1) {
-    const arrivalDate = addZonedCalendarDays(nowParts, offset);
-    const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
-    if (repeatEnabled && !repeatDays?.includes(getWeekdayForZonedDate(arrivalDate))) continue;
-    const bufferMinutes = getAutoBufferMinutes(arrivalAt.getTime() - nowMs, travelMinutes);
-    const departureAt = arrivalAt.getTime() - (travelMinutes + bufferMinutes) * 60_000;
-    const scheduledAt = departureAt - leadTimeMinutes * 60_000;
-    if (scheduledAt > nowMs) return arrivalAt;
-  }
-  return null;
 }
 
 function getWeatherAtDeparture(weather: WeatherSnapshot, departureAt: Date, timeZone: string): WeatherSnapshot | null {
@@ -397,9 +347,10 @@ function getTravelMinutes(
   currentOriginPlaceId?: string,
 ): number | undefined {
   const baseTravelMinutes = travelEstimate?.travelMinutes;
-  if (typeof baseTravelMinutes !== "number" || baseTravelMinutes <= 0) return undefined;
+  if (typeof baseTravelMinutes !== "number" || baseTravelMinutes < 0) return undefined;
   return getTravelMinutesForTransport(
     {
+      ...travelEstimate,
       originPlaceId: travelEstimate?.originPlaceId,
       travelMinutes: baseTravelMinutes,
       distanceMeters: travelEstimate?.distanceMeters ?? 0,
@@ -411,15 +362,6 @@ function getTravelMinutes(
     destinationCountryCode,
     currentOriginPlaceId,
   );
-}
-
-function getAutoBufferMinutes(arrivalOffsetMs: number, travelMinutes: number): number {
-  const freeWindow = Math.floor(arrivalOffsetMs / 60_000) - travelMinutes;
-  if (freeWindow <= 30) return 0;
-  if (freeWindow <= 90) return 5;
-  if (freeWindow <= 180) return 10;
-  if (freeWindow <= 360) return 15;
-  return 20;
 }
 
 function isValidTimeText(value: string): boolean {

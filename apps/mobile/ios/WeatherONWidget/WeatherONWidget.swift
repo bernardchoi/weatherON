@@ -111,6 +111,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
   let departureTime: String?
   let arrivalTime: String?
   let travelMinutes: Int?
+  let routeMessage: String?
+  let routeUpdatedAt: String?
   let transportMode: String?
   let deepLink: String
 
@@ -142,6 +144,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     case departureTime
     case arrivalTime
     case travelMinutes
+    case routeMessage
+    case routeUpdatedAt
     case transportMode
     case deepLink
   }
@@ -172,7 +176,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     arrivalTime: String?,
     travelMinutes: Int?,
     transportMode: String?,
-    deepLink: String
+    deepLink: String,
+    routeMessage: String? = nil,
+    routeUpdatedAt: String? = nil
   ) {
     self.id = id
     self.kind = kind
@@ -198,6 +204,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     self.departureTime = departureTime
     self.arrivalTime = arrivalTime
     self.travelMinutes = travelMinutes
+    self.routeMessage = routeMessage
+    self.routeUpdatedAt = routeUpdatedAt
     self.transportMode = transportMode
     self.deepLink = deepLink
   }
@@ -228,6 +236,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     departureTime = try values.decodeIfPresent(String.self, forKey: .departureTime)
     arrivalTime = try values.decodeIfPresent(String.self, forKey: .arrivalTime)
     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
+    routeMessage = try values.decodeIfPresent(String.self, forKey: .routeMessage)
+    routeUpdatedAt = try values.decodeIfPresent(String.self, forKey: .routeUpdatedAt)
     transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
     deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
   }
@@ -254,7 +264,7 @@ private extension WeatherONLocationSnapshot {
       outfitSummary: outfitSummary, outfitItems: outfitItems, outfitVariant: outfitVariant,
       observedAt: forecast.observedAt.ISO8601Format(),
       hourly: forecast.hourly.map { WeatherONHourlySnapshot(time: formatter.string(from: $0.date), temperatureC: Int($0.temperatureC.rounded()), condition: $0.condition, rainProbabilityPct: Int($0.rainProbabilityPct.rounded())) },
-      departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink
+      departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink, routeMessage: routeMessage, routeUpdatedAt: routeUpdatedAt
     )
   }
 }
@@ -1217,6 +1227,14 @@ private struct WeatherONScheduleCard: View {
             .foregroundStyle(palette.secondaryText)
         }
       }
+      if let routeMessage = location.routeMessage {
+        let queriedAt = weatherONAppSnapshotTime(location.routeUpdatedAt, referenceDate: Date(), timeZone: TimeZone(identifier: location.timeZone ?? "Asia/Seoul") ?? .current, localization: localization)
+        Text(verbatim: routeMessage + (queriedAt.map { " · " + $0 } ?? ""))
+          .font(.system(size: 8, weight: .regular))
+          .foregroundStyle(palette.secondaryText)
+          .lineLimit(2)
+      }
+
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal, compact ? 9 : 12)

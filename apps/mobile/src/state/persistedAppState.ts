@@ -469,7 +469,21 @@ export function normalizeDestinationTravelEstimate(value: unknown, origin: Weath
     travelMinutes: typeof record.travelMinutes === "number" ? record.travelMinutes : getDefaultTravelMinutes(place),
     distanceMeters: typeof record.distanceMeters === "number" ? record.distanceMeters : 0,
     message: typeof record.message === "string" ? record.message : "기본 이동시간",
-    updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString(),
+    updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : "",
+    durationSeconds: typeof record.durationSeconds === "number" && Number.isFinite(record.durationSeconds) && record.durationSeconds >= 0 && record.durationSeconds <= 7 * 86400 ? record.durationSeconds : undefined,
+    transportMode: isDestinationTransportMode(record.transportMode) ? record.transportMode : undefined,
+    timingBasis: ["predicted", "current", "route", "distance", "unavailable"].includes(record.timingBasis ?? "") ? record.timingBasis : undefined,
+    cacheStatus: record.cacheStatus === "fresh" || record.cacheStatus === "cached" || record.cacheStatus === "stale" ? record.cacheStatus : undefined,
+    bufferSeconds: typeof record.bufferSeconds === "number" && record.bufferSeconds >= 0 && record.bufferSeconds <= 86400 ? record.bufferSeconds : undefined,
+    departureAt: validStoredRouteTime(record.departureAt),
+    arrivalAt: validStoredRouteTime(record.arrivalAt),
+    requestArrivalTime: validStoredRouteTime(record.requestArrivalTime),
+    requestDepartureTime: validStoredRouteTime(record.requestDepartureTime),
+    targetArrivalAt: validStoredRouteTime(record.targetArrivalAt),
+    expiresAt: validStoredRouteTime(record.expiresAt),
+    arrivalFeasible: typeof record.arrivalFeasible === "boolean" ? record.arrivalFeasible : undefined,
+    searchStatus: typeof record.searchStatus === "string" ? record.searchStatus : undefined,
+    failureReason: typeof record.failureReason === "string" ? record.failureReason : undefined,
     routeOptions: Array.isArray(record.routeOptions) ? record.routeOptions.filter(isTravelRouteOption) : undefined,
   };
 }
@@ -610,4 +624,8 @@ function emptyPersistedNotificationState(): PersistedNotificationState {
     readNotificationIds: [],
     notificationHistory: [],
   };
+}
+
+function validStoredRouteTime(value: unknown): string | undefined {
+  return typeof value === "string" && /(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : undefined;
 }

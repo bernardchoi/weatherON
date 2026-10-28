@@ -1,9 +1,13 @@
+import { getZonedDateTimeParts } from "./zonedDateTime";
 import type { DestinationTransportMode } from "@weatheron/shared";
+import type { TravelEstimateResult } from "../providers/travelEstimateClient";
 
 export const maxWalkableDestinationDistanceKm = 25;
 
 export type TravelEstimateInput = {
   originPlaceId?: string;
+  durationSeconds?: number;
+  transportMode?: DestinationTransportMode;
   travelMinutes: number;
   distanceMeters: number;
   provider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
@@ -28,7 +32,7 @@ export function isUnverifiedInternationalRoute(
 }
 
 export function isWalkUnavailableForEstimate(estimate: TravelEstimateInput, transportMode: DestinationTransportMode): boolean {
-  if (transportMode !== "walk") return false;
+  if (transportMode !== "walk" || estimate.transportMode !== "walk") return false;
   const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
   return distanceKm > maxWalkableDestinationDistanceKm;
 }
@@ -45,20 +49,42 @@ export function getTravelMinutesForTransport(
   if (isUnverifiedInternationalRoute(estimate, originCountryCode, destinationCountryCode, currentOriginPlaceId)) return undefined;
   if (estimate.status === "idle" || estimate.status === "loading" || estimate.status === "error") return undefined;
   if (estimate.status === "fallback" && estimate.distanceMeters <= 0) return undefined;
-  if (!Number.isFinite(estimate.travelMinutes) || estimate.travelMinutes <= 0) return undefined;
-  const baseMinutes = Math.ceil(estimate.travelMinutes);
-  const distanceKm = estimate.distanceMeters > 0 ? estimate.distanceMeters / 1000 : 0;
-  if (transportMode === "walk") {
-    if (distanceKm > maxWalkableDestinationDistanceKm) return baseMinutes;
-    if (distanceKm > 0) return Math.max(5, Math.ceil((distanceKm / 4.5) * 60));
-    return Math.max(15, Math.ceil(baseMinutes * 1.8));
-  }
-  if (transportMode === "transit" && isLiveTransitEstimate(estimate)) return baseMinutes;
-  if (transportMode === "transit") return Math.max(12, Math.ceil(baseMinutes * 1.25) + 8);
-  if (transportMode === "drive") return baseMinutes;
-  return baseMinutes;
+  if (estimate.transportMode && (estimate.transportMode === "auto" ? "drive" : estimate.transportMode) !== (transportMode === "auto" ? "drive" : transportMode)) return undefined;
+  if (transportMode === "walk" && (estimate.transportMode !== "walk" || isWalkUnavailableForEstimate(estimate, transportMode))) return undefined;
+  if (transportMode === "transit" && !isLiveTransitEstimate(estimate)) return undefined;
+  const seconds = estimate.durationSeconds ?? estimate.travelMinutes * 60;
+  if (!Number.isFinite(seconds) || seconds < 0 || seconds > 7 * 86400) return undefined;
+  return seconds / 60;
 }
 
 export function isLiveTransitEstimate(estimate: Pick<TravelEstimateInput, "provider" | "status">): boolean {
   return estimate.status === "ready" && (estimate.provider === "kakao-transit" || estimate.provider === "google-transit");
+}
+
+// Absolute timing shared by screens, notifications, widgets and Live Activity. P defaults to zero;
+// the reminder lead time is not preparation time and never changes D or B.
+export function resolveTravelTiming(
+  estimate: Partial<TravelEstimateResult>, targetAt: string, timeBasis: "arrival" | "departure",
+  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0, nowMs = Date.now(),
+) {
+  const target = Date.parse(targetAt);
+  const durationSeconds = estimate.durationSeconds ?? travelMinutes * 60;
+  if (!Number.isFinite(target) || !Number.isFinite(durationSeconds) || durationSeconds < 0) return undefined;
+  const matches = timeBasis === "arrival" && estimate.requestArrivalTime === targetAt;
+  const bufferSeconds = timeBasis === "departure" ? 0 : matches ? estimate.bufferSeconds ?? bufferMinutes * 60 : bufferMinutes * 60;
+  const calculated = timeBasis === "departure" ? target : target - durationSeconds * 1000 - bufferSeconds * 1000;
+  const departure = matches && estimate.departureAt && Number.isFinite(Date.parse(estimate.departureAt)) ? Date.parse(estimate.departureAt) : calculated;
+  return {
+    targetAt, departureAt: new Date(departure).toISOString(),
+    arrivalAt: new Date(departure + durationSeconds * 1000).toISOString(),
+    preparationAt: new Date(departure - preparationMinutes * 60000).toISOString(),
+    nowArrivalAt: departure <= nowMs ? new Date(nowMs + durationSeconds * 1000).toISOString() : undefined,
+    durationSeconds, bufferSeconds,
+    arrivalFeasible: timeBasis === "departure" || departure + durationSeconds * 1000 + bufferSeconds * 1000 <= target,
+  };
+}
+
+export function formatRouteClock(value: string, timeZone: string): string {
+  const parts = getZonedDateTimeParts(new Date(value), timeZone);
+  return `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
 }

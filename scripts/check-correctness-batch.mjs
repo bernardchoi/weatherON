@@ -82,12 +82,10 @@ try {
    assert.equal(requests.at(-1).searchParams.has('arrival_time'),false);
  }
  assert.equal(requests.length,2,'selected time must partition cache');
- await handleProxyRoute(new URL(`${base}&transportMode=transit&arrivalTime=${times[0]}&departureTime=${times[1]}`),env,()=>null);
- assert.equal(requests.at(-1).searchParams.get('arrival_time'),String(Date.parse(times[0])/1000));
- assert.equal(requests.at(-1).searchParams.has('departure_time'),false);
- await handleProxyRoute(new URL(`${base}&transportMode=car&departureTime=${times[0]}`),env,()=>null);
+ await assert.rejects(() => handleProxyRoute(new URL(`${base}&transportMode=transit&arrivalTime=${times[0]}&departureTime=${times[1]}`),env,()=>null), /not both/);
+ await handleProxyRoute(new URL(`${base}&transportMode=drive&departureTime=${times[0]}`),env,()=>null);
  assert.equal(requests.at(-1).searchParams.get('departure_time'),String(Date.parse(times[0])/1000));
- const result=await handleProxyRoute(new URL(`${base}&transportMode=car&arrivalTime=${times[0]}`),env,()=>null);
+ const result=await handleProxyRoute(new URL(`${base}&transportMode=drive&arrivalTime=${times[0]}`),env,()=>null);
  assert.match(result.payload.message,/미반영/);
 } finally { globalThis.fetch=originalFetch; }
 console.log('Routing: selected departure, arrival precedence, driving support, unsupported arrival disclosure and cache isolation passed (mock HTTP only)');
@@ -127,7 +125,7 @@ console.log('H5: existing persisted rain preference callback and permission gate
 // A past departure must not silently turn into a 'now' driving estimate.
 globalThis.fetch=async()=>{throw new Error('past driving must not call a provider');};
 try {
- const result=await handleProxyRoute(new URL('https://example.invalid/routes/estimate?origin=35,139&destination=36,140&originCountryCode=JP&destinationCountryCode=JP&transportMode=car&departureTime=2000-01-01T00:00:00Z'), k=>k==='GOOGLE_MAPS_API_KEY'?'mock-only':undefined,()=>null);
+ const result=await handleProxyRoute(new URL('https://example.invalid/routes/estimate?origin=35,139&destination=36,140&originCountryCode=JP&destinationCountryCode=JP&transportMode=drive&departureTime=2000-01-01T00:00:00Z'), k=>k==='GOOGLE_MAPS_API_KEY'?'mock-only':undefined,()=>null);
  assert.equal(result.payload.status,'fallback');
 } finally {globalThis.fetch=originalFetch;}
 assert.deepEqual(buildTomorrowWeather({...sample,hourly:[]},new Date('2026-10-04T01:00:00Z')).weather.hourly,[], 'daily-only forecast must not invent a 09:00 rain onset');

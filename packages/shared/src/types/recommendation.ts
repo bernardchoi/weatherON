@@ -67,6 +67,13 @@ export type DestinationCare = {
   originWeather: WeatherSnapshot;
   destinationWeather: WeatherSnapshot;
   departureAdvice?: {
+    departureAt?: string;
+    arrivalAt?: string;
+    nowArrivalAt?: string;
+    targetAt?: string;
+    durationSeconds?: number;
+    routeMessage?: string;
+    routeUpdatedAt?: string;
     targetArrivalTime?: string;
     recommendedDepartureTime?: string;
     travelMinutes?: number;

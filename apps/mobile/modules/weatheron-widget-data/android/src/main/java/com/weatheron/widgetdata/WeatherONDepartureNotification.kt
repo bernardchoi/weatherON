@@ -239,7 +239,8 @@ private data class DeparturePayload(
       "clear" -> R.string.weatheron_guidance_clear
       else -> return guidance
     }
-    return context.getString(resource)
+    val suffix = guidance.substringAfter(" · ", "")
+    return context.getString(resource) + if (suffix.isEmpty()) "" else " · $suffix"
   }
 
   companion object {

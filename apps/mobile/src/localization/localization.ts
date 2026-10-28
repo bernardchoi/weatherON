@@ -42,6 +42,7 @@ export function translateText(value: string, language = snapshot.language): stri
     if (!match) continue;
     return `${leading}${fillPlaceholders(pattern.target, match.slice(1), language)}${trailing}`;
   }
+  if (source.includes(" · ")) return `${leading}${source.split(" · ").map((part) => translateText(part, language)).join(" · ")}${trailing}`;
   return value;
 }
 
@@ -108,7 +109,7 @@ function fillPlaceholders(target: string, values: string[], language: AppLanguag
   const template = target.startsWith("plural:")
     ? target.slice("plural:".length).split("|")[new Intl.PluralRules(language).select(Number(values[0])) === "one" ? 0 : 1]
     : target;
-  return template.replace(/\{(\d+)\}/gu, (_, index: string) => values[Number(index)] ?? "");
+  return template.replace(/\{(\d+)\}/gu, (_, index: string) => translateText(values[Number(index)] ?? "", language));
 }
 
 function escapeRegExp(value: string): string {

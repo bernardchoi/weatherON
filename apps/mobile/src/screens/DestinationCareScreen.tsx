@@ -1,3 +1,5 @@
+import { forecastTime } from "../utils/homeOuting";
+import { formatRouteClock } from "../utils/travelEstimate";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,7 +23,6 @@ import { cardShadow, radius, semanticColor, spacing, type AppTheme } from "../th
 import { openDestinationDirections } from "../utils/destinationDirections";
 import { getDestinationImageAsset } from "../utils/destinationImage";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
-import { addMinutesToTime } from "../utils/zonedDateTime";
 import { formatTemperature } from "../utils/units";
 import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
 import { getRouteArrivalTimeIso } from "../state/appStateHelpers";
@@ -86,15 +87,13 @@ export function DestinationCareScreen({
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
   const targetTimeReady = selectedDestinationDepartureAt
     ? new Date(selectedDestinationDepartureAt).getTime() > Date.now()
-    : timeBasis === "arrival" && !routeTimingReady && Boolean(getRouteArrivalTimeIso(
+    : !routeTimingReady && Boolean(getRouteArrivalTimeIso(
         selectedTargetTime, selectedDestinationPlace.timezone, Date.now(),
         selectedDestinationSchedulePreference.repeatEnabled, selectedDestinationSchedulePreference.repeatDays,
       ));
   const departureReady = targetTimeReady && (timeBasis === "departure" || routeTimingReady);
   const departureTime = timeBasis === "departure" ? selectedTargetTime : getRecommendedDepartureTime(care);
-  const targetArrivalTime = timeBasis === "departure"
-    ? typeof travelMinutes === "number" ? addMinutesToTime(selectedTargetTime, travelMinutes) : undefined
-    : selectedTargetTime;
+  const targetArrivalTime = timeBasis === "departure" ? care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : undefined : selectedTargetTime;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
   const transportFeedback = useConfirmedOptionFeedback(selectedDestinationSchedulePreference.transportMode);
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
@@ -106,13 +105,12 @@ export function DestinationCareScreen({
     enabled: false,
     active: false,
   });
-  const prepAlertTime = subtractMinutes(departureTime, 40);
-  const rainAlertTime = subtractMinutes(departureTime, 10);
-  const alertTimingCopy = departureReady ? `${prepAlertTime} · ${rainAlertTime} · ${departureTime}` : "출발 시간을 정하면 계산함";
+  const alertTime = subtractMinutes(departureTime, selectedDestinationAlertCondition.leadTimeMinutes);
+  const alertTimingCopy = departureReady ? `${alertTime} 알림 · ${departureTime} 출발` : "출발 시간을 정하면 계산함";
   const destinationRain = destinationWeather.current.rainProbabilityPct;
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
   const transportLabel = getTransportModeLabel(transportMode);
-  const walkUnavailable = isWalkUnavailable(selectedDestinationTravelEstimate.distanceMeters);
+  const walkUnavailable = selectedDestinationTravelEstimate.transportMode === "walk" && isWalkUnavailable(selectedDestinationTravelEstimate.distanceMeters);
   const repeatEnabled = selectedDestinationSchedulePreference.repeatEnabled;
   const repeatDays = selectedDestinationSchedulePreference.repeatDays;
   const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
@@ -181,9 +179,6 @@ export function DestinationCareScreen({
     }
   };
 
-  useEffect(() => {
-    if (transportMode === "walk" && walkUnavailable) onSetDestinationTransportMode("auto");
-  }, [onSetDestinationTransportMode, transportMode, walkUnavailable]);
 
   useEffect(() => {
     if (Platform.OS !== "ios" && Platform.OS !== "android") return;
@@ -287,8 +282,12 @@ export function DestinationCareScreen({
           <View style={[styles.decisionHeader, compactControls && styles.decisionHeaderCompact]}>
             <View style={styles.decisionCopy}>
               <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
-              <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>
+              <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.cacheStatus === "stale" ? "이전 조회 결과 · " : ""}{selectedDestinationTravelEstimate.message}</Text>
               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
+              {care.departureAdvice?.arrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather)} 도착 예상`}</Text> : null}
+              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
+              {care.departureAdvice?.nowArrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`지금 출발 시 ${forecastTime(Date.parse(care.departureAdvice.nowArrivalAt), destinationWeather)} 도착 예상 · 지각 가능`}</Text> : null}
+              {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[pageStyles.caption, { color: theme.muted }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
               {selectedDestinationTravelEstimate.message.includes("미반영") ? <Text style={[pageStyles.caption, { color: theme.muted }]}>선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.</Text> : null}
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
                 {departureReady

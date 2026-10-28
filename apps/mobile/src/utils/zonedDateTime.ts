@@ -74,7 +74,7 @@ export function getMinutesUntilTimeInZone(time: string, nowMs: number, timeZone:
 
 export function addMinutesToTime(time: string, minutes: number): string {
   const [hourText, minuteText] = time.split(":");
-  const total = (Number(hourText) * 60 + Number(minuteText) + minutes + 24 * 60) % (24 * 60);
+  const total = ((Math.floor(Number(hourText) * 60 + Number(minuteText) + minutes) % 1440) + 1440) % 1440;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 

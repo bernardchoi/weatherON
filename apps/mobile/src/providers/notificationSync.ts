@@ -4,7 +4,7 @@ import type { LocalNotificationSyncResult } from "./localNotifications";
 // after the in-flight operation, and acknowledge only a verified latest result.
 export function createNotificationSync<Input extends { enabled: boolean }>(
   sync: (input: Input) => Promise<LocalNotificationSyncResult>,
-  timers = { setTimeout, clearTimeout },
+  timers = { setTimeout: setTimeout.bind(globalThis), clearTimeout: clearTimeout.bind(globalThis) },
 ) {
   let latest: { key: string; input: Input; onResult: (result: LocalNotificationSyncResult) => void; revision: number } | null = null;
   let revision = 0;

@@ -1,0 +1,706 @@
+{
+  "verifiedAt": "2026-10-28T14:33:50.424Z",
+  "publicTestPlaces": [
+    "Gangnam Station",
+    "Seoul Station",
+    "Yeoksam Station"
+  ],
+  "callBudget": 12,
+  "upstreamCalls": 8,
+  "results": [
+    {
+      "name": "drive-current",
+      "upstreamCalls": 1,
+      "result": {
+        "provider": "kakao",
+        "status": "ready",
+        "durationSeconds": 1582,
+        "travelMinutes": 27,
+        "distanceMeters": 12979,
+        "timingBasis": "current",
+        "departureAt": "2026-10-28T14:33:48.026Z",
+        "arrivalAt": "2026-10-28T15:00:10.026Z",
+        "message": "현재 교통 기반",
+        "transportMode": "drive",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-28T14:33:48.358Z",
+        "expiresAt": "2026-10-28T14:34:48.358Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "name": "drive-future",
+      "upstreamCalls": 1,
+      "result": {
+        "provider": "kakao",
+        "status": "ready",
+        "durationSeconds": 1506,
+        "travelMinutes": 26,
+        "distanceMeters": 10976,
+        "timingBasis": "predicted",
+        "departureAt": "2026-10-29T00:00:00.000Z",
+        "arrivalAt": "2026-10-29T00:25:06.000Z",
+        "message": "시간대 교통 예측 반영",
+        "transportMode": "drive",
+        "requestDepartureTime": "2026-10-29T00:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-28T14:33:48.635Z",
+        "expiresAt": "2026-10-28T14:43:48.635Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "name": "drive-arrival",
+      "upstreamCalls": 3,
+      "result": {
+        "provider": "kakao",
+        "status": "ready",
+        "durationSeconds": 1769,
+        "travelMinutes": 30,
+        "distanceMeters": 10976,
+        "timingBasis": "predicted",
+        "departureAt": "2026-10-28T23:20:00.000Z",
+        "arrivalAt": "2026-10-28T23:49:29.000Z",
+        "message": "시간대 교통 예측 반영 · 조회한 후보 중 가장 늦은 출발 · 분 단위 확인",
+        "arrivalFeasible": true,
+        "searchStatus": "minute-resolution",
+        "queryCount": 3,
+        "targetArrivalAt": "2026-10-29T00:00:00.000Z",
+        "bufferSeconds": 600,
+        "searchedAt": "2026-10-28T14:33:48.636Z",
+        "transportMode": "drive",
+        "requestArrivalTime": "2026-10-29T00:00:00.000Z",
+        "updatedAt": "2026-10-28T14:33:49.630Z",
+        "expiresAt": "2026-10-28T14:43:49.630Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "name": "transit-transfer",
+      "upstreamCalls": 1,
+      "result": {
+        "provider": "kakao-transit",
+        "status": "ready",
+        "durationSeconds": 1872,
+        "travelMinutes": 32,
+        "distanceMeters": 11985,
+        "timingBasis": "route",
+        "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+        "routeOptions": [
+          {
+            "type": "SUBWAY",
+            "totalTime": 1872,
+            "totalDistance": 11985,
+            "transfers": 2,
+            "fare": 2350,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "신분당선 (강남 > 신사)",
+                "time": 302,
+                "distance": 2400,
+                "stops": [
+                  "강남",
+                  "신논현",
+                  "논현",
+                  "신사"
+                ],
+                "vehicles": [
+                  "일반 신분당선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "신사신사역 환승",
+                "time": 128,
+                "distance": 98,
+                "stops": [
+                  "신사",
+                  "신사"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "3호선 (신사 > 충무로)",
+                "time": 690,
+                "distance": 6800,
+                "stops": [
+                  "신사",
+                  "압구정",
+                  "옥수",
+                  "금호",
+                  "약수",
+                  "동대입구",
+                  "충무로"
+                ],
+                "vehicles": [
+                  "일반 3호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "충무로충무로역 환승",
+                "time": 62,
+                "distance": 36,
+                "stops": [
+                  "충무로",
+                  "충무로"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "4호선 (충무로 > 서울역)",
+                "time": 300,
+                "distance": 2300,
+                "stops": [
+                  "충무로",
+                  "명동",
+                  "회현(남대문시장)",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 4호선",
+                  "일반 4호선",
+                  "급행 4호선"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SUBWAY",
+            "totalTime": 2195,
+            "totalDistance": 15533,
+            "transfers": 1,
+            "fare": 1650,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (강남 > 사당)",
+                "time": 570,
+                "distance": 5200,
+                "stops": [
+                  "강남",
+                  "교대(법원.검찰청)",
+                  "서초",
+                  "방배",
+                  "사당"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "사당사당역 환승",
+                "time": 143,
+                "distance": 135,
+                "stops": [
+                  "사당",
+                  "사당"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "4호선 (사당 > 서울역)",
+                "time": 990,
+                "distance": 9800,
+                "stops": [
+                  "사당",
+                  "총신대입구(이수)",
+                  "동작(현충원)",
+                  "이촌(국립중앙박물관)",
+                  "신용산",
+                  "삼각지(전쟁기념관)",
+                  "숙대입구(서울시교육청)",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 4호선",
+                  "급행 4호선"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BUS_AND_SUBWAY",
+            "totalTime": 2411,
+            "totalDistance": 12055,
+            "transfers": 2,
+            "fare": 2350,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "신분당선 (강남 > 신사)",
+                "time": 302,
+                "distance": 2400,
+                "stops": [
+                  "강남",
+                  "신논현",
+                  "논현",
+                  "신사"
+                ],
+                "vehicles": [
+                  "일반 신분당선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "신사신사역 환승",
+                "time": 128,
+                "distance": 98,
+                "stops": [
+                  "신사",
+                  "신사"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "3호선 (신사 > 충무로)",
+                "time": 690,
+                "distance": 6800,
+                "stops": [
+                  "신사",
+                  "압구정",
+                  "옥수",
+                  "금호",
+                  "약수",
+                  "동대입구",
+                  "충무로"
+                ],
+                "vehicles": [
+                  "일반 3호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "충무로역.한옥마을.한국의집충무로역.한옥마을.한국의집정류장까지 도보로 이동 (5번 출구)",
+                "time": 302,
+                "distance": 262,
+                "stops": [
+                  "충무로",
+                  "충무로역.한옥마을.한국의집"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "BUS",
+                "guidance": "간선 421외 1대 (충무로역.한옥마을.한국의집 > 서울역버스환승센터(4번승강장))",
+                "time": 767,
+                "distance": 2314,
+                "stops": [
+                  "충무로역.한옥마을.한국의집",
+                  "명동역5번출구",
+                  "북창동.남대문시장",
+                  "숭례문",
+                  "서울역버스환승센터(4번승강장)"
+                ],
+                "vehicles": [
+                  "간선 421",
+                  "간선 507"
+                ]
+              }
+            ]
+          }
+        ],
+        "transportMode": "transit",
+        "requestDepartureTime": "2026-10-29T00:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-28T14:33:50.064Z",
+        "expiresAt": "2026-10-28T14:43:50.064Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "name": "transit-single",
+      "upstreamCalls": 1,
+      "result": {
+        "provider": "kakao-transit",
+        "status": "ready",
+        "durationSeconds": 192,
+        "travelMinutes": 4,
+        "distanceMeters": 847,
+        "timingBasis": "route",
+        "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+        "routeOptions": [
+          {
+            "type": "SUBWAY",
+            "totalTime": 192,
+            "totalDistance": 847,
+            "transfers": 0,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (강남 > 역삼)",
+                "time": 90,
+                "distance": 800,
+                "stops": [
+                  "강남",
+                  "역삼"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BUS",
+            "totalTime": 606,
+            "totalDistance": 910,
+            "transfers": 0,
+            "steps": [
+              {
+                "type": "BUS",
+                "guidance": "간선 8146(평일)외 9대 (강남역1번출구.역삼세무서 > 역삼역.포스코타워역삼)",
+                "time": 128,
+                "distance": 426,
+                "stops": [
+                  "강남역1번출구.역삼세무서",
+                  "역삼역.포스코타워역삼"
+                ],
+                "vehicles": [
+                  "간선 8146(평일)",
+                  "간선 360",
+                  "간선 146",
+                  "간선 341",
+                  "간선 740",
+                  "간선 040",
+                  "간선 N61(심야)",
+                  "간선 N13(심야)",
+                  "간선 N64(심야)",
+                  "간선 N31(심야)"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BUS",
+            "totalTime": 717,
+            "totalDistance": 905,
+            "transfers": 0,
+            "steps": [
+              {
+                "type": "BUS",
+                "guidance": "직행 9303외 13대 (삼성서초역삼세무서 > 역삼역.포스코타워역삼)",
+                "time": 192,
+                "distance": 376,
+                "stops": [
+                  "삼성서초역삼세무서",
+                  "역삼역.포스코타워역삼"
+                ],
+                "vehicles": [
+                  "직행 9303",
+                  "직행 2000",
+                  "직행 7007",
+                  "직행 1700",
+                  "직행 3200",
+                  "직행 2000-1",
+                  "직행 3300",
+                  "직행 3400",
+                  "직행 1100",
+                  "직행 8001",
+                  "직행 P9601(퇴근)",
+                  "직행 P9602(퇴근)",
+                  "광역 M6461",
+                  "광역 M6439"
+                ]
+              }
+            ]
+          }
+        ],
+        "transportMode": "transit",
+        "requestDepartureTime": "2026-10-29T00:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-28T14:33:50.349Z",
+        "expiresAt": "2026-10-28T14:43:50.349Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "name": "walk",
+      "upstreamCalls": 1,
+      "result": {
+        "provider": "kakao",
+        "status": "ready",
+        "durationSeconds": 223,
+        "travelMinutes": 4,
+        "distanceMeters": 247,
+        "timingBasis": "route",
+        "message": "도보 경로 소요시간 기준 예상 · 시간대 미반영",
+        "transportMode": "walk",
+        "requestDepartureTime": "2026-10-29T00:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-28T14:33:50.424Z",
+        "expiresAt": "2026-10-28T14:43:50.424Z",
+        "cacheStatus": "fresh"
+      }
+    }
+  ],
+  "upstream": [
+    {
+      "endpoint": "https://apis-navi.kakaomobility.com/v1/directions",
+      "httpStatus": 200,
+      "driving": [
+        {
+          "resultCode": 0,
+          "durationSeconds": 1582,
+          "distanceMeters": 12979
+        }
+      ],
+      "transit": []
+    },
+    {
+      "endpoint": "https://apis-navi.kakaomobility.com/v1/future/directions",
+      "departureTimeKST": "202610290900",
+      "httpStatus": 200,
+      "driving": [
+        {
+          "resultCode": 0,
+          "durationSeconds": 1506,
+          "distanceMeters": 10976
+        }
+      ],
+      "transit": []
+    },
+    {
+      "endpoint": "https://apis-navi.kakaomobility.com/v1/directions",
+      "httpStatus": 200,
+      "driving": [
+        {
+          "resultCode": 0,
+          "durationSeconds": 1582,
+          "distanceMeters": 12979
+        }
+      ],
+      "transit": []
+    },
+    {
+      "endpoint": "https://apis-navi.kakaomobility.com/v1/future/directions",
+      "departureTimeKST": "202610290823",
+      "httpStatus": 200,
+      "driving": [
+        {
+          "resultCode": 0,
+          "durationSeconds": 1783,
+          "distanceMeters": 10976
+        }
+      ],
+      "transit": []
+    },
+    {
+      "endpoint": "https://apis-navi.kakaomobility.com/v1/future/directions",
+      "departureTimeKST": "202610290820",
+      "httpStatus": 200,
+      "driving": [
+        {
+          "resultCode": 0,
+          "durationSeconds": 1769,
+          "distanceMeters": 10976
+        }
+      ],
+      "transit": []
+    },
+    {
+      "endpoint": "https://dapi.kakao.com/v2/routing/publictraffic",
+      "httpStatus": 200,
+      "status": "OK",
+      "driving": [],
+      "transit": [
+        {
+          "durationSeconds": 2195,
+          "distanceMeters": 15533,
+          "transfers": 1,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY"
+          ]
+        },
+        {
+          "durationSeconds": 1872,
+          "distanceMeters": 11985,
+          "transfers": 2,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY"
+          ]
+        },
+        {
+          "durationSeconds": 2970,
+          "distanceMeters": 22713,
+          "transfers": 1,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY"
+          ]
+        },
+        {
+          "durationSeconds": 3254,
+          "distanceMeters": 11051,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 2411,
+          "distanceMeters": 12055,
+          "transfers": 2,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY",
+            "WALKING",
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 2844,
+          "distanceMeters": 10610,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 2584,
+          "distanceMeters": 12701,
+          "transfers": 2,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY",
+            "WALKING",
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 2562,
+          "distanceMeters": 12716,
+          "transfers": 2,
+          "stepTypes": [
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY",
+            "WALKING",
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 2423,
+          "distanceMeters": 11789,
+          "transfers": 2,
+          "stepTypes": [
+            "BUS",
+            "WALKING",
+            "SUBWAY",
+            "WALKING",
+            "SUBWAY"
+          ]
+        },
+        {
+          "durationSeconds": 2833,
+          "distanceMeters": 10595,
+          "transfers": 1,
+          "stepTypes": [
+            "BUS",
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 3314,
+          "distanceMeters": 11513,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 4177,
+          "distanceMeters": 12730,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 4215,
+          "distanceMeters": 12743,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 3730,
+          "distanceMeters": 12162,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 5530,
+          "distanceMeters": 18204,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        }
+      ]
+    },
+    {
+      "endpoint": "https://dapi.kakao.com/v2/routing/publictraffic",
+      "httpStatus": 200,
+      "status": "OK",
+      "driving": [],
+      "transit": [
+        {
+          "durationSeconds": 192,
+          "distanceMeters": 847,
+          "transfers": 0,
+          "stepTypes": [
+            "SUBWAY"
+          ]
+        },
+        {
+          "durationSeconds": 606,
+          "distanceMeters": 910,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        },
+        {
+          "durationSeconds": 717,
+          "distanceMeters": 905,
+          "transfers": 0,
+          "stepTypes": [
+            "BUS"
+          ]
+        }
+      ]
+    },
+    {
+      "endpoint": "https://dapi.kakao.com/v2/routing/walk",
+      "httpStatus": 200,
+      "status": "OK",
+      "walk": {
+        "landingUrl": "https://map.kakao.com/link/by/walk/%ED%98%84%EC%9E%AC+%EC%9C%84%EC%B9%98,37.4979,127.0276/%EB%AA%A9%EC%A0%81%EC%A7%80,37.499,127.028",
+        "totalDistance": 247,
+        "totalTime": 223
+      }
+    }
+  ],
+  "keysLogged": false,
+  "realJourneyMeasurements": false
+}

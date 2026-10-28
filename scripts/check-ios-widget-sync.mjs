@@ -100,6 +100,8 @@ const lifecycleContext = {
   foregroundWeatherRefreshAtRef: { current: 0 },
   setWeatherRefreshTick: () => { foregroundRefreshes++; },
   localNotificationSync: { retry() {} },
+  routeAttemptsRef: { current: new Map() },
+  setNowMinuteTick() {},
 };
 runEffect('const previousState = appLifecycleStateRef.current;', lifecycleContext);
 onChange("active");

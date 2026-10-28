@@ -73,7 +73,7 @@ function subtractMinutes(time: string, minutes: number): string {
   const minute = Number(minuteText);
   if (!Number.isFinite(hour) || !Number.isFinite(minute)) return time;
   const dayMinutes = 24 * 60;
-  const totalMinutes = ((hour * 60 + minute - minutes) % dayMinutes + dayMinutes) % dayMinutes;
+  const totalMinutes = ((Math.floor(hour * 60 + minute - minutes)) % dayMinutes + dayMinutes) % dayMinutes;
   return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 

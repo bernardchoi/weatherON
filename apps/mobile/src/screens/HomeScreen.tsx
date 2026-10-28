@@ -22,7 +22,6 @@ import { WeatherStatusPanel } from "../components/WeatherStatusPanel";
 import type { P0RouteId } from "../navigation/routes";
 import type { P0ScreenProps } from "../navigation/types";
 import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
-import { getRouteArrivalTimeIso } from "../state/appStateHelpers";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { iosGlassSurface } from "../theme/iosGlass";
@@ -134,18 +133,7 @@ export function HomeScreen({
   )) ?? null;
   const homeDestinationPlace = homeDestination?.place ?? selectedDestinationPlace;
   const homeSchedulePreference = homeDestination?.schedulePreference ?? selectedDestinationSchedulePreference;
-  const homeTargetAt = getRouteArrivalTimeIso(
-    homeSchedulePreference.targetArrivalTime,
-    homeDestinationPlace.timezone,
-    Date.now(),
-    homeSchedulePreference.repeatEnabled,
-    homeSchedulePreference.repeatDays,
-  ) ?? selectedDestinationTargetAt;
-  const homeDepartureAt = homeSchedulePreference.timeBasis === "departure"
-    ? homeTargetAt
-    : homeTargetAt && typeof state.destinationCare.departureAdvice?.travelMinutes === "number" && typeof state.destinationCare.departureAdvice?.bufferMinutes === "number"
-      ? new Date(new Date(homeTargetAt).getTime() - (state.destinationCare.departureAdvice.travelMinutes + state.destinationCare.departureAdvice.bufferMinutes) * 60_000).toISOString()
-      : selectedDestinationDepartureAt;
+  const homeDepartureAt = state.destinationCare.departureAdvice?.departureAt;
   const currentWeather = state.destinationCare.originWeather;
   const todayMinMax = getTodayMinMax(currentWeather);
   const rawCurrentLocationName = getDisplayLocationName(currentWeather.locationName);
@@ -179,11 +167,7 @@ export function HomeScreen({
   }, []);
   const forecastNow = useForecastNow();
   const outingWeather = destinationReady ? state.destinationCare.destinationWeather : currentWeather;
-  const travel = state.destinationCare.departureAdvice?.travelMinutes;
-  const departureMs = homeDepartureAt ? Date.parse(homeDepartureAt) : NaN;
-  const targetMs = homeSchedulePreference.timeBasis === "arrival"
-    ? homeTargetAt ? Date.parse(homeTargetAt) : NaN
-    : typeof travel === "number" && ["ready", "fallback"].includes(state.destinationCare.departureAdvice?.travelStatus ?? "") ? departureMs + travel * 60_000 : NaN;
+  const targetMs = Date.parse(state.destinationCare.departureAdvice?.arrivalAt ?? "");
   const targetAt = destinationReady && Number.isFinite(targetMs) ? new Date(targetMs).toISOString() : undefined;
   const basisLabel = destinationReady ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
@@ -208,8 +192,11 @@ export function HomeScreen({
     Date.now(),
     homeSchedulePreference.timeBasis,
   );
+  const routeAdvice = state.destinationCare.departureAdvice;
+  const routeTimeline = routeAdvice?.nowArrivalAt ? `지금 출발 시 ${forecastTime(Date.parse(routeAdvice.nowArrivalAt), outingWeather)} 도착 예상 · 지각 가능` : routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "";
+  const departureExplanation = `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
-  const showDepartureExplanation = destinationReady && (!/^\d{2}:\d{2}$/.test(departureSummary.value) || state.destinationCare.departureAdvice?.travelStatus === "fallback");
+  const showDepartureExplanation = destinationReady;
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
@@ -362,10 +349,10 @@ export function HomeScreen({
           />
           </View>
           {destinationReady ? (
-            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureSummary.body}`}>
+            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureExplanation}`}>
               <FeedbackPressable
                 accessibilityRole="button"
-                accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureSummary.body}`}
+                accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
                 onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
                 style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && [styles.ambientDepartureChip, { borderWidth: 0, paddingHorizontal: 0, borderTopWidth: 0 }]]}
               >
@@ -376,12 +363,12 @@ export function HomeScreen({
                     <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? homeSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
                   </View>
                 </View>
-                {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
+                {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureExplanation}</Text> : null}
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
           </View>
-          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
+          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureExplanation}</Text> : null}
           {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
             {preparation.status ? <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{preparation.status}</Text> : null}
             {preparation.evidence && !preparation.rainEvidence ? <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{preparation.evidence}</Text> : null}
@@ -638,7 +625,7 @@ function buildHomeDecision(
   const departureTime = routeTimingReady
     ? care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes)
     : "계산 중";
-  const routeStatusLabel = getRouteStatusLabel(care.departureAdvice?.travelStatus);
+  const routeStatusLabel = care.departureAdvice?.routeMessage ?? getRouteStatusLabel(care.departureAdvice?.travelStatus);
   const destinationDiff = destinationReady
     ? buildDestinationDiff(care, temperatureUnit)
     : {

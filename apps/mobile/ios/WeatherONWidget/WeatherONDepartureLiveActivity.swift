@@ -258,7 +258,9 @@ private func weatherONDepartureGuidance(kind: String?, fallback: String) -> Stri
   guard let kind else { return fallback }
   let key = "guidance.\(kind)"
   let localized = weatherONDepartureLocalized(key)
-  return localized == key ? fallback : localized
+  guard localized != key else { return fallback }
+  let suffix = fallback.components(separatedBy: " · ").dropFirst().joined(separator: " · ")
+  return suffix.isEmpty ? localized : "\(localized) · \(suffix)"
 }
 
 #if DEBUG

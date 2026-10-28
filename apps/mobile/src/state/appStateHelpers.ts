@@ -1,3 +1,4 @@
+import { getTravelMinutesForTransport, resolveTravelTiming } from "../utils/travelEstimate";
 // useWeatherOnAppState에서 사용하는 순수 헬퍼 모음. React 상태에 의존하지 않는다.
 import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
 import type { NotificationRuleEvaluation } from "@weatheron/shared";
@@ -342,7 +343,7 @@ export function getRouteArrivalTimeIso(
     const arrivalDate = addZonedCalendarDays(nowParts, offset);
     if (repeatEnabled && !repeatDays.includes(getWeekdayForZonedDate(arrivalDate))) continue;
     const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
-    if (arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
+    if (!repeatEnabled || arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
   }
   return undefined;
 }
@@ -386,4 +387,18 @@ export function getTodayRepeatDay(): DestinationRepeatDay {
 
 export function isDestinationRepeatDay(value: unknown): value is DestinationRepeatDay {
   return value === "mon" || value === "tue" || value === "wed" || value === "thu" || value === "fri" || value === "sat" || value === "sun";
+}
+
+export function getDestinationTiming(
+  estimate: Partial<DestinationTravelEstimate> & { travelMinutes: number; distanceMeters: number; status: DestinationTravelEstimate["status"] },
+  schedule: DestinationSchedulePreference, timeZone: string, nowMs: number,
+  originCountryCode?: "KR" | "JP" | "GLOBAL", destinationCountryCode?: "KR" | "JP" | "GLOBAL", originPlaceId?: string,
+) {
+  const travelMinutes = getTravelMinutesForTransport(estimate, schedule.transportMode, originCountryCode, destinationCountryCode, originPlaceId);
+  const target = getRouteArrivalTimeIso(schedule.targetArrivalTime, timeZone, nowMs, schedule.repeatEnabled, schedule.repeatDays);
+  if (travelMinutes === undefined || !target) return undefined;
+  // A response for another date/time must never carry its route into this schedule.
+  if (estimate.requestArrivalTime && (schedule.timeBasis !== "arrival" || estimate.requestArrivalTime !== target)) return undefined;
+  if (estimate.requestDepartureTime && (schedule.timeBasis !== "departure" || estimate.requestDepartureTime !== target)) return undefined;
+  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0, nowMs);
 }

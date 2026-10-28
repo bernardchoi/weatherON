@@ -42,6 +42,7 @@ export type DestinationSchedulePreference = {
   repeatEnabled: boolean;
   repeatDays: DestinationRepeatDay[];
 };
+// 초 단위 원본·조회시각·시간대 근거를 보존함. 알림 leadTimeMinutes는 이동/도착 여유와 별개임.
 export type DestinationTravelEstimate = TravelEstimateResult & {
   originPlaceId: string;
   destinationPlaceId: string;

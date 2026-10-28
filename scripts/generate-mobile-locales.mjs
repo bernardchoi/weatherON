@@ -231,7 +231,13 @@ const overrides = {
 const files = (await Promise.all(sourceRoots.map(collectSourceFiles))).flat()
   .filter((file) => !file.includes(`${path.sep}localization${path.sep}`));
 // 공식 특보 제목은 provider에서 조합하므로, 앱 고온 문구 변경으로 번역 키가 사라지지 않게 유지한다.
-const messages = new Set(["폭염주의보", "폭염경보", "호우주의보", "호우경보"]);
+const messages = new Set(["폭염주의보", "폭염경보", "호우주의보", "호우경보",
+  // Server route provenance is composed of these public display segments.
+  "시간대 교통 예측 반영", "현재 교통 기반", "경로 소요시간 기준 예상", "시간대 미반영", "운행·대기시간 확인 필요",
+  "도보 경로 소요시간 기준 예상", "조회한 후보 중 가장 늦은 출발", "분 단위 확인", "제한된 탐색",
+  "지금 출발 기준 도착 예상", "목표/여유 충족 후보 확인 못함", "지각 가능", "동일 좌표", "이동 없음",
+  "대중교통 경로 없음/조회 실패", "운행 확인 필요", "직선 거리·시속 4.5km 기준 대략 추정", "도보 경로 확인 필요",
+]);
 
 for (const file of files) {
   const source = await fs.readFile(file, "utf8");

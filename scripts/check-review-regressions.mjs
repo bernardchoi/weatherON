@@ -74,7 +74,7 @@ const persistenceContext = { ...storage, appStateStorageKey: key, normalizePersi
 const readPersisted = callback(expression(persistencePath, (node) => ts.isFunctionDeclaration(node) && node.name?.text === "readPersistedAppState"), persistenceContext);
 const savePersisted = callback(expression(persistencePath, (node) => ts.isFunctionDeclaration(node) && node.name?.text === "savePersistedAppState"), persistenceContext);
 const oldItem = { id: "photo-test", source: "photo", imageUrl: "wardrobe-photos/photo-old.jpg", owned: true };
-const savedState = { onboardingCompleted: true, photoWardrobeItems: [oldItem], wardrobeOwnedItemIds: [oldItem.id] };
+const savedState = { selectedDestinationPlace: { id: "route-test", name: "목적지", address: "서울", category: "custom", countryCode: "KR", coordinate: { latitude: 37.5, longitude: 127 }, timezone: "Asia/Seoul", provider: "kakao" }, onboardingCompleted: true, photoWardrobeItems: [oldItem], wardrobeOwnedItemIds: [oldItem.id] };
 await storage.writeAppValue(key, savedState, true);
 const routeOptions = [{ type: "SUBWAY", totalTime: 1800, totalDistance: 12000, transfers: 1, fare: 1550, steps: [] }];
 await storage.writeAppValue(key, { ...savedState, savedDestinations: [{
@@ -101,7 +101,7 @@ const hydrateCode = expression(statePath, (node, source) => ts.isArrowFunction(n
 const setters = Object.fromEntries([...new Set(hydrateCode.match(/\bset[A-Z]\w*/g))].map((name) => [name, (value) => { restored[name] = value; }]));
 const restored = {};
 const hydrate = callback(hydrateCode, {
-  ...setters, Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {}, savedDestinationsRef: {},
+  ...setters, ...load("apps/mobile/src/state/departureActivityIntent.ts"), Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {}, savedDestinationsRef: {},
   readPersistedWeatherProviderResult: async () => null,
   readPersistedAppState: readPersisted,
   readPersistedNotificationState: async () => ({ readNotificationIds: [], notificationHistory: [] }),
@@ -241,10 +241,17 @@ const sharedModule = { exports: {} };
 const sharedCode = buildSync({ entryPoints: ["packages/shared/src/index.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text;
 new Function("module", "exports", sharedCode)(sharedModule, sharedModule.exports);
 const shared = sharedModule.exports;
+const timingHelpers = { exports: {} };
+new Function("module", "exports", buildSync({ entryPoints: ["apps/mobile/src/state/appStateHelpers.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(timingHelpers, timingHelpers.exports);
+const umbrellaSignals = { exports: {} };
+new Function("module", "exports", buildSync({ entryPoints: ["apps/mobile/src/utils/umbrellaRainSignals.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(umbrellaSignals, umbrellaSignals.exports);
 const demo = load("apps/mobile/src/data/demoState.ts", {
+  "../utils/umbrellaRainSignals": umbrellaSignals.exports,
+  "../state/appStateHelpers": timingHelpers.exports,
+  "../localization/react-native": { Platform: { OS: "ios" } },
   "@weatheron/shared": shared, "../providers/weatherProvider": {},
   "../utils/zonedDateTime": load("apps/mobile/src/utils/zonedDateTime.ts"),
-  "../utils/travelEstimate": load("apps/mobile/src/utils/travelEstimate.ts"),
+  "../utils/travelEstimate": load("apps/mobile/src/utils/travelEstimate.ts", { "./zonedDateTime": load("apps/mobile/src/utils/zonedDateTime.ts") }),
 });
 for (const [date, utcHour] of [["2026-09-05", 13], ["2026-01-15", 14]]) {
   const now = `${date}T${utcHour}:00:00Z`;

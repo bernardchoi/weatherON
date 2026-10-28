@@ -13,16 +13,15 @@ import { FeedbackPressable } from "../components/FeedbackPressable";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
-import { getAutoBufferMinutes, getRouteArrivalTimeIso } from "../state/appStateHelpers";
+import { getDestinationTiming } from "../state/appStateHelpers";
 import { getDestinationLabelText, type DestinationLabel } from "../state/appStateTypes";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
-import { getTravelMinutesForTransport } from "../utils/travelEstimate";
+import { formatRouteClock } from "../utils/travelEstimate";
 import { getOutfitVariantLabel } from "../utils/outfitLabels";
 import { toUserPreferenceProfile } from "../utils/preferenceProfile";
-import { addMinutesToTime } from "../utils/zonedDateTime";
 
 import { getConditionLabel } from "../utils/weatherPresentation";
 import { useIsNightHour } from "../utils/useIsNightHour";
@@ -479,9 +478,8 @@ function buildDestinationCards(
     const destinationWeather = destinationWeatherById[destination.place.id] ?? care.destinationWeather;
     const destinationRainLegacy = Math.max(destinationWeather.current.rainProbabilityPct, ...destinationWeather.hourly.map((hour) => hour.rainProbabilityPct));
     const destinationWindLegacy = Math.max(destinationWeather.current.windMs, ...destinationWeather.hourly.map((hour) => hour.windMs));
-    const travel = originAvailable ? getTravelMinutesForTransport(destination.travelEstimate, destination.schedulePreference.transportMode, care.originWeather.countryCode, destination.place.countryCode, care.originWeather.locationId) : undefined;
-    const scheduled = getRouteArrivalTimeIso(destination.schedulePreference.targetArrivalTime, destination.place.timezone, Date.now(), destination.schedulePreference.repeatEnabled, destination.schedulePreference.repeatDays);
-    const arrivalAt = scheduled && (destination.schedulePreference.timeBasis === "arrival" || typeof travel === "number") ? new Date(Date.parse(scheduled) + (destination.schedulePreference.timeBasis === "departure" ? travel! * 60_000 : 0)).toISOString() : undefined;
+    const timing = originAvailable ? getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, Date.now(), originWeather.countryCode, destination.place.countryCode, originWeather.locationId) : undefined;
+    const arrivalAt = timing?.arrivalAt;
     const hour = forecastAt(destinationWeather, arrivalAt);
     const available = Boolean(destinationWeatherById[destination.place.id]) && snapshotReliable(destinationWeather) && hour && (destinationWeather.source !== "weatherkit" || (hour.available?.rainProbability && hour.available.wind));
     const destinationRain = Platform.OS === "ios" ? available ? hour!.rainProbabilityPct : 0 : destinationRainLegacy;
@@ -632,55 +630,11 @@ function getDestinationSchedule(
   care: P0ScreenProps["state"]["destinationCare"],
   originAvailable: boolean,
 ) {
-  const targetArrivalTime = destination.schedulePreference.targetArrivalTime;
-  const travelMinutes = originAvailable ? getTravelMinutesForTransport(
-    destination.travelEstimate,
-    destination.schedulePreference.transportMode,
-    care.originWeather.countryCode,
-    destination.place.countryCode,
-    care.originWeather.locationId,
-  ) : undefined;
-  const nowMs = Date.now();
-  const targetAt = getRouteArrivalTimeIso(
-    targetArrivalTime,
-    destination.place.timezone,
-    nowMs,
-    destination.schedulePreference.repeatEnabled,
-    destination.schedulePreference.repeatDays,
-  );
-  if (destination.schedulePreference.timeBasis === "departure") {
-    return {
-      arrivalTime: typeof travelMinutes === "number" ? addMinutesToTime(targetArrivalTime, travelMinutes) : "경로 확인 전",
-      arrivalLabel: typeof travelMinutes === "number" ? "예상 도착" : "도착",
-      departureTime: targetAt ? targetArrivalTime : "출발 시간 변경 필요",
-    };
-  }
-  if (typeof travelMinutes !== "number") {
-    return {
-      arrivalTime: targetArrivalTime,
-      arrivalLabel: "도착 목표",
-      departureTime: "경로 확인 전",
-    };
-  }
-  if (!targetAt) {
-    return {
-      arrivalTime: targetArrivalTime,
-      arrivalLabel: "도착 목표",
-      departureTime: "도착 시간 변경 필요",
-    };
-  }
-  const bufferMinutes = getAutoBufferMinutes(targetArrivalTime, travelMinutes, nowMs, destination.place.timezone);
-  if (new Date(targetAt).getTime() - (travelMinutes + bufferMinutes) * 60_000 <= nowMs) {
-    return {
-      arrivalTime: targetArrivalTime,
-      arrivalLabel: "도착 목표",
-      departureTime: "도착 시간 변경 필요",
-    };
-  }
+  const timing = originAvailable ? getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, Date.now(), care.originWeather.countryCode, destination.place.countryCode, care.originWeather.locationId) : undefined;
   return {
-    arrivalTime: targetArrivalTime,
-    arrivalLabel: "도착 목표",
-    departureTime: subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes),
+    arrivalTime: timing ? formatRouteClock(timing.arrivalAt, destination.place.timezone) : destination.schedulePreference.targetArrivalTime,
+    arrivalLabel: timing ? "예상 도착" : "도착 목표",
+    departureTime: timing ? formatRouteClock(timing.departureAt, destination.place.timezone) : "경로 확인 전",
   };
 }
 
@@ -698,18 +652,6 @@ function getRepeatLabel(schedulePreference: P0ScreenProps["selectedDestinationSc
   if (!schedulePreference.repeatEnabled || schedulePreference.repeatDays.length === 0) return "없음";
   if (schedulePreference.repeatDays.length >= 5) return "주중";
   return schedulePreference.repeatDays.map((day) => repeatDayLabels[day]).join("");
-}
-
-function subtractMinutes(time: string, minutes: number) {
-  const [hourText, minuteText] = time.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return time;
-  const dayMinutes = 24 * 60;
-  const total = ((hour * 60 + minute - minutes) % dayMinutes + dayMinutes) % dayMinutes;
-  const nextHour = Math.floor(total / 60);
-  const nextMinute = total % 60;
-  return `${String(nextHour).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`;
 }
 
 function SunGlyph({ color }: { color: string }) {

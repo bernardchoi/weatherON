@@ -29,7 +29,6 @@ import {
   getWeatheronDestinationDeepLink,
   saveWeatheronWidgetSnapshot,
   saveWeatheronWidgetLocations,
-  subtractWidgetTime,
   type WeatheronWidgetLocationSnapshot,
 } from "../providers/widgetSnapshot";
 import { createWidgetLocations } from "../providers/widgetLocations";
@@ -56,7 +55,7 @@ import {
   scheduleLocalNotificationTest,
   syncLocalWeatherNotifications,
 } from "../providers/localNotifications";
-import { getTravelMinutesForTransport, isWalkUnavailableForEstimate } from "../utils/travelEstimate";
+import { formatRouteClock, getTravelMinutesForTransport } from "../utils/travelEstimate";
 import {
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
@@ -66,7 +65,7 @@ import {
   type DepartureLiveActivityInput,
 } from "../providers/departureLiveActivity";
 import { normalizePlaceSearchResultCategory } from "../utils/destination-visual-resolver";
-import { addMinutesToTime, getZonedDateTimeParts } from "../utils/zonedDateTime";
+import { getZonedDateTimeParts } from "../utils/zonedDateTime";
 import {
   defaultAlertPreferences,
   defaultDestinationAlertCondition,
@@ -126,6 +125,7 @@ import {
   getActiveWeatherLocation,
   getAlertSettingsFocusFromRoute,
   getAutoBufferMinutes,
+  getDestinationTiming,
   getBackRoute,
   getDefaultDestinationPlace,
   getDefaultDestinationSchedulePreference,
@@ -378,16 +378,11 @@ export function useWeatherOnAppState() {
     selectedDestinationPlace.countryCode,
     placeSearchOrigin?.locationId,
   );
-  const selectedDestinationAutoBufferMinutes = typeof selectedDestinationTravelMinutes === "number"
-    ? selectedDestinationSchedulePreference.timeBasis === "departure"
-      ? 0
-      : getAutoBufferMinutes(
-        selectedDestinationSchedulePreference.targetArrivalTime,
-        selectedDestinationTravelMinutes,
-        nowMinuteTick,
-        selectedDestinationPlace.timezone,
-      )
-    : undefined;
+  const selectedDestinationTiming = placeSearchOrigin ? getDestinationTiming(
+    selectedDestinationTravelEstimate, selectedDestinationSchedulePreference, selectedDestinationPlace.timezone, nowMinuteTick,
+    activeWeatherLocation.countryCode, selectedDestinationPlace.countryCode, placeSearchOrigin.locationId,
+  ) : undefined;
+  const selectedDestinationAutoBufferMinutes = selectedDestinationTiming ? selectedDestinationTiming.bufferSeconds / 60 : undefined;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
       gender: styleGender === "men" ? "male" : styleGender === "women" ? "female" : "any",
@@ -430,19 +425,9 @@ export function useWeatherOnAppState() {
             placeSearchOrigin.locationId,
           )
         : undefined;
-      const bufferMinutes = typeof travelMinutes === "number"
-        ? destination.schedulePreference.timeBasis === "departure"
-          ? 0
-          : getAutoBufferMinutes(destination.schedulePreference.targetArrivalTime, travelMinutes, nowMinuteTick, destination.place.timezone)
-        : undefined;
-      const departureTime = destination.schedulePreference.timeBasis === "departure"
-        ? destination.schedulePreference.targetArrivalTime
-        : typeof travelMinutes === "number" && typeof bufferMinutes === "number"
-          ? subtractWidgetTime(destination.schedulePreference.targetArrivalTime, travelMinutes + bufferMinutes)
-          : undefined;
-      const arrivalTime = destination.schedulePreference.timeBasis === "departure"
-        ? typeof travelMinutes === "number" ? addMinutesToTime(destination.schedulePreference.targetArrivalTime, travelMinutes) : undefined
-        : destination.schedulePreference.targetArrivalTime;
+      const timing = placeSearchOrigin ? getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMinuteTick, placeSearchOrigin.countryCode, destination.place.countryCode, placeSearchOrigin.locationId) : undefined;
+      const departureTime = timing ? formatRouteClock(timing.departureAt, destination.place.timezone) : undefined;
+      const arrivalTime = timing ? formatRouteClock(timing.arrivalAt, destination.place.timezone) : undefined;
       items.push(createWeatheronWidgetLocationSnapshot(
         weather,
         recommendOutfit(weather, userPreferenceProfile, recommendationWardrobe),
@@ -454,6 +439,12 @@ export function useWeatherOnAppState() {
           timeZone: destination.place.timezone,
           departureTime,
           arrivalTime,
+          departureAt: timing?.departureAt,
+          arrivalAt: timing?.arrivalAt,
+          durationSeconds: timing?.durationSeconds,
+          bufferSeconds: timing?.bufferSeconds,
+          routeMessage: translateText(destination.travelEstimate.message, localePolicy.language),
+          routeUpdatedAt: destination.travelEstimate.updatedAt,
           travelMinutes,
           transportMode: destination.schedulePreference.transportMode,
           deepLink: getWeatheronDestinationDeepLink(destination.place.id),
@@ -667,11 +658,11 @@ export function useWeatherOnAppState() {
           : undefined,
         destinationAlertCondition: selectedDestinationAlertCondition,
         destinationSchedule: {
+          ...selectedDestinationTravelEstimate,
           timeBasis: selectedDestinationSchedulePreference.timeBasis,
           targetArrivalTime: selectedDestinationSchedulePreference.targetArrivalTime,
           bufferMinutes: selectedDestinationAutoBufferMinutes,
-          // 이동수단별 최종 이동시간(도보 거리 기반 계산 포함)은 demoState 쪽에서 동일한 공식으로
-          // 다시 계산하므로, 여기서는 가공 전 원본 이동시간·거리를 넘긴다.
+          // 공통 계산에 초 단위 원본과 조회 근거를 함께 전달함.
           travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
           distanceMeters: selectedDestinationTravelEstimate.distanceMeters,
           originPlaceId: selectedDestinationTravelEstimate.originPlaceId,
@@ -726,16 +717,7 @@ export function useWeatherOnAppState() {
       activeDestination.place.countryCode,
       placeSearchOrigin?.locationId,
     );
-    const bufferMinutes = typeof travelMinutes === "number"
-      ? activeDestination.schedulePreference.timeBasis === "departure"
-        ? 0
-        : getAutoBufferMinutes(
-          activeDestination.schedulePreference.targetArrivalTime,
-          travelMinutes,
-          nowMinuteTick,
-          activeDestination.place.timezone,
-        )
-      : undefined;
+    const bufferMinutes = placeSearchOrigin ? (getDestinationTiming(travelEstimate, activeDestination.schedulePreference, activeDestination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, activeDestination.place.countryCode, placeSearchOrigin.locationId)?.bufferSeconds ?? 0) / 60 : undefined;
     const base = buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
       hasDestination: true,
       destinationCareEnabled: true,
@@ -750,6 +732,7 @@ export function useWeatherOnAppState() {
       },
       destinationAlertCondition: activeDestination.alertCondition,
       destinationSchedule: {
+        ...travelEstimate,
         timeBasis: activeDestination.schedulePreference.timeBasis,
         targetArrivalTime: activeDestination.schedulePreference.targetArrivalTime,
         bufferMinutes,
@@ -799,6 +782,8 @@ export function useWeatherOnAppState() {
         // avoid re-requesting every saved destination when the app bounces
         // through inactive/active or a request is already underway.
         const now = Date.now();
+        routeAttemptsRef.current.clear();
+        setNowMinuteTick(now);
         if (!weatherRequestInFlightRef.current && now - foregroundWeatherRefreshAtRef.current >= 5 * 60_000) {
           foregroundWeatherRefreshAtRef.current = now;
           setWeatherRefreshTick((value) => value + 1);
@@ -925,21 +910,7 @@ export function useWeatherOnAppState() {
       nowMinuteTick,
     ],
   );
-  const selectedDestinationDepartureAt = useMemo(() => {
-    if (
-      !destinationTargetTimeIso ||
-      (selectedDestinationSchedulePreference.timeBasis === "arrival" && (
-        typeof selectedDestinationTravelMinutes !== "number" ||
-        typeof selectedDestinationAutoBufferMinutes !== "number"
-      ))
-    ) {
-      return undefined;
-    }
-    if (selectedDestinationSchedulePreference.timeBasis === "departure") return destinationTargetTimeIso;
-    const departureAt = new Date(destinationTargetTimeIso).getTime()
-      - ((selectedDestinationTravelMinutes ?? 0) + (selectedDestinationAutoBufferMinutes ?? 0)) * 60 * 1000;
-    return new Date(departureAt).toISOString();
-  }, [destinationTargetTimeIso, selectedDestinationAutoBufferMinutes, selectedDestinationSchedulePreference.timeBasis, selectedDestinationTravelMinutes]);
+  const selectedDestinationDepartureAt = selectedDestinationTiming?.departureAt;
 
   // Keep Home's schedule props in the same destination context as homeState.
   // Without this, a preview could render one trip's card with another trip's
@@ -959,25 +930,8 @@ export function useWeatherOnAppState() {
   const homeDestinationDepartureAt = useMemo(() => {
     if (!homeDepartureDestination || homeDepartureDestination.place.id === selectedDestinationPlace.id) return selectedDestinationDepartureAt;
     if (!homeDestinationTargetAt) return undefined;
-    const travelEstimate = !placeSearchOrigin
-      ? { ...homeDepartureDestination.travelEstimate, status: "idle" as const }
-      : homeDepartureDestination.travelEstimate;
-    const travelMinutes = getTravelMinutesForTransport(
-      travelEstimate,
-      homeDepartureDestination.schedulePreference.transportMode,
-      activeWeatherLocation.countryCode,
-      homeDepartureDestination.place.countryCode,
-      placeSearchOrigin?.locationId,
-    );
-    if (homeDepartureDestination.schedulePreference.timeBasis === "departure") return homeDestinationTargetAt;
-    if (typeof travelMinutes !== "number") return undefined;
-    const bufferMinutes = getAutoBufferMinutes(
-      homeDepartureDestination.schedulePreference.targetArrivalTime,
-      travelMinutes,
-      nowMinuteTick,
-      homeDepartureDestination.place.timezone,
-    );
-    return new Date(new Date(homeDestinationTargetAt).getTime() - (travelMinutes + bufferMinutes) * 60_000).toISOString();
+    if (!placeSearchOrigin) return undefined;
+    return getDestinationTiming(homeDepartureDestination.travelEstimate, homeDepartureDestination.schedulePreference, homeDepartureDestination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, homeDepartureDestination.place.countryCode, placeSearchOrigin.locationId)?.departureAt;
   }, [
     activeWeatherLocation.countryCode,
     homeDepartureDestination,
@@ -988,59 +942,64 @@ export function useWeatherOnAppState() {
     selectedDestinationPlace.id,
   ]);
 
+  const routeRequests = [...savedDestinations.map(destination => ({ place: destination.place, schedule: destination.schedulePreference })),
+    ...(!destinationSaved ? [{ place: selectedDestinationPlace, schedule: selectedDestinationSchedulePreference }] : [])];
+  const routeRequestKey = JSON.stringify({ origin: placeSearchOrigin, routes: routeRequests });
+  const routeAttemptsRef = useRef(new Map<string, number>());
   useEffect(() => {
-    if (!appStateHydrated) return;
-    if (!placeSearchOrigin) {
-      setDestinationTravelEstimateRequestStatus("idle");
-      return;
-    }
+    if (!appStateHydrated || !placeSearchOrigin || AppState.currentState !== "active") return;
     let active = true;
-    setDestinationTravelEstimateRequestStatus("loading");
-    const originLocation = placeSearchOrigin;
-    const destinationPlace = selectedDestinationPlace;
-    runtimeTravelEstimateClient
-      .estimateRoute({
-        origin: originLocation.coordinate,
-        destination: destinationPlace.coordinate,
-        originName: originLocation.locationName,
-        destinationName: destinationPlace.name,
-        originCountryCode: originLocation.countryCode,
-        destinationCountryCode: destinationPlace.countryCode,
-        transportMode: selectedDestinationSchedulePreference.transportMode,
-        departureTime: selectedDestinationSchedulePreference.timeBasis === "departure" ? destinationTargetTimeIso : undefined,
-        arrivalTime: selectedDestinationSchedulePreference.timeBasis === "arrival" ? destinationTargetTimeIso : undefined,
-      })
-      .then((result) => {
+    const pendingKeys = new Set<string>();
+    const origin = placeSearchOrigin;
+    void (async () => {
+      for (const { place, schedule } of routeRequests) {
         if (!active) return;
-        const estimate = createDestinationTravelEstimate(originLocation.locationId, destinationPlace.id, result);
-        setPreviewDestinationTravelEstimate(estimate);
-        updateSavedDestinations((current) =>
-          current.map((destination) =>
-            destination.place.id === destinationPlace.id
-              ? { ...destination, travelEstimate: estimate, savedAtLabel: destination.changeStatus === "saved" ? "방금 저장" : "업데이트됨", changeStatus: destination.changeStatus === "saved" ? "saved" : "updated" }
-              : destination,
-          ),
-        );
-        setDestinationTravelEstimateRequestStatus("idle");
-      })
-      .catch(() => {
-        if (!active) return;
-        const estimate = createDefaultTravelEstimate(originLocation, destinationPlace, "error");
-        setPreviewDestinationTravelEstimate(estimate);
-        setDestinationTravelEstimateRequestStatus("error");
-      });
+        const targetAt = getRouteArrivalTimeIso(schedule.targetArrivalTime, place.timezone, nowMinuteTick, schedule.repeatEnabled, schedule.repeatDays);
+        if (!targetAt) continue;
+        const key = JSON.stringify({ origin, place, schedule, targetAt });
+        const stored = savedDestinationsRef.current.find(item => item.place.id === place.id)?.travelEstimate ?? previewDestinationTravelEstimate;
+        const previousAttempt = routeAttemptsRef.current.get(key);
+        if (previousAttempt && nowMinuteTick < previousAttempt) continue;
+        const nearDeparture = Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
+        const retryAt = Date.now() + (nearDeparture ? 60000 : 600000);
+        routeAttemptsRef.current.set(key, retryAt);
+        pendingKeys.add(key);
+        if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("loading");
+        try {
+          const result = await runtimeTravelEstimateClient.estimateRoute({
+            origin: origin.coordinate, destination: place.coordinate,
+            originName: origin.locationName, destinationName: place.name,
+            originCountryCode: origin.countryCode, destinationCountryCode: place.countryCode,
+            transportMode: schedule.transportMode,
+            departureTime: schedule.timeBasis === "departure" ? targetAt : undefined,
+            arrivalTime: schedule.timeBasis === "arrival" ? targetAt : undefined,
+            arrivalBufferSeconds: schedule.timeBasis === "arrival"
+              ? stored.requestArrivalTime === targetAt && stored.transportMode === schedule.transportMode && stored.bufferSeconds !== undefined
+                ? stored.bufferSeconds
+                : getAutoBufferMinutes(schedule.targetArrivalTime, (stored.durationSeconds ?? stored.travelMinutes * 60) / 60, nowMinuteTick, place.timezone) * 60
+              : 0,
+          });
+          if (!active) return;
+          const estimate = createDestinationTravelEstimate(origin.locationId, place.id, result);
+          if (place.id === selectedDestinationPlace.id) setPreviewDestinationTravelEstimate(estimate);
+          updateSavedDestinations(current => current.map(destination => destination.place.id === place.id ? { ...destination, travelEstimate: estimate } : destination));
+          if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
+        } catch {
+          if (!active) return;
+          // Retain a previous result with its original timestamp and visible failure provenance.
+          const estimate: DestinationTravelEstimate = stored.status === "ready"
+            ? { ...stored, cacheStatus: "stale", message: `이전 조회 결과 · 갱신 실패 · ${stored.message.replace(/^이전 조회 결과 · 갱신 실패 · /, "")}` }
+            : createDefaultTravelEstimate(origin, place, "error");
+          if (place.id === selectedDestinationPlace.id) { setPreviewDestinationTravelEstimate(estimate); setDestinationTravelEstimateRequestStatus("idle"); }
+          updateSavedDestinations(current => current.map(destination => destination.place.id === place.id ? { ...destination, travelEstimate: estimate } : destination));
+        } finally { pendingKeys.delete(key); }
+      }
+    })();
     return () => {
       active = false;
+      for (const key of pendingKeys) routeAttemptsRef.current.delete(key);
     };
-  }, [
-    appStateHydrated,
-    placeSearchOrigin,
-    selectedDestinationPlace,
-    updateSavedDestinations,
-    selectedDestinationSchedulePreference.timeBasis,
-    selectedDestinationSchedulePreference.transportMode,
-    destinationTargetTimeIso,
-  ]);
+  }, [appStateHydrated, routeRequestKey, nowMinuteTick, weatherRefreshTick, updateSavedDestinations]);
 
   useEffect(() => {
     if (!appStateHydrated) return;
@@ -1062,20 +1021,9 @@ export function useWeatherOnAppState() {
           destination.schedulePreference.repeatDays,
         );
         if (!targetTimeIso || !placeSearchOrigin) return undefined;
-        const travelMinutes = getTravelMinutesForTransport(
-          destination.travelEstimate,
-          destination.schedulePreference.transportMode,
-          activeWeatherLocation.countryCode,
-          destination.place.countryCode,
-          placeSearchOrigin.locationId,
-        );
-        if (destination.schedulePreference.timeBasis === "arrival" && typeof travelMinutes !== "number") return undefined;
-        const autoBufferMinutes = destination.schedulePreference.timeBasis === "departure"
-          ? 0
-          : getAutoBufferMinutes(destination.schedulePreference.targetArrivalTime, travelMinutes!, nowMinuteTick, destination.place.timezone);
-        const departureAt = destination.schedulePreference.timeBasis === "departure"
-          ? targetTimeIso
-          : new Date(new Date(targetTimeIso).getTime() - (travelMinutes! + autoBufferMinutes) * 60 * 1000).toISOString();
+        const timing = getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, destination.place.countryCode, placeSearchOrigin.locationId);
+        if (!timing) return null;
+        const departureAt = timing.departureAt;
         if (new Date(departureAt).getTime() <= Date.now()) return null;
         const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
         if (!weather) return undefined;
@@ -1087,7 +1035,7 @@ export function useWeatherOnAppState() {
           destinationName: destination.place.name,
           departureAt,
           departureTimeLabel: formatDisplayTime(departureAt, destination.place.timezone),
-          guidance: translateText(guidance, localePolicy.language),
+          guidance: translateText(guidance, localePolicy.language) + " · " + translateText(destination.travelEstimate.cacheStatus === "stale" ? "이전 조회 결과" : destination.travelEstimate.message, localePolicy.language),
           guidanceKind,
           guidanceSymbol: getDepartureGuidanceSymbol(guidanceKind),
           deepLink: `weatheron://destination?id=${encodeURIComponent(destination.place.id)}`,
@@ -1992,9 +1940,8 @@ export function useWeatherOnAppState() {
 
   const setSelectedDestinationTransportMode = useCallback((transportMode: DestinationTransportMode) => {
     const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    const nextTransportMode = isWalkUnavailableForEstimate(selectedDestinationTravelEstimate, transportMode) ? "auto" : transportMode;
-    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode: nextTransportMode });
-  }, [previewDestinationSchedulePreference, selectedDestinationTravelEstimate, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode });
+  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeat = useCallback(() => {
     const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
