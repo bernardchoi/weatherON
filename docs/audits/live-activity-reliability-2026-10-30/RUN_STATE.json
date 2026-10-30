@@ -1,0 +1,88 @@
+{
+  "timezone": "Asia/Seoul",
+  "candidate": {
+    "version": "1.0.0",
+    "build": 58,
+    "sourceCommit": "e955fc950bf004b7908bc19c984944ce3b2ac6af",
+    "internalOnly": true
+  },
+  "worker": {
+    "version": "3bb47ebe-e032-48a0-aaaf-05a8767f0b42",
+    "rollbackVersion": "6644552f-74b4-4057-b62b-8439ec42f66d"
+  },
+  "authorizedTestScope": "Temporarily change and restore the first saved destination schedule only; do not delete destinations or change location data.",
+  "originalSchedule": {
+    "timeBasis": "departure",
+    "time": "18:00",
+    "transportMode": "transit",
+    "repeatEnabled": true,
+    "repeatDays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "careEnabled": true,
+    "reminderLeadMinutes": 60
+  },
+  "currentSchedule": {
+    "timeBasis": "departure",
+    "time": "22:30",
+    "transportMode": "drive",
+    "repeatEnabled": false,
+    "careEnabled": true
+  },
+  "immediateCase": {
+    "departureAt": "2026-10-30T18:45:00+09:00",
+    "registrationObservedAt": "2026-10-30T18:37:30.961+09:00",
+    "registrationHttp": 200,
+    "appActiveLabelObservedMinute": "2026-10-30T18:38+09:00",
+    "backgroundEntryObservedMinute": "2026-10-30T18:38+09:00",
+    "conservativeClockCheckpoint": "2026-10-30T18:39:40+09:00",
+    "apnsObservedAt": "2026-10-30T18:45:00.673+09:00",
+    "apnsStatus": 200,
+    "physicalDisplay": "user reported actual display and countdown before departure",
+    "physicalEnd": "user reported disappearance after departure without reopening app; exact observation time not supplied",
+    "mirroringDisplay": "empty Island even while user confirmed actual display; do not use mirroring absence alone as end proof",
+    "preciseDeliveryLatency": null
+  },
+  "networkCase": {
+    "departureAt": "2026-10-30T18:55:00+09:00",
+    "registrationHttp": 200,
+    "appActiveLabelObservedMinute": "2026-10-30T18:50+09:00",
+    "backgroundEntryObservedMinute": "2026-10-30T18:50+09:00",
+    "disconnectedAt": null,
+    "reconnectedAt": "2026-10-30T18:58:00+09:00",
+    "state": "inconclusive for offline retention and recovery delivery: activity was absent before recovery; premature disappearance cause unresolved",
+    "disconnectionEvidence": "user confirmed airplane mode ON and both Wi-Fi/cellular OFF; exact start time not supplied",
+    "physicalEnd": "user reported automatic disappearance without manual removal before departure; exact observation time not supplied",
+    "recoveryEvidence": "user reported airplane mode OFF, normal connectivity restored, activity still absent; minute precision",
+    "apnsStatus": null,
+    "apnsEvidence": "18:55 response not recovered from available filtered output; do not infer from prior deadlines"
+  },
+  "longBackgroundCase": {
+    "state": "running; OS pending schedule confirmed; activation and registration not yet observed",
+    "backgroundStartAt": "2026-10-30T19:02:26+09:00",
+    "scheduledActivationAt": "2026-10-30T21:30:00+09:00",
+    "departureAt": "2026-10-30T22:30:00+09:00",
+    "osPendingLabelObservedMinute": "2026-10-30T19:02+09:00",
+    "lastPhysicalObservation": null,
+    "actualObservedSeconds": 0,
+    "observationMeaning": "zero completed hours at start; background wall-clock elapsed must be computed at each check; no continuous physical observation claimed",
+    "interruptionState": "none known since Home entry; future gaps must be recorded"
+  },
+  "overnightCase": {
+    "state": "not started",
+    "actualObservedSeconds": 0
+  },
+  "diagnostics": {
+    "sanitizedTailSessionId": 9040,
+    "tailFilterScript": "/tmp/weatheron-safe-tail.py",
+    "rawTokensOrPersonalLocationsStored": false,
+    "durableSanitizedTailSessionId": 78233,
+    "sanitizedEventsFile": "/tmp/weatheron-build58-safe-events.jsonl",
+    "heartbeatId": "build-58-live-activity",
+    "heartbeatIntervalMinutes": 5
+  }
+}
