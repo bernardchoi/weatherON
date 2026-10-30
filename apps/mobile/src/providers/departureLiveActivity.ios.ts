@@ -19,6 +19,8 @@ export {
 } from "./departureLiveActivity.shared";
 
 let registeredToken = "";
+let currentRegistrationKey = "";
+let registrationQueue = Promise.resolve(false);
 const pendingRegistrations = new Map<string, Promise<boolean>>();
 const registrationRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const registrationRetryAttempts = new Map<string, number>();
@@ -31,7 +33,7 @@ function clearRegistrationRetry(key: string) {
 }
 
 function scheduleRegistrationRetry(key: string) {
-  if (registrationRetryTimers.has(key) || !WeatheronWidgetDataModule) return;
+  if (key !== currentRegistrationKey || registrationRetryTimers.has(key) || !WeatheronWidgetDataModule) return;
   const nativeModule = WeatheronWidgetDataModule;
   const attempt = registrationRetryAttempts.get(key) ?? 0;
   const delay = Math.min(15_000 * 2 ** attempt, 5 * 60_000);
@@ -44,37 +46,57 @@ function scheduleRegistrationRetry(key: string) {
   }, delay));
 }
 
+function selectRegistrationKey(key: string) {
+  if (key === currentRegistrationKey) return;
+  currentRegistrationKey = key;
+  registeredToken = "";
+  for (const previous of registrationRetryAttempts.keys()) clearRegistrationRetry(previous);
+}
+
 async function registerAutomaticEnd(raw: string): Promise<DepartureLiveActivityStatus> {
   const status = parseDepartureLiveActivityStatus(raw);
-  if (!status.active && !status.scheduled) return status;
+  if (!status.active && !status.scheduled) {
+    selectRegistrationKey("");
+    return status;
+  }
   const native = JSON.parse(raw) as Record<string, unknown>;
   const token = typeof native.pushToken === "string" ? native.pushToken : "";
-  // A pending iOS activity can await its token before registration is possible.
-  if (!token) return { ...status, automaticEndScheduled: status.scheduled ? undefined : false };
   const key = `${status.activityId}:${token}:${status.departureAt}`;
+  selectRegistrationKey(key);
+  // Pending is not a server acknowledgement. JS retries only run while iOS allows execution.
+  if (!token) {
+    if (status.active) scheduleRegistrationRetry(key);
+    return { ...status, automaticEndScheduled: status.scheduled ? undefined : false };
+  }
   if (registeredToken === key) return { ...status, automaticEndScheduled: true };
   let pending = pendingRegistrations.get(key);
   if (!pending) {
-    pending = requestAuthenticatedAccountJson<{ scheduled: boolean }>("/live-activities/departure", {
-      activityId: status.activityId, departureAt: status.departureAt,
-      pushToken: token, bundleId: native.bundleId, pushEnvironment: native.pushEnvironment,
-    }).then((response) => {
-      if (response.scheduled) {
+    // Keep token rotations in order so an older request cannot overwrite the latest server token.
+    pending = registrationQueue.then(async () => {
+      if (key !== currentRegistrationKey) return false;
+      const response = await requestAuthenticatedAccountJson<{ scheduled: boolean }>("/live-activities/departure", {
+        activityId: status.activityId, departureAt: status.departureAt,
+        pushToken: token, bundleId: native.bundleId, pushEnvironment: native.pushEnvironment,
+      });
+      if (key !== currentRegistrationKey) return false;
+      if (response.scheduled === true) {
         registeredToken = key;
         clearRegistrationRetry(key);
-      }
+      } else scheduleRegistrationRetry(key);
       return response.scheduled === true;
     }).catch(() => {
       scheduleRegistrationRetry(key);
       return false;
     }).finally(() => pendingRegistrations.delete(key));
+    registrationQueue = pending;
     pendingRegistrations.set(key, pending);
   }
   return { ...status, automaticEndScheduled: await pending };
 }
 
-WeatheronWidgetDataModule?.addListener("onDeparturePushToken", ({ status }) => {
-  void registerAutomaticEnd(status);
+WeatheronWidgetDataModule?.addListener("onDeparturePushToken", () => {
+  // An event may have queued before a replacement/cancellation; read the current native Activity.
+  void getDepartureLiveActivityStatus();
 });
 
 export async function getDepartureLiveActivityStatus(): Promise<DepartureLiveActivityStatus> {
@@ -100,6 +122,7 @@ export async function startDepartureLiveActivity(
 
 export async function endDepartureLiveActivity(): Promise<boolean> {
   if (!WeatheronWidgetDataModule) return false;
+  selectRegistrationKey("");
   try {
     return await WeatheronWidgetDataModule.endDepartureActivity();
   } catch {

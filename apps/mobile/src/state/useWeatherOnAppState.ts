@@ -55,7 +55,7 @@ import {
   scheduleLocalNotificationTest,
   syncLocalWeatherNotifications,
 } from "../providers/localNotifications";
-import { formatRouteClock, getTravelMinutesForTransport } from "../utils/travelEstimate";
+import { formatRouteClock, getTravelMinutesForTransport, canScheduleTravelEstimate } from "../utils/travelEstimate";
 import {
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
@@ -443,7 +443,7 @@ export function useWeatherOnAppState() {
           arrivalAt: timing?.arrivalAt,
           durationSeconds: timing?.durationSeconds,
           bufferSeconds: timing?.bufferSeconds,
-          routeMessage: translateText(destination.travelEstimate.message, localePolicy.language),
+          routeMessage: translateText(destination.travelEstimate.cacheStatus === "stale" || Date.parse(destination.travelEstimate.expiresAt ?? "") <= nowMinuteTick ? `이전 조회 결과 · ${destination.travelEstimate.message}` : destination.travelEstimate.message, localePolicy.language),
           routeUpdatedAt: destination.travelEstimate.updatedAt,
           travelMinutes,
           transportMode: destination.schedulePreference.transportMode,
@@ -659,14 +659,13 @@ export function useWeatherOnAppState() {
         destinationAlertCondition: selectedDestinationAlertCondition,
         destinationSchedule: {
           ...selectedDestinationTravelEstimate,
-          timeBasis: selectedDestinationSchedulePreference.timeBasis,
-          targetArrivalTime: selectedDestinationSchedulePreference.targetArrivalTime,
+          ...selectedDestinationSchedulePreference,
+          status: selectedDestinationTiming ? selectedDestinationTravelEstimate.status : "idle",
           bufferMinutes: selectedDestinationAutoBufferMinutes,
           // 공통 계산에 초 단위 원본과 조회 근거를 함께 전달함.
           travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
           distanceMeters: selectedDestinationTravelEstimate.distanceMeters,
           originPlaceId: selectedDestinationTravelEstimate.originPlaceId,
-          transportMode: selectedDestinationSchedulePreference.transportMode,
           travelProvider: selectedDestinationTravelEstimate.provider,
           travelStatus: selectedDestinationTravelEstimate.status,
         },
@@ -684,6 +683,7 @@ export function useWeatherOnAppState() {
       selectedDestinationSchedulePreference,
       selectedDestinationTravelEstimate,
       selectedDestinationTravelMinutes,
+      selectedDestinationTiming?.departureAt,
       useDestinationWeather,
       userPreferenceProfile,
       recommendationWardrobe,
@@ -717,7 +717,8 @@ export function useWeatherOnAppState() {
       activeDestination.place.countryCode,
       placeSearchOrigin?.locationId,
     );
-    const bufferMinutes = placeSearchOrigin ? (getDestinationTiming(travelEstimate, activeDestination.schedulePreference, activeDestination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, activeDestination.place.countryCode, placeSearchOrigin.locationId)?.bufferSeconds ?? 0) / 60 : undefined;
+    const timing = placeSearchOrigin ? getDestinationTiming(travelEstimate, activeDestination.schedulePreference, activeDestination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, activeDestination.place.countryCode, placeSearchOrigin.locationId) : undefined;
+    const bufferMinutes = timing ? timing.bufferSeconds / 60 : undefined;
     const base = buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
       hasDestination: true,
       destinationCareEnabled: true,
@@ -733,13 +734,12 @@ export function useWeatherOnAppState() {
       destinationAlertCondition: activeDestination.alertCondition,
       destinationSchedule: {
         ...travelEstimate,
-        timeBasis: activeDestination.schedulePreference.timeBasis,
-        targetArrivalTime: activeDestination.schedulePreference.targetArrivalTime,
+        ...activeDestination.schedulePreference,
+        status: timing ? travelEstimate.status : "idle",
         bufferMinutes,
         travelMinutes: travelEstimate.travelMinutes,
         distanceMeters: travelEstimate.distanceMeters,
         originPlaceId: travelEstimate.originPlaceId,
-        transportMode: activeDestination.schedulePreference.transportMode,
         travelProvider: travelEstimate.provider,
         travelStatus: travelEstimate.status,
       },
@@ -1022,7 +1022,7 @@ export function useWeatherOnAppState() {
         );
         if (!targetTimeIso || !placeSearchOrigin) return undefined;
         const timing = getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, destination.place.countryCode, placeSearchOrigin.locationId);
-        if (!timing) return null;
+        if (!timing || !canScheduleTravelEstimate(destination.travelEstimate, nowMinuteTick)) return null;
         const departureAt = timing.departureAt;
         if (new Date(departureAt).getTime() <= Date.now()) return null;
         const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);

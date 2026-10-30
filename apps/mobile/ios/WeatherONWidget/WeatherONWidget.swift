@@ -110,6 +110,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
   let hourly: [WeatherONHourlySnapshot]
   let departureTime: String?
   let arrivalTime: String?
+  let departureAt: String?
+  let arrivalAt: String?
   let travelMinutes: Int?
   let routeMessage: String?
   let routeUpdatedAt: String?
@@ -143,6 +145,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     case hourly
     case departureTime
     case arrivalTime
+    case departureAt
+    case arrivalAt
     case travelMinutes
     case routeMessage
     case routeUpdatedAt
@@ -178,7 +182,9 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     transportMode: String?,
     deepLink: String,
     routeMessage: String? = nil,
-    routeUpdatedAt: String? = nil
+    routeUpdatedAt: String? = nil,
+    departureAt: String? = nil,
+    arrivalAt: String? = nil
   ) {
     self.id = id
     self.kind = kind
@@ -203,6 +209,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     self.hourly = hourly
     self.departureTime = departureTime
     self.arrivalTime = arrivalTime
+    self.departureAt = departureAt
+    self.arrivalAt = arrivalAt
     self.travelMinutes = travelMinutes
     self.routeMessage = routeMessage
     self.routeUpdatedAt = routeUpdatedAt
@@ -235,6 +243,8 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     hourly = try values.decodeIfPresent([WeatherONHourlySnapshot].self, forKey: .hourly) ?? []
     departureTime = try values.decodeIfPresent(String.self, forKey: .departureTime)
     arrivalTime = try values.decodeIfPresent(String.self, forKey: .arrivalTime)
+    departureAt = try values.decodeIfPresent(String.self, forKey: .departureAt)
+    arrivalAt = try values.decodeIfPresent(String.self, forKey: .arrivalAt)
     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
     routeMessage = try values.decodeIfPresent(String.self, forKey: .routeMessage)
     routeUpdatedAt = try values.decodeIfPresent(String.self, forKey: .routeUpdatedAt)
@@ -264,7 +274,8 @@ private extension WeatherONLocationSnapshot {
       outfitSummary: outfitSummary, outfitItems: outfitItems, outfitVariant: outfitVariant,
       observedAt: forecast.observedAt.ISO8601Format(),
       hourly: forecast.hourly.map { WeatherONHourlySnapshot(time: formatter.string(from: $0.date), temperatureC: Int($0.temperatureC.rounded()), condition: $0.condition, rainProbabilityPct: Int($0.rainProbabilityPct.rounded())) },
-      departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink, routeMessage: routeMessage, routeUpdatedAt: routeUpdatedAt
+      departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink, routeMessage: routeMessage, routeUpdatedAt: routeUpdatedAt,
+      departureAt: departureAt, arrivalAt: arrivalAt
     )
   }
 }
@@ -1160,7 +1171,7 @@ private struct WeatherONSmallDestinationStrip: View {
 
   var body: some View {
     HStack(spacing: 4) {
-      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: weatherONClock(location.departureTime, localization: localization), label: weatherONLocalized("출발"), palette: palette)
+      WeatherONCompactFact(symbol: transportSymbol(location.transportMode), value: weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization), label: weatherONLocalized("출발"), palette: palette)
       WeatherONCompactFact(symbol: outfitSymbol(location.outfitVariant), value: "코디", label: "추천", palette: palette)
       WeatherONCompactFact(symbol: "umbrella.fill", value: location.umbrellaNeeded ? "O" : "X", label: "우산", palette: palette)
     }
@@ -1206,7 +1217,7 @@ private struct WeatherONScheduleCard: View {
 
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         VStack(alignment: .leading, spacing: 1) {
-          Text(weatherONClock(location.departureTime, localization: localization))
+          Text(weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
             .font(.system(size: compact ? 16 : 21, weight: .semibold, design: .default))
             .lineLimit(1)
             .minimumScaleFactor(0.55)
@@ -1218,7 +1229,7 @@ private struct WeatherONScheduleCard: View {
           .font(.system(size: 9, weight: .bold))
           .foregroundStyle(palette.accent)
         VStack(alignment: .leading, spacing: 1) {
-          Text(weatherONClock(location.arrivalTime, localization: localization))
+          Text(weatherONRouteClock(location.arrivalAt, fallback: location.arrivalTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
             .font(.system(size: compact ? 14 : 18, weight: .semibold, design: .default))
             .lineLimit(1)
             .minimumScaleFactor(0.55)
@@ -1404,6 +1415,26 @@ private func weatherONClock(_ value: String?, localization: WeatherONWidgetLocal
   formatter.locale = Locale(identifier: localization.languageTag)
   formatter.timeZone = calendar.timeZone
   formatter.dateFormat = localization.uses24HourClock ? "HH:mm" : "h:mm a"
+  return formatter.string(from: date)
+}
+
+private func weatherONRouteClock(
+  _ value: String?, fallback: String?, timeZone: String?, referenceDate: Date,
+  localization: WeatherONWidgetLocalization
+) -> String {
+  guard let value,
+        let date = snapshotDateFormatter.date(from: value) ?? fallbackSnapshotDateFormatter.date(from: value)
+  else { return weatherONClock(fallback, localization: localization) }
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = timeZone.flatMap(TimeZone.init(identifier:)) ?? TimeZone(identifier: "Asia/Seoul")!
+  let sameDay = calendar.isDate(date, inSameDayAs: referenceDate)
+  let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: referenceDate)
+  let clock = localization.uses24HourClock ? "HHmm" : "hm"
+  let formatter = DateFormatter()
+  formatter.calendar = calendar
+  formatter.locale = Locale(identifier: localization.languageTag)
+  formatter.timeZone = calendar.timeZone
+  formatter.setLocalizedDateFormatFromTemplate(sameDay ? clock : (sameYear ? "Md" : "yMd") + clock)
   return formatter.string(from: date)
 }
 

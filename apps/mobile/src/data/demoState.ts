@@ -33,7 +33,7 @@ import {
 } from "../utils/zonedDateTime";
 import type { TravelEstimateResult } from "../providers/travelEstimateClient";
 import { getDestinationTiming } from "../state/appStateHelpers";
-import { getTravelMinutesForTransport, formatRouteClock } from "../utils/travelEstimate";
+import { getTravelMinutesForTransport, formatRouteClock, canScheduleTravelEstimate } from "../utils/travelEstimate";
 
 export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
 
@@ -295,7 +295,7 @@ function getDestinationNotificationTiming(
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
   const estimate = destination.travelEstimate;
-  if (!estimate) return null;
+  if (!estimate || !canScheduleTravelEstimate({ ...estimate, provider: estimate.provider ?? estimate.travelProvider, status: estimate.status ?? estimate.travelStatus }, nowMs)) return null;
   const timing = getDestinationTiming(
     { ...estimate, provider: estimate.provider ?? estimate.travelProvider, status: estimate.status ?? estimate.travelStatus ?? "idle", travelMinutes: estimate.travelMinutes ?? 0, distanceMeters: estimate.distanceMeters ?? 0 },
     { timeBasis: schedule.timeBasis ?? "arrival", targetArrivalTime, transportMode: schedule.transportMode ?? "auto", repeatEnabled: schedule.repeatEnabled ?? false, repeatDays: schedule.repeatDays ?? [] },

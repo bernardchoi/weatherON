@@ -44,6 +44,13 @@ try {
   await scheduler.alarm(); assert.equal(values.get('job').pushToken,'cd'.repeat(32));
   globalThis.fetch = async () => new Response(null,{status:410});
   await scheduler.alarm(); assert.equal(values.size,0); assert.equal(alarm,undefined);
+  values.set('job',{...job,departureMs:now-1000});
+  globalThis.fetch = async () => { throw Error('offline'); };
+  await scheduler.alarm(); assert.ok(values.has('job')); assert.ok(alarm>now);
+  globalThis.fetch = async () => new Response(null,{status:200});
+  await scheduler.alarm(); assert.equal(values.size,0); assert.equal(alarm,undefined);
+  values.set('job',{...job,departureMs:now-61*60_000});
+  await scheduler.alarm(); assert.equal(values.size,0,'expired jobs must discard tokens');
 } finally { globalThis.fetch=originalFetch; }
 let integrityChecked=false;
 env.DEPARTURE_END={idFromName: name=>name,get: name=>({fetch: async request=>{assert.equal(name,'user-1:activity-1');return scheduler.fetch(request);}})};
@@ -78,12 +85,18 @@ let requests=0;
 let starts=0;
 let ends=0;
 let fail=true;
+let acknowledge=true;
+let holdRequest;
+const retryTimers = new Map();
+let timerId=0;
+const flush = async () => { for(let i=0;i<30;i++) await Promise.resolve(); };
 const bridge={};
-new Function('exports','require',compile('apps/mobile/src/providers/departureLiveActivity.ios.ts'))(bridge,name=>{
+new Function('exports','require','setTimeout','clearTimeout',compile('apps/mobile/src/providers/departureLiveActivity.ios.ts'))(bridge,name=>{
   if(name==='./departureLiveActivity.shared')return shared;
   if(name==='./accountAuth')return {requestAuthenticatedAccountJson:async(path,body)=>{
     requests++; assert.equal(path,'/live-activities/departure');assert.equal(body.pushToken,nativeStatus.pushToken);assert.equal(body.method,undefined);
-    if(fail)throw Error('offline');return {scheduled:true};
+    if(holdRequest) await holdRequest;
+    if(fail)throw Error('offline');return {scheduled:acknowledge};
   }};
   return {__esModule:true,default:{
     addListener:(_,callback)=>{listener=callback;},
@@ -96,13 +109,14 @@ new Function('exports','require',compile('apps/mobile/src/providers/departureLiv
     },
     endDepartureActivity:async()=>{ends++;nativeStatus={supported:true,enabled:true,active:false,automaticStartSupported:true};return true;},
   }};
-});
+}, (callback,delay)=>{const id=++timerId;retryTimers.set(id,{callback,delay});return id;}, id=>retryTimers.delete(id));
 const tokenReadyStatus = nativeStatus;
 nativeStatus = { ...nativeStatus, active: false, scheduled: true, pushToken: '' };
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,undefined,'pending token must not be reported as registration failure or success');
 assert.equal(requests,0,'pending token must not send an invalid registration');
 nativeStatus = { ...nativeStatus, active: true, scheduled: false };
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false,'active activity without token must remain unconfirmed');
+assert.equal(retryTimers.size,1,'active missing token must be checked again');
 nativeStatus = { ...tokenReadyStatus, active: false, scheduled: true };
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false,'a real registration failure must remain visible for scheduled activities');
 nativeStatus = tokenReadyStatus;
@@ -113,6 +127,36 @@ nativeStatus={...nativeStatus,pushToken:'ef'.repeat(32)};
 listener({status:JSON.stringify(nativeStatus)});
 assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,true);
 assert.equal(requests,3);
+assert.equal(retryTimers.size,0,'rotation must clear obsolete retries');
+
+nativeStatus={...nativeStatus,pushToken:'12'.repeat(32)};
+acknowledge=false;
+assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,false);
+assert.equal(retryTimers.size,1,'negative acknowledgement must retry');
+const retry = [...retryTimers.values()][0];
+assert.equal(retry.delay,15000);
+retryTimers.clear();
+acknowledge=true;
+retry.callback();
+await flush();
+assert.equal((await bridge.getDepartureLiveActivityStatus()).automaticEndScheduled,true,'network/registration recovery must acknowledge current token');
+assert.equal(retryTimers.size,0);
+
+let release;
+holdRequest=new Promise(resolve=>{release=resolve;});
+nativeStatus={...nativeStatus,pushToken:'34'.repeat(32)};
+const oldRegistration=bridge.getDepartureLiveActivityStatus();
+await flush();
+nativeStatus={...nativeStatus,pushToken:'56'.repeat(32)};
+const rotatedRegistration=bridge.getDepartureLiveActivityStatus();
+const beforeRelease=requests;
+await flush();
+assert.equal(requests,beforeRelease,'rotated request must wait for older request to settle');
+holdRequest=undefined;
+release();
+assert.equal((await oldRegistration).automaticEndScheduled,false,'obsolete acknowledgement cannot mark latest token registered');
+assert.equal((await rotatedRegistration).automaticEndScheduled,true);
+assert.equal(requests,beforeRelease+1);
 const activityInput={destinationId:'destination-1',destinationName:'서울역',departureAt:input.departureAt,departureTimeLabel:'15:00',guidance:'우산 챙겨요',guidanceSymbol:'umbrella.fill',deepLink:'weatheron://destination?id=destination-1'};
 nativeStatus={...nativeStatus,...activityInput};
 await bridge.syncAutomaticDepartureLiveActivity(activityInput);
@@ -127,6 +171,25 @@ await bridge.syncAutomaticDepartureLiveActivity({...activityInput,departureAt:ne
 assert.equal(starts,2,'schedule changes must replace the current activity');
 await bridge.syncAutomaticDepartureLiveActivity(null);
 assert.equal(ends,1,'turning destination care off must end the current activity');
+assert.equal(retryTimers.size,0,'care OFF must clear registration retries');
+nativeStatus={...tokenReadyStatus,pushToken:'78'.repeat(32)};
+fail=true;
+await bridge.getDepartureLiveActivityStatus();
+assert.equal(retryTimers.size,1);
+await bridge.endDepartureLiveActivity();
+assert.equal(retryTimers.size,0,'explicit cancellation must clear retries');
+listener({status:JSON.stringify(tokenReadyStatus)});
+await flush();
+assert.equal(retryTimers.size,0,'late token event must read inactive native state');
+holdRequest=new Promise(resolve=>{release=resolve;});
+nativeStatus={...tokenReadyStatus,pushToken:'90'.repeat(32)};
+const cancelledRegistration=bridge.getDepartureLiveActivityStatus();
+await flush();
+await bridge.endDepartureLiveActivity();
+holdRequest=undefined;
+release();
+await cancelledRegistration;
+assert.equal(retryTimers.size,0,'failed in-flight registration must not restart retries after cancellation');
 console.log('iOS registration: actual request body, retry, deduplication and token event passed');
 
 env.APNS_SANDBOX_KEY_ID = 'SANDBOXKEY';

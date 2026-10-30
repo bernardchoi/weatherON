@@ -178,7 +178,7 @@ assert.equal(helpers.getRouteArrivalTimeIso('08:00', 'Asia/Seoul', friday, false
 const schedule = { timeBasis: 'arrival', targetArrivalTime: '09:00', transportMode: 'transit', repeatEnabled: false, repeatDays: [] };
 const scheduleNow = Date.parse('2090-01-01T05:00:00+09:00');
 const actualTarget = helpers.getRouteArrivalTimeIso('09:00', 'Asia/Seoul', scheduleNow, false, []);
-const verified = { ...estimate, requestArrivalTime: actualTarget, departureAt: new Date(Date.parse(actualTarget) - 50 * 60000).toISOString(), arrivalAt: new Date(Date.parse(actualTarget) - 10 * 60000).toISOString(), bufferSeconds: 600 };
+const verified = { ...estimate, updatedAt: new Date(scheduleNow - 60000).toISOString(), expiresAt: new Date(scheduleNow + 600000).toISOString(), requestArrivalTime: actualTarget, departureAt: new Date(Date.parse(actualTarget) - 50 * 60000).toISOString(), arrivalAt: new Date(Date.parse(actualTarget) - 10 * 60000).toISOString(), bufferSeconds: 600 };
 const timing = helpers.getDestinationTiming(verified, schedule, 'Asia/Seoul', scheduleNow, 'KR', 'KR', 'origin');
 assert.equal(travel.formatRouteClock(timing.departureAt, 'Asia/Seoul'), '08:10');
 assert.equal(helpers.getDestinationTiming(verified, { ...schedule, targetArrivalTime: '10:00' }, 'Asia/Seoul', scheduleNow), undefined);
@@ -298,6 +298,7 @@ function findBuilder(node) {
 findBuilder(stateAst); assert.ok(buildInputSource);
 const nativeContext = {
   getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getDestinationTiming: helpers.getDestinationTiming,
+  canScheduleTravelEstimate: travel.canScheduleTravelEstimate,
   nowMinuteTick: scheduleNow, placeSearchOrigin: context.placeSearchOrigin, activeWeatherLocation: { countryCode: 'KR' },
   weatherProviderResult: { destinationSnapshots: [destinationWeather] }, getDepartureWeatherGuidance: () => 'rain',
   getDepartureWeatherGuidanceKind: () => 'rain', getDepartureGuidanceSymbol: () => 'umbrella',
@@ -309,6 +310,23 @@ assert.equal(buildInput(saved).departureAt, timing.departureAt);
 assert.equal(buildInput(saved).departureTimeLabel, '08:10');
 assert.ok(buildInput(saved).guidance.includes(verified.message));
 assert.equal(buildInput({ ...saved, schedulePreference: { ...schedule, transportMode: 'walk' } }), null);
+const unsafeEstimates = [
+  { ...verified, status: 'error' },
+  { ...verified, status: 'fallback', provider: 'fallback', timingBasis: 'distance', transportMode: 'drive' },
+  { ...verified, provider: 'fallback', timingBasis: 'distance' },
+  { ...verified, cacheStatus: 'stale' },
+  { ...verified, expiresAt: new Date(scheduleNow).toISOString() },
+  { ...verified, expiresAt: undefined, updatedAt: '' },
+];
+for (const unsafe of unsafeEstimates) {
+  const destination = { ...saved, travelEstimate: unsafe, schedulePreference: { ...schedule, transportMode: unsafe.transportMode } };
+  assert.equal(buildInput(destination), null, 'unverified/expired routes must not start a native countdown');
+  const model = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, savedDestinations: [destination], notificationNow: scheduleNow });
+  const alert = model.notifications.find(item => item.id.endsWith(':destination'));
+  assert.equal(alert.active, false);
+  assert.equal(alert.scheduledAt, undefined);
+}
+assert.equal(travel.canScheduleTravelEstimate({ ...verified, cacheStatus: 'cached' }, scheduleNow), true);
 const serializers = load('apps/mobile/src/providers/widgetSnapshot.shared.ts');
 const widget = serializers.createWeatheronWidgetLocationSnapshot(destinationWeather, result.outfit, result.umbrella, { departureTime: travel.formatRouteClock(timing.departureAt, place.timezone), arrivalTime: travel.formatRouteClock(timing.arrivalAt, place.timezone), departureAt: timing.departureAt, arrivalAt: timing.arrivalAt, durationSeconds: timing.durationSeconds, bufferSeconds: timing.bufferSeconds, travelMinutes: 2401/60, routeMessage: verified.message, routeUpdatedAt: verified.updatedAt });
 assert.equal(widget.departureAt, buildInput(saved).departureAt);
@@ -320,6 +338,67 @@ assert.equal(travel.formatRouteClock(past.nowArrivalAt, place.timezone), '10:40'
 assert.equal(travel.formatRouteClock(past.departureAt, place.timezone), '08:10', 'past recommendation must not become tomorrow');
 globalThis.Date = originalDate;
 console.log('PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.');
+
+// Execute both actual schedule prop builders: selected destination and committed Home owner.
+const scheduleBuilders = [];
+function findScheduleBuilders(node) {
+  if (ts.isPropertyAssignment(node) && node.name.getText(stateAst) === 'destinationSchedule') scheduleBuilders.push(node.initializer.getText(stateAst));
+  ts.forEachChild(node, findScheduleBuilders);
+}
+findScheduleBuilders(stateAst);
+assert.equal(scheduleBuilders.length, 2);
+const repeatSchedule = { ...schedule, repeatEnabled: true, repeatDays: ['mon'] };
+const repeatTarget = helpers.getRouteArrivalTimeIso('09:00', place.timezone, friday, true, ['mon']);
+const repeatEstimate = { ...verified, requestArrivalTime: repeatTarget, departureAt: new Date(Date.parse(repeatTarget) - 3000000).toISOString() };
+const propsContext = {
+  selectedDestinationTravelEstimate: repeatEstimate, selectedDestinationSchedulePreference: repeatSchedule,
+  selectedDestinationTiming: timing, timing,
+  selectedDestinationAutoBufferMinutes: 10, travelEstimate: repeatEstimate,
+  activeDestination: { schedulePreference: repeatSchedule }, bufferMinutes: 10,
+};
+for (const source of scheduleBuilders) {
+  const props = new Function(...Object.keys(propsContext), `return (${source});`)(...Object.values(propsContext));
+  assert.deepEqual(props.repeatDays, ['mon']);
+  assert.equal(props.repeatEnabled, true);
+  const model = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: props, notificationNow: friday });
+  assert.equal(model.destinationCare.departureAdvice.departureAt, repeatEstimate.departureAt);
+  const pendingProps = new Function(...Object.keys(propsContext), `return (${source});`)(...Object.values({ ...propsContext, selectedDestinationTiming: undefined, timing: undefined }));
+  const pendingModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: pendingProps, notificationNow: friday });
+  assert.equal(pendingModel.destinationCare.departureAdvice.departureAt, undefined, 'flattened new schedule must not revive an old route rejected by the common timing helper');
+}
+
+// Execute the OS adapter with a native boundary double; this is not device delivery proof.
+now = scheduleNow; globalThis.Date = TestDate;
+const reservations = new Map();
+const nativeNotifications = {
+  setNotificationHandler() {}, getPermissionsAsync: async () => ({ granted: true }),
+  getAllScheduledNotificationsAsync: async () => [...reservations.values()], getPresentedNotificationsAsync: async () => [],
+  scheduleNotificationAsync: async request => { reservations.set(request.identifier, request); return request.identifier; },
+  cancelScheduledNotificationAsync: async id => { reservations.delete(id); },
+  SchedulableTriggerInputTypes: { DATE: 'date', CALENDAR: 'calendar' },
+};
+const notifications = load('apps/mobile/src/providers/localNotifications.ts', {
+  'expo-notifications': nativeNotifications,
+  './appStorage': { readAppValue: async () => ({}), writeAppValue: async () => {} },
+});
+await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [notification] });
+assert.equal(reservations.size, 1);
+const reservation = [...reservations.values()][0];
+assert.equal(reservation.trigger.date.toISOString(), notification.scheduledAt);
+assert.equal(reservation.content.data.scheduledAt, notification.scheduledAt);
+for (const durationSeconds of [3000, 1800, 2400, 3000, 2400]) {
+  const changed = { ...verified, durationSeconds, travelMinutes: durationSeconds / 60, departureAt: new Date(Date.parse(actualTarget) - (durationSeconds + 600) * 1000).toISOString() };
+  const destination = { ...saved, travelEstimate: changed };
+  const model = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, savedDestinations: [destination], notificationNow: scheduleNow });
+  const alert = model.notifications.find(item => item.id.endsWith(':destination'));
+  await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [alert] });
+  assert.equal(reservations.size, 1, 'duration changes replace the existing OS request without duplicates');
+  assert.equal([...reservations.values()][0].trigger.date.getTime(), Date.parse(buildInput(destination).departureAt) - 3600000, 'notification and countdown follow increases, decreases and oscillation');
+}
+await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [{ ...notification, active: false, scheduledAt: undefined }] });
+assert.equal(reservations.size, 0, 'an invalidated route removes the prior native reservation');
+globalThis.Date = originalDate;
+console.log('PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity and cancellation.');
 
 const clients = load('apps/mobile/src/providers/travelEstimateClient.ts', { '../config/weatherEnv': { DEFAULT_WEATHER_TIMEOUT_MS: 15000, getWeatherRuntimeConfig: () => ({ clientMode: 'fixture' }) } });
 let clientRequest;

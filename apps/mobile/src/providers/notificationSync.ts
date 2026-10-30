@@ -64,7 +64,8 @@ export function createNotificationSync<Input extends { enabled: boolean }>(
       } else {
         latest = { ...latest, input, onResult };
       }
-      if (retryTimer === undefined) void run();
+      // Re-renders must not restart an exhausted request; foreground/new intent can retry it.
+      if (retryTimer === undefined && retries < 3) void run();
     },
     retry() {
       clearRetry();

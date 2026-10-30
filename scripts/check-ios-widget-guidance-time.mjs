@@ -11,6 +11,9 @@ assert.doesNotMatch(source, /appSnapshotUpdatedAt:\s*(?:Date\(|[^\n]*observedAt)
 assert.match(source, /entry\.appSnapshotUpdatedAt, referenceDate: entry\.date/);
 const localization = source.slice(source.indexOf("private struct WeatherONWidgetLocalization"), source.indexOf("private struct WeatherONHourlySnapshot"));
 const formatter = source.slice(source.indexOf("private func weatherONAppSnapshotTime("), source.indexOf("private struct WeatherONWidgetFooter"));
+const models = source.slice(source.indexOf("private struct WeatherONHourlySnapshot"), source.indexOf("private extension WeatherONLocationSnapshot"));
+const routeClock = source.slice(source.indexOf("private func weatherONClock("), source.indexOf("private struct WeatherONWeatherBackdrop"));
+assert.match(source, /departureAt: departureAt, arrivalAt: arrivalAt/);
 const directory = mkdtempSync(join(tmpdir(), "weatheron-guidance-time-"));
 try {
   const file = join(directory, "check.swift");
@@ -21,8 +24,11 @@ private let snapshotDateFormatter: ISO8601DateFormatter = {
   return value
 }()
 private let fallbackSnapshotDateFormatter = ISO8601DateFormatter()
+private let homeDeepLink = URL(string: "weatheron://home")!
 ${localization}
+${models}
 ${formatter}
+${routeClock}
 var checked = 0
 var context = ""
 func expect(_ condition: @autoclosure () -> Bool, line: Int = #line) {
@@ -56,6 +62,24 @@ for deviceZone in ["Asia/Seoul", "America/Los_Angeles", "UTC"] {
       expect(sameLocalDay.contains("8:30") && !sameLocalDay.contains("10"))
     }
   }
+}
+do {
+  let decoder = JSONDecoder()
+  let payload = #"{"departureAt":"2026-10-30T14:50:00.000Z","arrivalAt":"2026-10-30T15:30:00.000Z","departureTime":"wrong","arrivalTime":"wrong","timeZone":"Asia/Seoul"}"#
+  let location = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(payload.utf8))
+  let restored = try decoder.decode(WeatherONLocationSnapshot.self, from: JSONEncoder().encode(location))
+  expect(restored.departureAt == location.departureAt && restored.arrivalAt == location.arrivalAt)
+  let now = ISO8601DateFormatter().date(from: "2026-10-30T14:00:00Z")!
+  let policy = WeatherONWidgetLocalization(languageTag: "en-US", temperatureUnit: "celsius", distanceUnit: "meter", uses24HourClock: true)
+  let departure = weatherONRouteClock(restored.departureAt, fallback: restored.departureTime, timeZone: restored.timeZone, referenceDate: now, localization: policy)
+  let arrival = weatherONRouteClock(restored.arrivalAt, fallback: restored.arrivalTime, timeZone: restored.timeZone, referenceDate: now, localization: policy)
+  expect(departure == "23:50")
+  expect(arrival.contains("10/31") && arrival.contains("00:30"))
+  let legacy = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(#"{"departureTime":"08:10"}"#.utf8))
+  expect(weatherONRouteClock(legacy.departureAt, fallback: legacy.departureTime, timeZone: "Asia/Seoul", referenceDate: now, localization: policy) == "08:10")
+  let tokyo = weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "Asia/Tokyo", referenceDate: now, localization: policy)
+  expect(tokyo == departure)
+  expect(weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "America/Los_Angeles", referenceDate: now, localization: policy) == "07:50")
 }
 print("Widget app snapshot time: \\(checked) checks passed (ko/en/ja, 12/24-hour, prior day/year, missing/future, location/device timezone)")
 `);

@@ -225,7 +225,11 @@ verifier.request("off", { enabled: false }, () => {}); await flush();
 for (let i = 0; i < 3; i++) await retryTimer.fire();
 assert.equal(attempts, 4); assert.equal(retryTimer.pending.size, 0, "automatic retries are bounded");
 verifier.request("off", { enabled: false }, () => {}); await flush();
-assert.equal(attempts, 5, "same input can retry after budget is exhausted");
+assert.equal(attempts, 4, "rendering the same input must not restart exhausted retries");
+verifier.retry(); await flush();
+assert.equal(attempts, 5, "foreground/manual reconciliation can explicitly retry the same input");
+verifier.request("new-off", { enabled: false }, () => {}); await flush();
+assert.equal(attempts, 6, "changed intent receives its own retry budget");
 verifier.stop();
 console.log("Notifications: native schedule/cancel failures, verification retries, rapid toggles, foreground reconciliation and stale completions passed.");
 

@@ -61,6 +61,15 @@ export function isLiveTransitEstimate(estimate: Pick<TravelEstimateInput, "provi
   return estimate.status === "ready" && (estimate.provider === "kakao-transit" || estimate.provider === "google-transit");
 }
 
+export function canScheduleTravelEstimate(estimate: Partial<TravelEstimateResult>, nowMs: number): boolean {
+  // Legacy/expired estimates remain readable; automation waits for a fresh route lookup.
+  return estimate.status === "ready" && ["kakao", "kakao-transit", "google", "google-transit"].includes(estimate.provider ?? "")
+    && estimate.cacheStatus !== "stale" && estimate.timingBasis !== "distance" && estimate.timingBasis !== "unavailable"
+    && Number.isFinite(Date.parse(estimate.updatedAt ?? ""))
+    && Date.parse(estimate.updatedAt!) <= nowMs
+    && Date.parse(estimate.expiresAt ?? "") > nowMs;
+}
+
 // Absolute timing shared by screens, notifications, widgets and Live Activity. P defaults to zero;
 // the reminder lead time is not preparation time and never changes D or B.
 export function resolveTravelTiming(
