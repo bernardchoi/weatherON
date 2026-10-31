@@ -28,10 +28,18 @@
   },
   "currentSchedule": {
     "timeBasis": "departure",
-    "time": "22:30",
-    "transportMode": "drive",
-    "repeatEnabled": false,
-    "careEnabled": true
+    "time": "18:00",
+    "transportMode": "transit",
+    "repeatEnabled": true,
+    "repeatDays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "careEnabled": true,
+    "reminderLeadMinutes": 60
   },
   "immediateCase": {
     "departureAt": "2026-10-30T18:45:00+09:00",
@@ -62,27 +70,124 @@
     "apnsEvidence": "18:55 response not recovered from available filtered output; do not infer from prior deadlines"
   },
   "longBackgroundCase": {
-    "state": "running; OS pending schedule confirmed; activation and registration not yet observed",
+    "state": "closed as unverified by explicit user instruction; do not require historical physical end proof before overnight setup",
     "backgroundStartAt": "2026-10-30T19:02:26+09:00",
     "scheduledActivationAt": "2026-10-30T21:30:00+09:00",
     "departureAt": "2026-10-30T22:30:00+09:00",
     "osPendingLabelObservedMinute": "2026-10-30T19:02+09:00",
     "lastPhysicalObservation": null,
     "actualObservedSeconds": 0,
-    "observationMeaning": "zero completed hours at start; background wall-clock elapsed must be computed at each check; no continuous physical observation claimed",
-    "interruptionState": "none known since Home entry; future gaps must be recorded"
+    "observationMeaning": "wall-clock elapsed is not continuous physical observation or proof of uninterrupted app background execution",
+    "interruptionState": "last successful monitor 20:44:25 KST; no successful checks through23:39:11; exact log loss time unknown; physical observation absent",
+    "lastMonitorCheckAt": "2026-10-30T14:40:35.066846+00:00",
+    "backgroundWallClockElapsedSeconds": 16689,
+    "lastMonitorResult": "sanitized temp events file and filter missing; execution session unknown; mirroring retry failed; no app interaction",
+    "activationObserved": false,
+    "apnsStatus": null,
+    "deviceEndObserved": false
   },
   "overnightCase": {
-    "state": "not started",
-    "actualObservedSeconds": 0
+    "state": "cancelled at user request; long-background verification left unverified; user will test overnight independently",
+    "backgroundStartAt": "2026-10-30T23:51:20+09:00",
+    "scheduledActivationAt": "2026-10-31T08:00:00+09:00",
+    "departureAt": "2026-10-31T09:00:00+09:00",
+    "minimumElapsedAt": "2026-10-31T07:51:20+09:00",
+    "minimumBackgroundElapsedSeconds": 28800,
+    "osPendingLabelObservedMinute": "2026-10-30T23:51+09:00",
+    "actualObservedSeconds": 0,
+    "backgroundWallClockElapsedSeconds": 520,
+    "planOnly": false,
+    "physicalActivationObservation": null,
+    "physicalEndObservation": null,
+    "apnsStatus": null,
+    "interruptionState": "agent reopened app around2026-10-31 00:00KST afterusercancellation",
+    "observationMeaning": "record elapsed wall clock and gaps; no continuous physical observation claimed",
+    "homeIntentSelection": "explicitly selected original test target in Home dropdown to replace previously preserved other destination activity; other schedules unchanged",
+    "lastMonitorCheckAt": "2026-10-30T14:54:19.750310+00:00",
+    "lastMonitorResult": "overnight heartbeat deleted; do not resumeovernight",
+    "cancelRequestedAt": "2026-10-30T23:59:26+09:00",
+    "foregroundReentryObservedMinute": "2026-10-31T00:00+09:00",
+    "elapsedPrecision": "approximate8min40sec until minute-only foregroundobservation; not8hours"
   },
   "diagnostics": {
     "sanitizedTailSessionId": 9040,
-    "tailFilterScript": "/tmp/weatheron-safe-tail.py",
+    "tailFilterScript": "docs/audits/live-activity-reliability-2026-10-30/capture-safe-tail.py",
     "rawTokensOrPersonalLocationsStored": false,
-    "durableSanitizedTailSessionId": 78233,
-    "sanitizedEventsFile": "/tmp/weatheron-build58-safe-events.jsonl",
-    "heartbeatId": "build-58-live-activity",
-    "heartbeatIntervalMinutes": 5
+    "durableSanitizedTailSessionId": 83602,
+    "sanitizedEventsFile": "docs/audits/live-activity-reliability-2026-10-30/build58-safe-events.jsonl",
+    "heartbeatId": null,
+    "heartbeatIntervalMinutes": 5,
+    "safeEventsLinesRead": 4,
+    "monitoringIncident": {
+      "detectedAt": "2026-10-30T14:40:35.066846+00:00",
+      "lastSuccessfulMonitorAt": "2026-10-30T11:44:25.586860+00:00",
+      "tempFilterMissing": true,
+      "tempEventsMissing": true,
+      "tailSessionUnavailable": true,
+      "mirroringRetryFailed": true,
+      "cause": "unknown; do not infer host restart or app failure"
+    },
+    "tailState": "captureprocesses stoppedbyagent after test and restoration",
+    "oauthLoginSessionId": null,
+    "mirroringState": "normal screenshot restored23:45; Home confirmed23:51",
+    "heartbeatState": "deleted; usercancelledovernight; no futureovernightwork",
+    "safeMethodEventsFile": "docs/audits/live-activity-reliability-2026-10-30/build58-safe-events-method.jsonl",
+    "tailStoppedAt": "2026-10-31T13:35:38.127428+00:00"
+  },
+  "followupAuthorization": {
+    "confirmedAtMinute": "2026-10-30T19:08+09:00",
+    "userWillLeaveAppUnopened": true,
+    "continueAfter2230IntoOvernight": true,
+    "restoreOriginalAfterAllTests": true,
+    "latestInstruction": "2026-10-31 user cancelledovernight, asks current-time shortcoretests then originalrestore"
+  },
+  "restoration": {
+    "state": "verified complete in physical iPhone mirroring UI and detail reentry",
+    "verifiedAtMinute": "2026-10-31T22:32+09:00",
+    "originalSchedulePreserved": true,
+    "doNotClaimRestored": false,
+    "verification": "18:00 departure; transit; repeatON mon-fri; sat/sunOFF; careON; computed17:00 reminder60min; no other destination/location/labelchanged",
+    "routeState": "original transit still no route/lookupfailure; restored setting is not routeavailabilitysuccess"
+  },
+  "shortCoreCase": {
+    "state": "shortpending registration and APNs receipt verified; physicalnotification/end and offline recovery unverified",
+    "backgroundEntryAt": "2026-10-31T13:16:05.555735+00:00",
+    "activationAt": "2026-10-31T22:20:00+09:00",
+    "notificationAt": "2026-10-31T22:20:00+09:00",
+    "departureAt": "2026-10-31T23:20:00+09:00",
+    "osPendingConfirmedMinute": "2026-10-31T22:15+09:00",
+    "installedBuildReconfirmed": "1.0.0(58), TestFlight22:10KST",
+    "note": "shortpending->activation test; afterreceipt/tap shortenenddeadline then restoreoriginal; no longproof",
+    "registrationObservedAt": "2026-10-31T22:20:02.779+09:00",
+    "registrationHttp": 200,
+    "appReopenedBeforeRegistrationByAgent": false,
+    "appForegroundEntryMinute": "2026-10-31T22:22+09:00",
+    "physicalNotificationReceipt": "not collected; quietHours policy may exclude22:20; awaiting permission to temporarilydisable",
+    "lockscreenBannerTap": "not collected",
+    "appInboxTap": "22:23 historical destination row opened correct testdestinationG2; notnewdelivery/read-stateproof",
+    "shortEndAt": "2026-10-31T22:30:00+09:00",
+    "shortEndRegistrationAt": "2026-10-31T22:23:36.150+09:00",
+    "onlineBackgroundStartAt": "2026-10-31T22:26:28+09:00",
+    "apnsResponses": [
+      {
+        "at": "2026-10-31T22:30:00.684+09:00",
+        "status": 200,
+        "environment": "production"
+      },
+      {
+        "at": "2026-10-31T22:30:01.060+09:00",
+        "status": 200,
+        "environment": "production"
+      }
+    ],
+    "onlineBackgroundUntilFirstApnsSeconds": 212.684,
+    "physicalEndObservation": null,
+    "networkDisconnectedConfirmed": false,
+    "notificationQuietHoursVerifiedOnMinute": "2026-10-31T22:33+09:00",
+    "quietHoursSettingChanged": false,
+    "notificationReceiptVerdict": "not verified; originalreducedinterruptionsON excludes22:00-07:00; no new22:20inboxrow",
+    "lockscreenBannerTapVerdict": "unverified; no physicalresponsecollected",
+    "appInboxVerdict": "historicaltargetrow taps correctG2; doesnotprovefreshdelivery/readchange",
+    "registrationMethodClarification": "routeonlyallowsPOST; earliercommentaryDELETEhypothesiswasincorrect; methodfieldaddedforsafeexplicittrace"
   }
 }

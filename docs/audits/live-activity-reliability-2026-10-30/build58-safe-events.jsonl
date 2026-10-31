@@ -1,0 +1,16 @@
+{"event": "tail_start", "timestamp": "2026-10-30T14:43:08.606991+00:00"}
+{"event": "tail_stop", "exit": 1, "timestamp": "2026-10-30T14:43:10.875474+00:00"}
+{"event": "tail_start", "timestamp": "2026-10-30T14:48:51.479704+00:00"}
+{"event": "departure_registration_request", "timestamp": 1793371977138, "status": 401}
+{"event": "departure_registration_request", "timestamp": 1793372536634, "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793372594390, "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793372655958, "status": 200}
+{"event": "tail_stop", "exit": 1, "timestamp": "2026-10-30T15:26:27.126523+00:00"}
+{"event": "tail_start", "timestamp": "2026-10-31T13:11:03.225573+00:00"}
+{"event": "departure_registration_request", "timestamp": 1793452500630, "status": 401}
+{"event": "departure_registration_request", "timestamp": 1793452802779, "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793453016150, "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793453074577, "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793453135987, "status": 200}
+{"event": "departure_end_push", "timestamp": 1793453400684, "status": 200, "environment": "production"}
+{"event": "departure_end_push", "timestamp": 1793453401060, "status": 200, "environment": "production"}
