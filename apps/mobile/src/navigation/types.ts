@@ -1,3 +1,4 @@
+import type { getDestinationLeavingNowTiming } from "../state/appStateHelpers";
 import type { DemoState } from "../data/demoState";
 import type { AppRouteId, P0RouteId } from "./routes";
 import type { PlaceSearchResult } from "@weatheron/shared";
@@ -41,6 +42,7 @@ import type { WeatherLocationPreset } from "../providers/weatherLocations";
 import type { AccountProfile } from "../providers/accountAuth";
 
 export type P0ScreenProps = {
+  destinationLeavingNow?: Record<string, ReturnType<typeof getDestinationLeavingNowTiming>>;
   state: DemoState;
   rainForecastContext?: import("../utils/homeOuting").RainForecastContext | null;
   onOpenRainForecast?: (context: import("../utils/homeOuting").RainForecastContext) => void;
@@ -90,6 +92,7 @@ export type P0ScreenProps = {
   selectedWardrobeItemId: string;
   recentlyRemovedWardrobeItemId: string | null;
   onboardingCompleted: boolean;
+  onboardingProgress: import("../state/persistedAppState").OnboardingProgress;
   isWeatherLoading: boolean;
   accountLinked: boolean;
   accountProfile: AccountProfile | null;

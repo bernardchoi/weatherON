@@ -1,0 +1,42 @@
+npm run check:shared
+
+> weatheron-design-workspace@1.0.0 check:shared
+> node scripts/check-shared-rules.mjs
+
+shared rules check passed
+
+node --no-warnings scripts/check-route-selected-time.mjs
+PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.
+PASS shared timing: 08:00→08:40, 09:00/40m/10m→08:10/08:50, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.
+PASS actual SQLite: additive/idempotent legacy migration, saved/preview round trip, duration/absolute schedule/provenance/expiry preserved, and old data retained.
+PASS UI model/notification: identical departure/arrival, separate reminder lead time, and route provenance in notification.
+PASS actual request effect: fast setting changes reject obsolete responses, ten-minute throttle, background guard, offline provenance and recovery. Foreground/restart clear/requery is covered separately by lifecycle/storage checks.
+PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.
+PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity and cancellation.
+PASS client/localization: server provenance/timestamps preserved, malformed result rejected, no fabricated transit fallback, composed route messages use OS language catalogs, and browser notification timer receiver retained.
+
+node --no-warnings scripts/check-ios-reliability.mjs
+Migration: 76 SQL failure points, read/decode/commit/cleanup and idempotent retries passed.
+Notifications: native schedule/cancel failures, verification retries, rapid toggles, foreground reconciliation and stale completions passed.
+Weather: partial/slow failures, location-specific cache, freshness, persistence and late responses passed.
+Weather hook: obsolete progressive/final responses cannot update UI or persistence.
+iOS reliability checks passed (native boundaries mocked; migration SQL executed by Node SQLite).
+
+node --no-warnings scripts/check-review-regressions.mjs
+Review regressions passed: storage failure/retry, durable photo replacement, notification races, overseas timezone/cache.
+
+node --no-warnings scripts/check-correctness-batch.mjs
+Cold-start location transitions passed
+Tomorrow: local midnight, stale observation, missing day, DST, year rollover and hourly offsets passed
+Reauth: same-account token guard, mismatch cleanup, cancellation, local data retention and explicit second confirmation passed
+Routing: selected departure, arrival precedence, driving support, unsupported arrival disclosure and cache isolation passed (mock HTTP only)
+iOS reminder calendar trigger retains the forecast location timezone
+Foreground TTL: expired vs fresh, bounded retry, background and in-flight guards passed
+H5: existing persisted rain preference callback and permission gate on enable passed
+
+node scripts/check-ios-widget-guidance-time.mjs
+Widget app snapshot time: 168 checks passed (ko/en/ja, 12/24-hour, prior day/year, missing/future, location/device timezone)
+
+Additional checks: iOS widget-sync, Live Activity, departure-activity-intent, Home outing, Android live-update, departure-push, tsc --noEmit, git diff --check: PASS.
+xcodebuild -workspace apps/mobile/ios/WeatherON.xcworkspace -scheme WeatherON -configuration Release -destination generic/platform=iOS -derivedDataPath /tmp/weatheron-route-connection-derived CODE_SIGNING_ALLOWED=NO build
+BUILD SUCCEEDED (final changes). Unsigned compile only; no installation/archive/TestFlight distribution.

@@ -18,6 +18,7 @@ type DestinationRow = {
   address: string;
   category: string;
   country_code: string;
+  country_iso_code: string | null;
   latitude: number;
   longitude: number;
   timezone: string;
@@ -51,6 +52,7 @@ type PlaceRow = {
   address: string;
   category: string;
   country_code: string;
+  country_iso_code: string | null;
   latitude: number;
   longitude: number;
   timezone: string;
@@ -61,6 +63,7 @@ type LocationRow = {
   location_id: string;
   location_name: string;
   country_code: string;
+  country_iso_code: string | null;
   latitude: number;
   longitude: number;
   timezone: string;
@@ -249,6 +252,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         address TEXT NOT NULL,
         category TEXT NOT NULL,
         country_code TEXT NOT NULL,
+        country_iso_code TEXT,
         latitude REAL NOT NULL,
         longitude REAL NOT NULL,
         timezone TEXT NOT NULL,
@@ -261,6 +265,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         location_id TEXT NOT NULL,
         location_name TEXT NOT NULL,
         country_code TEXT NOT NULL,
+        country_iso_code TEXT,
         latitude REAL NOT NULL,
         longitude REAL NOT NULL,
         timezone TEXT NOT NULL,
@@ -274,6 +279,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         address TEXT NOT NULL,
         category TEXT NOT NULL,
         country_code TEXT NOT NULL,
+        country_iso_code TEXT,
         latitude REAL NOT NULL,
         longitude REAL NOT NULL,
         timezone TEXT NOT NULL,
@@ -425,6 +431,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
         PRIMARY KEY (role, snapshot_seq, seq)
       );
     `);
+    await ensurePlaceCountryColumns(database);
     await ensureDestinationScheduleColumns(database);
     await ensureDestinationStatusColumn(database);
     await ensureDestinationLabelColumn(database);
@@ -477,6 +484,12 @@ async function readPersistedAppState(database: SQLiteExecutor): Promise<Record<s
 
   return removeUndefined({
     onboardingCompleted: boolSetting(settings, "onboardingCompleted"),
+    onboardingProgress: {
+      route: textSetting(settings, "onboardingRoute"),
+      locationHandled: boolSetting(settings, "onboardingLocationHandled"),
+      notificationHandled: boolSetting(settings, "onboardingNotificationHandled"),
+      destinationSelected: boolSetting(settings, "onboardingDestinationSelected"),
+    },
     smartCareEnabled: boolSetting(settings, "smartCareEnabled"),
     accountLinked: boolSetting(settings, "accountLinked"),
     termsRequiredAccepted: boolSetting(settings, "termsRequiredAccepted"),
@@ -517,6 +530,10 @@ async function writePersistedAppState(database: SQLiteExecutor, value: unknown) 
   const now = Date.now();
   await writeSettings(database, {
     onboardingCompleted: boolValue(record.onboardingCompleted),
+    onboardingRoute: textValue(objectRecord(record.onboardingProgress).route),
+    onboardingLocationHandled: boolValue(objectRecord(record.onboardingProgress).locationHandled),
+    onboardingNotificationHandled: boolValue(objectRecord(record.onboardingProgress).notificationHandled),
+    onboardingDestinationSelected: boolValue(objectRecord(record.onboardingProgress).destinationSelected),
     smartCareEnabled: boolValue(record.smartCareEnabled),
     accountLinked: boolValue(record.accountLinked),
     termsRequiredAccepted: boolValue(record.termsRequiredAccepted),
@@ -642,8 +659,8 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
         care_enabled, alert_rain_threshold_pct, alert_lead_time_minutes, alert_wind_threshold_ms,
         schedule_time_basis, schedule_target_arrival_time, schedule_transport_mode, schedule_repeat_enabled,
         travel_origin_place_id, travel_destination_place_id, travel_provider, travel_status, travel_minutes, travel_distance_meters, travel_message, travel_updated_at, travel_route_options_json, travel_result_json,
-        saved_at_label, change_status, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        saved_at_label, change_status, updated_at, country_iso_code
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       placeId,
       index,
       textValue(place.name) ?? "",
@@ -676,6 +693,7 @@ async function writeSavedDestinations(database: SQLiteExecutor, destinations: un
       textValue(destination.savedAtLabel) ?? "저장됨",
       textValue(destination.changeStatus) ?? "saved",
       now,
+      textValue(place.countryIsoCode) ?? null,
     );
     await replaceDestinationRepeatDays(database, placeId, stringArray(schedulePreference.repeatDays));
   }
@@ -782,14 +800,15 @@ async function writePlace(database: SQLiteExecutor, kind: string, value: unknown
   const timezone = textValue(place.timezone);
   if (!textValue(place.id) || !timezone) return;
   await database.runAsync(
-    `INSERT INTO places (kind, place_id, name, address, category, country_code, latitude, longitude, timezone, provider, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO places (kind, place_id, name, address, category, country_code, latitude, longitude, timezone, provider, updated_at, country_iso_code)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(kind) DO UPDATE SET
        place_id = excluded.place_id,
        name = excluded.name,
        address = excluded.address,
        category = excluded.category,
        country_code = excluded.country_code,
+       country_iso_code = excluded.country_iso_code,
        latitude = excluded.latitude,
        longitude = excluded.longitude,
        timezone = excluded.timezone,
@@ -806,6 +825,7 @@ async function writePlace(database: SQLiteExecutor, kind: string, value: unknown
     timezone,
     textValue(place.provider) ?? "fixture",
     now,
+    textValue(place.countryIsoCode) ?? null,
   );
 }
 
@@ -816,6 +836,7 @@ async function readWeatherLocation(database: SQLiteExecutor, kind: string): Prom
     locationId: row.location_id,
     locationName: row.location_name,
     countryCode: row.country_code,
+    ...(row.country_iso_code ? { countryIsoCode: row.country_iso_code } : {}),
     coordinate: { latitude: row.latitude, longitude: row.longitude },
     timezone: row.timezone,
   };
@@ -826,12 +847,13 @@ async function writeWeatherLocation(database: SQLiteExecutor, kind: string, valu
   const timezone = textValue(location.timezone);
   if (!textValue(location.locationId) || !timezone) return;
   await database.runAsync(
-    `INSERT INTO weather_locations (kind, location_id, location_name, country_code, latitude, longitude, timezone, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO weather_locations (kind, location_id, location_name, country_code, latitude, longitude, timezone, updated_at, country_iso_code)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(kind) DO UPDATE SET
        location_id = excluded.location_id,
        location_name = excluded.location_name,
        country_code = excluded.country_code,
+       country_iso_code = excluded.country_iso_code,
        latitude = excluded.latitude,
        longitude = excluded.longitude,
        timezone = excluded.timezone,
@@ -844,6 +866,7 @@ async function writeWeatherLocation(database: SQLiteExecutor, kind: string, valu
     numberValue(objectRecord(location.coordinate).longitude),
     timezone,
     now,
+    textValue(location.countryIsoCode) ?? null,
   );
 }
 
@@ -1124,6 +1147,13 @@ async function ensureWeatherSnapshotColumns(database: SQLiteDatabase) {
   if (!columns.has("pm2_5")) await database.runAsync("ALTER TABLE weather_snapshots ADD COLUMN pm2_5 REAL");
 }
 
+async function ensurePlaceCountryColumns(database: SQLiteDatabase) {
+  for (const table of ["destinations", "places", "weather_locations"] as const) {
+    const rows = await database.getAllAsync<TableInfoRow>(`PRAGMA table_info(${table})`);
+    if (!rows.some(row => row.name === "country_iso_code")) await database.runAsync(`ALTER TABLE ${table} ADD COLUMN country_iso_code TEXT`);
+  }
+}
+
 async function ensureDestinationScheduleColumns(database: SQLiteDatabase) {
   for (const table of ["destinations", "destination_preview"] as const) {
     const rows = await database.getAllAsync<TableInfoRow>(`PRAGMA table_info(${table})`);
@@ -1251,6 +1281,7 @@ function placeFromRow(row: PlaceRow | DestinationRow): Record<string, unknown> {
     address: row.address,
     category: row.category,
     countryCode: row.country_code,
+    ...(row.country_iso_code ? { countryIsoCode: row.country_iso_code } : {}),
     coordinate: { latitude: row.latitude, longitude: row.longitude },
     timezone: row.timezone,
     provider: row.provider,

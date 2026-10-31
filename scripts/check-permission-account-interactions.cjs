@@ -23,7 +23,7 @@ for(const change of cases){actions=[];const state={...props,...change};const tre
  const locationCopy=p.getLocationPermissionCopy(state.locationReady,state.weatherLocationMode,state.deviceLocationState,state.permissionGateResult);
  if(state.deviceLocationState.status==='requesting')assert.ok(!actions.some(a=>Array.isArray(a)&&a[0]==='location'));
  else if(locationCopy.requiresSettings)assert.ok(actions.includes('settings'));
- else if(locationCopy.canRequest)assert.ok(actions.some(a=>Array.isArray(a)&&a.join(',')==='location,M4,general'));
+ else if(locationCopy.canRequest&&!state.locationReady)assert.ok(actions.some(a=>Array.isArray(a)&&a.join(',')==='location,M4,general'));
  else assert.ok(actions.includes('current'));
  const notificationCopy=p.getNotificationPermissionCopy(state.permissionReady,state.smartCareEnabled,state.permissionGateResult);
  if(notificationCopy.requiresSettings)assert.ok(actions.includes('settings'));

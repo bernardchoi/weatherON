@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-30T07:27:28.567Z",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "service": "weatheron-weather-proxy",
+      "runtime": "cloudflare-worker"
+    }
+  },
+  "route": {
+    "status": 200,
+    "body": {
+      "provider": "google-transit",
+      "status": "ready",
+      "travelMinutes": 27,
+      "distanceMeters": 9557,
+      "message": "선택 시간 기준 대중교통 추정"
+    }
+  },
+  "sourceCommit": "unverified"
+}

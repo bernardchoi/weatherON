@@ -1,0 +1,2 @@
+place provider fallback: google geocoding failed: REQUEST_DENIED
+PASS overseas fixture boundaries: search identity/country, isolated save/reload/weather request, no-route, DST/midnight, stale notification exclusion

@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
-function load(file) {const m={exports:{}};new Function('module','exports','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(m,m.exports,id=>load(path.resolve(path.dirname(file),id+'.ts')));return m.exports;}
+import { buildSync } from 'esbuild';
+const shared={exports:{}};new Function('module','exports',buildSync({entryPoints:['packages/shared/src/index.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(shared,shared.exports);
+function load(file) {const m={exports:{}};new Function('module','exports','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(m,m.exports,id=>id==='@weatheron/shared'?shared.exports:load(path.resolve(path.dirname(file),id+'.ts')));return m.exports;}
 const api=load('apps/mobile/src/utils/homeOuting.ts');
 const now=Date.parse('2026-10-10T09:10:00+09:00');
 const hour=(time,temp=22,rain=0,amount=0,wind=2)=>({time,tempC:temp,rainProbabilityPct:rain,precipitationMm:amount,windMs:wind,condition:'clear',available:{temp:true,rainProbability:true,precipitation:true,wind:true}});
@@ -116,6 +118,7 @@ console.log('PASS: actual WeatherKit missing-field normalization and navigation 
       jsx: ts.JsxEmit.React, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
     } }).outputText;
     new Function('module', 'exports', 'require', compiled)(module, module.exports, id => {
+      if (id === '@weatheron/shared') return shared.exports;
       if (id === 'react') return react;
       if (id.endsWith('/localization/react-native')) return native;
       if (id.endsWith('/AppThemeContext')) return { useAppTheme: () => ({ name: mode, text: '#111', muted: '#777', border: '#aaa', card: '#ddd', gold: '#a40', sky: '#578' }) };
@@ -284,10 +287,10 @@ const futureCool={...dest,current:{...dest.current,feelsLikeC:33},hourly:[hour('
 const cool=preparation(futureCool,target,true,now);assert.match(cool.copy,/한 겹/);assert.equal(cool.evidence,'기온 17°C');assert.doesNotMatch(cool.evidence,/체감/);assert.doesNotMatch(cool.copy,/물 한 병/);
 // Build 56 feedback: changing origin temperature must not override the arrival forecast.
 const temperatureCases = [
- [-10, /포근한 겉옷/], [0, /포근한 겉옷/], [5, /포근한 겉옷/],
- [5.01, /가볍게 걸칠 한 겹/], [17, /가볍게 걸칠 한 겹/], [18, /가볍게 걸칠 한 겹/],
- [18.01, /편한 차림/], [25, /편한 차림/], [29.99, /편한 차림/],
- [30, /물 한 병/], [40, /물 한 병/],
+ [-10, /보온 겉옷/], [0, /보온 겉옷/], [5, /보온 겉옷/], [8, /보온 겉옷/],
+ [8.01, /보온 겉옷/], [12, /보온 겉옷/], [12.01, /가볍게 걸칠 한 겹/], [17, /가볍게 걸칠 한 겹/], [18, /가볍게 걸칠 한 겹/],
+ [18.01, /편한 차림/], [25, /편한 차림/], [26.99, /편한 차림/], [27, /통풍/], [29.99, /통풍/],
+ [30, /통풍/], [40, /통풍/],
 ];
 for (const source of ['weatherkit', 'openmeteo']) for (const [temp, expected] of temperatureCases) {
  const snapshot = {...dest, source, current: {...dest.current, tempC: 16, feelsLikeC: 16}, hourly: [hour('2026-10-10T10:00', temp)]};
@@ -334,12 +337,12 @@ for(const condition of ['snow','rain','clear']) for(const wind of [2,9]) for(con
  assert.equal(/바람/.test(p.copy),wind>=8);assert.equal(p.basis,'목적지 도착 무렵');
 }
 const snowNoWind={...dest,hourly:[{...hour('2026-10-10T10:00',-2,80,1,9),condition:'snow',available:{temp:true,rainProbability:true,precipitation:true,wind:false,condition:true}}]};
-assert.match(preparation(snowNoWind,target,true,now).copy,/눈.*\n미끄럼 적은 신발/);
+assert.match(preparation(snowNoWind,target,true,now).copy,/눈.*미끄럼 적은 신발/);
 assert.doesNotMatch(preparation(snowNoWind,target,true,now).copy,/바람/);
 const currentRain={...dest,current:{...dest.current,condition:'rain',windMs:2,windAvailable:true}};
-assert.match(preparation(currentRain,undefined,true,now).copy,/지금.*비.*\n우산/);
+assert.match(preparation(currentRain,undefined,true,now).copy,/비.*우산/);
 const currentStorm={...currentRain,current:{...currentRain.current,condition:'storm',windMs:9}};
-assert.match(preparation(currentStorm,undefined,true,now).copy,/비와 바람.*\n방수/);
+assert.match(preparation(currentStorm,undefined,true,now).copy,/강수와 강한 바람.*방수/);
 console.log('PASS: realistic snow probability/amount/wind matrix preserves snow footwear; unknown phase uses generic precipitation; current and forecast bases stay distinct.');
 const snowMissing={...dest,hourly:[{...hour('2026-10-10T10:00',17),condition:'snow'}]};assert.doesNotMatch(preparation(snowMissing,target,true,now).copy,/눈|신발/);
 const snowReal={...snowMissing,hourly:[{...snowMissing.hourly[0],available:{...snowMissing.hourly[0].available,condition:true}}]};assert.match(preparation(snowReal,target,true,now).copy,/신발/);
@@ -350,7 +353,7 @@ assert.match(preparation(dest,target,false,now).status,/목적지 선택/);
 const outside=preparation(dest,'2026-10-11T10:30:00+09:00',true,now);assert.equal(outside.basis,'목적지 현재 날씨');assert.match(outside.status,/선택 시각 예보 없음/);assert.equal(outside.evidence,'현재 체감 21°C');
 assert.match(preparation(dest,'2026-10-10T08:30:00+09:00',true,now).status,/지난 일정/);
 assert.match(home,/fontSize: 20, lineHeight: 28/);assert.match(home,/fontSize: 18, lineHeight: 26/);assert.doesNotMatch(home,/fontSize: 13, lineHeight: 20.*previewNames/);
-assert.ok(home.includes('날씨로 골랐어요'));assert.ok(home.includes('weatherBasis={state.weather.locationId'));assert.ok(home.includes('selectedDestinationTargetAt'));assert.ok(home.includes('state.destinationCare.destinationWeather : currentWeather'));
+assert.ok(home.includes('forecastStatus={state.outfitContext?.status'));assert.ok(home.includes('weatherBasis={state.weather.locationId'));assert.ok(home.includes('selectedDestinationTargetAt'));assert.ok(home.includes('state.destinationCare.destinationWeather : currentWeather'));
 console.log('PASS: friendly destination-based preparation, forecast-first/general temperature, genuine-only wind/condition, current-only fallback, uncertainty as secondary state and readable reduced copy.');
 
 for(const fixture of [{...weather,source:'fallback'},{...weather,locationUnverified:true}]){

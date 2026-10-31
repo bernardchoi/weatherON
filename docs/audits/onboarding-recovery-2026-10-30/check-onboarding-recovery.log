@@ -1,0 +1,5 @@
+PASS onboarding: legacy/malformed defaults; 6 steps and destination selection survive native SQLite + hydration.
+PASS permission callbacks: grant/deny/transient failure/settings return; notification decision retained. No OS prompt invoked.
+PASS account: success/incomplete terms/cancel/offline/retry eligibility + late response after cancel; duplicate taps suppressed. Only inert account services used.
+PASS cold account restore: offline retains local state, late restoration cannot overwrite a newer auth action, A2/A3 Back cancels pending navigation.
+PASS actual terms JSX: all 16 consent combinations across ready/saving/error. No real consent submitted.

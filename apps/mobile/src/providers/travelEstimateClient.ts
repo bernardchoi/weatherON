@@ -46,6 +46,7 @@ export type TravelRouteOption = {
 };
 
 export type TravelEstimateResult = {
+  requestKind?: "now" | "scheduled";
   provider: TravelEstimateProvider;
   status: TravelEstimateStatus;
   travelMinutes: number;

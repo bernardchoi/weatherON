@@ -1,0 +1,850 @@
+{
+  "observedAt": "2026-10-30T08:14:31.666Z",
+  "bundle": "index-73241cd89705cb0d18032d8e9433d098.js",
+  "source": "d16ae98 + working changes",
+  "environment": "QA-only final static export; production core with captured upstream replay; weather unavailable/fallback; care permission off; reduced motion and reduced transparency enabled",
+  "selected": {
+    "place": {
+      "id": "qa-seoul-station",
+      "name": "서울역",
+      "address": "공개 장소 QA 표본",
+      "category": "transit",
+      "coordinate": {
+        "latitude": 37.5547,
+        "longitude": 126.9707
+      },
+      "countryCode": "KR",
+      "timezone": "Asia/Seoul",
+      "provider": "kakao"
+    },
+    "label": null,
+    "careEnabled": true,
+    "alertCondition": {
+      "rainThresholdPct": 50,
+      "leadTimeMinutes": 60,
+      "windThresholdMs": 8
+    },
+    "schedulePreference": {
+      "timeBasis": "departure",
+      "targetArrivalTime": "18:00",
+      "transportMode": "transit",
+      "repeatEnabled": false,
+      "repeatDays": []
+    },
+    "travelEstimate": {
+      "originPlaceId": "qa-seongsu",
+      "destinationPlaceId": "qa-seoul-station",
+      "provider": "kakao-transit",
+      "status": "ready",
+      "travelMinutes": 26,
+      "distanceMeters": 9466,
+      "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+      "updatedAt": "2026-10-30T08:14:30.095Z",
+      "durationSeconds": 1518,
+      "transportMode": "transit",
+      "timingBasis": "route",
+      "cacheStatus": "fresh",
+      "bufferSeconds": 0,
+      "requestDepartureTime": "2026-10-30T09:00:00.000Z",
+      "expiresAt": "2026-10-30T08:15:30.095Z",
+      "routeOptions": [
+        {
+          "type": "SUBWAY",
+          "totalTime": 1518,
+          "totalDistance": 9466,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 동대문역사문화공원(DDP))",
+              "time": 630,
+              "distance": 5500,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "동대문역사문화공원(DDP)동대문역사문화공원역 환승",
+              "time": 48,
+              "distance": 15,
+              "stops": [
+                "동대문역사문화공원(DDP)",
+                "동대문역사문화공원(DDP)"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "SUBWAY",
+              "guidance": "4호선 (동대문역사문화공원(DDP) > 서울역)",
+              "time": 450,
+              "distance": 3600,
+              "stops": [
+                "동대문역사문화공원(DDP)",
+                "충무로",
+                "명동",
+                "회현(남대문시장)",
+                "서울역"
+              ],
+              "vehicles": [
+                "일반 4호선",
+                "일반 4호선",
+                "급행 4호선"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BUS_AND_SUBWAY",
+          "totalTime": 1747,
+          "totalDistance": 9919,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 시청)",
+              "time": 1080,
+              "distance": 8600,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)",
+                "을지로4가",
+                "을지로3가",
+                "을지로입구",
+                "시청"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "시청역8번출구시청역8번출구정류장까지 도보로 이동 (8번 출구)",
+              "time": 262,
+              "distance": 205,
+              "stops": [
+                "시청",
+                "시청역8번출구"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "BUS",
+              "guidance": "지선 7016 (시청역8번출구 > 서울역버스환승센터(3번승강장))",
+              "time": 274,
+              "distance": 1002,
+              "stops": [
+                "시청역8번출구",
+                "서울역버스환승센터(3번승강장)"
+              ],
+              "vehicles": [
+                "지선 7016"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "SUBWAY",
+          "totalTime": 1771,
+          "totalDistance": 10085,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 시청)",
+              "time": 1080,
+              "distance": 8600,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)",
+                "을지로4가",
+                "을지로3가",
+                "을지로입구",
+                "시청"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "시청시청역 환승",
+              "time": 185,
+              "distance": 109,
+              "stops": [
+                "시청",
+                "시청"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "SUBWAY",
+              "guidance": "1호선 (시청 > 서울역)",
+              "time": 150,
+              "distance": 1100,
+              "stops": [
+                "시청",
+                "서울역"
+              ],
+              "vehicles": [
+                "일반 1호선",
+                "일반 1호선",
+                "일반 1호선",
+                "급행 1호선",
+                "급행 1호선"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "savedAtLabel": "업데이트됨",
+    "changeStatus": "updated"
+  },
+  "restored": {
+    "place": {
+      "id": "qa-seoul-station",
+      "name": "서울역",
+      "address": "공개 장소 QA 표본",
+      "category": "transit",
+      "coordinate": {
+        "latitude": 37.5547,
+        "longitude": 126.9707
+      },
+      "countryCode": "KR",
+      "timezone": "Asia/Seoul",
+      "provider": "kakao"
+    },
+    "label": null,
+    "careEnabled": true,
+    "alertCondition": {
+      "rainThresholdPct": 50,
+      "leadTimeMinutes": 60,
+      "windThresholdMs": 8
+    },
+    "schedulePreference": {
+      "timeBasis": "departure",
+      "targetArrivalTime": "18:00",
+      "transportMode": "transit",
+      "repeatEnabled": false,
+      "repeatDays": []
+    },
+    "travelEstimate": {
+      "originPlaceId": "qa-seongsu",
+      "destinationPlaceId": "qa-seoul-station",
+      "provider": "kakao-transit",
+      "status": "ready",
+      "travelMinutes": 26,
+      "distanceMeters": 9466,
+      "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+      "updatedAt": "2026-10-30T08:14:30.095Z",
+      "durationSeconds": 1518,
+      "transportMode": "transit",
+      "timingBasis": "route",
+      "cacheStatus": "cached",
+      "bufferSeconds": 0,
+      "requestDepartureTime": "2026-10-30T09:00:00.000Z",
+      "expiresAt": "2026-10-30T08:15:30.095Z",
+      "routeOptions": [
+        {
+          "type": "SUBWAY",
+          "totalTime": 1518,
+          "totalDistance": 9466,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 동대문역사문화공원(DDP))",
+              "time": 630,
+              "distance": 5500,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "동대문역사문화공원(DDP)동대문역사문화공원역 환승",
+              "time": 48,
+              "distance": 15,
+              "stops": [
+                "동대문역사문화공원(DDP)",
+                "동대문역사문화공원(DDP)"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "SUBWAY",
+              "guidance": "4호선 (동대문역사문화공원(DDP) > 서울역)",
+              "time": 450,
+              "distance": 3600,
+              "stops": [
+                "동대문역사문화공원(DDP)",
+                "충무로",
+                "명동",
+                "회현(남대문시장)",
+                "서울역"
+              ],
+              "vehicles": [
+                "일반 4호선",
+                "일반 4호선",
+                "급행 4호선"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BUS_AND_SUBWAY",
+          "totalTime": 1747,
+          "totalDistance": 9919,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 시청)",
+              "time": 1080,
+              "distance": 8600,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)",
+                "을지로4가",
+                "을지로3가",
+                "을지로입구",
+                "시청"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "시청역8번출구시청역8번출구정류장까지 도보로 이동 (8번 출구)",
+              "time": 262,
+              "distance": 205,
+              "stops": [
+                "시청",
+                "시청역8번출구"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "BUS",
+              "guidance": "지선 7016 (시청역8번출구 > 서울역버스환승센터(3번승강장))",
+              "time": 274,
+              "distance": 1002,
+              "stops": [
+                "시청역8번출구",
+                "서울역버스환승센터(3번승강장)"
+              ],
+              "vehicles": [
+                "지선 7016"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "SUBWAY",
+          "totalTime": 1771,
+          "totalDistance": 10085,
+          "transfers": 1,
+          "fare": 1550,
+          "steps": [
+            {
+              "type": "SUBWAY",
+              "guidance": "2호선 (성수 > 시청)",
+              "time": 1080,
+              "distance": 8600,
+              "stops": [
+                "성수",
+                "뚝섬",
+                "한양대",
+                "왕십리(성동구청)",
+                "상왕십리",
+                "신당",
+                "동대문역사문화공원(DDP)",
+                "을지로4가",
+                "을지로3가",
+                "을지로입구",
+                "시청"
+              ],
+              "vehicles": [
+                "일반 2호선"
+              ]
+            },
+            {
+              "type": "WALKING",
+              "guidance": "시청시청역 환승",
+              "time": 185,
+              "distance": 109,
+              "stops": [
+                "시청",
+                "시청"
+              ],
+              "vehicles": []
+            },
+            {
+              "type": "SUBWAY",
+              "guidance": "1호선 (시청 > 서울역)",
+              "time": 150,
+              "distance": 1100,
+              "stops": [
+                "시청",
+                "서울역"
+              ],
+              "vehicles": [
+                "일반 1호선",
+                "일반 1호선",
+                "일반 1호선",
+                "급행 1호선",
+                "급행 1호선"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "savedAtLabel": "업데이트됨",
+    "changeStatus": "updated"
+  },
+  "selectedText": "서울역\n출발 시각 · 이동 · 도착 판단\n장소 이미지\n목적지 라벨\n집 또는 회사를 지정\n라벨 없음\n집\n회사\n도착 판단\n경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요\n약 18:25 도착 추정\n10/30 18:25 도착 예상\n조회 17:14\n선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.\n18:00 출발 · 약 26분\n케어 ON\n출발지\n성수역\n위치 변경\n출발 시간\n18:00\n도착 추정 약 18:25\n이동수단\n대중교통\n약 26분\n반복 요일\n반복 없음\nOFF\n월\n화\n수\n목\n금\n토\n일\n알림 일정\n17:00 알림 · 18:00 출발\n열기\n카카오맵 길찾기\n대중교통\n›\n카카오맵에는 출발시각이 자동 반영되지 않아요.\n목적지 코디\n햇빛이 강하고 더워요. 가볍게 가리고 나가요\n자외선 지수 7라 모자나 선크림을 챙기면 좋아요\n보유 0/4\n상의\n린넨 티셔츠\n하의\n치노 쇼츠\n신발\n블랙 스포츠 샌들\n소품\n네이비 볼캡\n추가 준비: 린넨 티셔츠, 치노 쇼츠, 블랙 스포츠 샌들, 네이비 볼캡\n목적지 삭제\n삭제 후 출발 목록에서 바로 복구 가능\n홈\n코디\n출발\nMY",
+  "homeText": "WeatherON\n성수역\n직접 고른 지역\n28°\n맑음\n최고 31° · 최저 24°\n저장된 날씨예요. 최신 정보를 다시 확인해 주세요.\n체감 31° · 강수 18%\n서울역\n도착 예정 시간\n18:25\n10/30 18:25 도착 예상 · 이동 26분 · 여유 0분 · 선택한 출발 시간과 이동시간 기준 도착 예정 시간이에요. · 경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요 · 조회 10/30 17:14\n목적지 강수\n18%\n시간별 예보 보기\n목적지 준비물\n가볍게\n가벼운 차림이면 충분\n오늘의 코디\n보기\n더운 날이에요 · 가볍게\n날씨 갱신 실패\n날씨 갱신 실패. 기본 예보 기준 추천\n재시도 필요\n다시 시도\n기본 예보로 보기\n홈\n코디\n출발\nMY",
+  "responses": [
+    {
+      "url": "http://127.0.0.1:8096/routes/estimate?origin=37.5446%2C127.0559&destination=37.5547%2C126.9707&originName=%EC%84%B1%EC%88%98%EC%97%AD&destinationName=%EC%84%9C%EC%9A%B8%EC%97%AD&originCountryCode=KR&destinationCountryCode=KR&transportMode=drive&departureTime=2026-10-30T09%3A00%3A00.000Z&arrivalBufferSeconds=0",
+      "body": {
+        "provider": "fallback",
+        "status": "fallback",
+        "travelMinutes": 20,
+        "durationSeconds": 1200,
+        "timingBasis": "distance",
+        "distanceMeters": 10253,
+        "message": "현지 좌표 거리 기반 추정",
+        "failureReason": "QA replay only supports Seongsu station to Seoul station",
+        "transportMode": "drive",
+        "requestDepartureTime": "2026-10-30T09:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-30T08:14:28.870Z",
+        "expiresAt": "2026-10-30T08:15:28.870Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8096/routes/estimate?origin=37.5446%2C127.0559&destination=37.5547%2C126.9707&originName=%EC%84%B1%EC%88%98%EC%97%AD&destinationName=%EC%84%9C%EC%9A%B8%EC%97%AD&originCountryCode=KR&destinationCountryCode=KR&transportMode=transit&departureTime=2026-10-30T09%3A00%3A00.000Z&arrivalBufferSeconds=0",
+      "body": {
+        "provider": "kakao-transit",
+        "status": "ready",
+        "durationSeconds": 1518,
+        "travelMinutes": 26,
+        "distanceMeters": 9466,
+        "timingBasis": "route",
+        "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+        "routeOptions": [
+          {
+            "type": "SUBWAY",
+            "totalTime": 1518,
+            "totalDistance": 9466,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 동대문역사문화공원(DDP))",
+                "time": 630,
+                "distance": 5500,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "동대문역사문화공원(DDP)동대문역사문화공원역 환승",
+                "time": 48,
+                "distance": 15,
+                "stops": [
+                  "동대문역사문화공원(DDP)",
+                  "동대문역사문화공원(DDP)"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "4호선 (동대문역사문화공원(DDP) > 서울역)",
+                "time": 450,
+                "distance": 3600,
+                "stops": [
+                  "동대문역사문화공원(DDP)",
+                  "충무로",
+                  "명동",
+                  "회현(남대문시장)",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 4호선",
+                  "일반 4호선",
+                  "급행 4호선"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BUS_AND_SUBWAY",
+            "totalTime": 1747,
+            "totalDistance": 9919,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 시청)",
+                "time": 1080,
+                "distance": 8600,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)",
+                  "을지로4가",
+                  "을지로3가",
+                  "을지로입구",
+                  "시청"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "시청역8번출구시청역8번출구정류장까지 도보로 이동 (8번 출구)",
+                "time": 262,
+                "distance": 205,
+                "stops": [
+                  "시청",
+                  "시청역8번출구"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "BUS",
+                "guidance": "지선 7016 (시청역8번출구 > 서울역버스환승센터(3번승강장))",
+                "time": 274,
+                "distance": 1002,
+                "stops": [
+                  "시청역8번출구",
+                  "서울역버스환승센터(3번승강장)"
+                ],
+                "vehicles": [
+                  "지선 7016"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SUBWAY",
+            "totalTime": 1771,
+            "totalDistance": 10085,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 시청)",
+                "time": 1080,
+                "distance": 8600,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)",
+                  "을지로4가",
+                  "을지로3가",
+                  "을지로입구",
+                  "시청"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "시청시청역 환승",
+                "time": 185,
+                "distance": 109,
+                "stops": [
+                  "시청",
+                  "시청"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "1호선 (시청 > 서울역)",
+                "time": 150,
+                "distance": 1100,
+                "stops": [
+                  "시청",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 1호선",
+                  "일반 1호선",
+                  "일반 1호선",
+                  "급행 1호선",
+                  "급행 1호선"
+                ]
+              }
+            ]
+          }
+        ],
+        "transportMode": "transit",
+        "requestDepartureTime": "2026-10-30T09:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-30T08:14:30.095Z",
+        "expiresAt": "2026-10-30T08:15:30.095Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8096/routes/estimate?origin=37.5446%2C127.0559&destination=37.5547%2C126.9707&originName=%EC%84%B1%EC%88%98%EC%97%AD&destinationName=%EC%84%9C%EC%9A%B8%EC%97%AD&originCountryCode=KR&destinationCountryCode=KR&transportMode=transit&departureTime=2026-10-30T09%3A00%3A00.000Z&arrivalBufferSeconds=0",
+      "body": {
+        "provider": "kakao-transit",
+        "status": "ready",
+        "durationSeconds": 1518,
+        "travelMinutes": 26,
+        "distanceMeters": 9466,
+        "timingBasis": "route",
+        "message": "경로 소요시간 기준 예상 · 시간대 미반영 · 운행·대기시간 확인 필요",
+        "routeOptions": [
+          {
+            "type": "SUBWAY",
+            "totalTime": 1518,
+            "totalDistance": 9466,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 동대문역사문화공원(DDP))",
+                "time": 630,
+                "distance": 5500,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "동대문역사문화공원(DDP)동대문역사문화공원역 환승",
+                "time": 48,
+                "distance": 15,
+                "stops": [
+                  "동대문역사문화공원(DDP)",
+                  "동대문역사문화공원(DDP)"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "4호선 (동대문역사문화공원(DDP) > 서울역)",
+                "time": 450,
+                "distance": 3600,
+                "stops": [
+                  "동대문역사문화공원(DDP)",
+                  "충무로",
+                  "명동",
+                  "회현(남대문시장)",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 4호선",
+                  "일반 4호선",
+                  "급행 4호선"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BUS_AND_SUBWAY",
+            "totalTime": 1747,
+            "totalDistance": 9919,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 시청)",
+                "time": 1080,
+                "distance": 8600,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)",
+                  "을지로4가",
+                  "을지로3가",
+                  "을지로입구",
+                  "시청"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "시청역8번출구시청역8번출구정류장까지 도보로 이동 (8번 출구)",
+                "time": 262,
+                "distance": 205,
+                "stops": [
+                  "시청",
+                  "시청역8번출구"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "BUS",
+                "guidance": "지선 7016 (시청역8번출구 > 서울역버스환승센터(3번승강장))",
+                "time": 274,
+                "distance": 1002,
+                "stops": [
+                  "시청역8번출구",
+                  "서울역버스환승센터(3번승강장)"
+                ],
+                "vehicles": [
+                  "지선 7016"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SUBWAY",
+            "totalTime": 1771,
+            "totalDistance": 10085,
+            "transfers": 1,
+            "fare": 1550,
+            "steps": [
+              {
+                "type": "SUBWAY",
+                "guidance": "2호선 (성수 > 시청)",
+                "time": 1080,
+                "distance": 8600,
+                "stops": [
+                  "성수",
+                  "뚝섬",
+                  "한양대",
+                  "왕십리(성동구청)",
+                  "상왕십리",
+                  "신당",
+                  "동대문역사문화공원(DDP)",
+                  "을지로4가",
+                  "을지로3가",
+                  "을지로입구",
+                  "시청"
+                ],
+                "vehicles": [
+                  "일반 2호선"
+                ]
+              },
+              {
+                "type": "WALKING",
+                "guidance": "시청시청역 환승",
+                "time": 185,
+                "distance": 109,
+                "stops": [
+                  "시청",
+                  "시청"
+                ],
+                "vehicles": []
+              },
+              {
+                "type": "SUBWAY",
+                "guidance": "1호선 (시청 > 서울역)",
+                "time": 150,
+                "distance": 1100,
+                "stops": [
+                  "시청",
+                  "서울역"
+                ],
+                "vehicles": [
+                  "일반 1호선",
+                  "일반 1호선",
+                  "일반 1호선",
+                  "급행 1호선",
+                  "급행 1호선"
+                ]
+              }
+            ]
+          }
+        ],
+        "transportMode": "transit",
+        "requestDepartureTime": "2026-10-30T09:00:00.000Z",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-30T08:14:30.095Z",
+        "expiresAt": "2026-10-30T08:15:30.095Z",
+        "cacheStatus": "cached"
+      }
+    }
+  ],
+  "errors": []
+}

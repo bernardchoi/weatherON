@@ -1,0 +1,27 @@
+[
+  [
+    "accountLinked",
+    null,
+    0
+  ],
+  [
+    "locationReady",
+    null,
+    1
+  ],
+  [
+    "onboardingCompleted",
+    null,
+    1
+  ],
+  [
+    "permissionReady",
+    null,
+    1
+  ],
+  [
+    "weatherLocationMode",
+    "auto",
+    null
+  ]
+]

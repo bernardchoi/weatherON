@@ -1,0 +1,254 @@
+{
+  "observedAt": "2026-10-30T07:27:28.853Z",
+  "status": 200,
+  "params": {
+    "origin": "37.5446,127.0559",
+    "destination": "37.5547,126.9707",
+    "originCountryCode": "KR",
+    "destinationCountryCode": "KR",
+    "originName": "성수역",
+    "destinationName": "서울역",
+    "transportMode": "transit",
+    "departureTime": "2026-10-30T18:00:00+09:00"
+  },
+  "apiStatus": "OK",
+  "options": [
+    {
+      "type": "SUBWAY",
+      "totalDistance": 9466,
+      "totalTime": 1518,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "SUBWAY",
+      "totalDistance": 10085,
+      "totalTime": 1771,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 9919,
+      "totalTime": 1747,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 9920,
+      "totalTime": 1819,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 10168,
+      "totalTime": 1877,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "SUBWAY",
+      "totalDistance": 11753,
+      "totalTime": 2035,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 9868,
+      "totalTime": 1961,
+      "transfers": 1,
+      "fare": {
+        "min": 1550,
+        "max": 2500
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 9966,
+      "totalTime": 1945,
+      "transfers": 1,
+      "fare": {
+        "min": 1550,
+        "max": 2500
+      }
+    },
+    {
+      "type": "BUS_AND_SUBWAY",
+      "totalDistance": 9896,
+      "totalTime": 2037,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 9925,
+      "totalTime": 3235,
+      "transfers": 1,
+      "fare": {
+        "value": 2500
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 9683,
+      "totalTime": 3333,
+      "transfers": 1,
+      "fare": {
+        "value": 2500
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 10329,
+      "totalTime": 3507,
+      "transfers": 1,
+      "fare": {
+        "value": 2500
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 11071,
+      "totalTime": 3429,
+      "transfers": 1,
+      "fare": {
+        "value": 2600
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 11236,
+      "totalTime": 3909,
+      "transfers": 0,
+      "fare": {
+        "value": 2500
+      }
+    },
+    {
+      "type": "BUS",
+      "totalDistance": 10105,
+      "totalTime": 3561,
+      "transfers": 0,
+      "fare": {
+        "value": 2500
+      }
+    }
+  ],
+  "selected": {
+    "properties": {
+      "type": "SUBWAY",
+      "totalDistance": 9466,
+      "totalTime": 1518,
+      "transfers": 1,
+      "fare": {
+        "value": 1550
+      }
+    },
+    "steps": [
+      {
+        "guidance": "2호선 (성수 > 동대문역사문화공원(DDP))",
+        "type": "SUBWAY",
+        "distance": 5500,
+        "time": 630,
+        "stops": [
+          {
+            "name": "성수"
+          },
+          {
+            "name": "뚝섬"
+          },
+          {
+            "name": "한양대"
+          },
+          {
+            "name": "왕십리(성동구청)"
+          },
+          {
+            "name": "상왕십리"
+          },
+          {
+            "name": "신당"
+          },
+          {
+            "name": "동대문역사문화공원(DDP)"
+          }
+        ],
+        "vehicles": [
+          {
+            "name": "2호선",
+            "type": "일반"
+          }
+        ]
+      },
+      {
+        "guidance": "동대문역사문화공원(DDP)동대문역사문화공원역 환승",
+        "type": "WALKING",
+        "distance": 15,
+        "time": 48,
+        "stops": [
+          {
+            "name": "동대문역사문화공원(DDP)"
+          },
+          {
+            "name": "동대문역사문화공원(DDP)"
+          }
+        ]
+      },
+      {
+        "guidance": "4호선 (동대문역사문화공원(DDP) > 서울역)",
+        "type": "SUBWAY",
+        "distance": 3600,
+        "time": 450,
+        "stops": [
+          {
+            "name": "동대문역사문화공원(DDP)"
+          },
+          {
+            "name": "충무로"
+          },
+          {
+            "name": "명동"
+          },
+          {
+            "name": "회현(남대문시장)"
+          },
+          {
+            "name": "서울역"
+          }
+        ],
+        "vehicles": [
+          {
+            "name": "4호선",
+            "type": "일반"
+          },
+          {
+            "name": "4호선",
+            "type": "일반"
+          },
+          {
+            "name": "4호선",
+            "type": "급행"
+          }
+        ]
+      }
+    ]
+  },
+  "note": "Raw public API response replayed locally; no new upstream requests from replay server."
+}

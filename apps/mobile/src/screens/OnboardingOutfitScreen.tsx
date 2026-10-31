@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
@@ -15,18 +15,13 @@ import { getOutfitVariantLabel } from "../utils/outfitLabels";
 
 const screenIcons = Platform.OS === "ios" ? { ...uiIconAssets, ...ambientScreenIconOverrides } : uiIconAssets;
 
-export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onRequestCurrentLocation, onCompleteOnboarding }: P0ScreenProps) {
+export function OnboardingOutfitScreen({ state, locationReady, onboardingProgress, onNavigate, onRequestCurrentLocation, onCompleteOnboarding }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const outfitItems = Object.values(state.outfit.items).filter(Boolean);
-  const [locationRequestHandled, setLocationRequestHandled] = useState(false);
+  const locationRequestHandled = onboardingProgress.locationHandled;
   const locationSetupComplete = locationReady || locationRequestHandled;
   const locationSkipped = locationRequestHandled && !locationReady;
-
-  const requestCurrentLocation = async () => {
-    await onRequestCurrentLocation();
-    setLocationRequestHandled(true);
-  };
 
   return (
     <AppScreen
@@ -38,7 +33,7 @@ export function OnboardingOutfitScreen({ state, locationReady, onNavigate, onReq
         <OnboardingFooter
           primaryLabel={locationSetupComplete ? "다음" : "현재 위치 사용"}
           primaryAccessibilityLabel={locationSetupComplete ? "알림 안내 단계로 이동" : "현재 위치 권한 요청"}
-          onPrimary={() => (locationSetupComplete ? onNavigate("O5") : void requestCurrentLocation())}
+          onPrimary={() => (locationSetupComplete ? onNavigate("O5") : void onRequestCurrentLocation())}
           secondaryLabel={locationSetupComplete ? "건너뛰기" : "나중에"}
           secondaryAccessibilityLabel={
             locationSetupComplete

@@ -1,0 +1,15 @@
+The following is a diff from the previous accessibility tree for Window: "WeatherON-P2-Isolated" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~					5 row (selectable) Expanded
+~					6 row (selected) WeatherON-P2-Isolated
+27.0
+Simulator
+~					7 row (selectable) Daehyeon의 iPhone
+27.2
+iPhone 16 Pro Max
+~			10 splitter (settable, float) 239.5
+~				27 button app.grid.3x3
+~				28 button camera.viewfinder
+~				29 button record.circle
+~				30 button
+~		31 splitter (settable, float) 1099.5
+~		34 toggle button Help: Sort and Filter, Value: off

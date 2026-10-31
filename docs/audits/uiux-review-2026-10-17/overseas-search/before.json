@@ -1,0 +1,39 @@
+[
+  {
+    "q": "Seoul Station",
+    "status": 200,
+    "results": []
+  },
+  {
+    "q": "Tokyo Station",
+    "status": 200,
+    "results": [
+      {
+        "name": "Tokyo Station",
+        "countryCode": "JP",
+        "provider": "fixture",
+        "timezone": "Asia/Tokyo"
+      }
+    ]
+  },
+  {
+    "q": "Eiffel Tower",
+    "status": 200,
+    "results": []
+  },
+  {
+    "q": "Times Square",
+    "status": 200,
+    "results": []
+  },
+  {
+    "q": "British Museum",
+    "status": 200,
+    "results": []
+  },
+  {
+    "q": "Marina Bay Sands",
+    "status": 200,
+    "results": []
+  }
+]

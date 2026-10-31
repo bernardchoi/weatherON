@@ -1,0 +1,3 @@
+Browser tab: 1, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/xcode-cloud/products/00bc7f97-00f6-48a8-ab9b-9be4cbdd5646/builds/3fe953e9-86ed-4ca5-898b-14f8f8bf344c/action/37691bf1-9831-4fc4-b632-39d98c2a38a7/logs".
+There has been no change in the accessibility tree.
+The focused UI element is 98 button (expanded) 통과함 Run ci_post_xcodebuild.sh script 1.9초, Secondary Actions: Collapse

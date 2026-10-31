@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-10-30T10:20:58.828Z",
+  "environment": "real search/WeatherKit; isolated JSON storage save/read simulates rehydration, no native restart",
+  "search": {
+    "id": "google-ChIJ3S-JXmauEmsRUcIaWtf4MzE",
+    "name": "시드니 오페라 하우스",
+    "address": "Bennelong Point, Sydney NSW 2000 오스트레일리아",
+    "category": "custom",
+    "countryCode": "GLOBAL",
+    "countryIsoCode": "AU",
+    "coordinate": {
+      "latitude": -33.8567844,
+      "longitude": 151.2152967
+    },
+    "provider": "google",
+    "timezone": "Australia/Sydney"
+  },
+  "restored": {
+    "id": "google-ChIJ3S-JXmauEmsRUcIaWtf4MzE",
+    "name": "시드니 오페라 하우스",
+    "address": "Bennelong Point, Sydney NSW 2000 오스트레일리아",
+    "category": "custom",
+    "countryCode": "GLOBAL",
+    "countryIsoCode": "AU",
+    "coordinate": {
+      "latitude": -33.8567844,
+      "longitude": 151.2152967
+    },
+    "provider": "google",
+    "timezone": "Australia/Sydney"
+  },
+  "weatherRequest": {
+    "latitude": -33.8567844,
+    "longitude": 151.2152967,
+    "timezone": "Australia/Sydney",
+    "countryCode": "AU",
+    "language": "en"
+  },
+  "weather": {
+    "locationId": "google-ChIJ3S-JXmauEmsRUcIaWtf4MzE",
+    "locationName": "시드니 오페라 하우스",
+    "timezone": "Australia/Sydney",
+    "source": "weatherkit",
+    "stale": false,
+    "observedAt": "2026-10-30T10:20:58Z",
+    "tempC": 19.6,
+    "hourlyCount": 227
+  }
+}

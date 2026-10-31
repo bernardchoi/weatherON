@@ -9,6 +9,8 @@ export type PlaceSearchResult = {
   address: string;
   category: DestinationCare["category"];
   countryCode: "KR" | "JP" | "GLOBAL";
+  /** Provider country; countryCode is the legacy weather/routing region. */
+  countryIsoCode?: string;
   coordinate: GeoCoordinate;
   distanceMeters?: number;
   timezone: string;

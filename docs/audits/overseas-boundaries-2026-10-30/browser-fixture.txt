@@ -1,0 +1,7 @@
+In-app browser: http://127.0.0.1:8098/
+Fixture only; actual getRouteArrivalTimeIso + DestinationCareScreen targetTimeReady source extracted and bundled.
+PASS future target
+PASS past target rejected
+PASS nonexistent DST 02:30 rejected
+PASS Auckland local midnight
+Not a native-app screen or device QA.

@@ -1,0 +1,1093 @@
+--- a/apps/mobile/src/utils/travelEstimate.ts
++++ b/apps/mobile/src/utils/travelEstimate.ts
+@@ -1,6 +1,50 @@
+ import { getZonedDateTimeParts } from "./zonedDateTime";
+ import type { DestinationTransportMode } from "@weatheron/shared";
+ import type { TravelEstimateResult } from "../providers/travelEstimateClient";
++import type { PlaceSearchResult } from "@weatheron/shared";
++import type { WeatherLocationPreset } from "../providers/weatherLocations";
++
++export type LeavingNowRouteState = {
++  status: "loading" | "ready" | "error" | "offline";
++  result?: TravelEstimateResult;
++};
++
++export function getLeavingNowRouteKey(origin: WeatherLocationPreset, place: PlaceSearchResult, transportMode: DestinationTransportMode): string {
++  return JSON.stringify([origin.locationId, origin.coordinate.latitude, origin.coordinate.longitude, origin.countryCode, place.id, place.coordinate.latitude, place.coordinate.longitude, place.countryCode, transportMode === "auto" ? "drive" : transportMode]);
++}
++
++export function isLeavingNowRouteResult(result: TravelEstimateResult | undefined, nowMs: number): result is TravelEstimateResult {
++  return Boolean(result && result.requestKind === "now" && !result.requestArrivalTime && !result.requestDepartureTime
++    && result.status === "ready" && result.provider !== "fallback" && (result.timingBasis === "current" || result.timingBasis === "route")
++    && Number.isFinite(result.durationSeconds) && result.durationSeconds! >= 0 && result.durationSeconds! <= 7 * 86400
++    && Number.isFinite(Date.parse(result.updatedAt)) && Date.parse(result.updatedAt) <= nowMs
++    && Number.isFinite(Date.parse(result.expiresAt ?? "")));
++}
++
++export function resolveLeavingNowTiming(state: LeavingNowRouteState | undefined, nowMs: number) {
++  const result = isLeavingNowRouteResult(state?.result, nowMs) ? state.result : undefined;
++  const reference = Boolean(result && (state?.status !== "ready" || result.cacheStatus === "stale" || Date.parse(result.expiresAt!) <= nowMs));
++  // A failed lookup keeps the original query's ETA; it must not slide forward as a new lookup.
++  const departure = result ? reference ? Date.parse(result.departureAt ?? result.updatedAt) : nowMs : NaN;
++  return {
++    nowArrivalStatus: state?.status ?? "idle" as const,
++    nowArrivalReference: reference,
++    nowArrivalAt: result && Number.isFinite(departure) ? new Date(departure + result.durationSeconds! * 1000).toISOString() : undefined,
++    nowRouteUpdatedAt: result?.updatedAt,
++    nowRouteExpiresAt: result?.expiresAt,
++    nowRouteMessage: result?.message,
++  };
++}
++
++export function getLeavingNowDescription(timing: ReturnType<typeof resolveLeavingNowTiming>, timeZone: string): string {
++  const clock = (value: string) => {
++    const parts = getZonedDateTimeParts(new Date(value), timeZone);
++    return `${parts.year}/${parts.month}/${parts.day} ${formatRouteClock(value, timeZone)}`;
++  };
++  const status = timing.nowArrivalStatus === "loading" ? "지금 출발 도착 조회 중" : timing.nowArrivalStatus === "offline" ? "오프라인/연결 실패" : timing.nowArrivalStatus === "error" ? "지금 출발 경로 조회 실패" : "";
++  const arrival = timing.nowArrivalAt ? `지금 출발 시 ${clock(timing.nowArrivalAt)} 도착 예상` : "지금 출발 도착 예상 확인 불가";
++  return [status, arrival, timing.nowArrivalReference ? "이전 조회 기준 참고" : timing.nowArrivalAt ? "최신 조회" : "", timing.nowRouteUpdatedAt ? `조회 ${clock(timing.nowRouteUpdatedAt)}` : "", timing.nowRouteMessage].filter(Boolean).join(" · ");
++}
+ 
+ export const maxWalkableDestinationDistanceKm = 25;
+ 
+@@ -74,7 +118,7 @@
+ // the reminder lead time is not preparation time and never changes D or B.
+ export function resolveTravelTiming(
+   estimate: Partial<TravelEstimateResult>, targetAt: string, timeBasis: "arrival" | "departure",
+-  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0, nowMs = Date.now(),
++  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0,
+ ) {
+   const target = Date.parse(targetAt);
+   const durationSeconds = estimate.durationSeconds ?? travelMinutes * 60;
+@@ -87,7 +131,6 @@
+     targetAt, departureAt: new Date(departure).toISOString(),
+     arrivalAt: new Date(departure + durationSeconds * 1000).toISOString(),
+     preparationAt: new Date(departure - preparationMinutes * 60000).toISOString(),
+-    nowArrivalAt: departure <= nowMs ? new Date(nowMs + durationSeconds * 1000).toISOString() : undefined,
+     durationSeconds, bufferSeconds,
+     arrivalFeasible: timeBasis === "departure" || departure + durationSeconds * 1000 + bufferSeconds * 1000 <= target,
+   };
+--- a/apps/mobile/src/providers/travelEstimateClient.ts
++++ b/apps/mobile/src/providers/travelEstimateClient.ts
+@@ -46,6 +46,7 @@
+ };
+ 
+ export type TravelEstimateResult = {
++  requestKind?: "now" | "scheduled";
+   provider: TravelEstimateProvider;
+   status: TravelEstimateStatus;
+   travelMinutes: number;
+--- a/apps/mobile/src/state/appStateHelpers.ts
++++ b/apps/mobile/src/state/appStateHelpers.ts
+@@ -1,4 +1,4 @@
+-import { getTravelMinutesForTransport, resolveTravelTiming } from "../utils/travelEstimate";
++import { getTravelMinutesForTransport, resolveTravelTiming, resolveLeavingNowTiming, getLeavingNowDescription, type LeavingNowRouteState } from "../utils/travelEstimate";
+ // useWeatherOnAppState에서 사용하는 순수 헬퍼 모음. React 상태에 의존하지 않는다.
+ import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
+ import type { NotificationRuleEvaluation } from "@weatheron/shared";
+@@ -405,5 +405,19 @@
+   // A response for another date/time must never carry its route into this schedule.
+   if (estimate.requestArrivalTime && (schedule.timeBasis !== "arrival" || estimate.requestArrivalTime !== target)) return undefined;
+   if (estimate.requestDepartureTime && (schedule.timeBasis !== "departure" || estimate.requestDepartureTime !== target)) return undefined;
+-  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0, nowMs);
+-}
++  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0);
++}
++
++export function getDestinationLeavingNowTiming(
++  estimate: DestinationTravelEstimate, schedule: DestinationSchedulePreference, timeZone: string, nowMs: number,
++  originCountryCode: "KR" | "JP" | "GLOBAL", destinationCountryCode: "KR" | "JP" | "GLOBAL", originPlaceId: string,
++  current?: LeavingNowRouteState,
++) {
++  const planned = getDestinationTiming(estimate, schedule, timeZone, nowMs, originCountryCode, destinationCountryCode, originPlaceId);
++  const departureAt = planned?.departureAt ?? getRouteArrivalTimeIso(schedule.targetArrivalTime, timeZone, nowMs, schedule.repeatEnabled, schedule.repeatDays);
++  if (!departureAt || Date.parse(departureAt) > nowMs) return undefined;
++  const timing = resolveLeavingNowTiming(current, nowMs);
++  // WidgetKit can render after expiry without another JavaScript lookup.
++  const reference = timing.nowArrivalReference ? timing : { ...resolveLeavingNowTiming(current ? { ...current, status: "loading" } : undefined, nowMs), nowArrivalStatus: "ready" as const };
++  return { ...timing, nowArrivalDescription: getLeavingNowDescription(timing, timeZone), nowArrivalReferenceDescription: getLeavingNowDescription(reference, timeZone) };
++}
+--- a/apps/mobile/src/state/useWeatherOnAppState.ts
++++ b/apps/mobile/src/state/useWeatherOnAppState.ts
+@@ -55,7 +55,7 @@
+   scheduleLocalNotificationTest,
+   syncLocalWeatherNotifications,
+ } from "../providers/localNotifications";
+-import { formatRouteClock, getTravelMinutesForTransport, canScheduleTravelEstimate } from "../utils/travelEstimate";
++import { formatRouteClock, getTravelMinutesForTransport, canScheduleTravelEstimate, getLeavingNowRouteKey, isLeavingNowRouteResult, type LeavingNowRouteState } from "../utils/travelEstimate";
+ import {
+   getDepartureLiveActivityActivationDelay,
+   getDepartureGuidanceSymbol,
+@@ -126,6 +126,7 @@
+   getAlertSettingsFocusFromRoute,
+   getAutoBufferMinutes,
+   getDestinationTiming,
++  getDestinationLeavingNowTiming,
+   getBackRoute,
+   getDefaultDestinationPlace,
+   getDefaultDestinationSchedulePreference,
+@@ -215,6 +216,7 @@
+   const [storageRetryTick, setStorageRetryTick] = useState(0);
+   const persistedStateRef = useRef<PersistedAppState | null>(null);
+   const photoSaveInFlightRef = useRef<Promise<void> | null>(null);
++  const [leavingNowRoutes, setLeavingNowRoutes] = useState<Record<string, LeavingNowRouteState>>({});
+   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
+   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
+   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
+@@ -382,6 +384,18 @@
+     selectedDestinationTravelEstimate, selectedDestinationSchedulePreference, selectedDestinationPlace.timezone, nowMinuteTick,
+     activeWeatherLocation.countryCode, selectedDestinationPlace.countryCode, placeSearchOrigin.locationId,
+   ) : undefined;
++  const routeRequests = [...savedDestinations.map(destination => ({ place: destination.place, schedule: destination.schedulePreference })),
++    ...(!destinationSaved ? [{ place: selectedDestinationPlace, schedule: selectedDestinationSchedulePreference }] : [])];
++  const destinationLeavingNow = useMemo(() => {
++    // A response can be newer than the last minute tick; use one clock for every display.
++    const nowMs = Date.now();
++    return Object.fromEntries(routeRequests.map(({ place, schedule }) => {
++      const estimate = savedDestinations.find(item => item.place.id === place.id)?.travelEstimate ?? storedDestinationTravelEstimate;
++      return [place.id, placeSearchOrigin ? getDestinationLeavingNowTiming(estimate, schedule, place.timezone, nowMs,
++        placeSearchOrigin.countryCode, place.countryCode, placeSearchOrigin.locationId,
++        leavingNowRoutes[getLeavingNowRouteKey(placeSearchOrigin, place, schedule.transportMode)]) : undefined];
++    }));
++  }, [savedDestinations, selectedDestinationPlace, selectedDestinationSchedulePreference, storedDestinationTravelEstimate, placeSearchOrigin, nowMinuteTick, leavingNowRoutes]);
+   const selectedDestinationAutoBufferMinutes = selectedDestinationTiming ? selectedDestinationTiming.bufferSeconds / 60 : undefined;
+   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
+     () => ({
+@@ -445,6 +459,11 @@
+           bufferSeconds: timing?.bufferSeconds,
+           routeMessage: translateText(destination.travelEstimate.cacheStatus === "stale" || Date.parse(destination.travelEstimate.expiresAt ?? "") <= nowMinuteTick ? `이전 조회 결과 · ${destination.travelEstimate.message}` : destination.travelEstimate.message, localePolicy.language),
+           routeUpdatedAt: destination.travelEstimate.updatedAt,
++          nowArrivalAt: destinationLeavingNow[destination.place.id]?.nowArrivalAt,
++          nowArrivalDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalDescription ?? "", localePolicy.language) || undefined,
++          nowArrivalReferenceDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalReferenceDescription ?? "", localePolicy.language) || undefined,
++          nowRouteUpdatedAt: destinationLeavingNow[destination.place.id]?.nowRouteUpdatedAt,
++          nowRouteExpiresAt: destinationLeavingNow[destination.place.id]?.nowRouteExpiresAt,
+           travelMinutes,
+           transportMode: destination.schedulePreference.transportMode,
+           deepLink: getWeatheronDestinationDeepLink(destination.place.id),
+@@ -466,6 +485,7 @@
+     activeWeatherLocation.timezone,
+     nowMinuteTick,
+     savedDestinations,
++    destinationLeavingNow,
+     selectedDestinationPlace.id,
+     userPreferenceProfile,
+     recommendationWardrobe,
+@@ -669,6 +689,7 @@
+           travelProvider: selectedDestinationTravelEstimate.provider,
+           travelStatus: selectedDestinationTravelEstimate.status,
+         },
++        leavingNow: destinationLeavingNow[selectedDestinationPlace.id],
+         savedDestinations,
+         notificationNow: nowMinuteTick,
+       });
+@@ -676,6 +697,7 @@
+     },
+     [
+       destinationCareEnabled,
++      destinationLeavingNow,
+       savedDestinations,
+       selectedDestinationAlertCondition,
+       selectedDestinationAutoBufferMinutes,
+@@ -743,6 +765,7 @@
+         travelProvider: travelEstimate.provider,
+         travelStatus: travelEstimate.status,
+       },
++      leavingNow: destinationLeavingNow[activeDestination.place.id],
+       savedDestinations,
+       notificationNow: nowMinuteTick,
+     });
+@@ -752,6 +775,7 @@
+   }, [
+     activeWeatherLocation.countryCode,
+     homeDepartureDestination,
++    destinationLeavingNow,
+     nowMinuteTick,
+     placeSearchOrigin,
+     recommendationWardrobe,
+@@ -768,6 +792,15 @@
+     const intervalId = setInterval(() => setNowMinuteTick(Date.now()), 60 * 1000);
+     return () => clearInterval(intervalId);
+   }, []);
++
++  useEffect(() => {
++    if (!appStateHydrated || AppState.currentState !== "active") return;
++    const now = Date.now();
++    const nextExpiry = Math.min(...Object.values(destinationLeavingNow).map(value => Date.parse(value?.nowRouteExpiresAt ?? "")).filter(value => value > now));
++    if (!Number.isFinite(nextExpiry)) return;
++    const timer = setTimeout(() => setNowMinuteTick(Date.now()), nextExpiry - now + 1);
++    return () => clearTimeout(timer);
++  }, [appStateHydrated, destinationLeavingNow]);
+ 
+   useEffect(() => {
+     const subscription = AppState.addEventListener("change", (nextState) => {
+@@ -942,9 +975,7 @@
+     selectedDestinationPlace.id,
+   ]);
+ 
+-  const routeRequests = [...savedDestinations.map(destination => ({ place: destination.place, schedule: destination.schedulePreference })),
+-    ...(!destinationSaved ? [{ place: selectedDestinationPlace, schedule: selectedDestinationSchedulePreference }] : [])];
+-  const routeRequestKey = JSON.stringify({ origin: placeSearchOrigin, routes: routeRequests });
++  const routeRequestKey = JSON.stringify({ origin: placeSearchOrigin, routes: routeRequests, leavingNow: routeRequests.map(({ place }) => Boolean(destinationLeavingNow[place.id])) });
+   const routeAttemptsRef = useRef(new Map<string, number>());
+   useEffect(() => {
+     if (!appStateHydrated || !placeSearchOrigin || AppState.currentState !== "active") return;
+@@ -956,36 +987,58 @@
+         if (!active) return;
+         const targetAt = getRouteArrivalTimeIso(schedule.targetArrivalTime, place.timezone, nowMinuteTick, schedule.repeatEnabled, schedule.repeatDays);
+         if (!targetAt) continue;
+-        const key = JSON.stringify({ origin, place, schedule, targetAt });
++        const leavingNow = Boolean(destinationLeavingNow[place.id]);
++        const nowKey = getLeavingNowRouteKey(origin, place, schedule.transportMode);
++        const previousNow = leavingNowRoutes[nowKey]?.result;
++        const key = leavingNow ? `now:${nowKey}` : JSON.stringify({ origin, place, schedule, targetAt });
++        const updateNow = (value: LeavingNowRouteState) => setLeavingNowRoutes(current => ({
++          ...Object.fromEntries(Object.entries(current).filter(([key]) => key !== nowKey).slice(-31)), [nowKey]: value,
++        }));
+         const stored = savedDestinationsRef.current.find(item => item.place.id === place.id)?.travelEstimate ?? previewDestinationTravelEstimate;
+         const previousAttempt = routeAttemptsRef.current.get(key);
+-        if (previousAttempt && nowMinuteTick < previousAttempt) continue;
+-        const nearDeparture = Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
++        if (previousAttempt && nowMinuteTick < previousAttempt) {
++          if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
++          continue;
++        }
++        const nearDeparture = leavingNow || Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
+         const retryAt = Date.now() + (nearDeparture ? 60000 : 600000);
+         routeAttemptsRef.current.set(key, retryAt);
+         pendingKeys.add(key);
+-        if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("loading");
++        if (leavingNow) {
++          updateNow({ status: "loading", result: previousNow });
++          if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
++        }
++        else if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("loading");
+         try {
+           const result = await runtimeTravelEstimateClient.estimateRoute({
+             origin: origin.coordinate, destination: place.coordinate,
+             originName: origin.locationName, destinationName: place.name,
+             originCountryCode: origin.countryCode, destinationCountryCode: place.countryCode,
+             transportMode: schedule.transportMode,
+-            departureTime: schedule.timeBasis === "departure" ? targetAt : undefined,
+-            arrivalTime: schedule.timeBasis === "arrival" ? targetAt : undefined,
+-            arrivalBufferSeconds: schedule.timeBasis === "arrival"
++            departureTime: !leavingNow && schedule.timeBasis === "departure" ? targetAt : undefined,
++            arrivalTime: !leavingNow && schedule.timeBasis === "arrival" ? targetAt : undefined,
++            arrivalBufferSeconds: !leavingNow && schedule.timeBasis === "arrival"
+               ? stored.requestArrivalTime === targetAt && stored.transportMode === schedule.transportMode && stored.bufferSeconds !== undefined
+                 ? stored.bufferSeconds
+                 : getAutoBufferMinutes(schedule.targetArrivalTime, (stored.durationSeconds ?? stored.travelMinutes * 60) / 60, nowMinuteTick, place.timezone) * 60
+               : 0,
+           });
+           if (!active) return;
++          if (leavingNow) {
++            const usable = isLeavingNowRouteResult(result, Date.now());
++            updateNow({ status: usable && result.cacheStatus !== "stale" && Date.parse(result.expiresAt!) > Date.now() ? "ready" : "error", result: usable ? result : previousNow });
++            continue;
++          }
+           const estimate = createDestinationTravelEstimate(origin.locationId, place.id, result);
+           if (place.id === selectedDestinationPlace.id) setPreviewDestinationTravelEstimate(estimate);
+           updateSavedDestinations(current => current.map(destination => destination.place.id === place.id ? { ...destination, travelEstimate: estimate } : destination));
+           if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
+-        } catch {
++        } catch (error) {
+           if (!active) return;
++          if (leavingNow) {
++            updateNow({ status: error instanceof TypeError && /offline|network|fetch/i.test(error.message) ? "offline" : "error", result: previousNow });
++            continue;
++          }
+           // Retain a previous result with its original timestamp and visible failure provenance.
+           const estimate: DestinationTravelEstimate = stored.status === "ready"
+             ? { ...stored, cacheStatus: "stale", message: `이전 조회 결과 · 갱신 실패 · ${stored.message.replace(/^이전 조회 결과 · 갱신 실패 · /, "")}` }
+@@ -2246,6 +2299,7 @@
+     deviceLocationState,
+     placeSearchOrigin,
+     destinationSaved,
++    destinationLeavingNow,
+     savedDestinations,
+     destinationLimitNotice,
+     recentlyRemovedDestination,
+--- a/apps/mobile/src/data/demoState.ts
++++ b/apps/mobile/src/data/demoState.ts
+@@ -32,12 +32,13 @@
+   parseDateTimeInZone,
+ } from "../utils/zonedDateTime";
+ import type { TravelEstimateResult } from "../providers/travelEstimateClient";
+-import { getDestinationTiming } from "../state/appStateHelpers";
++import { getDestinationTiming, type getDestinationLeavingNowTiming } from "../state/appStateHelpers";
+ import { getTravelMinutesForTransport, formatRouteClock, canScheduleTravelEstimate } from "../utils/travelEstimate";
+ 
+ export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
+ 
+ export type DemoStateOptions = {
++  leavingNow?: ReturnType<typeof getDestinationLeavingNowTiming>;
+   hasDestination?: boolean;
+   destinationCareEnabled?: boolean;
+   destination?: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode" | "timezone">;
+@@ -167,7 +168,8 @@
+   ) : undefined;
+   if (destinationCare.departureAdvice) {
+     Object.assign(destinationCare.departureAdvice, {
+-      departureAt: timing?.departureAt, arrivalAt: timing?.arrivalAt, nowArrivalAt: timing?.nowArrivalAt, targetAt: timing?.targetAt,
++      departureAt: timing?.departureAt, arrivalAt: timing?.arrivalAt, targetAt: timing?.targetAt,
++      ...options.leavingNow,
+       durationSeconds: timing?.durationSeconds, bufferMinutes: timing ? timing.bufferSeconds / 60 : undefined,
+       recommendedDepartureTime: timing ? formatRouteClock(timing.departureAt, options.destination!.timezone) : undefined,
+       travelMinutes: timing ? Math.ceil(timing.durationSeconds / 60) : undefined,
+--- a/packages/shared/src/types/recommendation.ts
++++ b/packages/shared/src/types/recommendation.ts
+@@ -70,6 +70,13 @@
+     departureAt?: string;
+     arrivalAt?: string;
+     nowArrivalAt?: string;
++    nowArrivalStatus?: "idle" | "loading" | "ready" | "error" | "offline";
++    nowArrivalReference?: boolean;
++    nowArrivalDescription?: string;
++    nowArrivalReferenceDescription?: string;
++    nowRouteUpdatedAt?: string;
++    nowRouteExpiresAt?: string;
++    nowRouteMessage?: string;
+     targetAt?: string;
+     durationSeconds?: number;
+     routeMessage?: string;
+--- a/apps/mobile/src/screens/HomeScreen.tsx
++++ b/apps/mobile/src/screens/HomeScreen.tsx
+@@ -193,8 +193,8 @@
+     homeSchedulePreference.timeBasis,
+   );
+   const routeAdvice = state.destinationCare.departureAdvice;
+-  const routeTimeline = routeAdvice?.nowArrivalAt ? `지금 출발 시 ${forecastTime(Date.parse(routeAdvice.nowArrivalAt), outingWeather)} 도착 예상 · 지각 가능` : routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "";
+-  const departureExplanation = `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
++  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "");
++  const departureExplanation = routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
+   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
+   const showDepartureExplanation = destinationReady;
+   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
+--- a/apps/mobile/src/screens/DestinationCareScreen.tsx
++++ b/apps/mobile/src/screens/DestinationCareScreen.tsx
+@@ -285,8 +285,8 @@
+               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.cacheStatus === "stale" ? "이전 조회 결과 · " : ""}{selectedDestinationTravelEstimate.message}</Text>
+               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
+               {care.departureAdvice?.arrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather)} 도착 예상`}</Text> : null}
+-              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
+-              {care.departureAdvice?.nowArrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`지금 출발 시 ${forecastTime(Date.parse(care.departureAdvice.nowArrivalAt), destinationWeather)} 도착 예상 · 지각 가능`}</Text> : null}
++              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${care.departureAdvice?.nowArrivalDescription ? "예정 경로 조회" : "조회"} ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
++              {care.departureAdvice?.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{care.departureAdvice.nowArrivalDescription}</Text> : null}
+               {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[pageStyles.caption, { color: theme.muted }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
+               {selectedDestinationTravelEstimate.message.includes("미반영") ? <Text style={[pageStyles.caption, { color: theme.muted }]}>선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.</Text> : null}
+               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
+--- a/apps/mobile/src/screens/DestinationListScreen.tsx
++++ b/apps/mobile/src/screens/DestinationListScreen.tsx
+@@ -28,6 +28,7 @@
+ import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
+ 
+ type DestinationCardModel = {
++  nowArrivalDescription?: string;
+   actionText?: string;
+   weatherCondition: string | null;
+   weatherNotice: string | null;
+@@ -60,6 +61,7 @@
+ export function DestinationListScreen({
+   state,
+   savedDestinations,
++  destinationLeavingNow,
+   placeSearchOrigin,
+   recentlyRemovedDestination,
+   selectedDestinationPlace,
+@@ -84,7 +86,7 @@
+   const layout = useResponsiveLayout();
+   const care = state.destinationCare;
+   const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
+-  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile, Boolean(placeSearchOrigin));
++  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile, Boolean(placeSearchOrigin), destinationLeavingNow);
+   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
+   const hasDestinations = destinationCards.length > 0;
+   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
+@@ -330,6 +332,7 @@
+       <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
+         <Text style={{ fontSize: item.departureTime.includes(":") ? 28 : 18, lineHeight: 32, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
+         <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalTime} {item.arrivalLabel}</Text>
++        {item.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.nowArrivalDescription}</Text> : null}
+       </View>
+       <View style={{ gap: 2, alignItems: stacked ? "flex-start" : "flex-end" }}>
+         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+@@ -418,6 +421,7 @@
+         {<View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+           <Text style={[pageStyles.number, { color: theme.text }]}>{item.departureTime}</Text>
+           <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} {item.arrivalLabel}</Text>
++          {item.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.nowArrivalDescription}</Text> : null}
+         </View>}
+         <View style={styles.destinationSummaryRow}>
+           <View style={styles.destinationWeatherLine}>
+@@ -470,6 +474,7 @@
+   wardrobeItems: P0ScreenProps["wardrobeItems"],
+   preferenceProfile: UserPreferenceProfile,
+   originAvailable: boolean,
++  nowArrivals?: P0ScreenProps["destinationLeavingNow"],
+ ): DestinationCardModel[] {
+   if (!savedDestinations.length) return [];
+   const originWeather = care.originWeather;
+@@ -507,7 +512,8 @@
+       rainPct: `${Math.round(destinationRain)}%`,
+       departureTime: schedule.departureTime,
+       arrivalTime: schedule.arrivalTime,
+-      arrivalLabel: schedule.arrivalLabel,
++      arrivalLabel: nowArrivals?.[destination.place.id] ? "예정 도착" : schedule.arrivalLabel,
++      nowArrivalDescription: nowArrivals?.[destination.place.id]?.nowArrivalDescription,
+       repeatLabel: getRepeatLabel(destination.schedulePreference),
+       warning,
+       warningKind,
+--- a/apps/mobile/src/providers/widgetSnapshot.shared.ts
++++ b/apps/mobile/src/providers/widgetSnapshot.shared.ts
+@@ -45,6 +45,11 @@
+   outfitVariant: OutfitRecommendation["variant"];
+   observedAt: string;
+   hourly: WeatheronWidgetHourlySnapshot[];
++  nowArrivalAt?: string;
++  nowArrivalDescription?: string;
++  nowArrivalReferenceDescription?: string;
++  nowRouteUpdatedAt?: string;
++  nowRouteExpiresAt?: string;
+   departureAt?: string;
+   arrivalAt?: string;
+   durationSeconds?: number;
+@@ -83,6 +88,11 @@
+     longitude: number;
+   };
+   timeZone?: string;
++  nowArrivalAt?: string;
++  nowArrivalDescription?: string;
++  nowArrivalReferenceDescription?: string;
++  nowRouteUpdatedAt?: string;
++  nowRouteExpiresAt?: string;
+   departureAt?: string;
+   arrivalAt?: string;
+   durationSeconds?: number;
+@@ -130,6 +140,11 @@
+       condition: hour.condition,
+       rainProbabilityPct: Math.round(hour.rainProbabilityPct),
+     })),
++    nowArrivalAt: options.nowArrivalAt,
++    nowArrivalDescription: options.nowArrivalDescription,
++    nowArrivalReferenceDescription: options.nowArrivalReferenceDescription,
++    nowRouteUpdatedAt: options.nowRouteUpdatedAt,
++    nowRouteExpiresAt: options.nowRouteExpiresAt,
+     departureAt: options.departureAt,
+     arrivalAt: options.arrivalAt,
+     durationSeconds: options.durationSeconds,
+--- a/apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift
++++ b/apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift
+@@ -115,6 +115,11 @@
+   let travelMinutes: Int?
+   let routeMessage: String?
+   let routeUpdatedAt: String?
++  let nowArrivalAt: String?
++  let nowArrivalDescription: String?
++  let nowArrivalReferenceDescription: String?
++  let nowRouteUpdatedAt: String?
++  let nowRouteExpiresAt: String?
+   let transportMode: String?
+   let deepLink: String
+ 
+@@ -150,6 +155,11 @@
+     case travelMinutes
+     case routeMessage
+     case routeUpdatedAt
++    case nowArrivalAt
++    case nowArrivalDescription
++    case nowArrivalReferenceDescription
++    case nowRouteUpdatedAt
++    case nowRouteExpiresAt
+     case transportMode
+     case deepLink
+   }
+@@ -183,6 +193,11 @@
+     deepLink: String,
+     routeMessage: String? = nil,
+     routeUpdatedAt: String? = nil,
++    nowArrivalAt: String? = nil,
++    nowArrivalDescription: String? = nil,
++    nowArrivalReferenceDescription: String? = nil,
++    nowRouteUpdatedAt: String? = nil,
++    nowRouteExpiresAt: String? = nil,
+     departureAt: String? = nil,
+     arrivalAt: String? = nil
+   ) {
+@@ -214,6 +229,11 @@
+     self.travelMinutes = travelMinutes
+     self.routeMessage = routeMessage
+     self.routeUpdatedAt = routeUpdatedAt
++    self.nowArrivalAt = nowArrivalAt
++    self.nowArrivalDescription = nowArrivalDescription
++    self.nowArrivalReferenceDescription = nowArrivalReferenceDescription
++    self.nowRouteUpdatedAt = nowRouteUpdatedAt
++    self.nowRouteExpiresAt = nowRouteExpiresAt
+     self.transportMode = transportMode
+     self.deepLink = deepLink
+   }
+@@ -248,6 +268,11 @@
+     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
+     routeMessage = try values.decodeIfPresent(String.self, forKey: .routeMessage)
+     routeUpdatedAt = try values.decodeIfPresent(String.self, forKey: .routeUpdatedAt)
++    nowArrivalAt = try values.decodeIfPresent(String.self, forKey: .nowArrivalAt)
++    nowArrivalDescription = try values.decodeIfPresent(String.self, forKey: .nowArrivalDescription)
++    nowArrivalReferenceDescription = try values.decodeIfPresent(String.self, forKey: .nowArrivalReferenceDescription)
++    nowRouteUpdatedAt = try values.decodeIfPresent(String.self, forKey: .nowRouteUpdatedAt)
++    nowRouteExpiresAt = try values.decodeIfPresent(String.self, forKey: .nowRouteExpiresAt)
+     transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
+     deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
+   }
+@@ -275,6 +300,7 @@
+       observedAt: forecast.observedAt.ISO8601Format(),
+       hourly: forecast.hourly.map { WeatherONHourlySnapshot(time: formatter.string(from: $0.date), temperatureC: Int($0.temperatureC.rounded()), condition: $0.condition, rainProbabilityPct: Int($0.rainProbabilityPct.rounded())) },
+       departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink, routeMessage: routeMessage, routeUpdatedAt: routeUpdatedAt,
++      nowArrivalAt: nowArrivalAt, nowArrivalDescription: nowArrivalDescription, nowArrivalReferenceDescription: nowArrivalReferenceDescription, nowRouteUpdatedAt: nowRouteUpdatedAt, nowRouteExpiresAt: nowRouteExpiresAt,
+       departureAt: departureAt, arrivalAt: arrivalAt
+     )
+   }
+@@ -668,6 +694,10 @@
+     var entryDates = (0...48).map { phase in
+       Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
+     }
++    if let value = location.nowRouteExpiresAt,
++       let expiry = snapshotDateFormatter.date(from: value) ?? fallbackSnapshotDateFormatter.date(from: value), expiry > now {
++      entryDates.append(expiry)
++    }
+     // Keep day/night changes scheduled even when iOS delays the requested refresh.
+     var solarCursor = now
+     let horizon = now.addingTimeInterval(24 * 3_600)
+@@ -1006,7 +1036,7 @@
+ 
+       VStack(spacing: 8) {
+         if entry.location.isDestination {
+-          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true)
++          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true, referenceDate: entry.date)
+           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
+         } else {
+           WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 3, referenceDate: entry.date, compact: true)
+@@ -1053,7 +1083,7 @@
+         .frame(maxWidth: .infinity)
+ 
+         if entry.location.isDestination {
+-          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: false)
++          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: false, referenceDate: entry.date)
+             .frame(maxWidth: .infinity)
+         }
+       }
+@@ -1201,6 +1231,7 @@
+   let localization: WeatherONWidgetLocalization
+   let palette: WeatherONWidgetPalette
+   let compact: Bool
++  let referenceDate: Date
+ 
+   var body: some View {
+     VStack(alignment: .leading, spacing: compact ? 4 : 7) {
+@@ -1217,7 +1248,7 @@
+ 
+       HStack(alignment: .firstTextBaseline, spacing: 5) {
+         VStack(alignment: .leading, spacing: 1) {
+-          Text(weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
++          Text(weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: referenceDate, localization: localization))
+             .font(.system(size: compact ? 16 : 21, weight: .semibold, design: .default))
+             .lineLimit(1)
+             .minimumScaleFactor(0.55)
+@@ -1229,7 +1260,7 @@
+           .font(.system(size: 9, weight: .bold))
+           .foregroundStyle(palette.accent)
+         VStack(alignment: .leading, spacing: 1) {
+-          Text(weatherONRouteClock(location.arrivalAt, fallback: location.arrivalTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
++          Text(weatherONRouteClock(location.arrivalAt, fallback: location.arrivalTime, timeZone: location.timeZone, referenceDate: referenceDate, localization: localization))
+             .font(.system(size: compact ? 14 : 18, weight: .semibold, design: .default))
+             .lineLimit(1)
+             .minimumScaleFactor(0.55)
+@@ -1238,8 +1269,14 @@
+             .foregroundStyle(palette.secondaryText)
+         }
+       }
++      if let description = weatherONNowArrivalDescription(location, referenceDate: referenceDate) {
++        Text(verbatim: description)
++          .font(.system(size: 8, weight: .regular))
++          .foregroundStyle(palette.secondaryText)
++          .lineLimit(6)
++      }
+       if let routeMessage = location.routeMessage {
+-        let queriedAt = weatherONAppSnapshotTime(location.routeUpdatedAt, referenceDate: Date(), timeZone: TimeZone(identifier: location.timeZone ?? "Asia/Seoul") ?? .current, localization: localization)
++        let queriedAt = weatherONAppSnapshotTime(location.routeUpdatedAt, referenceDate: referenceDate, timeZone: TimeZone(identifier: location.timeZone ?? "Asia/Seoul") ?? .current, localization: localization)
+         Text(verbatim: routeMessage + (queriedAt.map { " · " + $0 } ?? ""))
+           .font(.system(size: 8, weight: .regular))
+           .foregroundStyle(palette.secondaryText)
+@@ -1436,6 +1473,14 @@
+   formatter.timeZone = calendar.timeZone
+   formatter.setLocalizedDateFormatFromTemplate(sameDay ? clock : (sameYear ? "Md" : "yMd") + clock)
+   return formatter.string(from: date)
++}
++
++private func weatherONNowArrivalDescription(_ location: WeatherONLocationSnapshot, referenceDate: Date) -> String? {
++  guard let description = location.nowArrivalDescription else { return nil }
++  guard let expiry = location.nowRouteExpiresAt,
++        let date = snapshotDateFormatter.date(from: expiry) ?? fallbackSnapshotDateFormatter.date(from: expiry),
++        date <= referenceDate else { return description }
++  return location.nowArrivalReferenceDescription ?? description
+ }
+ 
+ private struct WeatherONWeatherBackdrop: View {
+--- a/apps/mobile/src/navigation/types.ts
++++ b/apps/mobile/src/navigation/types.ts
+@@ -1,3 +1,4 @@
++import type { getDestinationLeavingNowTiming } from "../state/appStateHelpers";
+ import type { DemoState } from "../data/demoState";
+ import type { AppRouteId, P0RouteId } from "./routes";
+ import type { PlaceSearchResult } from "@weatheron/shared";
+@@ -41,6 +42,7 @@
+ import type { AccountProfile } from "../providers/accountAuth";
+ 
+ export type P0ScreenProps = {
++  destinationLeavingNow?: Record<string, ReturnType<typeof getDestinationLeavingNowTiming>>;
+   state: DemoState;
+   rainForecastContext?: import("../utils/homeOuting").RainForecastContext | null;
+   onOpenRainForecast?: (context: import("../utils/homeOuting").RainForecastContext) => void;
+--- a/apps/mobile/src/navigation/AppNavigator.tsx
++++ b/apps/mobile/src/navigation/AppNavigator.tsx
+@@ -204,6 +204,7 @@
+     placeSearchOrigin: appState.placeSearchOrigin,
+     destinationSaved: appState.destinationSaved,
+     savedDestinations: appState.savedDestinations,
++    destinationLeavingNow: appState.destinationLeavingNow,
+     destinationLimitNotice: appState.destinationLimitNotice,
+     recentlyRemovedDestination: appState.recentlyRemovedDestination,
+     destinationCareEnabled: appState.destinationCareEnabled,
+--- a/apps/mobile/src/localization/locales/en.json
++++ b/apps/mobile/src/localization/locales/en.json
+@@ -1418,6 +1418,8 @@
+   "예약 확인 {0}건": "plural:{0} scheduled notification checked|{0} scheduled notifications checked",
+   "예약 확인 실패": "Reservation confirmation failed",
+   "예약 확인 실패 · 기기 확인 필요": "Reservation confirmation failed · Device verification required",
++  "예정 경로 조회": "Scheduled route lookup",
++  "예정 도착": "Scheduled arrival",
+   "예정 시각": "scheduled time",
+   "예정된 알림": "Upcoming notifications",
+   "오늘": "today",
+@@ -1467,6 +1469,7 @@
+   "오트밀 캐시미어 머플러": "Oatmeal Cashmere Muffler",
+   "오프라인": "offline",
+   "오프라인 상태예요. 연결되면 계정을 다시 확인해요.": "It's offline. Once connected, check your account again.",
++  "오프라인/연결 실패": "Offline/connection failed",
+   "오프화이트 캔버스 스니커즈": "Off-white canvas sneakers",
+   "오픈소스 라이선스": "open source license",
+   "오피스": "office",
+@@ -1650,6 +1653,7 @@
+   "이전 조회 결과 ·": "Previous result ·",
+   "이전 조회 결과 · {0}": "Previous result · {0}",
+   "이전 조회 결과 · 갱신 실패 · {0}": "Previous result · Refresh failed · {0}",
++  "이전 조회 기준 참고": "Reference from previous lookup",
+   "이전 화면으로 돌아가기": "Return to previous screen",
+   "이제 나갈 준비해요": "Now get ready to go",
+   "익명 집계 · 개인 식별 없이 표시": "Anonymous aggregation and display without personal identification",
+@@ -1775,6 +1779,7 @@
+   "조건에 맞는 아이템이 없음 · 필터를 초기화해줘": "There are no items matching the conditions · Reset the filter",
+   "조건에 맞는 옷이 없음 · 필터를 초기화해줘": "There are no clothes that match the criteria · Reset filter",
+   "조금 더 덥게": "a little hotter",
++  "조회": "Lookup",
+   "조회 {0}": "Queried {0}",
+   "조회와 길찾기는 가능함. 알림을 켤 때만 권한이 필요함": "Inquiry and directions are possible. Permission required only to turn on notifications",
+   "조회한 후보 중 가장 늦은 출발": "Latest departure among verified candidates",
+@@ -1821,9 +1826,12 @@
+   "지금 있는 곳에 맞춰 준비했어요": "I prepared it according to where I am now.",
+   "지금 있는 곳을 알면 더 잘 챙겨드려요": "If I know where you are now, I will take better care of you.",
+   "지금 차림 그대로 좋아요": "I like it the way it is now",
++  "지금 출발 경로 조회 실패": "Leaving-now route lookup failed",
+   "지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요": "Leaving now · May arrive late · Check arrival buffer",
+   "지금 출발 기준 도착 예상": "ETA when leaving now",
+-  "지금 출발 시 {0} 도착 예상 · 지각 가능": "If leaving now: ETA {0} · May arrive late",
++  "지금 출발 도착 예상 확인 불가": "Leaving-now arrival estimate unavailable",
++  "지금 출발 도착 조회 중": "Looking up leaving-now arrival",
++  "지금 출발 시 {0} 도착 예상": "Leaving now: estimated arrival {0}",
+   "지금 확인할 날씨": "Check the weather now",
+   "지금보다 기온 {0} 낮아요 · 겉옷 준비": "Temperature {0} lower than now · bring a layer",
+   "지금은 둘러보기": "Take a look now",
+@@ -1901,6 +1909,7 @@
+   "최신 날씨를 확인한 뒤 코디를 안내해요": "Check the latest weather for outfit guidance",
+   "최신 예보 기준으로 준비 완료": "Ready based on latest forecast",
+   "최신 예보 기준으로 추천 준비 완료": "Recommendations are ready based on the latest forecast",
++  "최신 조회": "Latest lookup",
+   "최저 {0}도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요": "With a low of {0}°, prepare a warm outer layer and a warm top.",
+   "최저 {0}도까지 내려가 얇게 걸칠 옷이 있으면 좋아요": "It's good to have thin clothes to wear when it gets down to the lowest {0} degrees.",
+   "최초 진입 · 대표 마스코트 즉시 부여 · 안개 컴패니언 미리보기 선택 중": "First entry · Immediately assigned representative mascot · Fog Companion preview being selected",
+--- a/apps/mobile/src/localization/locales/ja.json
++++ b/apps/mobile/src/localization/locales/ja.json
+@@ -1418,6 +1418,8 @@
+   "예약 확인 {0}건": "予約確認{0}件",
+   "예약 확인 실패": "予約確認に失敗しました",
+   "예약 확인 실패 · 기기 확인 필요": "予約確認失敗・機器確認が必要",
++  "예정 경로 조회": "予定ルートの検索",
++  "예정 도착": "予定到着",
+   "예정 시각": "予定時刻",
+   "예정된 알림": "スケジュールされた通知",
+   "오늘": "今日",
+@@ -1467,6 +1469,7 @@
+   "오트밀 캐시미어 머플러": "オートミールカシミアマフラー",
+   "오프라인": "オフライン",
+   "오프라인 상태예요. 연결되면 계정을 다시 확인해요.": "オフラインです。接続したら、アカウントをもう一度確認してください。",
++  "오프라인/연결 실패": "オフライン／接続失敗",
+   "오프화이트 캔버스 스니커즈": "オフホワイトキャンバススニーカー",
+   "오픈소스 라이선스": "オープンソースライセンス",
+   "오피스": "オフィス",
+@@ -1650,6 +1653,7 @@
+   "이전 조회 결과 ·": "前回の検索結果 ·",
+   "이전 조회 결과 · {0}": "前回の検索結果 · {0}",
+   "이전 조회 결과 · 갱신 실패 · {0}": "前回の検索結果 · 更新失敗 · {0}",
++  "이전 조회 기준 참고": "前回の検索に基づく参考",
+   "이전 화면으로 돌아가기": "前の画面に戻る",
+   "이제 나갈 준비해요": "今行く準備ができています。",
+   "익명 집계 · 개인 식별 없이 표시": "匿名集計・個人識別なしで表示",
+@@ -1775,6 +1779,7 @@
+   "조건에 맞는 아이템이 없음 · 필터를 초기화해줘": "条件に合うアイテムがない・フィルターを初期化してくれ",
+   "조건에 맞는 옷이 없음 · 필터를 초기화해줘": "条件に合った服がない・フィルターを初期化してくれ",
+   "조금 더 덥게": "もう少し暑い",
++  "조회": "検索",
+   "조회 {0}": "検索 {0}",
+   "조회와 길찾기는 가능함. 알림을 켤 때만 권한이 필요함": "照会と道順は可能です。通知をオンにしたときにのみ権限が必要",
+   "조회한 후보 중 가장 늦은 출발": "検索済み候補の中で最も遅い出発",
+@@ -1821,9 +1826,12 @@
+   "지금 있는 곳에 맞춰 준비했어요": "今のところに合わせて準備しました。",
+   "지금 있는 곳을 알면 더 잘 챙겨드려요": "今どこにいるのか分かると、もっとうまくいきます。",
+   "지금 차림 그대로 좋아요": "今姿のまま好きです",
++  "지금 출발 경로 조회 실패": "今出発するルートの検索に失敗",
+   "지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요": "今出発する場合 · 遅刻の可能性 · 到着余裕の確認が必要",
+   "지금 출발 기준 도착 예상": "今出発した場合の到着予想",
+-  "지금 출발 시 {0} 도착 예상 · 지각 가능": "今出発した場合の到着予想 {0} · 遅刻の可能性",
++  "지금 출발 도착 예상 확인 불가": "今出発する場合の到着予想を確認できません",
++  "지금 출발 도착 조회 중": "今出発する場合の到着予想を検索中",
++  "지금 출발 시 {0} 도착 예상": "今出発する場合の到着予想 {0}",
+   "지금 확인할 날씨": "今確認する天気",
+   "지금보다 기온 {0} 낮아요 · 겉옷 준비": "今より気温が{0}低い予報 · 上着を用意",
+   "지금은 둘러보기": "今はツアー",
+@@ -1901,6 +1909,7 @@
+   "최신 날씨를 확인한 뒤 코디를 안내해요": "最新の天気を確認して服装をご案内します",
+   "최신 예보 기준으로 준비 완료": "最新予報基準で準備完了",
+   "최신 예보 기준으로 추천 준비 완료": "最新の予報に基づいて紹介準備を完了",
++  "최신 조회": "最新の検索",
+   "최저 {0}도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요": "最低{0}度まで下がるため、保温性のあるアウターと暖かいトップスを用意しましょう",
+   "최저 {0}도까지 내려가 얇게 걸칠 옷이 있으면 좋아요": "最低{0}度まで下がって薄くかけられる服があればいいですよ",
+   "최초 진입 · 대표 마스코트 즉시 부여 · 안개 컴패니언 미리보기 선택 중": "初参入・代表マスコット即時付与・霧コンパニオンプレビュー選択中",
+--- a/scripts/generate-mobile-locales.mjs
++++ b/scripts/generate-mobile-locales.mjs
+@@ -11,6 +11,16 @@
+ const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
+ const overrides = {
+   en: {
++    "예정 경로 조회": "Scheduled route lookup",
++    "예정 도착": "Scheduled arrival",
++    "오프라인/연결 실패": "Offline/connection failed",
++    "이전 조회 기준 참고": "Reference from previous lookup",
++    "조회": "Lookup",
++    "지금 출발 경로 조회 실패": "Leaving-now route lookup failed",
++    "지금 출발 도착 예상 확인 불가": "Leaving-now arrival estimate unavailable",
++    "지금 출발 도착 조회 중": "Looking up leaving-now arrival",
++    "지금 출발 시 {0} 도착 예상": "Leaving now: estimated arrival {0}",
++    "최신 조회": "Latest lookup",
+     "집": "Home",
+     "목적지 라벨": "Destination label",
+     "집 또는 회사를 지정": "Set Home or Company",
+@@ -129,6 +139,16 @@
+     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
+   },
+   ja: {
++    "예정 경로 조회": "予定ルートの検索",
++    "예정 도착": "予定到着",
++    "오프라인/연결 실패": "オフライン／接続失敗",
++    "이전 조회 기준 참고": "前回の検索に基づく参考",
++    "조회": "検索",
++    "지금 출발 경로 조회 실패": "今出発するルートの検索に失敗",
++    "지금 출발 도착 예상 확인 불가": "今出発する場合の到着予想を確認できません",
++    "지금 출발 도착 조회 중": "今出発する場合の到着予想を検索中",
++    "지금 출발 시 {0} 도착 예상": "今出発する場合の到着予想 {0}",
++    "최신 조회": "最新の検索",
+     "집": "自宅",
+     "목적지 라벨": "目的地ラベル",
+     "집 또는 회사를 지정": "自宅または会社を指定",
+--- a/scripts/check-route-selected-time.mjs
++++ b/scripts/check-route-selected-time.mjs
+@@ -46,6 +46,14 @@
+   assert.equal(walk.durationSeconds, 223);
+   assert.equal(walk.distanceMeters, 247);
+   assert.equal(calls.at(-1).pathname, '/v2/routing/walk');
++  response = () => ({ status: 'OK', rows: [{ elements: [{ status: 'OK', duration: { value: 223 }, distance: { value: 247 } }] }] });
++  const foreignWalk = await route('walk', { originCountryCode: 'JP', destinationCountryCode: 'JP', origin: '35.6812,139.7671', destination: '35.68,139.768' });
++  assert.equal(foreignWalk.provider, 'google');
++  assert.match(foreignWalk.message, /도보.*시간대 미반영/);
++  assert.equal(calls.at(-1).searchParams.has('departure_time'), false);
++  const foreignTransit = await route('transit', { originCountryCode: 'JP', destinationCountryCode: 'JP' });
++  assert.equal(calls.at(-1).searchParams.get('departure_time'), 'now');
++  assert.match(foreignTransit.message, /운행·대기시간 확인 필요/);
+ 
+   // Increase, decrease, oscillation, route changes and nonconvergence use exactly the selected sample.
+   for (const sequence of [[3000, 4200, 4200], [4200, 2400, 2400], [2400, 3600, 2400, 3600, 2400, 3600], [2400, 6000, 7200, 8400, 9600, 10800]]) {
+@@ -126,6 +134,27 @@
+   assert.equal(stale.updatedAt, fresh.updatedAt); assert.equal(stale.expiresAt, fresh.expiresAt); assert.equal(stale.cacheStatus, 'stale');
+   response = () => ({ status: 'OK', routes: [transit(2500)] });
+   assert.equal((await route('transit', {}, key)).durationSeconds, 2500);
++
++  // Untimed current queries have their own cache and use the current driving endpoint.
++  const nowKey = counter++;
++  response = () => current(2400);
++  await route('drive', { departureTime: target }, nowKey);
++  response = () => current(1500);
++  const currentRoute = await route('drive', {}, nowKey);
++  assert.equal(currentRoute.requestKind, 'now');
++  assert.equal(currentRoute.timingBasis, 'current');
++  assert.equal(currentRoute.durationSeconds, 1500);
++  assert.equal(calls.at(-1).pathname, '/v1/directions');
++  assert.equal(calls.at(-1).searchParams.has('departure_time'), false);
++  const currentCalls = calls.length;
++  assert.equal((await route('drive', {}, nowKey)).updatedAt, currentRoute.updatedAt);
++  assert.equal(calls.length, currentCalls);
++  now += 61000;
++  response = () => { throw new TypeError('offline'); };
++  const currentStale = await route('drive', {}, nowKey);
++  assert.equal(currentStale.durationSeconds, 1500);
++  assert.equal(currentStale.cacheStatus, 'stale');
++  assert.equal(currentStale.updatedAt, currentRoute.updatedAt);
+   console.log('PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.');
+ } finally { globalThis.fetch = originalFetch; globalThis.Date = originalDate; }
+ 
+@@ -250,6 +279,9 @@
+   savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: verified,
+   routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getAutoBufferMinutes: helpers.getAutoBufferMinutes,
+   createDestinationTravelEstimate: helpers.createDestinationTravelEstimate,
++  destinationLeavingNow: {}, leavingNowRoutes: {},
++  getLeavingNowRouteKey: travel.getLeavingNowRouteKey, isLeavingNowRouteResult: travel.isLeavingNowRouteResult,
++  setLeavingNowRoutes() { throw new Error('future schedules must not update leaving-now state'); },
+   runtimeTravelEstimateClient: { estimateRoute: input => { const pending = deferred(); requests.push({ input, ...pending }); return pending.promise; } },
+   setDestinationTravelEstimateRequestStatus: value => effects.push(['status', value]), setPreviewDestinationTravelEstimate: value => effects.push(['preview', value]),
+   updateSavedDestinations: update => { destinations = update(destinations); },
+@@ -269,8 +301,10 @@
+ assert.equal(destinations[0].travelEstimate.durationSeconds, 2500, 'slow obsolete request must not overwrite latest settings');
+ cleanup();
+ const beforeThrottle = requests.length;
++effects.push(['status', 'loading']);
+ makeEffect({ ...context, routeRequests: [{ place, schedule: laterSchedule }] })();
+ assert.equal(requests.length, beforeThrottle, 'far departures are bounded to ten-minute retries');
++assert.deepEqual(effects.at(-1), ['status', 'idle'], 'returning to a completed throttled setting clears obsolete loading state');
+ attempts.current.clear();
+ makeEffect({ ...context, AppState: { currentState: 'background' } })();
+ assert.equal(requests.length, beforeThrottle, 'no background refresh guarantee');
+@@ -334,7 +368,7 @@
+ assert.equal(widget.routeUpdatedAt, verified.updatedAt);
+ assert.equal(widget.travelMinutes, 41);
+ const past = helpers.getDestinationTiming(verified, schedule, place.timezone, Date.parse('2090-01-01T10:00:00+09:00'), 'KR', 'KR', 'origin');
+-assert.equal(travel.formatRouteClock(past.nowArrivalAt, place.timezone), '10:40');
++assert.equal(past.nowArrivalAt, undefined, 'scheduled duration must not fabricate a leaving-now ETA');
+ assert.equal(travel.formatRouteClock(past.departureAt, place.timezone), '08:10', 'past recommendation must not become tomorrow');
+ globalThis.Date = originalDate;
+ console.log('PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.');
+@@ -423,3 +457,134 @@
+ const notificationSync = timerContext.exports.createNotificationSync(async () => ({ status: 'unavailable', scheduledCount: 0 }));
+ notificationSync.request('test', { enabled: false }, () => {}); await flush(); notificationSync.stop();
+ console.log('PASS client/localization: server provenance/timestamps preserved, malformed result rejected, no fabricated transit fallback, composed route messages use OS language catalogs, and browser notification timer receiver retained.');
++
++// Leaving-now lookup is independent of the persisted trip and its original duration.
++now = Date.parse('2090-01-01T10:00:00+09:00'); globalThis.Date = TestDate;
++destinations = [saved];
++const originalSchedule = JSON.stringify(destinations);
++let nowStates = {};
++const origin = context.placeSearchOrigin;
++const nowContext = (mode = 'transit', destination = place) => ({
++  ...context, nowMinuteTick: now, routeRequests: [{ place: destination, schedule: { ...schedule, transportMode: mode } }],
++  destinationLeavingNow: { [destination.id]: true }, leavingNowRoutes: nowStates,
++  setLeavingNowRoutes: update => { nowStates = update(nowStates); },
++});
++const currentResult = (seconds, mode = 'transit') => ({
++  ...estimate, requestKind: 'now', transportMode: mode, provider: mode === 'transit' ? 'kakao-transit' : 'kakao',
++  timingBasis: mode === 'drive' ? 'current' : 'route', durationSeconds: seconds, travelMinutes: Math.ceil(seconds / 60),
++  departureAt: new Date(now).toISOString(), updatedAt: new Date(now).toISOString(), expiresAt: new Date(now + 60000).toISOString(),
++});
++const currentKey = travel.getLeavingNowRouteKey(origin, place, 'transit');
++assert.equal(currentKey, travel.getLeavingNowRouteKey({ ...origin, coordinate: { longitude: origin.coordinate.longitude, latitude: origin.coordinate.latitude } }, place, 'transit'));
++const currentTiming = () => helpers.getDestinationLeavingNowTiming(verified, schedule, place.timezone, now, 'KR', 'KR', 'origin', nowStates[currentKey]);
++assert.equal(currentTiming().nowArrivalAt, undefined);
++assert.match(currentTiming().nowArrivalDescription, /確認|확인 불가/);
++for (const [seconds, clock] of [[1500, '10:25'], [3300, '10:56']]) {
++  attempts.current.clear();
++  const before = requests.length;
++  cleanup = makeEffect(nowContext())();
++  assert.equal(nowStates[currentKey].status, 'loading');
++  assert.equal(requests.at(-1).input.departureTime, undefined);
++  assert.equal(requests.at(-1).input.arrivalTime, undefined);
++  requests.at(-1).resolve(currentResult(seconds)); await flush();
++  assert.equal(travel.formatRouteClock(currentTiming().nowArrivalAt, place.timezone), clock);
++  assert.equal(currentTiming().nowArrivalReference, false);
++  cleanup();
++  makeEffect(nowContext())();
++  assert.equal(requests.length, before + 1, 'same current context is throttled to one lookup per minute');
++  assert.equal(JSON.stringify(destinations), originalSchedule, 'leaving-now results never overwrite the saved 40-minute trip');
++  now += 61000;
++}
++const previous = nowStates[currentKey].result;
++for (const error of [new Error('503'), new TypeError('offline')]) {
++  attempts.current.clear();
++  cleanup = makeEffect(nowContext())();
++  assert.equal(currentTiming().nowArrivalReference, true, 'loading retains a clearly marked previous current lookup');
++  requests.at(-1).reject(error); await flush();
++  assert.equal(nowStates[currentKey].status, error instanceof TypeError ? 'offline' : 'error');
++  assert.equal(currentTiming().nowArrivalAt, new Date(Date.parse(previous.departureAt) + previous.durationSeconds * 1000).toISOString());
++  assert.equal(currentTiming().nowRouteUpdatedAt, previous.updatedAt);
++  assert.match(currentTiming().nowArrivalDescription, /이전 조회 기준 참고/);
++  assert.ok(currentTiming().nowArrivalDescription.includes(travel.formatRouteClock(previous.updatedAt, place.timezone)));
++  cleanup(); now += 61000;
++}
++attempts.current.clear();
++cleanup = makeEffect(nowContext('walk'))();
++const abandoned = requests.at(-1); cleanup();
++const changedPlace = { ...place, id: 'another-place', coordinate: { latitude: 37.55, longitude: 126.98 } };
++cleanup = makeEffect(nowContext('drive', changedPlace))();
++requests.at(-1).resolve(currentResult(1500, 'drive')); await flush();
++abandoned.resolve(currentResult(3300, 'walk')); await flush();
++assert.equal(nowStates[travel.getLeavingNowRouteKey(origin, changedPlace, 'drive')].result.durationSeconds, 1500);
++assert.equal(nowStates[travel.getLeavingNowRouteKey(origin, place, 'walk')].result, undefined, 'late obsolete mode/destination response is discarded');
++cleanup();
++attempts.current.clear();
++cleanup = makeEffect(nowContext('walk'))();
++requests.at(-1).reject(new TypeError('Network request failed')); await flush();
++const unavailable = travel.resolveLeavingNowTiming(nowStates[travel.getLeavingNowRouteKey(origin, place, 'walk')], now);
++assert.equal(unavailable.nowArrivalAt, undefined);
++assert.match(travel.getLeavingNowDescription(unavailable, place.timezone), /오프라인.*확인 불가/);
++cleanup();
++attempts.current.clear();
++cleanup = makeEffect(nowContext())();
++requests.at(-1).resolve(currentResult(1500)); await flush();
++const recovered = currentTiming();
++assert.equal(recovered.nowArrivalReference, false);
++assert.equal(recovered.nowArrivalStatus, 'ready');
++let mapBuilder;
++function findCurrentDisplayMap(node) {
++  if (ts.isVariableDeclaration(node) && node.name.getText(stateAst) === 'destinationLeavingNow') mapBuilder = node.initializer.arguments[0].getText(stateAst);
++  ts.forEachChild(node, findCurrentDisplayMap);
++}
++findCurrentDisplayMap(stateAst);
++const mapContext = { routeRequests: [{ place, schedule }], savedDestinations: destinations, storedDestinationTravelEstimate: verified, placeSearchOrigin: origin, nowMinuteTick: now - 30000, leavingNowRoutes: nowStates, getDestinationLeavingNowTiming: helpers.getDestinationLeavingNowTiming, getLeavingNowRouteKey: travel.getLeavingNowRouteKey };
++const displayMap = new Function(...Object.keys(mapContext), ts.transpileModule(`const run = ${mapBuilder};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run();')(...Object.values(mapContext));
++assert.equal(displayMap[place.id].nowArrivalAt, recovered.nowArrivalAt, 'response newer than the minute tick is immediately visible across every display');
++let expiryEffect;
++function findExpiryEffect(node) {
++  if (ts.isCallExpression(node) && node.expression.getText(stateAst) === 'useEffect' && node.arguments[0]?.getText(stateAst).includes('const nextExpiry')) expiryEffect = node.arguments[0].getText(stateAst);
++  ts.forEachChild(node, findExpiryEffect);
++}
++findExpiryEffect(stateAst);
++let expiryTimer, refreshedAt;
++const expiryContext = { appStateHydrated: true, AppState: { currentState: 'active' }, destinationLeavingNow: displayMap, setTimeout: (callback, delay) => { expiryTimer = { callback, delay }; return 1; }, clearTimeout() {}, setNowMinuteTick: value => { refreshedAt = value; } };
++const runExpiry = context => new Function(...Object.keys(context), ts.transpileModule(`const run = ${expiryEffect};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run();')(...Object.values(context));
++const cancelExpiry = runExpiry(expiryContext);
++assert.equal(expiryTimer.delay, 60001, 'cache expiry triggers one refresh instead of waiting for another minute tick');
++now += 60001; expiryTimer.callback();
++assert.equal(refreshedAt, now);
++cancelExpiry(); expiryTimer = undefined;
++runExpiry({ ...expiryContext, AppState: { currentState: 'background' } });
++assert.equal(expiryTimer, undefined);
++now -= 60001;
++assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: verified }, now).nowArrivalAt, undefined, 'old planned duration is never a current result');
++assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: { ...currentResult(2400), provider: 'fallback', status: 'fallback' } }, now).nowArrivalAt, undefined);
++assert.equal(JSON.stringify(destinations), originalSchedule);
++const nowModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: { ...verified, ...schedule }, leavingNow: recovered, savedDestinations: [saved], notificationNow: now });
++assert.equal(nowModel.destinationCare.departureAdvice.nowArrivalDescription, recovered.nowArrivalDescription);
++assert.equal(nowModel.destinationCare.departureAdvice.departureAt, verified.departureAt);
++assert.equal(buildInput(saved), null, 'a current ETA must not restart the expired scheduled Live Activity');
++assert.ok(nowModel.notifications.filter(item => item.type === 'destination').every(item => !item.active && !item.scheduledAt));
++const nowWidget = serializers.createWeatheronWidgetLocationSnapshot(destinationWeather, result.outfit, result.umbrella, recovered);
++assert.equal(nowWidget.nowArrivalAt, recovered.nowArrivalAt);
++assert.equal(nowWidget.nowArrivalDescription, nowModel.destinationCare.departureAdvice.nowArrivalDescription);
++assert.equal(nowWidget.nowRouteUpdatedAt, recovered.nowRouteUpdatedAt);
++assert.equal(nowWidget.nowRouteExpiresAt, recovered.nowRouteExpiresAt);
++assert.equal(nowWidget.nowArrivalReferenceDescription, recovered.nowArrivalReferenceDescription);
++assert.match(recovered.nowArrivalReferenceDescription, /이전 조회 기준 참고/);
++assert.doesNotMatch(recovered.nowArrivalReferenceDescription, /최신 조회/);
++assert.equal(recovered.nowArrivalReferenceDescription, helpers.getDestinationLeavingNowTiming(verified, schedule, place.timezone, now + 60001, 'KR', 'KR', 'origin', nowStates[currentKey]).nowArrivalDescription, 'the native expiry fallback is identical to the app reference text and query time');
++for (const language of ['en', 'ja']) {
++  assert.doesNotMatch(localization.translateText(recovered.nowArrivalDescription, language), /[가-힣]/u);
++  assert.doesNotMatch(localization.translateText(recovered.nowArrivalReferenceDescription, language), /[가-힣]/u);
++}
++const unavailableModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: { ...verified, ...schedule, status: 'error', travelStatus: 'error' }, leavingNow: { ...unavailable, nowArrivalDescription: travel.getLeavingNowDescription(unavailable, place.timezone), nowArrivalReferenceDescription: travel.getLeavingNowDescription(unavailable, place.timezone) }, savedDestinations: [saved], notificationNow: now });
++assert.equal(unavailableModel.destinationCare.departureAdvice.nowArrivalAt, undefined);
++assert.match(unavailableModel.destinationCare.departureAdvice.nowArrivalDescription, /확인 불가/);
++cleanup();
++now = Date.parse('2090-12-31T23:50:00+09:00');
++const rollover = travel.resolveLeavingNowTiming({ status: 'ready', result: currentResult(1500) }, now);
++assert.equal(rollover.nowArrivalAt, new Date(Date.parse('2091-01-01T00:15:00+09:00')).toISOString());
++assert.match(travel.getLeavingNowDescription(rollover, place.timezone), /2091\/1\/1 00:15/);
++globalThis.Date = originalDate;
++console.log('PASS leaving now: separate current request/cache, 40m planned vs 25m/55m current, bounded requests, loading/error/offline/reference timestamps/recovery, late mode/destination responses, unchanged saved trip, Home/native payload identity and midnight rollover.');
+--- a/scripts/check-ios-widget-guidance-time.mjs
++++ b/scripts/check-ios-widget-guidance-time.mjs
+@@ -14,6 +14,11 @@
+ const models = source.slice(source.indexOf("private struct WeatherONHourlySnapshot"), source.indexOf("private extension WeatherONLocationSnapshot"));
+ const routeClock = source.slice(source.indexOf("private func weatherONClock("), source.indexOf("private struct WeatherONWeatherBackdrop"));
+ assert.match(source, /departureAt: departureAt, arrivalAt: arrivalAt/);
++assert.equal((source.match(/WeatherONScheduleCard\([^\n]+referenceDate: entry\.date\)/g) ?? []).length, 2);
++const scheduleCard = source.slice(source.indexOf("private struct WeatherONScheduleCard"), source.indexOf("private struct WeatherONOutfitCard"));
++assert.doesNotMatch(scheduleCard, /referenceDate: Date\(\)/);
++const expiryEntry = source.slice(source.indexOf("    if let value = location.nowRouteExpiresAt,"), source.indexOf("    // Keep day/night changes"));
++assert.match(expiryEntry, /entryDates\.append\(expiry\)/);
+ const directory = mkdtempSync(join(tmpdir(), "weatheron-guidance-time-"));
+ try {
+   const file = join(directory, "check.swift");
+@@ -29,6 +34,11 @@
+ ${models}
+ ${formatter}
+ ${routeClock}
++private func routeEntryDates(_ location: WeatherONLocationSnapshot, now: Date) -> [Date] {
++  var entryDates = [now]
++${expiryEntry}
++  return entryDates
++}
+ var checked = 0
+ var context = ""
+ func expect(_ condition: @autoclosure () -> Bool, line: Int = #line) {
+@@ -80,6 +90,25 @@
+   let tokyo = weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "Asia/Tokyo", referenceDate: now, localization: policy)
+   expect(tokyo == departure)
+   expect(weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "America/Los_Angeles", referenceDate: now, localization: policy) == "07:50")
++  let currentPayload = #"{"nowArrivalAt":"2026-10-30T14:25:00Z","nowArrivalDescription":"지금 출발 시 2026/10/30 23:25 도착 예상 · 최신 조회 · 조회 2026/10/30 23:00","nowArrivalReferenceDescription":"지금 출발 시 2026/10/30 23:25 도착 예상 · 이전 조회 기준 참고 · 조회 2026/10/30 23:00","nowRouteUpdatedAt":"2026-10-30T14:00:00Z","nowRouteExpiresAt":"2026-10-30T14:01:00Z"}"#
++  let current = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(currentPayload.utf8))
++  let currentRestored = try decoder.decode(WeatherONLocationSnapshot.self, from: JSONEncoder().encode(current))
++  expect(currentRestored.nowArrivalAt == current.nowArrivalAt)
++  expect(currentRestored.nowRouteUpdatedAt == current.nowRouteUpdatedAt)
++  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: now) == current.nowArrivalDescription)
++  let expired = weatherONNowArrivalDescription(currentRestored, referenceDate: now.addingTimeInterval(61))!
++  expect(expired.contains("이전 조회 기준 참고") && !expired.contains("최신 조회"))
++  expect(expired.contains("23:00") && expired.contains("23:25"))
++  expect(weatherONNowArrivalDescription(legacy, referenceDate: now) == nil)
++  let entryDates = routeEntryDates(currentRestored, now: now)
++  expect(entryDates.count == 2 && entryDates[0] == now)
++  expect(entryDates[1] == now.addingTimeInterval(60))
++  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: entryDates[0]) == current.nowArrivalDescription)
++  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: entryDates[1]) == current.nowArrivalReferenceDescription)
++  expect(routeEntryDates(currentRestored, now: now.addingTimeInterval(61)).count == 1)
++  expect(routeEntryDates(legacy, now: now).count == 1)
++  let invalidExpiry = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(#"{"nowRouteExpiresAt":"invalid"}"#.utf8))
++  expect(routeEntryDates(invalidExpiry, now: now).count == 1)
+ }
+ print("Widget app snapshot time: \\(checked) checks passed (ko/en/ja, 12/24-hour, prior day/year, missing/future, location/device timezone)")
+ `);
+--- a/apps/server/src/proxyCore.mjs
++++ b/apps/server/src/proxyCore.mjs
+@@ -364,7 +364,7 @@
+     const effectiveDeparture = result.departureAt ?? departureTime ?? (arrivalTime ? new Date(Date.parse(arrivalTime) - ((result.durationSeconds ?? 0) + bufferSeconds) * 1000).toISOString() : updatedAt);
+     const ttl = Math.min(readNumberEnv(readEnvValue, "ROUTE_CACHE_TTL_MS", DEFAULT_ROUTE_CACHE_TTL_MS), Date.parse(effectiveDeparture) - now < 3600000 ? 60000 : DEFAULT_ROUTE_CACHE_TTL_MS);
+     const payload = {
+-      ...result, transportMode, requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
++      ...result, transportMode, requestKind: arrivalTime || departureTime ? "scheduled" : "now", requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
+       bufferSeconds: arrivalTime ? bufferSeconds : 0, updatedAt, expiresAt: new Date(Date.parse(updatedAt) + Math.max(0, ttl)).toISOString(), cacheStatus: "fresh",
+     };
+     if (payload.status === "ready") {
+@@ -715,8 +715,8 @@
+     travelMinutes: Math.ceil(durationSeconds / 60),
+     distanceMeters: Math.max(0, Math.round(distanceMeters)),
+     timingBasis: googleMode === "driving" && !arrivalTime ? "current" : "route",
+-    message: googleMode === "transit"
+-      ? arrivalTime || departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정"
++    message: googleMode === "walking" ? "도보 경로 소요시간 기준 예상 · 시간대 미반영" : googleMode === "transit"
++      ? (arrivalTime || departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정") + " · 운행·대기시간 확인 필요"
+       : arrivalTime ? "현재 교통 기준 추정 · 선택 도착 시간 미반영"
+         : departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정",
+   };

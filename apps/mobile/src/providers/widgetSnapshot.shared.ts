@@ -45,6 +45,11 @@ export type WeatheronWidgetLocationSnapshot = {
   outfitVariant: OutfitRecommendation["variant"];
   observedAt: string;
   hourly: WeatheronWidgetHourlySnapshot[];
+  nowArrivalAt?: string;
+  nowArrivalDescription?: string;
+  nowArrivalReferenceDescription?: string;
+  nowRouteUpdatedAt?: string;
+  nowRouteExpiresAt?: string;
   departureAt?: string;
   arrivalAt?: string;
   durationSeconds?: number;
@@ -83,6 +88,11 @@ type WidgetLocationOptions = {
     longitude: number;
   };
   timeZone?: string;
+  nowArrivalAt?: string;
+  nowArrivalDescription?: string;
+  nowArrivalReferenceDescription?: string;
+  nowRouteUpdatedAt?: string;
+  nowRouteExpiresAt?: string;
   departureAt?: string;
   arrivalAt?: string;
   durationSeconds?: number;
@@ -130,6 +140,11 @@ export function createWeatheronWidgetLocationSnapshot(
       condition: hour.condition,
       rainProbabilityPct: Math.round(hour.rainProbabilityPct),
     })),
+    nowArrivalAt: options.nowArrivalAt,
+    nowArrivalDescription: options.nowArrivalDescription,
+    nowArrivalReferenceDescription: options.nowArrivalReferenceDescription,
+    nowRouteUpdatedAt: options.nowRouteUpdatedAt,
+    nowRouteExpiresAt: options.nowRouteExpiresAt,
     departureAt: options.departureAt,
     arrivalAt: options.arrivalAt,
     durationSeconds: options.durationSeconds,

@@ -32,12 +32,13 @@ import {
   parseDateTimeInZone,
 } from "../utils/zonedDateTime";
 import type { TravelEstimateResult } from "../providers/travelEstimateClient";
-import { getDestinationTiming } from "../state/appStateHelpers";
+import { getDestinationTiming, type getDestinationLeavingNowTiming } from "../state/appStateHelpers";
 import { getTravelMinutesForTransport, formatRouteClock, canScheduleTravelEstimate } from "../utils/travelEstimate";
 
 export type DemoState = ReturnType<typeof buildDemoStateFromWeatherResult>;
 
 export type DemoStateOptions = {
+  leavingNow?: ReturnType<typeof getDestinationLeavingNowTiming>;
   hasDestination?: boolean;
   destinationCareEnabled?: boolean;
   destination?: Pick<PlaceSearchResult, "id" | "name" | "category" | "countryCode" | "timezone">;
@@ -167,7 +168,8 @@ export function buildDemoStateFromWeatherResult(
   ) : undefined;
   if (destinationCare.departureAdvice) {
     Object.assign(destinationCare.departureAdvice, {
-      departureAt: timing?.departureAt, arrivalAt: timing?.arrivalAt, nowArrivalAt: timing?.nowArrivalAt, targetAt: timing?.targetAt,
+      departureAt: timing?.departureAt, arrivalAt: timing?.arrivalAt, targetAt: timing?.targetAt,
+      ...options.leavingNow,
       durationSeconds: timing?.durationSeconds, bufferMinutes: timing ? timing.bufferSeconds / 60 : undefined,
       recommendedDepartureTime: timing ? formatRouteClock(timing.departureAt, options.destination!.timezone) : undefined,
       travelMinutes: timing ? Math.ceil(timing.durationSeconds / 60) : undefined,

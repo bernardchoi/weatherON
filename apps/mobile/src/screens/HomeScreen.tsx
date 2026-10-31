@@ -6,7 +6,7 @@ import { resolveHomeViewportSpacing } from "../theme/homeViewport";
 import { HomeViewportContext } from "../components/HomeViewportContext";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Animated, AppState, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
-import { getOutfitImageSource, outfitImageAssets, uiIconAssets } from "../assets";
+import { getOutfitImageSource, uiIconAssets } from "../assets";
 import { IosSelectionRow } from "../components/IosSelectionRow";
 import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { BottomSheet } from "../components/BottomSheet";
@@ -34,7 +34,7 @@ import { useAmbientDaylight, useIsNightHour } from "../utils/useIsNightHour";
 import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMaterial";
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { useReducedMotion } from "../hooks/useReducedMotion";
-import { getHomeCompanionMessage, getHomeDepartureSummary } from "../utils/homeCompanion";
+import { getHomeDepartureSummary } from "../utils/homeCompanion";
 import { buildHomePreparation, buildRainForecast, forecastTime, hasFeelsLike, snapshotReliable } from "../utils/homeOuting";
 import { useForecastNow } from "../hooks/useForecastNow";
 import { getConditionLabel } from "../utils/weatherPresentation";
@@ -45,7 +45,6 @@ import { translateText } from "../localization/localization";
 // 2026-07-08 출시 로드맵: 코디가 출시 범위에 포함되어 홈 코디 카드 노출.
 const AmbientHomeScrollView = Platform.OS === "ios" ? Animated.ScrollView : ScrollView;
 const HOME_OUTFIT_CARD_VISIBLE = true;
-const HOME_OUTFIT_FALLBACK_IMAGE = "assets/outfits/weatheron-outfit-light-rain-jacket-v1.png";
 
 // Keep the native SVG module unevaluated on Android/web; their original text remains.
 const IosHomeWordmark = Platform.OS === "ios"
@@ -184,7 +183,7 @@ export function HomeScreen({
       }));
     } catch { /* Numeric diagnosis cannot affect the actual weather policy. */ }
   }, [reliableWeather, isWeatherLoading, current.condition, ambientDaylight.phase]);
-  const companionMessage = Platform.OS === "ios" ? preparation.copy : getHomeCompanionMessage(currentWeather, reliableWeather);
+  const companionMessage = preparation.copy;
   const departureSummary = getHomeDepartureSummary(
     state.destinationCare,
     destinationReady,
@@ -193,8 +192,8 @@ export function HomeScreen({
     homeSchedulePreference.timeBasis,
   );
   const routeAdvice = state.destinationCare.departureAdvice;
-  const routeTimeline = routeAdvice?.nowArrivalAt ? `지금 출발 시 ${forecastTime(Date.parse(routeAdvice.nowArrivalAt), outingWeather)} 도착 예상 · 지각 가능` : routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "";
-  const departureExplanation = `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
+  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "");
+  const departureExplanation = routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
   const showDepartureExplanation = destinationReady;
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
@@ -303,7 +302,7 @@ export function HomeScreen({
             feelsLikeAvailable={hasFeelsLike(currentWeather)}
             isNight={isNight}
             companionMessage={companionMessage}
-            companionBasis={Platform.OS === "ios" ? `${preparation.basis === "목적지 도착 무렵" && homeSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}` : undefined}
+            companionBasis={`${preparation.basis === "목적지 도착 무렵" && homeSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}`}
             weatherStatus={Platform.OS === "ios" && !snapshotReliable(currentWeather, forecastNow) ? "최근 정보" : undefined}
             currentLocationName={currentLocationName}
             todayMinMax={todayMinMax}
@@ -402,7 +401,7 @@ export function HomeScreen({
         </View>
 
         {HOME_OUTFIT_CARD_VISIBLE ? (
-          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText("현재 위치") : translateText("목적지")} packTitle={homeDecision.packTitle} theme={theme} onPress={() => onNavigate("C1")} />
+          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText("현재 위치") : translateText("목적지")} forecastStatus={state.outfitContext?.status ?? "제공된 예보 기준"} theme={theme} onPress={() => onNavigate("C1")} />
         ) : null}
         <View style={styles.cardStack}>
           {!isWeatherLoading && (state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed) ? (
@@ -831,7 +830,7 @@ function HomeDecisionHero({
           {Platform.OS !== "ios" && weatherIcon ? <Image accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize, marginHorizontal: 12 }} /> : null}
         </FeedbackPressable>
         <HomeValueTransition value={companionMessage}>
-          {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 20, marginBottom: 8 }}>{companionBasis ?  <Text style={{ color: theme.muted, fontSize: 17, lineHeight: 24 }}>{companionBasis}</Text> : null}<Text ref={companionReadRef} onLayout={() => onReadingRegion?.("companion", companionReadRef.current)} style={[styles.iosCompanion, { color: theme.text, fontSize: 26, lineHeight: 34 }]}>{iosCompanionCopy}</Text></View> : <Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text>}
+          {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 20, marginBottom: 8 }}>{companionBasis ?  <Text style={{ color: theme.muted, fontSize: 17, lineHeight: 24 }}>{companionBasis}</Text> : null}<Text ref={companionReadRef} onLayout={() => onReadingRegion?.("companion", companionReadRef.current)} style={[styles.iosCompanion, { color: theme.text, fontSize: 26, lineHeight: 34 }]}>{iosCompanionCopy}</Text></View> : <View style={{ gap: 8 }}>{companionBasis ? <Text style={{ color: theme.muted, fontSize: 17, lineHeight: 24 }}>{companionBasis}</Text> : null}<Text style={[styles.iosCompanion, { color: theme.text }]}>{companionMessage}</Text></View>}
         </HomeValueTransition>
         {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>
           체감 {formatTemperature(current.feelsLikeC, temperatureUnit)} · 강수 {current.rainProbabilityPct}%
@@ -880,7 +879,7 @@ function HomeOutfitPreviewCard({
   onReadingLayout,
   viewportSpacing,
   outfit,
-  packTitle,
+  forecastStatus,
   locationName,
   weatherBasis,
   theme,
@@ -889,7 +888,7 @@ function HomeOutfitPreviewCard({
   onReadingLayout?: (event: import("react-native").LayoutChangeEvent) => void;
   viewportSpacing: ReturnType<typeof resolveHomeViewportSpacing>;
   outfit: P0ScreenProps["state"]["outfit"];
-  packTitle: string;
+  forecastStatus?: string;
   locationName: string;
   weatherBasis: string;
   theme: AppTheme;
@@ -898,16 +897,15 @@ function HomeOutfitPreviewCard({
   const layout = useResponsiveLayout();
   const tightLayout = isHomeTightLayout(layout);
   const { fontScale } = useWindowDimensions();
-  const imageSource = getHomeOutfitPreviewImage(outfit);
-  const compactCopy = getHomeOutfitCopy(outfit.variant, packTitle);
-  const title = getHomeOutfitTitle(compactCopy.title);
+  const title = outfit.decisionText;
   const itemNames = Object.values(outfit.items).filter(Boolean).map(item => translateText(item!.name)).join(" + ");
+  const previewSummary = [forecastStatus ?? "", outfit.decisionText, itemNames].filter(Boolean).map(value => translateText(value)).join(" · ");
   // The approved Home composition pairs the recommended layer and footwear;
   // both remain actual recommendation items, never the board's example clothing.
   const photos = (Platform.OS === "ios" ? [outfit.items.outer ?? outfit.items.top, outfit.items.shoes] : Object.values(outfit.items))
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
-    <FeedbackPressable onLayout={onReadingLayout} accessibilityLabel={Platform.OS === "ios" ? `${getDisplayLocationName(locationName)} 기준 코디. ${itemNames}. 코디 자세히 보기` : `오늘 입기 좋은 코디 ${outfit.decisionText}. ${title}`} accessibilityRole="button" onPress={onPress}
+    <FeedbackPressable onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={onPress}
       style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }]}>
       <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>
@@ -915,7 +913,7 @@ function HomeOutfitPreviewCard({
         <Text style={[styles.ambientOutfitTitle, { color: theme.text }, Platform.OS === "ios" && { fontSize: 30, lineHeight: 40, flexShrink: 1 }]}>오늘의 코디</Text>
         {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 20, height: 20, tintColor: theme.text, transform: [{ rotate: "-90deg" }] }} /> : <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>보기</Text>}
       </View>
-      {Platform.OS === "ios" ? <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{weatherBasis} 날씨로 골랐어요</Text> : null}
+      <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{weatherBasis}<Text>{` · ${getDisplayLocationName(locationName)}`}</Text></Text>
       </View>
       <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: 126, width: layout.width < 390 || fontScale > 1.3 ? "100%" : "44%" }]}>
         {photos.length ? photos.map((item, index) => <Image key={index} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
@@ -923,23 +921,13 @@ function HomeOutfitPreviewCard({
           height: index === 0 ? 126 : 92,
           left: index === 0 ? "0%" : undefined, right: index === 1 ? "0%" : undefined, bottom: 0,
         } : { width: photos.length > 1 ? "46%" : "80%", height: tightLayout ? 100 : 132 }} />)
-          : <Image source={imageSource} resizeMode="contain" style={{ width: "80%", height: tightLayout ? 100 : 132 }} />}
+          : null}
       </View>
       </View>
-      {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{title}</Text> : null}
+      {forecastStatus ? <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{forecastStatus}</Text> : null}
+      <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>
     </FeedbackPressable>
   );
-}
-
-function getHomeOutfitCopy(variant: P0ScreenProps["state"]["outfit"]["variant"], fallback: string) {
-  if (variant === "rain") return { title: "비 소식 있어요.\n우산과 방수 신발 챙겨요", body: "방수 신발이면 더 좋아요" };
-  if (variant === "heat") return { title: "더운 날이에요 · 가볍게", body: "바람 잘 통하는 차림이 좋아요" };
-  if (variant === "cold") return { title: "쌀쌀해요 · 한 겹 더", body: "따뜻한 겉옷을 챙겨요" };
-  return { title: variant === "formal" ? fallback : "오늘은 가볍게 나가요", body: "편한 차림이면 충분해요" };
-}
-
-function getHomeOutfitTitle(copy: string) {
-  return copy.replace(/\s+/gu, " ").trim();
 }
 
 function SpecialWeatherAlertCard({
@@ -1054,13 +1042,6 @@ function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["officialSpecialA
     title: (alert.title ?? "기상청 특보가 있어요").replace(/\s+/gu, " ").trim(),
     body: reason.replace(/\s+/gu, " ").trim() || "기상청 발표 내용을 확인해요",
   };
-}
-
-function getHomeOutfitPreviewImage(outfit: P0ScreenProps["state"]["outfit"]) {
-  const previewItem = Object.values(outfit.items).find((item) => getOutfitImageSource(item?.imageUrl));
-  const previewSource = getOutfitImageSource(previewItem?.imageUrl);
-  if (previewSource) return previewSource;
-  return outfitImageAssets[HOME_OUTFIT_FALLBACK_IMAGE];
 }
 
 function NotificationBellButton({

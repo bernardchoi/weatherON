@@ -1,0 +1,34 @@
+overseas-shared.log
+shared rules check passed
+
+
+overseas-route.log
+PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.
+PASS shared timing: 08:00→08:40, 09:00/40m/10m→08:10/08:50, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.
+PASS actual SQLite: additive/idempotent legacy migration, saved/preview round trip, duration/absolute schedule/provenance/expiry preserved, and old data retained.
+PASS UI model/notification: identical departure/arrival, separate reminder lead time, and route provenance in notification.
+PASS actual request effect: fast setting changes reject obsolete responses, ten-minute throttle, background guard, offline provenance and recovery. Foreground/restart clear/requery is covered separately by lifecycle/storage checks.
+PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.
+PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity and cancellation.
+PASS client/localization: server provenance/timestamps preserved, malformed result rejected, no fabricated transit fallback, composed route messages use OS language catalogs, and browser notification timer receiver retained.
+
+
+overseas-uiux.log
+PASS iOS relevance, legacy distance, server cache separation/category, missing field presence and empty forecast
+PASS actual iOS destination model uses arrival probability, never full-horizon maximum or another place fallback
+PASS genuine zero temperature, humidity and probability remain available
+PASS actual detail presence predicate hides missing/fallback zero and preserves real zero
+PASS actual iOS care target distinguishes unavailable route from past destination-local time
+PASS native Constants config generation accepts the actual project path with spaces
+PASS actual notification center respects native delivery preferences, quiet hours and permission
+PASS overseas fallback cannot fabricate travel time or departure timing from GLOBAL country grouping
+
+
+overseas-home.log
+PASS: actual progressive provider + Home preparation retain identical fresh guidance while destination refresh is pending
+PASS: actual provider pending/error/new data/expiry/unverified/location and timezone changes; Home target time/missing forecast recomputation; no false preservation
+PASS: an actual failed refresh remains stale during retry until a successful response
+PASS: late old failure cannot invalidate newer concurrent success
+
+
+overseas-tsc.log

@@ -1,4 +1,4 @@
-import { getTravelMinutesForTransport, resolveTravelTiming } from "../utils/travelEstimate";
+import { getTravelMinutesForTransport, resolveTravelTiming, resolveLeavingNowTiming, getLeavingNowDescription, type LeavingNowRouteState } from "../utils/travelEstimate";
 // useWeatherOnAppState에서 사용하는 순수 헬퍼 모음. React 상태에 의존하지 않는다.
 import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
 import type { NotificationRuleEvaluation } from "@weatheron/shared";
@@ -156,11 +156,12 @@ export function getAlertSettingsFocusFromRoute(route: P0RouteId): AlertSettingsF
 }
 
 export function createWeatherLocationFromPlace(place: PlaceSearchResult): WeatherLocationPreset {
-  if (place.countryCode === "KR") return createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id);
+  if (place.countryCode === "KR") return { ...createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id), countryIsoCode: place.countryIsoCode };
   return {
     locationId: place.id,
     locationName: place.name,
     countryCode: place.countryCode,
+    countryIsoCode: place.countryIsoCode,
     coordinate: place.coordinate,
     timezone: place.timezone,
   };
@@ -343,6 +344,10 @@ export function getRouteArrivalTimeIso(
     const arrivalDate = addZonedCalendarDays(nowParts, offset);
     if (repeatEnabled && !repeatDays.includes(getWeekdayForZonedDate(arrivalDate))) continue;
     const arrivalAt = createDateAtTimeInZone(arrivalDate, targetArrivalTime, timeZone);
+    const resolved = getZonedDateTimeParts(arrivalAt, timeZone);
+    // A DST gap has no such local target; never silently schedule a different wall time.
+    if (resolved.hour !== Number(targetArrivalTime.slice(0, 2)) || resolved.minute !== Number(targetArrivalTime.slice(3))
+      || resolved.year !== arrivalDate.year || resolved.month !== arrivalDate.month || resolved.day !== arrivalDate.day) continue;
     if (!repeatEnabled || arrivalAt.getTime() > nowMs) return arrivalAt.toISOString();
   }
   return undefined;
@@ -400,5 +405,19 @@ export function getDestinationTiming(
   // A response for another date/time must never carry its route into this schedule.
   if (estimate.requestArrivalTime && (schedule.timeBasis !== "arrival" || estimate.requestArrivalTime !== target)) return undefined;
   if (estimate.requestDepartureTime && (schedule.timeBasis !== "departure" || estimate.requestDepartureTime !== target)) return undefined;
-  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0, nowMs);
+  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0);
+}
+
+export function getDestinationLeavingNowTiming(
+  estimate: DestinationTravelEstimate, schedule: DestinationSchedulePreference, timeZone: string, nowMs: number,
+  originCountryCode: "KR" | "JP" | "GLOBAL", destinationCountryCode: "KR" | "JP" | "GLOBAL", originPlaceId: string,
+  current?: LeavingNowRouteState,
+) {
+  const planned = getDestinationTiming(estimate, schedule, timeZone, nowMs, originCountryCode, destinationCountryCode, originPlaceId);
+  const departureAt = planned?.departureAt ?? getRouteArrivalTimeIso(schedule.targetArrivalTime, timeZone, nowMs, schedule.repeatEnabled, schedule.repeatDays);
+  if (!departureAt || Date.parse(departureAt) > nowMs) return undefined;
+  const timing = resolveLeavingNowTiming(current, nowMs);
+  // WidgetKit can render after expiry without another JavaScript lookup.
+  const reference = timing.nowArrivalReference ? timing : { ...resolveLeavingNowTiming(current ? { ...current, status: "loading" } : undefined, nowMs), nowArrivalStatus: "ready" as const };
+  return { ...timing, nowArrivalDescription: getLeavingNowDescription(timing, timeZone), nowArrivalReferenceDescription: getLeavingNowDescription(reference, timeZone) };
 }

@@ -1,0 +1,97 @@
+{
+  "checkedAt": "2026-10-30T10:11:12.068Z",
+  "environment": "local handler / real upstream providers, no deployment",
+  "records": [
+    {
+      "q": "Cambridge",
+      "status": 200,
+      "payload": [
+        {
+          "id": "google-ChIJLQEq84ld2EcRIT1eo-Ego2M",
+          "name": "Cambridge",
+          "address": "영국 캠브리지 케임브리지",
+          "category": "custom",
+          "countryCode": "GLOBAL",
+          "coordinate": {
+            "latitude": 52.1950788,
+            "longitude": 0.1312729
+          },
+          "provider": "google",
+          "timezone": "Europe/London"
+        }
+      ]
+    },
+    {
+      "q": "Cambridge Massachusetts",
+      "status": 200,
+      "payload": [
+        {
+          "id": "google-ChIJX8wwy6Vw44kRh2xoiWSOOsU",
+          "name": "Cambridge Massachusetts",
+          "address": "미국 매사추세츠 케임브리지",
+          "category": "custom",
+          "countryCode": "GLOBAL",
+          "coordinate": {
+            "latitude": 42.3666036,
+            "longitude": -71.1056916
+          },
+          "provider": "google",
+          "timezone": "America/New_York"
+        }
+      ]
+    },
+    {
+      "q": "Tokyo Station Cafe London",
+      "status": 200,
+      "payload": [
+        {
+          "id": "google-ChIJC3Cf2PuLGGAROO00ukl8JwA",
+          "name": "도쿄",
+          "address": "일본 〒100-0005 Tokyo, Chiyoda City, Marunouchi, 1-chōme−9 도쿄",
+          "category": "custom",
+          "countryCode": "JP",
+          "coordinate": {
+            "latitude": 35.6812996,
+            "longitude": 139.7670658
+          },
+          "timezone": "Asia/Tokyo",
+          "provider": "google"
+        }
+      ]
+    },
+    {
+      "q": "Sydney Opera House",
+      "status": 200,
+      "payload": [
+        {
+          "id": "google-ChIJ3S-JXmauEmsRUcIaWtf4MzE",
+          "name": "Sydney Opera House",
+          "address": "Bennelong Point, Sydney NSW 2000 오스트레일리아",
+          "category": "custom",
+          "countryCode": "GLOBAL",
+          "coordinate": {
+            "latitude": -33.8567844,
+            "longitude": 151.2152967
+          },
+          "provider": "google",
+          "timezone": "Australia/Sydney"
+        }
+      ]
+    },
+    {
+      "q": "시드니 오페라 하우스",
+      "status": 200,
+      "payload": []
+    },
+    {
+      "q": "베를린 중앙역",
+      "status": 200,
+      "payload": []
+    },
+    {
+      "q": "zzqv-no-such-place-983742",
+      "status": 200,
+      "payload": []
+    }
+  ]
+}

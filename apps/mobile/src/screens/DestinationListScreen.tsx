@@ -28,6 +28,7 @@ import { useIsNightHour } from "../utils/useIsNightHour";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 
 type DestinationCardModel = {
+  nowArrivalDescription?: string;
   actionText?: string;
   weatherCondition: string | null;
   weatherNotice: string | null;
@@ -60,6 +61,7 @@ type DestinationCardModel = {
 export function DestinationListScreen({
   state,
   savedDestinations,
+  destinationLeavingNow,
   placeSearchOrigin,
   recentlyRemovedDestination,
   selectedDestinationPlace,
@@ -84,7 +86,7 @@ export function DestinationListScreen({
   const layout = useResponsiveLayout();
   const care = state.destinationCare;
   const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
-  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile, Boolean(placeSearchOrigin));
+  const destinationCards = buildDestinationCards(savedDestinations, care, state.destinationWeatherById, temperatureUnit, wardrobeItems, preferenceProfile, Boolean(placeSearchOrigin), destinationLeavingNow);
   const alertCount = permissionReady ? destinationCards.filter((item) => item.careEnabled).length : 0;
   const hasDestinations = destinationCards.length > 0;
   const alertLabel = hasDestinations ? `알림 ${alertCount}/${destinationCards.length}` : "알림 0";
@@ -330,6 +332,7 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
       <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
         <Text style={{ fontSize: item.departureTime.includes(":") ? 28 : 18, lineHeight: 32, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
         <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalTime} {item.arrivalLabel}</Text>
+        {item.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.nowArrivalDescription}</Text> : null}
       </View>
       <View style={{ gap: 2, alignItems: stacked ? "flex-start" : "flex-end" }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -418,6 +421,7 @@ function DestinationCard({
         {<View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
           <Text style={[pageStyles.number, { color: theme.text }]}>{item.departureTime}</Text>
           <Text style={[pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>{item.departureTime.includes(":") ? "출발 · " : ""}{item.arrivalTime} {item.arrivalLabel}</Text>
+          {item.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.nowArrivalDescription}</Text> : null}
         </View>}
         <View style={styles.destinationSummaryRow}>
           <View style={styles.destinationWeatherLine}>
@@ -470,6 +474,7 @@ function buildDestinationCards(
   wardrobeItems: P0ScreenProps["wardrobeItems"],
   preferenceProfile: UserPreferenceProfile,
   originAvailable: boolean,
+  nowArrivals?: P0ScreenProps["destinationLeavingNow"],
 ): DestinationCardModel[] {
   if (!savedDestinations.length) return [];
   const originWeather = care.originWeather;
@@ -507,7 +512,8 @@ function buildDestinationCards(
       rainPct: `${Math.round(destinationRain)}%`,
       departureTime: schedule.departureTime,
       arrivalTime: schedule.arrivalTime,
-      arrivalLabel: schedule.arrivalLabel,
+      arrivalLabel: nowArrivals?.[destination.place.id] ? "예정 도착" : schedule.arrivalLabel,
+      nowArrivalDescription: nowArrivals?.[destination.place.id]?.nowArrivalDescription,
       repeatLabel: getRepeatLabel(destination.schedulePreference),
       warning,
       warningKind,

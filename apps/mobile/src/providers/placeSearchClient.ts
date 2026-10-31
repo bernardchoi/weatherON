@@ -255,6 +255,7 @@ function normalizeOpenMeteoPlaces(
         address: [place.admin2, place.admin1, place.country].filter(Boolean).join(" · ") || (place.country ?? "주소 정보 없음"),
         category: inferPlaceCategory(place),
         countryCode,
+        countryIsoCode: /^[A-Z]{2}$/.test(place.country_code ?? "") ? place.country_code : undefined,
         coordinate: {
           latitude: place.latitude ?? 0,
           longitude: place.longitude ?? 0,

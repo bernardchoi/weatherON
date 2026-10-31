@@ -42,8 +42,16 @@ import {
   type WeatherLocationMode,
 } from "./appStateTypes";
 
+export type OnboardingProgress = {
+  route: "O1" | "O2" | "O7" | "O4" | "O5" | "O6";
+  locationHandled: boolean;
+  notificationHandled: boolean;
+  destinationSelected: boolean;
+};
+
 export type PersistedAppState = {
   onboardingCompleted: boolean;
+  onboardingProgress: OnboardingProgress;
   smartCareEnabled: boolean;
   accountLinked: boolean;
   termsRequiredAccepted: boolean;
@@ -277,7 +285,9 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     ? record.savedDestinations.map(normalizeSavedDestination).filter((item): item is SavedDestination => Boolean(item)).slice(0, 12)
     : [];
   const defaultSelectedDestinationPlace = savedDestinations[0]?.place ?? getDefaultDestinationPlace();
-  const selectedDestinationPlace = normalizeSelectedDestinationPlace(record.selectedDestinationPlace, savedDestinations, defaultSelectedDestinationPlace);
+  const selectedDestinationPlace = record.onboardingCompleted !== true && record.onboardingProgress?.destinationSelected === true && isPlaceSearchResult(record.selectedDestinationPlace)
+    ? normalizePlaceSearchResultCategory(record.selectedDestinationPlace)
+    : normalizeSelectedDestinationPlace(record.selectedDestinationPlace, savedDestinations, defaultSelectedDestinationPlace);
   const departureActivityIntentDestinationId = typeof record.departureActivityIntentDestinationId === "string"
     && savedDestinations.some((destination) => destination.place.id === record.departureActivityIntentDestinationId && destination.careEnabled)
     ? record.departureActivityIntentDestinationId
@@ -291,6 +301,12 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
 
   return {
     onboardingCompleted: record.onboardingCompleted === true,
+    onboardingProgress: {
+      route: ["O1", "O2", "O7", "O4", "O5", "O6"].includes(record.onboardingProgress?.route ?? "") ? record.onboardingProgress!.route : "O1",
+      locationHandled: record.onboardingProgress?.locationHandled === true,
+      notificationHandled: record.onboardingProgress?.notificationHandled === true,
+      destinationSelected: record.onboardingCompleted !== true && record.onboardingProgress?.destinationSelected === true && isPlaceSearchResult(record.selectedDestinationPlace),
+    },
     // 이전 설치본에는 값이 없으므로 기존 자동 케어 기본값을 유지한다.
     smartCareEnabled: record.smartCareEnabled !== false,
     accountLinked: record.accountLinked === true,
@@ -514,6 +530,7 @@ function isPlaceSearchResult(value: unknown): value is PlaceSearchResult {
     typeof record.address === "string" &&
     isDestinationCategory(record.category) &&
     (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
+    (record.countryIsoCode === undefined || (typeof record.countryIsoCode === "string" && /^[A-Z]{2}$/.test(record.countryIsoCode))) &&
     isGeoCoordinate(record.coordinate) &&
     typeof record.timezone === "string" &&
     (record.provider === "fixture" || record.provider === "kakao" || record.provider === "google" || record.provider === "openmeteo")
@@ -543,6 +560,7 @@ function isWeatherLocationPreset(value: unknown): value is WeatherLocationPreset
     typeof record.locationId === "string" &&
     typeof record.locationName === "string" &&
     (record.countryCode === "KR" || record.countryCode === "JP" || record.countryCode === "GLOBAL") &&
+    (record.countryIsoCode === undefined || (typeof record.countryIsoCode === "string" && /^[A-Z]{2}$/.test(record.countryIsoCode))) &&
     isGeoCoordinate(record.coordinate) &&
     typeof record.timezone === "string"
   );

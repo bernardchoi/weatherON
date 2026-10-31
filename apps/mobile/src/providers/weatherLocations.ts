@@ -4,6 +4,7 @@ export type WeatherLocationPreset = {
   locationId: string;
   locationName: string;
   countryCode: CountryCode;
+  countryIsoCode?: string;
   coordinate: GeoCoordinate;
   timezone: string;
 };

@@ -27,7 +27,7 @@ const utcNow=Date.parse("2026-10-10T23:30:00Z");
 const ny={...base,timezone:"America/New_York",observedAt:new Date(utcNow).toISOString(),hourly:[h("2026-10-11T00:00:00Z",80,2,"rain"),h("2026-10-11T04:00:00Z",90,3,"rain")]};
 const nr=run(ny,utcNow);assert.equal(nr.outfitContext.weather.hourly.length,1);assert.match(nr.outfit.decisionText,/20:00/);
 // The local midnight changes date independently of the execution machine zone.
-const midnight=Date.parse("2026-10-11T00:00:00+09:00");const mr=run({...base,observedAt:new Date(midnight).toISOString(),hourly:[...base.hourly,h("2026-10-11T00:00",80,2,"rain")]},midnight);assert.equal(mr.outfitContext.weather.hourly.length,1);assert.match(mr.outfit.decisionText,/00:00/);
+const midnight=Date.parse("2026-10-11T00:00:00+09:00");const mr=run({...base,observedAt:new Date(midnight).toISOString(),hourly:[...base.hourly,h("2026-10-11T00:00",80,2,"rain")]},midnight);assert.equal(mr.outfitContext.weather.hourly.length,1);assert.doesNotMatch(mr.outfit.decisionText,/00:00/);
 // Missing later hours are not a claim of a rain-free rest of day.
 const gap=run({...full,hourly:[full.hourly[0],full.hourly[2]]},dayNow);assert.equal(gap.outfitContext.complete,false);assert.match(gap.outfitContext.status,/일부/);assert.match(gap.outfit.decisionText,/14:00/);
 assert.equal(run().outfitContext.observedLabel,"10/10 23:30");
@@ -59,9 +59,9 @@ for(const flags of [{feelsLikeAvailable:false,tempAvailable:false},{feelsLikeAva
 }
 const nan=run({...base,current:{...base.current,tempC:NaN,feelsLikeC:NaN}});assert.equal(nan.outfitContext.currentAvailable,false);
 const coldZero=run({...base,current:{...base.current,tempC:0,feelsLikeC:0}});assert.equal(coldZero.outfit.variant,"cold");
-for(const condition of ["rain","snow"]) {const r=run({...missing,current:{...missing.current,condition}});assert.match(r.outfit.decisionText,condition==="snow"?/현재 눈/:/현재 비/);assert.equal(Object.values(r.outfit.items).filter(Boolean).length,0);}
-const uv=run({...missing,current:{...missing.current,uvIndex:8}});assert.match(uv.outfit.decisionText,/햇빛/);
-const missingWet=run({...missing,hourly:[h("2026-10-10T23:00",80,2,"rain")]});assert.match(missingWet.outfit.decisionText,/비 예보/);
+for(const condition of ["rain","snow"]) {const r=run({...missing,current:{...missing.current,condition}});assert.match(r.outfit.decisionText,/온도를 확인/);assert.equal(Object.values(r.outfit.items).filter(Boolean).length,0);}
+const uv=run({...missing,current:{...missing.current,uvIndex:8}});assert.match(uv.outfit.decisionText,/온도를 확인/);
+const missingWet=run({...missing,hourly:[h("2026-10-10T23:00",80,2,"rain")]});assert.match(missingWet.outfit.decisionText,/온도를 확인/);
 const staleMissing=run({...missing,stale:true});assert.match(staleMissing.outfitContext.status,/최근 자료/);assert.match(staleMissing.outfit.decisionText,/최신 날씨/);
 // Real adapter → today scope, not only handcrafted normalized fixtures.
 const adapted=s.normalizeWeatherKitWeather({currentWeather:{asOf:new Date(now).toISOString(),conditionCode:"Cloudy"}}, {locationId:"test",locationName:"Test",countryCode:"KR",timezone:"Asia/Seoul"});

@@ -1,0 +1,127 @@
+{
+  "checkedAt": "2026-10-30T10:14:25.178Z",
+  "environment": "local handler / real upstream providers, no deployment",
+  "records": [
+    {
+      "label": "Sydney weather",
+      "params": {
+        "latitude": "-33.8567844",
+        "longitude": "151.2152967",
+        "timezone": "Australia/Sydney",
+        "countryCode": "AU"
+      },
+      "status": 200,
+      "payload": {
+        "currentWeather": {
+          "name": "CurrentWeather",
+          "metadata": {
+            "attributionURL": "https://developer.apple.com/weatherkit/data-source-attribution/",
+            "expireTime": "2026-10-30T10:19:24Z",
+            "latitude": -33.86,
+            "longitude": 151.22,
+            "readTime": "2026-10-30T10:14:24Z",
+            "reportedTime": "2026-10-30T10:14:24Z",
+            "units": "m",
+            "version": 1,
+            "sourceType": "modeled"
+          },
+          "asOf": "2026-10-30T10:14:24Z",
+          "cloudCover": 0.63,
+          "cloudCoverLowAltPct": 0.07,
+          "cloudCoverMidAltPct": 0.13,
+          "cloudCoverHighAltPct": 0.58,
+          "conditionCode": "Drizzle",
+          "daylight": false,
+          "humidity": 0.73,
+          "precipitationIntensity": 0.21,
+          "pressure": 1020.9,
+          "pressureTrend": "rising",
+          "temperature": 19.77,
+          "temperatureApparent": 16.39,
+          "temperatureDewPoint": 14.79,
+          "uvIndex": 0,
+          "visibility": 17905.68,
+          "windDirection": 36,
+          "windGust": 46.89,
+          "windSpeed": 22.34
+        },
+        "hourlyCount": 250,
+        "firstHour": {
+          "forecastStart": "2026-10-29T11:00:00Z",
+          "cloudCover": 0.51,
+          "conditionCode": "PartlyCloudy",
+          "daylight": false,
+          "humidity": 0.69,
+          "precipitationAmount": 0,
+          "precipitationIntensity": 0,
+          "precipitationChance": 0,
+          "precipitationType": "clear",
+          "pressure": 1025.28,
+          "pressureTrend": "rising",
+          "snowfallIntensity": 0,
+          "snowfallAmount": 0,
+          "temperature": 18.58,
+          "temperatureApparent": 17.88,
+          "temperatureDewPoint": 12.78,
+          "uvIndex": 0,
+          "visibility": 25635,
+          "windDirection": 131,
+          "windGust": 17.74,
+          "windSpeed": 7.47
+        }
+      }
+    },
+    {
+      "label": "Korea to Sydney",
+      "params": {
+        "origin": "37.5541,126.9707",
+        "destination": "-33.8567844,151.2152967",
+        "originCountryCode": "KR",
+        "destinationCountryCode": "GLOBAL",
+        "transportMode": "drive"
+      },
+      "status": 200,
+      "payload": {
+        "provider": "fallback",
+        "status": "fallback",
+        "travelMinutes": 180,
+        "durationSeconds": 10800,
+        "timingBasis": "distance",
+        "distanceMeters": 8327122,
+        "message": "국가 간 경로 확인 필요",
+        "failureReason": "Route provider unavailable or outside supported region",
+        "transportMode": "drive",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-30T10:14:24.806Z",
+        "expiresAt": "2026-10-30T10:15:24.806Z",
+        "cacheStatus": "fresh"
+      }
+    },
+    {
+      "label": "Tokyo transit",
+      "params": {
+        "origin": "35.6813,139.7671",
+        "destination": "35.6586,139.7454",
+        "originCountryCode": "JP",
+        "destinationCountryCode": "JP",
+        "transportMode": "transit"
+      },
+      "status": 200,
+      "payload": {
+        "provider": "fallback",
+        "status": "error",
+        "durationSeconds": 0,
+        "travelMinutes": 0,
+        "distanceMeters": 0,
+        "timingBasis": "unavailable",
+        "message": "대중교통 경로 없음/조회 실패 · 운행 확인 필요",
+        "failureReason": "google route element failed: ZERO_RESULTS",
+        "transportMode": "transit",
+        "bufferSeconds": 0,
+        "updatedAt": "2026-10-30T10:14:25.178Z",
+        "expiresAt": "2026-10-30T10:15:25.178Z",
+        "cacheStatus": "fresh"
+      }
+    }
+  ]
+}

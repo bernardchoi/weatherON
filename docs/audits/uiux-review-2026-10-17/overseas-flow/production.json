@@ -1,0 +1,130 @@
+[
+  {
+    "kind": "weather",
+    "name": "Eiffel Tower",
+    "status": 200,
+    "current": {
+      "name": "CurrentWeather",
+      "metadata": {
+        "attributionURL": "https://developer.apple.com/weatherkit/data-source-attribution/",
+        "expireTime": "2026-10-17T03:58:11Z",
+        "latitude": 48.86,
+        "longitude": 2.29,
+        "readTime": "2026-10-17T03:53:11Z",
+        "reportedTime": "2026-10-17T03:53:11Z",
+        "units": "m",
+        "version": 1,
+        "sourceType": "modeled"
+      },
+      "asOf": "2026-10-17T03:53:11Z",
+      "cloudCover": 0.1,
+      "cloudCoverLowAltPct": 0.12,
+      "cloudCoverMidAltPct": 0,
+      "cloudCoverHighAltPct": 0,
+      "conditionCode": "Clear",
+      "daylight": false,
+      "humidity": 0.86,
+      "precipitationIntensity": 0,
+      "pressure": 1027.44,
+      "pressureTrend": "rising",
+      "temperature": 9.52,
+      "temperatureApparent": 6.8,
+      "temperatureDewPoint": 7.29,
+      "uvIndex": 0,
+      "visibility": 27713.13,
+      "windDirection": 340,
+      "windGust": 24.45,
+      "windSpeed": 9.98
+    },
+    "hourlyCount": 251
+  },
+  {
+    "kind": "weather",
+    "name": "Tokyo Station",
+    "status": 200,
+    "current": {
+      "name": "CurrentWeather",
+      "metadata": {
+        "attributionURL": "https://developer.apple.com/weatherkit/data-source-attribution/",
+        "expireTime": "2026-10-17T03:58:11Z",
+        "latitude": 35.68,
+        "longitude": 139.77,
+        "readTime": "2026-10-17T03:53:11Z",
+        "reportedTime": "2026-10-17T03:53:11Z",
+        "units": "m",
+        "version": 1,
+        "sourceType": "modeled"
+      },
+      "asOf": "2026-10-17T03:53:11Z",
+      "cloudCover": 1,
+      "cloudCoverLowAltPct": 0,
+      "cloudCoverMidAltPct": 0,
+      "cloudCoverHighAltPct": 0.89,
+      "conditionCode": "Cloudy",
+      "daylight": true,
+      "humidity": 0.4,
+      "precipitationIntensity": 0,
+      "pressure": 1025.55,
+      "pressureTrend": "falling",
+      "temperature": 23.94,
+      "temperatureApparent": 23.16,
+      "temperatureDewPoint": 9.51,
+      "uvIndex": 4,
+      "visibility": 32651.05,
+      "windDirection": 33,
+      "windGust": 17.79,
+      "windSpeed": 6.4
+    },
+    "hourlyCount": 250
+  },
+  {
+    "kind": "route",
+    "name": "Seoul to Paris",
+    "status": 200,
+    "result": {
+      "provider": "fallback",
+      "status": "fallback",
+      "travelMinutes": 180,
+      "distanceMeters": 8969173,
+      "message": "국가 간 경로 확인 필요"
+    }
+  },
+  {
+    "kind": "route",
+    "name": "Tokyo Station to Shibuya",
+    "status": 200,
+    "result": {
+      "provider": "fallback",
+      "status": "fallback",
+      "travelMinutes": 18,
+      "distanceMeters": 8074,
+      "message": "현지 좌표 거리 기반 추정"
+    }
+  },
+  {
+    "kind": "route",
+    "name": "Louvre to Eiffel Tower",
+    "transportMode": "drive",
+    "status": 200,
+    "result": {
+      "provider": "google",
+      "status": "ready",
+      "travelMinutes": 15,
+      "distanceMeters": 5258,
+      "message": "현재 교통 기준 추정 · 선택 도착 시간 미반영"
+    }
+  },
+  {
+    "kind": "route",
+    "name": "Louvre to Eiffel Tower",
+    "transportMode": "transit",
+    "status": 200,
+    "result": {
+      "provider": "google-transit",
+      "status": "ready",
+      "travelMinutes": 29,
+      "distanceMeters": 5985,
+      "message": "선택 시간 기준 대중교통 추정"
+    }
+  }
+]

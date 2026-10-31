@@ -87,10 +87,10 @@ export function DestinationCareScreen({
   const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
   const targetTimeReady = selectedDestinationDepartureAt
     ? new Date(selectedDestinationDepartureAt).getTime() > Date.now()
-    : !routeTimingReady && Boolean(getRouteArrivalTimeIso(
+    : !routeTimingReady && Date.parse(getRouteArrivalTimeIso(
         selectedTargetTime, selectedDestinationPlace.timezone, Date.now(),
         selectedDestinationSchedulePreference.repeatEnabled, selectedDestinationSchedulePreference.repeatDays,
-      ));
+      ) ?? "") > Date.now();
   const departureReady = targetTimeReady && (timeBasis === "departure" || routeTimingReady);
   const departureTime = timeBasis === "departure" ? selectedTargetTime : getRecommendedDepartureTime(care);
   const targetArrivalTime = timeBasis === "departure" ? care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : undefined : selectedTargetTime;
@@ -285,8 +285,8 @@ export function DestinationCareScreen({
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.cacheStatus === "stale" ? "이전 조회 결과 · " : ""}{selectedDestinationTravelEstimate.message}</Text>
               <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
               {care.departureAdvice?.arrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather)} 도착 예상`}</Text> : null}
-              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
-              {care.departureAdvice?.nowArrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`지금 출발 시 ${forecastTime(Date.parse(care.departureAdvice.nowArrivalAt), destinationWeather)} 도착 예상 · 지각 가능`}</Text> : null}
+              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${care.departureAdvice?.nowArrivalDescription ? "예정 경로 조회" : "조회"} ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
+              {care.departureAdvice?.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{care.departureAdvice.nowArrivalDescription}</Text> : null}
               {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[pageStyles.caption, { color: theme.muted }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
               {selectedDestinationTravelEstimate.message.includes("미반영") ? <Text style={[pageStyles.caption, { color: theme.muted }]}>선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.</Text> : null}
               <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>

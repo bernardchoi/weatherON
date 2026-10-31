@@ -91,7 +91,12 @@ function buildDaily(payload: WeatherKitResponse, timeZone: string, conditionProf
 function toLocalTimeString(isoUtc: string, timeZone: string): string {
   const parts = getZonedParts(isoUtc, timeZone);
   if (!parts) return isoUtc;
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  const local = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  // Keep the offset so the two repeated hours at DST end remain distinct.
+  const offsetMinutes = Math.round((Date.parse(`${local}:00Z`) - Math.floor(Date.parse(isoUtc) / 60000) * 60000) / 60000);
+  const absoluteOffset = Math.abs(offsetMinutes);
+  const offset = `${offsetMinutes < 0 ? "-" : "+"}${String(Math.floor(absoluteOffset / 60)).padStart(2, "0")}:${String(absoluteOffset % 60).padStart(2, "0")}`;
+  return `${local}:00${offset}`;
 }
 
 function toLocalDateString(isoUtc: string, timeZone: string): string {

@@ -1,0 +1,15 @@
+{
+  "commit": "8217078",
+  "missingForecast": {
+    "hourlyCount": 0,
+    "displayedFallbackCount": 1,
+    "tempAvailable": false,
+    "tempValue": 0,
+    "displayedTime": "03:00",
+    "locationTime": "12:00"
+  },
+  "serviceCategory": "mountain",
+  "clearButton": {
+    "ios": false
+  }
+}

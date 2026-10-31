@@ -103,9 +103,7 @@ export function localizePlaceSearchResult(place: PlaceSearchResult, localeOrLang
   return {
     ...place,
     name: label.name,
-    address: label.address,
-    countryCode: "JP",
-    timezone: "Asia/Tokyo",
+    address: place.provider === "fixture" ? label.address : place.address,
   };
 }
 
@@ -127,16 +125,17 @@ function getPlaceSearchLanguage(value?: string): "ko" | "en" | "ja" {
 
 function getKnownStationKey(place: PlaceSearchResult): KnownStationKey | null {
   if (place.id in localizedStationLabels) return place.id as KnownStationKey;
-  const text = normalizeSearchText(`${place.name} ${place.address} ${place.id}`);
+  if (place.countryCode !== "JP") return null;
+  const text = normalizeSearchText(place.name);
   const compact = text.replace(/\s+/g, "");
   const stationLike = /station|stn|역|駅|nankai/.test(text);
-  if ((compact.includes("tokyostation") || compact.includes("도쿄역") || compact.includes("東京駅")) && stationLike) {
+  if ((compact === "tokyostation" || compact === "도쿄역" || compact === "東京駅") && stationLike) {
     return "jp-tokyo-station";
   }
-  if ((compact.includes("shinsaibashi") || compact.includes("신사이바시") || compact.includes("心斎橋")) && stationLike) {
+  if ((compact === "shinsaibashi" || compact === "신사이바시" || compact === "心斎橋") && stationLike) {
     return "jp-shinsaibashi-station";
   }
-  if ((compact.includes("nambastation") || compact.includes("nankainamba") || compact.includes("난바역") || compact.includes("난카이난바") || compact.includes("難波駅") || compact.includes("なんば駅")) && stationLike) {
+  if ((compact === "nambastation" || compact === "nankainamba" || compact === "난바역" || compact === "난카이난바" || compact === "難波駅" || compact === "なんば駅") && stationLike) {
     return "jp-namba-station";
   }
   return null;

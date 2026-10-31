@@ -1,0 +1,2 @@
+							268 텍스트 Content source resolution: [] -> <private> (resolver: ContentSourceResolver(requester: com.weatheron.mobile, permissions: Permissions(apsEnvironmentName: nil, multipleProcessContentSources: false; customPushProcessIdentifier: false, protectionClass: classC)))
+							298 텍스트 Push token is not available; waiting for next update

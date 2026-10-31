@@ -1,0 +1,529 @@
+[
+  {
+    "q": "Seoul Station",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "kakao-9113903",
+        "name": "서울역",
+        "address": "서울 중구 한강대로 405",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55406888733184,
+          "longitude": 126.97070335253385
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-161159877",
+        "name": "서울역 GTX-A",
+        "address": "서울 중구 봉래동2가 166-1",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5554875216741,
+          "longitude": 126.972636930856
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-21161051",
+        "name": "서울역 공항철도",
+        "address": "서울 용산구 청파로 378",
+        "category": "airport",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55332892758497,
+          "longitude": 126.96974961781686
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-27254967",
+        "name": "서울역 1호선",
+        "address": "서울 중구 세종대로 지하 2",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55597933890212,
+          "longitude": 126.97209238331357
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-21160827",
+        "name": "서울역 4호선",
+        "address": "서울 용산구 한강대로 지하 392",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.553027798935524,
+          "longitude": 126.97264235696984
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-26352409",
+        "name": "서울역 경의중앙선",
+        "address": "서울 중구 통일로 1",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55693330961779,
+          "longitude": 126.9713179064219
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1475862842",
+        "name": "서울역KTX빌딩 주차장",
+        "address": "서울 용산구 청파로 378",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55280093121902,
+          "longitude": 126.9697045634858
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-8350043",
+        "name": "롯데마트 제타플렉스 서울역점",
+        "address": "서울 중구 한강대로 405",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55600861395749,
+          "longitude": 126.97021820757755
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-897362656",
+        "name": "서울역KTX 고객주차장 입출구",
+        "address": "서울 용산구 청파로 378",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5532441051647,
+          "longitude": 126.969251704
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-11667262",
+        "name": "서울역 버스환승센터",
+        "address": "서울 중구 봉래동2가 125",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55541997224824,
+          "longitude": 126.97274673366927
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-26131902",
+        "name": "서울역 서부출입구",
+        "address": "서울 용산구 청파로 378",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.553705509211525,
+          "longitude": 126.96961139732429
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-21324768",
+        "name": "LG서울역빌딩",
+        "address": "서울 중구 후암로 98",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5539445860996,
+          "longitude": 126.974762847943
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-25767753",
+        "name": "서울역센트럴자이아파트",
+        "address": "서울 중구 만리동2가",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.553819454427,
+          "longitude": 126.964645412301
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1386340364",
+        "name": "서울역 삼경교육센터",
+        "address": "서울 용산구 한강대로 391",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5532664943118,
+          "longitude": 126.972345764166
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-26342364",
+        "name": "서울역공항철도 고객주차장",
+        "address": "서울 용산구 청파로 378",
+        "category": "airport",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.553341424711675,
+          "longitude": 126.96929693208489
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1614238315",
+        "name": "서울역 택시승강장",
+        "address": "서울 중구 봉래동2가 122-21",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5548836942472,
+          "longitude": 126.971959248344
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-18619498",
+        "name": "롯데아울렛 서울역점",
+        "address": "서울 중구 한강대로 405",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55492033491136,
+          "longitude": 126.97072225855301
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-18617859",
+        "name": "서울역광장",
+        "address": "서울 중구 통일로 1",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5561747840782,
+          "longitude": 126.971792398119
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1543633291",
+        "name": "서울역공간모아",
+        "address": "서울 중구 통일로 26",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.558128238544775,
+          "longitude": 126.97218099204292
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-26135136",
+        "name": "서울역 도심공항터미널",
+        "address": "서울 용산구 청파로 378",
+        "category": "airport",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5537884033433,
+          "longitude": 126.969620417333
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-709833114",
+        "name": "서울역파출소",
+        "address": "서울 중구 통일로 15",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55689465442675,
+          "longitude": 126.97168121473472
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-695462373",
+        "name": "다이소 서울역점",
+        "address": "서울 용산구 청파로 378",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55420255074633,
+          "longitude": 126.97200477214717
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1660980933",
+        "name": "서울역KTX 대회의실",
+        "address": "서울 용산구 한강대로 405",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5546932570832,
+          "longitude": 126.970615965508
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1797399676",
+        "name": "롯데아울렛서울역점 주차장",
+        "address": "서울 용산구 청파로 378",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.554321446128164,
+          "longitude": 126.97185194594007
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-688993266",
+        "name": "쌍용더플래티넘서울역오피스텔",
+        "address": "서울 중구 청파로 454",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5600158277289,
+          "longitude": 126.968590212262
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1560594650",
+        "name": "다이소 명동역점",
+        "address": "서울 중구 퇴계로 134-1",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.5607472660685,
+          "longitude": 126.986735142877
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-8187605",
+        "name": "골드만비뇨기과의원 서울역점",
+        "address": "서울 중구 세종대로 23",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.559066554761145,
+          "longitude": 126.97383531768261
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-13031514",
+        "name": "다이소 롯데마트서울역점",
+        "address": "서울 중구 한강대로 405",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55576718622,
+          "longitude": 126.970375615294
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-57161440",
+        "name": "서울역서부출구 택시정류장",
+        "address": "서울 용산구 서계동 298",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.55361348178205,
+          "longitude": 126.96912706460266
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      },
+      {
+        "id": "kakao-1711121947",
+        "name": "서울역철도떡볶이",
+        "address": "서울 용산구 청파로93길 18-1",
+        "category": "custom",
+        "countryCode": "KR",
+        "coordinate": {
+          "latitude": 37.554330333139326,
+          "longitude": 126.96784227048317
+        },
+        "distanceMeters": 0,
+        "timezone": "Asia/Seoul",
+        "provider": "kakao"
+      }
+    ]
+  },
+  {
+    "q": "Tokyo Station",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "google-ChIJC3Cf2PuLGGAROO00ukl8JwA",
+        "name": "Tokyo Station",
+        "address": "Tokyo Station, Marunouchi, Tokyo",
+        "category": "custom",
+        "countryCode": "JP",
+        "coordinate": {
+          "latitude": 35.6812996,
+          "longitude": 139.7670658
+        },
+        "timezone": "Asia/Tokyo",
+        "provider": "google"
+      }
+    ]
+  },
+  {
+    "q": "Eiffel Tower",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "google-ChIJLU7jZClu5kcR4PcOOO6p3I0",
+        "name": "Eiffel Tower",
+        "address": "Av. Gustave Eiffel, 75007 Paris, France",
+        "category": "custom",
+        "countryCode": "GLOBAL",
+        "coordinate": {
+          "latitude": 48.85837009999999,
+          "longitude": 2.2944813
+        },
+        "provider": "google",
+        "timezone": "Europe/Paris"
+      }
+    ]
+  },
+  {
+    "q": "Times Square",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "google-ChIJmQJIxlVYwokRLgeuocVOGVU",
+        "name": "Times Square",
+        "address": "Manhattan, NY 10036, USA",
+        "category": "custom",
+        "countryCode": "GLOBAL",
+        "coordinate": {
+          "latitude": 40.7579747,
+          "longitude": -73.9855426
+        },
+        "provider": "google",
+        "timezone": "America/New_York"
+      }
+    ]
+  },
+  {
+    "q": "British Museum",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "google-ChIJB9OTMDIbdkgRp0JWbQGZsS8",
+        "name": "British Museum",
+        "address": "Great Russell St, London WC1B 3DG, UK",
+        "category": "custom",
+        "countryCode": "GLOBAL",
+        "coordinate": {
+          "latitude": 51.5194133,
+          "longitude": -0.1269566
+        },
+        "provider": "google",
+        "timezone": "Europe/London"
+      }
+    ]
+  },
+  {
+    "q": "Marina Bay Sands",
+    "status": 200,
+    "pass": true,
+    "results": [
+      {
+        "id": "google-ChIJA5LATO4Z2jER111V-v6abAI",
+        "name": "Marina Bay Sands",
+        "address": "10 Bayfront Ave, Singapore 018956",
+        "category": "custom",
+        "countryCode": "GLOBAL",
+        "coordinate": {
+          "latitude": 1.2837575,
+          "longitude": 103.8591065
+        },
+        "provider": "google",
+        "timezone": "Asia/Singapore"
+      }
+    ]
+  }
+]

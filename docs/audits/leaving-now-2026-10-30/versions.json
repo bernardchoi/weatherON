@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-10-30T11:23:14.092464+00:00",
+  "baseCommit": "53016f4eec2fd197e04daf71d06edc313bd65565",
+  "scopeSHA256": {
+    "apps/mobile/src/utils/travelEstimate.ts": "91e450f1172c1ab6307f3afc2a493aebc8d36bd34e9a6e51e5d0232f889abc7c",
+    "apps/mobile/src/providers/travelEstimateClient.ts": "7fb613459abdb76b6bc530a3322113819864a837267b9da7e1cc3587c0a148e5",
+    "apps/mobile/src/state/appStateHelpers.ts": "4471760620cb9132b2a7b6f94f3be0912167edf7bcad41d45ac654dc601bbf36",
+    "apps/mobile/src/state/useWeatherOnAppState.ts": "6b72c6d01e5251e17f38b3c40e4a937b5acf92c8f2a66cba68300c58abc0ae32",
+    "apps/mobile/src/data/demoState.ts": "da1a3902fcd314463c8de74be34075d5508632ee055a8bb06a3d7d885c46ea1a",
+    "packages/shared/src/types/recommendation.ts": "5ae4b8fff975279a5392ab50c5fa651c95b4ebfdd2e690eb6ae7d48a2dd026d6",
+    "apps/mobile/src/screens/HomeScreen.tsx": "2132b3e504bc8ab643467790188b6d52856dba1a62b7202eb59803d2c67c7839",
+    "apps/mobile/src/screens/DestinationCareScreen.tsx": "e628002375c8de4f9ef65f7d5571b8f65590e76aed85c9e973eac5f9dac993d1",
+    "apps/mobile/src/screens/DestinationListScreen.tsx": "570e0768215acc8c42e99d8775ff98e6891527b8446cbae4fa125d71e98f4c50",
+    "apps/mobile/src/providers/widgetSnapshot.shared.ts": "ace94ba0eae9046e6dd9ff6910ef7b8bfa38e9d0ff14c6ce13bc73a6bcefaddb",
+    "apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift": "4693beb2dc92d2340e977386f1efbbf8a5f29dd18ce7e6814192c866df7b1cf0",
+    "apps/mobile/src/navigation/types.ts": "d7fe08b87275cdd65f70de303f53a972dd9af286c6a870102d35a6e5e72e3713",
+    "apps/mobile/src/navigation/AppNavigator.tsx": "13f5bf08e537fef4f0ef55100c18e804bbdae0efac52be3dbffe1d806850ab63",
+    "apps/mobile/src/localization/locales/en.json": "ce2198cc18ca8e88ddd9e99e27005bbb69c5b2abc87a67133fe0d86f3bc988f3",
+    "apps/mobile/src/localization/locales/ja.json": "0aadd7daa18e607e8f38bd8ddbb91a82f27bf50d18a21ea7cc415fb5aee0065f",
+    "scripts/generate-mobile-locales.mjs": "cf4368e86f135f69a7b69fea3350b497973bdcb598431717e757cfcb8534ba32",
+    "scripts/check-route-selected-time.mjs": "fae15f1b8ea5b74fba8211872a57f66200a420ca63a8a8fc9753066019c67961",
+    "scripts/check-ios-widget-guidance-time.mjs": "e801007c6aab901892665263ec49e7f5d7424494ffb8778496336a670301d38a",
+    "apps/server/src/proxyCore.mjs": "a3f03693e91a59f11c9f6ca2a20bafe34e81ab2020147e2a9df2f96593706c73"
+  },
+  "baselineDiffSHA256": "8bf6b7256e17d1a64e31372db1f4deaa5562dd1215c85b1b679cb080973595b1",
+  "browser": {
+    "bundle": "index-080ed1b61217ff34ecf5a85ebf636e78.js",
+    "sha256": "2cc8d2817af6cd39d3fe17be820d6ef9137b6470cd5493f3b4e5f866255de7ea",
+    "url": "http://127.0.0.1:8097",
+    "currentSource": "mock Kakao current endpoint, no external API requests",
+    "hasLocalEndpoint": true,
+    "productionEndpointOccurrences": 0
+  },
+  "native": {
+    "kind": "Xcode 27.1 Release unsigned compilation only",
+    "installed": false,
+    "appBundleSHA256": "ce646d0ee0df2f068c91f1634855cd02914269504a879219c985edbfcafeef00",
+    "widgetSHA256": "8b5b9cf0caf6ac4fbf00a0184e2db936527ee36c257c480b4f2af52db3b56bda"
+  },
+  "deploymentPerformed": false
+}

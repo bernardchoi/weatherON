@@ -286,21 +286,24 @@ async function searchPlaces(params, readEnvValue) {
   const originKey = origin ? formatCoordinateKey(origin) : "none";
   return fetchCachedJson(
     placeSearchCache,
-    `places:${countryCode}:${language}:${relevanceFirst ? "accuracy" : "distance"}:${originKey}:${query.trim().toLowerCase()}`,
+    `places:${params.get("countryCode") ?? "auto"}:${countryCode}:${language}:${relevanceFirst ? "accuracy" : "distance"}:${originKey}:${query.trim().toLowerCase()}`,
     readNumberEnv(readEnvValue, "PLACE_CACHE_TTL_MS", DEFAULT_PLACE_CACHE_TTL_MS),
     async () => {
       const curatedResults = localizePlaceSearchResults(searchFixturePlaces(searchQuery), language);
       try {
         if (countryCode === "KR" && readEnvValue("KAKAO_REST_API_KEY")) {
-          const places = mergePlaceSearchResults(curatedResults, await searchKakaoPlaces(searchQuery, relevanceFirst ? undefined : origin, readEnvValue));
-          return sortPlacesByDistance(await ensurePlaceTimezones(places, readEnvValue), origin);
+          const kakaoResults = await searchKakaoPlaces(searchQuery, relevanceFirst ? undefined : origin, readEnvValue);
+          if (kakaoResults.length || params.get("countryCode") === "KR") {
+            const places = mergePlaceSearchResults(curatedResults, kakaoResults);
+            return sortPlacesByDistance(await ensurePlaceTimezones(places, readEnvValue), origin);
+          }
         }
         if (getGoogleMapsApiKey(readEnvValue)) {
           const googleResults = localizePlaceSearchResults(
-            await searchGooglePlaces(searchQuery, countryCode, language, readEnvValue),
+            await searchGooglePlaces(searchQuery, normalizeCountryCode(params.get("countryCode")), language, readEnvValue),
             language,
           );
-          return ensurePlaceTimezones(googleResults.length ? googleResults : curatedResults, readEnvValue);
+          return await ensurePlaceTimezones(googleResults.length ? googleResults : curatedResults, readEnvValue);
         }
       } catch (error) {
         console.warn(`place provider fallback: ${error instanceof Error ? error.message : "unknown_error"}`);
@@ -361,7 +364,7 @@ async function estimateRoute(params, readEnvValue) {
     const effectiveDeparture = result.departureAt ?? departureTime ?? (arrivalTime ? new Date(Date.parse(arrivalTime) - ((result.durationSeconds ?? 0) + bufferSeconds) * 1000).toISOString() : updatedAt);
     const ttl = Math.min(readNumberEnv(readEnvValue, "ROUTE_CACHE_TTL_MS", DEFAULT_ROUTE_CACHE_TTL_MS), Date.parse(effectiveDeparture) - now < 3600000 ? 60000 : DEFAULT_ROUTE_CACHE_TTL_MS);
     const payload = {
-      ...result, transportMode, requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
+      ...result, transportMode, requestKind: arrivalTime || departureTime ? "scheduled" : "now", requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
       bufferSeconds: arrivalTime ? bufferSeconds : 0, updatedAt, expiresAt: new Date(Date.parse(updatedAt) + Math.max(0, ttl)).toISOString(), cacheStatus: "fresh",
     };
     if (payload.status === "ready") {
@@ -471,27 +474,32 @@ async function searchGooglePlaces(query, countryCode, language, readEnvValue) {
   url.searchParams.set("address", query || "Tokyo Station");
   url.searchParams.set("key", getGoogleMapsApiKey(readEnvValue));
   url.searchParams.set("language", language);
-  if (countryCode === "JP") {
-    url.searchParams.set("components", "country:JP");
-    url.searchParams.set("region", "jp");
+  if (countryCode === "JP" || countryCode === "KR") {
+    url.searchParams.set("components", `country:${countryCode}`);
+    url.searchParams.set("region", countryCode.toLowerCase());
   }
   const payload = await fetchJson(url, readEnvValue);
   if (payload.status !== "OK" && payload.status !== "ZERO_RESULTS") {
     throw new Error(`google geocoding failed: ${payload.status ?? "unknown_status"}`);
   }
-  return (payload.results ?? []).slice(0, 5).map((item) => ({
-    id: `google-${item.place_id}`,
-    name: getGooglePlaceName(item, query),
-    address: item.formatted_address,
-    category: inferPlaceCategory(`${item.types?.join(" ")} ${item.formatted_address}`),
-    countryCode: countryCode === "JP" ? "JP" : "GLOBAL",
-    coordinate: {
-      latitude: Number(item.geometry?.location?.lat),
-      longitude: Number(item.geometry?.location?.lng),
-    },
-    ...(countryCode === "JP" ? { timezone: "Asia/Tokyo" } : {}),
-    provider: "google",
-  }));
+  // Partial address matches can point to a city instead of the requested venue.
+  return (payload.results ?? []).filter(item => !item.partial_match).slice(0, 5).map((item) => {
+    const countryIsoCode = item.address_components?.find(component => component.types?.includes("country"))?.short_name;
+    return {
+      id: `google-${item.place_id}`,
+      name: getGooglePlaceName(item, query),
+      address: item.formatted_address,
+      category: inferPlaceCategory(`${item.types?.join(" ")} ${item.formatted_address}`),
+      countryCode: countryIsoCode === "KR" || countryIsoCode === "JP" ? countryIsoCode : "GLOBAL",
+      ...(/^[A-Z]{2}$/.test(countryIsoCode) ? { countryIsoCode } : {}),
+      coordinate: {
+        latitude: Number(item.geometry?.location?.lat),
+        longitude: Number(item.geometry?.location?.lng),
+      },
+      ...(countryIsoCode === "JP" ? { timezone: "Asia/Tokyo" } : countryIsoCode === "KR" ? { timezone: "Asia/Seoul" } : {}),
+      provider: "google",
+    };
+  });
 }
 
 async function ensurePlaceTimezones(places, readEnvValue) {
@@ -707,8 +715,8 @@ async function estimateGoogleRoute(origin, destination, destinationCountryCode, 
     travelMinutes: Math.ceil(durationSeconds / 60),
     distanceMeters: Math.max(0, Math.round(distanceMeters)),
     timingBasis: googleMode === "driving" && !arrivalTime ? "current" : "route",
-    message: googleMode === "transit"
-      ? arrivalTime || departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정"
+    message: googleMode === "walking" ? "도보 경로 소요시간 기준 예상 · 시간대 미반영" : googleMode === "transit"
+      ? (arrivalTime || departureTime ? "선택 시간 기준 대중교통 추정" : "현재 시간 기준 대중교통 추정") + " · 운행·대기시간 확인 필요"
       : arrivalTime ? "현재 교통 기준 추정 · 선택 도착 시간 미반영"
         : departureTime ? "선택 출발 시간 기준 교통 추정" : "현재 교통 기준 추정",
   };
@@ -1062,20 +1070,19 @@ function localizePlaceSearchResult(place, language = "en") {
   return {
     ...place,
     name: label.name,
-    address: label.address,
-    countryCode: "JP",
-    timezone: "Asia/Tokyo",
+    address: place.provider === "fixture" ? label.address : place.address,
   };
 }
 
 function getKnownStationKey(place) {
   if (Object.prototype.hasOwnProperty.call(localizedStationLabels, place.id)) return place.id;
-  const text = String(`${place.name ?? ""} ${place.address ?? ""} ${place.id ?? ""}`).trim().toLowerCase().replace(/\s+/g, " ");
+  if (place.countryCode !== "JP") return null;
+  const text = String(place.name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   const compact = text.replace(/\s+/g, "");
   const stationLike = /station|stn|역|駅|nankai/.test(text);
-  if ((compact.includes("tokyostation") || compact.includes("도쿄역") || compact.includes("東京駅")) && stationLike) return "jp-tokyo-station";
-  if ((compact.includes("shinsaibashi") || compact.includes("신사이바시") || compact.includes("心斎橋")) && stationLike) return "jp-shinsaibashi-station";
-  if ((compact.includes("nambastation") || compact.includes("nankainamba") || compact.includes("난바역") || compact.includes("난카이난바") || compact.includes("難波駅") || compact.includes("なんば駅")) && stationLike) return "jp-namba-station";
+  if ((compact === "tokyostation" || compact === "도쿄역" || compact === "東京駅") && stationLike) return "jp-tokyo-station";
+  if ((compact === "shinsaibashi" || compact === "신사이바시" || compact === "心斎橋") && stationLike) return "jp-shinsaibashi-station";
+  if ((compact === "nambastation" || compact === "nankainamba" || compact === "난바역" || compact === "난카이난바" || compact === "難波駅" || compact === "なんば駅") && stationLike) return "jp-namba-station";
   return null;
 }
 

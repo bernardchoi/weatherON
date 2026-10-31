@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-10-30T08:01:37.856476+00:00",
+  "baseCommit": "d16ae98fc92f210ae2bae02f1d5c471e0847c48c",
+  "workingFilesSHA256": {
+    "apps/mobile/ios/WeatherONWidget/WeatherONWidget.swift": "82b4e4efce8219298b5b4668927174f8c50110262759dc12cc62271fe4875226",
+    "apps/mobile/src/data/demoState.ts": "136b78fa1b3e68c7913374034a8ac18fe8c799f5c86556d198aecaa5028e8422",
+    "apps/mobile/src/providers/notificationSync.ts": "5aa82e8c1e51bcd422cec80c9d34824ab3290b7f7b67750a592aa98c6e26bb8b",
+    "apps/mobile/src/state/useWeatherOnAppState.ts": "8dfb5acf5f8cb7a78f180be1c8094253c23948124f38cce533ecfed39f908069",
+    "apps/mobile/src/utils/travelEstimate.ts": "f6c2112945148b294df40a8e76ad476afdb7af84c91dea168001968a1735eeb5",
+    "scripts/check-ios-reliability.mjs": "fb9cb94f82b1cb17a67dce5741ba931f3c31e7b64e804e33bb3b3827b6dbdfdc",
+    "scripts/check-ios-widget-guidance-time.mjs": "5d069d7e6f1e32a34718b8769e3626fac3c61367177544f4e9edc16afba023be",
+    "scripts/check-route-selected-time.mjs": "2e02ee0b098f4450bb6b5be06012a3dd55397e7b1eca379149bd738c248043a0",
+    "scripts/check-shared-rules.mjs": "47bd9f27552d5bbbdcd01604152a69b840b0285a201ea88df0fa77a88c44adbb",
+    "apps/server/src/proxyCore.mjs": "445f299a868235626858f5b90ec2b239c482b9189ebb7da6db10577aa8c11b71",
+    "apps/mobile/src/providers/travelEstimateClient.ts": "972d464065b710ae1e6c5e63c296fb55c7071781ab3975b72f12f3158a48d938",
+    "apps/mobile/src/providers/appStorage.ts": "05391b25412a1ce8f63a1d643e38929b8f83d0a47d7bf3bd31c75e5d2cb57639",
+    "apps/mobile/src/providers/localNotifications.ts": "2c00f89ad2b811211a34e0e2b9da80e37952a42a03d868ae5a149f082d85fcb1",
+    "apps/mobile/src/state/appStateHelpers.ts": "950c53c2a6b00da2b50d47c265823eda81ad7baf5b2eff380e207121b7ebb1c5"
+  },
+  "web": {
+    "bundle": "index-73241cd89705cb0d18032d8e9433d098.js",
+    "sha256": "ac308b5f0eec9bf8039a6f8db9a6137e35461755a2de4e07e4a26059b3768c56",
+    "endpoint": "http://127.0.0.1:8096",
+    "productionEndpointOccurrences": 0,
+    "environment": "isolated QA static export; public transit upstream replay; fallback weather",
+    "browserEvidenceBundleMatchesFinal": true,
+    "observedAt": "2026-10-30T08:14:31.666Z",
+    "settings": {
+      "reducedMotion": true,
+      "reducedTransparency": true,
+      "hasTouch": true,
+      "nativeNotificationPermission": false
+    },
+    "selectedSheetClosed": true,
+    "temporaryServersStopped": true
+  },
+  "localIOS": {
+    "configuration": "Release",
+    "codeSigningAllowed": false,
+    "xcode": "27.1 (27A9275)",
+    "version": "1.0.0",
+    "build": "41",
+    "bundleIdentifier": "com.weatheron.mobile",
+    "appJavaScriptSHA256": "80b129759b7e1dfc651ef9812b5d0df4af42a672af40af6c92f0ba077f8f8bdf",
+    "widgetBinarySHA256": "6afc6d1784f5f6378508835509280dbab0e7ed00582a4eda2f0c9d47ce2f6c0e",
+    "result": "BUILD SUCCEEDED",
+    "installed": false,
+    "apiEndpoint": "https://weatheron-api.weatheron.workers.dev",
+    "runtimeScope": "compile only; endpoint is legacy production; no runtime request made by the artifact"
+  },
+  "physicalDevice": {
+    "model": "iPhone 16 Pro Max",
+    "osVersion": "27.2",
+    "osBuild": "24B119",
+    "installedVersion": "1.0.0",
+    "installedBuild": "56",
+    "sourceCommit": "unverified; not used as d16ae98 runtime evidence",
+    "role": "baseline inventory only; not final-change runtime proof"
+  },
+  "productionServer": {
+    "endpoint": "https://weatheron-api.weatheron.workers.dev",
+    "sourceCommit": "unverified; Cloudflare credentials unavailable",
+    "behavior": "legacy google-transit; no durationSeconds/requestDepartureTime/updatedAt/expiresAt",
+    "d16ae98Applied": false
+  }
+}

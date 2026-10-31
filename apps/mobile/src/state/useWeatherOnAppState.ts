@@ -55,7 +55,7 @@ import {
   scheduleLocalNotificationTest,
   syncLocalWeatherNotifications,
 } from "../providers/localNotifications";
-import { formatRouteClock, getTravelMinutesForTransport, canScheduleTravelEstimate } from "../utils/travelEstimate";
+import { formatRouteClock, getTravelMinutesForTransport, canScheduleTravelEstimate, getLeavingNowRouteKey, isLeavingNowRouteResult, type LeavingNowRouteState } from "../utils/travelEstimate";
 import {
   getDepartureLiveActivityActivationDelay,
   getDepartureGuidanceSymbol,
@@ -126,6 +126,7 @@ import {
   getAlertSettingsFocusFromRoute,
   getAutoBufferMinutes,
   getDestinationTiming,
+  getDestinationLeavingNowTiming,
   getBackRoute,
   getDefaultDestinationPlace,
   getDefaultDestinationSchedulePreference,
@@ -150,6 +151,7 @@ import {
   saveNotificationState,
   savePersistedAppState,
   type PersistedAppState,
+  type OnboardingProgress,
   savePersistedWeatherProviderResult,
   shouldKeepPersistedWeatherResult,
 } from "./persistedAppState";
@@ -215,6 +217,7 @@ export function useWeatherOnAppState() {
   const [storageRetryTick, setStorageRetryTick] = useState(0);
   const persistedStateRef = useRef<PersistedAppState | null>(null);
   const photoSaveInFlightRef = useRef<Promise<void> | null>(null);
+  const [leavingNowRoutes, setLeavingNowRoutes] = useState<Record<string, LeavingNowRouteState>>({});
   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
   const [umbrellaReviewed, setUmbrellaReviewed] = useState(false);
@@ -286,12 +289,15 @@ export function useWeatherOnAppState() {
   const [selectedWardrobeItemId, setSelectedWardrobeItemId] = useState<string>(presetWardrobe[0]?.id ?? "");
   const [recentlyRemovedWardrobeItemId, setRecentlyRemovedWardrobeItemId] = useState<string | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>({ route: "O1", locationHandled: false, notificationHandled: false, destinationSelected: false });
   const [styleProfileReturnRoute, setStyleProfileReturnRoute] = useState<P0RouteId | null>(null);
   const [destinationAddReturnRoute, setDestinationAddReturnRoute] = useState<DestinationAddReturnRouteId>("G1");
   const [accountLinked, setAccountLinked] = useState(false);
   const [accountProfile, setAccountProfile] = useState<AccountProfile | null>(null);
   const [accountAuthStatus, setAccountAuthStatus] = useState<AccountAuthStatus>("restoring");
   const [accountAuthMessage, setAccountAuthMessage] = useState<string | null>(null);
+  const accountActionRevisionRef = useRef(0);
+  const accountActionInFlightRef = useRef(false);
   const [termsRequiredAccepted, setTermsRequiredAccepted] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
   const [permissionReady, setPermissionReady] = useState(false);
@@ -312,7 +318,6 @@ export function useWeatherOnAppState() {
   const placeSearchRequestSeqRef = useRef(0);
   const recentlyRemovedDestinationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deviceLocationRequestInFlightRef = useRef(false);
-  const locationReadyRef = useRef(locationReady);
   const weatherLocationModeRef = useRef(weatherLocationMode);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const widgetSnapshotContentKeyRef = useRef("");
@@ -328,7 +333,6 @@ export function useWeatherOnAppState() {
     mode: WeatherProviderMode;
     refreshTick: number;
   } | null>(null);
-  locationReadyRef.current = locationReady;
   weatherLocationModeRef.current = weatherLocationMode;
   const updateSavedDestinations = useCallback((update: (current: SavedDestination[]) => SavedDestination[]) => {
     const next = update(savedDestinationsRef.current);
@@ -382,6 +386,18 @@ export function useWeatherOnAppState() {
     selectedDestinationTravelEstimate, selectedDestinationSchedulePreference, selectedDestinationPlace.timezone, nowMinuteTick,
     activeWeatherLocation.countryCode, selectedDestinationPlace.countryCode, placeSearchOrigin.locationId,
   ) : undefined;
+  const routeRequests = [...savedDestinations.map(destination => ({ place: destination.place, schedule: destination.schedulePreference })),
+    ...(!destinationSaved ? [{ place: selectedDestinationPlace, schedule: selectedDestinationSchedulePreference }] : [])];
+  const destinationLeavingNow = useMemo(() => {
+    // A response can be newer than the last minute tick; use one clock for every display.
+    const nowMs = Date.now();
+    return Object.fromEntries(routeRequests.map(({ place, schedule }) => {
+      const estimate = savedDestinations.find(item => item.place.id === place.id)?.travelEstimate ?? storedDestinationTravelEstimate;
+      return [place.id, placeSearchOrigin ? getDestinationLeavingNowTiming(estimate, schedule, place.timezone, nowMs,
+        placeSearchOrigin.countryCode, place.countryCode, placeSearchOrigin.locationId,
+        leavingNowRoutes[getLeavingNowRouteKey(placeSearchOrigin, place, schedule.transportMode)]) : undefined];
+    }));
+  }, [savedDestinations, selectedDestinationPlace, selectedDestinationSchedulePreference, storedDestinationTravelEstimate, placeSearchOrigin, nowMinuteTick, leavingNowRoutes]);
   const selectedDestinationAutoBufferMinutes = selectedDestinationTiming ? selectedDestinationTiming.bufferSeconds / 60 : undefined;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
@@ -445,6 +461,11 @@ export function useWeatherOnAppState() {
           bufferSeconds: timing?.bufferSeconds,
           routeMessage: translateText(destination.travelEstimate.cacheStatus === "stale" || Date.parse(destination.travelEstimate.expiresAt ?? "") <= nowMinuteTick ? `이전 조회 결과 · ${destination.travelEstimate.message}` : destination.travelEstimate.message, localePolicy.language),
           routeUpdatedAt: destination.travelEstimate.updatedAt,
+          nowArrivalAt: destinationLeavingNow[destination.place.id]?.nowArrivalAt,
+          nowArrivalDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalDescription ?? "", localePolicy.language) || undefined,
+          nowArrivalReferenceDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalReferenceDescription ?? "", localePolicy.language) || undefined,
+          nowRouteUpdatedAt: destinationLeavingNow[destination.place.id]?.nowRouteUpdatedAt,
+          nowRouteExpiresAt: destinationLeavingNow[destination.place.id]?.nowRouteExpiresAt,
           travelMinutes,
           transportMode: destination.schedulePreference.transportMode,
           deepLink: getWeatheronDestinationDeepLink(destination.place.id),
@@ -466,6 +487,7 @@ export function useWeatherOnAppState() {
     activeWeatherLocation.timezone,
     nowMinuteTick,
     savedDestinations,
+    destinationLeavingNow,
     selectedDestinationPlace.id,
     userPreferenceProfile,
     recommendationWardrobe,
@@ -494,7 +516,6 @@ export function useWeatherOnAppState() {
   }, []);
 
   const reconcileDeviceLocationPermission = useCallback(async () => {
-    if (!locationReadyRef.current && weatherLocationModeRef.current !== "auto") return;
     // 사용자가 직접 요청한 권한 다이얼로그(applyCurrentLocationWeather)가 떠 있는 동안
     // 앱 포그라운드 전환으로 이 동기화가 겹쳐 뛰면, 방금 받은 허용 결과를 되돌릴 수 있다.
     if (deviceLocationRequestInFlightRef.current) return;
@@ -543,6 +564,8 @@ export function useWeatherOnAppState() {
           return;
         }
         setOnboardingCompleted(persistedState.onboardingCompleted);
+        setOnboardingProgress(persistedState.onboardingProgress);
+        setDestinationSelectionReady(persistedState.onboardingProgress.destinationSelected);
         setSmartCareEnabled(persistedState.smartCareEnabled);
         locallyRestoredAccountLinkedRef.current = persistedState.accountLinked;
         setAccountLinked(persistedState.accountLinked);
@@ -587,7 +610,7 @@ export function useWeatherOnAppState() {
         setAlertPreferences(persistedState.alertPreferences);
         if (persistedState.locationReady) setDeviceLocationState({ status: "idle", message: "현재 위치 재확인 필요" });
         setManualWeatherLocation(persistedState.manualWeatherLocation);
-        setRoute(persistedState.onboardingCompleted ? "H1" : "O1");
+        setRoute(persistedState.onboardingCompleted ? "H1" : persistedState.onboardingProgress.route);
       })
       .then(() => {
         if (!active) return;
@@ -612,8 +635,9 @@ export function useWeatherOnAppState() {
   useEffect(() => {
     if (!appStateHydrated) return;
     let active = true;
+    const revision = accountActionRevisionRef.current;
     void restoreAccountSession().then((restoredAccount) => {
-      if (!active) return;
+      if (!active || revision !== accountActionRevisionRef.current) return;
       if (restoredAccount.status === "authenticated") {
         setAccountLinked(true);
         setAccountProfile(restoredAccount.account);
@@ -669,6 +693,7 @@ export function useWeatherOnAppState() {
           travelProvider: selectedDestinationTravelEstimate.provider,
           travelStatus: selectedDestinationTravelEstimate.status,
         },
+        leavingNow: destinationLeavingNow[selectedDestinationPlace.id],
         savedDestinations,
         notificationNow: nowMinuteTick,
       });
@@ -676,6 +701,7 @@ export function useWeatherOnAppState() {
     },
     [
       destinationCareEnabled,
+      destinationLeavingNow,
       savedDestinations,
       selectedDestinationAlertCondition,
       selectedDestinationAutoBufferMinutes,
@@ -743,6 +769,7 @@ export function useWeatherOnAppState() {
         travelProvider: travelEstimate.provider,
         travelStatus: travelEstimate.status,
       },
+      leavingNow: destinationLeavingNow[activeDestination.place.id],
       savedDestinations,
       notificationNow: nowMinuteTick,
     });
@@ -752,6 +779,7 @@ export function useWeatherOnAppState() {
   }, [
     activeWeatherLocation.countryCode,
     homeDepartureDestination,
+    destinationLeavingNow,
     nowMinuteTick,
     placeSearchOrigin,
     recommendationWardrobe,
@@ -768,6 +796,15 @@ export function useWeatherOnAppState() {
     const intervalId = setInterval(() => setNowMinuteTick(Date.now()), 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!appStateHydrated || AppState.currentState !== "active") return;
+    const now = Date.now();
+    const nextExpiry = Math.min(...Object.values(destinationLeavingNow).map(value => Date.parse(value?.nowRouteExpiresAt ?? "")).filter(value => value > now));
+    if (!Number.isFinite(nextExpiry)) return;
+    const timer = setTimeout(() => setNowMinuteTick(Date.now()), nextExpiry - now + 1);
+    return () => clearTimeout(timer);
+  }, [appStateHydrated, destinationLeavingNow]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -942,9 +979,7 @@ export function useWeatherOnAppState() {
     selectedDestinationPlace.id,
   ]);
 
-  const routeRequests = [...savedDestinations.map(destination => ({ place: destination.place, schedule: destination.schedulePreference })),
-    ...(!destinationSaved ? [{ place: selectedDestinationPlace, schedule: selectedDestinationSchedulePreference }] : [])];
-  const routeRequestKey = JSON.stringify({ origin: placeSearchOrigin, routes: routeRequests });
+  const routeRequestKey = JSON.stringify({ origin: placeSearchOrigin, routes: routeRequests, leavingNow: routeRequests.map(({ place }) => Boolean(destinationLeavingNow[place.id])) });
   const routeAttemptsRef = useRef(new Map<string, number>());
   useEffect(() => {
     if (!appStateHydrated || !placeSearchOrigin || AppState.currentState !== "active") return;
@@ -956,36 +991,58 @@ export function useWeatherOnAppState() {
         if (!active) return;
         const targetAt = getRouteArrivalTimeIso(schedule.targetArrivalTime, place.timezone, nowMinuteTick, schedule.repeatEnabled, schedule.repeatDays);
         if (!targetAt) continue;
-        const key = JSON.stringify({ origin, place, schedule, targetAt });
+        const leavingNow = Boolean(destinationLeavingNow[place.id]);
+        const nowKey = getLeavingNowRouteKey(origin, place, schedule.transportMode);
+        const previousNow = leavingNowRoutes[nowKey]?.result;
+        const key = leavingNow ? `now:${nowKey}` : JSON.stringify({ origin, place, schedule, targetAt });
+        const updateNow = (value: LeavingNowRouteState) => setLeavingNowRoutes(current => ({
+          ...Object.fromEntries(Object.entries(current).filter(([key]) => key !== nowKey).slice(-31)), [nowKey]: value,
+        }));
         const stored = savedDestinationsRef.current.find(item => item.place.id === place.id)?.travelEstimate ?? previewDestinationTravelEstimate;
         const previousAttempt = routeAttemptsRef.current.get(key);
-        if (previousAttempt && nowMinuteTick < previousAttempt) continue;
-        const nearDeparture = Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
+        if (previousAttempt && nowMinuteTick < previousAttempt) {
+          if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
+          continue;
+        }
+        const nearDeparture = leavingNow || Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
         const retryAt = Date.now() + (nearDeparture ? 60000 : 600000);
         routeAttemptsRef.current.set(key, retryAt);
         pendingKeys.add(key);
-        if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("loading");
+        if (leavingNow) {
+          updateNow({ status: "loading", result: previousNow });
+          if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
+        }
+        else if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("loading");
         try {
           const result = await runtimeTravelEstimateClient.estimateRoute({
             origin: origin.coordinate, destination: place.coordinate,
             originName: origin.locationName, destinationName: place.name,
             originCountryCode: origin.countryCode, destinationCountryCode: place.countryCode,
             transportMode: schedule.transportMode,
-            departureTime: schedule.timeBasis === "departure" ? targetAt : undefined,
-            arrivalTime: schedule.timeBasis === "arrival" ? targetAt : undefined,
-            arrivalBufferSeconds: schedule.timeBasis === "arrival"
+            departureTime: !leavingNow && schedule.timeBasis === "departure" ? targetAt : undefined,
+            arrivalTime: !leavingNow && schedule.timeBasis === "arrival" ? targetAt : undefined,
+            arrivalBufferSeconds: !leavingNow && schedule.timeBasis === "arrival"
               ? stored.requestArrivalTime === targetAt && stored.transportMode === schedule.transportMode && stored.bufferSeconds !== undefined
                 ? stored.bufferSeconds
                 : getAutoBufferMinutes(schedule.targetArrivalTime, (stored.durationSeconds ?? stored.travelMinutes * 60) / 60, nowMinuteTick, place.timezone) * 60
               : 0,
           });
           if (!active) return;
+          if (leavingNow) {
+            const usable = isLeavingNowRouteResult(result, Date.now());
+            updateNow({ status: usable && result.cacheStatus !== "stale" && Date.parse(result.expiresAt!) > Date.now() ? "ready" : "error", result: usable ? result : previousNow });
+            continue;
+          }
           const estimate = createDestinationTravelEstimate(origin.locationId, place.id, result);
           if (place.id === selectedDestinationPlace.id) setPreviewDestinationTravelEstimate(estimate);
           updateSavedDestinations(current => current.map(destination => destination.place.id === place.id ? { ...destination, travelEstimate: estimate } : destination));
           if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
-        } catch {
+        } catch (error) {
           if (!active) return;
+          if (leavingNow) {
+            updateNow({ status: error instanceof TypeError && /offline|network|fetch/i.test(error.message) ? "offline" : "error", result: previousNow });
+            continue;
+          }
           // Retain a previous result with its original timestamp and visible failure provenance.
           const estimate: DestinationTravelEstimate = stored.status === "ready"
             ? { ...stored, cacheStatus: "stale", message: `이전 조회 결과 · 갱신 실패 · ${stored.message.replace(/^이전 조회 결과 · 갱신 실패 · /, "")}` }
@@ -1140,8 +1197,14 @@ export function useWeatherOnAppState() {
 
   useEffect(() => () => localNotificationSync.stop(), [localNotificationSync]);
 
+  useEffect(() => {
+    if (!appStateHydrated || onboardingCompleted || !["O1", "O2", "O7", "O4", "O5", "O6"].includes(route)) return;
+    setOnboardingProgress((current) => current.route === route ? current : { ...current, route: route as OnboardingProgress["route"] });
+  }, [appStateHydrated, onboardingCompleted, route]);
+
   persistedStateRef.current = {
     onboardingCompleted,
+    onboardingProgress: { ...onboardingProgress, destinationSelected: !onboardingCompleted && destinationSelectionReady },
     smartCareEnabled,
     accountLinked,
     termsRequiredAccepted,
@@ -1194,6 +1257,8 @@ export function useWeatherOnAppState() {
     locationReady,
     notificationHistory,
     onboardingCompleted,
+    onboardingProgress,
+    destinationSelectionReady,
     outfitSaved,
     permissionReady,
     previewDestinationAlertCondition,
@@ -1284,11 +1349,13 @@ export function useWeatherOnAppState() {
   const requestCurrentLocation = useCallback(async () => {
     if (deviceLocationRequestInFlightRef.current) return;
     await applyCurrentLocationWeather("위치 권한 및 현재 위치 확인 중");
+    setOnboardingProgress((current) => ({ ...current, locationHandled: true }));
   }, [applyCurrentLocationWeather]);
 
   const requestOnboardingNotificationPermission = useCallback(async () => {
     const result = await requestLocalNotificationPermission();
     setPermissionReady(result.granted);
+    setOnboardingProgress((current) => ({ ...current, notificationHandled: true }));
     return result.granted;
   }, []);
 
@@ -1346,6 +1413,7 @@ export function useWeatherOnAppState() {
   }, [dismissRemovedDestination, resetPlaceSearch, route]);
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
+    if (route === "O7" && nextRoute === "O5") setOnboardingProgress((current) => ({ ...current, locationHandled: true }));
     setAlertSettingsRouteState(null);
     if (nextRoute === "R1") setPolicyHubReturnRoute(route === "A4" ? "A4" : "M1");
     if (nextRoute === "O4" && isP0Route(route)) setStyleProfileReturnRoute(route);
@@ -1527,6 +1595,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const completeSmartCareOnboarding = useCallback(() => {
+    setOnboardingProgress((current) => ({ ...current, notificationHandled: true }));
     setSmartCareEnabled(true);
     setRoute("O6");
   }, []);
@@ -2061,6 +2130,9 @@ export function useWeatherOnAppState() {
   };
 
   const signInWithProvider = async (provider: AccountProvider) => {
+    if (accountActionInFlightRef.current) return;
+    accountActionInFlightRef.current = true;
+    const revision = ++accountActionRevisionRef.current;
     setAccountAuthStatus("signing-in");
     setAccountAuthMessage(null);
     try {
@@ -2069,6 +2141,7 @@ export function useWeatherOnAppState() {
       setAccountProfile(result.account);
       setTermsRequiredAccepted(result.account.termsAccepted);
       setAccountAuthStatus("ready");
+      if (revision !== accountActionRevisionRef.current) return;
       if (!result.account.termsAccepted) {
         setRoute("A3");
         return;
@@ -2080,6 +2153,8 @@ export function useWeatherOnAppState() {
       const message = getAccountAuthDisplayMessage(error);
       setAccountAuthStatus(isAccountAuthCancellation(error) ? "idle" : "error");
       setAccountAuthMessage(message);
+    } finally {
+      accountActionInFlightRef.current = false;
     }
   };
 
@@ -2116,6 +2191,9 @@ export function useWeatherOnAppState() {
   };
 
   const completeTerms = async () => {
+    if (accountActionInFlightRef.current) return;
+    accountActionInFlightRef.current = true;
+    const revision = ++accountActionRevisionRef.current;
     setAccountAuthStatus("saving-terms");
     setAccountAuthMessage(null);
     try {
@@ -2127,7 +2205,10 @@ export function useWeatherOnAppState() {
       setAccountAuthStatus("error");
       setAccountAuthMessage(error instanceof Error ? error.message : "약관 동의를 저장하지 못했습니다.");
       return;
+    } finally {
+      accountActionInFlightRef.current = false;
     }
+    if (revision !== accountActionRevisionRef.current) return;
     const returnTo = gate?.returnTo ?? "H1";
     if (completeAccountAction(gate)) setRoute(returnTo);
     setGate(null);
@@ -2205,6 +2286,7 @@ export function useWeatherOnAppState() {
   };
 
   const cancelAccountGate = () => {
+    accountActionRevisionRef.current += 1;
     setRoute(gate?.returnTo ?? "H1");
     setGate(null);
   };
@@ -2221,7 +2303,10 @@ export function useWeatherOnAppState() {
 
   const goBack = useCallback(() => {
     if (route === "A1" || route === "H1" || route === "O1" || route === "O2") return false;
-    if (route === "A2" || route === "A3") setGate(null);
+    if (route === "A2" || route === "A3") {
+      accountActionRevisionRef.current += 1;
+      setGate(null);
+    }
     if (route === "O3") setPermissionGate(null);
     setRoute(backRoute);
     return true;
@@ -2246,6 +2331,7 @@ export function useWeatherOnAppState() {
     deviceLocationState,
     placeSearchOrigin,
     destinationSaved,
+    destinationLeavingNow,
     savedDestinations,
     destinationLimitNotice,
     recentlyRemovedDestination,
@@ -2291,6 +2377,7 @@ export function useWeatherOnAppState() {
     smartCareScenario,
     onboardingCompleted,
     isWeatherLoading,
+    onboardingProgress,
     accountLinked,
     accountProfile,
     accountAuthStatus,

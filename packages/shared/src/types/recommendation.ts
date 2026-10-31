@@ -70,6 +70,13 @@ export type DestinationCare = {
     departureAt?: string;
     arrivalAt?: string;
     nowArrivalAt?: string;
+    nowArrivalStatus?: "idle" | "loading" | "ready" | "error" | "offline";
+    nowArrivalReference?: boolean;
+    nowArrivalDescription?: string;
+    nowArrivalReferenceDescription?: string;
+    nowRouteUpdatedAt?: string;
+    nowRouteExpiresAt?: string;
+    nowRouteMessage?: string;
     targetAt?: string;
     durationSeconds?: number;
     routeMessage?: string;

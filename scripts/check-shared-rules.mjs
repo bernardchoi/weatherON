@@ -59,8 +59,9 @@ await writeFile(
       weatherKitFixture,
     } from "../packages/shared/src/index.ts";
 
+    const recommendationWeather = { ...seongsuRainSnapshot, source: "kma" as const };
     const dryCommuteSnapshot = {
-      ...seongsuRainSnapshot,
+      ...recommendationWeather,
       id: "weather-seongsu-dry-commute",
       observedAt: "2026-06-26T08:00:00+09:00",
       current: {
@@ -194,7 +195,7 @@ await writeFile(
     const supportedIanaTimeZones = supportedValuesOf?.("timeZone") ?? worldwideWeatherKitCases.map((item) => item.timeZone);
     const unsupportedIanaTimeZones = supportedIanaTimeZones.filter((timeZone) => {
       const time = normalizeWeatherKitTime(timeZone, "2026-01-15T12:00:00Z");
-      return !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$/.test(time ?? "");
+      return Date.parse(time ?? "") !== Date.parse("2026-01-15T12:00:00Z");
     });
     let invalidWeatherKitTimezoneRejected = false;
     try {
@@ -209,7 +210,8 @@ await writeFile(
       unsupportedIanaTimeZones,
       worldwideWeatherKitTimes,
       presetWardrobeIds: presetWardrobe.map((item) => item.id),
-      outfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
+      outfit: recommendOutfit(recommendationWeather, defaultPreferenceProfile, presetWardrobe),
+      fallbackOutfit: recommendOutfit(seongsuRainSnapshot, defaultPreferenceProfile, presetWardrobe),
       ownedDryOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedDenim),
       ownedPhotoOutfit: recommendOutfit(dryCommuteSnapshot, defaultPreferenceProfile, wardrobeWithOwnedPhotoTop),
       hotHumidLargeSwingOutfit: recommendOutfit(
@@ -995,7 +997,10 @@ for (const key of ["GLOBAL:park", "GLOBAL:hotel", "GLOBAL:airport", "GLOBAL:dini
 }
 assert.equal(results.outfit.variant, "rain");
 assert.equal(results.outfit.items.shoes.name, "방수 스니커즈");
-assert.ok(results.outfit.reasons.some((reason) => reason.includes("비 올 가능성")));
+assert.ok(results.outfit.reasons.some((reason) => reason.includes("강수")));
+assert.match(results.fallbackOutfit.decisionText, /최신 날씨/);
+assert.deepEqual(results.fallbackOutfit.reasons, []);
+assert.deepEqual(results.fallbackOutfit.timeAdvice, []);
 assert.equal(results.ownedDryOutfit.items.bottom.name, "와이드 데님");
 assert.equal(results.ownedDryOutfit.items.bottom.owned, true);
 assert.equal(results.ownedPhotoOutfit.items.top.id, "photo-test-dry-top");
@@ -1004,7 +1009,7 @@ assert.equal(results.hotHumidLargeSwingOutfit.variant, "heat");
 assert.equal(results.hotHumidLargeSwingOutfit.items.outer, undefined);
 assert.ok(results.hotHumidLargeSwingOutfit.items.top.seasons.includes("summer"));
 assert.ok(results.hotHumidLargeSwingOutfit.items.top.weatherTags.includes("heat"));
-assert.ok(results.hotHumidLargeSwingOutfit.reasons.some((reason) => reason.includes("긴 겉옷은 뺐어요")));
+assert.ok(results.hotHumidLargeSwingOutfit.reasons.some((reason) => reason.includes("확인된 기온 차")));
 assert.equal(results.coolLargeSwingOutfit.items.outer.name, "얇은 가디건");
 assert.equal(results.coolLargeSwingOutfit.items.outer.owned, true);
 assert.ok(results.coolLargeSwingOutfit.reasons.some((reason) => reason.includes("얇게 걸칠 옷")));
@@ -1020,7 +1025,8 @@ assert.equal(results.outfit.ruleVersion, "weatheron-outfit-0.5.0");
 assert.ok(results.highUvOutfit.reasons.some((reason) => reason.includes("자외선 지수 8")));
 assert.equal(results.highUvOutfit.items.accessory.name, "네이비 볼캡");
 assert.ok(results.dustyOutfit.reasons.some((reason) => reason.includes("초미세 39")));
-assert.ok(results.dustyOutfit.timeAdvice.some((item) => item.text.includes("마스크")));
+
+assert.ok(results.dustyOutfit.timeAdvice.every((item) => !item.text.includes("먼지 많은 시간")));
 assert.ok(results.notifications.every((item) => item.ruleVersion !== results.outfit.ruleVersion));
 assert.ok(results.destinationNotificationsStrict.some((item) => item.id === "destination-change" && !item.active && item.reason.includes("강수 70%")));
 assert.ok(results.destinationNotificationsWind.some((item) => item.id === "destination-change" && item.active && item.reason.includes("출발 30분 전")));
@@ -1048,22 +1054,22 @@ assert.equal(results.weatherkit.source, "weatherkit");
 assert.equal(results.weatherkit.current.condition, "cloud");
 assert.equal(results.weatherkit.current.humidityPct, 70);
 assert.equal(results.weatherkit.hourly[1].condition, "rain");
-assert.equal(results.weatherkit.hourly[0].time, "2026-06-26T18:00");
+assert.equal(results.weatherkit.hourly[0].time, "2026-06-26T18:00:00+09:00");
 assert.equal(results.weatherkit.daily[0].rainProbabilityPct, 65);
 assert.deepEqual(
   results.weatherkitCurrentHour.hourly.map((item) => item.time),
-  ["2026-08-23T08:00", "2026-08-23T09:00"],
+  ["2026-08-23T08:00:00+09:00", "2026-08-23T09:00:00+09:00"],
 );
 assert.deepEqual(results.worldwideWeatherKitTimes, [
-  { timeZone: "America/New_York", time: "2026-01-15T07:00" },
-  { timeZone: "America/New_York", time: "2026-07-15T08:00" },
-  { timeZone: "Europe/London", time: "2026-07-15T13:00" },
-  { timeZone: "Asia/Kathmandu", time: "2026-01-15T05:45" },
-  { timeZone: "Australia/Adelaide", time: "2026-07-15T09:30" },
-  { timeZone: "America/St_Johns", time: "2026-07-15T09:30" },
-  { timeZone: "Pacific/Chatham", time: "2026-07-15T12:45" },
-  { timeZone: "Pacific/Kiritimati", time: "2026-08-24T02:00" },
-  { timeZone: "Pacific/Honolulu", time: "2026-08-22T19:00" },
+  { timeZone: "America/New_York", time: "2026-01-15T07:00:00-05:00" },
+  { timeZone: "America/New_York", time: "2026-07-15T08:00:00-04:00" },
+  { timeZone: "Europe/London", time: "2026-07-15T13:00:00+01:00" },
+  { timeZone: "Asia/Kathmandu", time: "2026-01-15T05:45:00+05:45" },
+  { timeZone: "Australia/Adelaide", time: "2026-07-15T09:30:00+09:30" },
+  { timeZone: "America/St_Johns", time: "2026-07-15T09:30:00-02:30" },
+  { timeZone: "Pacific/Chatham", time: "2026-07-15T12:45:00+12:45" },
+  { timeZone: "Pacific/Kiritimati", time: "2026-08-24T02:00:00+14:00" },
+  { timeZone: "Pacific/Honolulu", time: "2026-08-22T19:00:00-10:00" },
 ]);
 assert.ok(results.supportedIanaTimeZoneCount > 300);
 assert.deepEqual(results.unsupportedIanaTimeZones, []);

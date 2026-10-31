@@ -46,6 +46,14 @@ try {
   assert.equal(walk.durationSeconds, 223);
   assert.equal(walk.distanceMeters, 247);
   assert.equal(calls.at(-1).pathname, '/v2/routing/walk');
+  response = () => ({ status: 'OK', rows: [{ elements: [{ status: 'OK', duration: { value: 223 }, distance: { value: 247 } }] }] });
+  const foreignWalk = await route('walk', { originCountryCode: 'JP', destinationCountryCode: 'JP', origin: '35.6812,139.7671', destination: '35.68,139.768' });
+  assert.equal(foreignWalk.provider, 'google');
+  assert.match(foreignWalk.message, /도보.*시간대 미반영/);
+  assert.equal(calls.at(-1).searchParams.has('departure_time'), false);
+  const foreignTransit = await route('transit', { originCountryCode: 'JP', destinationCountryCode: 'JP' });
+  assert.equal(calls.at(-1).searchParams.get('departure_time'), 'now');
+  assert.match(foreignTransit.message, /운행·대기시간 확인 필요/);
 
   // Increase, decrease, oscillation, route changes and nonconvergence use exactly the selected sample.
   for (const sequence of [[3000, 4200, 4200], [4200, 2400, 2400], [2400, 3600, 2400, 3600, 2400, 3600], [2400, 6000, 7200, 8400, 9600, 10800]]) {
@@ -126,6 +134,27 @@ try {
   assert.equal(stale.updatedAt, fresh.updatedAt); assert.equal(stale.expiresAt, fresh.expiresAt); assert.equal(stale.cacheStatus, 'stale');
   response = () => ({ status: 'OK', routes: [transit(2500)] });
   assert.equal((await route('transit', {}, key)).durationSeconds, 2500);
+
+  // Untimed current queries have their own cache and use the current driving endpoint.
+  const nowKey = counter++;
+  response = () => current(2400);
+  await route('drive', { departureTime: target }, nowKey);
+  response = () => current(1500);
+  const currentRoute = await route('drive', {}, nowKey);
+  assert.equal(currentRoute.requestKind, 'now');
+  assert.equal(currentRoute.timingBasis, 'current');
+  assert.equal(currentRoute.durationSeconds, 1500);
+  assert.equal(calls.at(-1).pathname, '/v1/directions');
+  assert.equal(calls.at(-1).searchParams.has('departure_time'), false);
+  const currentCalls = calls.length;
+  assert.equal((await route('drive', {}, nowKey)).updatedAt, currentRoute.updatedAt);
+  assert.equal(calls.length, currentCalls);
+  now += 61000;
+  response = () => { throw new TypeError('offline'); };
+  const currentStale = await route('drive', {}, nowKey);
+  assert.equal(currentStale.durationSeconds, 1500);
+  assert.equal(currentStale.cacheStatus, 'stale');
+  assert.equal(currentStale.updatedAt, currentRoute.updatedAt);
   console.log('PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.');
 } finally { globalThis.fetch = originalFetch; globalThis.Date = originalDate; }
 
@@ -250,6 +279,9 @@ const context = {
   savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: verified,
   routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getAutoBufferMinutes: helpers.getAutoBufferMinutes,
   createDestinationTravelEstimate: helpers.createDestinationTravelEstimate,
+  destinationLeavingNow: {}, leavingNowRoutes: {},
+  getLeavingNowRouteKey: travel.getLeavingNowRouteKey, isLeavingNowRouteResult: travel.isLeavingNowRouteResult,
+  setLeavingNowRoutes() { throw new Error('future schedules must not update leaving-now state'); },
   runtimeTravelEstimateClient: { estimateRoute: input => { const pending = deferred(); requests.push({ input, ...pending }); return pending.promise; } },
   setDestinationTravelEstimateRequestStatus: value => effects.push(['status', value]), setPreviewDestinationTravelEstimate: value => effects.push(['preview', value]),
   updateSavedDestinations: update => { destinations = update(destinations); },
@@ -269,8 +301,10 @@ requests[0].resolve({ ...verified, durationSeconds: 9000 }); await flush();
 assert.equal(destinations[0].travelEstimate.durationSeconds, 2500, 'slow obsolete request must not overwrite latest settings');
 cleanup();
 const beforeThrottle = requests.length;
+effects.push(['status', 'loading']);
 makeEffect({ ...context, routeRequests: [{ place, schedule: laterSchedule }] })();
 assert.equal(requests.length, beforeThrottle, 'far departures are bounded to ten-minute retries');
+assert.deepEqual(effects.at(-1), ['status', 'idle'], 'returning to a completed throttled setting clears obsolete loading state');
 attempts.current.clear();
 makeEffect({ ...context, AppState: { currentState: 'background' } })();
 assert.equal(requests.length, beforeThrottle, 'no background refresh guarantee');
@@ -334,7 +368,7 @@ assert.equal(widget.arrivalAt, result.destinationCare.departureAdvice.arrivalAt)
 assert.equal(widget.routeUpdatedAt, verified.updatedAt);
 assert.equal(widget.travelMinutes, 41);
 const past = helpers.getDestinationTiming(verified, schedule, place.timezone, Date.parse('2090-01-01T10:00:00+09:00'), 'KR', 'KR', 'origin');
-assert.equal(travel.formatRouteClock(past.nowArrivalAt, place.timezone), '10:40');
+assert.equal(past.nowArrivalAt, undefined, 'scheduled duration must not fabricate a leaving-now ETA');
 assert.equal(travel.formatRouteClock(past.departureAt, place.timezone), '08:10', 'past recommendation must not become tomorrow');
 globalThis.Date = originalDate;
 console.log('PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.');
@@ -423,3 +457,134 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('apps/mobile/src/providers
 const notificationSync = timerContext.exports.createNotificationSync(async () => ({ status: 'unavailable', scheduledCount: 0 }));
 notificationSync.request('test', { enabled: false }, () => {}); await flush(); notificationSync.stop();
 console.log('PASS client/localization: server provenance/timestamps preserved, malformed result rejected, no fabricated transit fallback, composed route messages use OS language catalogs, and browser notification timer receiver retained.');
+
+// Leaving-now lookup is independent of the persisted trip and its original duration.
+now = Date.parse('2090-01-01T10:00:00+09:00'); globalThis.Date = TestDate;
+destinations = [saved];
+const originalSchedule = JSON.stringify(destinations);
+let nowStates = {};
+const origin = context.placeSearchOrigin;
+const nowContext = (mode = 'transit', destination = place) => ({
+  ...context, nowMinuteTick: now, routeRequests: [{ place: destination, schedule: { ...schedule, transportMode: mode } }],
+  destinationLeavingNow: { [destination.id]: true }, leavingNowRoutes: nowStates,
+  setLeavingNowRoutes: update => { nowStates = update(nowStates); },
+});
+const currentResult = (seconds, mode = 'transit') => ({
+  ...estimate, requestKind: 'now', transportMode: mode, provider: mode === 'transit' ? 'kakao-transit' : 'kakao',
+  timingBasis: mode === 'drive' ? 'current' : 'route', durationSeconds: seconds, travelMinutes: Math.ceil(seconds / 60),
+  departureAt: new Date(now).toISOString(), updatedAt: new Date(now).toISOString(), expiresAt: new Date(now + 60000).toISOString(),
+});
+const currentKey = travel.getLeavingNowRouteKey(origin, place, 'transit');
+assert.equal(currentKey, travel.getLeavingNowRouteKey({ ...origin, coordinate: { longitude: origin.coordinate.longitude, latitude: origin.coordinate.latitude } }, place, 'transit'));
+const currentTiming = () => helpers.getDestinationLeavingNowTiming(verified, schedule, place.timezone, now, 'KR', 'KR', 'origin', nowStates[currentKey]);
+assert.equal(currentTiming().nowArrivalAt, undefined);
+assert.match(currentTiming().nowArrivalDescription, /確認|확인 불가/);
+for (const [seconds, clock] of [[1500, '10:25'], [3300, '10:56']]) {
+  attempts.current.clear();
+  const before = requests.length;
+  cleanup = makeEffect(nowContext())();
+  assert.equal(nowStates[currentKey].status, 'loading');
+  assert.equal(requests.at(-1).input.departureTime, undefined);
+  assert.equal(requests.at(-1).input.arrivalTime, undefined);
+  requests.at(-1).resolve(currentResult(seconds)); await flush();
+  assert.equal(travel.formatRouteClock(currentTiming().nowArrivalAt, place.timezone), clock);
+  assert.equal(currentTiming().nowArrivalReference, false);
+  cleanup();
+  makeEffect(nowContext())();
+  assert.equal(requests.length, before + 1, 'same current context is throttled to one lookup per minute');
+  assert.equal(JSON.stringify(destinations), originalSchedule, 'leaving-now results never overwrite the saved 40-minute trip');
+  now += 61000;
+}
+const previous = nowStates[currentKey].result;
+for (const error of [new Error('503'), new TypeError('offline')]) {
+  attempts.current.clear();
+  cleanup = makeEffect(nowContext())();
+  assert.equal(currentTiming().nowArrivalReference, true, 'loading retains a clearly marked previous current lookup');
+  requests.at(-1).reject(error); await flush();
+  assert.equal(nowStates[currentKey].status, error instanceof TypeError ? 'offline' : 'error');
+  assert.equal(currentTiming().nowArrivalAt, new Date(Date.parse(previous.departureAt) + previous.durationSeconds * 1000).toISOString());
+  assert.equal(currentTiming().nowRouteUpdatedAt, previous.updatedAt);
+  assert.match(currentTiming().nowArrivalDescription, /이전 조회 기준 참고/);
+  assert.ok(currentTiming().nowArrivalDescription.includes(travel.formatRouteClock(previous.updatedAt, place.timezone)));
+  cleanup(); now += 61000;
+}
+attempts.current.clear();
+cleanup = makeEffect(nowContext('walk'))();
+const abandoned = requests.at(-1); cleanup();
+const changedPlace = { ...place, id: 'another-place', coordinate: { latitude: 37.55, longitude: 126.98 } };
+cleanup = makeEffect(nowContext('drive', changedPlace))();
+requests.at(-1).resolve(currentResult(1500, 'drive')); await flush();
+abandoned.resolve(currentResult(3300, 'walk')); await flush();
+assert.equal(nowStates[travel.getLeavingNowRouteKey(origin, changedPlace, 'drive')].result.durationSeconds, 1500);
+assert.equal(nowStates[travel.getLeavingNowRouteKey(origin, place, 'walk')].result, undefined, 'late obsolete mode/destination response is discarded');
+cleanup();
+attempts.current.clear();
+cleanup = makeEffect(nowContext('walk'))();
+requests.at(-1).reject(new TypeError('Network request failed')); await flush();
+const unavailable = travel.resolveLeavingNowTiming(nowStates[travel.getLeavingNowRouteKey(origin, place, 'walk')], now);
+assert.equal(unavailable.nowArrivalAt, undefined);
+assert.match(travel.getLeavingNowDescription(unavailable, place.timezone), /오프라인.*확인 불가/);
+cleanup();
+attempts.current.clear();
+cleanup = makeEffect(nowContext())();
+requests.at(-1).resolve(currentResult(1500)); await flush();
+const recovered = currentTiming();
+assert.equal(recovered.nowArrivalReference, false);
+assert.equal(recovered.nowArrivalStatus, 'ready');
+let mapBuilder;
+function findCurrentDisplayMap(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(stateAst) === 'destinationLeavingNow') mapBuilder = node.initializer.arguments[0].getText(stateAst);
+  ts.forEachChild(node, findCurrentDisplayMap);
+}
+findCurrentDisplayMap(stateAst);
+const mapContext = { routeRequests: [{ place, schedule }], savedDestinations: destinations, storedDestinationTravelEstimate: verified, placeSearchOrigin: origin, nowMinuteTick: now - 30000, leavingNowRoutes: nowStates, getDestinationLeavingNowTiming: helpers.getDestinationLeavingNowTiming, getLeavingNowRouteKey: travel.getLeavingNowRouteKey };
+const displayMap = new Function(...Object.keys(mapContext), ts.transpileModule(`const run = ${mapBuilder};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run();')(...Object.values(mapContext));
+assert.equal(displayMap[place.id].nowArrivalAt, recovered.nowArrivalAt, 'response newer than the minute tick is immediately visible across every display');
+let expiryEffect;
+function findExpiryEffect(node) {
+  if (ts.isCallExpression(node) && node.expression.getText(stateAst) === 'useEffect' && node.arguments[0]?.getText(stateAst).includes('const nextExpiry')) expiryEffect = node.arguments[0].getText(stateAst);
+  ts.forEachChild(node, findExpiryEffect);
+}
+findExpiryEffect(stateAst);
+let expiryTimer, refreshedAt;
+const expiryContext = { appStateHydrated: true, AppState: { currentState: 'active' }, destinationLeavingNow: displayMap, setTimeout: (callback, delay) => { expiryTimer = { callback, delay }; return 1; }, clearTimeout() {}, setNowMinuteTick: value => { refreshedAt = value; } };
+const runExpiry = context => new Function(...Object.keys(context), ts.transpileModule(`const run = ${expiryEffect};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run();')(...Object.values(context));
+const cancelExpiry = runExpiry(expiryContext);
+assert.equal(expiryTimer.delay, 60001, 'cache expiry triggers one refresh instead of waiting for another minute tick');
+now += 60001; expiryTimer.callback();
+assert.equal(refreshedAt, now);
+cancelExpiry(); expiryTimer = undefined;
+runExpiry({ ...expiryContext, AppState: { currentState: 'background' } });
+assert.equal(expiryTimer, undefined);
+now -= 60001;
+assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: verified }, now).nowArrivalAt, undefined, 'old planned duration is never a current result');
+assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: { ...currentResult(2400), provider: 'fallback', status: 'fallback' } }, now).nowArrivalAt, undefined);
+assert.equal(JSON.stringify(destinations), originalSchedule);
+const nowModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: { ...verified, ...schedule }, leavingNow: recovered, savedDestinations: [saved], notificationNow: now });
+assert.equal(nowModel.destinationCare.departureAdvice.nowArrivalDescription, recovered.nowArrivalDescription);
+assert.equal(nowModel.destinationCare.departureAdvice.departureAt, verified.departureAt);
+assert.equal(buildInput(saved), null, 'a current ETA must not restart the expired scheduled Live Activity');
+assert.ok(nowModel.notifications.filter(item => item.type === 'destination').every(item => !item.active && !item.scheduledAt));
+const nowWidget = serializers.createWeatheronWidgetLocationSnapshot(destinationWeather, result.outfit, result.umbrella, recovered);
+assert.equal(nowWidget.nowArrivalAt, recovered.nowArrivalAt);
+assert.equal(nowWidget.nowArrivalDescription, nowModel.destinationCare.departureAdvice.nowArrivalDescription);
+assert.equal(nowWidget.nowRouteUpdatedAt, recovered.nowRouteUpdatedAt);
+assert.equal(nowWidget.nowRouteExpiresAt, recovered.nowRouteExpiresAt);
+assert.equal(nowWidget.nowArrivalReferenceDescription, recovered.nowArrivalReferenceDescription);
+assert.match(recovered.nowArrivalReferenceDescription, /이전 조회 기준 참고/);
+assert.doesNotMatch(recovered.nowArrivalReferenceDescription, /최신 조회/);
+assert.equal(recovered.nowArrivalReferenceDescription, helpers.getDestinationLeavingNowTiming(verified, schedule, place.timezone, now + 60001, 'KR', 'KR', 'origin', nowStates[currentKey]).nowArrivalDescription, 'the native expiry fallback is identical to the app reference text and query time');
+for (const language of ['en', 'ja']) {
+  assert.doesNotMatch(localization.translateText(recovered.nowArrivalDescription, language), /[가-힣]/u);
+  assert.doesNotMatch(localization.translateText(recovered.nowArrivalReferenceDescription, language), /[가-힣]/u);
+}
+const unavailableModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: { ...verified, ...schedule, status: 'error', travelStatus: 'error' }, leavingNow: { ...unavailable, nowArrivalDescription: travel.getLeavingNowDescription(unavailable, place.timezone), nowArrivalReferenceDescription: travel.getLeavingNowDescription(unavailable, place.timezone) }, savedDestinations: [saved], notificationNow: now });
+assert.equal(unavailableModel.destinationCare.departureAdvice.nowArrivalAt, undefined);
+assert.match(unavailableModel.destinationCare.departureAdvice.nowArrivalDescription, /확인 불가/);
+cleanup();
+now = Date.parse('2090-12-31T23:50:00+09:00');
+const rollover = travel.resolveLeavingNowTiming({ status: 'ready', result: currentResult(1500) }, now);
+assert.equal(rollover.nowArrivalAt, new Date(Date.parse('2091-01-01T00:15:00+09:00')).toISOString());
+assert.match(travel.getLeavingNowDescription(rollover, place.timezone), /2091\/1\/1 00:15/);
+globalThis.Date = originalDate;
+console.log('PASS leaving now: separate current request/cache, 40m planned vs 25m/55m current, bounded requests, loading/error/offline/reference timestamps/recovery, late mode/destination responses, unchanged saved trip, Home/native payload identity and midnight rollover.');

@@ -1,0 +1,2 @@
+PASS actual M4 JSX/handlers: 9 permission matrices, requesting disabled, gates/OS-settings/current-location/manual/alerts/back, permission copy functions unchanged.
+PASS actual A4 JSX: guest/terms/connected, open/cancel never invokes account services; destructive callback selection/processing guard and close guard with inert mock callbacks; 18 motion/busy combinations; warning strings preserved. No real account actions.

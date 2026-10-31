@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
+import { buildSync } from "esbuild";
+const shared = { exports: {} };
+new Function("module", "exports", buildSync({ entryPoints: ["packages/shared/src/index.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(shared, shared.exports);
 
 // Execute production TypeScript with only platform boundaries replaced. No
 // dependencies, generated files, network, device, or installed SQLite required.
@@ -37,7 +40,7 @@ const weatherBindings = {
 const { createWeatherProvider } = load("apps/mobile/src/providers/weatherProvider.ts", ["createWeatherProvider"], weatherBindings);
 
 const zone=load("apps/mobile/src/utils/zonedDateTime.ts",["addZonedCalendarDays","createDateAtTimeInZone","getZonedDateTimeParts","parseDateTimeInZone"]);
-const {buildHomePreparation}=load("apps/mobile/src/utils/homeOuting.ts",["buildHomePreparation"],zone);
+const {buildHomePreparation}=load("apps/mobile/src/utils/homeOuting.ts",["buildHomePreparation"],{...zone,buildOutfitCommentary:shared.exports.buildOutfitCommentary});
 let delay=false;let job=deferred();const updates=[];
 const provider=createWeatherProvider({fetchWeatherKitForecast:async ({latitude})=>delay&&latitude===36?job.promise:payload(22)});
 const options={currentLocation:home,destinationLocation:away};

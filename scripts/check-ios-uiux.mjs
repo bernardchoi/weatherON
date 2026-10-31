@@ -32,7 +32,7 @@ const outing={exports:{}};new Function('module','exports',buildSync({entryPoints
 const listFile='apps/mobile/src/screens/DestinationListScreen.tsx';const listAst=ts.createSourceFile(listFile,fs.readFileSync(listFile,'utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const model=listAst.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='buildDestinationCards');
 const target=new Date(Date.now()+3600000).toISOString();
-const bindings={...outing.exports,Platform:{OS:'ios'},getTravelMinutesForTransport:()=>30,getRouteArrivalTimeIso:()=>target,buildDestinationWarning:()=>'',getDestinationSchedule:()=>({}),recommendOutfit:()=>({items:{}}),getDestinationWeatherPresentation:()=>({}),getAreaLabel:()=>'',formatTemperature:String,formatTemperatureDelta:String,getRepeatLabel:()=>'',getOutfitVariantLabel:()=>''};
+const bindings={...outing.exports,Platform:{OS:'ios'},getTravelMinutesForTransport:()=>30,getRouteArrivalTimeIso:()=>target,getDestinationTiming:()=>({arrivalAt:target}),buildDestinationWarning:()=>'',getDestinationSchedule:()=>({}),recommendOutfit:()=>({items:{}}),getDestinationWeatherPresentation:()=>({}),getAreaLabel:()=>'',formatTemperature:String,formatTemperatureDelta:String,getRepeatLabel:()=>'',getOutfitVariantLabel:()=>''};
 const cards=new Function(...Object.keys(bindings),ts.transpile(model.getText(listAst))+';return buildDestinationCards;')(...Object.values(bindings));
 const w={...weather,source:'openmeteo',observedAt:new Date().toISOString(),current:{...weather.current,tempC:23},hourly:[{time:target,tempC:23,windMs:2,rainProbabilityPct:51,precipitationMm:0,condition:'cloud'},{time:new Date(Date.parse(target)+3600000).toISOString(),tempC:23,windMs:2,rainProbabilityPct:82,precipitationMm:0,condition:'rain'}]};
 const d={place:base,schedulePreference:{timeBasis:'arrival',targetArrivalTime:'10:00',repeatEnabled:false,repeatDays:[]},alertCondition:{rainThresholdPct:50,windThresholdMs:8}};
@@ -80,7 +80,8 @@ const centerScheduled=permissionReady=>new Function('state','permissionReady','s
 assert.deepEqual(centerScheduled(true).map(x=>x.id),['routine'],'notification center must apply the same quiet-hours policy as native scheduling');
 assert.equal(centerScheduled(false).length,0,'no permission means no scheduled notifications');
 console.log('PASS actual notification center respects native delivery preferences, quiet hours and permission');
-const {getTravelMinutesForTransport}=await import('../apps/mobile/src/utils/travelEstimate.ts');
+const travel={exports:{}};new Function('module','exports',buildSync({entryPoints:['apps/mobile/src/utils/travelEstimate.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(travel,travel.exports);
+const {getTravelMinutesForTransport}=travel.exports;
 const overseasFallback={travelMinutes:180,distanceMeters:6000000,provider:'fallback',status:'fallback'};
 assert.equal(getTravelMinutesForTransport(overseasFallback,'auto','GLOBAL','GLOBAL'),undefined,'GLOBAL must not prove that two places are in the same country');
 assert.equal(getTravelMinutesForTransport({...overseasFallback,travelMinutes:29,distanceMeters:4500,provider:'google-transit',status:'ready'},'transit','GLOBAL','GLOBAL'),29);

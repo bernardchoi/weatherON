@@ -32,7 +32,7 @@ export function AppPermissionsScreen({
       void Linking.openSettings();
       return;
     }
-    if (locationCopy.canRequest) {
+    if (locationCopy.canRequest && !locationReady) {
       onRequestPermissionGate("location", "M4", "general");
       return;
     }

@@ -115,6 +115,11 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
   let travelMinutes: Int?
   let routeMessage: String?
   let routeUpdatedAt: String?
+  let nowArrivalAt: String?
+  let nowArrivalDescription: String?
+  let nowArrivalReferenceDescription: String?
+  let nowRouteUpdatedAt: String?
+  let nowRouteExpiresAt: String?
   let transportMode: String?
   let deepLink: String
 
@@ -150,6 +155,11 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     case travelMinutes
     case routeMessage
     case routeUpdatedAt
+    case nowArrivalAt
+    case nowArrivalDescription
+    case nowArrivalReferenceDescription
+    case nowRouteUpdatedAt
+    case nowRouteExpiresAt
     case transportMode
     case deepLink
   }
@@ -183,6 +193,11 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     deepLink: String,
     routeMessage: String? = nil,
     routeUpdatedAt: String? = nil,
+    nowArrivalAt: String? = nil,
+    nowArrivalDescription: String? = nil,
+    nowArrivalReferenceDescription: String? = nil,
+    nowRouteUpdatedAt: String? = nil,
+    nowRouteExpiresAt: String? = nil,
     departureAt: String? = nil,
     arrivalAt: String? = nil
   ) {
@@ -214,6 +229,11 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     self.travelMinutes = travelMinutes
     self.routeMessage = routeMessage
     self.routeUpdatedAt = routeUpdatedAt
+    self.nowArrivalAt = nowArrivalAt
+    self.nowArrivalDescription = nowArrivalDescription
+    self.nowArrivalReferenceDescription = nowArrivalReferenceDescription
+    self.nowRouteUpdatedAt = nowRouteUpdatedAt
+    self.nowRouteExpiresAt = nowRouteExpiresAt
     self.transportMode = transportMode
     self.deepLink = deepLink
   }
@@ -248,6 +268,11 @@ private struct WeatherONLocationSnapshot: Codable, Hashable {
     travelMinutes = try values.decodeIfPresent(Int.self, forKey: .travelMinutes)
     routeMessage = try values.decodeIfPresent(String.self, forKey: .routeMessage)
     routeUpdatedAt = try values.decodeIfPresent(String.self, forKey: .routeUpdatedAt)
+    nowArrivalAt = try values.decodeIfPresent(String.self, forKey: .nowArrivalAt)
+    nowArrivalDescription = try values.decodeIfPresent(String.self, forKey: .nowArrivalDescription)
+    nowArrivalReferenceDescription = try values.decodeIfPresent(String.self, forKey: .nowArrivalReferenceDescription)
+    nowRouteUpdatedAt = try values.decodeIfPresent(String.self, forKey: .nowRouteUpdatedAt)
+    nowRouteExpiresAt = try values.decodeIfPresent(String.self, forKey: .nowRouteExpiresAt)
     transportMode = try values.decodeIfPresent(String.self, forKey: .transportMode)
     deepLink = try values.decodeIfPresent(String.self, forKey: .deepLink) ?? homeDeepLink.absoluteString
   }
@@ -275,6 +300,7 @@ private extension WeatherONLocationSnapshot {
       observedAt: forecast.observedAt.ISO8601Format(),
       hourly: forecast.hourly.map { WeatherONHourlySnapshot(time: formatter.string(from: $0.date), temperatureC: Int($0.temperatureC.rounded()), condition: $0.condition, rainProbabilityPct: Int($0.rainProbabilityPct.rounded())) },
       departureTime: departureTime, arrivalTime: arrivalTime, travelMinutes: travelMinutes, transportMode: transportMode, deepLink: deepLink, routeMessage: routeMessage, routeUpdatedAt: routeUpdatedAt,
+      nowArrivalAt: nowArrivalAt, nowArrivalDescription: nowArrivalDescription, nowArrivalReferenceDescription: nowArrivalReferenceDescription, nowRouteUpdatedAt: nowRouteUpdatedAt, nowRouteExpiresAt: nowRouteExpiresAt,
       departureAt: departureAt, arrivalAt: arrivalAt
     )
   }
@@ -668,6 +694,10 @@ private enum WeatherONTimelineFactory {
     var entryDates = (0...48).map { phase in
       Calendar.current.date(byAdding: .minute, value: phase * 30, to: now) ?? now
     }
+    if let value = location.nowRouteExpiresAt,
+       let expiry = snapshotDateFormatter.date(from: value) ?? fallbackSnapshotDateFormatter.date(from: value), expiry > now {
+      entryDates.append(expiry)
+    }
     // Keep day/night changes scheduled even when iOS delays the requested refresh.
     var solarCursor = now
     let horizon = now.addingTimeInterval(24 * 3_600)
@@ -1006,7 +1036,7 @@ private struct WeatherONMediumView: View {
 
       VStack(spacing: 8) {
         if entry.location.isDestination {
-          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true)
+          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: true, referenceDate: entry.date)
           WeatherONOutfitCard(location: entry.location, palette: palette, compact: true)
         } else {
           WeatherONHourlyStrip(location: entry.location, localization: entry.localization, palette: palette, limit: 3, referenceDate: entry.date, compact: true)
@@ -1053,7 +1083,7 @@ private struct WeatherONLargeView: View {
         .frame(maxWidth: .infinity)
 
         if entry.location.isDestination {
-          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: false)
+          WeatherONScheduleCard(location: entry.location, localization: entry.localization, palette: palette, compact: false, referenceDate: entry.date)
             .frame(maxWidth: .infinity)
         }
       }
@@ -1201,6 +1231,7 @@ private struct WeatherONScheduleCard: View {
   let localization: WeatherONWidgetLocalization
   let palette: WeatherONWidgetPalette
   let compact: Bool
+  let referenceDate: Date
 
   var body: some View {
     VStack(alignment: .leading, spacing: compact ? 4 : 7) {
@@ -1217,7 +1248,7 @@ private struct WeatherONScheduleCard: View {
 
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         VStack(alignment: .leading, spacing: 1) {
-          Text(weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
+          Text(weatherONRouteClock(location.departureAt, fallback: location.departureTime, timeZone: location.timeZone, referenceDate: referenceDate, localization: localization))
             .font(.system(size: compact ? 16 : 21, weight: .semibold, design: .default))
             .lineLimit(1)
             .minimumScaleFactor(0.55)
@@ -1229,7 +1260,7 @@ private struct WeatherONScheduleCard: View {
           .font(.system(size: 9, weight: .bold))
           .foregroundStyle(palette.accent)
         VStack(alignment: .leading, spacing: 1) {
-          Text(weatherONRouteClock(location.arrivalAt, fallback: location.arrivalTime, timeZone: location.timeZone, referenceDate: Date(), localization: localization))
+          Text(weatherONRouteClock(location.arrivalAt, fallback: location.arrivalTime, timeZone: location.timeZone, referenceDate: referenceDate, localization: localization))
             .font(.system(size: compact ? 14 : 18, weight: .semibold, design: .default))
             .lineLimit(1)
             .minimumScaleFactor(0.55)
@@ -1238,8 +1269,14 @@ private struct WeatherONScheduleCard: View {
             .foregroundStyle(palette.secondaryText)
         }
       }
+      if let description = weatherONNowArrivalDescription(location, referenceDate: referenceDate) {
+        Text(verbatim: description)
+          .font(.system(size: 8, weight: .regular))
+          .foregroundStyle(palette.secondaryText)
+          .lineLimit(6)
+      }
       if let routeMessage = location.routeMessage {
-        let queriedAt = weatherONAppSnapshotTime(location.routeUpdatedAt, referenceDate: Date(), timeZone: TimeZone(identifier: location.timeZone ?? "Asia/Seoul") ?? .current, localization: localization)
+        let queriedAt = weatherONAppSnapshotTime(location.routeUpdatedAt, referenceDate: referenceDate, timeZone: TimeZone(identifier: location.timeZone ?? "Asia/Seoul") ?? .current, localization: localization)
         Text(verbatim: routeMessage + (queriedAt.map { " · " + $0 } ?? ""))
           .font(.system(size: 8, weight: .regular))
           .foregroundStyle(palette.secondaryText)
@@ -1436,6 +1473,14 @@ private func weatherONRouteClock(
   formatter.timeZone = calendar.timeZone
   formatter.setLocalizedDateFormatFromTemplate(sameDay ? clock : (sameYear ? "Md" : "yMd") + clock)
   return formatter.string(from: date)
+}
+
+private func weatherONNowArrivalDescription(_ location: WeatherONLocationSnapshot, referenceDate: Date) -> String? {
+  guard let description = location.nowArrivalDescription else { return nil }
+  guard let expiry = location.nowRouteExpiresAt,
+        let date = snapshotDateFormatter.date(from: expiry) ?? fallbackSnapshotDateFormatter.date(from: expiry),
+        date <= referenceDate else { return description }
+  return location.nowArrivalReferenceDescription ?? description
 }
 
 private struct WeatherONWeatherBackdrop: View {

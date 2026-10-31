@@ -1,4 +1,4 @@
-import type { HourlyWeather, WeatherSnapshot } from "@weatheron/shared";
+import { buildOutfitCommentary, type HourlyWeather, type WeatherSnapshot } from "@weatheron/shared";
 import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts, parseDateTimeInZone } from "./zonedDateTime";
 
 export type RainForecastContext = { locationId: string; targetAt?: string; basisLabel: string };
@@ -146,24 +146,21 @@ export function buildHomePreparation(weather: WeatherSnapshot | undefined, targe
   const snowy = condition === "snow";
   const frozenPrecipitation = condition === "sleet" || condition === "hail" || condition === "storm-hail" || condition === "mixed";
   const rainy = condition === "rain" || condition === "storm";
-  const precipitationPossible = snowy || frozenPrecipitation || rainy || (rainProbability ?? 0) >= 50 || (precipitation ?? 0) > 0;
-  const status = isForecast ? ["temp", "wind", "rainProbability", "precipitation"].some(field => !available(field as "temp")) ? "일부 예보 미확인" : ""
+  const precipitationPossible = snowy || frozenPrecipitation || rainy || (rainProbability ?? 0) >= 60 || (precipitation ?? 0) >= 1;
+  const status = isForecast ? [temp, wind, rainProbability, precipitation].some(value => value === undefined) ? "일부 예보 미확인" : ""
     : targetAt ? "선택 시각 예보 없음 · 현재 기준" : "도착 시각 미확인 · 현재 기준";
   const basis = isForecast ? "목적지 도착 무렵" : "목적지 현재 날씨";
   const evidence = precipitationPossible ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : snowy ? "눈 소식 있어요" : frozenPrecipitation ? "얼음·혼합 강수 소식 있어요" : rainy ? "비 소식 있어요" : "강수 가능성이 있어요"
     : wind !== undefined && wind >= 7 ? `바람 ${wind.toFixed(1)}m/s`
     : temp !== undefined ? `${!isForecast && hasFeelsLike(weather!) ? "현재 체감" : "기온"} ${temperature(temp)}` : "";
-  let copy = "편한 차림으로,\n기분 좋게 나가요.";
-  if (snowy) copy = wind !== undefined && wind >= 8 ? "눈과 바람이 겹쳐요.\n미끄럼 적은 신발로 나가요." : isForecast ? "눈 소식이 있어요.\n미끄럼 적은 신발로 나가요." : "지금 가는 곳에 눈이 와요.\n미끄럼 적은 신발로 나가요.";
-  else if (frozenPrecipitation) copy = condition === "hail" || condition === "storm-hail" ? "우박 신호가 있어요.\n실외 이동을 잠시 피하고 확인해요." : "얼음·혼합 강수 소식이에요.\n방수와 미끄럼에 대비해요.";
-  else if (rainy && wind !== undefined && wind >= 8) copy = "비와 바람이 겹쳐요.\n방수 겉옷을 챙겨요.";
-  else if (rainy) copy = isForecast ? "비 소식이 있어요.\n우산 하나 챙겨 나가요." : "지금 가는 곳에 비가 와요.\n우산을 챙겨봐요.";
-  else if (precipitationPossible) copy = wind !== undefined && wind >= 8 ? "강수와 강한 바람에 대비해요.\n젖지 않을 겉옷을 챙겨요." : "강수 가능성이 있어요.\n젖지 않을 겉옷을 챙겨요.";
-  else if (wind !== undefined && wind >= 7) copy = "바람을 막아줄\n한 겹만 더 챙겨요.";
-  else if (temp !== undefined && temp <= 5) copy = "포근한 겉옷으로\n따뜻하게 나가요.";
-  else if (temp !== undefined && temp <= 18) copy = "가볍게 걸칠 한 겹,\n같이 챙겨 나가요.";
-  else if (temp !== undefined && temp >= 30) copy = "물 한 병 챙기고,\n여유롭게 나가요.";
-  else if (temp === undefined) return { ...neutral, basis, status: status || "준비 판단에 필요한 예보 없음", evidence: "" };
+  if (temp === undefined) return { ...neutral, basis, status: "준비 판단에 필요한 예보 없음", evidence: "" };
+  const scoped: WeatherSnapshot = { ...weather!, daily: undefined, hourly: [], current: {
+    ...current, tempC: hour ? temp : current.tempAvailable !== false && (weather!.source !== "weatherkit" || current.tempAvailable === true) ? current.tempC : NaN,
+    feelsLikeC: temp, tempAvailable: true, feelsLikeAvailable: !hour && hasFeelsLike(weather!),
+    windMs: wind ?? NaN, rainProbabilityPct: rainProbability ?? NaN, precipitationMm: precipitation ?? NaN,
+    condition: (condition ?? "unknown") as WeatherSnapshot["current"]["condition"], uvIndex: undefined, pm10: undefined, pm25: undefined, humidityPct: NaN,
+  } };
+  const copy = buildOutfitCommentary(scoped);
   // Unknown rain/wind never become an optimistic 'no rain/no wind' statement.
   return { copy, basis, status, evidence, rainEvidence: precipitationPossible };
 }

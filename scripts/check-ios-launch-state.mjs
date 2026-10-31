@@ -14,7 +14,7 @@ const localRestoreEnd = stateSource.indexOf("  }, [storageRetryTick]);", localRe
 assert.ok(localRestoreStart >= 0 && localRestoreEnd > localRestoreStart, "local restore effect is missing");
 const localRestoreEffect = stateSource.slice(localRestoreStart, localRestoreEnd);
 assert.doesNotMatch(localRestoreEffect, /restoreAccountSession/u);
-assert.match(localRestoreEffect, /setRoute\(persistedState\.onboardingCompleted \? "H1" : "O1"\)/u);
+assert.match(localRestoreEffect, /setRoute\(persistedState\.onboardingCompleted \? "H1" : persistedState\.onboardingProgress\.route\)/u);
 assert.match(localRestoreEffect, /setAccountLinked\(persistedState\.accountLinked\)/u);
 
 const remoteRestoreStart = stateSource.indexOf("void restoreAccountSession().then");

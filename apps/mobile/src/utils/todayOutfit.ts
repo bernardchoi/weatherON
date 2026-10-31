@@ -45,7 +45,8 @@ export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferen
     coveredTo = Math.max(coveredTo, h.at + 3_600_000);
   }
   const complete = zoneValid && coveredTo >= end;
-  const usableHours = reliable && zoneValid ? usable : [];
+  const usableHours = reliable && zoneValid ? usable.map(h => ({ ...h,
+    condition: h.available?.condition === false || (weather.source === "weatherkit" && h.available?.condition !== true) ? "unknown" : h.condition })) : [];
   // Provider current probability/amount may come from its first forecast hour.
   // Recompute them from the interval containing now; preserve actual condition.
   const currentHour = usableHours.find(h => h.at <= now && h.at + 3_600_000 > now);
@@ -59,18 +60,17 @@ export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferen
   let decision = outfit.decisionText;
   if (!reliable) decision = "최신 날씨를 확인한 뒤 코디를 안내해요";
   else if (!zoneValid) decision = "위치 시간대를 확인한 뒤 코디를 안내해요";
-  else if (weather.current.condition === "snow") decision = "현재 눈 · 미끄럼 적은 신발을 챙겨요";
-  else if (weather.current.condition === "sleet" || weather.current.condition === "hail" || weather.current.condition === "storm-hail" || weather.current.condition === "mixed") decision = "현재 얼음·혼합 강수 · 미끄럼 방지 방수 신발을 챙겨요";
-  else if (weather.current.condition === "rain" || weather.current.condition === "storm") decision = "현재 비 · 우산과 방수 신발을 챙겨요";
-  else if (wet) {
+  else if (!currentAvailable) decision = "온도를 확인한 뒤 옷차림을 추천해요";
+  else if (wet && wet.at > now && !["rain", "storm", "snow", "sleet", "hail", "storm-hail", "mixed"].includes(weather.current.condition)
+    && !(currentHour && (currentHour.rainProbabilityPct >= 60 || currentHour.precipitationMm >= 1))) {
     const p = getZonedDateTimeParts(new Date(wet.at), weather.timezone!);
     const clock = `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
-    decision = wet.condition === "snow" ? `오늘 ${clock} 무렵 눈 예보 · 미끄럼에 대비해요`
-      : wet.condition === "sleet" || wet.condition === "hail" || wet.condition === "storm-hail" || wet.condition === "mixed" ? `오늘 ${clock} 무렵 얼음·혼합 강수 예보 · 미끄럼과 젖음에 대비해요`
-      : wet.condition === "rain" || wet.condition === "storm" ? `오늘 ${clock} 무렵 비 예보 · 우산을 챙겨요`
-      : `오늘 ${clock} 무렵 강수 가능 · 방수 차림을 준비해요`;
-  } else if (!currentAvailable) decision = outfit.decisionText;
-  else if (!complete) decision = "예보를 확인한 뒤 오늘 코디를 준비해요";
+    const advice = wet.condition === "snow" ? `오늘 ${clock} 무렵 눈 예보`
+      : wet.condition === "sleet" || wet.condition === "hail" || wet.condition === "storm-hail" || wet.condition === "mixed" ? `오늘 ${clock} 무렵 얼음·혼합 강수 예보`
+      : wet.condition === "rain" || wet.condition === "storm" ? `오늘 ${clock} 무렵 비 예보`
+      : `오늘 ${clock} 무렵 강수 가능`;
+    decision = `${decision} · ${advice}`;
+  } else if (!complete) decision = `${decision} · 예보를 확인한 뒤 오늘 코디를 준비해요`;
   const observed = Date.parse(weather.observedAt);
   let observedLabel: string | undefined;
   if (observationAvailable && zoneValid && Number.isFinite(observed)) {

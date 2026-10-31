@@ -1,0 +1,81 @@
+Leaving-now checks, final local source. Native OS boundaries are mocked unless explicitly noted.
+
+$ tests
+PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.
+PASS shared timing: 08:00→08:40, 09:00/40m/10m→08:10/08:50, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.
+PASS actual SQLite: additive/idempotent legacy migration, saved/preview round trip, duration/absolute schedule/provenance/expiry preserved, and old data retained.
+PASS UI model/notification: identical departure/arrival, separate reminder lead time, and route provenance in notification.
+PASS actual request effect: fast setting changes reject obsolete responses, ten-minute throttle, background guard, offline provenance and recovery. Foreground/restart clear/requery is covered separately by lifecycle/storage checks.
+PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.
+PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity and cancellation.
+PASS client/localization: server provenance/timestamps preserved, malformed result rejected, no fabricated transit fallback, composed route messages use OS language catalogs, and browser notification timer receiver retained.
+PASS leaving now: separate current request/cache, 40m planned vs 25m/55m current, bounded requests, loading/error/offline/reference timestamps/recovery, late mode/destination responses, unchanged saved trip, Home/native payload identity and midnight rollover.
+
+$ shared
+
+> weatheron-design-workspace@1.0.0 check:shared
+> node scripts/check-shared-rules.mjs
+
+shared rules check passed
+
+$ review
+Review regressions passed: storage failure/retry, durable photo replacement, notification races, overseas timezone/cache.
+
+$ correctness
+Cold-start location transitions passed
+Tomorrow: local midnight, stale observation, missing day, DST, year rollover and hourly offsets passed
+Reauth: same-account token guard, mismatch cleanup, cancellation, local data retention and explicit second confirmation passed
+Routing: selected departure, arrival precedence, driving support, unsupported arrival disclosure and cache isolation passed (mock HTTP only)
+iOS reminder calendar trigger retains the forecast location timezone
+Foreground TTL: expired vs fresh, bounded retry, background and in-flight guards passed
+H5: existing persisted rain preference callback and permission gate on enable passed
+
+$ reliability
+Migration: 76 SQL failure points, read/decode/commit/cleanup and idempotent retries passed.
+Notifications: native schedule/cancel failures, verification retries, rapid toggles, foreground reconciliation and stale completions passed.
+Weather: partial/slow failures, location-specific cache, freshness, persistence and late responses passed.
+Weather hook: obsolete progressive/final responses cannot update UI or persistence.
+iOS reliability checks passed (native boundaries mocked; migration SQL executed by Node SQLite).
+
+$ home
+PASS: outing/Rain actual model — scoped location, missing/partial/stale/fallback, gap/out-of-range dates, midnight/timezone, no false rain end, current feels-like provenance and units. Native layout, user perception and navigation remain separate device QA.
+PASS: actual Home Hero apparent-temperature presence/zero/negative/missing JSX in both themes, three languages, 1–2x font scale and accessible label.
+PASS: actual WeatherKit missing-field normalization and navigation callbacks/context replacement/back-entry/overlay lifecycle.
+PASS: actual H5 screen + chart modules — selection/reselection, expanded exact rows, alert permissions, missing vs zero, independent probability, stale/removed/out-of-range contexts, both themes, 1–2x type and whole-column touch targets. Native rendering remains separate QA.
+PASS: actual SQLite additive/idempotent presence migration, existing data preservation, observed/hourly field-presence round trip and legacy/malformed cache unknowns.
+PASS: Build 56 feedback temperature matrix — cold/light-layer/mild/hot boundaries, arrival vs current changes, two providers, Celsius/Fahrenheit and unavailable temperatures.
+PASS: realistic snow probability/amount/wind matrix preserves snow footwear; unknown phase uses generic precipitation; current and forecast bases stay distinct.
+PASS: friendly destination-based preparation, forecast-first/general temperature, genuine-only wind/condition, current-only fallback, uncertainty as secondary state and readable reduced copy.
+PASS: fallback and spatially unverified snapshots cannot display forecast numbers or claimed observation time.
+PASS: actual Home material selection across OS/module/theme/transparency combinations; opaque fallback, no hit interception or new animations; responsive grouping and duplicate forecast label removal. Device visual assessment remains separate.
+PASS: Home derives its display theme from the shared app provider; no temporary body-only dark override remains.
+
+$ widget-sync
+iOS widget sync: behavior checks and native source contracts passed (Swift not executed).
+
+$ swift
+Widget app snapshot time: 181 checks passed (ko/en/ja, 12/24-hour, prior day/year, missing/future, location/device timezone)
+
+$ activity
+iOS Live Activity check passed
+
+$ intent
+Departure Activity intent: preview preservation, save replacement, restart, rapid browsing and care-off passed
+
+$ locales
+mobile localization check passed (2289 messages)
+
+$ tsc
+PASS (exit 0, no output)
+
+$ Xcode 27.1 Release generic/platform=iOS CODE_SIGNING_ALLOWED=NO
+** BUILD SUCCEEDED **
+Final Widget expiry timeline source included. Compilation only; not installed, signed, archived or distributed.
+
+$ git diff --check
+PASS
+$ git apply --reverse --check --exclude=docs/** baseline/before.diff
+PASS (preexisting source changes retained)
+
+$ Browser assertions
+PASS: five phases, Home/destination text and timestamps identical, planned 40m retained, no fabricated ETA.

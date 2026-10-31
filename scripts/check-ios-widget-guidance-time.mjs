@@ -14,6 +14,11 @@ const formatter = source.slice(source.indexOf("private func weatherONAppSnapshot
 const models = source.slice(source.indexOf("private struct WeatherONHourlySnapshot"), source.indexOf("private extension WeatherONLocationSnapshot"));
 const routeClock = source.slice(source.indexOf("private func weatherONClock("), source.indexOf("private struct WeatherONWeatherBackdrop"));
 assert.match(source, /departureAt: departureAt, arrivalAt: arrivalAt/);
+assert.equal((source.match(/WeatherONScheduleCard\([^\n]+referenceDate: entry\.date\)/g) ?? []).length, 2);
+const scheduleCard = source.slice(source.indexOf("private struct WeatherONScheduleCard"), source.indexOf("private struct WeatherONOutfitCard"));
+assert.doesNotMatch(scheduleCard, /referenceDate: Date\(\)/);
+const expiryEntry = source.slice(source.indexOf("    if let value = location.nowRouteExpiresAt,"), source.indexOf("    // Keep day/night changes"));
+assert.match(expiryEntry, /entryDates\.append\(expiry\)/);
 const directory = mkdtempSync(join(tmpdir(), "weatheron-guidance-time-"));
 try {
   const file = join(directory, "check.swift");
@@ -29,6 +34,11 @@ ${localization}
 ${models}
 ${formatter}
 ${routeClock}
+private func routeEntryDates(_ location: WeatherONLocationSnapshot, now: Date) -> [Date] {
+  var entryDates = [now]
+${expiryEntry}
+  return entryDates
+}
 var checked = 0
 var context = ""
 func expect(_ condition: @autoclosure () -> Bool, line: Int = #line) {
@@ -80,6 +90,25 @@ do {
   let tokyo = weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "Asia/Tokyo", referenceDate: now, localization: policy)
   expect(tokyo == departure)
   expect(weatherONRouteClock(restored.departureAt, fallback: nil, timeZone: "America/Los_Angeles", referenceDate: now, localization: policy) == "07:50")
+  let currentPayload = #"{"nowArrivalAt":"2026-10-30T14:25:00Z","nowArrivalDescription":"지금 출발 시 2026/10/30 23:25 도착 예상 · 최신 조회 · 조회 2026/10/30 23:00","nowArrivalReferenceDescription":"지금 출발 시 2026/10/30 23:25 도착 예상 · 이전 조회 기준 참고 · 조회 2026/10/30 23:00","nowRouteUpdatedAt":"2026-10-30T14:00:00Z","nowRouteExpiresAt":"2026-10-30T14:01:00Z"}"#
+  let current = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(currentPayload.utf8))
+  let currentRestored = try decoder.decode(WeatherONLocationSnapshot.self, from: JSONEncoder().encode(current))
+  expect(currentRestored.nowArrivalAt == current.nowArrivalAt)
+  expect(currentRestored.nowRouteUpdatedAt == current.nowRouteUpdatedAt)
+  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: now) == current.nowArrivalDescription)
+  let expired = weatherONNowArrivalDescription(currentRestored, referenceDate: now.addingTimeInterval(61))!
+  expect(expired.contains("이전 조회 기준 참고") && !expired.contains("최신 조회"))
+  expect(expired.contains("23:00") && expired.contains("23:25"))
+  expect(weatherONNowArrivalDescription(legacy, referenceDate: now) == nil)
+  let entryDates = routeEntryDates(currentRestored, now: now)
+  expect(entryDates.count == 2 && entryDates[0] == now)
+  expect(entryDates[1] == now.addingTimeInterval(60))
+  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: entryDates[0]) == current.nowArrivalDescription)
+  expect(weatherONNowArrivalDescription(currentRestored, referenceDate: entryDates[1]) == current.nowArrivalReferenceDescription)
+  expect(routeEntryDates(currentRestored, now: now.addingTimeInterval(61)).count == 1)
+  expect(routeEntryDates(legacy, now: now).count == 1)
+  let invalidExpiry = try decoder.decode(WeatherONLocationSnapshot.self, from: Data(#"{"nowRouteExpiresAt":"invalid"}"#.utf8))
+  expect(routeEntryDates(invalidExpiry, now: now).count == 1)
 }
 print("Widget app snapshot time: \\(checked) checks passed (ko/en/ja, 12/24-hour, prior day/year, missing/future, location/device timezone)")
 `);

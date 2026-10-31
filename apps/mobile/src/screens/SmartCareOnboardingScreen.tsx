@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Platform, Image, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
@@ -24,6 +24,7 @@ const scenarios: { value: SmartCareScenario; title: string; body: string; icon: 
 export function SmartCareOnboardingScreen({
   smartCareScenario,
   permissionReady,
+  onboardingProgress,
   onSetSmartCareScenario,
   onCompleteSmartCareOnboarding,
   onRequestNotificationPermission,
@@ -32,14 +33,10 @@ export function SmartCareOnboardingScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const selectedScenario = scenarios.find((item) => item.value === smartCareScenario) ?? scenarios[0];
-  const [notificationRequestHandled, setNotificationRequestHandled] = useState(false);
+  const notificationRequestHandled = onboardingProgress.notificationHandled;
   const notificationSetupComplete = permissionReady || notificationRequestHandled;
   const notificationSkipped = notificationRequestHandled && !permissionReady;
 
-  const requestNotificationPermission = async () => {
-    await onRequestNotificationPermission();
-    setNotificationRequestHandled(true);
-  };
   return (
     <AppScreen
       title="필요한 순간에만 알려드릴게요"
@@ -50,7 +47,7 @@ export function SmartCareOnboardingScreen({
         <OnboardingFooter
           primaryLabel={notificationSetupComplete ? "다음" : "알림 켜기"}
           primaryAccessibilityLabel={notificationSetupComplete ? "목적지 안내 단계로 이동" : "알림 권한 요청"}
-          onPrimary={() => (notificationSetupComplete ? onCompleteSmartCareOnboarding() : void requestNotificationPermission())}
+          onPrimary={() => (notificationSetupComplete ? onCompleteSmartCareOnboarding() : void onRequestNotificationPermission())}
           secondaryLabel={notificationSetupComplete ? "건너뛰기" : "나중에"}
           secondaryAccessibilityLabel={
             notificationSetupComplete

@@ -1,0 +1,169 @@
+Browser tab: 1, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/apps/6789612592/testflight/ios/02a5f953-f8bc-49f9-8e6f-cae19cffeef0/metadata".
+0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/apps/6789612592/testflight/ios/02a5f953-f8bc-49f9-8e6f-cae19cffeef0/metadata
+	1 container
+		2 container App Store Connect
+			3 container
+				4 heading App Store Connect, Value: 1
+					5 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				6 container 글로벌
+					7 content list
+						8 link Description: 앱, Value: appstoreconnect.apple.com/apps
+						9 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/xcode-cloud
+						10 link Description: 추세, Value: appstoreconnect.apple.com/trends
+						11 link Description: 보고서, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+						12 link Description: 비즈니스, Value: appstoreconnect.apple.com/business
+						13 link Description: 사용자 및 액세스, Value: appstoreconnect.apple.com/access/users
+				14 button Daehyeon Choi Daehyeon Choi Account name menu
+		15 container sub
+			16 pop up button (collapsed) Description: 앱 메뉴, WeatherON (57256a), 선택됨, Secondary Actions: Expand
+				17 container
+					18 image WeatherON (57256a)
+					19 text WeatherON (57256a)
+				20 image
+			21 container 앱
+				22 container
+					23 text TestFlight
+					24 image
+				25 content list
+					26 link Description: 배포, Value: appstoreconnect.apple.com/apps/6789612592/distribution
+					27 link Description: 분석, Value: appstoreconnect.apple.com/apps/6789612592/analytics
+					28 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/apps/6789612592/testflight
+		29 container
+			30 container
+				31 link Description: iOS 빌드, Value: appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/apps/6789612592/testflight/ios
+				32 heading 1.0.0 (56), Value: 2
+					33 text 1.0.0 (56)
+				36 tab group
+					37 tab (selectable, settable, boolean) 테스트 정보, Value: 0
+테스트 정보
+					38 tab (selected, settable, boolean) 빌드 메타데이터, Value: 1
+						84 text 빌드 메타데이터
+				85 heading 일반 정보, Value: 3
+					86 text 일반 정보
+				87 definition list
+					88 container 앱 이름
+						89 text 앱 이름
+					90 text WeatherON (57256a)
+					91 container 바이너리 상태
+						92 text 바이너리 상태
+					93 text 검증됨
+					94 container 번들 버전
+						95 text 번들 버전
+					96 text 1.0.0
+					97 container 업로드 날짜
+						98 text 업로드 날짜
+					99 text 2026년 10월 23일 오전 12:41
+					100 container SDK 빌드
+						101 text SDK 빌드
+					102 text 24A94232
+					103 container 번들 버전(상세보기)
+						104 text 번들 버전(상세보기)
+					105 text 56
+					106 container 원본 파일명
+						107 text 원본 파일명
+					108 text 49da965a-fb2e-43ff-8b76-35ada86fc0c4.ipa
+					109 container 플랫폼 빌드
+						110 text 플랫폼 빌드
+					111 text 24A94232
+					112 container 번들 ID
+						113 text 번들 ID
+					114 text com.weatheron.mobile
+					115 container 요청형 리소스
+						116 text 요청형 리소스
+					117 text 아니요
+					118 container 기호 포함
+						119 text 기호 포함
+					120 text 예
+					121 container 앱의 비면제 암호화 포함
+						122 text 앱의 비면제 암호화 포함
+					123 text 아니요
+					124 container SiriKit
+						125 text SiriKit
+					126 text 아니요
+					127 container Watch 전용 앱
+						128 text Watch 전용 앱
+					129 text 아니요
+				130 heading iMessage 앱, Value: 3
+					131 text iMessage 앱
+				132 definition list
+					133 container iMessage 앱 포함
+						134 text iMessage 앱 포함
+					135 text 아니요
+					136 container 스티커 포함
+						137 text 스티커 포함
+					138 text 아니요
+					139 container 앱 아이콘 숨김
+						140 text 앱 아이콘 숨김
+					141 text 아니요
+				142 heading 기기 요구사항, Value: 3
+					143 text 기기 요구사항
+				144 definition list
+					145 container 최소 iOS 버전
+						146 text 최소 iOS 버전
+					147 text 16.4
+					148 container 최소 macOS 버전
+						149 text 최소 macOS 버전
+					150 text 12.0
+					151 container 최소 visionOS 버전
+						152 text 최소 visionOS 버전
+					153 text 1.0
+					154 container LS 최소 시스템 버전
+						155 text LS 최소 시스템 버전
+					156 text 12.0
+					157 container 지원되는 아키텍처
+						158 text 지원되는 아키텍처
+					159 text arm64
+					160 container 기기 프로토콜
+						161 text 기기 프로토콜
+					162 text -
+					163 container 기기 제품군
+						164 text 기기 제품군
+					165 text iPhone
+					166 container 필수 기능
+						167 text 필수 기능
+					168 text arm64
+				169 heading Store 정보, Value: 3
+					170 text Store 정보
+				171 definition list
+					172 container 현지화
+						173 text 현지화
+					174 text 영어 일본어 한국어
+					175 container 인타이틀먼트
+						176 text 인타이틀먼트
+					177 container
+						178 text WeatherON.app/PlugIns/WeatherONWidget.appex/WeatherONWidget
+    application-identifier: R4L3X54675.com.weatheron.mobile.widget
+    beta-reports-active: true
+    get-task-allow: false
+    com.apple.developer.weatherkit: true
+    com.apple.developer.team-identifier: R4L3X54675
+    com.apple.security.application-groups: ( "group.com.weatheron.mobile" )
+WeatherON.app/WeatherON
+    application-identifier: R4L3X54675.com.weatheron.mobile
+    com.apple.developer.applesignin: ( "Default" )
+    beta-reports-active: true
+    get-task-allow: false
+    com.apple.developer.team-identifier: R4L3X54675
+    aps-environment: production
+    com.apple.security.application-groups: ( "group.com.weatheron.mobile" )
+    com.apple.developer.devicecheck.appattest-environment: production
+						179 button 복사
+					180 container 뉴스 가판대 앱
+						181 text 뉴스 가판대 앱
+					182 text 아니요
+					183 container 사전 렌더링된 아이콘 플래그
+						184 text 사전 렌더링된 아이콘 플래그
+					185 text 예
+		73 content list
+			74 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		75 content list
+			76 text Copyright © 2026 Apple Inc. 모든 권리 보유.
+			77 container
+				78 link Description: 서비스 약관, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				79 text |
+			80 container
+				81 link Description: 개인정보 처리방침, Value: apple.com/legal/privacy
+				82 text |
+			83 link Description: Apple에 문의, Value: appstoreconnect.apple.com/contact-us
+
+The focused UI element is 38 tab (selected, settable, boolean) 빌드 메타데이터, Value: 1

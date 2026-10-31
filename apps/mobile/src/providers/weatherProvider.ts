@@ -199,7 +199,7 @@ async function fetchWeatherSnapshot(
       latitude: location.coordinate.latitude,
       longitude: location.coordinate.longitude,
       timezone: location.timezone,
-      countryCode: location.countryCode === "GLOBAL" ? undefined : location.countryCode,
+      countryCode: location.countryIsoCode ?? (location.countryCode === "GLOBAL" ? undefined : location.countryCode),
       language,
     });
     return normalizeWeatherKitWeather(payload, {

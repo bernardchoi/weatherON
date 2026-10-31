@@ -1,6 +1,50 @@
 import { getZonedDateTimeParts } from "./zonedDateTime";
 import type { DestinationTransportMode } from "@weatheron/shared";
 import type { TravelEstimateResult } from "../providers/travelEstimateClient";
+import type { PlaceSearchResult } from "@weatheron/shared";
+import type { WeatherLocationPreset } from "../providers/weatherLocations";
+
+export type LeavingNowRouteState = {
+  status: "loading" | "ready" | "error" | "offline";
+  result?: TravelEstimateResult;
+};
+
+export function getLeavingNowRouteKey(origin: WeatherLocationPreset, place: PlaceSearchResult, transportMode: DestinationTransportMode): string {
+  return JSON.stringify([origin.locationId, origin.coordinate.latitude, origin.coordinate.longitude, origin.countryCode, place.id, place.coordinate.latitude, place.coordinate.longitude, place.countryCode, transportMode === "auto" ? "drive" : transportMode]);
+}
+
+export function isLeavingNowRouteResult(result: TravelEstimateResult | undefined, nowMs: number): result is TravelEstimateResult {
+  return Boolean(result && result.requestKind === "now" && !result.requestArrivalTime && !result.requestDepartureTime
+    && result.status === "ready" && result.provider !== "fallback" && (result.timingBasis === "current" || result.timingBasis === "route")
+    && Number.isFinite(result.durationSeconds) && result.durationSeconds! >= 0 && result.durationSeconds! <= 7 * 86400
+    && Number.isFinite(Date.parse(result.updatedAt)) && Date.parse(result.updatedAt) <= nowMs
+    && Number.isFinite(Date.parse(result.expiresAt ?? "")));
+}
+
+export function resolveLeavingNowTiming(state: LeavingNowRouteState | undefined, nowMs: number) {
+  const result = isLeavingNowRouteResult(state?.result, nowMs) ? state.result : undefined;
+  const reference = Boolean(result && (state?.status !== "ready" || result.cacheStatus === "stale" || Date.parse(result.expiresAt!) <= nowMs));
+  // A failed lookup keeps the original query's ETA; it must not slide forward as a new lookup.
+  const departure = result ? reference ? Date.parse(result.departureAt ?? result.updatedAt) : nowMs : NaN;
+  return {
+    nowArrivalStatus: state?.status ?? "idle" as const,
+    nowArrivalReference: reference,
+    nowArrivalAt: result && Number.isFinite(departure) ? new Date(departure + result.durationSeconds! * 1000).toISOString() : undefined,
+    nowRouteUpdatedAt: result?.updatedAt,
+    nowRouteExpiresAt: result?.expiresAt,
+    nowRouteMessage: result?.message,
+  };
+}
+
+export function getLeavingNowDescription(timing: ReturnType<typeof resolveLeavingNowTiming>, timeZone: string): string {
+  const clock = (value: string) => {
+    const parts = getZonedDateTimeParts(new Date(value), timeZone);
+    return `${parts.year}/${parts.month}/${parts.day} ${formatRouteClock(value, timeZone)}`;
+  };
+  const status = timing.nowArrivalStatus === "loading" ? "지금 출발 도착 조회 중" : timing.nowArrivalStatus === "offline" ? "오프라인/연결 실패" : timing.nowArrivalStatus === "error" ? "지금 출발 경로 조회 실패" : "";
+  const arrival = timing.nowArrivalAt ? `지금 출발 시 ${clock(timing.nowArrivalAt)} 도착 예상` : "지금 출발 도착 예상 확인 불가";
+  return [status, arrival, timing.nowArrivalReference ? "이전 조회 기준 참고" : timing.nowArrivalAt ? "최신 조회" : "", timing.nowRouteUpdatedAt ? `조회 ${clock(timing.nowRouteUpdatedAt)}` : "", timing.nowRouteMessage].filter(Boolean).join(" · ");
+}
 
 export const maxWalkableDestinationDistanceKm = 25;
 
@@ -74,7 +118,7 @@ export function canScheduleTravelEstimate(estimate: Partial<TravelEstimateResult
 // the reminder lead time is not preparation time and never changes D or B.
 export function resolveTravelTiming(
   estimate: Partial<TravelEstimateResult>, targetAt: string, timeBasis: "arrival" | "departure",
-  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0, nowMs = Date.now(),
+  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0,
 ) {
   const target = Date.parse(targetAt);
   const durationSeconds = estimate.durationSeconds ?? travelMinutes * 60;
@@ -87,7 +131,6 @@ export function resolveTravelTiming(
     targetAt, departureAt: new Date(departure).toISOString(),
     arrivalAt: new Date(departure + durationSeconds * 1000).toISOString(),
     preparationAt: new Date(departure - preparationMinutes * 60000).toISOString(),
-    nowArrivalAt: departure <= nowMs ? new Date(nowMs + durationSeconds * 1000).toISOString() : undefined,
     durationSeconds, bufferSeconds,
     arrivalFeasible: timeBasis === "departure" || departure + durationSeconds * 1000 + bufferSeconds * 1000 <= target,
   };
