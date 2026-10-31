@@ -1,3 +1,8 @@
 {"event": "tail_start", "timestamp": "2026-10-31T13:26:08.813360+00:00"}
 {"event": "departure_end_push", "timestamp": 1793453400684, "status": 200, "environment": "production"}
 {"event": "departure_end_push", "timestamp": 1793453401060, "status": 200, "environment": "production"}
+{"event": "tail_start", "timestamp": "2026-10-31T13:39:13.103936+00:00"}
+{"event": "departure_registration_request", "timestamp": 1793454305484, "method": "POST", "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793454451996, "method": "POST", "status": 200}
+{"event": "departure_registration_request", "timestamp": 1793454512003, "method": "POST", "status": 200}
+{"event": "departure_end_push", "timestamp": 1793454900422, "status": 200, "environment": "production"}

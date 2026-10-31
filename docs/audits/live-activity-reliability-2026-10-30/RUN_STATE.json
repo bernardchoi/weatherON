@@ -113,7 +113,7 @@
     "sanitizedTailSessionId": 9040,
     "tailFilterScript": "docs/audits/live-activity-reliability-2026-10-30/capture-safe-tail.py",
     "rawTokensOrPersonalLocationsStored": false,
-    "durableSanitizedTailSessionId": 83602,
+    "durableSanitizedTailSessionId": 98996,
     "sanitizedEventsFile": "docs/audits/live-activity-reliability-2026-10-30/build58-safe-events.jsonl",
     "heartbeatId": null,
     "heartbeatIntervalMinutes": 5,
@@ -127,12 +127,13 @@
       "mirroringRetryFailed": true,
       "cause": "unknown; do not infer host restart or app failure"
     },
-    "tailState": "captureprocesses stoppedbyagent after test and restoration",
+    "tailState": "stopped after final tests and restoredsettings",
     "oauthLoginSessionId": null,
     "mirroringState": "normal screenshot restored23:45; Home confirmed23:51",
     "heartbeatState": "deleted; usercancelledovernight; no futureovernightwork",
     "safeMethodEventsFile": "docs/audits/live-activity-reliability-2026-10-30/build58-safe-events-method.jsonl",
-    "tailStoppedAt": "2026-10-31T13:35:38.127428+00:00"
+    "tailStoppedAt": "2026-10-31T14:05:49.692026+00:00",
+    "taskState": "shortcoretests concluded with scopedunverifieditems; overnightcancelled; norecurringmonitor"
   },
   "followupAuthorization": {
     "confirmedAtMinute": "2026-10-30T19:08+09:00",
@@ -142,12 +143,13 @@
     "latestInstruction": "2026-10-31 user cancelledovernight, asks current-time shortcoretests then originalrestore"
   },
   "restoration": {
-    "state": "verified complete in physical iPhone mirroring UI and detail reentry",
-    "verifiedAtMinute": "2026-10-31T22:32+09:00",
+    "state": "final verifiedcomplete after approvednightretest; schedule and reducedinterruptions restored",
+    "verifiedAtMinute": "2026-10-31T23:03+09:00",
     "originalSchedulePreserved": true,
     "doNotClaimRestored": false,
     "verification": "18:00 departure; transit; repeatON mon-fri; sat/sunOFF; careON; computed17:00 reminder60min; no other destination/location/labelchanged",
-    "routeState": "original transit still no route/lookupfailure; restored setting is not routeavailabilitysuccess"
+    "routeState": "original transit still no route/lookupfailure; restored setting is not routeavailabilitysuccess",
+    "quietHoursRestoredOnObservedMinute": "2026-10-31T23:02+09:00"
   },
   "shortCoreCase": {
     "state": "shortpending registration and APNs receipt verified; physicalnotification/end and offline recovery unverified",
@@ -189,5 +191,57 @@
     "lockscreenBannerTapVerdict": "unverified; no physicalresponsecollected",
     "appInboxVerdict": "historicaltargetrow taps correctG2; doesnotprovefreshdelivery/readchange",
     "registrationMethodClarification": "routeonlyallowsPOST; earliercommentaryDELETEhypothesiswasincorrect; methodfieldaddedforsafeexplicittrace"
+  },
+  "quietHoursRetest": {
+    "approved": true,
+    "originalReducedInterruptions": true,
+    "temporaryReducedInterruptions": true,
+    "offObservedMinute": "2026-10-31T22:39+09:00",
+    "notificationAt": "2026-10-31T22:45:00+09:00",
+    "departureAt": "2026-10-31T23:45:00+09:00",
+    "osPendingConfirmedMinute": "2026-10-31T22:44+09:00",
+    "lateAirplaneOnObservation": "userreportedairplaneONafter22:30test/restoration; notassignedto22:28",
+    "lateNetworkRecoveryAt": "2026-10-31T22:38:00+09:00",
+    "state": "completed; userconfirmedactualreceipt and requestedlockscreen notificationtap tocorrectdestination; exacttimesnotprovided",
+    "backgroundEntryObservedMinute": "2026-10-31T22:44+09:00",
+    "registrationAt": "2026-10-31T22:45:05.484+09:00",
+    "registrationMethod": "POST",
+    "registrationHttp": 200,
+    "physicalReceipt": "user confirmed normalnotificationreceived",
+    "lockscreenTap": "userconfirmednotificationtapopenedcorrectdestinationdetail",
+    "exactReceiptAndTapTimes": null,
+    "activityDisplayBeforeTap": "not independently specified in user reply",
+    "restoredReducedInterruptions": true,
+    "restoreObservedMinute": "2026-10-31T23:02+09:00",
+    "separateWarmBannerTap": "not performed; do not inferfromlockscreen test"
+  },
+  "networkRetest": {
+    "departureAt": "2026-10-31T22:55:00+09:00",
+    "registrationObservedAt": [
+      "2026-10-31T22:47:31.996+09:00",
+      "2026-10-31T22:48:32.003+09:00"
+    ],
+    "registrationMethod": "POST",
+    "registrationStatus": 200,
+    "appActiveLabelObservedMinute": "2026-10-31T22:48+09:00",
+    "backgroundClockCheckpoint": "2026-10-31T22:49:32+09:00",
+    "disconnectedAt": "2026-10-31T22:50:00+09:00",
+    "disconnectionEvidence": "user reported airplane modeON and disconnected; minute precision",
+    "actualWifiCellularMeasurement": null,
+    "reconnectedAt": "2026-10-31T22:56:00+09:00",
+    "state": "boundedoffline/recoverybehavior observed: visiblebeforeoutage, automaticallyabsentafterrecovery; preciseendpath/timeunverified",
+    "apnsAt": "2026-10-31T22:55:00.422+09:00",
+    "apnsStatus": 200,
+    "apnsEnvironment": "production",
+    "physicalDisplayBeforeDisconnection": "userexplicitlyconfirmedvisible",
+    "physicalStateAfterDeadlineWhileOffline": "userreported no notification; activityvisibilitynotexplicitlyspecified",
+    "recoveryEvidence": "userreportedairplanemodeOFF and connectivityrestored; minute precision",
+    "manualRemoval": false,
+    "physicalEndAfterRecovery": "userconfirmedautomaticallydisappeared, withoutopeningapp/manualremoval",
+    "precisePhysicalEndAt": null,
+    "reportedOfflineElapsedSeconds": 360,
+    "elapsedPrecision": "22:50->22:56 minute-only userreports; notpacket-levelmeasurement",
+    "backgroundCheckpointToApnsSeconds": 328.422,
+    "proofLimit": "doesnotproveAPNSpacketdeliveryat22:56 or exactlywhenactivitydisappearedwhileoffline"
   }
 }
