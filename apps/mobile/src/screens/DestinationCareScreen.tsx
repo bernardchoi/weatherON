@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
-import { AppButton } from "../components/AppButton";
 import { BackButton } from "../components/BackButton";
 import { IosSelectionRow } from "../components/IosSelectionRow";
 import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
@@ -93,7 +92,6 @@ export function DestinationCareScreen({
       ) ?? "") > Date.now();
   const departureReady = targetTimeReady && (timeBasis === "departure" || routeTimingReady);
   const departureTime = timeBasis === "departure" ? selectedTargetTime : getRecommendedDepartureTime(care);
-  const targetArrivalTime = timeBasis === "departure" ? care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : undefined : selectedTargetTime;
   const transportMode = care.departureAdvice?.transportMode ?? selectedDestinationSchedulePreference.transportMode;
   const transportFeedback = useConfirmedOptionFeedback(selectedDestinationSchedulePreference.transportMode);
   const [transportSelectorOpen, setTransportSelectorOpen] = useState(false);
@@ -136,12 +134,7 @@ export function DestinationCareScreen({
   const movementTimeLabel = routeTimingReady
     ? `약 ${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
-  const decisionEyebrow = timeBasis === "departure" ? "도착 판단" : "출발 판단";
-  const departureDecision = departureReady
-    ? timeBasis === "departure"
-      ? targetArrivalTime ? `약 ${targetArrivalTime} 도착 추정` : "도착 시간 확인 전"
-      : `약 ${departureTime} 출발 추정`
-    : targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
+  const departureDecision = targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const liveActivityMeta = departureActivityMatchesDestination
     ? departureActivityStatus.automaticEndScheduled === false
       ? "종료 연결 재시도 중"
@@ -236,17 +229,11 @@ export function DestinationCareScreen({
               <Image source={screenIcons.pin} style={[styles.headerIcon, { tintColor: theme.text }]} resizeMode="contain" />
               <RawText style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</RawText>
             </View>
-            <Text style={[styles.subtitle, pageStyles.caption, { color: theme.subtle }]}>
-              {timeBasis === "departure" ? "출발 시각 · 이동 · 도착 판단" : "도착 목표 · 이동 · 출발 판단"}
-            </Text>
           </View>
         </View>
 
         <LocalizedView accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[[styles.placeImageFrame, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.placeImageFrame]}>
           <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
-          <View style={[styles.generatedImageBadge, { backgroundColor: theme.cardStrong }]}>
-            <Text style={[styles.generatedImageBadgeText, pageStyles.caption, { color: theme.subtle }]}>장소 이미지</Text>
-          </View>
         </LocalizedView>
 
         {justSaved ? (
@@ -258,10 +245,6 @@ export function DestinationCareScreen({
 
         {destinationSaved ? (
           <View style={[[styles.labelPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.labelPanel]}>
-            <View style={styles.labelCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>목적지 라벨</Text>
-              <Text style={[styles.labelHint, { color: theme.subtle }]}>집 또는 회사를 지정</Text>
-            </View>
             <View style={styles.labelOptions}>
               <DestinationLabelOption label={null} selected={selectedDestinationLabel === null} onPress={onSetDestinationLabel} theme={theme} />
               <DestinationLabelOption label="home" selected={selectedDestinationLabel === "home"} onPress={onSetDestinationLabel} theme={theme} />
@@ -281,32 +264,43 @@ export function DestinationCareScreen({
         <View style={[styles.decisionPanel, pageStyles.unboxed]}>
           <View style={[styles.decisionHeader, compactControls && styles.decisionHeaderCompact]}>
             <View style={styles.decisionCopy}>
-              <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>{decisionEyebrow}</Text>
-              <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>{selectedDestinationTravelEstimate.cacheStatus === "stale" ? "이전 조회 결과 · " : ""}{selectedDestinationTravelEstimate.message}</Text>
-              <Text style={[styles.decisionTitle, pageStyles.number, { color: theme.text }]}>{departureDecision}</Text>
-              {care.departureAdvice?.arrivalAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather)} 도착 예상`}</Text> : null}
-              {selectedDestinationTravelEstimate.updatedAt ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{`${care.departureAdvice?.nowArrivalDescription ? "예정 경로 조회" : "조회"} ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
-              {care.departureAdvice?.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{care.departureAdvice.nowArrivalDescription}</Text> : null}
-              {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[pageStyles.caption, { color: theme.muted }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
-              {selectedDestinationTravelEstimate.message.includes("미반영") ? <Text style={[pageStyles.caption, { color: theme.muted }]}>선택한 시간의 교통·배차는 반영되지 않아요. 출발 전 카카오맵에서 같은 출발지·시간·경로로 확인해 주세요.</Text> : null}
-              <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>
-                {departureReady
-                  ? timeBasis === "departure"
-                    ? targetArrivalTime ? `${selectedTargetTime} 출발 · ${movementTimeLabel}` : `${selectedTargetTime} 출발 · 이동 시간 확인 뒤 도착 시간을 안내`
-                    : `${targetArrivalTime} 도착 목표 · ${movementTimeLabel} · 여유 ${bufferMinutes}분`
-                  : targetTimeReady
-                    ? timeBasis === "departure"
-                      ? `${selectedTargetTime} 출발 예정 · 이동 시간 확인 뒤 도착 시간을 안내`
-                      : `${selectedTargetTime} 도착 목표 · 이동 시간 확인 뒤 출발 시간을 안내`
-                    : `${selectedTargetTime} ${timeBasis === "departure" ? "출발" : "도착"} 목표를 다시 선택해야 함`}
-              </Text>
+              <Text style={[styles.decisionEyebrow, pageStyles.caption, { color: theme.gold }]}>이동 일정</Text>
+              {!departureReady ? <Text style={[styles.decisionBody, { color: theme.warm }]}>{departureDecision}</Text> : null}
             </View>
-            <View style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? semanticColor(theme, "successTint") : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
+            <FeedbackPressable accessibilityRole="switch" accessibilityLabel={ctaLabel} accessibilityState={{ checked: destinationCareEnabled }} onPress={onToggleDestinationCare} style={[styles.careStatePill, { backgroundColor: destinationCareEnabled ? semanticColor(theme, "successTint") : theme.cardStrong, borderColor: destinationCareEnabled ? theme.clear : theme.border }]}>
               <Text style={[styles.careStateText, pageStyles.caption, { color: destinationCareEnabled ? theme.clear : theme.subtle }]}>
                 {destinationCareEnabled ? "케어 ON" : "케어 OFF"}
               </Text>
+            </FeedbackPressable>
+          </View>
+          <View style={[styles.journey, { borderColor: theme.border }, fontScale > 1.15 && { flexDirection: "column", alignItems: "stretch" }]}>
+            <View style={styles.journeyStop}>
+              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{timeBasis === "departure" ? "출발" : "출발 예상"}</Text>
+              <Text style={[styles.journeyTime, { color: theme.gold }]}>{departureReady ? departureTime : "—"}</Text>
+            </View>
+            <View style={styles.journeyLeg}>
+              <Text style={[styles.journeyLabel, { color: theme.muted }]}>{movementTimeLabel}</Text>
+              <View style={styles.journeyTrack}>
+                <View style={[styles.journeyDot, { backgroundColor: theme.gold }]} />
+                <View style={[styles.journeyLine, { backgroundColor: theme.border }]} />
+                <Text style={{ color: theme.sky }}>›</Text>
+              </View>
+              {timeBasis === "arrival" && departureReady ? <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{`여유 ${bufferMinutes}분`}</Text> : null}
+            </View>
+            <View style={styles.journeyStop}>
+              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{departureReady && care.departureAdvice?.arrivalAt ? `${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather).split(" ")[0]} 도착 예상` : "도착 예상"}</Text>
+              <Text style={[styles.journeyTime, { color: theme.text }]}>{departureReady && care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : "—"}</Text>
             </View>
           </View>
+          <View style={styles.routeStatus}>
+            {selectedDestinationTravelEstimate.cacheStatus === "stale" ? <Text style={[styles.routeNotice, { color: theme.warm }]}>이전 조회 결과</Text> : null}
+            {selectedDestinationTravelEstimate.message.includes("미반영") ? (
+              <Text style={[styles.routeNotice, { color: theme.muted }]}>교통·배차 미반영 · 출발 전 지도에서 확인</Text>
+            ) : <Text style={[styles.routeNotice, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>}
+            {selectedDestinationTravelEstimate.updatedAt ? <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
+          </View>
+          {care.departureAdvice?.nowArrivalDescription ? <Text style={[styles.routeNotice, { color: theme.muted }]}>{care.departureAdvice.nowArrivalDescription}</Text> : null}
+          {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[styles.routeNotice, { color: theme.warm }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
           <View
             style={[[
               styles.routeSummaryStrip,
@@ -317,7 +311,6 @@ export function DestinationCareScreen({
               icon={screenIcons.pin}
               label="출발지"
               value={placeSearchOrigin?.locationName ?? "선택 필요"}
-              meta={placeSearchOrigin ? "위치 변경" : "직접 선택"}
               color={theme.clear}
               theme={theme}
               accessibilityLabel={`${placeSearchOrigin?.locationName ?? "출발지 미설정"}, 출발지 변경`}
@@ -328,9 +321,6 @@ export function DestinationCareScreen({
               icon={screenIcons.clock}
               label={timeBasis === "departure" ? "출발 시간" : "도착 목표"}
               value={selectedTargetTime}
-              meta={departureReady
-                ? timeBasis === "departure" ? targetArrivalTime ? `도착 추정 약 ${targetArrivalTime}` : "도착 확인 전" : `${departureTime} 출발`
-                : "시간 변경"}
               color={theme.sky}
               theme={theme}
               accessibilityLabel={`${timeBasis === "departure" ? "출발" : "도착"} 희망 시각 ${selectedTargetTime}, 시간 변경 시트 열기`}
@@ -341,7 +331,6 @@ export function DestinationCareScreen({
               icon={screenIcons.depart}
               label="이동수단"
               value={transportLabel}
-              meta={movementTimeLabel}
               color={theme.gold}
               theme={theme}
               accessibilityLabel={`이동수단 ${transportLabel}, 선택 시트 열기`}
@@ -398,7 +387,6 @@ export function DestinationCareScreen({
                 <Text style={[styles.routeNotice, { color: theme.warm }]}>조회와 길찾기는 가능함. 알림을 켤 때만 권한이 필요함</Text>
               ) : null}
 
-              <AppButton label={ctaLabel} accessibilityLabel={ctaLabel} onPress={onToggleDestinationCare} variant="outlined" tone={destinationCareEnabled ? "warning" : "primary"} />
             </>
           </DropdownMotion>
         </View>
@@ -587,7 +575,6 @@ function SummaryChip({
   icon,
   label,
   value,
-  meta,
   color,
   theme,
   accessibilityLabel,
@@ -597,7 +584,6 @@ function SummaryChip({
   icon: number;
   label: string;
   value: string;
-  meta: string;
   color: string;
   theme: AppTheme;
   accessibilityLabel: string;
@@ -622,7 +608,7 @@ function SummaryChip({
       </View>
       <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryLabel, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.summaryLabel]}>{label}</Text>
       <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryValue, pageStyles.body, { color: theme.text }], Platform.OS === "ios" && ambientVisual.summaryValue]}>{value}</Text>
-      <Text numberOfLines={Platform.OS === "ios" ? undefined : 1} style={[[styles.summaryMeta, pageStyles.compactCaption, { color }], Platform.OS === "ios" && ambientVisual.summaryMeta]}>{meta}</Text>
+      <Text accessibilityElementsHidden importantForAccessibility="no" style={{ color: theme.subtle }}>›</Text>
     </FeedbackPressable>
   );
 }
@@ -825,7 +811,7 @@ function RepeatSchedulePanel({
 }) {
   return (
     <View style={[[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.settingsPanel]}>
-      <View style={styles.settingsRow}>
+      <View style={[styles.settingsRow, Platform.OS === "ios" && ambientVisual.settingsRow]}>
         <View style={styles.settingsRowMain}>
           <View style={[[styles.settingsIconFrame, { backgroundColor: repeatEnabled ? `${theme.clear}18` : theme.cardMuted }], Platform.OS === "ios" && ambientVisual.settingsIconFrame]}>
             <Image source={screenIcons.clock} style={[styles.settingsIcon, { tintColor: repeatEnabled ? theme.clear : theme.subtle }]} resizeMode="contain" />
@@ -1010,14 +996,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.lg,
   },
-  labelCopy: {
-    gap: 2,
-  },
-  labelHint: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
   labelOptions: {
     flexDirection: "row",
     gap: spacing.xs,
@@ -1077,11 +1055,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0,
   },
-  subtitle: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
   savedBanner: {
     gap: 3,
     padding: 14,
@@ -1099,8 +1072,23 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: "700",
   },
+  journey: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  journeyStop: { flex: 1, minWidth: 0, gap: 6 },
+  journeyLeg: { flex: 0.8, minWidth: 0, gap: 6, alignItems: "center" },
+  journeyLabel: { fontSize: 12, lineHeight: 18 },
+  journeyTime: { fontSize: 24, lineHeight: 32, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  journeyTrack: { flexDirection: "row", alignItems: "center", width: "100%", gap: 4 },
+  journeyDot: { width: 6, height: 6, borderRadius: 3 },
+  journeyLine: { flex: 1, height: 1 },
+  routeStatus: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", columnGap: spacing.sm },
   decisionPanel: {
-    gap: spacing.md,
+    gap: spacing.sm,
     borderRadius: radius.lg,
   },
   carePanel: {
@@ -1110,7 +1098,7 @@ const styles = StyleSheet.create({
   },
   decisionHeader: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
   },
@@ -1135,31 +1123,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  generatedImageBadge: {
-    position: "absolute",
-    right: spacing.sm,
-    bottom: spacing.sm,
-    minHeight: 24,
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    opacity: 0.9,
-  },
-  generatedImageBadgeText: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-  },
   decisionEyebrow: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
-  },
-  decisionTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: "900",
-    letterSpacing: 0,
   },
   decisionBody: {
     fontSize: 13,
@@ -1167,7 +1134,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   careStatePill: {
-    minHeight: 30,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
     borderRadius: radius.pill,
@@ -1292,11 +1259,6 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 16,
     lineHeight: 20,
-    fontWeight: "900",
-  },
-  summaryMeta: {
-    fontSize: 10,
-    lineHeight: 13,
     fontWeight: "900",
   },
   decisionStats: {
@@ -1733,8 +1695,7 @@ const ambientVisual = StyleSheet.create({
     "borderWidth": 0,
     "borderRadius": 0,
     "shadowOpacity": 0,
-    "paddingHorizontal": 0,
-    "paddingVertical": 0,
+    "padding": 0,
     "gap": 12
   },
   "labelPanel": {
@@ -1784,10 +1745,10 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
     "borderBottomWidth": 0.5,
-    "paddingVertical": 10,
+    "paddingVertical": 8,
     "flex": 0,
     "width": "100%",
-    "minHeight": 64,
+    "minHeight": 56,
     "flexDirection": "row",
     "alignItems": "center",
     "flexWrap": "wrap",
@@ -1804,13 +1765,6 @@ const ambientVisual = StyleSheet.create({
     "lineHeight": 23,
     "fontWeight": "500",
     "maxWidth": "65%"
-  },
-  "summaryMeta": {
-    "fontSize": 14,
-    "lineHeight": 20,
-    "fontWeight": "400",
-    "flexBasis": "100%",
-    "paddingLeft": 36
   },
   "summaryIconFrame": {
     "backgroundColor": "transparent",
@@ -1831,9 +1785,9 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
     "borderBottomWidth": 0.5,
-    "paddingVertical": 18,
+    "paddingVertical": 10,
     "flex": 0,
-    "minHeight": 64
+    "minHeight": 56
   },
   "quickActionIconFrame": {
     "backgroundColor": "transparent",
@@ -1858,8 +1812,10 @@ const ambientVisual = StyleSheet.create({
     "borderWidth": 0,
     "borderRadius": 0,
     "shadowOpacity": 0,
-    "paddingHorizontal": 0
+    "paddingHorizontal": 0,
+    "paddingVertical": 8
   },
+  "settingsRow": { "minHeight": 48 },
   "settingsIconFrame": {
     "backgroundColor": "transparent",
     "borderWidth": 0

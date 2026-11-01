@@ -11,6 +11,9 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "이동 일정": "Trip schedule",
+    "출발 예상": "Estimated departure",
+    "교통·배차 미반영 · 출발 전 지도에서 확인": "Traffic and service schedules excluded · Check the map before leaving",
     "강한 강수에 대비해 방수 겉옷과 신발을 챙겨요": "Bring waterproof outerwear and shoes for heavy precipitation",
     "추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요": "Cold weather calls for a warm coat and top",
     "더운 날씨라 통풍이 잘되는 가벼운 차림이 좋아요": "Dress lightly in breathable clothes for the heat",
@@ -155,6 +158,9 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "이동 일정": "移動予定",
+    "출발 예상": "出発予想",
+    "교통·배차 미반영 · 출발 전 지도에서 확인": "交通・運行時刻は未反映・出発前に地図で確認",
     "강한 강수에 대비해 방수 겉옷과 신발을 챙겨요": "強い雨や雪に備えて、防水アウターと靴を用意しましょう",
     "추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요": "寒さに備えて、防寒アウターと暖かいトップスがおすすめです",
     "더운 날씨라 통풍이 잘되는 가벼운 차림이 좋아요": "暑さに合わせて、通気性のよい軽い服装がおすすめです",
