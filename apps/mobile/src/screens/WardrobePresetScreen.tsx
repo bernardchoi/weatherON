@@ -134,9 +134,9 @@ export function WardrobePresetScreen({
       showWordmark={false}
       compactHeader
       contentPaddingTop={layout.weatherTopPadding}
-      contentGap={layout.destinationContentGap}
+      contentGap={Platform.OS === "ios" ? 12 : layout.destinationContentGap}
     >
-      <Section title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
+      <Section compact={Platform.OS === "ios"} title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
         <View style={[[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoEntryCard]}>
           <View style={styles.copy}>
             <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>사진 한 장으로 옷장에 쏙</Text>
@@ -160,7 +160,7 @@ export function WardrobePresetScreen({
         />
       </View>
 
-      <Section title="필터" caption="아이템·계절·목적 기준" accent="sky">
+      <Section compact={Platform.OS === "ios"} title="필터" caption="아이템·계절·목적 기준" accent="sky">
         <WardrobeFilterControls
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
@@ -172,7 +172,7 @@ export function WardrobePresetScreen({
       </Section>
 
       {previewItem ? (
-        <Section
+        <Section compact={Platform.OS === "ios"}
           title="미리보기"
           caption={`${getWardrobeCategoryLabel(previewItem.category)} · ${formatOutfitTags(previewItem.seasons)} · ${formatOutfitTags(previewItem.purposes)}`}
           accent="clear"
@@ -218,7 +218,7 @@ export function WardrobePresetScreen({
         </Section>
       ) : null}
 
-      <Section
+      <Section compact={Platform.OS === "ios"}
         title="프리셋 전체"
         caption={categoryFilter === "all" ? `${filteredItems.length}개 · 카테고리를 열어 확인` : `${filteredItems.length}개 · 카드를 눌러 미리보고 바로 추가`}
         accent="gold"
@@ -255,7 +255,7 @@ export function WardrobePresetScreen({
         )}
       </Section>
 
-      <Section title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
+      <Section compact={Platform.OS === "ios"} title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
         <View style={styles.actions}>
           <AppButton label="코디 보기" onPress={() => onNavigate("C1")} tone="secondary" />
           <AppButton label="내 옷장" onPress={() => onNavigate("C2")} tone="secondary" />
@@ -371,8 +371,8 @@ function PresetCard({
       style={[[
         styles.presetCard,
         {
-          width: Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.wardrobeGridItemWidth,
-          minHeight: layout.wardrobePresetCardMinHeight,
+          width: Platform.OS === "ios" ? layout.width < 350 || fontScale > 1.3 ? "47%" : layout.isTablet ? "23%" : "30.8%" : layout.wardrobeGridItemWidth,
+          minHeight: Platform.OS === "ios" ? 0 : layout.wardrobePresetCardMinHeight,
           backgroundColor: theme.cardMuted,
           borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
         },
@@ -548,7 +548,7 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 16,
+    "paddingVertical": 4,
     "gap": 16
   },
   "searchInput": {
@@ -567,14 +567,14 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 16,
+    "paddingVertical": 4,
     "gap": 16
   },
   "selectedImageWrap": {
     "backgroundColor": "transparent",
     "borderWidth": 0,
-    "width": 86,
-    "height": 108
+    "width": 64,
+    "height": 72
   },
   "title": {
     "fontSize": 16,
@@ -593,11 +593,11 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 16,
+    "paddingVertical": 4,
     "gap": 16
   },
   "categoryHeader": {
-    "minHeight": 56
+    "minHeight": 44
   },
   "categoryTitle": {
     "fontSize": 19,
@@ -627,12 +627,12 @@ const ambientVisual = StyleSheet.create({
     "elevation": 0,
     "paddingHorizontal": 0,
     "padding": 0,
-    "gap": 12
+    "gap": 6
   },
   "presetImageWrap": {
     "backgroundColor": "transparent",
     "borderWidth": 0,
-    "height": 148
+    "height": 100
   },
   "presetImage": {
     "width": "94%",
@@ -642,7 +642,7 @@ const ambientVisual = StyleSheet.create({
     "fontSize": 15,
     "lineHeight": 22,
     "fontWeight": "600",
-    "minHeight": 44
+    "minHeight": 0
   },
   "presetMeta": {
     "fontSize": 14,
@@ -650,7 +650,7 @@ const ambientVisual = StyleSheet.create({
     "fontWeight": "400"
   },
   "presetGrid": {
-    "rowGap": 24
+    "rowGap": 12
   },
   "empty": {
     "fontSize": 16,

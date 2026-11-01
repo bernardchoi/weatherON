@@ -53,16 +53,28 @@ for(const dark of [true,false])for(const phase of ['day','twilight','night','unk
  assert.equal(!!light,phase==='day'||phase==='twilight','UI theme never selects day/night');
  if(light){const s=light.props.style;assert.equal(s.backgroundColor,undefined);assert.equal(s.borderWidth,undefined);assert.ok(s.width>440&&s.height>758&&s.left<0&&s.top<0,'solar field edges extend outside screen');assert.ok(s.experimental_backgroundImage.includes('00 100%'));assert.ok(s.transform.some(v=>v.translateX.config.outputRange.some(x=>x!==0)),'shared native clock changes sunlight placement');}
 }
+// Flattened sunlight opacity must preserve the old curve, including static phase zero.
+for(const dark of [false,true]) for(const solar of ['day','twilight']) for(let i=0;i<=100;i++) {
+ const phase=i/100;
+ const tree=AmbientWeatherLayer({kind:'clear',particles:0,phase:new Value(phase),moving:false,daylight:{phase:solar,season:'autumn'},skyRegion:{x:0,y:0,width:440,height:956},dark});
+ const light=all(tree).find(n=>n.props?.testID==='ambient-day-sunlight');
+ const opacity=light.props.style.opacity;
+ const [low,high]=dark?[.30,.52]:[.86,.94];
+ const oldOpacity=low+(high-low)*(1-Math.abs(2*phase-1));
+ assert.ok(Math.abs(scalar(opacity)-oldOpacity)<1e-12,'single interpolation preserves the full sunlight brightness curve');
+ assert.deepEqual(opacity.config.inputRange,[0,.5,1],'opacity consumes the shared phase directly');
+}
 const target=ambientStars[0],sky={x:0,y:0,width:440,height:758};const r={x:target.x*440-8,y:target.y*758-8,width:16,height:16};
 const renderSky=y=>AmbientWeatherLayer({kind:'clear',particles:0,phase:new Value(.2),moving:false,daylight:{phase:'night',season:'autumn'},skyRegion:sky,readingAreas:[r],scrollOffset:new Value(y),dark:true});
 const opacity=y=>scalar(all(renderSky(y)).find(n=>n.props?.testID==='ambient-sky-star').props.style.opacity);
 assert.ok(opacity(80)>opacity(0)*10,'native scroll weight follows the actual measured reading area');
 assert.equal(all(renderSky(0)).filter(n=>n.props?.testID==='ambient-sky-star').length,26);assert.equal(all(renderSky(80)).filter(n=>n.props?.testID==='ambient-sky-star').length,26,'scroll never removes sky stars');
-for(const kind of ['rain','snow','storm']) {
+for(const kind of ['rain','snow','storm']) for(const dark of [false,true]) for(const phase of [0,.5]) {
  const particles=ambientWeatherMotion(kind,true,3,2).particles;
- const render=y=>AmbientWeatherLayer({kind,particles,phase:new Value(.5),moving:false,daylight:{phase:'day',season:'autumn'},skyRegion:sky,readingAreas:[{x:0,y:0,width:440,height:758}],scrollOffset:new Value(y),dark:true});
+ const render=y=>AmbientWeatherLayer({kind,particles,phase:new Value(phase),moving:false,daylight:{phase:'day',season:'autumn'},skyRegion:sky,readingAreas:[{x:0,y:0,width:440,height:758}],scrollOffset:new Value(y),dark});
  const drops=y=>all(render(y)).filter(n=>n.props?.testID==='ambient-weather-particle');
  assert.equal(drops(0).length,particles);
+ assert.ok(drops(900).some(n=>scalar(n.props.style.opacity)>.1),'static Reduce Motion phase retains visible precipitation outside reading areas');
  assert.ok(drops(0).reduce((sum,n)=>sum+scalar(n.props.style.opacity),0)<drops(900).reduce((sum,n)=>sum+scalar(n.props.style.opacity),0)*.1,'particles fade across actual reading regions, tracking native scroll');
 }
 const home=fs.readFileSync(base+'screens/HomeScreen.tsx','utf8');assert.ok(home.includes('Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }]'));assert.equal(home.includes('setAmbientScrollOffset'),false,'no React state update per scroll frame');

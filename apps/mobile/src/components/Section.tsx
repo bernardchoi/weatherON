@@ -27,7 +27,7 @@ export function Section({ title, titleStyle, caption, compact = false, contentGa
           contentGap === undefined ? null : { gap: contentGap },
           { backgroundColor: theme.card, borderColor: theme.border },
           pageStyles.card,
-          ambient && { ...pageStyles.unboxed, paddingHorizontal: 0, paddingVertical: 12, gap: 20 },
+          ambient && { ...pageStyles.unboxed, paddingHorizontal: 0, paddingVertical: compact ? 4 : 12, gap: contentGap ?? (compact ? 10 : 20) },
         ]}
       >
         <View style={[styles.header, compact ? styles.headerCompact : null]}>

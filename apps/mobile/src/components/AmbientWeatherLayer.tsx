@@ -51,7 +51,6 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
   // Every weather field shares the measured Home sky, never the icon's bounds.
   const weatherRegion = sky;
 
-  const wave = phase.interpolate({ inputRange: [0, .5, 1], outputRange: [0, 1, 0] });
   const warm = daylight?.phase === "twilight";
   return <View testID="ambient-weather-region" pointerEvents="none" style={{ position: "absolute", left: weatherRegion.x, top: weatherRegion.y, width: weatherRegion.width, height: weatherRegion.height, overflow: "hidden", opacity: quiet ? .35 : 1 }}>
     {kind === "clear" && daylight && (daylight.phase === "day" || daylight.phase === "twilight") ? <>
@@ -60,17 +59,17 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
         // The full measured sky and transparent endpoints prevent rectangular light edges.
         // UI theme affects ink intensity; actual solar phase alone selects day/twilight.
         experimental_backgroundImage: dark
-          ? `radial-gradient(ellipse 21% 13% at 76% 4%, ${warm ? "#FFCA9A08" : "#FFF9EA08"} 0%, #FFF9EA00 100%), radial-gradient(ellipse 68% 46% at 76% -4%, ${warm ? "#FFCA9A08" : "#FFE9BB08"} 0%, #FFE9BB00 100%), linear-gradient(158deg, #FFFFFF00 37%, #FFFFFF04 42%, #FFFFFF00 48%), linear-gradient(175deg, #FFFFFF00 45%, #FFFFFF04 48%, #FFFFFF00 53%)`
+          ? `radial-gradient(ellipse 21% 13% at 76% 4%, ${warm ? "#FFCA9A10" : "#FFF9EA10"} 0%, #FFF9EA00 100%), radial-gradient(ellipse 68% 46% at 76% -4%, ${warm ? "#FFCA9A10" : "#FFE9BB10"} 0%, #FFE9BB00 100%), linear-gradient(158deg, #FFFFFF00 37%, #FFFFFF08 42%, #FFFFFF00 48%), linear-gradient(175deg, #FFFFFF00 45%, #FFFFFF08 48%, #FFFFFF00 53%)`
           : warm
-          ? "radial-gradient(ellipse 21% 13% at 76% 4%, #FFF1D6F0 0%, #FFE4BD98 28%, #FFE4BD00 100%), radial-gradient(ellipse 68% 46% at 76% -4%, #FFCA9A68 0%, #FFCA9A28 38%, #FFCA9A00 100%), linear-gradient(158deg, #FFCA9A00 37%, #FFCA9A3C 42%, #FFCA9A00 48%), linear-gradient(175deg, #FFCA9A00 45%, #FFCA9A22 48%, #FFCA9A00 53%)"
-          : "radial-gradient(ellipse 21% 13% at 76% 4%, #FFFFF6F5 0%, #FFF7E6B0 28%, #FFF7E600 100%), radial-gradient(ellipse 68% 46% at 76% -4%, #FFF1D86A 0%, #FFF1D826 38%, #FFF1D800 100%), linear-gradient(158deg, #FFFFFF00 37%, #FFFFFF3C 42%, #FFFFFF00 48%), linear-gradient(175deg, #FFFFFF00 45%, #FFFFFF22 48%, #FFFFFF00 53%)",
-        opacity: wave.interpolate({ inputRange: [0, 1], outputRange: dark ? [.30, .52] : [.86, .94] }),
+          ? "radial-gradient(ellipse 21% 13% at 76% 4%, #FFF1D6F0 0%, #FFE4BD98 28%, #FFE4BD00 100%), radial-gradient(ellipse 68% 46% at 76% -4%, #FFCA9A68 0%, #FFCA9A28 38%, #FFCA9A00 100%), linear-gradient(158deg, #FFCA9A00 37%, #FFCA9A64 42%, #FFCA9A00 48%), linear-gradient(175deg, #FFCA9A00 45%, #FFCA9A40 48%, #FFCA9A00 53%)"
+          : "radial-gradient(ellipse 21% 13% at 76% 4%, #FFFFF6F5 0%, #FFF7E6B0 28%, #FFF7E600 100%), radial-gradient(ellipse 68% 46% at 76% -4%, #FFF1D86A 0%, #FFF1D826 38%, #FFF1D800 100%), linear-gradient(158deg, #FFFFFF00 37%, #FFFFFF64 42%, #FFFFFF00 48%), linear-gradient(175deg, #FFFFFF00 45%, #FFFFFF40 48%, #FFFFFF00 53%)",
+        opacity: phase.interpolate({ inputRange: [0, .5, 1], outputRange: dark ? [.30, .52, .30] : [.86, .94, .86] }),
         transform: [{ translateX: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: [0, -18, 13, 0] }) }, { translateY: phase.interpolate({ inputRange: [0, .5, 1], outputRange: [0, 16, 0] }) }, { rotate: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: ["0deg", "-1.6deg", "1.1deg", "0deg"] }) }],
       }} />
     </> : null}
     {["cloud", "partly-cloudy", "rain", "storm", "thunder", "snow", "fog"].includes(kind) ? Array.from({ length: 3 }, (_, i) => <Animated.View key={`cloud${i}`} testID="ambient-cloud-volume" style={{ position: "absolute", left: -weatherRegion.width * .3, top: weatherRegion.height * ((kind === "fog" ? .18 : .02) + i * .22), width: weatherRegion.width * 1.6, height: weatherRegion.height * (kind === "fog" ? .25 : .4),
-      experimental_backgroundImage: `radial-gradient(ellipse at center, ${dark ? "#A6BFDA52" : "#FFFFFFC0"} 0%, ${dark ? "#A6BFDA00" : "#FFFFFF00"} 70%)`,
-      opacity: phase.interpolate({ inputRange: [0, .25, .6, 1], outputRange: (i % 2 ? [.10, .19, .12, .10] : [.18, .11, .24, .18]).map(value => dark ? value / 3 : value) }), transform: [{ translateX: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: [0, (i % 2 ? -1 : 1) * (30 + wind * 2), (i % 2 ? 1 : -1) * 18, 0] }) }, { translateY: phase.interpolate({ inputRange: [0, .4, 1], outputRange: [0, i % 2 ? -16 : 12, 0] }) }] }} />) : null}
+      experimental_backgroundImage: `radial-gradient(ellipse at center, ${dark ? "#A6BFDA52" : "#FFFFFFE0"} 0%, ${dark ? "#A6BFDA00" : "#FFFFFF00"} 70%)`,
+      opacity: phase.interpolate({ inputRange: [0, .25, .6, 1], outputRange: (i % 2 ? [.16, .26, .18, .16] : [.26, .18, .32, .26]).map(value => dark ? value / 2.5 : value) }), transform: [{ translateX: phase.interpolate({ inputRange: [0, .3, .7, 1], outputRange: [0, (i % 2 ? -1 : 1) * (30 + wind * 2), (i % 2 ? 1 : -1) * 18, 0] }) }, { translateY: phase.interpolate({ inputRange: [0, .4, 1], outputRange: [0, i % 2 ? -16 : 12, 0] }) }] }} />) : null}
     {Array.from({ length: particles }, (_, i) => {
       const snow = kind === "snow";
       // Several traversals inside a long common native clock, with invisible resets.
@@ -94,7 +93,7 @@ export function AmbientWeatherLayer({ kind, particles, phase, moving, daylight, 
         const inside = contentY.interpolate({ inputRange: [area.y - 12, area.y, area.y + area.height, area.y + area.height + 12], outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
         readWeight = Animated.multiply(readWeight, Animated.subtract(1, Animated.multiply(.965, inside)));
       }
-      return <Animated.View key={`particle${i}`} testID="ambient-weather-particle" style={{ position: "absolute", left: x, top: -14, width: snow ? 3 : 1, height: snow ? 3 : 12, borderRadius: snow ? 2 : 0, backgroundColor: dark ? "#D6E9F9" : "#568DAF", opacity: Animated.multiply(readWeight, phase.interpolate({ inputRange, outputRange: visibility.map(value => value * (snow ? .55 : .34)) })), transform: [{ translateY: fallingY }, { translateX: phase.interpolate({ inputRange: [0, .5, 1], outputRange: snow ? [-5, 8 + wind, -5] : [0, 3 + wind, 0] }) }] }} />;
+      return <Animated.View key={`particle${i}`} testID="ambient-weather-particle" style={{ position: "absolute", left: x, top: -14, width: snow ? 4 : 1.25, height: snow ? 4 : 14, borderRadius: snow ? 2 : 0, backgroundColor: dark ? "#D6E9F9" : snow ? "#47758F" : "#568DAF", opacity: Animated.multiply(readWeight, phase.interpolate({ inputRange, outputRange: visibility.map(value => value * (snow ? .62 : .42)) })), transform: [{ translateY: fallingY }, { translateX: phase.interpolate({ inputRange: [0, .5, 1], outputRange: snow ? [-5, 8 + wind, -5] : [0, 3 + wind, 0] }) }] }} />;
     })}
     {/* Only explicit provider thunder evidence adds a slow, local cloud illumination. No flash. */}
     {kind === "thunder" ? <Animated.View testID="ambient-thunder-cloud-light" style={{ position: "absolute", left: weatherRegion.width * .55, top: weatherRegion.height * .1, width: weatherRegion.width * .6, height: weatherRegion.height * .24,

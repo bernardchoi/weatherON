@@ -49,7 +49,7 @@ export function WardrobeScreen({
     return categoryMatch && seasonMatch && purposeMatch;
   });
   const { fontScale } = useWindowDimensions();
-  const wardrobeItemWidth = Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const wardrobeItemWidth = Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
 
   return (
     <AppScreen
@@ -60,7 +60,7 @@ export function WardrobeScreen({
       showWordmark={false}
       compactHeader
       contentPaddingTop={layout.weatherTopPadding}
-      contentGap={layout.destinationContentGap}
+      contentGap={Platform.OS === "ios" ? 12 : layout.destinationContentGap}
     >
       {removedItem ? (
         <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
@@ -70,7 +70,7 @@ export function WardrobeScreen({
         <View
           style={[[
             styles.infoCard,
-            layout.isShort || layout.isNarrow ? styles.infoCardShort : null,
+            Platform.OS !== "ios" && (layout.isShort || layout.isNarrow) ? styles.infoCardShort : null,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
           ], Platform.OS === "ios" && ambientVisual.infoCard]}
         >
@@ -122,7 +122,7 @@ export function WardrobeScreen({
                 styles.addTile,
                 {
                   width: wardrobeItemWidth,
-                  minHeight: layout.wardrobeCardMinHeight,
+                  minHeight: Platform.OS === "ios" ? 0 : layout.wardrobeCardMinHeight,
                   borderColor: theme.border,
                 },
               ]}
@@ -138,7 +138,7 @@ export function WardrobeScreen({
 }
 
 function WardrobeSection({ children, ...props }: React.ComponentProps<typeof Section>) {
-  return Platform.OS === "ios" ? <View style={{ gap: 20 }}>{children}</View> : <Section {...props}>{children}</Section>;
+  return Platform.OS === "ios" ? <View style={{ gap: 12 }}>{children}</View> : <Section {...props}>{children}</Section>;
 }
 
 function WardrobeItemCard({
@@ -154,26 +154,8 @@ function WardrobeItemCard({
   const layout = useResponsiveLayout();
   const imageSource = getOutfitImageSource(item.imageUrl);
   const { fontScale } = useWindowDimensions();
-  const wardrobeItemWidth = Platform.OS === "ios" && (layout.isNarrow || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
-  return (
-    <View
-      style={[[
-        styles.card,
-        {
-          width: wardrobeItemWidth,
-          minHeight: layout.wardrobeCardMinHeight,
-          backgroundColor: theme.cardMuted,
-          borderColor: theme.clear,
-        },
-      ], Platform.OS === "ios" && ambientVisual.card]}
-    >
-      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={[styles.cardMain, Platform.OS === "ios" && ambientVisual.cardMain]}>
-        <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell, { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md }]}>
-          {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
-        </View>
-        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</Text>}
-        <Text style={[[styles.itemMeta, styles.cardMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.itemMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
-      </FeedbackPressable>
+  const wardrobeItemWidth = Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const deleteControl = (
       <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
         accessibilityRole="button"
@@ -185,6 +167,30 @@ function WardrobeItemCard({
           <Image source={Platform.OS === "ios" ? ambientUiIcons.delete : uiIconAssets.trash} style={[[styles.deleteIcon, { tintColor: theme.warm }], Platform.OS === "ios" && ambientVisual.deleteIcon]} resizeMode="contain" />
         </View>
       </FeedbackPressable>
+  );
+  return (
+    <View
+      style={[[
+        styles.card,
+        {
+          width: wardrobeItemWidth,
+          minHeight: Platform.OS === "ios" ? 0 : layout.wardrobeCardMinHeight,
+          backgroundColor: theme.cardMuted,
+          borderColor: theme.clear,
+        },
+      ], Platform.OS === "ios" && ambientVisual.card]}
+    >
+      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onOpen} style={[styles.cardMain, Platform.OS === "ios" && ambientVisual.cardMain]}>
+        <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell, { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md }]}>
+          {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
+        </View>
+        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</Text>}
+        {Platform.OS !== "ios" ? <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text> : null}
+      </FeedbackPressable>
+      {Platform.OS === "ios" ? <View style={ambientVisual.cardFooter}>
+        <Text style={[ambientVisual.itemMeta, { color: theme.muted, flex: 1 }]}>{getWardrobeCategoryLabel(item.category)}</Text>
+        {deleteControl}
+      </View> : deleteControl}
     </View>
   );
 }
@@ -356,13 +362,14 @@ const styles = StyleSheet.create({
 // iOS Ambient image-led wardrobe; original Android layout is retained.
 const ambientVisual = StyleSheet.create({
   "infoCard": {
+    "minHeight": 44,
     "backgroundColor": "transparent",
     "borderWidth": 0,
     "borderRadius": 0,
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 16,
+    "paddingVertical": 4,
     "gap": 16
   },
   "title": {
@@ -384,15 +391,16 @@ const ambientVisual = StyleSheet.create({
     "paddingHorizontal": 0,
     "overflow": "visible"
   },
+  cardFooter: { flexDirection: "row", alignItems: "center" },
   "cardMain": {
     "paddingHorizontal": 0,
-    "paddingTop": 34,
-    "gap": 8
+    "paddingTop": 0,
+    "gap": 4
   },
   "imageWell": {
     "backgroundColor": "transparent",
     "borderWidth": 0,
-    "height": 132
+    "height": 100
   },
   "itemImage": {
     "width": "94%",
@@ -407,8 +415,10 @@ const ambientVisual = StyleSheet.create({
     "paddingRight": 0
   },
   "deleteButton": {
+    "position": "relative",
     "bottom": undefined,
-    "top": 0
+    "right": undefined,
+    "alignSelf": "flex-end"
   },
   "deleteButtonSurface": {
     "backgroundColor": "transparent",
@@ -419,7 +429,7 @@ const ambientVisual = StyleSheet.create({
     "height": 20
   },
   "grid": {
-    "rowGap": 24
+    "rowGap": 12
   },
   "emptyState": {
     "alignItems": "stretch",
@@ -438,7 +448,7 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 16,
+    "paddingVertical": 4,
     "gap": 16
   },
   "removedTitle": {
