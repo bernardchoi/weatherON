@@ -36,7 +36,9 @@ const bindings={...outing.exports,Platform:{OS:'ios'},getTravelMinutesForTranspo
 const cards=new Function(...Object.keys(bindings),ts.transpile(model.getText(listAst))+';return buildDestinationCards;')(...Object.values(bindings));
 const w={...weather,source:'openmeteo',observedAt:new Date().toISOString(),current:{...weather.current,tempC:23},hourly:[{time:target,tempC:23,windMs:2,rainProbabilityPct:51,precipitationMm:0,condition:'cloud'},{time:new Date(Date.parse(target)+3600000).toISOString(),tempC:23,windMs:2,rainProbabilityPct:82,precipitationMm:0,condition:'rain'}]};
 const d={place:base,schedulePreference:{timeBasis:'arrival',targetArrivalTime:'10:00',repeatEnabled:false,repeatDays:[]},alertCondition:{rainThresholdPct:50,windThresholdMs:8}};
-const card=cards([d],{originWeather:w,destinationWeather:w},{[base.id]:w},'c',[],{},true)[0];assert.equal(card.rainPct,'51%');assert.match(card.actionText,/51%/);
+const card=cards([d],{originWeather:w,destinationWeather:w},{[base.id]:w},'c',[],{},true)[0];assert.equal(card.rainPct,'51%');assert.match(card.actionText,/기온 23°C/);assert.doesNotMatch(card.actionText,/82%/);
+const rainy={...w,hourly:w.hourly.map((hour,index)=>index===0?{...hour,rainProbabilityPct:61}:hour)};
+const rainyCard=cards([d],{originWeather:w,destinationWeather:rainy},{[base.id]:rainy},'c',[],{},true)[0];assert.equal(rainyCard.rainPct,'61%');assert.match(rainyCard.actionText,/강수확률 61%/);assert.doesNotMatch(rainyCard.actionText,/82%/);
 assert.match(cards([d],{originWeather:w,destinationWeather:w},{},'c',[],{},true)[0].actionText,/확인 필요/);
 console.log('PASS actual iOS destination model uses arrival probability, never full-horizon maximum or another place fallback');
 const zero=m.exports.normalizeWeatherKitWeather({currentWeather:{asOf:new Date().toISOString(),temperature:0,temperatureApparent:0,humidity:0,windSpeed:0},forecastHourly:{hours:[{forecastStart:new Date().toISOString(),temperature:0,precipitationChance:0,precipitationAmount:0,windSpeed:0,conditionCode:'Clear'}]}},{locationId:'audit',locationName:'서울',countryCode:'KR',timezone:'Asia/Seoul'});

@@ -48,7 +48,7 @@ assertSourceIncludes("apps/mobile/src/state/useWeatherOnAppState.ts", [
   "readPersistedWeatherProviderResult",
   "savePersistedWeatherProviderResult",
   "weatherLoadedFromNetworkRef",
-  "originCountryCode: originLocation.countryCode",
+  "originCountryCode: origin.countryCode",
   "setRoute(persistedState.onboardingCompleted ? \"H1\" : persistedState.onboardingProgress.route)",
   "startAccountGate",
   "const result = await requestDeviceWeatherLocation()",
@@ -93,8 +93,8 @@ assertSourceIncludes("apps/mobile/src/providers/weatherLocations.ts", [
 
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", ["BackHandler", "goBack"]);
 assertSourceIncludes("apps/mobile/src/navigation/AppNavigator.tsx", [
-  'route === "O4" && appState.styleProfileReturnRoute',
-  'activeRoute={route === "O4" ? appState.styleProfileReturnRoute! : bottomNavActiveRoute}',
+  'route === "O4" && styleProfileReturnRoute',
+  'activeRoute={navigationRoute === "O4" ? styleProfileReturnRoute! : getBottomNavActiveRoute(navigationRoute, appState.alertSettingsRouteState?.returnTo, appState.overlayReturnRoutes.H4)}',
 ]);
 assertSourceIncludes("apps/mobile/src/config/weatherEnv.ts", [
   '"fixture" | "proxy" | "openmeteo"',
@@ -276,7 +276,7 @@ assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
   "목적지 삭제됨",
   'actionLabel="복구"',
   "onDismiss={onDismissRemovedDestination}",
-  "duration={3800}",
+  'duration={Platform.OS === "ios" ? 0 : 3800}',
   "getDestinationActionText",
   "getDestinationSchedule",
   "알림 켬",
