@@ -9,6 +9,7 @@ function bundle(file, external = []) {
   return m.exports;
 }
 const s = bundle('packages/shared/src/index.ts');
+const { summarizeHomeOutfit } = bundle('apps/mobile/src/utils/homeOutfitSummary.ts');
 const { buildTodayOutfit } = bundle('apps/mobile/src/utils/todayOutfit.ts');
 const { buildHomePreparation } = bundle('apps/mobile/src/utils/homeOuting.ts');
 const { translateText } = bundle('apps/mobile/src/localization/localization.ts', ['expo-localization']);
@@ -72,6 +73,57 @@ const instant=buildHomePreparation({...cold,hourly:[hour(3)]},new Date(now).toIS
 assert.doesNotMatch(instant.copy,/기온 차|오후|저녁|최저/);
 const partial=buildTodayOutfit({...weather(19),hourly:[hour(12),hour(24,14)]},s.defaultPreferenceProfile,s.presetWardrobe,now);
 assert.equal(partial.outfitContext.complete,false);assert.match(partial.outfitContext.status,/일부/);assert.doesNotMatch(partial.outfit.decisionText,/일교차|저녁/);
+for (const sample of samples) {
+ const summary = summarizeHomeOutfit(sample.copy);
+ assert.ok(summary.length <= sample.copy.length, sample.name);
+ assert.equal(summary.split(' · ').length, sample.copy.split(' · ').length, 'Keep every weather clause');
+ for (const language of ['en', 'ja']) assert.doesNotMatch(translateText(summary, language), /[가-힣]/u);
+}
+assert.equal(summarizeHomeOutfit('추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요'), '따뜻한 상의와 겉옷을 챙겨요');
+assert.match(summarizeHomeOutfit(heavyResult.outfit.decisionText), /따뜻.*강한 강수.*방수/);
+assert.match(summarizeHomeOutfit(futureWindResult.outfit.decisionText), /따뜻.*방수.*14:00/);
+assert.equal(summarizeHomeOutfit(m.outfit.decisionText), m.outfit.decisionText);
+assert.equal(summarizeHomeOutfit('새로운 경고 문구'), '새로운 경고 문구');
+// Every thermal group has three short, stable expressions; warnings keep their meaning and order.
+const thermalBases = [
+ '추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요',
+ '더운 날씨라 통풍이 잘되는 가벼운 차림이 좋아요',
+ '서늘함에 대비해 가볍게 걸칠 한 겹이 좋아요',
+ '온화한 기온에 맞춰 편한 차림으로 나가요',
+];
+for (const base of thermalBases) {
+ const variants = new Set();
+ for (const day of [1, 2, 3]) {
+  const instant = Date.parse(`2026-11-0${day}T12:00:00+09:00`);
+  const copy = summarizeHomeOutfit(base, instant, 'Asia/Seoul');
+  variants.add(copy);
+  assert.ok(copy.length <= base.length);
+  assert.match(copy, /요$/);
+  assert.equal(summarizeHomeOutfit(base, instant + 3600000, 'Asia/Seoul'), copy);
+  for (const language of ['en', 'ja']) assert.doesNotMatch(translateText(copy, language), /[가-힣]/u);
+  for (const sample of samples) {
+   const combined = `${base} · ${sample.copy.split(' · ').slice(1).join(' · ')}`;
+   assert.equal(summarizeHomeOutfit(combined, instant, 'Asia/Seoul').split(' · ').slice(1).join(' · '), summarizeHomeOutfit(combined).split(' · ').slice(1).join(' · '));
+  }
+  for (const copy of [m.outfit.decisionText, '최신 날씨를 확인한 뒤 코디를 안내해요', '새로운 경고 문구']) {
+   assert.equal(summarizeHomeOutfit(copy, instant, 'Asia/Seoul'), copy);
+  }
+ }
+ assert.equal(variants.size, 3);
+ const midnight = Date.parse('2026-11-02T00:00:00+09:00');
+ assert.notEqual(summarizeHomeOutfit(base, midnight - 1, 'Asia/Seoul'), summarizeHomeOutfit(base, midnight, 'Asia/Seoul'));
+ assert.equal(summarizeHomeOutfit(base, midnight, 'America/New_York'), summarizeHomeOutfit(base, midnight - 1, 'Asia/Seoul'));
+ assert.equal(summarizeHomeOutfit(base, midnight, 'invalid-zone'), summarizeHomeOutfit(base));
+}
+console.log('PASS: 12 friendly thermal phrases, per-location daily stability/midnight, unchanged warnings and unknown states, KO/EN/JA.');
+assert.ok(homeOrder());
+function homeOrder() {
+ const source = fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx', 'utf8');
+ assert.ok(source.indexOf('<HomeDecisionHero') < source.indexOf('<HomeOutfitPreviewCard'));
+ assert.ok(source.indexOf('<HomeOutfitPreviewCard') < source.indexOf('testID="home-plan-card"'));
+ assert.match(source, /companionMessage=\{Platform.OS === "ios" \? undefined : companionMessage\}/);
+ return true;
+}
 for(const sample of samples) for(const language of ['ko','en','ja']) {
  const translated=translateText(sample.copy,language);assert.ok(translated.length);
  if(language!=='ko') assert.doesNotMatch(translated,/[가-힣]/u,`${sample.name} ${language}`);
@@ -84,10 +136,10 @@ const jsx=ts.transpileModule(fn.getText(ast),{compilerOptions:{module:ts.ModuleK
 const createElement=(type,props,...children)=>({type,props,children});
 for(const fontScale of [1,1.6,2]) for(const language of ['ko','en','ja']) {
  const {outfit,outfitContext}=buildTodayOutfit(cold,s.defaultPreferenceProfile,s.presetWardrobe,now);
- const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons',jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
- const tree=render({outfit,forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
+ const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','summarizeHomeOutfit','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons',jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),summarizeHomeOutfit,v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
+ const tree=render({outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
  const nodes=[];function visit(n){if(Array.isArray(n))return n.forEach(visit);if(!n||typeof n!=='object')return;nodes.push(n);n.children?.forEach(visit);}visit(tree);
- const comment=nodes.find(n=>n.children?.includes(outfit.decisionText));assert.ok(comment);assert.equal(comment.props.numberOfLines,undefined);assert.equal(comment.props.adjustsFontSizeToFit,undefined);
+ const comment=nodes.find(n=>n.children?.includes(summarizeHomeOutfit(outfit.decisionText)));assert.ok(comment);assert.equal(comment.props.numberOfLines,undefined);assert.equal(comment.props.adjustsFontSizeToFit,undefined);
  const images=nodes.filter(n=>n.type==='img'&&n.props.resizeMode==='contain');assert.deepEqual(images.map(n=>n.props.source),[outfit.items.outer.imageUrl,outfit.items.shoes.imageUrl]);
  const row=nodes.find(n=>n.props?.style?.flexDirection);assert.equal(row.props.style.flexDirection,fontScale>1.3?'column':'row');
 }

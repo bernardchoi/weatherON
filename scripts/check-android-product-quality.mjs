@@ -754,7 +754,7 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "목적지 강수",
   "오늘 챙길 것",
   "오늘의 코디",
-  "const title = outfit.decisionText;",
+  "summary={summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)}",
   "getHeroTemperatureRange",
   "최고 ",
   "onNavigate(\"C1\")",
