@@ -9,6 +9,7 @@ private let widgetSnapshotKey = "weatheron.widget.store.v2"
 private let widgetSnapshotRelativePath = "Library/Application Support/WeatherONWidget/weatheron-widget-store-v2.json"
 private let widgetKind = "WeatherONLocationWidgetV4"
 private let widgetLogger = Logger(subsystem: "com.weatheron.mobile", category: "WidgetSync")
+private let departureLogger = Logger(subsystem: "com.weatheron.mobile", category: "DepartureActivity")
 private let departureActivityLeadTime: TimeInterval = 60 * 60
 private let departureActivityRecoveryGrace: TimeInterval = 2 * 60
 
@@ -32,13 +33,17 @@ private enum DepartureActivityError: Error {
 
 public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   private var departureTokenTask: Task<Void, Never>?
+  private var departureStateTask: Task<Void, Never>?
   private var observedActivityId: String?
   private var departureEndWorkItem: DispatchWorkItem?
 
   public func definition() -> ModuleDefinition {
     Name("WeatheronWidgetData")
     Events("onDeparturePushToken")
-    OnDestroy { self.departureTokenTask?.cancel() }
+    OnDestroy {
+      self.departureTokenTask?.cancel()
+      self.departureStateTask?.cancel()
+    }
 
     Function("saveSnapshot") { (snapshotJson: String) -> Bool in
       self.saveWidgetJSON(snapshotJson, key: widgetSnapshotKey, relativePath: widgetSnapshotRelativePath)
@@ -90,6 +95,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
 
     AsyncFunction("startDepartureActivity") { (payloadJson: String) async throws -> String in
       guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+        departureLogger.notice("event=request_disabled")
         throw DepartureActivityError.activitiesDisabled
       }
       guard
@@ -123,6 +129,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       let content = ActivityContent(state: state, staleDate: departureAt, relevanceScore: 80)
 
       if let activity = self.matchingDepartureActivity(attributes: attributes) {
+        departureLogger.notice("event=reuse")
         await self.endOtherDepartureActivities(keeping: activity.id)
         await activity.update(content)
         self.observePushToken(for: activity)
@@ -130,14 +137,21 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
         return self.departureActivityStatusJson(activity: activity)
       }
 
-      await self.endAllDepartureActivities()
       let activity: Activity<WeatherONDepartureActivityAttributes>
       do {
         activity = try self.requestDepartureActivity(attributes: attributes, content: content, pushType: .token)
       } catch {
+        departureLogger.error("event=token_request_failed code=\((error as NSError).code, privacy: .public)")
         // Push token 생성 실패가 Live Activity 표시 자체를 막으면 로컬 Activity로 계속한다.
-        activity = try self.requestDepartureActivity(attributes: attributes, content: content, pushType: nil)
+        do {
+          activity = try self.requestDepartureActivity(attributes: attributes, content: content, pushType: nil)
+        } catch {
+          departureLogger.error("event=local_request_failed code=\((error as NSError).code, privacy: .public)")
+          throw error
+        }
       }
+      // Preserve the accepted countdown if both replacement requests fail.
+      await self.endOtherDepartureActivities(keeping: activity.id)
       self.observePushToken(for: activity)
       self.scheduleAutomaticEnd(for: activity)
       return self.departureActivityStatusJson(activity: activity)
@@ -181,13 +195,37 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   private func observePushToken(for activity: Activity<WeatherONDepartureActivityAttributes>) {
     guard observedActivityId != activity.id else { return }
     departureTokenTask?.cancel()
+    departureStateTask?.cancel()
     observedActivityId = activity.id
+    self.logDepartureState(activity.activityState)
+    departureStateTask = Task { [weak self] in
+      for await state in activity.activityStateUpdates {
+        guard !Task.isCancelled, let self else { return }
+        self.logDepartureState(state)
+      }
+    }
     departureTokenTask = Task { [weak self] in
       for await _ in activity.pushTokenUpdates {
         guard !Task.isCancelled, let self else { return }
         self.sendEvent("onDeparturePushToken", ["status": self.departureActivityStatusJson(activity: activity)])
       }
     }
+  }
+
+  private func logDepartureState(_ state: ActivityState) {
+    let name: String
+    if #available(iOS 26.0, *), state == .pending { name = "scheduled" }
+    else {
+      switch state {
+      case .active: name = "active"
+      case .stale: name = "stale"
+      case .ended: name = "ended"
+      case .dismissed: name = "dismissed"
+      default: name = "unknown"
+      }
+    }
+    // No IDs, names, dates, coordinates, content, token or error description.
+    departureLogger.notice("event=state state=\(name, privacy: .public)")
   }
 
   private func pushEnvironment() -> String {
@@ -222,6 +260,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   ) throws -> Activity<WeatherONDepartureActivityAttributes> {
     let startAt = attributes.departureAt.addingTimeInterval(-departureActivityLeadTime)
     if #available(iOS 26.0, *), startAt > Date() {
+      departureLogger.notice("event=request mode=scheduled style=standard")
       let alert = AlertConfiguration(
         title: LocalizedStringResource("departure.alert.title", defaultValue: "출발 준비 시작"),
         body: LocalizedStringResource("departure.alert.body", defaultValue: "\(attributes.destinationName) 출발까지 60분 남았어요"),
@@ -236,6 +275,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
         start: startAt
       )
     }
+    departureLogger.notice("event=request mode=immediate style=standard")
     return try Activity<WeatherONDepartureActivityAttributes>.request(
       attributes: attributes,
       content: content,
@@ -278,7 +318,10 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   }
 
   private func endAllDepartureActivities() async {
+    departureLogger.notice("event=explicit_end")
     departureTokenTask?.cancel()
+    departureStateTask?.cancel()
+    departureStateTask = nil
     departureTokenTask = nil
     observedActivityId = nil
     departureEndWorkItem?.cancel()
@@ -330,6 +373,16 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
   ) -> String {
     let activeActivity = activity ?? self.currentDepartureActivity()
     let lifecycle = self.departureActivityLifecycle(activeActivity)
+    let activities = Activity<WeatherONDepartureActivityAttributes>.activities
+    var scheduledCount = 0
+    if #available(iOS 26.0, *) { scheduledCount = activities.filter { $0.activityState == .pending }.count }
+    // Enumeration is native lifecycle evidence, not a claim of screen visibility.
+    let diagnostics = [
+      "activityCount": activities.count,
+      "activeCount": activities.filter { $0.activityState == .active }.count,
+      "scheduledCount": scheduledCount,
+      "staleCount": activities.filter { $0.activityState == .stale }.count,
+    ]
     let payload: [String: Any] = [
       "pushToken": activeActivity?.pushToken?.map { String(format: "%02x", $0) }.joined() ?? "",
       "bundleId": Bundle.main.bundleIdentifier ?? "",
@@ -344,6 +397,7 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
       "destinationId": activeActivity?.attributes.destinationId ?? "",
       "departureAt": activeActivity.map { ISO8601DateFormatter().string(from: $0.attributes.departureAt) } ?? "",
       "guidance": activeActivity?.content.state.guidance ?? "",
+      "diagnostics": diagnostics,
     ]
     guard
       let data = try? JSONSerialization.data(withJSONObject: payload),

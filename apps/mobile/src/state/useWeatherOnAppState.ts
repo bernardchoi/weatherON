@@ -1004,7 +1004,14 @@ export function useWeatherOnAppState() {
           if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
           continue;
         }
-        const nearDeparture = leavingNow || Date.parse(targetAt) > nowMinuteTick && Date.parse(targetAt) - nowMinuteTick - (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 < 3600000;
+        // Match the countdown/server window to the actual departure, including
+        // arrival buffers and the provider's solved departure. Target minus
+        // duration alone can throttle an expiring arrival route for ten minutes.
+        const scheduledTiming = getDestinationTiming(stored, schedule, place.timezone, nowMinuteTick, origin.countryCode, place.countryCode, origin.locationId);
+        const departureMs = scheduledTiming ? Date.parse(scheduledTiming.departureAt)
+          : Date.parse(targetAt) - (schedule.timeBasis === "arrival" ? (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 : 0);
+        const remainingMs = departureMs - Date.now();
+        const nearDeparture = leavingNow || remainingMs > 0 && remainingMs <= 3600000;
         const retryAt = Date.now() + (nearDeparture ? 60000 : 600000);
         routeAttemptsRef.current.set(key, retryAt);
         pendingKeys.add(key);
@@ -1148,7 +1155,10 @@ export function useWeatherOnAppState() {
         active &&
         departureActivitySyncRevisionRef.current === syncRevision &&
         automaticDepartureActivityInput?.replaceExistingActivity &&
-        status.destinationId === automaticDepartureActivityInput.destinationId
+        (status.active || status.scheduled) &&
+        status.destinationId === automaticDepartureActivityInput.destinationId &&
+        status.departureAt &&
+        Math.abs(Date.parse(status.departureAt) - Date.parse(automaticDepartureActivityInput.departureAt)) < 1000
       ) {
         setDepartureActivityReplacementDestinationId((currentDestinationId) => (
           currentDestinationId === automaticDepartureActivityInput.destinationId ? null : currentDestinationId

@@ -93,8 +93,9 @@ const flush = async () => { for(let i=0;i<30;i++) await Promise.resolve(); };
 const bridge={};
 new Function('exports','require','setTimeout','clearTimeout',compile('apps/mobile/src/providers/departureLiveActivity.ios.ts'))(bridge,name=>{
   if(name==='./departureLiveActivity.shared')return shared;
+  if(name==='../localization/react-native')return {AppState:{currentState:'active'}};
   if(name==='./accountAuth')return {requestAuthenticatedAccountJson:async(path,body)=>{
-    requests++; assert.equal(path,'/live-activities/departure');assert.equal(body.pushToken,nativeStatus.pushToken);assert.equal(body.method,undefined);
+    requests++; assert.equal(path,'/live-activities/departure');assert.equal(body.pushToken,nativeStatus.pushToken);assert.equal(body.method,undefined);assert.equal(body.diagnostics,undefined,'local lifecycle counts must not be added to the server registration');
     if(holdRequest) await holdRequest;
     if(fail)throw Error('offline');return {scheduled:acknowledge};
   }};

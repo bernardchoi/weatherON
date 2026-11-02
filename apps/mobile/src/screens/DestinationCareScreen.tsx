@@ -124,24 +124,23 @@ export function DestinationCareScreen({
     selectedDestinationDepartureAt &&
     Math.abs(new Date(departureActivityStatus.departureAt).getTime() - new Date(selectedDestinationDepartureAt).getTime()) < 1000,
   );
-  // Browsing an unsaved destination is deliberately not an Activity update.
-  // Keep the committed trip's countdown visible instead of implying that the
-  // preview cancelled it.
-  const departureActivityPreservedForOtherDestination =
+  // A preview or deferred time change must not claim that the accepted native
+  // countdown already represents the newly edited plan.
+  const departureActivityPreservedForOtherPlan =
     (departureActivityStatus.active || departureActivityStatus.scheduled) &&
     Boolean(departureActivityStatus.destinationId) &&
-    departureActivityStatus.destinationId !== selectedDestinationPlace.id;
+    !departureActivityMatchesCurrentPlan;
   const movementTimeLabel = routeTimingReady
     ? `약 ${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
   const departureDecision = targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
-  const liveActivityMeta = departureActivityMatchesDestination
+  const liveActivityMeta = departureActivityMatchesCurrentPlan
     ? departureActivityStatus.automaticEndScheduled === false
       ? "종료 연결 재시도 중"
       : departureActivityStatus.scheduled
         ? `출발 ${departureLiveActivityAutoLeadMinutes}분 전 시작 예약됨`
         : `${departureTime}까지 표시 중`
-    : departureActivityPreservedForOtherDestination
+    : departureActivityPreservedForOtherPlan
       ? departureActivityStatus.scheduled
         ? "기존 카운트다운이 예약된 상태예요 · 이 프리뷰는 아직 적용 안 됨"
         : "기존 카운트다운이 진행 중이에요 · 이 프리뷰는 아직 적용 안 됨"

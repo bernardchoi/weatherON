@@ -1,0 +1,41 @@
+
+> weatheron-design-workspace@1.0.0 check:android-product-quality
+> node scripts/check-android-product-quality.mjs
+
+Terms consent behavior passed: 16 combinations, individual/all toggles, no implicit marketing consent, save guard, policy links, cancel and retry
+android product quality check passed
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
+Migration: 80 SQL failure points, read/decode/commit/cleanup and idempotent retries passed.
+Notifications: native schedule/cancel failures, verification retries, rapid toggles, foreground reconciliation and stale completions passed.
+Weather: partial/slow failures, location-specific cache, freshness, persistence and late responses passed.
+Weather hook: obsolete progressive/final responses cannot update UI or persistence.
+iOS reliability checks passed (native boundaries mocked; migration SQL executed by Node SQLite).
+Cold-start location transitions passed
+Tomorrow: local midnight, stale observation, missing day, DST, year rollover and hourly offsets passed
+Reauth: same-account token guard, mismatch cleanup, cancellation, local data retention and explicit second confirmation passed
+Routing: selected departure, arrival precedence, driving support, unsupported arrival disclosure and cache isolation passed (mock HTTP only)
+iOS reminder calendar trigger retains the forecast location timezone
+Foreground TTL: expired vs fresh, bounded retry, background and in-flight guards passed
+H5: existing persisted rain preference callback and permission gate on enable passed
+Repro: {"range":{"date":"2026-10-22","minTempC":3.85,"maxTempC":14.75,"condition":"clear","rainProbabilityPct":0,"precipitationMm":0,"windMs":1.5},"representativeAir":9.3,"outer":"네이비 셸 파카","top":"니트 스웨터","reasons":["최저 4도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요"]}
+PASS: screenshot, daily-only/sparse coverage, ownership, cold boundaries, heat, wind chill, cold rain, unavailable data, local date and rounded copy.
+Weather/outfit regressions passed: original four fixes plus pending content/time/location/timezone replacement, stable inputs, unrelated recurring preservation, exact presented-event identity, receipt dedupe, v3 migration, unknown/cancelled state, failed OS reads, restart, partial cancellation and in-flight receipt races (native mock).
+Travel duration contract passed: zero/same-point, failed/invalid inputs, fractional precision and authoritative seconds precedence.
+PASS: Home leaving-now production declarations/JSX (216 destination renders + no-destination guards): latest, failed/offline reference, unavailable/loading/no info; before/after departure, both schedule bases and iOS/Android/web. Native layout remains device QA.
+PASS lifecycle: actual request effects use solved departure + buffer for one-minute retries; inactive lookup guard, expiry -> null -> native end, and real foreground callback -> throttle clear -> fresh route -> local Activity recreation exercised for both bases. Background OS activation remains unverified.
+PASS: 6 paired arrival/departure schedules (repeat/nonrepeat, drive/transit/walk), actual Activity builder + iOS provider/native contract, departure-minus-60 window, notification-lead independence, expiry/failure/target mismatch rejection, end-server registration and all Dynamic Island presentations. No physical display or OS scheduling proof.
+Review regressions passed: storage failure/retry, durable photo replacement, notification races, overseas timezone/cache.
+
+> weatheron-design-workspace@1.0.0 check:mobile-localization
+> node scripts/generate-mobile-locales.mjs --check
+
+mobile localization check passed (2238 messages)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

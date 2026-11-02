@@ -3,6 +3,10 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { buildSync } from "esbuild";
 import ts from "typescript";
+import "./check-home-leaving-now.mjs";
+import "./check-departure-activity-schedule.mjs";
+import "./check-departure-registration-order.mjs";
+import "./check-dynamic-island-contract.mjs";
 
 const compile = (source) => ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },

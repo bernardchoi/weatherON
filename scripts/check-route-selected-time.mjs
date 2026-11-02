@@ -277,7 +277,7 @@ const context = {
   appStateHydrated: true, AppState: { currentState: 'active' }, placeSearchOrigin: { coordinate: { latitude: 37.5, longitude: 127 }, locationId: 'origin', countryCode: 'KR' },
   routeRequests: [{ place, schedule }], nowMinuteTick: scheduleNow,
   savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: verified,
-  routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getAutoBufferMinutes: helpers.getAutoBufferMinutes,
+  routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getAutoBufferMinutes: helpers.getAutoBufferMinutes, getDestinationTiming: helpers.getDestinationTiming,
   createDestinationTravelEstimate: helpers.createDestinationTravelEstimate,
   destinationLeavingNow: {}, leavingNowRoutes: {},
   getLeavingNowRouteKey: travel.getLeavingNowRouteKey, isLeavingNowRouteResult: travel.isLeavingNowRouteResult,
@@ -415,7 +415,10 @@ const notifications = load('apps/mobile/src/providers/localNotifications.ts', {
   'expo-notifications': nativeNotifications,
   './appStorage': { readAppValue: async () => ({}), writeAppValue: async () => {} },
 });
-await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [notification] });
+// This block tests absolute DATE-trigger identity, independent of the host's
+// local quiet hours. Exercise the real quiet-hours policy separately below.
+const adapterOptions = { enabled: true, reducedInterruptions: false };
+await notifications.syncLocalWeatherNotifications({ ...adapterOptions, notifications: [notification] });
 assert.equal(reservations.size, 1);
 const reservation = [...reservations.values()][0];
 assert.equal(reservation.trigger.date.toISOString(), notification.scheduledAt);
@@ -425,14 +428,28 @@ for (const durationSeconds of [3000, 1800, 2400, 3000, 2400]) {
   const destination = { ...saved, travelEstimate: changed };
   const model = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, savedDestinations: [destination], notificationNow: scheduleNow });
   const alert = model.notifications.find(item => item.id.endsWith(':destination'));
-  await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [alert] });
+  await notifications.syncLocalWeatherNotifications({ ...adapterOptions, notifications: [alert] });
   assert.equal(reservations.size, 1, 'duration changes replace the existing OS request without duplicates');
   assert.equal([...reservations.values()][0].trigger.date.getTime(), Date.parse(buildInput(destination).departureAt) - 3600000, 'notification and countdown follow increases, decreases and oscillation');
 }
-await notifications.syncLocalWeatherNotifications({ enabled: true, notifications: [{ ...notification, active: false, scheduledAt: undefined }] });
+await notifications.syncLocalWeatherNotifications({ ...adapterOptions, notifications: [{ ...notification, active: false, scheduledAt: undefined }] });
 assert.equal(reservations.size, 0, 'an invalidated route removes the prior native reservation');
+const { applyLocalNotificationPolicy } = load('apps/mobile/src/providers/notificationPolicy.ts');
+// Construct local wall-clock fixtures so UTC and Asia/Seoul both exercise
+// 22:00–07:00, rather than accidentally testing Seoul's 07:10 as UTC's 22:10.
+const localPolicyItem = hour => {
+  const date = new TestDate();
+  date.setDate(date.getDate() + 1);
+  date.setHours(hour, 0, 0, 0);
+  return { ...notification, id: `local-hour-${hour}`, scheduledAt: date.toISOString() };
+};
+for (const hour of [0, 6, 7, 12, 21, 22, 23]) {
+  const item = localPolicyItem(hour);
+  assert.equal(applyLocalNotificationPolicy([item], { reducedInterruptions: true }).length, hour >= 7 && hour < 22 ? 1 : 0, `local quiet-hours boundary ${hour}`);
+  assert.equal(applyLocalNotificationPolicy([item], { reducedInterruptions: false }).length, 1, 'explicit policy off permits a future notification');
+}
 globalThis.Date = originalDate;
-console.log('PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity and cancellation.');
+console.log('PASS connection gaps: selected/committed Home repeat schedule, unsafe route notification/countdown suppression, native DATE trigger identity/cancellation independent of host timezone, and real local quiet-hours boundaries.');
 
 const clients = load('apps/mobile/src/providers/travelEstimateClient.ts', { '../config/weatherEnv': { DEFAULT_WEATHER_TIMEOUT_MS: 15000, getWeatherRuntimeConfig: () => ({ clientMode: 'fixture' }) } });
 let clientRequest;

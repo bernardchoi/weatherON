@@ -16,6 +16,13 @@ export type DepartureLiveActivityInput = {
   deepLink: string;
 };
 
+export type DepartureActivityDiagnostics = {
+  activityCount: number;
+  activeCount: number;
+  scheduledCount: number;
+  staleCount: number;
+};
+
 export type DepartureLiveActivityStatus = {
   supported: boolean;
   enabled: boolean;
@@ -28,6 +35,8 @@ export type DepartureLiveActivityStatus = {
   departureAt?: string;
   guidance?: string;
   lifecycle?: "inactive" | "scheduled" | "active" | "stale";
+  /** Native enumeration counts; this does not report Dynamic Island visibility. */
+  diagnostics?: DepartureActivityDiagnostics;
 };
 
 export const unavailableDepartureLiveActivityStatus: DepartureLiveActivityStatus = {
@@ -108,6 +117,7 @@ export function parseDepartureLiveActivityStatus(value: string): DepartureLiveAc
       destinationId: typeof parsed.destinationId === "string" && parsed.destinationId ? parsed.destinationId : undefined,
       departureAt: typeof parsed.departureAt === "string" && parsed.departureAt ? parsed.departureAt : undefined,
       guidance: typeof parsed.guidance === "string" && parsed.guidance ? parsed.guidance : undefined,
+      diagnostics: parseDepartureActivityDiagnostics(parsed.diagnostics),
       lifecycle: ["inactive", "scheduled", "active", "stale"].includes(String(parsed.lifecycle))
         ? parsed.lifecycle as DepartureLiveActivityStatus["lifecycle"]
         : undefined,
@@ -115,4 +125,16 @@ export function parseDepartureLiveActivityStatus(value: string): DepartureLiveAc
   } catch {
     return unavailableDepartureLiveActivityStatus;
   }
+}
+
+function parseDepartureActivityDiagnostics(value: unknown): DepartureActivityDiagnostics | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const raw = value as Record<string, unknown>;
+  const keys = ["activityCount", "activeCount", "scheduledCount", "staleCount"] as const;
+  if (!keys.every(key => typeof raw[key] === "number" && Number.isSafeInteger(raw[key]) && Number(raw[key]) >= 0)) return undefined;
+  const result = {
+    activityCount: Number(raw.activityCount), activeCount: Number(raw.activeCount),
+    scheduledCount: Number(raw.scheduledCount), staleCount: Number(raw.staleCount),
+  };
+  return result.activeCount + result.scheduledCount + result.staleCount <= result.activityCount ? result : undefined;
 }

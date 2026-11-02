@@ -195,7 +195,7 @@ export function HomeScreen({
   const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "");
   const departureExplanation = routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
-  const showDepartureExplanation = destinationReady && (routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
+  const showDepartureExplanation = destinationReady && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
@@ -367,7 +367,7 @@ export function HomeScreen({
             </HomeValueTransition>
           ) : null}
           </View>
-          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummary.body}</Text> : null}
+          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
           {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
             {preparation.status ? <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{preparation.status}</Text> : null}
             {preparation.evidence && !preparation.rainEvidence ? <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{preparation.evidence}</Text> : null}

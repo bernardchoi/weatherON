@@ -18,12 +18,17 @@ function load(path, imports = {}) {
 }
 const umbrellaSignalsModule = { exports: {} };
 new Function("module", "exports", buildSync({ entryPoints: ["apps/mobile/src/utils/umbrellaRainSignals.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(umbrellaSignalsModule, umbrellaSignalsModule.exports);
+const appStateHelpersModule = { exports: {} };
+new Function("module", "exports", buildSync({ entryPoints: ["apps/mobile/src/state/appStateHelpers.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(appStateHelpersModule, appStateHelpersModule.exports);
+const zonedDateTime = load("apps/mobile/src/utils/zonedDateTime.ts");
+const travelTiming = load("apps/mobile/src/utils/travelEstimate.ts", { "./zonedDateTime": zonedDateTime });
 const demo = load("apps/mobile/src/data/demoState.ts", {
   "@weatheron/shared": shared, "../providers/weatherProvider": {},
   "../localization/react-native": { Platform: { OS: "ios" } },
   "../utils/umbrellaRainSignals": umbrellaSignalsModule.exports,
-  "../utils/zonedDateTime": load("apps/mobile/src/utils/zonedDateTime.ts"),
-  "../utils/travelEstimate": load("apps/mobile/src/utils/travelEstimate.ts"),
+  "../state/appStateHelpers": appStateHelpersModule.exports,
+  "../utils/zonedDateTime": zonedDateTime,
+  "../utils/travelEstimate": travelTiming,
 });
 let now = Date.parse("2026-07-01T12:00:00+09:00");
 const base = { ...shared.gangneungClearSnapshot, timezone: "Asia/Seoul", observedAt: new Date(now).toISOString(), source: "openmeteo", stale: false,
@@ -412,9 +417,20 @@ try {
 } finally { Date.now = originalNow; }
 console.log("Weather/outfit regressions passed: original four fixes plus pending content/time/location/timezone replacement, stable inputs, unrelated recurring preservation, exact presented-event identity, receipt dedupe, v3 migration, unknown/cancelled state, failed OS reads, restart, partial cancellation and in-flight receipt races (native mock).");
 
-const travelTiming = load("apps/mobile/src/utils/travelEstimate.ts");
-for (const travelMinutes of [0, -1, NaN, Infinity]) {
-  assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), undefined);
+const transitEstimate = { travelMinutes: 51, distanceMeters: 1000, status: "ready", provider: "kakao-transit", transportMode: "transit" };
+const travelMinutesFor = changes => travelTiming.getTravelMinutesForTransport({ ...transitEstimate, ...changes }, "transit");
+for (const travelMinutes of [-1, NaN, Infinity, -Infinity, undefined, 10081]) {
+  assert.equal(travelMinutesFor({ travelMinutes }), undefined, "negative, nonfinite, missing and over-seven-day durations are unavailable");
 }
-assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes: 51, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), 51);
-assert.equal(travelTiming.getTravelMinutesForTransport({ travelMinutes: 51.2, distanceMeters: 1000, status: "ready", provider: "kakao-transit" }, "transit"), 52);
+assert.equal(travelMinutesFor({ travelMinutes: 0 }), 0, "ready zero minutes is valid under the current duration contract");
+assert.equal(travelMinutesFor({ travelMinutes: 0, durationSeconds: 0, distanceMeters: 0 }), 0, "same-coordinate routes require no travel");
+assert.equal(travelMinutesFor({ travelMinutes: 0, distanceMeters: 0, status: "error" }), undefined, "zero must not promote a failed route");
+assert.equal(travelMinutesFor({}), 51);
+assert.equal(travelMinutesFor({ travelMinutes: 51.2 }), 51.2, "model preserves seconds; display rounding is separate");
+assert.equal(travelMinutesFor({ travelMinutes: 999, durationSeconds: 223 }), 223 / 60, "provider seconds take precedence over minute fields");
+assert.equal(travelMinutesFor({ durationSeconds: 0, distanceMeters: 0 }), 0, "zero seconds must not fall back to positive minutes");
+assert.equal(travelMinutesFor({ durationSeconds: 7 * 86400 }), 10080, "seven-day duration boundary is inclusive");
+for (const durationSeconds of [-1, NaN, Infinity, -Infinity, 7 * 86400 + 1]) {
+  assert.equal(travelMinutesFor({ durationSeconds }), undefined, "invalid supplied seconds cannot fall back to valid minutes");
+}
+console.log("Travel duration contract passed: zero/same-point, failed/invalid inputs, fractional precision and authoritative seconds precedence.");

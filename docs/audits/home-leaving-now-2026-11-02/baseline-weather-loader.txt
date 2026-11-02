@@ -1,0 +1,21 @@
+Repro: {"range":{"date":"2026-10-22","minTempC":3.85,"maxTempC":14.75,"condition":"clear","rainProbabilityPct":0,"precipitationMm":0,"windMs":1.5},"representativeAir":9.3,"outer":"네이비 셸 파카","top":"니트 스웨터","reasons":["최저 4도까지 내려가 보온성 있는 겉옷과 따뜻한 상의를 준비해요"]}
+PASS: screenshot, daily-only/sparse coverage, ownership, cold boundaries, heat, wind chill, cold rain, unavailable data, local date and rounded copy.
+Weather/outfit regressions passed: original four fixes plus pending content/time/location/timezone replacement, stable inputs, unrelated recurring preservation, exact presented-event identity, receipt dedupe, v3 migration, unknown/cancelled state, failed OS reads, restart, partial cancellation and in-flight receipt races (native mock).
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+0 !== undefined
+
+    at file:///tmp/weatheron-home-baseline/scripts/check-weather-outfit-regressions.mjs:421:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: undefined,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

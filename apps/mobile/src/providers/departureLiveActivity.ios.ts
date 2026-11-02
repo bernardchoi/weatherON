@@ -1,4 +1,5 @@
 import { requestAuthenticatedAccountJson } from "./accountAuth";
+import { AppState } from "../localization/react-native";
 import WeatheronWidgetDataModule from "../../modules/weatheron-widget-data/src/WeatheronWidgetDataModule";
 import {
   isDepartureLiveActivityAutoWindow,
@@ -111,10 +112,14 @@ export async function getDepartureLiveActivityStatus(): Promise<DepartureLiveAct
 export async function startDepartureLiveActivity(
   input: DepartureLiveActivityInput,
 ): Promise<DepartureLiveActivityStatus> {
+  return registerAutomaticEnd(await requestNativeDepartureActivity(input));
+}
+
+async function requestNativeDepartureActivity(input: DepartureLiveActivityInput): Promise<string> {
   if (!WeatheronWidgetDataModule) throw new Error("이 빌드에서는 실시간 출발 현황을 지원하지 않음");
   try {
-    const status = await WeatheronWidgetDataModule.startDepartureActivity(JSON.stringify(input));
-    return await registerAutomaticEnd(status);
+    if (AppState.currentState !== "active") throw new Error("inactive");
+    return await WeatheronWidgetDataModule.startDepartureActivity(JSON.stringify(input));
   } catch {
     throw new Error("실시간 출발 현황을 시작하지 못했음. iOS 설정에서 Live Activity 허용 여부를 확인해야 함");
   }
@@ -134,30 +139,54 @@ export async function syncAutomaticDepartureLiveActivity(
   input: DepartureLiveActivityInput | null,
 ): Promise<DepartureLiveActivityStatus> {
   const revision = ++automaticSyncRevision;
-  automaticSyncQueue = automaticSyncQueue
-    .catch(() => unavailableDepartureLiveActivityStatus)
+  const nativeSync = automaticSyncQueue
+    .catch(() => ({ status: unavailableDepartureLiveActivityStatus }))
     .then(() => revision === automaticSyncRevision
       ? performAutomaticDepartureLiveActivitySync(input)
-      : getDepartureLiveActivityStatus());
-  return automaticSyncQueue;
+      : readNativeDepartureActivityStatus());
+  automaticSyncQueue = nativeSync;
+  // A caller can await the registration result without holding up the next
+  // native mutation. The independent registrationQueue retains token ordering.
+  return nativeSync.then(result => result.registration ?? result.status);
+}
+
+type NativeDepartureSync = {
+  status: DepartureLiveActivityStatus;
+  registration?: Promise<DepartureLiveActivityStatus>;
+};
+
+function registerNativeSnapshot(raw: string): NativeDepartureSync {
+  return { status: parseDepartureLiveActivityStatus(raw), registration: registerAutomaticEnd(raw) };
+}
+
+async function readNativeDepartureActivityStatus(): Promise<NativeDepartureSync> {
+  if (!WeatheronWidgetDataModule) return { status: unavailableDepartureLiveActivityStatus };
+  try { return registerNativeSnapshot(await WeatheronWidgetDataModule.getDepartureActivityStatus()); }
+  catch { return { status: unavailableDepartureLiveActivityStatus }; }
 }
 
 let automaticSyncRevision = 0;
-let automaticSyncQueue = Promise.resolve<DepartureLiveActivityStatus>(unavailableDepartureLiveActivityStatus);
+let automaticSyncQueue = Promise.resolve<NativeDepartureSync>({ status: unavailableDepartureLiveActivityStatus });
 
 async function performAutomaticDepartureLiveActivitySync(
   input: DepartureLiveActivityInput | null,
-): Promise<DepartureLiveActivityStatus> {
-  const status = await getDepartureLiveActivityStatus();
-  if (!status.supported || !status.enabled) return status;
+): Promise<NativeDepartureSync> {
+  if (!WeatheronWidgetDataModule) return { status: unavailableDepartureLiveActivityStatus };
+  // Read native state before any network acknowledgement. An old Activity's
+  // automatic-end registration must not delay the next OS start reservation.
+  let raw: string;
+  try { raw = await WeatheronWidgetDataModule.getDepartureActivityStatus(); }
+  catch { return { status: unavailableDepartureLiveActivityStatus }; }
+  const status = parseDepartureLiveActivityStatus(raw);
+  if (!status.supported || !status.enabled) return { status };
 
   const departureMs = input ? new Date(input.departureAt).getTime() : Number.NaN;
   if (!input || !Number.isFinite(departureMs) || departureMs <= Date.now()) {
     if (status.active || status.scheduled || status.lifecycle === "stale") {
       await endDepartureLiveActivity();
-      return getDepartureLiveActivityStatus();
+      return readNativeDepartureActivityStatus();
     }
-    return status;
+    return registerNativeSnapshot(raw);
   }
 
   // A persisted intent can predate the currently scheduled native Activity
@@ -173,15 +202,15 @@ async function performAutomaticDepartureLiveActivitySync(
     status.destinationId !== input.destinationId &&
     !input.replaceExistingActivity
   ) {
-    return status;
+    return registerNativeSnapshot(raw);
   }
 
   if (!status.automaticStartSupported && !isDepartureLiveActivityAutoWindow(input.departureAt)) {
     if (status.active || status.scheduled) {
       await endDepartureLiveActivity();
-      return getDepartureLiveActivityStatus();
+      return readNativeDepartureActivityStatus();
     }
-    return status;
+    return registerNativeSnapshot(raw);
   }
 
   if (
@@ -191,8 +220,11 @@ async function performAutomaticDepartureLiveActivitySync(
     Math.abs(new Date(status.departureAt).getTime() - departureMs) < 1_000 &&
     status.guidance === input.guidance
   ) {
-    return status;
+    return registerNativeSnapshot(raw);
   }
 
-  return startDepartureLiveActivity(input);
+  // Activity.request requires foreground. The app may have backgrounded while
+  // native status was being read; retain an accepted reservation until return.
+  if (AppState.currentState !== "active") return registerNativeSnapshot(raw);
+  return registerNativeSnapshot(await requestNativeDepartureActivity(input));
 }

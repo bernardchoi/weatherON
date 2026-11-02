@@ -1,0 +1,15 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: arrival: the real request effect must retry at one minute inside computed departure-minus-60 window; got 600000ms
+    at file:///workspace/weatherON/scripts/check-departure-activity-schedule.mjs:171:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

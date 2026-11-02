@@ -109,9 +109,20 @@ private struct WeatherONDepartureGuidanceIcon: View {
   let symbol: String?
 
   var body: some View {
-    WeatherONAmbientIcon(symbol: symbol ?? "figure.walk.departure", size: 16)
+    WeatherONAmbientIcon(symbol: weatherONDepartureIslandSymbol(symbol), size: 16)
       .foregroundStyle(departureGold)
       .accessibilityLabel("출발 날씨 안내")
+  }
+}
+
+// Compact/minimal can consist only of this glyph. Empty, unsupported or legacy
+// payload symbols must still produce a bundled, visible app silhouette.
+private func weatherONDepartureIslandSymbol(_ symbol: String?) -> String {
+  switch symbol {
+  case "umbrella.fill": return "umbrella.fill"
+  case "wind": return "wind"
+  case "exclamationmark.clock.fill": return "exclamationmark.clock.fill"
+  default: return "figure.walk.departure"
   }
 }
 

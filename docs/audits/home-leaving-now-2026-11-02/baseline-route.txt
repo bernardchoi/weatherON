@@ -1,0 +1,24 @@
+PASS server: public Kakao priority/walk, all solver directions/budget/route identity, seconds/minute tolerance, past/near/same points, input validation, 401/403/429/5xx/timeout/schema/offline and cache provenance/recovery.
+PASS shared timing: 08:00→08:40, 09:00/40m/10m→08:10/08:50, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.
+PASS actual SQLite: additive/idempotent legacy migration, saved/preview round trip, duration/absolute schedule/provenance/expiry preserved, and old data retained.
+PASS UI model/notification: identical departure/arrival, separate reminder lead time, and route provenance in notification.
+PASS actual request effect: fast setting changes reject obsolete responses, ten-minute throttle, background guard, offline provenance and recovery. Foreground/restart clear/requery is covered separately by lifecycle/storage checks.
+PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+0 !== 1
+
+    at file:///tmp/weatheron-home-baseline/scripts/check-route-selected-time.mjs:419:8 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

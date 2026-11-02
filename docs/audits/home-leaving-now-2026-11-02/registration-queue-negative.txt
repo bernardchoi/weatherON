@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: A previous automatic-sync END acknowledgement cannot hold the native mutation queue
+
+0 !== 1
+
+    at file:///workspace/weatherON/scripts/check-departure-registration-order.mjs:77:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
