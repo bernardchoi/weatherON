@@ -51,3 +51,7 @@ Build 61: Xcode Cloud successful from `eb77387`; no external distribution perfor
 - TestFlight UI explicitly shows Build 61 **Internal**, Ready to Test, no assigned group. Build 60 remains internal Team (Expo); Build 59 remains Team (Expo) + external group.
 - Cloud Default currently prepares **TestFlight (Internal Testing Only)**. External TestFlight requires the **App Store Connect** archive option; this enables eligibility, not public App Store release. Apple reference: https://help.apple.com/xcode/mac/current/en.lproj/dev31de635e5.html
 - Automatic approval review rejected changing this archive option, interpreting “all testers and customers” as exceeding external TestFlight authorization. A retry with Apple documentation was also rejected. No setting change was made and Build 62 has not started; explicit approval of that named workflow option is now required. No public App Store review/release is authorized or attempted.
+
+### Release authorization update
+
+User explicitly approved changing Default from internal-only preparation to App Store Connect. The workflow option was changed and saved in App Store Connect. The earlier automatic-review block is resolved; authorization remains TestFlight external testing only. Integrated source commit `2844973bf02b91ff452d525b6c77c7b822cce6d7` is pushed to main; this documentation-only follow-up is also included before Build 62 starts.
