@@ -1,3 +1,7 @@
+import { ambientMotion } from "../theme/ambientMotion";
+import { HomeUpdateStatus } from "../components/HomeUpdateStatus";
+import { homeRouteStatus } from "../utils/homeUpdateState";
+import { getDestinationTiming } from "../state/appStateHelpers";
 import { writeAmbientTouchEvidence } from "../debug/ambientTouchEvidence";
 import { File, Paths } from "expo-file-system";
 import { createAmbientTouchController, type AmbientContact, type AmbientTouchSample } from "../utils/ambientTouch";
@@ -63,6 +67,9 @@ export function HomeScreen({
   notificationHistory,
   smartCareEnabled,
   isWeatherLoading,
+  homeUpdateState,
+  homeMotionActive = true,
+  selectedDestinationTravelEstimate,
   locationReady,
   weatherLocationMode,
   placeSearchOrigin,
@@ -121,6 +128,7 @@ export function HomeScreen({
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [refreshCompletedAt, setRefreshCompletedAt] = useState(0);
   const pullRefreshObservedLoadingRef = useRef(false);
+  const pullRefreshRevisionRef = useRef(0);
   const activeWeatherAlert = state.officialSpecialAlert.active ? state.officialSpecialAlert : null;
   const unreadNotificationCount = notificationHistoryUnreadCount(notificationHistory, readNotificationIds);
   const destinationReady = state.hasDestination;
@@ -135,6 +143,9 @@ export function HomeScreen({
   const homeSchedulePreference = homeDestination?.schedulePreference ?? selectedDestinationSchedulePreference;
   const homeDepartureAt = state.destinationCare.departureAdvice?.departureAt;
   const currentWeather = state.destinationCare.originWeather;
+  const currentWeatherPending = homeUpdateState?.currentWeatherPending ?? isWeatherLoading;
+  const routePending = homeUpdateState?.routePending ?? selectedDestinationTravelEstimate.status === "loading";
+  const destinationWeatherPending = destinationReady && (homeUpdateState?.destinationWeatherPending ?? isWeatherLoading);
   const todayMinMax = getTodayMinMax(currentWeather);
   const rawCurrentLocationName = getDisplayLocationName(currentWeather.locationName);
   const currentLocationName = currentWeather.locationId === defaultSeoulWeatherLocation.locationId
@@ -173,7 +184,7 @@ export function HomeScreen({
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
-  const reliableWeather = state.weatherProvider.status === "ready" && !state.weatherProvider.fallbackUsed && !currentWeather.stale;
+  const reliableWeather = snapshotReliable(currentWeather, forecastNow);
   useEffect(() => {
     if (!__DEV__) return;
     try {
@@ -201,28 +212,30 @@ export function HomeScreen({
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
-  const refreshMessage = isWeatherLoading ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
+  const refreshMessage = currentWeatherPending ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
+  const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, Boolean(placeSearchOrigin && getDestinationTiming(selectedDestinationTravelEstimate, homeSchedulePreference, homeDestinationPlace.timezone, forecastNow, placeSearchOrigin.countryCode, homeDestinationPlace.countryCode, placeSearchOrigin.locationId)), routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
   const refreshFromPull = useCallback(() => {
     pullRefreshObservedLoadingRef.current = false;
+    pullRefreshRevisionRef.current = homeUpdateState?.currentWeatherRevision ?? 0;
     setRefreshCompletedAt(0);
     setIsPullRefreshing(true);
     onRefreshWeather();
-  }, [onRefreshWeather]);
+  }, [onRefreshWeather, homeUpdateState?.currentWeatherRevision]);
 
   useEffect(() => {
     if (!isPullRefreshing) return;
-    if (isWeatherLoading) {
+    if (currentWeatherPending) {
       pullRefreshObservedLoadingRef.current = true;
       return;
     }
-    if (pullRefreshObservedLoadingRef.current) {
+    if (pullRefreshObservedLoadingRef.current || (homeUpdateState?.currentWeatherRevision ?? 0) > pullRefreshRevisionRef.current) {
       setIsPullRefreshing(false);
       if (reliableWeather) setRefreshCompletedAt(Date.now());
     }
-  }, [isPullRefreshing, isWeatherLoading, reliableWeather]);
+  }, [isPullRefreshing, currentWeatherPending, reliableWeather, homeUpdateState?.currentWeatherRevision]);
 
   useEffect(() => {
     if (!refreshCompletedAt) return;
@@ -245,7 +258,7 @@ export function HomeScreen({
     } : { onTouchStart: () => setTouchPulse(value => value + 1) })} style={[styles.screenWrap, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
       <HomeAmbientPortal enabled={Platform.OS === "ios"} interaction={{ contentOrigin: { x: ambientInsets.left, y: ambientInsets.top }, touchPulse, touchContact, touchPoint, onLowPowerChange: setLowPowerMode, readingAreas: Object.values(readRegions), scrollOffset: ambientScrollOffset, meteorScrollY, scrolling: ambientScrolling }}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <AmbientSurfaceBackground contentOrigin={Platform.OS === "ios" ? { x: ambientInsets.left, y: ambientInsets.top } : undefined} condition={current.condition} theme={theme} windMs={current.windMs} precipitationMm={current.precipitationMm} reliable={reliableWeather && !isWeatherLoading} touchPulse={touchPulse} touchContact={touchContact} touchPoint={touchPoint} lowPowerMode={lowPowerMode} onLowPowerChange={setLowPowerMode} daylight={ambientDaylight} readingAreas={Object.values(readRegions)} scrollOffset={ambientScrollOffset} meteorScrollY={meteorScrollY} scrolling={ambientScrolling} />
+        <AmbientSurfaceBackground contentOrigin={Platform.OS === "ios" ? { x: ambientInsets.left, y: ambientInsets.top } : undefined} condition={current.condition} theme={theme} windMs={current.windMs} precipitationMm={current.precipitationMm} reliable={reliableWeather && !currentWeatherPending} touchPulse={touchPulse} touchContact={touchContact} touchPoint={touchPoint} lowPowerMode={lowPowerMode} onLowPowerChange={setLowPowerMode} daylight={ambientDaylight} readingAreas={Object.values(readRegions)} scrollOffset={ambientScrollOffset} meteorScrollY={meteorScrollY} scrolling={ambientScrolling} />
       </View>
       </HomeAmbientPortal>
       <AmbientHomeScrollView
@@ -286,7 +299,7 @@ export function HomeScreen({
               <Image source={ambientUiIcons.location} style={{ width: 20, height: 20, tintColor: theme.muted }} />
               <RawText style={[styles.iosLocationName, { color: theme.text, flex: 1 }]} numberOfLines={2}>{currentLocationName}</RawText>
             </FeedbackPressable>
-            {Platform.OS !== "ios" || refreshMessage || locationStatus.tone !== "clear" ? <Text accessibilityLiveRegion="polite" style={[styles.iosSecondaryText, { color: theme.muted }]}>{refreshMessage || locationStatus.value}</Text> : null}
+            <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-weather-update" pending={currentWeatherPending} label={refreshMessage || locationStatus.value} color={theme.muted} />
           </View>
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
@@ -354,7 +367,7 @@ export function HomeScreen({
           />
           </View>
           {destinationReady ? (
-            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}:${departureExplanation}`}>
+            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}`}>
               <FeedbackPressable
                 accessibilityRole="button"
                 accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
@@ -377,9 +390,12 @@ export function HomeScreen({
             <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{companionBasis}</Text>
             <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
           </View> : null}
-          {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
+          {destinationReady ? <View style={{ minHeight: 44 }}>
+            <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-route-update" pending={routePending} label={routeStatus} color={theme.muted} onRetry={!routePending && /실패|다시 확인/.test(routeStatus) ? onRefreshWeather : undefined} />
+            {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
+          </View> : null}
           {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
-            {preparation.status ? <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{preparation.status}</Text> : null}
+            <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={destinationWeatherPending} label={destinationWeatherPending ? "목적지 날씨 확인 중" : preparation.status || preparation.basis} color={theme.muted} />
             {preparation.evidence && !preparation.rainEvidence ? <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{preparation.evidence}</Text> : null}
             <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
               <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{preparation.rainEvidence && preparation.evidence ? `${preparation.evidence} · ` : rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수확률 최대 ${rainForecast.maxProbability}% · ` : ""}강수 예보 ›</Text>
@@ -1108,14 +1124,14 @@ function HomeValueTransition({ value, children, style, testID }: { value: string
     previousValue.current = value;
     progress.stopAnimation();
     // A remount or an async accessibility result is not a content change.
-    if ((Platform.OS === "ios" && !changed) || reducedMotion !== false) { progress.setValue(1); return; }
+    if (!changed || reducedMotion !== false) { progress.setValue(1); return; }
     progress.setValue(0);
-    const animation = Animated.timing(progress, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    const animation = Animated.timing(progress, { toValue: 1, duration: ambientMotion.result, easing: Easing.out(Easing.cubic), useNativeDriver: true });
     animation.start();
     return () => animation.stop();
   }, [value, reducedMotion, progress]);
 
-  return <Animated.View testID={testID} style={[style, { opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] }), transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [3, 0] }) }] }]}>{children}</Animated.View>;
+  return <Animated.View testID={testID} style={[style, { opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }]}>{children}</Animated.View>;
 }
 
 const styles = StyleSheet.create({

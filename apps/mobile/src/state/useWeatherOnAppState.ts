@@ -1,3 +1,4 @@
+import { homeRouteRequestKey, finishHomeRouteRequest } from "../utils/homeUpdateState";
 import { buildTodayOutfit } from "../utils/todayOutfit";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createNotificationSync } from "../providers/notificationSync";
@@ -256,6 +257,10 @@ export function useWeatherOnAppState() {
   const [previewDestinationTravelEstimate, setPreviewDestinationTravelEstimate] = useState<DestinationTravelEstimate>(() =>
     createDefaultTravelEstimate(seongsuWeatherLocation, getDefaultDestinationPlace()),
   );
+  const [homeRouteRequests, setHomeRouteRequests] = useState<Record<string, number>>({});
+  const homeRouteRevisionRef = useRef(0);
+  const [homeWeatherCompletionRevision, setHomeWeatherCompletionRevision] = useState(0);
+  const [pendingWeatherLocations, setPendingWeatherLocations] = useState<string[]>([]);
   const [destinationTravelEstimateRequestStatus, setDestinationTravelEstimateRequestStatus] = useState<"idle" | "loading" | "error">("idle");
   const [destinationSelectionReady, setDestinationSelectionReady] = useState(false);
   const [placeSearchQuery, setPlaceSearchQuery] = useState("");
@@ -371,7 +376,9 @@ export function useWeatherOnAppState() {
   const storedDestinationTravelEstimate = selectedSavedDestination?.travelEstimate ?? previewDestinationTravelEstimate;
   const selectedDestinationTravelEstimate = !placeSearchOrigin
     ? { ...storedDestinationTravelEstimate, status: "idle" as const }
-    : destinationTravelEstimateRequestStatus === "idle"
+    : (destinationTravelEstimateRequestStatus === "idle" || (storedDestinationTravelEstimate.status === "ready"
+      && canScheduleTravelEstimate(storedDestinationTravelEstimate, nowMinuteTick)
+      && getDestinationTiming(storedDestinationTravelEstimate, selectedDestinationSchedulePreference, selectedDestinationPlace.timezone, nowMinuteTick, placeSearchOrigin.countryCode, selectedDestinationPlace.countryCode, placeSearchOrigin.locationId)))
       ? storedDestinationTravelEstimate
       : { ...storedDestinationTravelEstimate, status: destinationTravelEstimateRequestStatus };
   const activeWeatherLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
@@ -863,6 +870,7 @@ export function useWeatherOnAppState() {
     // 홈 저장 목적지 전환은 이미 받은 목적지 스냅샷만 바꿔 보여준다.
     // 선택값을 이 요청의 의존성으로 두면 칩을 누를 때마다 전체 날씨 요청이 다시 발생한다.
     const destinationLocation = savedDestinationWeatherLocations[0] ?? fallbackDestinationWeatherLocation;
+    setPendingWeatherLocations([currentLocation.locationId, ...savedDestinationWeatherLocations.map(item => item.locationId), destinationLocation.locationId]);
     const previousRequest = previousWeatherRequestRef.current;
     const currentSnapshot = previousRequest?.currentLocationId === currentLocation.locationId
       && previousRequest.mode === weatherProviderMode
@@ -882,6 +890,8 @@ export function useWeatherOnAppState() {
           refreshTick: weatherRefreshTick,
         };
         setWeatherProviderResult(nextResult);
+        setPendingWeatherLocations(result.pendingLocationIds ?? []);
+        if (!(result.pendingLocationIds ?? []).includes(currentLocation.locationId)) setHomeWeatherCompletionRevision(requestSequence);
         if ([result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) {
           persistedWeatherProviderResultRef.current = normalizePersistedWeatherProviderResult(result);
           savePersistedWeatherProviderResult(result);
@@ -908,6 +918,7 @@ export function useWeatherOnAppState() {
         if (active && weatherRequestSequenceRef.current === requestSequence) {
           weatherRequestInFlightRef.current = false;
           setIsWeatherLoading(false);
+          setPendingWeatherLocations([]);
         }
       });
 
@@ -985,6 +996,7 @@ export function useWeatherOnAppState() {
     if (!appStateHydrated || !placeSearchOrigin || AppState.currentState !== "active") return;
     let active = true;
     const pendingKeys = new Set<string>();
+    const uiRevisions = new Map<string, number>();
     const origin = placeSearchOrigin;
     void (async () => {
       for (const { place, schedule } of routeRequests) {
@@ -994,7 +1006,7 @@ export function useWeatherOnAppState() {
         const leavingNow = Boolean(destinationLeavingNow[place.id]);
         const nowKey = getLeavingNowRouteKey(origin, place, schedule.transportMode);
         const previousNow = leavingNowRoutes[nowKey]?.result;
-        const key = leavingNow ? `now:${nowKey}` : JSON.stringify({ origin, place, schedule, targetAt });
+        const key = leavingNow ? `now:${nowKey}` : homeRouteRequestKey(origin, place, schedule, targetAt);
         const updateNow = (value: LeavingNowRouteState) => setLeavingNowRoutes(current => ({
           ...Object.fromEntries(Object.entries(current).filter(([key]) => key !== nowKey).slice(-31)), [nowKey]: value,
         }));
@@ -1015,6 +1027,9 @@ export function useWeatherOnAppState() {
         const retryAt = Date.now() + (nearDeparture ? 60000 : 600000);
         routeAttemptsRef.current.set(key, retryAt);
         pendingKeys.add(key);
+        const uiRevision = ++homeRouteRevisionRef.current;
+        uiRevisions.set(key, uiRevision);
+        setHomeRouteRequests(current => ({ ...current, [key]: uiRevision }));
         if (leavingNow) {
           updateNow({ status: "loading", result: previousNow });
           if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
@@ -1056,12 +1071,16 @@ export function useWeatherOnAppState() {
             : createDefaultTravelEstimate(origin, place, "error");
           if (place.id === selectedDestinationPlace.id) { setPreviewDestinationTravelEstimate(estimate); setDestinationTravelEstimateRequestStatus("idle"); }
           updateSavedDestinations(current => current.map(destination => destination.place.id === place.id ? { ...destination, travelEstimate: estimate } : destination));
-        } finally { pendingKeys.delete(key); }
+        } finally {
+          pendingKeys.delete(key);
+          setHomeRouteRequests(current => finishHomeRouteRequest(current, key, uiRevision));
+        }
       }
     })();
     return () => {
       active = false;
       for (const key of pendingKeys) routeAttemptsRef.current.delete(key);
+      for (const [key, revision] of uiRevisions) setHomeRouteRequests(current => finishHomeRouteRequest(current, key, revision));
     };
   }, [appStateHydrated, routeRequestKey, nowMinuteTick, weatherRefreshTick, updateSavedDestinations]);
 
@@ -1839,11 +1858,13 @@ export function useWeatherOnAppState() {
     if (selectedDestinationPlaceIdRef.current === normalizedPlace.id) return;
     selectedDestinationPlaceIdRef.current = normalizedPlace.id;
     setSelectedDestinationPlace(normalizedPlace);
+    // A new preview must not borrow the last preview's ETA before its effect runs.
+    setPreviewDestinationTravelEstimate(createDefaultTravelEstimate(placeSearchOrigin ?? seongsuWeatherLocation, normalizedPlace, "loading"));
     setPreviewDestinationSchedulePreference(getDefaultDestinationSchedulePreference(normalizedPlace));
     setDestinationSelectionReady(true);
     setPreviewDestinationCareEnabled(true);
     setUseDestinationWeather(false);
-  }, []);
+  }, [placeSearchOrigin]);
 
   // Home's saved-destination picker is an explicit trip choice, unlike a
   // search result or editor preview. Commit it immediately so the Home card,
@@ -2333,6 +2354,15 @@ export function useWeatherOnAppState() {
     overlayReturnRoutes,
     state,
     homeState,
+    homeUpdateState: {
+      currentWeatherRevision: homeWeatherCompletionRevision,
+      currentWeatherPending: pendingWeatherLocations.includes(homeState.destinationCare.originWeather.locationId),
+      destinationWeatherPending: pendingWeatherLocations.includes(homeState.destinationCare.destinationWeather.locationId),
+      routePending: Boolean(placeSearchOrigin && homeRouteRequests[destinationLeavingNow[homeDestinationPlace.id]
+        ? `now:${getLeavingNowRouteKey(placeSearchOrigin, homeDestinationPlace, homeDestinationSchedulePreference.transportMode)}`
+        : homeRouteRequestKey(placeSearchOrigin, homeDestinationPlace, homeDestinationSchedulePreference, homeDestinationTargetAt)]),
+    },
+    homeDestinationEstimate: homeDepartureDestination?.travelEstimate ?? selectedDestinationTravelEstimate,
     useDestinationWeather,
     umbrellaReviewed,
     smartCareEnabled,

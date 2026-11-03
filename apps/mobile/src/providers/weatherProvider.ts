@@ -36,6 +36,8 @@ export type OfficialSpecialAlert = {
 };
 
 export type WeatherProviderResult = {
+  /** Transient per-location work; never interpreted as data freshness. */
+  pendingLocationIds?: string[];
   current: WeatherSnapshot;
   destination: WeatherSnapshot;
   destinationSnapshots: WeatherSnapshot[];
@@ -107,6 +109,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         const status = failed.size ? "error" : pending.size ? "stale" : mode;
         return {
           current, destination: destinationSnapshots[0], destinationSnapshots, officialSpecialAlert,
+          pendingLocationIds: [...pending],
           status, message: getProviderMessage(status, fallbackUsed), retryable: status !== "ready", fallbackUsed,
         };
       }

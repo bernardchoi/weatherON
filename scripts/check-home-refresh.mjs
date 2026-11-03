@@ -71,6 +71,10 @@ for(const patch of [{stale:true},{observedAt:new Date(now-16*60_000).toISOString
  assert.notEqual(buildHomePreparation(value,undefined,true,now).copy,before,'Invalid/unverified/expired snapshots cannot masquerade as valid guidance');
  run.held.resolve(payload(22));await run.promise;
 }
+const partialRun=await duringRefresh(freshSeed);
+assert.deepEqual(partialRun.interim.pendingLocationIds,[away.locationId], 'A slow destination must not mark completed current weather pending');
+partialRun.held.resolve(payload(22));const completeRun=await partialRun.promise;
+assert.deepEqual(completeRun.pendingLocationIds,[], 'Final response clears per-location pending');
 const failure=await duringRefresh(freshSeed);failure.held.reject(new Error('offline'));
 const failed=await failure.promise;assert.equal(failed.status,'error');assert.equal(failed.destination.stale,true);
 assert.notEqual(buildHomePreparation(failed.destination,undefined,true,now).copy,before,'A completed error must remain visible');

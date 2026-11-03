@@ -42,6 +42,8 @@ import type { WeatherLocationPreset } from "../providers/weatherLocations";
 import type { AccountProfile } from "../providers/accountAuth";
 
 export type P0ScreenProps = {
+  homeMotionActive?: boolean;
+  homeUpdateState?: import("../utils/homeUpdateState").HomeUpdateState;
   destinationLeavingNow?: Record<string, ReturnType<typeof getDestinationLeavingNowTiming>>;
   state: DemoState;
   rainForecastContext?: import("../utils/homeOuting").RainForecastContext | null;

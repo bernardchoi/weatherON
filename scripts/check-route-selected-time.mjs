@@ -274,6 +274,7 @@ let destinations = [saved];
 const attempts = { current: new Map() };
 const requests = [];
 const context = {
+    ...load("apps/mobile/src/utils/homeUpdateState.ts"), homeRouteRevisionRef: { current: 0 }, setHomeRouteRequests() {},
   appStateHydrated: true, AppState: { currentState: 'active' }, placeSearchOrigin: { coordinate: { latitude: 37.5, longitude: 127 }, locationId: 'origin', countryCode: 'KR' },
   routeRequests: [{ place, schedule }], nowMinuteTick: scheduleNow,
   savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: verified,

@@ -300,7 +300,7 @@ oldJob.resolve(payload(1, now - 10_000)); await oldRequest;
 assert.equal((await racingWeather.getSnapshots("error", options)).current.current.tempC, 30, "late older observation cannot poison cache");
 
 const persistedApi = load("apps/mobile/src/state/persistedAppState.ts", ["shouldKeepPersistedWeatherResult", "savePersistedWeatherProviderResult", "readPersistedWeatherProviderResult"], {
-  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.equal(value, partial); }, weatherProviderResultStorageKey: "weather",
+  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.deepEqual(value, Object.fromEntries(Object.entries(partial).filter(([key]) => key !== "pendingLocationIds"))); }, weatherProviderResultStorageKey: "weather",
 });
 assert.equal(persistedApi.shouldKeepPersistedWeatherResult(partial, { ...partial, current: old }), false);
 persistedApi.savePersistedWeatherProviderResult(partial);
@@ -345,7 +345,9 @@ const effectStart = hook.lastIndexOf("  useEffect(() => {", hook.indexOf("const 
 const effectEnd = hook.indexOf("\n  }, [", effectStart);
 const effectBody = hook.slice(effectStart + "  useEffect(() => {".length, effectEnd);
 const hookJobs = [], shown = [], persistedWrites = [], loading = [];
+const pendingLocations = [], completionRevisions = [];
 const hookContext = {
+  setPendingWeatherLocations(value) { pendingLocations.push(value); }, setHomeWeatherCompletionRevision(value) { completionRevisions.push(value); },
   weatherRefreshAttemptAtRef: { current: 0 }, weatherRequestSequenceRef: { current: 0 }, weatherRequestInFlightRef: { current: false }, manualWeatherRefreshTickRef: { current: null },
   appStateHydrated: true, setIsWeatherLoading: (value) => loading.push(value),
   getActiveWeatherLocation: (_, manual) => manual, weatherLocationMode: "manual", manualWeatherLocation: home, deviceWeatherLocation: null,
@@ -366,6 +368,8 @@ const newCleanup = effect(...Object.values(hookContext));
 hookJobs[0].opts.onUpdate(partial); hookJobs[0].resolve(partial); await flush();
 assert.equal(shown.length, 0); assert.equal(persistedWrites.length, 0);
 assert.deepEqual(loading, [true, true]);
+assert.equal(pendingLocations.length,2,'Obsolete result cannot clear newer location work');
+assert.equal(completionRevisions.length,0,'Obsolete result cannot acknowledge a newer refresh');
 const latestResult = { ...partial, current: { ...partial.current, locationId: "away" } };
 hookJobs[1].opts.onUpdate(latestResult);
 assert.equal(shown.at(-1).current.locationId, "away");

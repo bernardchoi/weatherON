@@ -4,6 +4,8 @@ import { DatabaseSync } from "node:sqlite";
 import { buildSync } from "esbuild";
 import ts from "typescript";
 import "./check-home-leaving-now.mjs";
+import "./check-home-update-state.mjs";
+import "./check-ambient-motion.mjs";
 import "./check-departure-activity-schedule.mjs";
 import "./check-departure-registration-order.mjs";
 import "./check-dynamic-island-contract.mjs";

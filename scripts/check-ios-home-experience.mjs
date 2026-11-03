@@ -51,7 +51,7 @@ assert.ok(motionEffect);
 let started = 0, stopped = 0, current = 1;
 const progress = {stopAnimation() {}, setValue(value) {current = value;}};
 const Animated = {timing: () => ({start() {started++;}, stop() {stopped++;}})};
-const runMotion = new Function('reducedMotion', 'progress', 'Animated', 'Easing', `return (${motionEffect})();`);
+const runMotion = new Function('reducedMotion', 'progress', 'Animated', 'Easing', `const ambientMotion={result:160};const previousValue={current:'old'};const value='new';const Platform={OS:'ios'};return (${motionEffect})();`);
 for (const reduced of [true, null]) runMotion(reduced, progress, Animated, {});
 assert.equal(started, 0, 'reduced or unknown motion preference must stay static');
 assert.equal(current, 1);
@@ -63,15 +63,15 @@ assert.equal(stopped, 1, 'changing content or unmounting must stop the prior ani
 console.log('Shared home: reduced motion and transition cancellation passed');
 let refreshEffect;
 function findRefresh(node) {
-  if (ts.isCallExpression(node) && node.expression.getText(homeAst) === 'useEffect' && node.arguments[1]?.getText(homeAst) === '[isPullRefreshing, isWeatherLoading, reliableWeather]') refreshEffect = node.arguments[0].getText(homeAst);
+  if (ts.isCallExpression(node) && node.expression.getText(homeAst) === 'useEffect' && node.arguments[1]?.getText(homeAst) === '[isPullRefreshing, currentWeatherPending, reliableWeather, homeUpdateState?.currentWeatherRevision]') refreshEffect = node.arguments[0].getText(homeAst);
   ts.forEachChild(node, findRefresh);
 }
 findRefresh(homeAst);
 assert.ok(refreshEffect);
 let acknowledgements = 0, refreshFinished = 0;
 const observed = {current:false};
-const runRefresh = new Function('isPullRefreshing','isWeatherLoading','reliableWeather','pullRefreshObservedLoadingRef','setIsPullRefreshing','setRefreshCompletedAt',`return (${refreshEffect})();`);
-const refresh = (pull,loading,reliable) => runRefresh(pull,loading,reliable,observed,()=>refreshFinished++,()=>acknowledgements++);
+const runRefresh = new Function('isPullRefreshing','currentWeatherPending','reliableWeather','pullRefreshObservedLoadingRef','setIsPullRefreshing','setRefreshCompletedAt','revision',`const homeUpdateState={currentWeatherRevision:revision};const pullRefreshRevisionRef={current:2};return (${refreshEffect})();`);
+const refresh = (pull,loading,reliable,revision=2) => runRefresh(pull,loading,reliable,observed,()=>refreshFinished++,()=>acknowledgements++,revision);
 refresh(false,false,true);
 refresh(true,false,true);
 assert.equal(acknowledgements,0,'must observe a refresh before saying it completed');
@@ -83,4 +83,5 @@ observed.current=false;
 refresh(true,true,true);
 refresh(true,false,true);
 assert.equal(acknowledgements,1);
-console.log('Shared home: refresh completion and failure acknowledgement passed');
+observed.current=false;refresh(true,false,true,3);assert.equal(acknowledgements,2,'A completed fast current-weather revision finishes pull refresh even if busy never painted');
+console.log('Shared home: refresh completion, fast completion revision and failure acknowledgement passed');

@@ -30,7 +30,7 @@ const reactNative = {
 };
 const localRequire = (id) => {
   if (id === "react") return { __esModule: true, default: {}, useRef: () => ({ current: scale }), useState: () => [false, () => {}] };
-  if (id === "react-native") return reactNative;
+  if (id === "react-native" || id.endsWith("/localization/react-native")) return reactNative;
   return id.includes("useReducedMotion")
     ? { useReducedMotion: () => false }
     : { triggerImportantActionHaptic: () => {} };

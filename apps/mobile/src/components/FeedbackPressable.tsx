@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import { ambientMotion } from "../theme/ambientMotion";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -44,6 +45,10 @@ export function FeedbackPressable({
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
   const [pressed, setPressed] = useState(false);
+  useEffect(() => {
+    if (reducedMotion !== false) { scale.stopAnimation(); scale.setValue(1); }
+    return () => scale.stopAnimation();
+  }, [reducedMotion, scale]);
   void feedbackColor;
   void android_ripple;
 
@@ -59,12 +64,12 @@ export function FeedbackPressable({
   };
   const handlePressIn = (event: GestureResponderEvent) => {
     setPressed(true);
-    animateTo(0.985, 80);
+    animateTo(0.985, ambientMotion.pressIn);
     onPressIn?.(event);
   };
   const handlePressOut = (event: GestureResponderEvent) => {
     setPressed(false);
-    animateTo(1, 140);
+    animateTo(1, ambientMotion.pressOut);
     onPressOut?.(event);
   };
   const handlePress = (event: GestureResponderEvent) => {
