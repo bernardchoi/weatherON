@@ -22,6 +22,7 @@ export type TravelEstimateParams = {
   originCountryCode?: "KR" | "JP" | "GLOBAL";
   destinationCountryCode?: "KR" | "JP" | "GLOBAL";
   transportMode?: DestinationTransportMode;
+  /** Legacy wire field. Scheduled arrivals always request zero extra margin. */
   arrivalBufferSeconds?: number;
   arrivalTime?: string;
   departureTime?: string;
@@ -107,12 +108,21 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       if (params.transportMode) url.searchParams.set("transportMode", params.transportMode);
       if (params.departureTime) url.searchParams.set("departureTime", params.departureTime);
       if (params.arrivalTime) url.searchParams.set("arrivalTime", params.arrivalTime);
-      if (params.arrivalBufferSeconds !== undefined) url.searchParams.set("arrivalBufferSeconds", String(params.arrivalBufferSeconds));
+      if (params.arrivalTime) url.searchParams.set("arrivalBufferSeconds", "0");
       const headers = options.apiToken ? { [PROXY_TOKEN_HEADER]: options.apiToken } : undefined;
       const result = await fetchJson<TravelEstimateResult>(url, timeoutMs, options.fetchImpl, headers);
       if (!["ready", "fallback", "error"].includes(result.status) || !["kakao", "kakao-transit", "google", "google-transit", "fallback"].includes(result.provider) || !Number.isFinite(result.durationSeconds ?? result.travelMinutes * 60) || (result.durationSeconds ?? result.travelMinutes * 60) < 0 || (result.durationSeconds ?? result.travelMinutes * 60) > 7 * 86400 || !Number.isFinite(result.distanceMeters) || result.distanceMeters < 0) throw new Error("Invalid route response");
+      // Older deployed proxies may still return an automatic buffer or a sampled
+      // early departure. Normalize scheduled arrivals without changing provenance.
+      const durationSeconds = result.durationSeconds ?? result.travelMinutes * 60;
+      const arrivalTarget = Date.parse(result.requestArrivalTime ?? "");
+      const departure = arrivalTarget - durationSeconds * 1000;
+      const aligned = result.status !== "error" && Number.isFinite(arrivalTarget) ? {
+        departureAt: new Date(departure).toISOString(), arrivalAt: new Date(arrivalTarget).toISOString(),
+        targetArrivalAt: new Date(arrivalTarget).toISOString(), arrivalFeasible: departure >= Date.now(),
+      } : {};
       return {
-        ...result,
+        ...result, ...aligned, bufferSeconds: 0,
         // Server query timestamps and prediction provenance survive cache reads.
         updatedAt: result.updatedAt ?? "",
         durationSeconds: result.durationSeconds ?? result.travelMinutes * 60,

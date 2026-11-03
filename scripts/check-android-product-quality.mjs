@@ -750,7 +750,7 @@ assertSourceIncludes("apps/mobile/src/screens/HomeScreen.tsx", [
   "WeatherStatusPanel",
   "destinationReady",
   "목적지 추가",
-  "추천 출발 시간",
+  "출발 예상",
   "목적지 강수",
   "오늘 챙길 것",
   "오늘의 코디",

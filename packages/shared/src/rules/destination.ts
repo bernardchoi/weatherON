@@ -13,6 +13,7 @@ type DestinationCareInput = {
   alertCondition?: DestinationAlertCondition;
   travelMinutes?: number;
   targetArrivalTime?: string;
+  /** Legacy input accepted for saved callers; automatic early-arrival margins are ignored. */
   bufferMinutes?: number;
   transportMode?: DestinationTransportMode;
   travelProvider?: "kakao" | "kakao-transit" | "google" | "google-transit" | "fallback";
@@ -47,9 +48,9 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
     destinationWeather: input.destinationWeather,
     departureAdvice: {
       targetArrivalTime: input.targetArrivalTime,
-      recommendedDepartureTime: getRecommendedDepartureTime(input.targetArrivalTime, input.travelMinutes, input.bufferMinutes),
+      recommendedDepartureTime: getRecommendedDepartureTime(input.targetArrivalTime, input.travelMinutes),
       travelMinutes: input.travelMinutes,
-      bufferMinutes: input.bufferMinutes,
+      bufferMinutes: 0,
       transportMode: input.transportMode,
       travelProvider: input.travelProvider,
       travelStatus: input.travelStatus,
@@ -62,9 +63,9 @@ export function buildDestinationCare(input: DestinationCareInput): DestinationCa
   };
 }
 
-function getRecommendedDepartureTime(targetArrivalTime?: string, travelMinutes?: number, bufferMinutes = 10): string | undefined {
+function getRecommendedDepartureTime(targetArrivalTime?: string, travelMinutes?: number): string | undefined {
   if (!targetArrivalTime || typeof travelMinutes !== "number") return undefined;
-  return subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+  return subtractMinutes(targetArrivalTime, travelMinutes);
 }
 
 function subtractMinutes(time: string, minutes: number): string {

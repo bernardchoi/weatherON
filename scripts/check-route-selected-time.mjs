@@ -41,6 +41,19 @@ try {
     assert.equal(calls.at(-1).pathname, '/v2/routing/publictraffic');
     assert.deepEqual([...calls.at(-1).searchParams.keys()].sort(), ['e_name', 'end_x', 'end_y', 's_name', 'start_x', 'start_y']);
   }
+  // User case and backwards-compatible cache policy: old clients sending 20m
+  // share the target-aligned result, with no extra route lookup.
+  response = () => ({ status: 'OK', routes: [transit(3000)] });
+  const policyKey = counter++;
+  const caseTarget = '2090-01-01T08:40:00+09:00';
+  const caseResult = await route('transit', { arrivalTime: caseTarget, arrivalBufferSeconds: '1200' }, policyKey);
+  assert.equal(caseResult.departureAt, new Date('2090-01-01T07:50:00+09:00').toISOString());
+  assert.equal(caseResult.arrivalAt, new Date(caseTarget).toISOString());
+  const beforePolicyCache = calls.length;
+  const caseCached = await route('transit', { arrivalTime: caseTarget, arrivalBufferSeconds: '0' }, policyKey);
+  assert.equal(calls.length, beforePolicyCache);
+  assert.equal(caseCached.updatedAt, caseResult.updatedAt);
+  assert.equal(caseCached.bufferSeconds, 0);
   response = () => ({ status: 'OK', route: { properties: { totalTime: 223, totalDistance: 247 } } });
   const walk = await route('walk', { departureTime: target });
   assert.equal(walk.durationSeconds, 223);
@@ -55,7 +68,18 @@ try {
   assert.equal(calls.at(-1).searchParams.get('departure_time'), 'now');
   assert.match(foreignTransit.message, /운행·대기시간 확인 필요/);
 
-  // Increase, decrease, oscillation, route changes and nonconvergence use exactly the selected sample.
+  for (const mode of ['walk', 'transit', 'drive']) {
+    response = () => ({ status: 'OK', rows: [{ elements: [{ status: 'OK', duration: { value: 3000 }, distance: { value: 8000 } }] }] });
+    const foreignArrival = await route(mode, { originCountryCode: 'JP', destinationCountryCode: 'JP', arrivalTime: target, arrivalBufferSeconds: '1200' });
+    assert.match(foreignArrival.provider, /^google/);
+    assert.equal(foreignArrival.bufferSeconds, 0);
+    assert.equal(foreignArrival.arrivalAt, target);
+    assert.equal(Date.parse(foreignArrival.departureAt), Date.parse(target) - 3000000);
+    if (mode === 'transit') assert.equal(calls.at(-1).searchParams.get('arrival_time'), String(Date.parse(target) / 1000));
+  }
+
+  // Increasing/decreasing/oscillating traffic retains an actual sampled duration,
+  // with the same bounded search budget, then aligns that duration to the target.
   for (const sequence of [[3000, 4200, 4200], [4200, 2400, 2400], [2400, 3600, 2400, 3600, 2400, 3600], [2400, 6000, 7200, 8400, 9600, 10800]]) {
     const sampled = []; let index = 0;
     response = url => {
@@ -66,27 +90,22 @@ try {
     const before = calls.length;
     const result = await route('drive', { arrivalTime: target, arrivalBufferSeconds: '600' });
     assert.ok(calls.length - before <= 6);
-    assert.ok(Date.parse(result.arrivalAt) + 600000 <= Date.parse(target));
+    assert.equal(result.arrivalAt, target);
+    assert.equal(result.bufferSeconds, 0, 'legacy request buffer cannot shift the target');
     assert.equal(Date.parse(result.arrivalAt) - Date.parse(result.departureAt), result.durationSeconds * 1000);
-    const korea = at => new Date(Date.parse(at) + 9 * 3600000).toISOString().slice(0, 16).replace(/[-T:]/g, '');
-    const selected = Date.parse(result.departureAt) === now ? sampled[0] : sampled.find(sample => sample.at === korea(result.departureAt));
-    assert.ok(selected, 'return a route queried at the selected departure');
-    assert.equal(result.durationSeconds, selected.duration, 'do not carry old long duration into a new response');
-    const feasible = sampled.filter(sample => sample.at).map(sample => {
-      const t = sample.at;
-      return { ...sample, departure: Date.parse(`${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00+09:00`) };
-    }).filter(sample => sample.departure + sample.duration * 1000 + 600000 <= Date.parse(target));
-    if (feasible.length) assert.equal(Date.parse(result.departureAt), Math.max(...feasible.map(sample => sample.departure)));
+    assert.ok(sampled.some(sample => sample.duration === result.durationSeconds), 'duration must come from an actual query, even when traffic oscillates');
   }
   response = () => current(2401);
   const rounded = await route('drive', { arrivalTime: target, arrivalBufferSeconds: '600' });
   assert.equal(rounded.durationSeconds, 2401);
-  assert.ok(Date.parse(target) - 600000 - Date.parse(rounded.arrivalAt) < 60000);
+  assert.equal(rounded.arrivalAt, target);
+  assert.equal(Date.parse(rounded.departureAt), Date.parse(target) - 2401000);
   const late = await route('drive', { arrivalTime: '2089-12-31T23:50:00Z' });
   assert.equal(late.arrivalFeasible, false);
-  assert.equal(late.departureAt, new Date(now).toISOString());
+  assert.equal(Date.parse(late.departureAt), Date.parse(late.arrivalAt) - late.durationSeconds * 1000);
+  assert.ok(Date.parse(late.departureAt) < now, 'missed planned departure is not silently moved to now/tomorrow');
   assert.equal(calls.at(-1).pathname, '/v1/directions');
-  assert.match(late.message, /지각 가능/);
+  assert.match(late.message, /출발 예상/);
 
   // Validation must fail before any upstream request.
   for (const extra of [{ origin: '91,127' }, { origin: '37,181' }, { origin: ',127' }, { origin: ' ,127' }, { origin: '37,127,0' }, { transportMode: 'car' }, { arrivalTime: 'tomorrow' }, { arrivalTime: '2090-02-30T09:00:00Z' }, { arrivalTime: '2090-01-01T09:00:00' }, { arrivalTime: target, departureTime: target }, { arrivalBufferSeconds: '-1' }]) {
@@ -186,9 +205,9 @@ const departure = travel.resolveTravelTiming(estimate, '2090-01-01T08:00:00+09:0
 assert.equal(travel.formatRouteClock(departure.arrivalAt, 'Asia/Seoul'), '08:40');
 assert.equal(travel.formatRouteClock(departure.preparationAt, 'Asia/Seoul'), '07:45');
 const arrival = travel.resolveTravelTiming(estimate, '2090-01-01T09:00:00+09:00', 'arrival', 40, 10, 15);
-assert.equal(travel.formatRouteClock(arrival.departureAt, 'Asia/Seoul'), '08:10');
-assert.equal(travel.formatRouteClock(arrival.arrivalAt, 'Asia/Seoul'), '08:50');
-assert.equal(travel.formatRouteClock(arrival.preparationAt, 'Asia/Seoul'), '07:55');
+assert.equal(travel.formatRouteClock(arrival.departureAt, 'Asia/Seoul'), '08:20');
+assert.equal(travel.formatRouteClock(arrival.arrivalAt, 'Asia/Seoul'), '09:00');
+assert.equal(travel.formatRouteClock(arrival.preparationAt, 'Asia/Seoul'), '08:05');
 assert.equal(travel.getTravelMinutesForTransport({ ...estimate, provider: 'kakao', transportMode: undefined }, 'walk'), undefined);
 assert.equal(travel.getTravelMinutesForTransport({ ...estimate, provider: 'kakao' }, 'transit'), undefined);
 assert.equal(travel.getTravelMinutesForTransport({ ...estimate, transportMode: 'walk', durationSeconds: 223, provider: 'kakao' }, 'walk'), 223 / 60);
@@ -209,10 +228,30 @@ const scheduleNow = Date.parse('2090-01-01T05:00:00+09:00');
 const actualTarget = helpers.getRouteArrivalTimeIso('09:00', 'Asia/Seoul', scheduleNow, false, []);
 const verified = { ...estimate, updatedAt: new Date(scheduleNow - 60000).toISOString(), expiresAt: new Date(scheduleNow + 600000).toISOString(), requestArrivalTime: actualTarget, departureAt: new Date(Date.parse(actualTarget) - 50 * 60000).toISOString(), arrivalAt: new Date(Date.parse(actualTarget) - 10 * 60000).toISOString(), bufferSeconds: 600 };
 const timing = helpers.getDestinationTiming(verified, schedule, 'Asia/Seoul', scheduleNow, 'KR', 'KR', 'origin');
-assert.equal(travel.formatRouteClock(timing.departureAt, 'Asia/Seoul'), '08:10');
+assert.equal(travel.formatRouteClock(timing.departureAt, 'Asia/Seoul'), '08:20');
 assert.equal(helpers.getDestinationTiming(verified, { ...schedule, targetArrivalTime: '10:00' }, 'Asia/Seoul', scheduleNow), undefined);
 assert.equal(helpers.getDestinationTiming(verified, schedule, 'Asia/Seoul', scheduleNow, 'KR', 'KR', 'other-origin'), undefined);
-console.log('PASS shared timing: 08:00→08:40, 09:00/40m/10m→08:10/08:50, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.');
+console.log('PASS shared timing: 08:00→08:40, 09:00/40m/legacy10m→08:20/09:00, preparation separate, seconds, midnight/month/year, repeat days/timezones, past targets, mode/origin/time mismatch.');
+
+// Target policy is independent of query time, old buffers and sampled departures.
+// Whole-second duration is authoritative; no minute rounding/double subtraction.
+for (const zone of ['Asia/Seoul', 'Asia/Tokyo', 'America/Los_Angeles', 'America/New_York']) {
+  for (const at of ['2026-11-03T08:40:00+09:00', '2026-12-31T00:10:00+09:00', '2026-11-01T06:30:00Z']) {
+    for (const seconds of [0, 223, 3000, 9000]) for (const oldBuffer of [0, 300, 1200]) {
+      const old = { ...estimate, durationSeconds: seconds, bufferSeconds: oldBuffer, requestArrivalTime: at,
+        departureAt: new Date(Date.parse(at) - (seconds + oldBuffer) * 1000).toISOString() };
+      const aligned = travel.resolveTravelTiming(old, at, 'arrival', 99, 20);
+      assert.equal(Date.parse(aligned.departureAt), Date.parse(at) - seconds * 1000);
+      assert.equal(Date.parse(aligned.arrivalAt), Date.parse(at));
+      assert.equal(aligned.bufferSeconds, 0);
+      assert.equal(travel.formatRouteClock(aligned.arrivalAt, zone), travel.formatRouteClock(at, zone));
+      const fixedDeparture = travel.resolveTravelTiming(old, at, 'departure', 99, 20);
+      assert.equal(Date.parse(fixedDeparture.departureAt), Date.parse(at));
+      assert.equal(Date.parse(fixedDeparture.arrivalAt), Date.parse(at) + seconds * 1000);
+    }
+  }
+}
+console.log('PASS target-aligned policy matrix: 08:40/50m→07:50, legacy 0/5/20m, seconds/zero, departure mode, midnight/year/DST instants and four display timezones.');
 
 // SQL migration and persistence use actual SQLite, not an imitation of SQL.
 const storageSource = fs.readFileSync('apps/mobile/src/providers/appStorage.ts', 'utf8');
@@ -235,12 +274,27 @@ for (const table of ['destinations', 'destination_preview']) {
   const row = db.prepare(`SELECT * FROM ${table}`).get();
   const restored = persistence.normalizeDestinationTravelEstimate(sqlContext.travelEstimateFromRow(row), { locationId: 'origin' }, place);
   assert.equal(restored.durationSeconds, 2400); assert.equal(restored.updatedAt, verified.updatedAt); assert.equal(restored.expiresAt, verified.expiresAt);
-  assert.equal(restored.requestArrivalTime, verified.requestArrivalTime); assert.equal(restored.bufferSeconds, 600);
+  assert.equal(restored.requestArrivalTime, verified.requestArrivalTime); assert.equal(restored.bufferSeconds, 0);
   assert.equal(helpers.getDestinationTiming(restored, schedule, place.timezone, scheduleNow, 'KR', 'KR', 'origin').departureAt, timing.departureAt);
 }
 const legacy = persistence.normalizeDestinationTravelEstimate({ provider: 'kakao', status: 'ready', travelMinutes: 40, distanceMeters: 1000 }, { locationId: 'origin' }, place);
 assert.equal(legacy.updatedAt, '', 'unknown original lookup must not become now');
 assert.equal(legacy.travelMinutes, 40);
+for (const durationSeconds of [0, 223, 3000]) {
+  const old = { ...verified, durationSeconds, bufferSeconds: 1200, cacheStatus: 'stale' };
+  const migrated = persistence.normalizeDestinationTravelEstimate(JSON.parse(JSON.stringify(old)), { locationId: 'origin' }, place);
+  assert.equal(migrated.bufferSeconds, 0);
+  assert.equal(migrated.arrivalAt, actualTarget);
+  assert.equal(Date.parse(migrated.departureAt), Date.parse(actualTarget) - durationSeconds * 1000);
+  assert.equal(migrated.updatedAt, old.updatedAt);
+  assert.equal(migrated.expiresAt, old.expiresAt);
+  assert.equal(migrated.cacheStatus, 'stale', 'migration is not a successful refresh');
+  assert.deepEqual(persistence.normalizeDestinationTravelEstimate(migrated, { locationId: 'origin' }, place), migrated, 'migration is idempotent');
+}
+const oldNow = { ...verified, requestArrivalTime: undefined, requestKind: 'now' };
+const restoredNow = persistence.normalizeDestinationTravelEstimate(oldNow, { locationId: 'origin' }, place);
+assert.equal(restoredNow.departureAt, oldNow.departureAt, 'current-query basis remains its original instant');
+assert.equal(restoredNow.arrivalAt, oldNow.arrivalAt);
 console.log('PASS actual SQLite: additive/idempotent legacy migration, saved/preview round trip, duration/absolute schedule/provenance/expiry preserved, and old data retained.');
 
 // Actual notification scheduling and UI model consume the same result.
@@ -250,7 +304,7 @@ const destinationWeather = { ...weather, locationId: 'destination', locationName
 const result = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationCareEnabled: true, destinationSchedule: { ...verified, ...schedule }, savedDestinations: [saved], notificationNow: scheduleNow });
 assert.equal(result.destinationCare.departureAdvice.departureAt, timing.departureAt);
 assert.equal(result.destinationCare.departureAdvice.arrivalAt, timing.arrivalAt);
-assert.equal(result.destinationCare.departureAdvice.recommendedDepartureTime, '08:10');
+assert.equal(result.destinationCare.departureAdvice.recommendedDepartureTime, '08:20');
 const notification = result.notifications.find(item => item.id.endsWith(':destination'));
 assert.ok(notification); assert.equal(notification.scheduledAt, new Date(Date.parse(timing.departureAt) - 60 * 60000).toISOString());
 assert.ok(notification.pushBody.includes(verified.message));
@@ -277,7 +331,7 @@ const context = {
   appStateHydrated: true, AppState: { currentState: 'active' }, placeSearchOrigin: { coordinate: { latitude: 37.5, longitude: 127 }, locationId: 'origin', countryCode: 'KR' },
   routeRequests: [{ place, schedule }], nowMinuteTick: scheduleNow,
   savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: verified,
-  routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getAutoBufferMinutes: helpers.getAutoBufferMinutes, getDestinationTiming: helpers.getDestinationTiming,
+  routeAttemptsRef: attempts, selectedDestinationPlace: place, getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getDestinationTiming: helpers.getDestinationTiming,
   createDestinationTravelEstimate: helpers.createDestinationTravelEstimate,
   destinationLeavingNow: {}, leavingNowRoutes: {},
   getLeavingNowRouteKey: travel.getLeavingNowRouteKey, isLeavingNowRouteResult: travel.isLeavingNowRouteResult,
@@ -291,6 +345,7 @@ const context = {
 const makeEffect = input => new Function(...Object.keys(input), ts.transpileModule(`const run = ${routeEffect};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run;')(...Object.values(input));
 let cleanup = makeEffect(context)();
 assert.equal(requests.length, 1);
+assert.equal(requests[0].input.arrivalBufferSeconds, 0, 'actual route effect discards persisted buffer');
 cleanup();
 const laterSchedule = { ...schedule, targetArrivalTime: '10:00' };
 cleanup = makeEffect({ ...context, routeRequests: [{ place, schedule: laterSchedule }] })();
@@ -341,7 +396,7 @@ const nativeContext = {
 };
 const buildInput = new Function(...Object.keys(nativeContext), ts.transpileModule(`const run = ${buildInputSource};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + '\nreturn run;')(...Object.values(nativeContext));
 assert.equal(buildInput(saved).departureAt, timing.departureAt);
-assert.equal(buildInput(saved).departureTimeLabel, '08:10');
+assert.equal(buildInput(saved).departureTimeLabel, '08:20');
 assert.ok(buildInput(saved).guidance.includes(verified.message));
 assert.equal(buildInput({ ...saved, schedulePreference: { ...schedule, transportMode: 'walk' } }), null, 'a mismatched mode ends the outdated countdown');
 const unsafeEstimates = [
@@ -370,9 +425,35 @@ assert.equal(widget.routeUpdatedAt, verified.updatedAt);
 assert.equal(widget.travelMinutes, 41);
 const past = helpers.getDestinationTiming(verified, schedule, place.timezone, Date.parse('2090-01-01T10:00:00+09:00'), 'KR', 'KR', 'origin');
 assert.equal(past.nowArrivalAt, undefined, 'scheduled duration must not fabricate a leaving-now ETA');
-assert.equal(travel.formatRouteClock(past.departureAt, place.timezone), '08:10', 'past recommendation must not become tomorrow');
+assert.equal(travel.formatRouteClock(past.departureAt, place.timezone), '08:20', 'past recommendation must not become tomorrow');
 globalThis.Date = originalDate;
 console.log('PASS native input/widget payload: same departure/arrival/duration/buffer as UI and notification, provenance preserved, conservative minute display, and leaving-now ETA separated from past recommendation.');
+
+// End-to-end user example across the common model and all delivery inputs.
+const userSchedule = { ...schedule, targetArrivalTime: '08:40' };
+const userTarget = helpers.getRouteArrivalTimeIso('08:40', place.timezone, scheduleNow, false, []);
+const userEstimate = { ...verified, durationSeconds: 3000, travelMinutes: 50, bufferSeconds: 1200,
+  requestArrivalTime: userTarget, departureAt: new Date(Date.parse(userTarget) - 70 * 60000).toISOString(),
+  arrivalAt: new Date(Date.parse(userTarget) - 20 * 60000).toISOString() };
+const userDestination = { ...saved, schedulePreference: userSchedule, travelEstimate: userEstimate };
+const userModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true,
+  { hasDestination: true, destination: place, destinationCareEnabled: true, destinationSchedule: { ...userEstimate, ...userSchedule, travelStatus: userEstimate.status, travelProvider: userEstimate.provider }, savedDestinations: [userDestination], notificationNow: scheduleNow });
+const userAdvice = userModel.destinationCare.departureAdvice;
+const homeSummary = load('apps/mobile/src/utils/homeCompanion.ts').getHomeDepartureSummary(userModel.destinationCare, true, userAdvice.departureAt, scheduleNow, 'arrival');
+assert.equal(homeSummary.value, '07:50');
+assert.equal(userAdvice.recommendedDepartureTime, '07:50');
+assert.equal(travel.formatRouteClock(userAdvice.arrivalAt, place.timezone), '08:40');
+assert.equal(userAdvice.bufferMinutes, 0);
+assert.equal(buildInput(userDestination).departureAt, userAdvice.departureAt);
+assert.equal(buildInput(userDestination).departureTimeLabel, '07:50');
+const userAlert = userModel.notifications.find(item => item.id.endsWith(':destination'));
+assert.equal(travel.formatRouteClock(userAlert.scheduledAt, place.timezone), '06:50');
+assert.equal(load('apps/mobile/src/providers/departureLiveActivity.shared.ts').getDepartureLiveActivityActivationDelay(userAdvice.departureAt, scheduleNow), 110 * 60000);
+const userWidget = serializers.createWeatheronWidgetLocationSnapshot(destinationWeather, result.outfit, result.umbrella,
+  { departureAt: userAdvice.departureAt, arrivalAt: userAdvice.arrivalAt, durationSeconds: userAdvice.durationSeconds, bufferSeconds: userAdvice.bufferMinutes * 60 });
+assert.equal(userWidget.departureAt, userAdvice.departureAt);
+assert.equal(userWidget.arrivalAt, userTarget);
+console.log('PASS user case: legacy 07:30/08:20/20m → Home/detail model 07:50/08:40, reminder 06:50, Activity activation 06:50, widget identical.');
 
 // Execute both actual schedule prop builders: selected destination and committed Home owner.
 const scheduleBuilders = [];
@@ -384,11 +465,11 @@ findScheduleBuilders(stateAst);
 assert.equal(scheduleBuilders.length, 2);
 const repeatSchedule = { ...schedule, repeatEnabled: true, repeatDays: ['mon'] };
 const repeatTarget = helpers.getRouteArrivalTimeIso('09:00', place.timezone, friday, true, ['mon']);
-const repeatEstimate = { ...verified, requestArrivalTime: repeatTarget, departureAt: new Date(Date.parse(repeatTarget) - 3000000).toISOString() };
+const repeatEstimate = { ...verified, requestArrivalTime: repeatTarget, departureAt: new Date(Date.parse(repeatTarget) - 2400000).toISOString() };
 const propsContext = {
   selectedDestinationTravelEstimate: repeatEstimate, selectedDestinationSchedulePreference: repeatSchedule,
   selectedDestinationTiming: timing, timing,
-  selectedDestinationAutoBufferMinutes: 10, travelEstimate: repeatEstimate,
+  selectedDestinationBufferMinutes: 10, travelEstimate: repeatEstimate,
   activeDestination: { schedulePreference: repeatSchedule }, bufferMinutes: 10,
 };
 for (const source of scheduleBuilders) {
@@ -456,7 +537,10 @@ const clients = load('apps/mobile/src/providers/travelEstimateClient.ts', { '../
 let clientRequest;
 const proxy = clients.createProxyTravelEstimateClient({ apiBaseUrl: 'https://mock', fetchImpl: async input => { clientRequest = new URL(input); return new Response(JSON.stringify({ ...verified, cacheStatus: 'cached' })); } });
 const fromClient = await proxy.estimateRoute({ origin: { latitude: 37.5, longitude: 127 }, destination: place.coordinate, transportMode: 'transit', arrivalTime: actualTarget, arrivalBufferSeconds: 600 });
-assert.equal(clientRequest.searchParams.get('arrivalBufferSeconds'), '600');
+assert.equal(clientRequest.searchParams.get('arrivalBufferSeconds'), '0');
+assert.equal(fromClient.bufferSeconds, 0);
+assert.equal(fromClient.arrivalAt, actualTarget);
+assert.equal(fromClient.departureAt, timing.departureAt);
 assert.equal(fromClient.message, verified.message, 'client must not overwrite server prediction provenance');
 assert.equal(fromClient.updatedAt, verified.updatedAt, 'cache read must not fabricate a lookup timestamp');
 assert.equal(fromClient.expiresAt, verified.expiresAt);
@@ -580,7 +664,7 @@ assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: { ...curr
 assert.equal(JSON.stringify(destinations), originalSchedule);
 const nowModel = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, destinationSchedule: { ...verified, ...schedule }, leavingNow: recovered, savedDestinations: [saved], notificationNow: now });
 assert.equal(nowModel.destinationCare.departureAdvice.nowArrivalDescription, recovered.nowArrivalDescription);
-assert.equal(nowModel.destinationCare.departureAdvice.departureAt, verified.departureAt);
+assert.equal(nowModel.destinationCare.departureAdvice.departureAt, timing.departureAt);
 assert.equal(buildInput(saved), null, 'a current ETA must not restart the expired scheduled Live Activity');
 assert.ok(nowModel.notifications.filter(item => item.type === 'destination').every(item => !item.active && !item.scheduledAt));
 const nowWidget = serializers.createWeatheronWidgetLocationSnapshot(destinationWeather, result.outfit, result.umbrella, recovered);

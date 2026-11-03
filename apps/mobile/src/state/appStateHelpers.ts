@@ -13,7 +13,6 @@ import {
 import {
   addZonedCalendarDays,
   createDateAtTimeInZone,
-  getMinutesUntilTimeInZone,
   getWeekdayForZonedDate,
   getZonedDateTimeParts,
 } from "../utils/zonedDateTime";
@@ -319,17 +318,6 @@ export function createDestinationTravelEstimate(originPlaceId: string, destinati
   };
 }
 
-export function getAutoBufferMinutes(targetArrivalTime: string, travelMinutes: number, nowMs: number, timeZone: string): number {
-  if (!isValidTimeText(targetArrivalTime)) return 10;
-  const arrivalOffset = getMinutesUntilTimeInZone(targetArrivalTime, nowMs, timeZone);
-  const freeWindow = arrivalOffset - travelMinutes;
-  if (freeWindow <= 30) return 0;
-  if (freeWindow <= 90) return 5;
-  if (freeWindow <= 180) return 10;
-  if (freeWindow <= 360) return 15;
-  return 20;
-}
-
 export function getRouteArrivalTimeIso(
   targetArrivalTime: string,
   timeZone: string,
@@ -405,7 +393,7 @@ export function getDestinationTiming(
   // A response for another date/time must never carry its route into this schedule.
   if (estimate.requestArrivalTime && (schedule.timeBasis !== "arrival" || estimate.requestArrivalTime !== target)) return undefined;
   if (estimate.requestDepartureTime && (schedule.timeBasis !== "departure" || estimate.requestDepartureTime !== target)) return undefined;
-  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, getAutoBufferMinutes(schedule.targetArrivalTime, travelMinutes, nowMs, timeZone), 0);
+  return resolveTravelTiming(estimate, target, schedule.timeBasis, travelMinutes, 0, 0);
 }
 
 export function getDestinationLeavingNowTiming(

@@ -1149,7 +1149,8 @@ assert.ok(departureWaitingSummary.body.includes("도착 시간을 안내"));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-gangneung") && item.title.includes("강릉")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.active && item.reason.includes("출발 30분 전")));
 assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.pushTitle.includes("가는 길") && item.pushBody.includes("우산")));
-assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.scheduledAt === "2026-06-25T23:30:00.000Z"));
+// 10:00 arrival - 45m route = 09:15 departure; reminder remains 30m before it.
+assert.ok(demoResults.multiDestination.notifications.some((item) => item.id.includes("kr-jamsil") && item.scheduledAt === "2026-06-25T23:45:00.000Z"));
 assert.equal(demoResults.stale.weatherProvider.status, "stale");
 assert.equal(demoResults.stale.weather.stale, true);
 assert.equal(demoResults.fallback.weatherProvider.status, "fallback");

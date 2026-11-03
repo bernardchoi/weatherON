@@ -13,6 +13,10 @@ const overrides = {
   en: {
     "이동 일정": "Trip schedule",
     "출발 예상": "Estimated departure",
+    "{0} 도착 · 이동 {1}분 · {2}": "Arrival {0} · Travel {1} min · {2}",
+    "{0} 도착 예상 · 이동 {1}분": "ETA {0} · Travel {1} min",
+    "출발 예상시각 지남 · 시간 변경 필요": "Estimated departure passed · Change time",
+    "도착 목표 기준 출발 예상": "Estimated departure for target arrival",
     "교통·배차 미반영 · 출발 전 지도에서 확인": "Traffic and service schedules excluded · Check the map before leaving",
     "강한 강수에 대비해 방수 겉옷과 신발을 챙겨요": "Bring waterproof outerwear and shoes for heavy precipitation",
     "추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요": "Cold weather calls for a warm coat and top",
@@ -160,6 +164,10 @@ const overrides = {
   ja: {
     "이동 일정": "移動予定",
     "출발 예상": "出発予想",
+    "{0} 도착 · 이동 {1}분 · {2}": "{0}到着 · 移動{1}分 · {2}",
+    "{0} 도착 예상 · 이동 {1}분": "{0}到着予想 · 移動{1}分",
+    "출발 예상시각 지남 · 시간 변경 필요": "出発予想時刻を過ぎました · 時刻を変更",
+    "도착 목표 기준 출발 예상": "目標到着時刻に合わせた出発予想",
     "교통·배차 미반영 · 출발 전 지도에서 확인": "交通・運行時刻は未反映・出発前に地図で確認",
     "강한 강수에 대비해 방수 겉옷과 신발을 챙겨요": "強い雨や雪に備えて、防水アウターと靴を用意しましょう",
     "추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요": "寒さに備えて、防寒アウターと暖かいトップスがおすすめです",
@@ -292,7 +300,7 @@ const files = (await Promise.all(sourceRoots.map(collectSourceFiles))).flat()
 const messages = new Set(["폭염주의보", "폭염경보", "호우주의보", "호우경보",
   // Server route provenance is composed of these public display segments.
   "시간대 교통 예측 반영", "현재 교통 기반", "경로 소요시간 기준 예상", "시간대 미반영", "운행·대기시간 확인 필요",
-  "도보 경로 소요시간 기준 예상", "조회한 후보 중 가장 늦은 출발", "분 단위 확인", "제한된 탐색",
+  "도착 목표 기준 출발 예상", "도보 경로 소요시간 기준 예상", "조회한 후보 중 가장 늦은 출발", "분 단위 확인", "제한된 탐색",
   "지금 출발 기준 도착 예상", "목표/여유 충족 후보 확인 못함", "지각 가능", "동일 좌표", "이동 없음",
   "대중교통 경로 없음/조회 실패", "운행 확인 필요", "직선 거리·시속 4.5km 기준 대략 추정", "도보 경로 확인 필요",
 ]);

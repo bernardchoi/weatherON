@@ -325,11 +325,12 @@ async function estimateRoute(params, readEnvValue) {
   const arrivalTime = normalizeRouteTime(params.get("arrivalTime"));
   const departureTime = normalizeRouteTime(params.get("departureTime"));
   if (arrivalTime && departureTime) throw new Error("Specify arrivalTime or departureTime, not both");
-  const bufferSeconds = Number(params.get("arrivalBufferSeconds") ?? 0);
-  if (!Number.isInteger(bufferSeconds) || bufferSeconds < 0 || bufferSeconds > 86400) throw new Error("Invalid arrivalBufferSeconds");
+  const legacyBufferSeconds = Number(params.get("arrivalBufferSeconds") ?? 0);
+  if (!Number.isInteger(legacyBufferSeconds) || legacyBufferSeconds < 0 || legacyBufferSeconds > 86400) throw new Error("Invalid arrivalBufferSeconds");
+  const bufferSeconds = 0; // Target-aligned policy; old clients may still send an automatic buffer.
   const domestic = shouldUseKakaoRoute(originCountryCode, destinationCountryCode);
   const provider = domestic ? "kakao" : "google";
-  const cacheKey = `route:${provider}:${Boolean(readEnvValue(domestic ? "KAKAO_REST_API_KEY" : "GOOGLE_MAPS_API_KEY"))}:${originCountryCode}:${destinationCountryCode}:${transportMode}:${arrivalTime}:${departureTime}:${bufferSeconds}:${origin.latitude},${origin.longitude}:${destination.latitude},${destination.longitude}:TIME`;
+  const cacheKey = `route:target-aligned-v1:${provider}:${Boolean(readEnvValue(domestic ? "KAKAO_REST_API_KEY" : "GOOGLE_MAPS_API_KEY"))}:${originCountryCode}:${destinationCountryCode}:${transportMode}:${arrivalTime}:${departureTime}:${bufferSeconds}:${origin.latitude},${origin.longitude}:${destination.latitude},${destination.longitude}:TIME`;
   const now = Date.now();
   const cached = routeEstimateCache.get(cacheKey);
   if (cached && Date.parse(cached.payload.expiresAt) > now) return { ...cached.payload, cacheStatus: "cached" };
@@ -361,7 +362,15 @@ async function estimateRoute(params, readEnvValue) {
       result.failureReason = reason.replace(/upstream request failed: (\d+).*/, "upstream_http_$1");
     }
     const updatedAt = new Date().toISOString();
-    const effectiveDeparture = result.departureAt ?? departureTime ?? (arrivalTime ? new Date(Date.parse(arrivalTime) - ((result.durationSeconds ?? 0) + bufferSeconds) * 1000).toISOString() : updatedAt);
+    // Normalize every provider/mode from its duration. A sampled driving departure
+    // is a lookup basis, not an additional early-arrival margin.
+    const scheduledDeparture = arrivalTime && result.status !== "error" && Number.isFinite(result.durationSeconds)
+      ? new Date(Date.parse(arrivalTime) - result.durationSeconds * 1000).toISOString() : undefined;
+    if (scheduledDeparture) result = {
+      ...result, departureAt: scheduledDeparture, arrivalAt: arrivalTime, targetArrivalAt: arrivalTime,
+      arrivalFeasible: Date.parse(scheduledDeparture) >= now,
+    };
+    const effectiveDeparture = scheduledDeparture ?? result.departureAt ?? departureTime ?? updatedAt;
     const ttl = Math.min(readNumberEnv(readEnvValue, "ROUTE_CACHE_TTL_MS", DEFAULT_ROUTE_CACHE_TTL_MS), Date.parse(effectiveDeparture) - now < 3600000 ? 60000 : DEFAULT_ROUTE_CACHE_TTL_MS);
     const payload = {
       ...result, transportMode, requestKind: arrivalTime || departureTime ? "scheduled" : "now", requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
@@ -411,9 +420,7 @@ async function estimateKakaoArrivalRoute(origin, destination, originName, destin
   const selected = feasible.sort((a, b) => Date.parse(b.departureAt) - Date.parse(a.departureAt))[0] ?? initial;
   return {
     ...selected, arrivalFeasible: feasible.length > 0, searchStatus, queryCount,
-    message: feasible.length
-      ? `${selected.message} · 조회한 후보 중 가장 늦은 출발 · ${searchStatus === "minute-resolution" ? "분 단위 확인" : "제한된 탐색"}`
-      : `지금 출발 기준 도착 예상 · 목표/여유 충족 후보 확인 못함 · 지각 가능`,
+    message: `${selected.message} · 도착 목표 기준 출발 예상`,
     targetArrivalAt: arrivalTime, bufferSeconds, searchedAt: new Date(now).toISOString(),
   };
 }

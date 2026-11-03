@@ -477,6 +477,12 @@ function isDestinationTransportMode(value: unknown): value is DestinationTranspo
 export function normalizeDestinationTravelEstimate(value: unknown, origin: WeatherLocationPreset, place: PlaceSearchResult): DestinationTravelEstimate {
   if (!value || typeof value !== "object") return createDefaultTravelEstimate(origin, place);
   const record = value as Partial<DestinationTravelEstimate>;
+  // Migrate old automatic margins without changing route identity, freshness or
+  // selected settings. Current-departure lookups retain their actual timestamps.
+  const arrivalTarget = validStoredRouteTime(record.requestArrivalTime);
+  const duration = typeof record.durationSeconds === "number" && Number.isFinite(record.durationSeconds) && record.durationSeconds >= 0 && record.durationSeconds <= 7 * 86400
+    ? record.durationSeconds : typeof record.travelMinutes === "number" && Number.isFinite(record.travelMinutes) && record.travelMinutes >= 0 && record.travelMinutes <= 7 * 1440 ? record.travelMinutes * 60 : undefined;
+  const alignedDeparture = arrivalTarget && duration !== undefined ? new Date(Date.parse(arrivalTarget) - duration * 1000).toISOString() : undefined;
   return {
     originPlaceId: typeof record.originPlaceId === "string" ? record.originPlaceId : origin.locationId,
     destinationPlaceId: typeof record.destinationPlaceId === "string" ? record.destinationPlaceId : place.id,
@@ -490,14 +496,14 @@ export function normalizeDestinationTravelEstimate(value: unknown, origin: Weath
     transportMode: isDestinationTransportMode(record.transportMode) ? record.transportMode : undefined,
     timingBasis: ["predicted", "current", "route", "distance", "unavailable"].includes(record.timingBasis ?? "") ? record.timingBasis : undefined,
     cacheStatus: record.cacheStatus === "fresh" || record.cacheStatus === "cached" || record.cacheStatus === "stale" ? record.cacheStatus : undefined,
-    bufferSeconds: typeof record.bufferSeconds === "number" && record.bufferSeconds >= 0 && record.bufferSeconds <= 86400 ? record.bufferSeconds : undefined,
-    departureAt: validStoredRouteTime(record.departureAt),
-    arrivalAt: validStoredRouteTime(record.arrivalAt),
+    bufferSeconds: 0,
+    departureAt: arrivalTarget ? alignedDeparture : validStoredRouteTime(record.departureAt),
+    arrivalAt: arrivalTarget ? (duration !== undefined ? arrivalTarget : undefined) : validStoredRouteTime(record.arrivalAt),
     requestArrivalTime: validStoredRouteTime(record.requestArrivalTime),
     requestDepartureTime: validStoredRouteTime(record.requestDepartureTime),
     targetArrivalAt: validStoredRouteTime(record.targetArrivalAt),
     expiresAt: validStoredRouteTime(record.expiresAt),
-    arrivalFeasible: typeof record.arrivalFeasible === "boolean" ? record.arrivalFeasible : undefined,
+    arrivalFeasible: arrivalTarget ? undefined : typeof record.arrivalFeasible === "boolean" ? record.arrivalFeasible : undefined,
     searchStatus: typeof record.searchStatus === "string" ? record.searchStatus : undefined,
     failureReason: typeof record.failureReason === "string" ? record.failureReason : undefined,
     routeOptions: Array.isArray(record.routeOptions) ? record.routeOptions.filter(isTravelRouteOption) : undefined,

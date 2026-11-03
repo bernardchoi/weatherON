@@ -194,13 +194,13 @@ export function HomeScreen({
     homeSchedulePreference.timeBasis,
   );
   const routeAdvice = state.destinationCare.departureAdvice;
-  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분 · 여유 ${routeAdvice.bufferMinutes}분` : "");
+  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분` : "");
   const departureExplanation = routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
   const showDepartureExplanation = destinationReady && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
-    : departureSummary.soon ? "이제 나갈 준비해요" : "추천 출발 시간";
+    : departureSummary.soon ? "이제 나갈 준비해요" : "출발 예상";
   const refreshMessage = isWeatherLoading ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
@@ -626,10 +626,9 @@ function buildHomeDecision(
 ) {
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime ?? "13:00";
   const travelMinutes = care.departureAdvice?.travelMinutes;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes;
-  const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
+  const routeTimingReady = typeof travelMinutes === "number";
   const departureTime = routeTimingReady
-    ? care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes)
+    ? care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes)
     : "계산 중";
   const routeStatusLabel = care.departureAdvice?.routeMessage ?? getRouteStatusLabel(care.departureAdvice?.travelStatus);
   const destinationDiff = destinationReady
@@ -651,7 +650,7 @@ function buildHomeDecision(
     departureTime,
     departureBody: destinationReady
       ? routeTimingReady
-        ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · 여유 ${bufferMinutes}분 · ${routeStatusLabel}`
+        ? `${targetArrivalTime} 도착 · 이동 ${travelMinutes}분 · ${routeStatusLabel}`
         : `${targetArrivalTime} 도착 · 해외 경로 확인 전`
       : "현재 위치 날씨를 보고 있음 · 목적지를 고르면 출발 시간까지 챙겨드림",
     destinationTitle: destinationDiff.title,

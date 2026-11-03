@@ -124,7 +124,6 @@ import {
   getAccountResultReturnRoute,
   getActiveWeatherLocation,
   getAlertSettingsFocusFromRoute,
-  getAutoBufferMinutes,
   getDestinationTiming,
   getDestinationLeavingNowTiming,
   getBackRoute,
@@ -398,7 +397,7 @@ export function useWeatherOnAppState() {
         leavingNowRoutes[getLeavingNowRouteKey(placeSearchOrigin, place, schedule.transportMode)]) : undefined];
     }));
   }, [savedDestinations, selectedDestinationPlace, selectedDestinationSchedulePreference, storedDestinationTravelEstimate, placeSearchOrigin, nowMinuteTick, leavingNowRoutes]);
-  const selectedDestinationAutoBufferMinutes = selectedDestinationTiming ? selectedDestinationTiming.bufferSeconds / 60 : undefined;
+  const selectedDestinationBufferMinutes = selectedDestinationTiming ? selectedDestinationTiming.bufferSeconds / 60 : undefined;
   const userPreferenceProfile = useMemo<UserPreferenceProfile>(
     () => ({
       gender: styleGender === "men" ? "male" : styleGender === "women" ? "female" : "any",
@@ -685,7 +684,7 @@ export function useWeatherOnAppState() {
           ...selectedDestinationTravelEstimate,
           ...selectedDestinationSchedulePreference,
           status: selectedDestinationTiming ? selectedDestinationTravelEstimate.status : "idle",
-          bufferMinutes: selectedDestinationAutoBufferMinutes,
+          bufferMinutes: selectedDestinationBufferMinutes,
           // 공통 계산에 초 단위 원본과 조회 근거를 함께 전달함.
           travelMinutes: selectedDestinationTravelEstimate.travelMinutes,
           distanceMeters: selectedDestinationTravelEstimate.distanceMeters,
@@ -704,7 +703,7 @@ export function useWeatherOnAppState() {
       destinationLeavingNow,
       savedDestinations,
       selectedDestinationAlertCondition,
-      selectedDestinationAutoBufferMinutes,
+      selectedDestinationBufferMinutes,
       selectedDestinationPlace,
       selectedDestinationSchedulePreference,
       selectedDestinationTravelEstimate,
@@ -1004,9 +1003,7 @@ export function useWeatherOnAppState() {
           if (place.id === selectedDestinationPlace.id) setDestinationTravelEstimateRequestStatus("idle");
           continue;
         }
-        // Match the countdown/server window to the actual departure, including
-        // arrival buffers and the provider's solved departure. Target minus
-        // duration alone can throttle an expiring arrival route for ten minutes.
+        // Use the same target-aligned departure deadline as notifications and ActivityKit.
         const scheduledTiming = getDestinationTiming(stored, schedule, place.timezone, nowMinuteTick, origin.countryCode, place.countryCode, origin.locationId);
         const departureMs = scheduledTiming ? Date.parse(scheduledTiming.departureAt)
           : Date.parse(targetAt) - (schedule.timeBasis === "arrival" ? (stored.durationSeconds ?? stored.travelMinutes * 60) * 1000 : 0);
@@ -1028,11 +1025,7 @@ export function useWeatherOnAppState() {
             transportMode: schedule.transportMode,
             departureTime: !leavingNow && schedule.timeBasis === "departure" ? targetAt : undefined,
             arrivalTime: !leavingNow && schedule.timeBasis === "arrival" ? targetAt : undefined,
-            arrivalBufferSeconds: !leavingNow && schedule.timeBasis === "arrival"
-              ? stored.requestArrivalTime === targetAt && stored.transportMode === schedule.transportMode && stored.bufferSeconds !== undefined
-                ? stored.bufferSeconds
-                : getAutoBufferMinutes(schedule.targetArrivalTime, (stored.durationSeconds ?? stored.travelMinutes * 60) / 60, nowMinuteTick, place.timezone) * 60
-              : 0,
+            arrivalBufferSeconds: 0,
           });
           if (!active) return;
           if (leavingNow) {

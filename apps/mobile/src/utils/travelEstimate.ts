@@ -118,15 +118,15 @@ export function canScheduleTravelEstimate(estimate: Partial<TravelEstimateResult
 // the reminder lead time is not preparation time and never changes D or B.
 export function resolveTravelTiming(
   estimate: Partial<TravelEstimateResult>, targetAt: string, timeBasis: "arrival" | "departure",
-  travelMinutes: number, bufferMinutes: number, preparationMinutes = 0,
+  travelMinutes: number, _legacyBufferMinutes: number, preparationMinutes = 0,
 ) {
   const target = Date.parse(targetAt);
   const durationSeconds = estimate.durationSeconds ?? travelMinutes * 60;
   if (!Number.isFinite(target) || !Number.isFinite(durationSeconds) || durationSeconds < 0) return undefined;
-  const matches = timeBasis === "arrival" && estimate.requestArrivalTime === targetAt;
-  const bufferSeconds = timeBasis === "departure" ? 0 : matches ? estimate.bufferSeconds ?? bufferMinutes * 60 : bufferMinutes * 60;
-  const calculated = timeBasis === "departure" ? target : target - durationSeconds * 1000 - bufferSeconds * 1000;
-  const departure = matches && estimate.departureAt && Number.isFinite(Date.parse(estimate.departureAt)) ? Date.parse(estimate.departureAt) : calculated;
+  // A route supplies duration; the selected time supplies the schedule. Legacy
+  // automatic buffers and sampled provider departures must not move that target.
+  const bufferSeconds = 0;
+  const departure = timeBasis === "departure" ? target : target - durationSeconds * 1000;
   return {
     targetAt, departureAt: new Date(departure).toISOString(),
     arrivalAt: new Date(departure + durationSeconds * 1000).toISOString(),

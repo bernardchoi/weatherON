@@ -82,8 +82,7 @@ export function DestinationCareScreen({
   const timeBasisFeedback = useConfirmedOptionFeedback(timeBasis);
   const timeFeedback = useConfirmedOptionFeedback(selectedTargetTime);
   const travelMinutes = care.departureAdvice?.travelMinutes;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes;
-  const routeTimingReady = typeof travelMinutes === "number" && typeof bufferMinutes === "number";
+  const routeTimingReady = typeof travelMinutes === "number";
   const targetTimeReady = selectedDestinationDepartureAt
     ? new Date(selectedDestinationDepartureAt).getTime() > Date.now()
     : !routeTimingReady && Date.parse(getRouteArrivalTimeIso(
@@ -284,7 +283,6 @@ export function DestinationCareScreen({
                 <View style={[styles.journeyLine, { backgroundColor: theme.border }]} />
                 <Text style={{ color: theme.sky }}>›</Text>
               </View>
-              {timeBasis === "arrival" && departureReady ? <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{`여유 ${bufferMinutes}분`}</Text> : null}
             </View>
             <View style={styles.journeyStop}>
               <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{departureReady && care.departureAdvice?.arrivalAt ? `${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather).split(" ")[0]} 도착 예상` : "도착 예상"}</Text>
@@ -299,7 +297,7 @@ export function DestinationCareScreen({
             {selectedDestinationTravelEstimate.updatedAt ? <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
           </View>
           {care.departureAdvice?.nowArrivalDescription ? <Text style={[styles.routeNotice, { color: theme.muted }]}>{care.departureAdvice.nowArrivalDescription}</Text> : null}
-          {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[styles.routeNotice, { color: theme.warm }]}>지금 출발 기준 · 지각 가능 · 도착 여유 확인 필요</Text> : null}
+          {selectedDestinationTravelEstimate.arrivalFeasible === false ? <Text style={[styles.routeNotice, { color: theme.warm }]}>출발 예상시각 지남 · 시간 변경 필요</Text> : null}
           <View
             style={[[
               styles.routeSummaryStrip,
@@ -893,9 +891,8 @@ function DropdownMotion({ visible, maxHeight, children }: { visible: boolean; ma
 function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCare"]) {
   const targetArrivalTime = care.departureAdvice?.targetArrivalTime;
   const travelMinutes = care.departureAdvice?.travelMinutes;
-  const bufferMinutes = care.departureAdvice?.bufferMinutes ?? 10;
   if (!targetArrivalTime || !travelMinutes) return care.departureAdvice?.recommendedDepartureTime ?? "확인 전";
-  return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes + bufferMinutes);
+  return care.departureAdvice?.recommendedDepartureTime ?? subtractMinutes(targetArrivalTime, travelMinutes);
 }
 
 function getTransportModeLabel(mode: P0ScreenProps["selectedDestinationSchedulePreference"]["transportMode"]) {

@@ -47,7 +47,7 @@ const alertCondition = { rainThresholdPct: 50, windThresholdMs: 8, leadTimeMinut
 let pairs = 0;
 for (const repeatEnabled of [false, true]) for (const mode of ["drive", "transit", "walk"]) {
   const commonSchedule = { transportMode: mode, repeatEnabled, repeatDays: ["mon"] };
-  const departureAt = "2026-11-02T01:15:00.000Z"; // 10:15 Seoul, activation 09:15.
+  const departureAt = "2026-11-02T01:20:00.000Z"; // 10:20 Seoul, activation 09:20.
   const arrival = {
     place, careEnabled: true, alertCondition,
     schedulePreference: { ...commonSchedule, timeBasis: "arrival", targetArrivalTime: "11:00" },
@@ -55,17 +55,17 @@ for (const repeatEnabled of [false, true]) for (const mode of ["drive", "transit
       requestArrivalTime: "2026-11-02T02:00:00.000Z", departureAt, bufferSeconds: 300 },
   };
   const departure = {
-    ...arrival, schedulePreference: { ...commonSchedule, timeBasis: "departure", targetArrivalTime: "10:15" },
+    ...arrival, schedulePreference: { ...commonSchedule, timeBasis: "departure", targetArrivalTime: "10:20" },
     travelEstimate: { ...arrival.travelEstimate, requestArrivalTime: undefined, requestDepartureTime: departureAt, bufferSeconds: 0 },
   };
   for (const destination of [arrival, departure]) {
     const before = JSON.stringify(destination);
     const input = intent.resolveDepartureActivityReconcileValue({ smartCareEnabled: true, intentDestinationId: place.id, savedDestinations: [destination], buildInput: build });
     assert.equal(input.departureAt, departureAt, `${mode}/${destination.schedulePreference.timeBasis}: use computed departure, never target arrival`);
-    assert.equal(input.departureTimeLabel, "10:15");
-    assert.equal(shared.getDepartureLiveActivityActivationDelay(input.departureAt, now), 15 * 60_000);
+    assert.equal(input.departureTimeLabel, "10:20");
+    assert.equal(shared.getDepartureLiveActivityActivationDelay(input.departureAt, now), 20 * 60_000);
     assert.equal(shared.isDepartureLiveActivityAutoWindow(input.departureAt, now), false);
-    assert.equal(shared.isDepartureLiveActivityAutoWindow(input.departureAt, now + 15 * 60_000), true);
+    assert.equal(shared.isDepartureLiveActivityAutoWindow(input.departureAt, now + 20 * 60_000), true);
     for (const leadTimeMinutes of [10, 30, 120]) {
       const changedNotificationLead = build({ ...destination, alertCondition: { ...alertCondition, leadTimeMinutes } });
       assert.equal(changedNotificationLead.departureAt, departureAt, "Notification lead does not change Activity's departure-minus-60 policy");
@@ -114,7 +114,7 @@ new Function("exports", "require", "Date", providerCode)(provider, name => {
   if (name === "./accountAuth") return { requestAuthenticatedAccountJson: async (path, body) => { registrations.push({ path, body }); return { scheduled: true }; } };
   throw new Error(`Unexpected dependency ${name}`);
 }, class extends Date { static now() { return nativeClock; } });
-const input = { destinationId: place.id, destinationName: place.name, departureAt: "2026-11-02T01:15:00.000Z", departureTimeLabel: "10:15", guidance: "가볍게 출발해요", guidanceSymbol: "figure.walk.departure", deepLink: "weatheron://destination?id=destination" };
+const input = { destinationId: place.id, destinationName: place.name, departureAt: "2026-11-02T01:20:00.000Z", departureTimeLabel: "10:20", guidance: "가볍게 출발해요", guidanceSymbol: "figure.walk.departure", deepLink: "weatheron://destination?id=destination" };
 for (let i = 0; i < 2; i++) {
   await provider.endDepartureLiveActivity();
   const result = await provider.syncAutomaticDepartureLiveActivity(input);
@@ -166,11 +166,11 @@ for (const timeBasis of ["arrival", "departure"]) for (const appState of ["activ
   providerAppState.currentState = "active";
   nativeClock = now;
   await provider.endDepartureLiveActivity();
-  const departureAt = "2026-11-02T01:15:00.000Z";
+  const departureAt = "2026-11-02T01:20:00.000Z";
   const target = timeBasis === "arrival" ? "2026-11-02T02:00:00.000Z" : departureAt;
   const destination = {
     place, careEnabled: true, alertCondition,
-    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "11:00" : "10:15", transportMode: "drive", repeatEnabled: false, repeatDays: [] },
+    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "11:00" : "10:20", transportMode: "drive", repeatEnabled: false, repeatDays: [] },
     travelEstimate: { ...baseEstimate, departureAt, bufferSeconds: timeBasis === "arrival" ? 300 : 0,
       requestArrivalTime: timeBasis === "arrival" ? target : undefined,
       requestDepartureTime: timeBasis === "departure" ? target : undefined },
@@ -210,7 +210,7 @@ for (const timeBasis of ["arrival", "departure"]) for (const appState of ["activ
     ["Smart Care OFF", destination, { smartCareEnabled: false }],
     ["intent cleared", destination, { intentDestinationId: null }],
     ["different destination expired", { ...destination, place: { ...place, id: "other" }, travelEstimate: { ...destination.travelEstimate, destinationPlaceId: "other", cacheStatus: "stale" } }, {}],
-    ["different solved departure expired", { ...destination, schedulePreference: { ...destination.schedulePreference, targetArrivalTime: timeBasis === "departure" ? "10:20" : "11:00" }, travelEstimate: { ...destination.travelEstimate, departureAt: "2026-11-02T01:20:00.000Z", requestDepartureTime: timeBasis === "departure" ? "2026-11-02T01:20:00.000Z" : undefined, cacheStatus: "stale" } }, {}],
+    ["different computed departure expired", { ...destination, schedulePreference: { ...destination.schedulePreference, targetArrivalTime: timeBasis === "departure" ? "10:25" : "11:00" }, travelEstimate: { ...destination.travelEstimate, durationSeconds: 2100, departureAt: "2026-11-02T01:25:00.000Z", requestDepartureTime: timeBasis === "departure" ? "2026-11-02T01:25:00.000Z" : undefined, cacheStatus: "stale" } }, {}],
   ];
   for (const [label, changed, options] of changedPlanCases) {
     providerAppState.currentState = "active";
@@ -219,6 +219,19 @@ for (const timeBasis of ["arrival", "departure"]) for (const appState of ["activ
     await reconcileAt(changed, expiredAt, options);
     assert.equal(nativeStatus.scheduled || nativeStatus.active, false, label + " cannot retain a misleading old Activity");
     assert.equal(starts.length, count, label + " cannot start from an unverified route");
+  }
+  if (timeBasis === "arrival") {
+    // A persisted reservation at the former 20m-early deadline is a different
+    // trip deadline. An expired route cannot preserve it after policy migration.
+    const canonical = build(destination);
+    providerAppState.currentState = "active";
+    nativeClock = now;
+    await syncProvider.syncAutomaticDepartureLiveActivity({ ...canonical,
+      departureAt: new Date(Date.parse(canonical.departureAt) - 20 * 60000).toISOString() });
+    const count = starts.length;
+    await reconcileAt(destination, expiredAt);
+    assert.equal(nativeStatus.scheduled || nativeStatus.active, false, "legacy early deadline must end when canonical deadline differs");
+    assert.equal(starts.length, count, "expired migration must not create the replacement Activity");
   }
   const repeating = { ...destination, schedulePreference: { ...destination.schedulePreference, repeatEnabled: true, repeatDays: ["mon", "tue"] } };
   await reconcileAt(repeating, now);
@@ -247,14 +260,13 @@ for (const presentation of [/dynamicIsland: \{ context in/, /compactLeading:/, /
   /DynamicIslandExpandedRegion\(\.leading\)/, /DynamicIslandExpandedRegion\(\.trailing\)/, /DynamicIslandExpandedRegion\(\.bottom\)/]) assert.match(widgetSource, presentation);
 assert.match(widgetSource, /compactTrailing:[\s\S]*WeatherONDepartureCountdown\([\s\S]*departureAt: context\.attributes\.departureAt/);
 
-// Exercise the request effect, not just already-fresh inputs. With a ten-minute
-// arrival buffer, target-minus-duration is ten minutes later than true departure.
-// The old client throttled this arrival route for ten minutes even after the
-// server supplied a one-minute expiry inside the Activity's activation window.
+// Exercise actual retries for both bases with target-aligned timing, including
+// old persisted buffer fields. The route expiry inside the activation window
+// must still retry after one minute, independently of the legacy fields.
 const requestNow = now + 1000;
 const absoluteDeparture = "2026-11-02T01:00:00.000Z"; // 10:00 Seoul.
 for (const timeBasis of ["arrival", "departure"]) {
-  const schedule = { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "10:50" : "10:00", transportMode: "drive", repeatEnabled: false, repeatDays: [] };
+  const schedule = { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "10:40" : "10:00", transportMode: "drive", repeatEnabled: false, repeatDays: [] };
   const target = helpers.getRouteArrivalTimeIso(schedule.targetArrivalTime, place.timezone, requestNow, false, []);
   const estimate = {
     ...baseEstimate, requestKind: "scheduled", departureAt: absoluteDeparture, bufferSeconds: timeBasis === "arrival" ? 600 : 0,
@@ -327,5 +339,5 @@ for (const timeBasis of ["arrival", "departure"]) {
   foregroundCleanup();
   cleanup();
 }
-console.log("PASS lifecycle: actual request effects use solved departure + buffer for one-minute retries; inactive lookup guard, expiry -> preserve active reservation, and real foreground callback -> throttle clear -> fresh route reconciliation exercised for both bases. Background OS activation remains unverified.");
+console.log("PASS lifecycle: actual request effects use target-aligned departure for one-minute retries; inactive lookup guard, expiry -> preserve active reservation, and real foreground callback -> throttle clear -> fresh route reconciliation exercised for both bases. Background OS activation remains unverified.");
 console.log(`PASS: ${pairs} paired arrival/departure schedules (repeat/nonrepeat, drive/transit/walk), actual Activity builder + iOS provider/native contract, departure-minus-60 window, notification-lead independence, expiry/failure/target mismatch rejection, end-server registration and all Dynamic Island presentations. No physical display or OS scheduling proof.`);
