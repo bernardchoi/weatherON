@@ -59,3 +59,15 @@ User explicitly approved changing Default from internal-only preparation to App 
 ### Post-push CI correction
 
 Source checks run 41663843599 on `2844973` failed because the Android meta-check still required old “확인 알림 / 목적지 출발” strings in the updated small-screen test. The final local multi-command invocation did not propagate this intermediate failure; the earlier broad-source pass preceded the browser-selector correction. The claim of a final Android-quality pass above is superseded by this finding. Updated the two meta-check expectations to actual “비·특보 미리보기 / 출발 타이밍” labels and reran with exit-code enforcement. This changes only test expectations and this record; no app, shared package, dependency or native build inputs change from Build 62 source `92eaab1`. External distribution waits for remote CI success.
+
+### Remote validation and Build 62
+
+GitHub Source checks passed on `5a3647b`: https://github.com/bernardchoi/weatherON/actions/runs/41664574941 (typecheck, Android product quality, core regressions and localization all successful). Build 62 started at 2026-11-04 00:28 KST on main after `92eaab1d5a69e0ca288134e47bebdae2a0534c2b` was verified remotely; Cloud lists its unique commit title “docs: record approved external TestFlight archive preparation”. `git diff 92eaab1 5a3647b -- apps packages package.json package-lock.json` is empty; the only later changes are the meta-test expectations and this record. No app changes were omitted from the binary.
+
+GitHub check-runs on exact commit `92eaab1d5a69e0ca288134e47bebdae2a0534c2b` confirms Cloud action “WeatherON | Default | Archive - iOS”, build UUID `bf28cc6e-7cae-4a6f-bc65-2d0220d4eb09`, action `7355dd22-4d59-469c-8ef4-328c9670aeb2`. This verifies the build-source linkage beyond the visible commit title.
+
+### Confirmed external delivery
+
+Cloud Build 62 succeeded at 2026-11-04 00:45:27 KST, with 0 errors, 0 test failures, 0 analyzer issues and 594 warnings (warnings are not claimed resolved). TestFlight `1.0.0 (62)` was added to existing `외부테스트` group (6 testers), with Korean What to Test notes and automatic tester notification enabled. After submission, the group UI explicitly showed **테스트 중**, 90 days remaining; group build count increased 11 → 12. This is external availability, not proof of tester installation or physical-device rendering. Build 61 remains internal-only and was not assigned externally.
+
+Internal Team (Expo) follow-up was interrupted by the Mac locking before adding Build 62. External group testing status was already confirmed. Internal-group addition is not yet verified. Local preview server was stopped and temporary QA browser tab closed. Original QA artifacts and old worktree files remain preserved.
