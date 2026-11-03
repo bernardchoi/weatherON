@@ -55,3 +55,7 @@ Build 61: Xcode Cloud successful from `eb77387`; no external distribution perfor
 ### Release authorization update
 
 User explicitly approved changing Default from internal-only preparation to App Store Connect. The workflow option was changed and saved in App Store Connect. The earlier automatic-review block is resolved; authorization remains TestFlight external testing only. Integrated source commit `2844973bf02b91ff452d525b6c77c7b822cce6d7` is pushed to main; this documentation-only follow-up is also included before Build 62 starts.
+
+### Post-push CI correction
+
+Source checks run 41663843599 on `2844973` failed because the Android meta-check still required old “확인 알림 / 목적지 출발” strings in the updated small-screen test. The final local multi-command invocation did not propagate this intermediate failure; the earlier broad-source pass preceded the browser-selector correction. The claim of a final Android-quality pass above is superseded by this finding. Updated the two meta-check expectations to actual “비·특보 미리보기 / 출발 타이밍” labels and reran with exit-code enforcement. This changes only test expectations and this record; no app, shared package, dependency or native build inputs change from Build 62 source `92eaab1`. External distribution waits for remote CI success.

@@ -262,8 +262,8 @@ assertSourceIncludes("scripts/check-android-small-screen-layout.mjs", [
   "clipped button text",
   "small touch target",
   "duplicate accessible button label",
-  "확인 알림",
-  "목적지 출발",
+  "비·특보 미리보기",
+  "출발 타이밍",
   "notification-center",
 ]);
 assertSourceIncludes("apps/mobile/src/screens/DestinationListScreen.tsx", [
