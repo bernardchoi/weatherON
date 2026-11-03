@@ -15,7 +15,9 @@ const intent = load("apps/mobile/src/state/departureActivityIntent.ts");
 const source = readFileSync(process.env.DEPARTURE_ACTIVITY_STATE_SOURCE ?? "apps/mobile/src/state/useWeatherOnAppState.ts", "utf8");
 const ast = ts.createSourceFile("state.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 let builder, requestEffect, foregroundCallback, activityEffect;
+const careActions = new Map();
 function visit(node) {
+  if (ts.isVariableDeclaration(node) && ["saveSelectedDestination", "toggleDestinationCare", "toggleSavedDestinationCare", "restoreRemovedDestination"].includes(node.name.getText(ast))) careActions.set(node.name.getText(ast), node.initializer.arguments[0].getText(ast));
   if (ts.isPropertyAssignment(node) && node.name.getText(ast) === "buildInput" && node.initializer.getText(ast).includes("getDestinationTiming")) builder = node.initializer.getText(ast);
   if (ts.isCallExpression(node) && node.expression.getText(ast) === "useEffect" && node.arguments[0]?.getText(ast).includes("runtimeTravelEstimateClient.estimateRoute")) requestEffect = node.arguments[0].getText(ast);
   if (ts.isCallExpression(node) && node.expression.getText(ast) === "AppState.addEventListener" && node.arguments[1]?.getText(ast).includes("routeAttemptsRef.current.clear()")) foregroundCallback = node.arguments[1].getText(ast);
@@ -160,6 +162,47 @@ async function reconcileAt(destination, tick, options = {}) {
   cleanup();
   return value;
 }
+
+// Execute explicit care actions through the real builder/effect/iOS provider.
+// An older pending trip must not suppress the newly saved/enabled trip.
+assert.equal(careActions.size, 4);
+for (const minutes of [45, 80]) for (const action of careActions.keys()) {
+  syncProvider = provider;
+  providerAppState.currentState = "active";
+  nativeClock = now;
+  await provider.endDepartureLiveActivity();
+  await provider.syncAutomaticDepartureLiveActivity({ ...input, destinationId: "old-owner", departureAt: new Date(now + 3 * 3600000).toISOString() });
+  const departureAt = new Date(now + minutes * 60000).toISOString();
+  const destination = {
+    place, careEnabled: false, alertCondition,
+    schedulePreference: { timeBasis: "departure", targetArrivalTime: minutes === 45 ? "09:45" : "10:20", transportMode: "drive", repeatEnabled: false, repeatDays: [] },
+    travelEstimate: { ...baseEstimate, departureAt, requestDepartureTime: departureAt },
+  };
+  let saved = [destination], owner = "old-owner", replacement = null;
+  const apply = (value, previous) => typeof value === "function" ? value(previous) : value;
+  const bindings = {
+    selectedDestinationPlace: place, selectedSavedDestination: destination,
+    savedDestinations: saved, savedDestinationsRef: { get current() { return saved; } },
+    departureActivityIntentDestinationId: owner, destinationCareEnabled: false, destinationSaved: true, permissionReady: true,
+    recentlyRemovedDestination: { ...destination, careEnabled: true },
+    canSaveDestination: () => true,
+    updateSavedDestinations: update => { saved = update(saved); },
+    setDepartureActivityIntentDestinationId: value => { owner = apply(value, owner); },
+    setDepartureActivityReplacementDestinationId: value => { replacement = apply(value, replacement); },
+    setCommittedDepartureDestinationId() {}, setDestinationSelectionReady() {}, setDestinationLimitNotice() {},
+    setPreviewDestinationCareEnabled() {}, setSelectedDestinationPlace() {}, setPreviewDestinationAlertCondition() {},
+    dismissRemovedDestination() {}, setWeatherProviderMode() {}, setWeatherRefreshTick() {},
+  };
+  const run = new Function(...Object.keys(bindings), ts.transpileModule(`const run = ${careActions.get(action)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + "\nreturn run;")(...Object.values(bindings));
+  run(action === "toggleSavedDestinationCare" ? place.id : true);
+  assert.equal(owner, place.id, `${action}: explicit care action commits the new owner`);
+  await reconcileAt(saved[0], now, { intentDestinationId: owner, builderContext: { departureActivityReplacementDestinationId: replacement } });
+  assert.equal(nativeStatus.destinationId, place.id, `${action}: old reservation must not block the new trip`);
+  assert.equal(nativeStatus.active, minutes === 45, `${action}: an in-window trip must request immediate presentation`);
+  assert.equal(nativeStatus.scheduled, minutes === 80);
+}
+console.log("PASS explicit save/care-on/restore -> actual builder/effect/iOS provider replaces an older reservation for immediate and scheduled trips");
+
 for (const candidateProvider of [provider, androidProvider]) {
 syncProvider = candidateProvider;
 for (const timeBasis of ["arrival", "departure"]) for (const appState of ["active", "background"]) {

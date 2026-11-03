@@ -1893,6 +1893,9 @@ export function useWeatherOnAppState() {
       if (careEnabled) return selectedDestinationPlace.id;
       return currentIntentDestinationId === selectedDestinationPlace.id ? null : currentIntentDestinationId;
     });
+    setDepartureActivityReplacementDestinationId((currentDestinationId) => (
+      careEnabled ? selectedDestinationPlace.id : currentDestinationId === selectedDestinationPlace.id ? null : currentDestinationId
+    ));
     setCommittedDepartureDestinationId((currentCommittedDestinationId) => {
       if (careEnabled) return selectedDestinationPlace.id;
       return currentCommittedDestinationId === selectedDestinationPlace.id ? null : currentCommittedDestinationId;
@@ -1945,6 +1948,9 @@ export function useWeatherOnAppState() {
           ? (nextCareEnabled ? selectedDestinationPlace.id : null)
           : currentIntentDestinationId
       ));
+      setDepartureActivityReplacementDestinationId((currentDestinationId) => (
+        nextCareEnabled ? selectedDestinationPlace.id : currentDestinationId === selectedDestinationPlace.id ? null : currentDestinationId
+      ));
       setCommittedDepartureDestinationId((currentCommittedDestinationId) => (
         nextCareEnabled || currentCommittedDestinationId === selectedDestinationPlace.id
           ? (nextCareEnabled ? selectedDestinationPlace.id : null)
@@ -1971,9 +1977,11 @@ export function useWeatherOnAppState() {
     );
     if (nextCareEnabled) {
       setDepartureActivityIntentDestinationId(placeId);
+      setDepartureActivityReplacementDestinationId(placeId);
       setCommittedDepartureDestinationId(placeId);
     } else if (departureActivityIntentDestinationId === placeId) {
       setDepartureActivityIntentDestinationId(null);
+      setDepartureActivityReplacementDestinationId((currentDestinationId) => currentDestinationId === placeId ? null : currentDestinationId);
       setCommittedDepartureDestinationId((currentCommittedDestinationId) => currentCommittedDestinationId === placeId ? null : currentCommittedDestinationId);
     }
   }, [departureActivityIntentDestinationId, permissionReady, savedDestinations, updateSavedDestinations]);
@@ -2084,6 +2092,9 @@ export function useWeatherOnAppState() {
       if (restoredDestination.careEnabled) return restoredDestination.place.id;
       return currentIntentDestinationId === restoredDestination.place.id ? null : currentIntentDestinationId;
     });
+    setDepartureActivityReplacementDestinationId((currentDestinationId) => (
+      restoredDestination.careEnabled ? restoredDestination.place.id : currentDestinationId === restoredDestination.place.id ? null : currentDestinationId
+    ));
     setCommittedDepartureDestinationId((currentCommittedDestinationId) => {
       if (restoredDestination.careEnabled) return restoredDestination.place.id;
       return currentCommittedDestinationId === restoredDestination.place.id ? null : currentCommittedDestinationId;
