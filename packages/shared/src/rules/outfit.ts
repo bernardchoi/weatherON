@@ -102,7 +102,7 @@ function buildReasons(weather: WeatherSnapshot, signals: ReturnType<typeof getWe
   if (signals.isWindy && signals.needsLightLayer && !signals.isCold) reasons.push(`바람이 ${signals.maxWindMs.toFixed(1)}m/s라 얇은 겉옷이 있으면 좋아요`);
   if (signals.isHot) {
     reasons.push(
-      signals.isHumid
+      signals.isHumid && typeof weather.current.humidityPct === "number"
         ? `${temperatureLabel} ${temperature}도에 습도 ${weather.current.humidityPct}%라 통풍이 잘되는 옷이 좋아요`
         : `${temperatureLabel} ${temperature}도라 바람 잘 통하는 소재가 좋아요`,
     );

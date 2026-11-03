@@ -84,8 +84,13 @@ function buildDaily(payload: WeatherKitResponse, timeZone: string, conditionProf
     rainProbabilityPct: ratioToPct(day.precipitationChance),
     precipitationMm: day.precipitationAmount ?? 0,
     windMs: kmhToMs(day.windSpeedAvg ?? day.windSpeed ?? payload.currentWeather?.windSpeed ?? 0),
+    maxUvIndex: finiteNumberOrUndefined(day.maxUvIndex),
     condition: conditionFromWeatherKit(day.conditionCode ?? payload.currentWeather?.conditionCode, conditionProfile),
   }));
+}
+
+function finiteNumberOrUndefined(value: number | undefined): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function toLocalTimeString(isoUtc: string, timeZone: string): string {
