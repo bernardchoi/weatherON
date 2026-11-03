@@ -321,6 +321,7 @@ for (const timeBasis of ["arrival", "departure"]) {
   let effectNow = requestNow;
   const attempts = new Map(), requests = [];
   const effectContext = {
+    ...load("apps/mobile/src/utils/homeUpdateState.ts"), homeRouteRevisionRef: { current: 0 }, setHomeRouteRequests() {},
     ...helpers, getLeavingNowRouteKey: travel.getLeavingNowRouteKey, isLeavingNowRouteResult: travel.isLeavingNowRouteResult,
     appStateHydrated: true, AppState: { currentState: "active" }, nowMinuteTick: requestNow,
     Date: class extends Date { static now() { return effectNow; } },

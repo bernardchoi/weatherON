@@ -119,7 +119,8 @@ export async function readPersistedWeatherProviderResult(
 
 export function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
   if (![result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) return;
-  void writeAppValue(weatherProviderResultStorageKey, result);
+  const { pendingLocationIds: _pending, ...snapshotResult } = result;
+  void writeAppValue(weatherProviderResultStorageKey, snapshotResult);
 }
 
 export async function readPersistedNotificationState(): Promise<PersistedNotificationState> {

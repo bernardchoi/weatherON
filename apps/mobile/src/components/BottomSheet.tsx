@@ -1,3 +1,5 @@
+import { ambientMotion } from "../theme/ambientMotion";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Platform, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -25,30 +27,37 @@ export function BottomSheet(props: BottomSheetProps) {
 
 function LegacyBottomSheet({ visible, onClose, accessibilityLabel, children }: BottomSheetProps) {
   const theme = useAppTheme();
+  const reducedMotion = useReducedMotion();
+  const generation = useRef(0);
+  const previousVisible = useRef(visible);
   const { height: windowHeight } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const content = useRef({ children, accessibilityLabel });
+  if (visible) content.current = { children, accessibilityLabel };
 
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 260,
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }).start();
+    const token = ++generation.current;
+    const changed = previousVisible.current !== visible;
+    previousVisible.current = visible;
+    progress.stopAnimation();
+    if (visible) setMounted(true);
+    if (reducedMotion !== false || !changed) {
+      progress.setValue(visible ? 1 : 0);
+      setMounted(visible);
       return;
     }
-    Animated.timing(progress, {
-      toValue: 0,
-      duration: 190,
-      easing: Easing.in(Easing.cubic),
+    const animation = Animated.timing(progress, {
+      toValue: visible ? 1 : 0,
+      duration: visible ? ambientMotion.androidSheetOpen : ambientMotion.androidSheetClose,
+      easing: visible ? Easing.out(Easing.exp) : Easing.in(Easing.cubic),
       useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) setMounted(false);
     });
-  }, [progress, visible]);
+    animation.start(({ finished }) => {
+      if (finished && token === generation.current && !visible) setMounted(false);
+    });
+    return () => { generation.current++; animation.stop(); };
+  }, [progress, visible, reducedMotion]);
 
   if (!mounted) return null;
 
@@ -72,7 +81,10 @@ function LegacyBottomSheet({ visible, onClose, accessibilityLabel, children }: B
           />
         </Animated.View>
         <Animated.View
-          accessibilityLabel={accessibilityLabel}
+          accessibilityLabel={content.current.accessibilityLabel}
+          accessibilityElementsHidden={!visible}
+          importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
+          pointerEvents={visible ? "auto" : "none"}
           collapsable={false}
           style={[
             styles.panel,
@@ -100,7 +112,7 @@ function LegacyBottomSheet({ visible, onClose, accessibilityLabel, children }: B
             <View style={[styles.grabber, styles.grabberDefault, { backgroundColor: androidMaterialColor(theme, "outlineVariant") }]} />
           )}
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {children}
+            {content.current.children}
           </ScrollView>
         </Animated.View>
       </View>

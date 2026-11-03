@@ -329,6 +329,9 @@ export function AppNavigator() {
   // route, so scope the owner-specific values to Home only.
   const homeScreenProps = {
     ...screenProps,
+    homeMotionActive: appState.route === "H1",
+    homeUpdateState: appState.homeUpdateState,
+    selectedDestinationTravelEstimate: appState.homeDestinationEstimate,
     selectedDestinationSchedulePreference: appState.homeDestinationSchedulePreference,
     selectedDestinationDepartureAt: appState.homeDestinationDepartureAt,
     selectedDestinationTargetAt: appState.homeDestinationTargetAt,

@@ -1,9 +1,10 @@
+import { AmbientDisclosure } from "../components/AmbientDisclosure";
 import { forecastTime } from "../utils/homeOuting";
 import { formatRouteClock } from "../utils/travelEstimate";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Animated, Easing, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import { AppState, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -363,7 +364,7 @@ export function DestinationCareScreen({
             <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "열기"}</Text>
           </FeedbackPressable>
 
-          <DropdownMotion visible={detailPanelOpen} maxHeight={260}>
+          <DropdownMotion visible={detailPanelOpen}>
             <>
               <View style={styles.conditionHeader}>
                 <View style={styles.conditionCopy}>
@@ -681,7 +682,7 @@ function TimeWheel({
   const centerOffsetRef = useRef(centerOffset);
   centerOffsetRef.current = centerOffset;
 
-  // 이 휠은 높이가 0→목표값으로 애니메이션되는 DropdownMotion(overflow:hidden) 안에 있다.
+  // 이 휠은 시트의 실제 네이티브 레이아웃이 확정된 뒤에 정렬해야 한다.
   // requestAnimationFrame 한 프레임 뒤에 scrollTo를 호출하면 웹에서는 통하지만, 실기기에서는
   // 네이티브 레이아웃이 그 시점에 아직 잡히지 않아 스크롤이 씹히는 경우가 있었다(첫 프레임에
   // 목록 맨 위 00/01/02가 보이던 버그). onLayout은 플랫폼 관계없이 실제 레이아웃이 끝난 뒤에만
@@ -856,36 +857,8 @@ function RepeatSchedulePanel({
   );
 }
 
-function DropdownMotion({ visible, maxHeight, children }: { visible: boolean; maxHeight: number; children: React.ReactNode }) {
-  const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
-  const [rendered, setRendered] = useState(visible);
-
-  useEffect(() => {
-    if (visible) setRendered(true);
-    Animated.timing(progress, {
-      toValue: visible ? 1 : 0,
-      duration: visible ? 260 : 190,
-      easing: visible ? Easing.out(Easing.exp) : Easing.in(Easing.cubic),
-      useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished && !visible) setRendered(false);
-    });
-  }, [progress, visible]);
-
-  if (!rendered) return null;
-
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] });
-  const scaleY = progress.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] });
-  const animatedMaxHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [0, maxHeight] });
-
-  return (
-    <Animated.View
-      collapsable={false}
-      style={[styles.dropdownMotion, { maxHeight: animatedMaxHeight, opacity: progress, transform: [{ translateY }, { scaleY }] }]}
-    >
-      {children}
-    </Animated.View>
-  );
+function DropdownMotion({ visible, children }: { visible: boolean; children: React.ReactNode }) {
+  return <AmbientDisclosure visible={visible}>{children}</AmbientDisclosure>;
 }
 
 function getRecommendedDepartureTime(care: P0ScreenProps["state"]["destinationCare"]) {
