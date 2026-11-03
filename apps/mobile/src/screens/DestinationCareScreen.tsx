@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   labelOption: {
-    minHeight: 40,
+    minHeight: 44,
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -1551,12 +1551,13 @@ const styles = StyleSheet.create({
   },
   repeatDayRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 4,
   },
   repeatDayChip: {
     flex: 1,
-    minWidth: 0,
+    minWidth: 44,
     maxWidth: 48,
     height: 44,
     alignItems: "center",

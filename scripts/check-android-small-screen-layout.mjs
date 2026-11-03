@@ -152,9 +152,9 @@ try {
 
     console.log(`small-screen: ${viewport.name}/destination-care`);
     await clickAriaIncludes(page, "출발 상세 보기");
-    await assertText(page, "출발 판단 · 이동 · 준비", viewport, "destination-care");
-    await assertText(page, "목적지 현재 날씨 · 준비 안내", viewport, "destination-care");
-    await assertText(page, "카카오맵에서 상세 경로 보기", viewport, "destination-care");
+    await assertText(page, "이동 일정", viewport, "destination-care");
+    await assertText(page, "목적지 코디", viewport, "destination-care");
+    await assertText(page, "카카오맵 길찾기", viewport, "destination-care");
     await clickAriaIncludes(page, "이동수단");
     await assertText(page, "대중교통", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
@@ -164,8 +164,8 @@ try {
     await assertText(page, "출발 시간", viewport, "destination-care");
     await assertText(page, "5분 단위 스크롤 선택", viewport, "destination-care");
     await clickAriaIncludes(page, "희망 시각 확인");
-    await clickAriaIncludes(page, "계산 근거와 알림 상세 열기");
-    await assertText(page, "반복 알림", viewport, "destination-care");
+    await clickAriaIncludes(page, "알림 일정 열기");
+    await assertText(page, "반복 요일", viewport, "destination-care");
     await assertText(page, "ON", viewport, "destination-care");
     await checkLayout(page, viewport, "destination-care");
     await screenshot(page, viewport, "destination-care");
@@ -185,8 +185,8 @@ try {
     console.log(`small-screen: ${viewport.name}/alert-settings`);
     await clickAriaIncludes(page, "알림 설정");
     await assertText(page, "스마트 알림 설정", viewport, "alert-settings");
-    await assertAnyText(page, ["필수 날씨", "확인 알림"], viewport, "alert-settings");
-    await assertText(page, "목적지 출발", viewport, "alert-settings");
+    await assertText(page, "비·특보 미리보기", viewport, "alert-settings");
+    await assertText(page, "출발 타이밍", viewport, "alert-settings");
     await checkLayout(page, viewport, "alert-settings");
     await screenshot(page, viewport, "alert-settings");
 
@@ -196,36 +196,36 @@ try {
     const onboardingPage = await browser.newPage();
     await onboardingPage.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await loadSeededApp(onboardingPage, onboardingState);
-    await assertText(onboardingPage, "오늘의 외출, 미리 준비하세요", viewport, "onboarding");
+    await assertText(onboardingPage, "오늘 나갈 준비, WeatherON이 가볍게 챙겨드려요", viewport, "onboarding");
     await assertText(onboardingPage, "다음", viewport, "onboarding");
     await assertText(onboardingPage, "건너뛰기", viewport, "onboarding");
     await checkLayout(onboardingPage, viewport, "onboarding");
     await screenshot(onboardingPage, viewport, "onboarding");
 
-    await clickText(onboardingPage, "다음");
-    await assertText(onboardingPage, "날씨 보고, 바로 준비", viewport, "onboarding-intro");
-    await assertText(onboardingPage, "날씨 맞춤", viewport, "onboarding-intro");
+    await clickAriaIncludes(onboardingPage, "다음");
+    await assertText(onboardingPage, "날씨 보고, 가볍게 나가요", viewport, "onboarding-intro");
+    await assertText(onboardingPage, "날씨에 딱 맞게", viewport, "onboarding-intro");
     await assertText(onboardingPage, "우산·신발", viewport, "onboarding-intro");
     await checkLayout(onboardingPage, viewport, "onboarding-intro");
     await checkOnboardingBadge(onboardingPage, viewport, "onboarding-intro", "1 / 4");
     await screenshot(onboardingPage, viewport, "onboarding-intro");
 
     await clickAriaIncludes(onboardingPage, "코디 안내 단계로 이동");
-    await assertText(onboardingPage, "오늘 날씨 맞춤 코디", viewport, "onboarding-outfit");
+    await assertText(onboardingPage, "오늘, 뭐 입을지 고민 끝", viewport, "onboarding-outfit");
     await assertText(onboardingPage, "현재 위치 사용", viewport, "onboarding-outfit");
     await checkLayout(onboardingPage, viewport, "onboarding-outfit");
     await checkOnboardingBadge(onboardingPage, viewport, "onboarding-outfit", "2 / 4");
     await screenshot(onboardingPage, viewport, "onboarding-outfit");
 
     await clickAriaIncludes(onboardingPage, "위치 권한을 나중에 설정");
-    await assertText(onboardingPage, "상황에 맞는 알림만", viewport, "onboarding-smart-care");
+    await assertText(onboardingPage, "필요한 순간에만 알려드릴게요", viewport, "onboarding-smart-care");
     await assertText(onboardingPage, "알림 켜기", viewport, "onboarding-smart-care");
     await checkLayout(onboardingPage, viewport, "onboarding-smart-care");
     await checkOnboardingBadge(onboardingPage, viewport, "onboarding-smart-care", "3 / 4");
     await screenshot(onboardingPage, viewport, "onboarding-smart-care");
 
     await clickAriaIncludes(onboardingPage, "알림 권한을 나중에 설정");
-    await assertText(onboardingPage, "목적지까지 미리 준비", viewport, "onboarding-destination");
+    await assertText(onboardingPage, "가는 곳까지 미리 챙겨요", viewport, "onboarding-destination");
     await assertText(onboardingPage, "장소 찾기", viewport, "onboarding-destination");
     await checkLayout(onboardingPage, viewport, "onboarding-destination");
     await checkOnboardingBadge(onboardingPage, viewport, "onboarding-destination", "4 / 4");

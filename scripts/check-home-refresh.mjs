@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { buildSync } from "esbuild";
-const shared = { exports: {} };
-new Function("module", "exports", buildSync({ entryPoints: ["packages/shared/src/index.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(shared, shared.exports);
 
 // Execute production TypeScript with only platform boundaries replaced. No
 // dependencies, generated files, network, device, or installed SQLite required.
@@ -39,8 +37,9 @@ const weatherBindings = {
 };
 const { createWeatherProvider } = load("apps/mobile/src/providers/weatherProvider.ts", ["createWeatherProvider"], weatherBindings);
 
-const zone=load("apps/mobile/src/utils/zonedDateTime.ts",["addZonedCalendarDays","createDateAtTimeInZone","getZonedDateTimeParts","parseDateTimeInZone"]);
-const {buildHomePreparation}=load("apps/mobile/src/utils/homeOuting.ts",["buildHomePreparation"],{...zone,buildOutfitCommentary:shared.exports.buildOutfitCommentary});
+const homePreparation = { exports: {} };
+new Function("module", "exports", buildSync({ entryPoints: ["apps/mobile/src/utils/homeOuting.ts"], bundle: true, platform: "node", format: "cjs", write: false }).outputFiles[0].text)(homePreparation, homePreparation.exports);
+const { buildHomePreparation } = homePreparation.exports;
 let delay=false;let job=deferred();const updates=[];
 const provider=createWeatherProvider({fetchWeatherKitForecast:async ({latitude})=>delay&&latitude===36?job.promise:payload(22)});
 const options={currentLocation:home,destinationLocation:away};
@@ -87,7 +86,7 @@ for(const requested of [other,{...away,timezone:'America/New_York'},{...away,cou
  assert.notEqual(buildHomePreparation(run.interim.destination,undefined,true,now).copy,before);
  run.held.resolve(payload(22));await run.promise;
 }
-const {buildRainForecast}=load('apps/mobile/src/utils/homeOuting.ts',['buildRainForecast'],zone);
+const { buildRainForecast } = homePreparation.exports;
 const hourAt=Math.floor(now/3_600_000)*3_600_000+3_600_000;
 const forecast=(at,condition,temp)=>({time:new Date(at).toISOString(),condition,tempC:temp,windMs:1,rainProbabilityPct:condition==='rain'?90:0,precipitationMm:condition==='rain'?2:0,available:{temp:true,wind:true,rainProbability:true,precipitation:true,condition:true}});
 const scoped={...freshSeed,hourly:[forecast(hourAt,'rain',22),forecast(hourAt+3_600_000,'clear',22)]};
