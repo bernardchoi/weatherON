@@ -25,4 +25,7 @@ if [ -z "${EXPO_PUBLIC_WEATHER_API_TOKEN:-}" ]; then
   exit 1
 fi
 
+# Preserve target automatic signing and CODE_SIGN_ENTITLEMENTS. The app and
+# extension must carry their App Group entitlement into archive and export.
+
 echo "WeatherON production environment is configured for the Xcode Cloud build."
