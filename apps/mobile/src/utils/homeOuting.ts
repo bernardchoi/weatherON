@@ -1,4 +1,5 @@
 import { buildOutfitCommentary, type HourlyWeather, type WeatherSnapshot } from "@weatheron/shared";
+import { judgePreparationConditions, judgeThermal, thermalPreparation, validTemperature, validMeasure } from "../../../../packages/shared/src/rules/thermalJudgment";
 import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts, parseDateTimeInZone } from "./zonedDateTime";
 
 export type RainForecastContext = { locationId: string; targetAt?: string; basisLabel: string };
@@ -90,16 +91,14 @@ export function buildOutingCheck(weather: WeatherSnapshot | undefined, targetAt:
   if (Date.parse(targetAt) < now) return "지난 일정이에요 · 시간을 다시 골라 주세요";
   const hour = forecastAt(weather, targetAt);
   if (!hour) return "선택 시각의 예보가 아직 없어요";
-  if (weather?.source === "weatherkit" && (!hour.available || Object.values(hour.available).some(value => !value))) return "선택 시각의 예보가 일부 없어요";
-  if (!Number.isFinite(hour.rainProbabilityPct) || !Number.isFinite(hour.precipitationMm) || !Number.isFinite(hour.tempC) || !Number.isFinite(hour.windMs)) return "선택 시각의 예보가 일부 없어요";
-  if (hour.windMs >= 8 && (hour.rainProbabilityPct >= 50 || hour.precipitationMm > 0)) return "비와 강풍 예보 · 우산보다 방수 겉옷 준비";
-  if (hour.rainProbabilityPct >= 50 || hour.precipitationMm > 0) return "비 가능성이 있어요 · 우산 준비";
-  if (hour.windMs >= 7) return "강한 바람 예보 · 바람을 막을 한 겹 준비";
+  const preparation = buildHomePreparation(weather, targetAt, true, now);
+  const judgment = getPreparationThermal(weather!, hour);
   const difference = hour.tempC - weather!.current.tempC;
-  if (difference <= -4) return `지금보다 기온 ${formatDelta(-difference)} 낮아요 · 겉옷 준비`;
-  if (hour.tempC <= 5) return "낮은 기온 예보 · 보온할 한 겹 준비";
-  if (hour.tempC >= 30) return "높은 기온 예보 · 물 준비";
-  return "큰 비·강풍 신호는 없어요";
+  const copy = preparation.copy.replace(/\n/g, " ");
+  if (!judgment.cold && !judgment.hot && Number.isFinite(validTemperature(hour.tempC, hour.available?.temp !== false && (weather!.source !== "weatherkit" || hour.available?.temp === true))) && Number.isFinite(validTemperature(weather!.current.tempC, weather!.current.tempAvailable !== false && (weather!.source !== "weatherkit" || weather!.current.tempAvailable === true))) && Number.isFinite(difference) && difference <= -4) {
+    return `지금보다 기온 ${formatDelta(-difference)} 낮아요 · ${copy}${preparation.status ? ` · ${preparation.status}` : ""}`;
+  }
+  return preparation.status ? `${copy} · ${preparation.status}` : copy;
 }
 
 export function getCurrentWeatherFeature(weather: WeatherSnapshot, reliable: boolean) {
@@ -113,15 +112,16 @@ export function getCurrentWeatherFeature(weather: WeatherSnapshot, reliable: boo
   if (c.precipitationMm > 0 || c.condition === "rain") return "현재 비가 내려요";
   if (c.windMs >= 7) return "현재 바람이 강해요";
   if (c.condition === "dust") return "현재 먼지 신호가 있어요";
-  if (!hasFeelsLike(weather)) return "현재 날씨를 확인해요";
-  if (c.feelsLikeC >= 30) return "덥게 느껴지는 날씨예요";
-  if (c.feelsLikeC <= 8) return "차갑게 느껴지는 공기예요";
-  if (c.feelsLikeC <= 18) return "선선한 공기예요";
+  const thermal = getPreparationThermal(weather);
+  if (!Number.isFinite(thermal.temperature)) return "현재 날씨를 확인해요";
+  if (thermal.hot) return "덥게 느껴지는 날씨예요";
+  if (thermal.cold) return "차갑게 느껴지는 공기예요";
+  if (thermal.lightLayer) return "선선한 공기예요";
   return "온화하게 느껴지는 공기예요";
 }
 
 export function hasFeelsLike(weather: Pick<WeatherSnapshot, "source" | "current">) {
-  return Number.isFinite(weather.current.feelsLikeC) && weather.current.feelsLikeAvailable !== false && (weather.source !== "weatherkit" || weather.current.feelsLikeAvailable === true);
+  return Number.isFinite(validTemperature(weather.current.feelsLikeC)) && weather.current.feelsLikeAvailable !== false && (weather.source !== "weatherkit" || weather.current.feelsLikeAvailable === true);
 }
 
 // The main Home copy owns the preparation action; the lower area owns its evidence.
@@ -134,24 +134,25 @@ export function buildHomePreparation(weather: WeatherSnapshot | undefined, targe
   const hour = forecastAt(weather, targetAt);
   const current = weather!.current;
   const isForecast = Boolean(hour);
-  const available = (field: "temp" | "wind" | "rainProbability" | "precipitation" | "condition") => weather!.source !== "weatherkit" || hour?.available?.[field] === true;
-  const temp = hour ? available("temp") && Number.isFinite(hour.tempC) ? hour.tempC : undefined
-    : hasFeelsLike(weather!) ? current.feelsLikeC : current.tempAvailable === true && Number.isFinite(current.tempC) ? current.tempC : undefined;
-  const wind = hour ? available("wind") && Number.isFinite(hour.windMs) ? hour.windMs : undefined
-    : current.windAvailable === true && Number.isFinite(current.windMs) ? current.windMs : undefined;
-  const rainProbability = hour && available("rainProbability") && Number.isFinite(hour.rainProbabilityPct) ? hour.rainProbabilityPct : undefined;
-  const precipitation = hour && available("precipitation") && Number.isFinite(hour.precipitationMm) ? hour.precipitationMm : undefined;
+  const available = (field: "temp" | "wind" | "rainProbability" | "precipitation" | "condition") => hour?.available?.[field] !== false && (weather!.source !== "weatherkit" || hour?.available?.[field] === true);
+  const temp = hour ? available("temp") && Number.isFinite(validTemperature(hour.tempC)) ? hour.tempC : undefined
+    : hasFeelsLike(weather!) ? current.feelsLikeC : current.tempAvailable !== false && (weather!.source !== "weatherkit" || current.tempAvailable === true) && Number.isFinite(validTemperature(current.tempC)) ? current.tempC : undefined;
+  const wind = hour ? available("wind") && Number.isFinite(validMeasure(hour.windMs)) ? hour.windMs : undefined
+    : current.windAvailable !== false && (weather!.source !== "weatherkit" || current.windAvailable === true) && Number.isFinite(validMeasure(current.windMs)) ? current.windMs : undefined;
+  const rainProbability = hour ? available("rainProbability") && Number.isFinite(validMeasure(hour.rainProbabilityPct, true, 100)) ? hour.rainProbabilityPct : undefined : Number.isFinite(validMeasure(current.rainProbabilityPct, current.rainProbabilityAvailable !== false, 100)) ? current.rainProbabilityPct : undefined;
+  const precipitation = hour ? available("precipitation") && Number.isFinite(validMeasure(hour.precipitationMm)) ? hour.precipitationMm : undefined : Number.isFinite(validMeasure(current.precipitationMm)) ? current.precipitationMm : undefined;
   const condition = hour ? available("condition") ? hour.condition : undefined : current.condition;
   // Probability and amount describe precipitation, not its phase. Known snow wins.
-  const snowy = condition === "snow";
-  const frozenPrecipitation = condition === "sleet" || condition === "hail" || condition === "storm-hail" || condition === "mixed";
-  const rainy = condition === "rain" || condition === "storm";
-  const precipitationPossible = snowy || frozenPrecipitation || rainy || (rainProbability ?? 0) >= 60 || (precipitation ?? 0) >= 1;
-  const status = isForecast ? [temp, wind, rainProbability, precipitation].some(value => value === undefined) ? "일부 예보 미확인" : ""
+  const conditions = judgePreparationConditions({ conditions: condition ? [condition] : [], wind: wind ?? NaN, probability: rainProbability ?? NaN, precipitation: precipitation ?? NaN });
+  const snowy = conditions.phase === "snow";
+  const frozenPrecipitation = conditions.phase === "ice" || conditions.phase === "hail";
+  const rainy = conditions.phase === "rain";
+  const precipitationPossible = conditions.wet;
+  const status = isForecast ? [temp, wind, rainProbability, precipitation, condition].some(value => value === undefined) ? "일부 예보 미확인" : ""
     : targetAt ? "선택 시각 예보 없음 · 현재 기준" : "도착 시각 미확인 · 현재 기준";
   const basis = isForecast ? "목적지 도착 무렵" : "목적지 현재 날씨";
   const evidence = precipitationPossible ? rainProbability !== undefined ? `강수확률 ${rainProbability}%` : snowy ? "눈 소식 있어요" : frozenPrecipitation ? "얼음·혼합 강수 소식 있어요" : rainy ? "비 소식 있어요" : "강수 가능성이 있어요"
-    : wind !== undefined && wind >= 7 ? `바람 ${wind.toFixed(1)}m/s`
+    : conditions.windy ? `바람 ${wind!.toFixed(1)}m/s`
     : temp !== undefined ? `${!isForecast && hasFeelsLike(weather!) ? "현재 체감" : "기온"} ${temperature(temp)}` : "";
   if (temp === undefined) return { ...neutral, basis, status: "준비 판단에 필요한 예보 없음", evidence: "" };
   const scoped: WeatherSnapshot = { ...weather!, daily: undefined, hourly: [], current: {
@@ -163,4 +164,14 @@ export function buildHomePreparation(weather: WeatherSnapshot | undefined, targe
   const copy = buildOutfitCommentary(scoped);
   // Unknown rain/wind never become an optimistic 'no rain/no wind' statement.
   return { copy, basis, status, evidence, rainEvidence: precipitationPossible };
+}
+
+// A selected hour is a separate context. Never import current apparent
+// temperature, humidity or daily extremes into that hour's judgment.
+export function getPreparationThermal(weather: WeatherSnapshot, hour?: HourlyWeather) {
+  const known = (field: "temp" | "wind") => hour?.available?.[field] !== false && (weather.source !== "weatherkit" || hour?.available?.[field] === true);
+  const air = hour ? validTemperature(hour.tempC, known("temp")) : validTemperature(weather.current.tempC, weather.current.tempAvailable !== false && (weather.source !== "weatherkit" || weather.current.tempAvailable === true));
+  const apparent = !hour && hasFeelsLike(weather) ? weather.current.feelsLikeC : NaN;
+  const wind = hour ? validMeasure(hour.windMs, known("wind")) : validMeasure(weather.current.windMs, weather.current.windAvailable !== false && (weather.source !== "weatherkit" || weather.current.windAvailable === true));
+  return judgeThermal({ air, apparent, min: air, max: air, wind, humid: !hour && weather.current.humidityAvailable !== false && (weather.current.humidityPct ?? NaN) >= 70 });
 }

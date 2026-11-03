@@ -1,4 +1,4 @@
-import { recommendOutfit, type WeatherSnapshot, type UserPreferenceProfile, type WardrobeItem } from "@weatheron/shared";
+import { getWeatherSignals, thermalPreparation, validTemperature, recommendOutfit, type WeatherSnapshot, type UserPreferenceProfile, type WardrobeItem } from "@weatheron/shared";
 import { forecastHours, snapshotReliable, type ForecastHour } from "./homeOuting";
 import { addZonedCalendarDays, createDateAtTimeInZone, getZonedDateTimeParts } from "./zonedDateTime";
 
@@ -16,7 +16,7 @@ export type TodayOutfitContext = {
 // provider's entire horizon. Unknown dates/zones/field presence stay unknown.
 export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferenceProfile, wardrobe: WardrobeItem[], now: number) {
   const observationAvailable = weather.source !== "fallback" && !weather.locationUnverified && Number.isFinite(Date.parse(weather.observedAt));
-  const present = (value: number, flag?: boolean) => Number.isFinite(value) && flag !== false && (weather.source !== "weatherkit" || flag === true);
+  const present = (value: number, flag?: boolean) => Number.isFinite(validTemperature(value)) && flag !== false && (weather.source !== "weatherkit" || flag === true);
   const temperature: TodayOutfitContext["temperature"] = !observationAvailable ? undefined
     : present(weather.current.feelsLikeC, weather.current.feelsLikeAvailable) ? { value: weather.current.feelsLikeC, basis: "feelsLike" }
     : present(weather.current.tempC, weather.current.tempAvailable) ? { value: weather.current.tempC, basis: "air" } : undefined;
@@ -35,7 +35,7 @@ export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferen
     hours = forecastHours({ ...weather, hourly: weather.hourly.filter(h => /^\d{4}-\d{2}-\d{2}T/.test(h.time)) })
       .filter(h => h.at + 3_600_000 > now && h.at < end);
   } catch { /* No inferred device zone or confident forecast without a location zone. */ }
-  const usable = hours.filter(h => Number.isFinite(h.tempC) && Number.isFinite(h.windMs)
+  const usable = hours.filter(h => Number.isFinite(validTemperature(h.tempC)) && Number.isFinite(h.windMs) && h.windMs >= 0
     && Number.isFinite(h.rainProbabilityPct) && h.rainProbabilityPct >= 0 && h.rainProbabilityPct <= 100
     && Number.isFinite(h.precipitationMm) && h.precipitationMm >= 0
     && (weather.source !== "weatherkit" || (h.available?.temp && h.available.wind && h.available.rainProbability && h.available.precipitation)));
@@ -45,8 +45,15 @@ export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferen
     coveredTo = Math.max(coveredTo, h.at + 3_600_000);
   }
   const complete = zoneValid && coveredTo >= end;
-  const usableHours = reliable && zoneValid ? usable.map(h => ({ ...h,
-    condition: h.available?.condition === false || (weather.source === "weatherkit" && h.available?.condition !== true) ? "unknown" : h.condition })) : [];
+  // Completeness and each individual signal are independent: missing rain/wind
+  // must not discard a real cold temperature in the same forecast hour.
+  const usableHours = reliable && zoneValid ? hours.map(h => ({ ...h,
+    tempC: validTemperature(h.tempC, h.available?.temp !== false && (weather.source !== "weatherkit" || h.available?.temp === true)),
+    windMs: h.available?.wind === false || (weather.source === "weatherkit" && h.available?.wind !== true) ? NaN : h.windMs,
+    rainProbabilityPct: h.available?.rainProbability === false || (weather.source === "weatherkit" && h.available?.rainProbability !== true) ? NaN : h.rainProbabilityPct,
+    precipitationMm: h.available?.precipitation === false || (weather.source === "weatherkit" && h.available?.precipitation !== true) ? NaN : h.precipitationMm,
+    condition: h.available?.condition === false || (weather.source === "weatherkit" && h.available?.condition !== true) ? "unknown" : h.condition,
+  })) : [];
   // Provider current probability/amount may come from its first forecast hour.
   // Recompute them from the interval containing now; preserve actual condition.
   const currentHour = usableHours.find(h => h.at <= now && h.at + 3_600_000 > now);
@@ -56,7 +63,8 @@ export function buildTodayOutfit(weather: WeatherSnapshot, profile: UserPreferen
   const outfit = recommendOutfit(scoped, profile, wardrobe, { temperature: temperature ?? null });
   const status = !reliable ? "최근 자료 · 최신 확인 필요" : !zoneValid ? "위치 시간대 확인 필요"
     : !usable.length ? "오늘 남은 시간 예보 없음" : !complete ? "오늘 예보 일부 미확인" : "오늘 남은 시간 기준";
-  const wet = usableHours.find(h => ["rain", "storm", "snow", "sleet", "hail", "storm-hail", "mixed"].includes(h.condition) || h.rainProbabilityPct >= 60 || h.precipitationMm >= 1);
+  const wet = usableHours.find(h => ["rain", "storm", "snow", "sleet", "hail", "storm-hail", "mixed"].includes(h.condition) || h.rainProbabilityPct >= 50 || h.precipitationMm > 0);
+  const signals = getWeatherSignals(scoped);
   let decision = outfit.decisionText;
   if (!reliable) decision = "최신 날씨를 확인한 뒤 코디를 안내해요";
   else if (!zoneValid) decision = "위치 시간대를 확인한 뒤 코디를 안내해요";
