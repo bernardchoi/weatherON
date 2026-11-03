@@ -71,3 +71,7 @@ GitHub check-runs on exact commit `92eaab1d5a69e0ca288134e47bebdae2a0534c2b` con
 Cloud Build 62 succeeded at 2026-11-04 00:45:27 KST, with 0 errors, 0 test failures, 0 analyzer issues and 594 warnings (warnings are not claimed resolved). TestFlight `1.0.0 (62)` was added to existing `외부테스트` group (6 testers), with Korean What to Test notes and automatic tester notification enabled. After submission, the group UI explicitly showed **테스트 중**, 90 days remaining; group build count increased 11 → 12. This is external availability, not proof of tester installation or physical-device rendering. Build 61 remains internal-only and was not assigned externally.
 
 Internal Team (Expo) follow-up was interrupted by the Mac locking before adding Build 62. External group testing status was already confirmed. Internal-group addition is not yet verified. Local preview server was stopped and temporary QA browser tab closed. Original QA artifacts and old worktree files remain preserved.
+
+### Final internal follow-up
+
+After the user unlocked the Mac, Build `1.0.0 (62)` was added to existing Team (Expo). Its group UI also explicitly shows **테스트 중**, 90 days remaining. Both requested release channels are now available; the temporary lock interruption is resolved. Build 61 was not selected. No public App Store release was performed.
