@@ -189,6 +189,17 @@ async function performAutomaticDepartureLiveActivitySync(
     return registerNativeSnapshot(raw);
   }
 
+  if (input.preserveExistingOnly) {
+    const sameAcceptedTrip = (status.active || status.scheduled) &&
+      status.destinationId === input.destinationId && Boolean(status.departureAt) &&
+      Math.abs(Date.parse(status.departureAt!) - departureMs) < 1_000;
+    if (!sameAcceptedTrip && (status.active || status.scheduled || status.lifecycle === "stale")) {
+      await endDepartureLiveActivity();
+      return readNativeDepartureActivityStatus();
+    }
+    return registerNativeSnapshot(raw);
+  }
+
   // A persisted intent can predate the currently scheduled native Activity
   // (for example after browsing another saved destination). This guard must
   // run before the auto-window branch below: outside the window, that branch

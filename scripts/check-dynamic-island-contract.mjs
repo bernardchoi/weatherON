@@ -77,6 +77,10 @@ assert.deepEqual(parse({ ...counts, pushToken: "must-not-propagate", destination
 for (const bad of [undefined, null, [], {}, { ...counts, activityCount: "3" }, { ...counts, activeCount: -1 }, { ...counts, scheduledCount: .5 }, { ...counts, staleCount: 4 }]) assert.equal(parse(bad), undefined);
 const diagnostics = native.slice(native.indexOf("let diagnostics = ["), native.indexOf("]", native.indexOf("let diagnostics = [")));
 assert.deepEqual([...diagnostics.matchAll(/"([^"]+)":/g)].map(match => match[1]).sort(), Object.keys(counts).sort(), "New native diagnostic fields contain counts only");
+const statusRead = native.slice(native.indexOf('AsyncFunction("getDepartureActivityStatus")'), native.indexOf('AsyncFunction("startDepartureActivity")'));
+assert.ok(statusRead.indexOf("self.logDepartureSnapshot()") >= 0);
+assert.ok(statusRead.indexOf("self.logDepartureSnapshot()") < statusRead.indexOf("await self.recoverLongExpiredDepartureActivities()"), "Native counts must be captured before recovery can change the evidence");
+assert.match(native, /event=snapshot total=/);
 assert.match(native, /for await state in activity\.activityStateUpdates/);
 assert.match(native, /departureStateTask\?\.cancel\(\)/);
 for (const line of native.split("\n").filter(line => line.includes("departureLogger."))) {

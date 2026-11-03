@@ -14,11 +14,12 @@ const shared = load("apps/mobile/src/providers/departureLiveActivity.shared.ts")
 const intent = load("apps/mobile/src/state/departureActivityIntent.ts");
 const source = readFileSync(process.env.DEPARTURE_ACTIVITY_STATE_SOURCE ?? "apps/mobile/src/state/useWeatherOnAppState.ts", "utf8");
 const ast = ts.createSourceFile("state.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-let builder, requestEffect, foregroundCallback;
+let builder, requestEffect, foregroundCallback, activityEffect;
 function visit(node) {
   if (ts.isPropertyAssignment(node) && node.name.getText(ast) === "buildInput" && node.initializer.getText(ast).includes("getDestinationTiming")) builder = node.initializer.getText(ast);
   if (ts.isCallExpression(node) && node.expression.getText(ast) === "useEffect" && node.arguments[0]?.getText(ast).includes("runtimeTravelEstimateClient.estimateRoute")) requestEffect = node.arguments[0].getText(ast);
   if (ts.isCallExpression(node) && node.expression.getText(ast) === "AppState.addEventListener" && node.arguments[1]?.getText(ast).includes("routeAttemptsRef.current.clear()")) foregroundCallback = node.arguments[1].getText(ast);
+  if (ts.isCallExpression(node) && node.expression.getText(ast) === "useEffect" && node.arguments[0]?.getText(ast).includes("const syncActivity = async")) activityEffect = node.arguments[0].getText(ast);
   ts.forEachChild(node, visit);
 }
 visit(ast);
@@ -73,8 +74,14 @@ for (const repeatEnabled of [false, true]) for (const mode of ["drive", "transit
       { status: "error" }, { cacheStatus: "stale" }, { expiresAt: new Date(now).toISOString() },
       { expiresAt: undefined }, { provider: "fallback", status: "fallback", timingBasis: "distance" },
       { originPlaceId: "another-origin" },
-    ]) assert.equal(build({ ...destination, travelEstimate: { ...destination.travelEstimate, ...unsafe } }), null, "Both schedule bases require a verified fresh matching route");
-    assert.equal(build({ ...destination, travelEstimate: { ...destination.travelEstimate, requestArrivalTime: "2026-11-03T02:00:00.000Z" } }), null, "A different target/date cannot start an Activity");
+    ]) {
+      const changed = { ...destination, travelEstimate: { ...destination.travelEstimate, ...unsafe } };
+      const candidate = build(changed);
+      if (!helpers.getDestinationTiming(changed.travelEstimate, changed.schedulePreference, place.timezone, now, "KR", "KR", "origin")) {
+        assert.equal(candidate, null, "Invalid/mismatched plan explicitly ends the old countdown");
+      } else assert.equal(candidate.preserveExistingOnly, true, "Unverified matching timing permits preservation only");
+    }
+    assert.equal(build({ ...destination, travelEstimate: { ...destination.travelEstimate, requestArrivalTime: "2026-11-03T02:00:00.000Z" } }), null, "A different target/date must end an outdated Activity");
     assert.equal(JSON.stringify(destination), before, "Input construction cannot mutate saved settings");
   }
   pairs++;
@@ -86,6 +93,7 @@ const providerSource = readFileSync("apps/mobile/src/providers/departureLiveActi
 let nativeStatus = { supported: true, enabled: true, active: false, scheduled: false, automaticStartSupported: true };
 let nativeClock = now;
 const starts = [], registrations = [];
+const providerAppState = { currentState: "active" };
 const native = {
   addListener() {}, getDepartureActivityStatus: async () => JSON.stringify(nativeStatus),
   startDepartureActivity: async json => {
@@ -101,7 +109,7 @@ const provider = {};
 const providerCode = ts.transpileModule(providerSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 new Function("exports", "require", "Date", providerCode)(provider, name => {
   if (name === "./departureLiveActivity.shared") return shared;
-  if (name === "../localization/react-native") return { AppState: { currentState: "active" } };
+  if (name === "../localization/react-native") return { AppState: providerAppState };
   if (name.includes("WeatheronWidgetDataModule")) return { __esModule: true, default: native };
   if (name === "./accountAuth") return { requestAuthenticatedAccountJson: async (path, body) => { registrations.push({ path, body }); return { scheduled: true }; } };
   throw new Error(`Unexpected dependency ${name}`);
@@ -116,6 +124,119 @@ for (let i = 0; i < 2; i++) {
   assert.equal(registrations.at(-1).path, "/live-activities/departure");
   assert.equal(registrations.at(-1).body.departureAt, input.departureAt);
 }
+// The shared builder is also used by Android; execute its provider's retention
+// guard so a preserve-only input can never leak into a native start there.
+const androidProvider = {};
+new Function("exports", "require", "Date", ts.transpileModule(readFileSync("apps/mobile/src/providers/departureLiveActivity.android.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(androidProvider, name => {
+  if (name === "./departureLiveActivity.shared") return shared;
+  if (name.includes("WeatheronWidgetDataModule")) return { __esModule: true, default: native };
+  throw new Error(`Unexpected Android dependency ${name}`);
+}, class extends Date { static now() { return nativeClock; } });
+let syncProvider = provider;
+
+// Reproduce the complete builder -> reconciliation effect -> iOS provider path.
+// A route TTL is permission to create/replace, not a cancellation deadline for
+// an OS-accepted countdown. Run expiry while still foregrounded and backgrounded.
+assert.ok(activityEffect, "Execute actual Activity reconciliation effect");
+const flushActivity = () => new Promise(resolve => setImmediate(resolve));
+async function reconcileAt(destination, tick, options = {}) {
+  nativeClock = tick;
+  const { builderContext = {}, ...intentOptions } = options;
+  const ctx = { ...context, ...builderContext, nowMinuteTick: tick, Date: class extends Date { static now() { return tick; } } };
+  const currentBuild = new Function(...Object.keys(ctx), `${code}\nreturn build;`)(...Object.values(ctx));
+  const value = intent.resolveDepartureActivityReconcileValue({ smartCareEnabled: true, intentDestinationId: destination.place.id, savedDestinations: [destination], ...intentOptions, buildInput: currentBuild });
+  const scope = {
+    appStateHydrated: true, automaticDepartureActivityInput: value,
+    departureActivitySyncRevisionRef: { current: 0 },
+    syncAutomaticDepartureLiveActivity: syncProvider.syncAutomaticDepartureLiveActivity,
+    setDepartureActivityReplacementDestinationId() {},
+    getDepartureLiveActivityActivationDelay: shared.getDepartureLiveActivityActivationDelay,
+    AppState: { addEventListener() { return { remove() {} }; } },
+    setTimeout, clearTimeout,
+  };
+  const compiled = ts.transpileModule(`const effect = ${activityEffect};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const cleanup = new Function(...Object.keys(scope), `${compiled}\nreturn effect();`)(...Object.values(scope));
+  await flushActivity(); await flushActivity();
+  cleanup();
+  return value;
+}
+for (const candidateProvider of [provider, androidProvider]) {
+syncProvider = candidateProvider;
+for (const timeBasis of ["arrival", "departure"]) for (const appState of ["active", "background"]) {
+  providerAppState.currentState = "active";
+  nativeClock = now;
+  await provider.endDepartureLiveActivity();
+  const departureAt = "2026-11-02T01:15:00.000Z";
+  const target = timeBasis === "arrival" ? "2026-11-02T02:00:00.000Z" : departureAt;
+  const destination = {
+    place, careEnabled: true, alertCondition,
+    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "11:00" : "10:15", transportMode: "drive", repeatEnabled: false, repeatDays: [] },
+    travelEstimate: { ...baseEstimate, departureAt, bufferSeconds: timeBasis === "arrival" ? 300 : 0,
+      requestArrivalTime: timeBasis === "arrival" ? target : undefined,
+      requestDepartureTime: timeBasis === "departure" ? target : undefined },
+  };
+  await reconcileAt(destination, now);
+  assert.equal(nativeStatus.scheduled, true);
+  const startsBeforeExpiry = starts.length;
+  await reconcileAt(destination, now, { builderContext: { weatherProviderResult: { destinationSnapshots: [] } } });
+  assert.equal(nativeStatus.scheduled, true, "Missing weather retains only the matching accepted trip");
+  assert.equal(starts.length, startsBeforeExpiry, "Missing weather cannot create/update a native Activity");
+  providerAppState.currentState = appState;
+  const expiredAt = now + 601_000;
+  assert.equal(travel.canScheduleTravelEstimate(destination.travelEstimate, expiredAt), false);
+  await reconcileAt(destination, expiredAt);
+  assert.equal(nativeStatus.scheduled, true, `${timeBasis}/${appState}: route expiry must not cancel an accepted OS reservation`);
+  assert.equal(starts.length, startsBeforeExpiry, "Expired route must not create a replacement");
+  await reconcileAt({ ...destination, travelEstimate: { ...destination.travelEstimate, cacheStatus: "stale" } }, expiredAt);
+  assert.equal(nativeStatus.scheduled, true, "Failed refresh must preserve accepted reservation");
+  // With no accepted reservation, an expired route must still not start one.
+  await provider.endDepartureLiveActivity();
+  await reconcileAt(destination, expiredAt);
+  assert.equal(starts.length, startsBeforeExpiry);
+  assert.equal(nativeStatus.scheduled, false);
+  // The computed trip deadline is still an end even when the route has expired.
+  providerAppState.currentState = "active";
+  await reconcileAt(destination, now);
+  await reconcileAt(destination, Date.parse(departureAt) + 1);
+  assert.equal(nativeStatus.scheduled || nativeStatus.active, false, "Past departure still ends the accepted countdown");
+  // Independently challenge retention: accepted A may never survive a changed
+  // date/time/mode, missing destination, disabled care, or expired B replacement.
+  const changedPlanCases = [
+    ["time edit", { ...destination, schedulePreference: { ...destination.schedulePreference, targetArrivalTime: "12:00" } }, {}],
+    ["basis edit", { ...destination, schedulePreference: { ...destination.schedulePreference, timeBasis: timeBasis === "arrival" ? "departure" : "arrival" } }, {}],
+    ["mode edit", { ...destination, schedulePreference: { ...destination.schedulePreference, transportMode: "walk" } }, {}],
+    ["different route date", { ...destination, travelEstimate: { ...destination.travelEstimate, requestArrivalTime: "2026-11-03T02:00:00.000Z", cacheStatus: "stale" } }, {}],
+    ["destination removal", destination, { savedDestinations: [] }],
+    ["Smart Care OFF", destination, { smartCareEnabled: false }],
+    ["intent cleared", destination, { intentDestinationId: null }],
+    ["different destination expired", { ...destination, place: { ...place, id: "other" }, travelEstimate: { ...destination.travelEstimate, destinationPlaceId: "other", cacheStatus: "stale" } }, {}],
+    ["different solved departure expired", { ...destination, schedulePreference: { ...destination.schedulePreference, targetArrivalTime: timeBasis === "departure" ? "10:20" : "11:00" }, travelEstimate: { ...destination.travelEstimate, departureAt: "2026-11-02T01:20:00.000Z", requestDepartureTime: timeBasis === "departure" ? "2026-11-02T01:20:00.000Z" : undefined, cacheStatus: "stale" } }, {}],
+  ];
+  for (const [label, changed, options] of changedPlanCases) {
+    providerAppState.currentState = "active";
+    await reconcileAt(destination, now);
+    const count = starts.length;
+    await reconcileAt(changed, expiredAt, options);
+    assert.equal(nativeStatus.scheduled || nativeStatus.active, false, label + " cannot retain a misleading old Activity");
+    assert.equal(starts.length, count, label + " cannot start from an unverified route");
+  }
+  const repeating = { ...destination, schedulePreference: { ...destination.schedulePreference, repeatEnabled: true, repeatDays: ["mon", "tue"] } };
+  await reconcileAt(repeating, now);
+  await reconcileAt(repeating, now + 24 * 3600000);
+  assert.equal(nativeStatus.scheduled || nativeStatus.active, false, "Day rollover cannot retain yesterday's Activity against today's schedule");
+  // Explicit care cancellation retains its existing null -> native end contract.
+  providerAppState.currentState = "active";
+  await reconcileAt(destination, now);
+  await reconcileAt({ ...destination, careEnabled: false }, now);
+  assert.equal(nativeStatus.scheduled, false);
+  assert.equal(nativeStatus.active, false);
+}
+}
+syncProvider = provider;
+providerAppState.currentState = "active";
+nativeClock = now;
+console.log("PASS changed plan/removal/care-off/day rollover guards and exact-trip preservation through actual iOS + Android providers");
+console.log("PASS route expiry/refresh failure preserves accepted OS reservations in actual builder/effect/provider paths; expired routes never create, care-off still cancels (arrival/departure, foreground/background)");
 const nativeSource = readFileSync("apps/mobile/modules/weatheron-widget-data/ios/WeatheronWidgetDataModule.swift", "utf8");
 assert.match(nativeSource, /departureActivityLeadTime: TimeInterval = 60 \* 60/);
 assert.match(nativeSource, /let startAt = attributes\.departureAt\.addingTimeInterval\(-departureActivityLeadTime\)/);
@@ -184,9 +305,9 @@ for (const timeBasis of ["arrival", "departure"]) {
   compileEffect({ AppState: { currentState: "background" }, nowMinuteTick: effectNow })();
   assert.equal(requests.length, 1, "No route lookup while app is inactive: a missing/cancelled native reservation cannot recover itself");
   const expiredInput = buildAt(effectNow)(destinations[0]);
-  assert.equal(expiredInput, null, "The existing freshness contract rejects the expired route for either basis");
+  assert.equal(expiredInput.preserveExistingOnly, true, "An expired route permits only exact-trip preservation");
   await provider.syncAutomaticDepartureLiveActivity(expiredInput);
-  assert.equal(nativeStatus.active || nativeStatus.scheduled, false, "A null reconciliation ends the native Activity; background recovery isn't provided");
+  assert.equal(nativeStatus.active, true, "Preserve the accepted active countdown across route expiry");
   let foregroundTick;
   const foregroundBindings = {
     Date: effectContext.Date, appLifecycleStateRef: { current: "background" }, widgetSnapshotContentKeyRef: { current: "old" }, widgetLocationsKeyRef: { current: "old" },
@@ -206,5 +327,5 @@ for (const timeBasis of ["arrival", "departure"]) {
   foregroundCleanup();
   cleanup();
 }
-console.log("PASS lifecycle: actual request effects use solved departure + buffer for one-minute retries; inactive lookup guard, expiry -> null -> native end, and real foreground callback -> throttle clear -> fresh route -> local Activity recreation exercised for both bases. Background OS activation remains unverified.");
+console.log("PASS lifecycle: actual request effects use solved departure + buffer for one-minute retries; inactive lookup guard, expiry -> preserve active reservation, and real foreground callback -> throttle clear -> fresh route reconciliation exercised for both bases. Background OS activation remains unverified.");
 console.log(`PASS: ${pairs} paired arrival/departure schedules (repeat/nonrepeat, drive/transit/walk), actual Activity builder + iOS provider/native contract, departure-minus-60 window, notification-lead independence, expiry/failure/target mismatch rejection, end-server registration and all Dynamic Island presentations. No physical display or OS scheduling proof.`);

@@ -52,6 +52,13 @@ export async function syncAutomaticDepartureLiveActivity(
       if (status.active || status.scheduled) await endDepartureLiveActivity();
       return getDepartureLiveActivityStatus();
     }
+    if (input.preserveExistingOnly) {
+      const sameAcceptedTrip = (status.active || status.scheduled) &&
+        status.destinationId === input.destinationId && Boolean(status.departureAt) &&
+        Math.abs(Date.parse(status.departureAt!) - departureMs) < 1_000;
+      if (!sameAcceptedTrip && (status.active || status.scheduled)) await endDepartureLiveActivity();
+      return getDepartureLiveActivityStatus();
+    }
     if (!status.automaticStartSupported && !isDepartureLiveActivityAutoWindow(input.departureAt)) return status;
     if (
       (status.active || status.scheduled) &&

@@ -1086,15 +1086,18 @@ export function useWeatherOnAppState() {
         );
         if (!targetTimeIso || !placeSearchOrigin) return undefined;
         const timing = getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, destination.place.countryCode, placeSearchOrigin.locationId);
-        if (!timing || !canScheduleTravelEstimate(destination.travelEstimate, nowMinuteTick)) return null;
+        // A mismatched time/mode/date is not a temporary route TTL expiry.
+        if (!timing) return null;
         const departureAt = timing.departureAt;
         if (new Date(departureAt).getTime() <= Date.now()) return null;
         const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
-        if (!weather) return undefined;
-        const guidance = getDepartureWeatherGuidance(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs);
-        const guidanceKind = getDepartureWeatherGuidanceKind(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs);
+        const guidance = weather ? getDepartureWeatherGuidance(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs) : "";
+        const guidanceKind = weather ? getDepartureWeatherGuidanceKind(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs) : "clear";
         return {
           destinationId: destination.place.id,
+          // An expired route may retain only this exact accepted native trip.
+          // The provider must not create/replace or retain a different plan.
+          preserveExistingOnly: !weather || !canScheduleTravelEstimate(destination.travelEstimate, nowMinuteTick),
           replaceExistingActivity: departureActivityReplacementDestinationId === destination.place.id,
           destinationName: destination.place.name,
           departureAt,

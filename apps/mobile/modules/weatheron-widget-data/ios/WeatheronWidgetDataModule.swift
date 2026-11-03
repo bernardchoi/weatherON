@@ -86,6 +86,8 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     }
 
     AsyncFunction("getDepartureActivityStatus") { () async -> String in
+      // Capture OS state before recovery/reconciliation can end or recreate it.
+      self.logDepartureSnapshot()
       await self.recoverLongExpiredDepartureActivities()
       if let activity = self.currentDepartureActivity() {
         self.observePushToken(for: activity)
@@ -210,6 +212,16 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
         self.sendEvent("onDeparturePushToken", ["status": self.departureActivityStatusJson(activity: activity)])
       }
     }
+  }
+
+  private func logDepartureSnapshot() {
+    let activities = Activity<WeatherONDepartureActivityAttributes>.activities
+    let totalCount = activities.count
+    let activeCount = activities.filter { $0.activityState == .active }.count
+    let staleCount = activities.filter { $0.activityState == .stale }.count
+    var pendingCount = 0
+    if #available(iOS 26.0, *) { pendingCount = activities.filter { $0.activityState == .pending }.count }
+    departureLogger.notice("event=snapshot total=\(totalCount, privacy: .public) active=\(activeCount, privacy: .public) pending=\(pendingCount, privacy: .public) stale=\(staleCount, privacy: .public)")
   }
 
   private func logDepartureState(_ state: ActivityState) {

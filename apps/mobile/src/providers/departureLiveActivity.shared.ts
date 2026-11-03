@@ -7,6 +7,8 @@ export type DepartureLiveActivityInput = {
   destinationId: string;
   /** A direct Home choice may replace an older saved system countdown. */
   replaceExistingActivity?: boolean;
+  /** Unverified route: retain only the exact accepted trip; never start/update. */
+  preserveExistingOnly?: boolean;
   destinationName: string;
   departureAt: string;
   departureTimeLabel: string;

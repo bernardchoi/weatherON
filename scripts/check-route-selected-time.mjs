@@ -343,7 +343,7 @@ const buildInput = new Function(...Object.keys(nativeContext), ts.transpileModul
 assert.equal(buildInput(saved).departureAt, timing.departureAt);
 assert.equal(buildInput(saved).departureTimeLabel, '08:10');
 assert.ok(buildInput(saved).guidance.includes(verified.message));
-assert.equal(buildInput({ ...saved, schedulePreference: { ...schedule, transportMode: 'walk' } }), null);
+assert.equal(buildInput({ ...saved, schedulePreference: { ...schedule, transportMode: 'walk' } }), null, 'a mismatched mode ends the outdated countdown');
 const unsafeEstimates = [
   { ...verified, status: 'error' },
   { ...verified, status: 'fallback', provider: 'fallback', timingBasis: 'distance', transportMode: 'drive' },
@@ -354,7 +354,8 @@ const unsafeEstimates = [
 ];
 for (const unsafe of unsafeEstimates) {
   const destination = { ...saved, travelEstimate: unsafe, schedulePreference: { ...schedule, transportMode: unsafe.transportMode } };
-  assert.equal(buildInput(destination), null, 'unverified/expired routes must not start a native countdown');
+  const candidate = buildInput(destination);
+  assert.ok(candidate === null || candidate.preserveExistingOnly === true, 'unverified routes can only end or preserve an exact accepted trip, never create/replace');
   const model = demo.buildDemoStateFromWeatherResult({ current: weather, destination: destinationWeather, destinationSnapshots: [destinationWeather], status: 'ready', fallbackUsed: false }, true, { hasDestination: true, destination: place, savedDestinations: [destination], notificationNow: scheduleNow });
   const alert = model.notifications.find(item => item.id.endsWith(':destination'));
   assert.equal(alert.active, false);
