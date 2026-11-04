@@ -16,6 +16,8 @@ import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 import type { AppLanguage } from "../localization/localePolicy";
 import { getConditionLabel } from "../utils/weatherPresentation";
+import { summarizeHomeOutfit } from "../utils/homeOutfitSummary";
+import { useForecastNow } from "../hooks/useForecastNow";
 
 export function OutfitScreen({
   state,
@@ -31,6 +33,7 @@ export function OutfitScreen({
   const { language } = React.use(LocalizationContext);
   const conditionLabel = ambient ? translateText(getConditionLabel(state.weather.current.condition), language) : getConditionLabel(state.weather.current.condition);
   const { fontScale } = useWindowDimensions();
+  const forecastNow = useForecastNow();
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -47,7 +50,7 @@ export function OutfitScreen({
       <AppScreen title="코디" titleStyle={ambient ? { fontSize: 28, lineHeight: 36, fontWeight: "700" } : undefined} subtitle={state.outfitContext?.temperature?.basis === "air" ? `${ambient ? translateText(weatherLine, language) : weatherLine} · 현재 기온 기준` : weatherLine} showWordmark={false} compactHeader contentGap={ambient ? 12 : layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={ambient ? 20 : 8}>
         <View style={{ gap: ambient ? 10 : 12 }}>
           {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
-          <Text style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{state.outfit.decisionText}</Text>
+          <Text testID="outfit-summary" style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)}</Text>
           {ambient && state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.currentAvailable) ? <AppButton label="날씨 다시 확인" onPress={onRefreshWeather} tone="secondary" size="sm" /> : null}
           <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={() => onNavigate("C4")} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>

@@ -76,7 +76,8 @@ assert.equal(partial.outfitContext.complete,false);assert.match(partial.outfitCo
 for (const sample of samples) {
  const summary = summarizeHomeOutfit(sample.copy);
  assert.ok(summary.length <= sample.copy.length, sample.name);
- assert.equal(summary.split(' · ').length, sample.copy.split(' · ').length, 'Keep every weather clause');
+ const mergedLayering = /^(추운 날씨라|서늘함에)/.test(sample.copy) && sample.copy.includes('확인된 기온 차가 커서');
+ assert.equal(summary.split(' · ').length, sample.copy.split(' · ').length - Number(mergedLayering), 'Only repeated layering advice may merge; keep separate warnings');
  for (const language of ['en', 'ja']) assert.doesNotMatch(translateText(summary, language), /[가-힣]/u);
 }
 assert.equal(summarizeHomeOutfit('추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요'), '따뜻한 상의와 겉옷을 챙겨요');
@@ -84,6 +85,13 @@ assert.match(summarizeHomeOutfit(heavyResult.outfit.decisionText), /따뜻.*강�
 assert.match(summarizeHomeOutfit(futureWindResult.outfit.decisionText), /따뜻.*방수.*14:00/);
 assert.equal(summarizeHomeOutfit(m.outfit.decisionText), m.outfit.decisionText);
 assert.equal(summarizeHomeOutfit('새로운 경고 문구'), '새로운 경고 문구');
+const screenshotCopy = '추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요 · 확인된 기온 차가 커서 겉옷을 벗고 입으며 조절해요';
+assert.equal(summarizeHomeOutfit(screenshotCopy), '따뜻하게 겹쳐 입고, 겉옷으로 조절해요');
+assert.ok(summarizeHomeOutfit(screenshotCopy).length <= 24, 'The reported long headline becomes one short sentence');
+const layeredRain = summarizeHomeOutfit(`${screenshotCopy.split(' · ')[0]} · 강수와 강한 바람에 대비해 방수 겉옷을 챙겨요 · ${screenshotCopy.split(' · ')[1]} · 오늘 14:00 무렵 비 예보`);
+assert.match(layeredRain, /따뜻.*조절.*강수·강풍.*방수.*14:00.*비 예보/, 'Merging thermal advice cannot remove rain/wind protection or forecast time');
+assert.match(summarizeHomeOutfit('영하의 추위라 두툼한 보온 겉옷과 목도리를 챙겨요'), /두툼.*목도리/);
+assert.match(summarizeHomeOutfit('더운 날씨라 통풍이 잘되는 가벼운 차림에 물도 챙겨요'), /시원.*물/);
 // Every thermal group has three short, stable expressions; warnings keep their meaning and order.
 const thermalBases = [
  '추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요',
@@ -144,3 +152,16 @@ for(const fontScale of [1,1.6,2]) for(const language of ['ko','en','ja']) {
  const row=nodes.find(n=>n.props?.style?.flexDirection);assert.equal(row.props.style.flexDirection,fontScale>1.3?'column':'row');
 }
 console.log('PASS: compound conditions, item assets/thermal consistency, instant thresholds, missing/stale/partial defenses, action-only hourly advice, ko/en/ja and real Home preview JSX at 1–2x type.');
+const outfitSource = fs.readFileSync('apps/mobile/src/screens/OutfitScreen.tsx', 'utf8');
+const outfitAst = ts.createSourceFile('outfit.tsx', outfitSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let headline;
+function findHeadline(node) {
+ if (ts.isJsxElement(node) && node.openingElement.attributes.getText(outfitAst).includes('testID="outfit-summary"')) headline = node.getText(outfitAst);
+ ts.forEachChild(node, findHeadline);
+}
+findHeadline(outfitAst); assert.ok(headline);
+const renderHeadline = new Function('React', 'Text', 'pageStyles', 'theme', 'ambient', 'state', 'forecastNow', 'summarizeHomeOutfit', ts.transpileModule(`const headline = (${headline});`, { compilerOptions: { jsx: ts.JsxEmit.React } }).outputText + '\nreturn headline;');
+const rendered = renderHeadline({ createElement }, 'Text', { body: {} }, {}, true, { outfit: { decisionText: screenshotCopy }, weather: { timezone: 'Asia/Seoul' } }, now, summarizeHomeOutfit);
+assert.equal(rendered.children[0], summarizeHomeOutfit(screenshotCopy, now, 'Asia/Seoul'));
+assert.equal(rendered.props.numberOfLines, undefined, 'The shorter headline still wraps at large text sizes');
+console.log('PASS reported cold/swing headline uses the same short copy on Home and Outfit; hydration, freezing, rain/wind and future forecast warnings remain visible.');

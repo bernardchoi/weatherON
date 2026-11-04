@@ -11,6 +11,12 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "강수 최대 {0}%": "Precipitation up to {0}%",
+    "기온 차엔 겉옷을 더하고 빼요": "Add or remove a layer as temperatures change",
+    "더울 땐 겉옷 벗고 물 챙겨요": "When warm, shed a layer and bring water",
+    "두툼한 겉옷에 목도리도 챙겨요": "Bring a thick coat and a scarf",
+    "따뜻하게 겹쳐 입고, 겉옷으로 조절해요": "Layer up warmly and adjust your outer layer",
+    "시원한 옷에 물도 챙겨요": "Dress cool and bring water",
     "영하의 추위라 두툼한 보온 겉옷과 목도리를 챙겨요": "Bring a thick warm coat and scarf for subzero temperatures",
     "더운 날씨라 통풍이 잘되는 가벼운 차림에 물도 챙겨요": "Wear light, breathable clothes and bring water for the heat",
     "더운 시간에는 겉옷을 벗고 물을 챙겨요": "Remove your outer layer during warmer hours and bring water",
@@ -165,6 +171,12 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "강수 최대 {0}%": "降水確率 最大{0}%",
+    "기온 차엔 겉옷을 더하고 빼요": "気温に合わせて上着で調節しましょう",
+    "더울 땐 겉옷 벗고 물 챙겨요": "暑い時は上着を脱いで、水も用意しましょう",
+    "두툼한 겉옷에 목도리도 챙겨요": "厚手の上着にマフラーも用意しましょう",
+    "따뜻하게 겹쳐 입고, 겉옷으로 조절해요": "暖かく重ね着して、上着で調節しましょう",
+    "시원한 옷에 물도 챙겨요": "涼しい服装で、水も用意しましょう",
     "영하의 추위라 두툼한 보온 겉옷과 목도리를 챙겨요": "氷点下の寒さに備えて、厚手の防寒アウターとマフラーを用意しましょう",
     "더운 날씨라 통풍이 잘되는 가벼운 차림에 물도 챙겨요": "暑さに備えて、通気性のよい軽い服装と水を用意しましょう",
     "더운 시간에는 겉옷을 벗고 물을 챙겨요": "暑い時間帯は上着を脱ぎ、水を用意しましょう",

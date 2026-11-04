@@ -1,5 +1,8 @@
 // Shorten known commentary clauses without reinterpreting weather or dropping warnings.
 const shortClauses: Record<string, string> = {
+  "영하의 추위라 두툼한 보온 겉옷과 목도리를 챙겨요": "두툼한 겉옷에 목도리도 챙겨요",
+  "더운 날씨라 통풍이 잘되는 가벼운 차림에 물도 챙겨요": "시원한 옷에 물도 챙겨요",
+  "더운 시간에는 겉옷을 벗고 물을 챙겨요": "더울 땐 겉옷 벗고 물 챙겨요",
   "우박 신호가 있어 실외 이동을 잠시 피하고 확인해요": "우박 주의, 실내에서 잠시 기다려요",
   "눈과 바람에 대비해 미끄럼 적은 신발을 챙겨요": "눈·바람엔 미끄럼 적은 신발이 좋아요",
   "눈에 대비해 미끄럼 적은 신발을 챙겨요": "눈 오는 날엔 미끄럼 적은 신발이 좋아요",
@@ -44,5 +47,13 @@ export function summarizeHomeOutfit(decisionText: string, now = 0, timeZone = "U
     // Keep wording stable within the location's calendar day; weather warnings never rotate.
     variant = (Number(new Intl.DateTimeFormat("en", { day: "numeric", timeZone }).format(now)) - 1) % 3;
   } catch { /* Unknown date/zone keeps the first phrase. */ }
-  return decisionText.split(" · ").map(clause => thermalPhrases[clause]?.[variant] ?? shortClauses[clause] ?? clause).join(" · ");
+  const clauses = decisionText.split(" · ");
+  const swingIndex = clauses.indexOf("확인된 기온 차가 커서 겉옷을 벗고 입으며 조절해요");
+  // Merge repeated layering advice; keep every separate weather warning.
+  if (swingIndex > 0 && ["추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요", "서늘함에 대비해 가볍게 걸칠 한 겹이 좋아요"].includes(clauses[0])) {
+    clauses[0] = clauses[0] === "추운 날씨라 보온 겉옷과 따뜻한 상의가 좋아요"
+      ? "따뜻하게 겹쳐 입고, 겉옷으로 조절해요" : "기온 차엔 겉옷을 더하고 빼요";
+    clauses.splice(swingIndex, 1);
+  }
+  return clauses.map(clause => thermalPhrases[clause]?.[variant] ?? shortClauses[clause] ?? clause).join(" · ");
 }

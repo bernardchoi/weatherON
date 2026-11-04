@@ -344,9 +344,9 @@ export function HomeScreen({
           style={[
             styles.homePlanCard,
             {
-              paddingVertical: Platform.OS === "ios" ? 16 : layout.homePanelPadding,
+              paddingVertical: Platform.OS === "ios" ? 14 : layout.homePanelPadding,
               marginTop: Platform.OS === "ios" ? viewportSpacing.planMargin : 0,
-              gap: Platform.OS === "ios" ? viewportSpacing.planGap : spacing.md,
+              gap: Platform.OS === "ios" ? 8 : spacing.md,
               paddingHorizontal: Platform.OS === "ios" ? 18 : 0,
               backgroundColor: "transparent",
               borderColor: theme.border,
@@ -387,18 +387,16 @@ export function HomeScreen({
           ) : null}
           </View>
           {Platform.OS === "ios" && destinationReady ? <View testID="home-plan-preparation" style={{ gap: 6 }}>
-            <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{companionBasis}</Text>
-            <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
+            <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
           </View> : null}
-          {destinationReady ? <View style={{ minHeight: 44 }}>
+          {destinationReady && (Platform.OS !== "ios" || routePending || showDepartureExplanation || /이전 조회/.test(routeStatus)) ? <View>
             <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-route-update" pending={routePending} label={routeStatus} color={theme.muted} onRetry={!routePending && /실패|다시 확인/.test(routeStatus) ? onRefreshWeather : undefined} />
             {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
           </View> : null}
           {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
-            <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={destinationWeatherPending} label={destinationWeatherPending ? "목적지 날씨 확인 중" : preparation.status || preparation.basis} color={theme.muted} />
-            {preparation.evidence && !preparation.rainEvidence ? <Text style={{ color: theme.text, fontSize: 20, lineHeight: 28 }}>{preparation.evidence}</Text> : null}
+            {destinationWeatherPending || preparation.status ? <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={destinationWeatherPending} label={destinationWeatherPending ? "목적지 날씨 확인 중" : preparation.status} color={theme.muted} /> : null}
             <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
-              <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{preparation.rainEvidence && preparation.evidence ? `${preparation.evidence} · ` : rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수확률 최대 ${rainForecast.maxProbability}% · ` : ""}강수 예보 ›</Text>
+              <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{preparation.evidence ? `${preparation.evidence} · ` : ""}{!preparation.rainEvidence && rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수 최대 ${rainForecast.maxProbability}%` : "강수 예보"} ›</Text>
             </FeedbackPressable>
           </View> : destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
           <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
