@@ -1089,19 +1089,21 @@ export function useWeatherOnAppState() {
       intentDestinationId: departureActivityIntentDestinationId,
       savedDestinations,
       buildInput: (destination) => {
+        // A route response may be newer than the last minute tick.
+        const nowMs = Date.now();
         const targetTimeIso = getRouteArrivalTimeIso(
           destination.schedulePreference.targetArrivalTime,
           destination.place.timezone,
-          nowMinuteTick,
+          nowMs,
           destination.schedulePreference.repeatEnabled,
           destination.schedulePreference.repeatDays,
         );
         if (!targetTimeIso || !placeSearchOrigin) return undefined;
-        const timing = getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, destination.place.countryCode, placeSearchOrigin.locationId);
+        const timing = getDestinationTiming(destination.travelEstimate, destination.schedulePreference, destination.place.timezone, nowMs, activeWeatherLocation.countryCode, destination.place.countryCode, placeSearchOrigin.locationId);
         // A mismatched time/mode/date is not a temporary route TTL expiry.
         if (!timing) return null;
         const departureAt = timing.departureAt;
-        if (new Date(departureAt).getTime() <= Date.now()) return null;
+        if (new Date(departureAt).getTime() <= nowMs) return null;
         const weather = weatherProviderResult.destinationSnapshots.find((snapshot) => snapshot.locationId === destination.place.id);
         const guidance = weather ? getDepartureWeatherGuidance(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs) : "";
         const guidanceKind = weather ? getDepartureWeatherGuidanceKind(weather, destination.alertCondition.rainThresholdPct, destination.alertCondition.windThresholdMs) : "clear";
@@ -1109,7 +1111,7 @@ export function useWeatherOnAppState() {
           destinationId: destination.place.id,
           // An expired route may retain only this exact accepted native trip.
           // The provider must not create/replace or retain a different plan.
-          preserveExistingOnly: !weather || !canScheduleTravelEstimate(destination.travelEstimate, nowMinuteTick),
+          preserveExistingOnly: !weather || !canScheduleTravelEstimate(destination.travelEstimate, nowMs),
           replaceExistingActivity: departureActivityReplacementDestinationId === destination.place.id,
           destinationName: destination.place.name,
           departureAt,

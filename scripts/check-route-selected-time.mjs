@@ -387,6 +387,7 @@ function findBuilder(node) {
 }
 findBuilder(stateAst); assert.ok(buildInputSource);
 const nativeContext = {
+  Date: TestDate,
   getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getDestinationTiming: helpers.getDestinationTiming,
   canScheduleTravelEstimate: travel.canScheduleTravelEstimate,
   nowMinuteTick: scheduleNow, placeSearchOrigin: context.placeSearchOrigin, activeWeatherLocation: { countryCode: 'KR' },

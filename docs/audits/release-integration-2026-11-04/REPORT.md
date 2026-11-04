@@ -75,3 +75,26 @@ Internal Team (Expo) follow-up was interrupted by the Mac locking before adding 
 ### Final internal follow-up
 
 After the user unlocked the Mac, Build `1.0.0 (62)` was added to existing Team (Expo). Its group UI also explicitly shows **테스트 중**, 90 days remaining. Both requested release channels are now available; the temporary lock interruption is resolved. Build 61 was not selected. No public App Store release was performed.
+
+### Build 62 physical feedback and local arrival follow-up
+
+On 2026-11-04 KST the user confirmed automatic Lock Screen Live Activity and Dynamic Island presentation for a departure-time destination on physical TestFlight build 62. Arrival-time destinations still showed neither surface, including after reopening the app. The reported case is transit, arrival 08:40, displayed departure 07:50, and reopening during 06:50–07:50. Thus the observation was inside the computed departure-minus-60 window, not after departure. This is user-reported device evidence; no continuous device trace was collected here.
+
+Local follow-up: `Daehyeons-Laptop.local`, repository `/Users/daehyeonchoi/Claude/Projects/스마트 날씨 앱`, branch `main`, base HEAD `47b3b4c104b355dd50a5733f60fa0690edf44099`. The repair below is uncommitted/unpushed, not included in build 62 or any main commit. The local upstream ref matches HEAD; no new build, release or cross-host integration inventory was requested/performed.
+
+A production builder defect was reproduced: the route's `updatedAt` is compared with `nowMinuteTick`, which can predate the asynchronous response by almost a minute. A fresh response five seconds after that tick incorrectly sets `preserveExistingOnly`, so the provider cannot request an initial Activity or reserve its future start. Backgrounding before another usable reconciliation can leave no OS reservation. Conversely, a route expiring after the tick could remain eligible against that old clock. This is a demonstrated code defect affecting both bases, not proof that it explains every arrival-only device failure or a perpetual foreground absence.
+
+The builder now samples `Date.now()` once for target recurrence, canonical departure timing, passed-departure rejection and route freshness. The 60-minute start policy, transit duration, native ActivityKit implementation and preservation/ownership guards are unchanged. No dependency, endpoint, permission or stored schedule is changed.
+
+Validation:
+
+- Before the repair, the new real-builder/effect/iOS-provider regression fails: `arrival: a response newer than the minute tick is fresh at reconciliation` (`true !== false`). Afterward, both bases pass the 08:40/50-minute transit case, immediate start at 06:55 and future reservation at 06:30, with a five-second response delay. Native/account boundaries are mocked.
+- The actual production request-effect lifecycle test now advances the response clock five seconds beyond its render tick and checks immediate initial/foreground reconciliation. Truly future timestamps and routes expired at the actual clock still cannot create an Activity. Existing expiry, mode/date/origin mismatch, cancellation, ownership and Android preservation checks pass.
+- PASS mobile TypeScript, departure activity schedule, activity intent, iOS Live Activity source contracts, route selected-time suite in `Asia/Seoul` and `UTC`, and `git diff --check`.
+- The route-suite builder fixture now explicitly injects its test clock; its first rerun exposed an old dependency on the restored real clock. Both timezone runs pass after correcting that fixture.
+
+No physical-device resolution is claimed. `devicectl list devices --timeout 5` timed out, so no device app/state inspection or settings change occurred. Apple SDK compilation, live APNs, new Xcode Cloud/TestFlight distribution and physical revalidation of this repair remain unperformed. Existing untracked QA artifacts/temporary files remain excluded and untouched.
+
+### Follow-up publication authorization
+
+The user subsequently explicitly authorized committing and pushing both the Live Activity clock repair and the Home/Outfit UI work. A fresh `git fetch origin` confirmed local main and origin/main both at `47b3b4c104b355dd50a5733f60fa0690edf44099` before publication. The changes are separated into two scoped commits; final commit SHAs and remote-ref verification are supplied in the delivery response. This authorization covers source publication, not a new TestFlight build/distribution. QA artifacts and temporary files remain excluded.

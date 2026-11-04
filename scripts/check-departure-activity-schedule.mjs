@@ -142,9 +142,9 @@ let syncProvider = provider;
 assert.ok(activityEffect, "Execute actual Activity reconciliation effect");
 const flushActivity = () => new Promise(resolve => setImmediate(resolve));
 async function reconcileAt(destination, tick, options = {}) {
-  nativeClock = tick;
-  const { builderContext = {}, ...intentOptions } = options;
-  const ctx = { ...context, ...builderContext, nowMinuteTick: tick, Date: class extends Date { static now() { return tick; } } };
+  const { builderContext = {}, clockMs = tick, ...intentOptions } = options;
+  nativeClock = clockMs;
+  const ctx = { ...context, ...builderContext, nowMinuteTick: tick, Date: class extends Date { static now() { return clockMs; } } };
   const currentBuild = new Function(...Object.keys(ctx), `${code}\nreturn build;`)(...Object.values(ctx));
   const value = intent.resolveDepartureActivityReconcileValue({ smartCareEnabled: true, intentDestinationId: destination.place.id, savedDestinations: [destination], ...intentOptions, buildInput: currentBuild });
   const scope = {
@@ -162,6 +162,40 @@ async function reconcileAt(destination, tick, options = {}) {
   cleanup();
   return value;
 }
+
+// Route responses arrive between minute ticks. Reopening during the reported
+// 06:50–07:50 window must accept a fresh 50-minute transit route immediately.
+for (const timeBasis of ["arrival", "departure"]) for (const minutesBeforeDeparture of [55, 80]) {
+  const tick = Date.parse("2026-11-02T07:50:00+09:00") - minutesBeforeDeparture * 60000;
+  const responseAt = tick + 5000;
+  const destination = {
+    place, careEnabled: true, alertCondition,
+    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "08:40" : "07:50", transportMode: "transit", repeatEnabled: false, repeatDays: [] },
+    travelEstimate: {
+      ...baseEstimate, provider: "kakao-transit", transportMode: "transit", travelMinutes: 50, durationSeconds: 3000,
+      requestArrivalTime: timeBasis === "arrival" ? "2026-11-01T23:40:00.000Z" : undefined,
+      requestDepartureTime: timeBasis === "departure" ? "2026-11-01T22:50:00.000Z" : undefined,
+      updatedAt: new Date(responseAt).toISOString(), expiresAt: new Date(responseAt + 60000).toISOString(),
+    },
+  };
+  providerAppState.currentState = "active";
+  await provider.endDepartureLiveActivity();
+  const value = await reconcileAt(destination, tick, { clockMs: responseAt });
+  assert.equal(value.preserveExistingOnly, false, `${timeBasis}: a response newer than the minute tick is fresh at reconciliation`);
+  assert.equal(nativeStatus.departureAt, "2026-11-01T22:50:00.000Z");
+  assert.equal(nativeStatus.active, minutesBeforeDeparture <= 60);
+  assert.equal(nativeStatus.scheduled, minutesBeforeDeparture > 60);
+  for (const unsafe of [
+    { updatedAt: new Date(responseAt + 1).toISOString() },
+    { updatedAt: new Date(tick - 30000).toISOString(), expiresAt: new Date(responseAt).toISOString() },
+  ]) {
+    await provider.endDepartureLiveActivity();
+    const blocked = await reconcileAt({ ...destination, travelEstimate: { ...destination.travelEstimate, ...unsafe } }, tick, { clockMs: responseAt });
+    assert.equal(blocked.preserveExistingOnly, true, "Future/expired data cannot start an Activity against the actual clock");
+    assert.equal(nativeStatus.active || nativeStatus.scheduled, false);
+  }
+}
+console.log("PASS fresh transit response between minute ticks starts/reserves 08:40 arrival -> 07:50 departure immediately; actual-future/expired responses cannot create an Activity");
 
 // Execute explicit care actions through the real builder/effect/iOS provider.
 // An older pending trip must not suppress the newly saved/enabled trip.
@@ -329,7 +363,7 @@ for (const timeBasis of ["arrival", "departure"]) {
     routeRequests: [{ place, schedule }], destinationLeavingNow: {}, leavingNowRoutes: {},
     savedDestinationsRef: { get current() { return destinations; } }, previewDestinationTravelEstimate: estimate,
     selectedDestinationPlace: place, routeAttemptsRef: { current: attempts },
-    runtimeTravelEstimateClient: { estimateRoute: async input => { requests.push(input); return { ...estimate, updatedAt: new Date(effectNow).toISOString(), expiresAt: new Date(effectNow + 60000).toISOString() }; } },
+    runtimeTravelEstimateClient: { estimateRoute: async input => { requests.push(input); effectNow += 5000; return { ...estimate, updatedAt: new Date(effectNow).toISOString(), expiresAt: new Date(effectNow + 60000).toISOString() }; } },
     createDestinationTravelEstimate: helpers.createDestinationTravelEstimate,
     setLeavingNowRoutes() { throw new Error("Scheduled request must not mutate leaving-now data"); },
     setDestinationTravelEstimateRequestStatus() {}, setPreviewDestinationTravelEstimate() {},
@@ -348,12 +382,14 @@ for (const timeBasis of ["arrival", "departure"]) {
   const retryAt = [...attempts.values()][0];
   assert.ok(retryAt <= requestNow + 60000, `${timeBasis}: the real request effect must retry at one minute inside computed departure-minus-60 window; got ${retryAt - requestNow}ms`);
   const buildAt = tick => {
-    const bindings = { ...context, nowMinuteTick: tick, Date: class extends Date { static now() { return tick; } } };
+    const bindings = { ...context, nowMinuteTick: tick, Date: class extends Date { static now() { return effectNow; } } };
     return new Function(...Object.keys(bindings), `${code}\nreturn build;`)(...Object.values(bindings));
   };
   await provider.endDepartureLiveActivity();
   nativeClock = effectNow;
-  assert.equal((await provider.syncAutomaticDepartureLiveActivity(buildAt(effectNow)(destinations[0]))).active, true);
+  const freshInput = buildAt(requestNow)(destinations[0]);
+  assert.equal(freshInput.preserveExistingOnly, false, "The actual route response must be usable before another minute tick");
+  assert.equal((await provider.syncAutomaticDepartureLiveActivity(freshInput)).active, true);
   // Without active JS there is no route refresh; do not pretend that the
   // end-only server job can start/recreate an Activity from a stale route.
   effectNow += 60001;
@@ -377,8 +413,10 @@ for (const timeBasis of ["arrival", "departure"]) {
   const foregroundCleanup = compileEffect({ nowMinuteTick: foregroundTick })();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests.length, 2);
-  const recoveredInput = buildAt(effectNow)(destinations[0]);
+  nativeClock = effectNow;
+  const recoveredInput = buildAt(foregroundTick)(destinations[0]);
   assert.ok(recoveredInput);
+  assert.equal(recoveredInput.preserveExistingOnly, false, "A foreground route response is usable immediately after its asynchronous lookup");
   assert.equal((await provider.syncAutomaticDepartureLiveActivity(recoveredInput)).active, true, "Fresh foreground lookup makes a local Activity request possible again");
   foregroundCleanup();
   cleanup();
