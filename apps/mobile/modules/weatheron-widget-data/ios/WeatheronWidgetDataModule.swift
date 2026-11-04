@@ -221,7 +221,8 @@ public final class WeatheronWidgetDataModule: Module, @unchecked Sendable {
     let staleCount = activities.filter { $0.activityState == .stale }.count
     var pendingCount = 0
     if #available(iOS 26.0, *) { pendingCount = activities.filter { $0.activityState == .pending }.count }
-    departureLogger.notice("event=snapshot total=\(totalCount, privacy: .public) active=\(activeCount, privacy: .public) pending=\(pendingCount, privacy: .public) stale=\(staleCount, privacy: .public)")
+    let activitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+    departureLogger.notice("event=snapshot total=\(totalCount, privacy: .public) active=\(activeCount, privacy: .public) pending=\(pendingCount, privacy: .public) stale=\(staleCount, privacy: .public) enabled=\(activitiesEnabled, privacy: .public)")
   }
 
   private func logDepartureState(_ state: ActivityState) {

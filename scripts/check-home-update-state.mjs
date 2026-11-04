@@ -17,12 +17,33 @@ const schedule={timeBasis:'arrival',targetArrivalTime:'09:00',transportMode:'dri
 const state=fs.readFileSync('apps/mobile/src/state/useWeatherOnAppState.ts','utf8');const ast=ts.createSourceFile('state.ts',state,ts.ScriptTarget.Latest,true);
 let selected,requestEffect,selectPlace;
 function walk(n){if(ts.isVariableDeclaration(n)&&n.name.getText(ast)==='selectDestinationPlace')selectPlace=n.initializer.arguments[0].getText(ast);if(ts.isVariableDeclaration(n)&&n.name.getText(ast)==='selectedDestinationTravelEstimate') selected=n.initializer.getText(ast);if(ts.isCallExpression(n)&&n.expression.getText(ast)==='useEffect'&&n.arguments[0]?.getText(ast).includes('runtimeTravelEstimateClient.estimateRoute')) requestEffect=n.arguments[0].getText(ast);ts.forEachChild(n,walk);}walk(ast);
-function project(changes={}){const scope={placeSearchOrigin:{locationId:'origin',countryCode:'KR'},storedDestinationTravelEstimate:estimate,destinationTravelEstimateRequestStatus:'loading',nowMinuteTick:now,selectedDestinationSchedulePreference:schedule,selectedDestinationPlace:{timezone:'Asia/Seoul',countryCode:'KR'},...travel,...helpers,...changes};return new Function(...Object.keys(scope),ts.transpileModule(`const value = ${selected};`,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText + ';return value;' )(...Object.values(scope));}
+function project(changes={}){const scope={Date:class extends Date { static now(){return now;} },placeSearchOrigin:{locationId:'origin',countryCode:'KR'},storedDestinationTravelEstimate:estimate,destinationTravelEstimateRequestStatus:'loading',nowMinuteTick:now,selectedDestinationSchedulePreference:schedule,selectedDestinationPlace:{timezone:'Asia/Seoul',countryCode:'KR'},...travel,...helpers,...changes};return new Function(...Object.keys(scope),ts.transpileModule(`const value = ${selected};`,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText + ';return value;' )(...Object.values(scope));}
 let preview;
 const selectScope={selectedDestinationPlaceIdRef:{current:'A'},normalizePlaceSearchResultCategory:x=>x,setSelectedDestinationPlace(){},setPreviewDestinationTravelEstimate:x=>{preview=x;},createDefaultTravelEstimate:helpers.createDefaultTravelEstimate,placeSearchOrigin:{locationId:'origin'},seongsuWeatherLocation:{locationId:'origin'},setPreviewDestinationSchedulePreference(){},getDefaultDestinationSchedulePreference:()=>schedule,setDestinationSelectionReady(){},setPreviewDestinationCareEnabled(){},setUseDestinationWeather(){}};
 const selectCallback=new Function(...Object.keys(selectScope),ts.transpileModule(`const select = ${selectPlace};`,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+';return select;')(...Object.values(selectScope));
 for(const id of ['B','A']){selectCallback({id,name:id});assert.equal(preview.destinationPlaceId,id);assert.equal(preview.status,'loading','New destination immediately invalidates old preview ETA before async effects');}
 assert.equal(project(),estimate,'A fresh same-request result remains readable during actual request state');
+const completedAt=now+2500;
+const completedEstimate={...estimate,updatedAt:new Date(completedAt).toISOString(),expiresAt:new Date(completedAt+60000).toISOString()};
+const DecisionDate=class extends Date { static now(){return completedAt;} };
+assert.equal(project({storedDestinationTravelEstimate:completedEstimate,Date:DecisionDate}),completedEstimate,'A completed response newer than the tick is immediately readable');
+assert.equal(project({storedDestinationTravelEstimate:{...completedEstimate,updatedAt:new Date(completedAt+1).toISOString()},Date:DecisionDate}).status,'loading','Truly future data at the decision clock stays unverified');
+const notificationClocks=[];
+function visitClocks(node){if(ts.isPropertyAssignment(node)&&node.name.getText(ast)==='notificationNow')notificationClocks.push(node.initializer.getText(ast));ts.forEachChild(node,visitClocks);}visitClocks(ast);
+assert.equal(notificationClocks.length,2,'Selected and committed Home models both carry an automation clock');
+const demoAst=ts.createSourceFile('demo.ts',fs.readFileSync('apps/mobile/src/data/demoState.ts','utf8'),ts.ScriptTarget.Latest,true);
+const notificationTiming=demoAst.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='getDestinationNotificationTiming').getText(demoAst);
+const notificationBindings={...travel,...helpers,isValidTimeText:value=>/^\d{2}:\d{2}$/.test(value),getWeatherAtDeparture:weather=>weather};
+const getNotificationTiming=new Function(...Object.keys(notificationBindings),ts.transpileModule(notificationTiming,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+';return getDestinationNotificationTiming;')(...Object.values(notificationBindings));
+for(const expression of notificationClocks){
+ const clock=new Function('Date','nowMinuteTick',`return (${expression});`)(DecisionDate,now);
+ const destination={place:{id:'D',countryCode:'KR',timezone:'Asia/Seoul'},schedulePreference:schedule,travelEstimate:completedEstimate,alertCondition:{leadTimeMinutes:20}};
+ const weather={source:'weatherkit',stale:false};
+ const timing=getNotificationTiming(destination,weather,{locationId:'origin',countryCode:'KR'},clock);
+ assert.ok(timing,'A just-completed route can schedule a notification before the next tick');
+ assert.equal(timing.departureAt.getTime(),Date.parse('2090-01-01T08:20:00+09:00'));
+ assert.equal(getNotificationTiming({...destination,travelEstimate:{...completedEstimate,expiresAt:new Date(completedAt).toISOString()}},weather,{locationId:'origin',countryCode:'KR'},clock),null,'Actually expired routes cannot schedule');
+}
 for(const changed of [{...schedule,targetArrivalTime:'10:00'},{...schedule,timeBasis:'departure'},{...schedule,transportMode:'walk'}]) assert.equal(helpers.getDestinationTiming(project({selectedDestinationSchedulePreference:changed}),changed,'Asia/Seoul',now,'KR','KR','origin'),undefined,'Changed request must not show old ETA');
 assert.equal(project({storedDestinationTravelEstimate:{...estimate,originPlaceId:'B'}}).status,'loading');
 assert.equal(project({storedDestinationTravelEstimate:{...estimate,expiresAt:new Date(now-1).toISOString()}}).status,'loading');

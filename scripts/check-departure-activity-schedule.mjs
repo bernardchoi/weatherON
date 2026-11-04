@@ -165,14 +165,17 @@ async function reconcileAt(destination, tick, options = {}) {
 
 // Route responses arrive between minute ticks. Reopening during the reported
 // 06:50–07:50 window must accept a fresh 50-minute transit route immediately.
+for (const candidateProvider of [provider, androidProvider])
+for (const transportMode of ["drive", "transit", "walk"])
 for (const timeBasis of ["arrival", "departure"]) for (const minutesBeforeDeparture of [55, 80]) {
+  syncProvider = candidateProvider;
   const tick = Date.parse("2026-11-02T07:50:00+09:00") - minutesBeforeDeparture * 60000;
   const responseAt = tick + 5000;
   const destination = {
     place, careEnabled: true, alertCondition,
-    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "08:40" : "07:50", transportMode: "transit", repeatEnabled: false, repeatDays: [] },
+    schedulePreference: { timeBasis, targetArrivalTime: timeBasis === "arrival" ? "08:40" : "07:50", transportMode, repeatEnabled: false, repeatDays: [] },
     travelEstimate: {
-      ...baseEstimate, provider: "kakao-transit", transportMode: "transit", travelMinutes: 50, durationSeconds: 3000,
+      ...baseEstimate, provider: transportMode === "transit" ? "kakao-transit" : "kakao", transportMode, travelMinutes: 50, durationSeconds: 3000,
       requestArrivalTime: timeBasis === "arrival" ? "2026-11-01T23:40:00.000Z" : undefined,
       requestDepartureTime: timeBasis === "departure" ? "2026-11-01T22:50:00.000Z" : undefined,
       updatedAt: new Date(responseAt).toISOString(), expiresAt: new Date(responseAt + 60000).toISOString(),

@@ -376,7 +376,7 @@ export function useWeatherOnAppState() {
   const selectedDestinationTravelEstimate = !placeSearchOrigin
     ? { ...storedDestinationTravelEstimate, status: "idle" as const }
     : (destinationTravelEstimateRequestStatus === "idle" || (storedDestinationTravelEstimate.status === "ready"
-      && canScheduleTravelEstimate(storedDestinationTravelEstimate, nowMinuteTick)
+      && canScheduleTravelEstimate(storedDestinationTravelEstimate, Date.now())
       && getDestinationTiming(storedDestinationTravelEstimate, selectedDestinationSchedulePreference, selectedDestinationPlace.timezone, nowMinuteTick, placeSearchOrigin.countryCode, selectedDestinationPlace.countryCode, placeSearchOrigin.locationId)))
       ? storedDestinationTravelEstimate
       : { ...storedDestinationTravelEstimate, status: destinationTravelEstimateRequestStatus };
@@ -701,7 +701,7 @@ export function useWeatherOnAppState() {
         },
         leavingNow: destinationLeavingNow[selectedDestinationPlace.id],
         savedDestinations,
-        notificationNow: nowMinuteTick,
+        notificationNow: Date.now(),
       });
       return Platform.OS === "ios" ? { ...base, ...buildTodayOutfit(base.weather, userPreferenceProfile, recommendationWardrobe, nowMinuteTick) } : base;
     },
@@ -777,7 +777,7 @@ export function useWeatherOnAppState() {
       },
       leavingNow: destinationLeavingNow[activeDestination.place.id],
       savedDestinations,
-      notificationNow: nowMinuteTick,
+      notificationNow: Date.now(),
     });
     return Platform.OS === "ios"
       ? { ...base, ...buildTodayOutfit(base.weather, userPreferenceProfile, recommendationWardrobe, nowMinuteTick) }

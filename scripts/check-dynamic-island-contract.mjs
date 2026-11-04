@@ -81,6 +81,9 @@ const statusRead = native.slice(native.indexOf('AsyncFunction("getDepartureActiv
 assert.ok(statusRead.indexOf("self.logDepartureSnapshot()") >= 0);
 assert.ok(statusRead.indexOf("self.logDepartureSnapshot()") < statusRead.indexOf("await self.recoverLongExpiredDepartureActivities()"), "Native counts must be captured before recovery can change the evidence");
 assert.match(native, /event=snapshot total=/);
+const snapshotLog = native.slice(native.indexOf("private func logDepartureSnapshot()"), native.indexOf("private func logDepartureState"));
+assert.match(snapshotLog, /let activitiesEnabled = ActivityAuthorizationInfo\(\)\.areActivitiesEnabled/);
+assert.ok(snapshotLog.includes('enabled=\\(activitiesEnabled, privacy: .public)'), 'Snapshot records authorization without trip data');
 assert.match(native, /for await state in activity\.activityStateUpdates/);
 assert.match(native, /departureStateTask\?\.cancel\(\)/);
 for (const line of native.split("\n").filter(line => line.includes("departureLogger."))) {
