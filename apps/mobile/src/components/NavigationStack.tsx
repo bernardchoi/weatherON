@@ -1,10 +1,12 @@
-import React, { useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "../localization/react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { AppState, Platform, StyleSheet, View } from "../localization/react-native";
 import { ScreenStack, ScreenStackItem } from "react-native-screens";
 import type { AppRouteId } from "../navigation/routes";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { ScreenTransition } from "./ScreenTransition";
 import { HomeViewportContext } from "./HomeViewportContext";
+import { AmbientMotionContext } from "./AmbientReveal";
+import { OutfitMotionContext, useOutfitTransitionHost } from "./OutfitMotion";
 
 export function reconcileScreenStack(stack: AppRouteId[], route: AppRouteId, backRoute?: AppRouteId): AppRouteId[] {
   if (stack.at(-1) === route) return stack;
@@ -33,13 +35,25 @@ export function NavigationStack(props: Props) {
 function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
   const [viewportHeight, setViewportHeight] = useState(0);
   const reducedMotion = useReducedMotion();
+  const [foreground, setForeground] = useState(AppState.currentState === "active");
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", state => setForeground(state === "active"));
+    return () => subscription.remove();
+  }, []);
   const [stack, setStack] = useState<AppRouteId[]>(() => backRoute && backRoute !== route ? [backRoute, route] : [route]);
+  const entrance = useRef({ route, visit: 0, animate: false });
+  if (entrance.current.route !== route) {
+    // A retained screen is already visible during UIKit's interactive pop.
+    entrance.current = { route, visit: entrance.current.visit + 1, animate: !stack.includes(route) };
+  }
   const next = reconcileScreenStack(stack, route, backRoute);
   if (next !== stack) setStack(next);
   const routeRef = useRef(route);
   routeRef.current = route;
-  return <View style={styles.fill} onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}>
+  const outfitMotion = useOutfitTransitionHost(route, foreground && reducedMotion === false);
+  return <View ref={outfitMotion.root} style={styles.fill} onLayout={event => { setViewportHeight(event.nativeEvent.layout.height); outfitMotion.onLayout(event); }}>
     <HomeViewportContext.Provider value={viewportHeight}>
+    <OutfitMotionContext.Provider value={outfitMotion.context}>
     <ScreenStack key={next[0]} style={StyleSheet.absoluteFill}>
       {next.map((id, index) => <ScreenStackItem
         // Native stack controllers must not regress from active (2) to
@@ -48,15 +62,19 @@ function IosStack({ route, backRoute, onGoBack, renderScreen }: Props) {
         key={id} screenId={id} activityState={2}
         style={StyleSheet.absoluteFill} contentStyle={{ backgroundColor: "transparent" }}
         headerConfig={{ hidden: true, disableTopInsetApplication: true, disableBottomInsetApplication: true }}
-        stackAnimation={reducedMotion !== false || !backRoute ? "none" : "default"}
+        stackAnimation={reducedMotion !== false || !backRoute || outfitMotion.pendingRoute === id ? "none" : "default"}
         gestureEnabled={index > 0}
         fullScreenSwipeEnabled={index > 0}
         onDismissed={() => { if (routeRef.current === id) onGoBack(); }}>
         <View style={styles.fill} pointerEvents={id === route ? "auto" : "none"} accessibilityElementsHidden={id !== route} importantForAccessibility={id === route ? "auto" : "no-hide-descendants"}>
+          <AmbientMotionContext.Provider value={{ scene: id, active: id === route, motionAllowed: foreground && reducedMotion === false, enabled: foreground && reducedMotion === false && entrance.current.animate && outfitMotion.pendingRoute !== id, visit: entrance.current.visit }}>
           {renderScreen(id)}
+          </AmbientMotionContext.Provider>
         </View>
       </ScreenStackItem>)}
     </ScreenStack>
+    {outfitMotion.overlay}
+    </OutfitMotionContext.Provider>
     </HomeViewportContext.Provider>
   </View>;
 }

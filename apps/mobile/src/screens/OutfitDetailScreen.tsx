@@ -4,6 +4,7 @@ import { ambientUiIcons } from "../ambientAssets";
 import { AmbientControlSurface } from "../components/AmbientControlSurface";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
 import { AppButton } from "../components/AppButton";
+import { OutfitMotionImage } from "../components/OutfitMotion";
 import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
@@ -139,7 +140,7 @@ export function OutfitDetailScreen({
                   ]}
                 >
                   {imageSource ? (
-                    <Image
+                    <OutfitMotionImage outfitItemId={item.id} imageKey={item.imageUrl}
                       source={imageSource}
                       style={[styles.outfitImage, { height: ambient ? (comparisonRail ? comparisonImageHeight * (slot === "shoes" ? 0.70 : slot === "accessory" ? 0.65 : 0.96) : slot === "shoes" ? 108 : slot === "accessory" ? 100 : layout.height >= 900 ? 164 : 146) : Math.max(40, layout.outfitDetailImageHeight - 4) }]}
                       resizeMode="contain"

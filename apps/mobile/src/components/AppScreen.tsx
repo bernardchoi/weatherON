@@ -9,6 +9,7 @@ import { useAppTheme } from "../theme/AppThemeContext";
 import { iosGlassSurface } from "../theme/iosGlass";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { spacing } from "../theme/tokens";
+import { AmbientReveal } from "./AmbientReveal";
 
 // AppNavigator에서 BottomNav는 스크롤 영역과 겹치지 않는 별도 레이아웃(flex:1 형제)이라
 // 탭바를 가릴 걱정 없이 스크롤 끝의 시각적 여유만 담당하면 된다.
@@ -76,7 +77,7 @@ export function AppScreen({
         automaticallyAdjustKeyboardInsets
       >
 
-        <View
+        <AmbientReveal testID="ambient-screen-header"
           style={[
             styles.hero,
             compactHeader ? styles.compactHero : null,
@@ -121,8 +122,8 @@ export function AppScreen({
               {heroAction}
             </View>
           ) : null}
-        </View>
-        {children}
+        </AmbientReveal>
+        <AmbientReveal testID="ambient-screen-content" order={1} style={{ gap: contentGap ?? layout.screenContentGap }}>{children}</AmbientReveal>
       </ScrollView>
       {footer ? (
         <View

@@ -1,3 +1,4 @@
+import { AmbientReveal } from "../components/AmbientReveal";
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
@@ -122,7 +123,7 @@ export function DestinationListScreen({
         showsVerticalScrollIndicator={false}
       >
 
-        <View style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "flex-start" }]}>
+        <AmbientReveal order={0} testID="departure-header" style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "flex-start" }]}>
           <Text
             style={[
               styles.title,
@@ -137,7 +138,7 @@ export function DestinationListScreen({
           >
             출발
           </Text>
-        </View>
+        </AmbientReveal>
 
         {(Platform.OS !== "ios" || !hasDestinations) && (
           <FeedbackPressable accessibilityRole="button" accessibilityLabel={selectedCard ? `${selectedCard.title} 출발 상세 보기` : "첫 목적지 추가"}
@@ -151,7 +152,7 @@ export function DestinationListScreen({
 
         {Platform.OS === "ios" && hasDestinations ? <Text style={[pageStyles.caption, { color: theme.muted }]}>저장된 목적지</Text> : null}
 
-        <View style={styles.destinationList}>
+        <AmbientReveal order={1} testID="departure-content" style={styles.destinationList}>
           {hasDestinations ? (
             visibleCards.map((item) => (
               Platform.OS === "ios" ? <AmbientDestinationSummary key={item.id} item={item} theme={theme} permissionReady={permissionReady} selected={selectedDestinationPlace.id === item.id} featured={selectedCard?.id === item.id} onOpen={() => openDestination(item.place)} /> : <DestinationCard
@@ -175,7 +176,7 @@ export function DestinationListScreen({
               onAdd={() => onNavigate("P1")}
             />
           )}
-        </View>
+        </AmbientReveal>
 
         {hasDestinations ? (
           <View style={styles.secondaryActions}>

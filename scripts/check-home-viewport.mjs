@@ -20,7 +20,8 @@ assert.ok(scroll);assert.ok(source.includes('Platform.OS === "ios" ? Animated.Sc
 const attrs=scroll.attributes.getText(ast);
 assert.ok(source.includes('const viewportHeight = useContext(HomeViewportContext)'));
 const stackSource=fs.readFileSync('apps/mobile/src/components/NavigationStack.tsx','utf8');
-assert.ok(stackSource.includes('onLayout={event => setViewportHeight(event.nativeEvent.layout.height)}'));
+assert.ok(stackSource.includes('setViewportHeight(event.nativeEvent.layout.height)'));
+assert.ok(stackSource.includes('outfitMotion.onLayout(event)'), 'Image-flight coordinates also follow the persistent viewport resize');
 assert.ok(stackSource.includes('<HomeViewportContext.Provider value={viewportHeight}>'));
 assert.ok(attrs.includes('onContentSizeChange={(_, height) => setContentHeight(height)}'));
 assert.ok(!/scrollEnabled|maximumZoomScale|height:|maxHeight:|overflow:/.test(attrs),'Keep natural scrolling and uncapped content for small screens, large text, translated/status content.');

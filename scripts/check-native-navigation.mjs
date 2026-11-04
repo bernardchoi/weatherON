@@ -10,7 +10,7 @@ function sourceFunction(path, name) {
 }
 const path = 'apps/mobile/src/components/NavigationStack.tsx';
 const stackSource = readFileSync(path, 'utf8');
-assert.match(stackSource, /<View style=\{styles\.fill\}[^>]*>[\s\S]*<ScreenStack[^>]*style=\{StyleSheet\.absoluteFill\}>/,
+assert.match(stackSource, /<View ref=\{outfitMotion\.root\} style=\{styles\.fill\}[^>]*>[\s\S]*<ScreenStack[^>]*style=\{StyleSheet\.absoluteFill\}>/,
   'native stack must fill a flex-sized wrapper');
 assert.match(stackSource, /<ScreenStackItem[\s\S]*style=\{StyleSheet\.absoluteFill\}/,
   'native screen items must fill the stack viewport');
@@ -19,10 +19,10 @@ assert.match(stackSource, /fullScreenSwipeEnabled=\{index > 0\}/,
 assert.match(stackSource, /<ScreenStack key=\{next\[0\]\}/, 'primary tab resets the native controller to remove transparent snapshots');
 // Native stack owns iOS visibility during an interactive pop; React only gates input/a11y.
 const jsx = (type, props) => ({type, props});
-const nativeMocks = {View:'View',StyleSheet:{absoluteFill:{},create:x=>x},Platform:{OS:'ios'}};
+const nativeMocks = {AppState:{currentState:'active',addEventListener:()=>({remove(){}})},View:'View',StyleSheet:{absoluteFill:{},create:x=>x},Platform:{OS:'ios'}};
 const module = {exports:{}};
 const js = ts.transpileModule(stackSource, {compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
-const boundaries = {'react':{useRef:v=>({current:v}),useState:v=>[typeof v==='function'?v():v,()=>{}]},'react/jsx-runtime':{jsx,jsxs:jsx},'../localization/react-native':nativeMocks,'react-native-screens':{ScreenStack:'Stack',ScreenStackItem:'Item'},'../hooks/useReducedMotion':{useReducedMotion:()=>false},'./ScreenTransition':{},'./HomeViewportContext':{HomeViewportContext:{Provider:'Viewport'}}};
+const boundaries = {'react':{useEffect(){},useRef:v=>({current:v}),useState:v=>[typeof v==='function'?v():v,()=>{}]},'react/jsx-runtime':{jsx,jsxs:jsx},'../localization/react-native':nativeMocks,'react-native-screens':{ScreenStack:'Stack',ScreenStackItem:'Item'},'../hooks/useReducedMotion':{useReducedMotion:()=>false},'./OutfitMotion':{OutfitMotionContext:{Provider:'Outfit'},useOutfitTransitionHost:()=>({root:{current:null},context:{},onLayout(){},overlay:null})},'./ScreenTransition':{},'./HomeViewportContext':{HomeViewportContext:{Provider:'Viewport'}},'./AmbientReveal':{AmbientMotionContext:{Provider:'Motion'}}};
 new Function('require','module','exports',js)(id=>{assert.ok(id in boundaries,id);return boundaries[id]},module,module.exports);
 const nodes=n=>!n||typeof n!=='object'?[]:Array.isArray(n)?n.flatMap(nodes):[n,...nodes(n.props?.children)];
 for(const [route,backRoute] of [['A4','M1'],['R1','A4'],['H1',undefined]]) {
@@ -84,8 +84,8 @@ const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4
 for (const [from,to] of [['A4','M1'],['A2','C1'],['O3','M4'],['R2','R1'],['R1','A4'],['O4','C1'],['H4','C1']]) assert.equal(resolveBack(from),to);
 for (const route of ['A4','A2','O3','H1']) {
   let destination,accountCleared=false,permissionCleared=false;
-  const back=new Function('route','backRoute','setRoute','setGate','setPermissionGate',`return (${backCallback})();`);
-  back(route,resolveBack(route),r=>destination=r,()=>accountCleared=true,()=>permissionCleared=true);
+  const back=new Function('route','backRoute','setRoute','setGate','setPermissionGate','accountActionRevisionRef',`return (${backCallback})();`);
+  back(route,resolveBack(route),r=>destination=r,()=>accountCleared=true,()=>permissionCleared=true,{current:0});
   assert.equal(destination,route==='H1'?undefined:resolveBack(route));
   assert.equal(accountCleared,route==='A2');
   assert.equal(permissionCleared,route==='O3');

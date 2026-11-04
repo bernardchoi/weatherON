@@ -1,3 +1,4 @@
+import { AmbientReveal } from "../components/AmbientReveal";
 import { AmbientDisclosure } from "../components/AmbientDisclosure";
 import { forecastTime } from "../utils/homeOuting";
 import { formatRouteClock } from "../utils/travelEstimate";
@@ -221,7 +222,7 @@ export function DestinationCareScreen({
         showsVerticalScrollIndicator={false}
       >
 
-        <View style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
+        <AmbientReveal order={0} testID="care-header" style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
           <BackButton onPress={() => onNavigate("G1")} />
           <View style={styles.headerCopy}>
             <View style={styles.headerTitleRow}>
@@ -229,7 +230,7 @@ export function DestinationCareScreen({
               <RawText style={[styles.title, pageStyles.title, { color: theme.text }]} numberOfLines={1}>{headerTitle}</RawText>
             </View>
           </View>
-        </View>
+        </AmbientReveal>
 
         <LocalizedView accessibilityLabel={`${headerTitle} 생성형 분위기 이미지`} style={[[styles.placeImageFrame, { borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.placeImageFrame]}>
           <Image source={destinationImage} style={styles.decisionImage} resizeMode="cover" />
@@ -252,7 +253,7 @@ export function DestinationCareScreen({
           </View>
         ) : null}
 
-        <View
+        <AmbientReveal order={1} testID="care-summary"
           style={[[
             styles.carePanel,
             { padding: layout.destinationPanelPadding, backgroundColor: theme.card, borderColor: theme.border },
@@ -428,9 +429,9 @@ export function DestinationCareScreen({
             </Text>
           ) : null}
         </View>
-        </View>
+        </AmbientReveal>
 
-        <View style={[[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.outfitPanel]}>
+        <AmbientReveal order={2} testID="care-outfit" style={[[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.outfitPanel]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
@@ -443,7 +444,7 @@ export function DestinationCareScreen({
           </View>
           <OutfitGrid outfit={destinationOutfit} maxItems={4} compact singleRow={!compactControls} />
           {destinationOutfit.preparation.missingItemNames.length > 0 ? <Text style={[[styles.outfitReason, { color: theme.warm }], Platform.OS === "ios" && ambientVisual.outfitReason]}>추가 준비: {destinationOutfit.preparation.missingItemNames.join(", ")}</Text> : null}
-        </View>
+        </AmbientReveal>
 
         {destinationSaved ? (
           <FeedbackPressable

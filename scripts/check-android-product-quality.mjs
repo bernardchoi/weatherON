@@ -183,7 +183,7 @@ assertSourceIncludes("apps/mobile/src/components/MaterialSnackbar.tsx", [
 ]);
 assertSourceIncludes("apps/mobile/src/components/FeedbackPressable.tsx", [
   "android_ripple={undefined}",
-  "animateTo(0.985, ambientMotion.pressIn)",
+  "animateTo(ambientMotion.pressScale, ambientMotion.pressIn)",
   "animateTo(1, ambientMotion.pressOut)",
   "triggerImportantActionHaptic(accessibilityLabel)",
 ]);

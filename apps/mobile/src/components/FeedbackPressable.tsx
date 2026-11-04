@@ -64,7 +64,7 @@ export function FeedbackPressable({
   };
   const handlePressIn = (event: GestureResponderEvent) => {
     setPressed(true);
-    animateTo(0.985, ambientMotion.pressIn);
+    animateTo(ambientMotion.pressScale, ambientMotion.pressIn);
     onPressIn?.(event);
   };
   const handlePressOut = (event: GestureResponderEvent) => {

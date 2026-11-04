@@ -1,3 +1,4 @@
+import { AmbientReveal } from "../components/AmbientReveal";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
 import { Image, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
@@ -83,7 +84,7 @@ export function MyScreen({
         showsVerticalScrollIndicator={false}
       >
 
-        <View style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
+        <AmbientReveal order={0} testID="my-header" style={[styles.header, { minHeight: 44, paddingTop: 0, justifyContent: "center" }]}>
           <Text
             style={[
               styles.title,
@@ -98,16 +99,16 @@ export function MyScreen({
           >
             마이
           </Text>
-        </View>
+        </AmbientReveal>
 
-        {ambient ? <View style={ambientVisual.account}>
+        {ambient ? <AmbientReveal order={1} testID="my-profile" style={ambientVisual.account}>
           <View style={[ambientVisual.avatar, { width: accountSize, height: accountSize, backgroundColor: theme.card, borderColor: theme.border }]}>
             <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
           </View>
           <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
           <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
-        </View> : <FeedbackPressable
+        </AmbientReveal> : <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
           onPress={openProfile}
@@ -161,6 +162,7 @@ export function MyScreen({
         ) : null}
 
         {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>관리</Text> : null}
+        <AmbientReveal order={2} testID="my-settings">
         <AmbientControlSurface style={{ padding: ambient ? 8 : 12, gap: 0 }}>
           {ambient && recommendation ? <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${recommendation.title}, ${recommendation.action}`} onPress={() => onNavigate(recommendation.route)} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, paddingHorizontal: 12, paddingBottom: 16 }}>
             <Image source={recommendation.route === "M4" ? ambientUiIcons.location : ambientUiIcons.notifications} style={{ width: 28, height: 28, tintColor: theme.warm }} />
@@ -207,6 +209,7 @@ export function MyScreen({
         </AppListGroup>
 
         </AmbientControlSurface>
+        </AmbientReveal>
         {!ambient ? <Text style={[styles.groupLabel, { color: theme.subtle }]}>정보</Text> : null}
 
         <AppListGroup>

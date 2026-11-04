@@ -8,7 +8,7 @@ function load(file) {const m={exports:{}};new Function('module','exports','requi
 const api=load('apps/mobile/src/utils/homeOuting.ts');
 const now=Date.parse('2026-10-10T09:10:00+09:00');
 const hour=(time,temp=22,rain=0,amount=0,wind=2)=>({time,tempC:temp,rainProbabilityPct:rain,precipitationMm:amount,windMs:wind,condition:'clear',available:{temp:true,rainProbability:true,precipitation:true,wind:true}});
-const weather={locationId:'origin',locationName:'public-origin',countryCode:'KR',timezone:'Asia/Seoul',observedAt:new Date(now).toISOString(),source:'weatherkit',stale:false,current:{tempC:22,feelsLikeC:21,feelsLikeAvailable:true,precipitationMm:0,rainProbabilityPct:0,windMs:2,condition:'clear'},hourly:[hour('2026-10-10T09:00'),hour('2026-10-10T10:00',18,70,0.5),hour('2026-10-10T12:00',17)],daily:[{date:'2026-10-10',minTempC:0,maxTempC:0,rainProbabilityPct:0,precipitationMm:0,windMs:2,condition:'clear',available:{minTemp:false,maxTemp:true,rainProbability:false}}]};
+const weather={locationId:'origin',locationName:'public-origin',countryCode:'KR',timezone:'Asia/Seoul',observedAt:new Date(now).toISOString(),source:'weatherkit',stale:false,current:{tempC:22,feelsLikeC:21,feelsLikeAvailable:true,precipitationMm:0,rainProbabilityPct:0,windMs:2,windAvailable:true,condition:'clear'},hourly:[hour('2026-10-10T09:00'),hour('2026-10-10T10:00',18,70,0.5),hour('2026-10-10T12:00',17)],daily:[{date:'2026-10-10',minTempC:0,maxTempC:0,rainProbabilityPct:0,precipitationMm:0,windMs:2,condition:'clear',available:{minTemp:false,maxTemp:true,rainProbability:false}}]};
 const target='2026-10-10T10:30:00+09:00';
 assert.match(api.buildOutingCheck(weather,target,now),/강수/);
 assert.match(api.buildOutingCheck(weather,'2026-10-10T11:30:00+09:00',now),/아직 없어요/);
@@ -124,6 +124,8 @@ console.log('PASS: actual WeatherKit missing-field normalization and navigation 
       if (id.endsWith('/localization/react-native')) return native;
       if (id.endsWith('/AppThemeContext')) return { useAppTheme: () => ({ name: mode, text: '#111', muted: '#777', border: '#aaa', card: '#ddd', gold: '#a40', sky: '#578' }) };
       if (id.endsWith('/FeedbackPressable')) return { FeedbackPressable: 'FeedbackPressable' };
+      if (id.endsWith('/OutfitMotion')) return {OutfitMotionImage:'Image',useOutfitNavigation:()=> (_id,_route,navigate)=>navigate()};
+      if (id.endsWith('/AmbientReveal')) return { AmbientReveal: 'Reveal' };
       if (id.endsWith('/AppScreen')) return { AppScreen: 'AppScreen' };
       if (id.endsWith('/useForecastNow')) return { useForecastNow: () => now };
       if (id.endsWith('/assets')) return { uiIconAssets: { drop: 'drop', myAlerts: 'alerts' } };
@@ -353,7 +355,7 @@ for(const fixture of [{...dest,stale:true},{...dest,locationUnverified:true},und
 assert.match(preparation(dest,target,false,now).status,/목적지 선택/);
 const outside=preparation(dest,'2026-10-11T10:30:00+09:00',true,now);assert.equal(outside.basis,'목적지 현재 날씨');assert.match(outside.status,/선택 시각 예보 없음/);assert.equal(outside.evidence,'현재 체감 21°C');
 assert.match(preparation(dest,'2026-10-10T08:30:00+09:00',true,now).status,/지난 일정/);
-assert.match(home,/fontSize: 20, lineHeight: 28/);assert.match(home,/fontSize: 18, lineHeight: 26/);assert.doesNotMatch(home,/fontSize: 13, lineHeight: 20.*previewNames/);
+assert.match(home,/fontSize: 18, lineHeight: 26/);assert.match(home,/fontSize: 18, lineHeight: 26/);assert.doesNotMatch(home,/fontSize: 13, lineHeight: 20.*previewNames/);
 assert.ok(home.includes('forecastStatus={state.outfitContext?.status'));assert.ok(home.includes('weatherBasis={state.weather.locationId'));assert.ok(home.includes('selectedDestinationTargetAt'));assert.ok(home.includes('state.destinationCare.destinationWeather : currentWeather'));
 console.log('PASS: friendly destination-based preparation, forecast-first/general temperature, genuine-only wind/condition, current-only fallback, uncertainty as secondary state and readable reduced copy.');
 

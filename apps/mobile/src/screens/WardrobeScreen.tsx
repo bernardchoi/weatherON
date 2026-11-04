@@ -5,6 +5,8 @@ import { ambientUiIcons } from "../ambientAssets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { AmbientMotionContext, AmbientReveal } from "../components/AmbientReveal";
+import { useWardrobeMotion } from "../components/useWardrobeMotion";
 import { Section } from "../components/Section";
 import {
   WardrobeFilterControls,
@@ -33,11 +35,20 @@ export function WardrobeScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const motion = React.useContext(AmbientMotionContext);
+  const changeWardrobe = useWardrobeMotion();
   const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
 
   const ownedItems = wardrobeItems.filter((item) => item.owned);
+  const seenIds = React.useRef(new Set(ownedItems.map(item => item.id)));
+  const arriving = new Set(ownedItems.filter(item => !seenIds.current.has(item.id)).map(item => item.id));
+  const ownedKey = ownedItems.map(item => item.id).join(":");
+  React.useEffect(() => {
+    // Keep additions pending while the retained wardrobe is behind its editor.
+    if (motion.active) seenIds.current = new Set(ownedItems.map(item => item.id));
+  }, [ownedKey, motion.active]);
   const removedItem = recentlyRemovedWardrobeItemId
     ? wardrobeItems.find((item) => item.id === recentlyRemovedWardrobeItemId && !item.owned)
     : undefined;
@@ -63,7 +74,7 @@ export function WardrobeScreen({
       contentGap={Platform.OS === "ios" ? 12 : layout.destinationContentGap}
     >
       {removedItem ? (
-        <RemovedItemBanner itemName={removedItem.name} onRestore={onRestoreRemovedWardrobeItem} theme={theme} />
+        <RemovedItemBanner itemName={removedItem.name} onRestore={() => changeWardrobe(onRestoreRemovedWardrobeItem)} theme={theme} />
       ) : null}
 
       <WardrobeSection title="내 옷장" caption={`${filteredItems.length}개 항목 · ${selectedStyles.join(" · ")}`} accent="clear">
@@ -107,12 +118,13 @@ export function WardrobeScreen({
         ) : (
           <View style={[[styles.grid, { gap: layout.outfitCardGap }], Platform.OS === "ios" && ambientVisual.grid]}>
             {filteredItems.map((item) => (
+              <AmbientMotionContext.Provider key={item.id} value={{ ...motion, enabled: motion.motionAllowed && arriving.has(item.id) }}>
               <WardrobeItemCard
-                key={item.id}
                 item={item}
                 onOpen={() => onOpenWardrobeItem(item.id)}
-                onRemove={() => onRemoveWardrobeItem(item.id)}
+                onRemove={() => changeWardrobe(() => onRemoveWardrobeItem(item.id))}
               />
+              </AmbientMotionContext.Provider>
             ))}
             <Pressable
               accessibilityLabel="내 옷장에 추가"
@@ -169,7 +181,7 @@ function WardrobeItemCard({
       </FeedbackPressable>
   );
   return (
-    <View
+    <AmbientReveal
       style={[[
         styles.card,
         {
@@ -191,7 +203,7 @@ function WardrobeItemCard({
         <Text style={[ambientVisual.itemMeta, { color: theme.muted, flex: 1 }]}>{getWardrobeCategoryLabel(item.category)}</Text>
         {deleteControl}
       </View> : deleteControl}
-    </View>
+    </AmbientReveal>
   );
 }
 

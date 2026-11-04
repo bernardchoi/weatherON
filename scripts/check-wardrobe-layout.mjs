@@ -15,7 +15,7 @@ function load(file, env) {
 }
 for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 440, 768]) for (const fontScale of [1, 1.3, 1.6, 2]) {
  const layout = { width, isNarrow: width < 390, isTablet: width >= 768, wardrobeGridItemWidth: width >= 768 ? '23%' : width < 390 ? '48%' : '30.8%', wardrobeCardMinHeight: 120, wardrobePresetCardMinHeight: 162, outfitCardGap: 8 };
- const env = { React: { createElement: jsx, useState: v => [v, () => {}] }, Platform: { OS: os }, LayoutAnimation: { Types: {}, Properties: {} }, StyleSheet: { create: v => v }, useAppTheme: () => ({}), useResponsiveLayout: () => layout, useWindowDimensions: () => ({ fontScale }), getOutfitImageSource: () => 'image', outfitImageAssets: { image: 'image' }, getWardrobeCategoryLabel: () => '겉옷', ambientUiIcons: { delete: 'trash' }, uiIconAssets: { trash: 'trash' }, spacing: {}, radius: {}, semanticColor: () => '', View: 'View', Text: 'Text', RawText: 'Text', Image: 'Image', FeedbackPressable: 'Button', Pressable: 'Button', AppButton: 'AppButton', Section: 'Section', useAmbientReadingSurface: () => os === 'ios', cardShadow: () => ({}), pageStyles: {} };
+ const env = { React: { createElement: jsx, useState: v => [v, () => {}] }, Platform: { OS: os }, LayoutAnimation: { Types: {}, Properties: {} }, StyleSheet: { create: v => v }, useAppTheme: () => ({}), useResponsiveLayout: () => layout, useWindowDimensions: () => ({ fontScale }), getOutfitImageSource: () => 'image', outfitImageAssets: { image: 'image' }, getWardrobeCategoryLabel: () => '겉옷', ambientUiIcons: { delete: 'trash' }, uiIconAssets: { trash: 'trash' }, spacing: {}, radius: {}, semanticColor: () => '', AmbientReveal:'View', View: 'View', Text: 'Text', RawText: 'Text', Image: 'Image', FeedbackPressable: 'Button', Pressable: 'Button', AppButton: 'AppButton', Section: 'Section', useAmbientReadingSurface: () => os === 'ios', cardShadow: () => ({}), pageStyles: {} };
  load('apps/mobile/src/screens/WardrobeScreen.tsx', env);
  let opened = 0, removed = 0, restored = 0, toggled = 0;
  const item = { id: 'test', name: '아주 긴 아이템 이름 테스트', imageUrl: 'image', category: 'outer', source: 'photo' };
@@ -34,6 +34,25 @@ for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 44
  if (expectedColumns) assert.ok(parseFloat(ownedWidth) * expectedColumns <= 100);
  const banner = env.RemovedItemBanner({ itemName: item.name, onRestore: () => restored++, theme: {} });
  nodes(banner).find(n => n.props.accessibilityLabel?.endsWith('복구')).props.onPress(); assert.equal(restored, 1);
+ if(os==='ios' && width===440 && fontScale===1) {
+  const slots=[],effectSlots=[];let cursor=0,pending=[],motion={active:true,motionAllowed:true,enabled:false,scene:'C2',visit:4};
+  env.React={...env.React,useContext:()=>motion,useRef:v=>{const i=cursor++;return slots[i]??(slots[i]={current:v});},useState:v=>{const i=cursor++;if(!(i in slots))slots[i]=v;return[slots[i],v=>slots[i]=v];},useEffect:(cb,deps)=>{const i=cursor++,old=effectSlots[i];if(!old||deps.some((d,j)=>d!==old[j]))pending.push(()=>{effectSlots[i]=deps;cb();});}};
+  let wrapped=0,removedId;env.useWardrobeMotion=()=>action=>{wrapped++;action();};env.AmbientMotionContext={Provider:'ArrivalPolicy'};
+  env.AppScreen='AppScreen';env.WardrobeFilterControls='Filters';
+  const items=['a','b','c'].map(id=>({...item,id,owned:id!=='c',category:id==='b'?'top':'outer',seasons:['spring'],purposes:['daily']}));
+  const props={wardrobeItems:items,selectedStyles:[],onNavigate(){},onOpenWardrobeItem(){},onOpenWardrobeAdd(){},onRemoveWardrobeItem:id=>removedId=id,onRestoreRemovedWardrobeItem(){},onGoBack(){}};
+  const render=()=>{cursor=0;pending=[];const tree=env.WardrobeScreen(props);pending.forEach(fn=>fn());return tree;};
+  const policies=tree=>nodes(tree).filter(n=>n.type==='ArrivalPolicy');
+  assert.ok(policies(render()).every(n=>!n.props.value.enabled),'Initial owned list does not multiply page entry');
+  motion={...motion,active:false};items[2].owned=true;assert.equal(policies(render()).at(-1).props.value.enabled,true);
+  motion={...motion,active:true};let rows=policies(render());assert.deepEqual(rows.map(n=>n.props.value.enabled),[false,false,true],'Only saved item enters after returning from its editor');
+  assert.ok(policies(render()).every(n=>!n.props.value.enabled),'Unchanged list never replays arrivals');
+  rows[0].children[0].props.onRemove();assert.equal(removedId,'a');assert.equal(wrapped,1,'Delete is wrapped without delaying the mutation');
+  items[0].owned=false;render();props.recentlyRemovedWardrobeItemId='a';const deleted=render();
+  nodes(deleted).find(n=>n.type===env.RemovedItemBanner).props.onRestore();assert.equal(wrapped,2,'Undo uses the same immediate layout feedback');
+  items[0].owned=true;rows=policies(render());assert.deepEqual(rows.map(n=>n.children[0].props.item.id),['a','b','c'],'Undo restores original model order');assert.equal(rows[0].props.value.enabled,true);assert.equal(rows[1].props.value.enabled,false);
+  slots[0]='top';render();slots[0]='all';assert.ok(policies(render()).every(n=>!n.props.value.enabled),'Filtering is not treated as ownership changes');
+ }
  load('apps/mobile/src/screens/WardrobePresetScreen.tsx', env);
  for (const owned of [true, false]) {
   const preset = env.PresetCard({ item: { ...item, owned }, selected: true, onPreview: () => opened++, onToggleOwned: () => toggled++ });

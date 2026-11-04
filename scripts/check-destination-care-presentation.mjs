@@ -8,6 +8,7 @@ const React = { createElement: element, useState: value => [value, () => {}], us
 const icons = new Proxy({}, { get: (_, key) => String(key) });
 const native = { ...React, Platform: { OS: 'ios' }, View: 'View', Text: 'Text', RawText: 'Text', LocalizedView: 'View', Image: 'Image', ScrollView: 'ScrollView', Animated: {}, Easing: {}, StyleSheet: { create: x => x, hairlineWidth: 0.5 }, useWindowDimensions: () => ({ width: 390, fontScale: 1 }) };
 const boundary = {
+  AmbientReveal: 'Reveal',
   useAppTheme: () => ({}), useResponsiveLayout: () => ({}), useConfirmedOptionFeedback: () => ({}),
   recommendOutfit: () => ({ reasons: [], preparation: { ownedItemCount: 0, totalItemCount: 0, missingItemNames: [] } }),
   toUserPreferenceProfile: () => ({}), getDestinationImageAsset: () => 1,

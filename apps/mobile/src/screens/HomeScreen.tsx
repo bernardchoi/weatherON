@@ -1,4 +1,6 @@
 import { ambientMotion } from "../theme/ambientMotion";
+import { AmbientChange, AmbientReveal, useAmbientEntrance } from "../components/AmbientReveal";
+import { OutfitMotionImage, useOutfitNavigation } from "../components/OutfitMotion";
 import { HomeUpdateStatus } from "../components/HomeUpdateStatus";
 import { homeRouteStatus } from "../utils/homeUpdateState";
 import { getDestinationTiming } from "../state/appStateHelpers";
@@ -356,7 +358,8 @@ export function HomeScreen({
           ]}
         >
           {Platform.OS === "ios" ? <HomePlanMaterial theme={theme} /> : null}
-          <View testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: stackedPlanControls ? "column" : "row", alignItems: stackedPlanControls ? "stretch" : "center", gap: 14 } : undefined}>
+          <AmbientReveal testID="home-plan-content" order={2} style={{ gap: Platform.OS === "ios" ? 8 : spacing.md }}>
+          <AmbientChange changeKey={`${selectedDestination?.place.id}:${departureSummary.value}`} testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: stackedPlanControls ? "column" : "row", alignItems: stackedPlanControls ? "stretch" : "center", gap: 14 } : undefined}>
           <View style={{ flex: 1, minWidth: 0 }}>
           <DestinationSelectorCard
             savedDestinations={savedDestinations}
@@ -367,7 +370,7 @@ export function HomeScreen({
           />
           </View>
           {destinationReady ? (
-            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={`${selectedDestination?.place.id}:${departureSummary.value}`}>
+            <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={Platform.OS === "ios" ? "" : `${selectedDestination?.place.id}:${departureSummary.value}`}>
               <FeedbackPressable
                 accessibilityRole="button"
                 accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
@@ -385,20 +388,20 @@ export function HomeScreen({
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
-          </View>
-          {Platform.OS === "ios" && destinationReady ? <View testID="home-plan-preparation" style={{ gap: 6 }}>
+          </AmbientChange>
+          {Platform.OS === "ios" && destinationReady ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
             <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
-          </View> : null}
+          </AmbientChange> : null}
           {destinationReady && (Platform.OS !== "ios" || routePending || showDepartureExplanation || /이전 조회/.test(routeStatus)) ? <View>
             <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-route-update" pending={routePending} label={routeStatus} color={theme.muted} onRetry={!routePending && /실패|다시 확인/.test(routeStatus) ? onRefreshWeather : undefined} />
             {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
           </View> : null}
-          {Platform.OS === "ios" ? <View testID="home-outing-check" style={{ gap: 8 }}>
+          {Platform.OS === "ios" ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${preparation.evidence}:${rainForecast.maxProbability}`} order={2} testID="home-outing-check" style={{ gap: 8 }}>
             {destinationWeatherPending || preparation.status ? <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={destinationWeatherPending} label={destinationWeatherPending ? "목적지 날씨 확인 중" : preparation.status} color={theme.muted} /> : null}
             <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
               <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{preparation.evidence ? `${preparation.evidence} · ` : ""}{!preparation.rainEvidence && rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수 최대 ${rainForecast.maxProbability}%` : "강수 예보"} ›</Text>
             </FeedbackPressable>
-          </View> : destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
+          </AmbientChange> : destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
           <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
             <VisualDecisionCard
               label={"목적지 강수"}
@@ -422,6 +425,7 @@ export function HomeScreen({
             />
           </View>
           </HomeValueTransition> : null}
+          </AmbientReveal>
         </View>
 
         <View style={styles.cardStack}>
@@ -919,6 +923,8 @@ function HomeOutfitPreviewCard({
   const layout = useResponsiveLayout();
   const tightLayout = isHomeTightLayout(layout);
   const { fontScale } = useWindowDimensions();
+  const entrance = useAmbientEntrance(1);
+  const openOutfit = useOutfitNavigation();
   const title = summary;
   const itemNames = Object.values(outfit.items).filter(Boolean).map(item => translateText(item!.name)).join(" + ");
   const previewSummary = [forecastStatus ?? "", outfit.decisionText, itemNames].filter(Boolean).map(value => translateText(value)).join(" · ");
@@ -927,8 +933,8 @@ function HomeOutfitPreviewCard({
   const photos = (Platform.OS === "ios" ? [outfit.items.outer ?? outfit.items.top, outfit.items.shoes] : Object.values(outfit.items))
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
-    <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={onPress}
-      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }]}>
+    <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={() => openOutfit(photos[0]?.id, "C1", onPress)}
+      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
       <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>
       <View style={styles.ambientOutfitHeading}>
@@ -938,7 +944,7 @@ function HomeOutfitPreviewCard({
       <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{weatherBasis}{forecastStatus ? ` · ${translateText(forecastStatus)}` : ""}</Text>
       </View>
       <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: 96, width: layout.width < 390 || fontScale > 1.3 ? "100%" : "44%" }]}>
-        {photos.length ? photos.map((item, index) => <Image key={index} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
+        {photos.length ? photos.map((item, index) => <OutfitMotionImage key={index} outfitItemId={item!.id} imageKey={item!.imageUrl} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
           position: "absolute", width: photos.length > 1 ? index === 0 ? "56%" : "48%" : "80%",
           height: index === 0 ? 96 : 76,
           left: index === 0 ? "0%" : undefined, right: index === 1 ? "0%" : undefined, bottom: 0,

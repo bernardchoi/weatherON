@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
+import { RawText, StyleSheet, Text, View } from "../localization/react-native";
 import type { OutfitRecommendation } from "@weatheron/shared";
 import { useAmbientReadingSurface } from "./AmbientReadingSurface";
 import { useWindowDimensions } from "../localization/react-native";
@@ -8,6 +8,8 @@ import { FeedbackPressable } from "./FeedbackPressable";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { pageStyles } from "../theme/pageStyles";
 import { radius, semanticColor, spacing } from "../theme/tokens";
+import { AmbientReveal } from "./AmbientReveal";
+import { OutfitMotionImage } from "./OutfitMotion";
 
 type OutfitGridProps = {
   outfit: OutfitRecommendation;
@@ -38,7 +40,7 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
     .slice(0, maxItems);
   return (
     <View style={[styles.outfitGrid, onePage ? styles.outfitGridOnePage : null, singleRow ? styles.outfitGridSingleRow : null, ambient && mainVisual && { rowGap: 8 }]}>
-      {entries.map(([slot, item]) => {
+      {entries.map(([slot, item], index) => {
         const imageSource = getOutfitImageSource(item?.imageUrl);
         return item ? (
           <FeedbackPressable
@@ -58,7 +60,7 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
               ambient && { gap: 3, minHeight: 0, alignItems: "center", ...(fontScale > 1.5 ? { flexBasis: "100%", maxWidth: "100%" } : {}) },
             ]}
           >
-            <View
+            <AmbientReveal testID={`outfit-image-${slot}`} order={index}
               style={[
                 styles.imageWell,
                 compact ? styles.imageWellCompact : null,
@@ -72,7 +74,7 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
               ]}
             >
               {imageSource ? (
-                <Image
+                <OutfitMotionImage outfitItemId={item.id} imageKey={item.imageUrl}
                   source={imageSource}
                   style={[
                     styles.itemImage,
@@ -86,7 +88,7 @@ export function OutfitGrid({ outfit, maxItems, mainVisual = false, compact = fal
                   resizeMode="contain"
                 />
               ) : null}
-            </View>
+            </AmbientReveal>
             <Text style={[styles.itemSlot, singleRow ? styles.itemSlotSingleRow : null, pageStyles.compactCaption, { color: ambient ? theme.muted : theme.clear }]} numberOfLines={ambient && mainVisual ? undefined : 1}>{slotLabel[slot] ?? "아이템"}</Text>
             {item.source === "photo" ? <RawText style={[styles.itemName,
                 { fontWeight: "500" }, dense ? styles.itemNameDense : null, onePage ? styles.itemNameOnePage : null, singleRow ? styles.itemNameSingleRow : null, { color: theme.text }, ambient && { fontSize: 14, lineHeight: 19, textAlign: "center" }]}>{item.name}</RawText> : <Text style={[styles.itemName,

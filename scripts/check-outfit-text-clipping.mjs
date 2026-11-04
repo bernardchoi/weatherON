@@ -11,10 +11,12 @@ const mocks = {
   '../localization/react-native': { Image: 'Image', RawText: 'RawText', Text: 'Text', View: 'View', StyleSheet: { create: s => s }, useWindowDimensions: () => ({ width: 440, height: 956, fontScale: 1 }) },
   './AmbientReadingSurface': { useAmbientReadingSurface: () => ambient },
   './FeedbackPressable': { FeedbackPressable: 'Pressable' },
+  './OutfitMotion': {OutfitMotionImage:'Image'},
+  './AmbientReveal': { AmbientReveal: 'View' },
   '../assets': { getOutfitImageSource: () => null },
   '../theme/AppThemeContext': { useAppTheme: () => ({}) },
   '../theme/pageStyles': { pageStyles: { unboxed: { backgroundColor: 'transparent', borderWidth: 0 } } },
-  '../theme/tokens': { radius: { md: 18 }, spacing: { sm: 10 } },
+  '../theme/tokens': { semanticColor:()=> '#ccc', radius: { md: 18 }, spacing: { sm: 10 } },
 };
 const exports = {};
 vm.runInNewContext(ts.transpileModule(readFileSync('apps/mobile/src/components/OutfitGrid.tsx', 'utf8'), {

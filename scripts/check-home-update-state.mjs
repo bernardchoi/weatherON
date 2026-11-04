@@ -52,7 +52,7 @@ tree=render(false,'경로 확인 실패 · 다시 시도해 주세요');assert.e
 assert.equal(tree.children[1].props.numberOfLines,undefined,'Large text wraps instead of truncating');assert.equal(tree.props.style.height,undefined,'No clipping height');assert.equal(tree.props.accessibilityLiveRegion,undefined,'No repeated partial-response announcements');
 let retries=0;tree=render(false,'경로 확인 실패',{onRetry:()=>retries++});assert.equal(tree.children[1].props.accessibilityRole,'button');assert.equal(retries,0);tree.children[1].props.onPress();assert.equal(retries,1,'Retry reuses explicit user action, never a new automatic request');
 for(const e of effects)e?.cleanup?.();assert.equal(timers.size,0);
-const home=fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');assert.match(home,/value=\{`\$\{selectedDestination\?\.place\.id\}:\$\{departureSummary\.value\}`\}/);assert.ok(!home.includes('outputRange: [3, 0]'),'Result transition never translates the control');
+const home=fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');assert.match(home,/changeKey=\{`\$\{selectedDestination\?\.place\.id\}:\$\{departureSummary\.value\}`\}/);assert.ok(!home.includes('outputRange: [3, 0]'),'Result transition never translates the control');
 assert.match(home,/active=\{homeMotionActive && !lowPowerMode\}/);
 assert.match(state,/homeRouteRequests\[destinationLeavingNow\[homeDestinationPlace.id\]/);assert.match(state,/result.pendingLocationIds \?\? \[\]/);
 console.log('PASS Home update-state: actual estimate projection, request-key/ownership races, TTL/offline/failure basis, actual busy component fast/slow timers, stable slot, Reduce Motion, wrapping and privacy. Native/device layout remains unverified.');

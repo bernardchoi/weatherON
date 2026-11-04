@@ -4,6 +4,7 @@ import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
+import { useWardrobeMotion } from "../components/useWardrobeMotion";
 import { Section } from "../components/Section";
 import { WardrobePhotoRegistration } from "../components/WardrobePhotoRegistration";
 import {
@@ -42,6 +43,8 @@ export function WardrobePresetScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const changeWardrobe = useWardrobeMotion();
+  const toggleOwned = (id: string, owned: boolean) => changeWardrobe(() => onSetWardrobeItemOwned(id, owned));
   const presetItems = React.useMemo(() => wardrobeItems.filter((item) => item.source === "preset"), [wardrobeItems]);
   const selectedItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
   const selectedPhotoItem = selectedItem?.source === "photo" ? selectedItem : undefined;
@@ -210,7 +213,7 @@ export function WardrobePresetScreen({
             <AppButton
               label={previewItem.owned ? "해제" : "추가"}
               accessibilityLabel={`${previewItem.name} ${previewItem.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
-              onPress={() => onSetWardrobeItemOwned(previewItem.id, !previewItem.owned)}
+              onPress={() => toggleOwned(previewItem.id, !previewItem.owned)}
               tone="warning"
               size="sm"
             />
@@ -236,7 +239,7 @@ export function WardrobePresetScreen({
                 selectedItemId={previewItem?.id}
                 onToggle={() => toggleCategory(category)}
                 onPreview={setPreviewId}
-                onToggleOwned={onSetWardrobeItemOwned}
+                onToggleOwned={toggleOwned}
               />
             ))}
           </View>
@@ -248,7 +251,7 @@ export function WardrobePresetScreen({
                 item={item}
                 selected={item.id === previewItem?.id}
                 onPreview={() => setPreviewId(item.id)}
-                onToggleOwned={() => onSetWardrobeItemOwned(item.id, !item.owned)}
+                onToggleOwned={() => toggleOwned(item.id, !item.owned)}
               />
             ))}
           </View>
