@@ -56,7 +56,9 @@ function load(file) {
     const resolved = path.resolve(path.dirname(file), id);
     return load(id.endsWith(".json") ? resolved : resolved + ".ts");
   };
-  new Function("module", "exports", "require", compiled)(module, module.exports, localRequire);
+  // Match the Apple Hermes runtime, which omits Intl.PluralRules.
+  const nativeIntl = Object.assign(Object.create(Intl), { PluralRules: undefined });
+  new Function("module", "exports", "require", "Intl", compiled)(module, module.exports, localRequire, nativeIntl);
   return module.exports;
 }
 const wrapper = load(path.resolve(wrapperPath));
@@ -80,6 +82,12 @@ register({ register() {} }, wrapper, "localization-wrapper");
 assert.equal(optionalReads, 0, "Refresh must leave unused native APIs uninitialized");
 assert.equal("PushNotificationIOS" in wrapper, false);
 const localization = load(path.resolve("apps/mobile/src/localization/localization.ts"));
+language = "en";
+for (const count of [0, 1, 2]) {
+  const label = `알림 열기, 읽지 않음 ${count}개`;
+  assert.equal(wrapper.Pressable.render({ accessibilityLabel: label }).props.accessibilityLabel,
+    `Open notifications, ${count} unread notification${count === 1 ? "" : "s"}`);
+}
 const ref = {};
 for (language of ["ko", "en", "ja"]) {
   const translated = localization.translateText("홈", language);

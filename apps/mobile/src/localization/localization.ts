@@ -130,8 +130,9 @@ function getPatterns(language: Exclude<AppLanguage, "ko">) {
 }
 
 function fillPlaceholders(target: string, values: string[], language: AppLanguage): string {
+  // Only the English catalog uses singular/plural pairs, all for integer counts.
   const template = target.startsWith("plural:")
-    ? target.slice("plural:".length).split("|")[new Intl.PluralRules(language).select(Number(values[0])) === "one" ? 0 : 1]
+    ? target.slice("plural:".length).split("|")[language === "en" && Math.abs(Number(values[0])) === 1 ? 0 : 1]
     : target;
   return template.replace(/\{(\d+)\}/gu, (_, index: string) => translateText(values[Number(index)] ?? "", language));
 }
