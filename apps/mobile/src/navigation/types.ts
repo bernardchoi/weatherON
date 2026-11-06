@@ -40,6 +40,7 @@ import type { DeviceLocationState } from "../providers/deviceLocation";
 import type { WeatherProviderMode } from "../providers/weatherProvider";
 import type { WeatherLocationPreset } from "../providers/weatherLocations";
 import type { AccountProfile } from "../providers/accountAuth";
+import type { SavedOutfitSnapshot } from "../utils/savedOutfit";
 
 export type P0ScreenProps = {
   homeMotionActive?: boolean;
@@ -99,11 +100,15 @@ export type P0ScreenProps = {
   accountLinked: boolean;
   accountProfile: AccountProfile | null;
   accountAuthStatus: AccountAuthStatus;
+  accountCleanupPending: boolean;
   accountAuthMessage: string | null;
   termsRequiredAccepted: boolean;
   locationReady: boolean;
   permissionReady: boolean;
   outfitSaved: boolean;
+  savedOutfitSnapshot: SavedOutfitSnapshot | null;
+  outfitSavePending: boolean;
+  outfitSaveMessage: string | null;
   accountGateResult: AccountGateResultState | null;
   permissionGateResult: PermissionGateResultState | null;
   onNavigate: (route: AppRouteId) => void;

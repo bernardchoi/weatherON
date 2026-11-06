@@ -80,7 +80,7 @@ const persistenceContext = { ...storage, appStateStorageKey: key, normalizePersi
 const readPersisted = callback(expression(persistencePath, (node) => ts.isFunctionDeclaration(node) && node.name?.text === "readPersistedAppState"), persistenceContext);
 const savePersisted = callback(expression(persistencePath, (node) => ts.isFunctionDeclaration(node) && node.name?.text === "savePersistedAppState"), persistenceContext);
 const oldItem = { id: "photo-test", source: "photo", imageUrl: "wardrobe-photos/photo-old.jpg", owned: true };
-const savedState = { selectedDestinationPlace: { id: "route-test", name: "목적지", address: "서울", category: "custom", countryCode: "KR", coordinate: { latitude: 37.5, longitude: 127 }, timezone: "Asia/Seoul", provider: "kakao" }, onboardingCompleted: true, photoWardrobeItems: [oldItem], wardrobeOwnedItemIds: [oldItem.id] };
+const savedState = { accountLinked: true, selectedDestinationPlace: { id: "route-test", name: "목적지", address: "서울", category: "custom", countryCode: "KR", coordinate: { latitude: 37.5, longitude: 127 }, timezone: "Asia/Seoul", provider: "kakao" }, onboardingCompleted: true, photoWardrobeItems: [oldItem], wardrobeOwnedItemIds: [oldItem.id] };
 await storage.writeAppValue(key, savedState, true);
 const routeOptions = [{ type: "SUBWAY", totalTime: 1800, totalDistance: 12000, transfers: 1, fare: 1550, steps: [] }];
 await storage.writeAppValue(key, { ...savedState, savedDestinations: [{
@@ -107,7 +107,7 @@ const hydrateCode = expression(statePath, (node, source) => ts.isArrowFunction(n
 const setters = Object.fromEntries([...new Set(hydrateCode.match(/\bset[A-Z]\w*/g))].map((name) => [name, (value) => { restored[name] = value; }]));
 const restored = {};
 const hydrate = callback(hydrateCode, {
-  ...setters, ...load("apps/mobile/src/state/departureActivityIntent.ts"), Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {}, savedDestinationsRef: {},
+  ...setters, recordLocationIntent: () => {}, ...load("apps/mobile/src/state/departureActivityIntent.ts"), Platform: { OS: "ios" }, persistedWeatherProviderResultRef: {}, locallyRestoredAccountLinkedRef: {}, savedDestinationsRef: {},
   readPersistedWeatherProviderResult: async () => null,
   readPersistedAppState: readPersisted,
   readPersistedNotificationState: async () => ({ readNotificationIds: [], notificationHistory: [] }),
@@ -128,10 +128,11 @@ const photoCode = expression(statePath, (node) => ts.isArrowFunction(node)
   && ts.isCallExpression(node.parent) && ts.isVariableDeclaration(node.parent.parent)
   && node.parent.parent.name.getText() === "savePhotoWardrobeItem");
 const photoChanges = [];
+const photoRemovedFiles = [];
 let approved = true;
 const inFlight = { current: null };
 const savePhoto = callback(photoCode, {
-  appStateHydrated: true, photoSaveInFlightRef: inFlight, persistedStateRef: { current: savedState },
+  appStateHydrated: true, accountSessionReadyRef: { current: true }, accountDataClearingRef: { current: false }, accountDeletionCompletedRef: { current: false }, photoSaveInFlightRef: inFlight, outfitSaveInFlightRef: { current: null }, getSavedOutfitPhotoUris: () => [], toStoredWardrobePhotoUri: value => value, removePersistedWardrobePhotos: uris => photoRemovedFiles.push(...uris), persistedStateRef: { current: savedState },
   Platform: { OS: "ios" }, consumePersistedWardrobePhotoApproval: () => approved,
   savePersistedAppState: savePersisted,
   ...Object.fromEntries(["setPhotoWardrobeItems", "setWardrobeOwnedItemIds", "setSelectedWardrobeItemId", "setRecentlyRemovedWardrobeItemId", "setRoute"].map((name) => [name, (value) => photoChanges.push([name, value])])),
@@ -145,11 +146,14 @@ failWriteAfter = 4;
 await assert.rejects(savePhoto(newItem), /disk full/);
 assert.equal(inFlight.current, null);
 assert.equal(photoChanges.length, 0);
+assert.deepEqual(photoRemovedFiles, [], "failed writes retain the previous photo");
 assert.deepEqual((await storage.readAppValue(key, true)).photoWardrobeItems, [oldItem], "failed transaction must retain old metadata");
 const saving = savePhoto(newItem);
 assert.equal(photoChanges.length, 0);
+assert.deepEqual(photoRemovedFiles, [], "photo cannot be removed before the durable commit");
 await saving;
 assert.equal(photoChanges[0][0], "setPhotoWardrobeItems");
+assert.deepEqual(photoRemovedFiles, [oldItem.imageUrl], "state owner cleans up unused photos after the durable commit");
 assert.deepEqual((await storage.readAppValue(key, true)).photoWardrobeItems, [newItem]);
 
 const registrationCode = expression("apps/mobile/src/components/WardrobePhotoRegistration.tsx", (node) => ts.isArrowFunction(node)
@@ -170,7 +174,7 @@ failPhotoSave = false;
 const registering = registrationSave(); await tick();
 assert.deepEqual(removedFiles, [], "old file must survive while the commit is pending");
 commit.resolve(); await registering;
-assert.deepEqual(removedFiles, [oldItem.imageUrl]);
+assert.deepEqual(removedFiles, [], "registration component delegates file cleanup to the state owner, which knows saved snapshot references");
 
 // Browser storage must report denied access/quota errors when durable user state is requested.
 const web = load("apps/mobile/src/providers/appStorage.web.ts");

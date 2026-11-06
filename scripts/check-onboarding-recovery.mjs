@@ -71,8 +71,8 @@ for (const route of ['O1','O2','O7','O4','O5','O6']) for (const completed of [fa
   await storage.writeAppValue(key,profile,true);
   const restored=normalize(await storage.readAppValue(key,true));
   assert.deepEqual(restored.onboardingProgress,{...progress,destinationSelected:!completed},'native SQL round-trip');
-  const bindings={active:true,readPersistedWeatherProviderResult:async()=>null,readPersistedAppState:async()=>restored,readPersistedNotificationState:async()=>({readNotificationIds:[],notificationHistory:[]}),
-    persistedWeatherProviderResultRef:{},locallyRestoredAccountLinkedRef:{},savedDestinationsRef:{},resolveDepartureActivityIntentDestinationId:()=>null};
+  const bindings={createClearedAccountState:module.exports.createClearedAccountState,active:true,readPersistedWeatherProviderResult:async()=>null,readPersistedAppState:async()=>restored,readPersistedNotificationState:async()=>({readNotificationIds:[],notificationHistory:[]}),
+    persistedWeatherProviderResultRef:{},locallyRestoredAccountLinkedRef:{},savedDestinationsRef:{},resolveDepartureActivityIntentDestinationId:()=>null,recordLocationIntent:noop};
   for (const name of [...source.slice(source.indexOf('Promise.all([\n      readPersistedWeatherProviderResult'),source.indexOf('  }, [storageRetryTick]')).matchAll(/\b(set\w+)\(/g)].map(m=>m[1])) bindings[name]=noop;
   let actualRoute,actualSelection;
   bindings.setRoute=v=>{actualRoute=v;}; bindings.setDestinationSelectionReady=v=>{actualSelection=v;};
@@ -86,18 +86,8 @@ await storage.writeAppValue(key,{...defaults,onboardingCompleted:true,onboarding
 assert.equal(normalize(await storage.readAppValue(key,true)).onboardingCompleted,true);
 console.log('PASS onboarding: legacy/malformed defaults; 6 steps and destination selection survive native SQLite + hydration.');
 
-for (const status of ['granted','denied','error','unavailable']) {
-  const updates={}; let calls=0;
-  const bindings={locationReadyRef:{current:false},weatherLocationModeRef:{current:'manual'},deviceLocationRequestInFlightRef:{current:false},
-    syncDeviceWeatherLocationPermission:async()=>{calls++;return {status,location:status==='granted'?{id:'test'}:undefined};}};
-  for(const key of ['DeviceLocationState','LocationReady','DeviceWeatherLocation','WeatherLocationMode','UseDestinationWeather','WeatherRefreshTick']) bindings['set'+key]=value=>{updates[key]=value;};
-  await callback('reconcileDeviceLocationPermission',bindings)();
-  assert.equal(calls,1,'OS-settings grant is observed after a previous denial/manual mode');
-  assert.equal(updates.WeatherLocationMode,undefined,'manual location choice stays manual');
-  if(status==='granted') assert.equal(updates.LocationReady,true);
-  if(status==='denied') assert.equal(updates.LocationReady,false);
-  assert.equal(bindings.deviceLocationRequestInFlightRef.current,false);
-}
+// Shared production GPS ownership and permission transition regressions.
+await import('./check-location-intent-regressions.mjs');
 for (const granted of [true,false]) {
   const progress=[];
   assert.equal(await callback('requestOnboardingNotificationPermission',{requestLocalNotificationPermission:async()=>({granted}),setPermissionReady:v=>assert.equal(v,granted),setOnboardingProgress:f=>progress.push(f(defaults.onboardingProgress))})(),granted);
@@ -110,7 +100,7 @@ for(const action of ['signInWithProvider','completeTerms']) for(const outcome of
   const revision={current:0},inFlight={current:false};
   let requests=0;
   const request=()=>{requests++;return requests===1?response.promise:Promise.resolve(action==='completeTerms'?{termsAccepted:true}:{account:{termsAccepted:true}});};
-  const bindings={accountActionRevisionRef:revision,accountActionInFlightRef:inFlight,gate:{returnTo:'C4',reason:'save-outfit'},
+  const bindings={accountActionRevisionRef:revision,accountSessionRevisionRef:{current:0},accountSessionReadyRef:{current:true},accountCleanupPendingRef:{current:false},readPendingAccountDeletion:async()=>null,writePendingAccountDeletion:async()=>{},accountActionInFlightRef:inFlight,accountDeletionCompletedRef:{current:false},gate:{returnTo:'C4',reason:'save-outfit'},
     signInWithAppleAccount:request,signInWithOAuthAccount:request,acceptAccountTerms:request,
     completeAccountAction:()=>{events.push('action');return true;},
     isAccountAuthCancellation:e=>e.code==='cancel',getAccountAuthDisplayMessage:e=>e.message};
@@ -143,9 +133,9 @@ db.close();
 for(const status of ['authenticated','offline','signed-out']) for(const superseded of [false,true]) {
   const response=deferred(),events=[];
   const revision={current:0};
-  const bindings={appStateHydrated:true,accountActionRevisionRef:revision,locallyRestoredAccountLinkedRef:{current:true},restoreAccountSession:()=>response.promise};
-  for(const key of ['AccountLinked','AccountProfile','TermsRequiredAccepted','AccountAuthStatus','AccountAuthMessage'])bindings['set'+key]=v=>events.push([key,v]);
-  const cleanup=effect('void restoreAccountSession().then',bindings);
+  const bindings={appStateHydrated:true,accountActionRevisionRef:revision,accountSessionRevisionRef:{current:0},accountSessionReadyRef:{current:true},accountCleanupPendingRef:{current:false},readPendingAccountDeletion:async()=>null,writePendingAccountDeletion:async()=>{},locallyRestoredAccountLinkedRef:{current:true},restoreAccountSession:()=>response.promise};
+  for(const key of ['AccountLinked','AccountProfile','TermsRequiredAccepted','AccountAuthStatus','AccountAuthMessage','SavedOutfitSnapshot','PhotoWardrobeItems','WardrobeOwnedItemIds'])bindings['set'+key]=v=>events.push([key,v]);
+  const cleanup=effect('void restoreAccountSession(isCurrent).then',bindings);
   if(superseded)revision.current++;
   response.resolve({status,account:status==='authenticated'?{termsAccepted:false}:null});
   await tick();

@@ -3,6 +3,7 @@
 import { presetWardrobe, type PlaceSearchResult, type WardrobeItem } from "@weatheron/shared";
 import { Platform } from "../localization/react-native";
 import { readAppValue, writeAppValue } from "../providers/appStorage";
+import { normalizeSavedOutfitSnapshot, type SavedOutfitSnapshot } from "../utils/savedOutfit";
 import { toStoredWardrobePhotoUri } from "../utils/wardrobePhotoUri";
 import type { OfficialSpecialAlert, WeatherProviderResult } from "../providers/weatherProvider";
 import { defaultSeoulWeatherLocation, type WeatherLocationPreset } from "../providers/weatherLocations";
@@ -57,7 +58,7 @@ export type PersistedAppState = {
   termsRequiredAccepted: boolean;
   locationReady: boolean;
   permissionReady: boolean;
-  outfitSaved: boolean;
+  savedOutfitSnapshot: SavedOutfitSnapshot | null;
   styleProfileSaved: boolean;
   styleGender: StyleGender;
   ageBand: AgeBand;
@@ -102,6 +103,27 @@ export async function readPersistedAppState(): Promise<PersistedAppState | null>
 
 export function savePersistedAppState(state: PersistedAppState) {
   return writeAppValue(appStateStorageKey, normalizePersistedAppState(state), true);
+}
+
+// Destinations and preset ownership also work for guests. Only an explicit
+// logout/delete clears destinations; an expired/missing session must retain them.
+export function createClearedAccountState(state: PersistedAppState, clearDestinations = true): PersistedAppState {
+  const presetIds = new Set(presetWardrobe.map(item => item.id));
+  return {
+    ...state,
+    accountLinked: false,
+    termsRequiredAccepted: false,
+    savedOutfitSnapshot: null,
+    photoWardrobeItems: [],
+    wardrobeOwnedItemIds: state.wardrobeOwnedItemIds.filter(id => presetIds.has(id)),
+    selectedWardrobeItemId: presetIds.has(state.selectedWardrobeItemId) ? state.selectedWardrobeItemId : presetWardrobe[0]?.id ?? "",
+    ...(clearDestinations ? {
+      savedDestinations: [],
+      departureActivityIntentDestinationId: null,
+      onboardingProgress: { ...state.onboardingProgress, destinationSelected: false },
+      selectedDestinationPlace: getDefaultDestinationPlace(),
+    } : {}),
+  };
 }
 
 export async function readPersistedWeatherProviderResult(
@@ -314,7 +336,8 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     termsRequiredAccepted: record.termsRequiredAccepted === true,
     locationReady: record.locationReady === true,
     permissionReady: record.permissionReady === true,
-    outfitSaved: record.outfitSaved === true,
+    // Legacy outfitSaved booleans have no recoverable outfit and cannot claim a save.
+    savedOutfitSnapshot: normalizeSavedOutfitSnapshot(record.savedOutfitSnapshot),
     styleProfileSaved: record.styleProfileSaved === true,
     styleGender: isStyleGender(record.styleGender) ? record.styleGender : "all",
     ageBand: isAgeBand(record.ageBand) ? record.ageBand : "20-30",

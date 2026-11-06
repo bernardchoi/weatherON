@@ -8,6 +8,7 @@ import { OutfitMotionImage } from "../components/OutfitMotion";
 import { AppScreen } from "../components/AppScreen";
 import { CompletionStatus } from "../components/CompletionStatus";
 import { Section } from "../components/Section";
+import { SavedOutfitPreview } from "../components/SavedOutfitPreview";
 import { getOutfitImageSource, uiIconAssets } from "../assets";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -25,8 +26,12 @@ const AI_RECOMPOSE_VISIBLE = false;
 export function OutfitDetailScreen({
   state,
   accountLinked,
+  accountAuthStatus,
   termsRequiredAccepted,
   outfitSaved,
+  savedOutfitSnapshot,
+  outfitSavePending,
+  outfitSaveMessage,
   wardrobeItems,
   accountGateResult,
   onNavigate,
@@ -110,6 +115,7 @@ export function OutfitDetailScreen({
       contentPaddingBottom={0}
     >
       {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
+      {savedOutfitSnapshot ? <SavedOutfitPreview snapshot={savedOutfitSnapshot} /> : null}
       <Section title={ambient ? state.outfit.decisionText : "오늘 입기 좋은 세트"} caption={ambient ? undefined : state.outfit.decisionText} titleStyle={ambient ? { fontSize: 23, lineHeight: 32, fontWeight: "700" } : undefined} accent="clear">
         <View style={[styles.outfitRail, ambient && { columnGap: 12, rowGap: 18, alignItems: "flex-start" }, comparisonRail && { flexWrap: "nowrap", columnGap: 10 }]}>
           {items.map(([slot, item]) => {
@@ -232,24 +238,26 @@ export function OutfitDetailScreen({
 
       <AmbientControlSurface>
       <Section title="저장 및 내 옷장" caption={`보유 ${ownedItemCount}개 · 추천에 반영됨`} accent="clear" compact contentGap={spacing.xs}>
+        <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>가장 최근 코디 1개를 이 기기에 보관해요. 다시 저장하면 이전 코디를 대체해요.</Text>
         <CompletionStatus
           visible={saveCompletionVisible}
           compact
           title="코디 저장 완료"
-          message="저장한 코디는 코디 탭에서 계속 확인할 수 있어요"
+          message="저장 시점의 코디를 이 기기에 보관했어요"
         />
         <AppButton
-          label={outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
+          label={accountAuthStatus === "restoring" ? "계정 확인 중" : outfitSavePending ? "저장 중" : outfitSaved ? "저장 완료" : canSaveDirectly ? "코디 저장" : needsTerms ? "약관 동의 후 저장" : "계정 연결 후 저장"}
           hapticFeedback={ambient ? "none" : "automatic"}
           onPress={() => { saveRequestedRef.current = true; onRequireAccount("save-outfit", "C4"); }}
           tone={outfitSaved ? "secondary" : "warning"}
-          disabled={outfitSaved}
+          disabled={accountAuthStatus === "restoring" || outfitSaved || outfitSavePending}
           size="sm"
         />
         <View style={[styles.actions, ambient && fontScale > 1.3 && { flexDirection: "column", alignItems: "stretch" }]}>
           <AppButton label="내 옷장 보기" onPress={() => onNavigate("C2")} tone="secondary" variant="outlined" size="sm" />
           <AppButton label="아이템 추가" onPress={onOpenWardrobeAdd} tone="secondary" variant="outlined" size="sm" />
         </View>
+        {outfitSaveMessage ? <Text accessibilityRole="alert" style={[pageStyles.compactCaption, { color: theme.warm }]}>{localize(outfitSaveMessage)}</Text> : null}
       </Section>
       </AmbientControlSurface>
     </AppScreen>

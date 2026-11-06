@@ -3,23 +3,9 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 const read = p => readFileSync(p, 'utf8');
 const hook = stripTypeScriptTypes(read('apps/mobile/src/state/useWeatherOnAppState.ts'));
-const marker = hook.indexOf('if (!appStateHydrated || weatherLocationMode !== "auto")');
-const start = hook.lastIndexOf('useEffect(() => {', marker) + 'useEffect(() => {'.length;
-const end = hook.indexOf('\n  }, [', marker);
-for (const status of ['error', 'unavailable', 'denied', 'granted']) {
- const updates = {};
- const bindings = { appStateHydrated:true, weatherLocationMode:'auto', deviceWeatherLocation:null, locationReady:true,
- deviceLocationRequestInFlightRef:{current:false}, syncDeviceWeatherLocationPermission:async()=>({status,location:status==='granted'?{id:'here'}:undefined}),
- ...Object.fromEntries(['DeviceLocationState','LocationReady','DeviceWeatherLocation','WeatherLocationMode','WeatherRefreshTick'].map(k=>['set'+k,v=>{updates[k]=v;}])) };
- new Function(...Object.keys(bindings), hook.slice(start,end))(...Object.values(bindings));
- await new Promise(setImmediate);
- if (status==='error'||status==='unavailable') {
- assert.notEqual(updates.WeatherLocationMode,'manual', `${status} must preserve auto intent`);
- assert.notEqual(updates.LocationReady,false, `${status} must preserve readiness`);
- } else if(status==='denied') assert.equal(updates.WeatherLocationMode,'manual');
- else assert.equal(updates.LocationReady,true);
-}
-console.log('Cold-start location transitions passed');
+// Executes the shared production location request flow with deferred promises,
+// including cold-start permission transitions and later user-intent races.
+await import('./check-location-intent-regressions.mjs');
 function load(path, names, bindings={}) {
  const source=stripTypeScriptTypes(read(path)).replace(/^import[\s\S]*?;\r?\n/gmu,'').replace(/^export /gmu,'');
  return new Function(...Object.keys(bindings), `${source}\nreturn {${names.join(',')}}`)(...Object.values(bindings));
@@ -44,7 +30,8 @@ const authClass = authSource.slice(authSource.indexOf('export class AccountAuthE
 const AccountAuthError = new Function(`${authClass}; return AccountAuthError;`)();
 const persistSource = authSource.slice(authSource.indexOf('async function persistAuthenticatedSession'),authSource.indexOf('function isProviderAvailability'));
 const written=[], identities=[], revoked=[];
-const persist = new Function('AccountAuthError','writeSessionToken','rememberIntegrityUser','ensureAppAttestEnrollment','accountRequest', `${persistSource};return persistAuthenticatedSession;`)(AccountAuthError,async t=>written.push(t),async id=>identities.push(id),async()=>{},async(_,opts)=>revoked.push(opts.token));
+const mutationSource = authSource.slice(authSource.indexOf('let sessionMutationTail'),authSource.indexOf('export async function isAppleAccountSignInAvailable'));
+const persist = new Function('AccountAuthError','writeSessionToken','rememberIntegrityUser','ensureAppAttestEnrollment','accountRequest', `${mutationSource}\n${persistSource};return persistAuthenticatedSession;`)(AccountAuthError,async t=>written.push(t),async id=>identities.push(id),async()=>{},async(_,opts)=>revoked.push(opts.token));
 await assert.rejects(persist({sessionToken:'new-other',account:{userId:'other'}},'original'),e=>e.code==='reauth_account_mismatch');
 assert.deepEqual(written,[]);assert.deepEqual(identities,[]);assert.deepEqual(revoked,['new-other']);
 await persist({sessionToken:'new-same',account:{userId:'original'}},'original');
@@ -52,7 +39,7 @@ assert.deepEqual(written,['new-same']);assert.deepEqual(identities,['original'])
 const deleteSource=hook.slice(hook.indexOf('  const deleteAccount = async () => {'),hook.indexOf('\n  const completeTerms'));
 for(const result of ['same','cancel','mismatch']) {
  const events=[];
- const bindings={AccountAuthError,accountAuthStatus:'ready',accountProfile:{userId:'original',provider:'apple'},
+ const bindings={AccountAuthError,accountSessionRevisionRef:{current:0},accountSessionReadyRef:{current:true},accountCleanupPendingRef:{current:false},readPendingAccountDeletion:async()=>null,writePendingAccountDeletion:async()=>{},accountActionRevisionRef:{current:0},accountActionInFlightRef:{current:false},accountDataClearingRef:{current:false},accountDeletionCompletedRef:{current:false},accountAuthStatus:'ready',accountProfile:{userId:'original',provider:'apple'},
  setAccountAuthStatus:s=>events.push(s),setAccountAuthMessage:m=>events.push(m),setAccountProfile:()=>events.push('profile'),setRoute:()=>events.push('route'),
  deleteAccountSession:async()=>{events.push('delete-attempt');throw new AccountAuthError('recent_auth_required','recent',401);},
  clearLinkedAccountState:async()=>events.push('clear'),

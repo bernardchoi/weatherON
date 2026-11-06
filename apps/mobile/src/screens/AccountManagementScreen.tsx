@@ -18,6 +18,7 @@ export function AccountManagementScreen({
   accountLinked,
   accountProfile,
   accountAuthStatus,
+  accountCleanupPending,
   accountAuthMessage,
   termsRequiredAccepted,
   onNavigate,
@@ -34,13 +35,13 @@ export function AccountManagementScreen({
   const accountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const provider = accountProfile?.provider ?? "apple";
-  const profileTitle = accountReady ? getProviderConnectedTitle(provider) : needsTerms ? "약관 동의가 필요해요" : "게스트 모드";
+  const profileTitle = accountCleanupPending ? "계정 정리 필요" : accountReady ? getProviderConnectedTitle(provider) : needsTerms ? "약관 동의가 필요해요" : "게스트 모드";
   const profileMeta = accountReady ? "이 기기의 계정 연결과 저장 상태를 관리해요" : needsTerms ? "필수 약관 확인 후 계정 연결을 완료해요" : "계정을 연결하면 저장 기능을 사용할 수 있어요";
-  const statusLabel = accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결 완료" : needsTerms ? "확인 필요" : "게스트";
+  const statusLabel = accountCleanupPending ? "확인 필요" : accountAuthStatus === "offline" ? "오프라인" : accountReady ? "연결 완료" : needsTerms ? "확인 필요" : "게스트";
   const primaryLabel = needsTerms ? "약관 동의" : "계정 연결";
   const primaryAccessibilityLabel = needsTerms ? "필수 약관 동의 이어가기" : "계정 연결";
   const primaryTone = accountReady ? theme.success : needsTerms ? theme.gold : theme.sky;
-  const showPrimaryAction = accountLinked && !accountReady;
+  const showPrimaryAction = accountLinked && !accountReady && !accountCleanupPending;
   const ConfirmationContent = ambient ? ScrollView : React.Fragment;
   const isProcessing = accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in";
 
@@ -126,9 +127,9 @@ export function AccountManagementScreen({
           </Pressable>
         ) : null}
 
-        {accountLinked ? (
+        {accountLinked || accountCleanupPending ? (
           <View style={[styles.accountActions, ambient && ambientVisual.accountActions]}>
-            <FeedbackPressable
+            {!accountCleanupPending ? <FeedbackPressable
               accessibilityLabel="로그아웃"
               accessibilityRole="button"
               hapticFeedback={ambient ? "none" : "automatic"}
@@ -137,15 +138,15 @@ export function AccountManagementScreen({
               style={({ pressed }) => [styles.logoutButton, { backgroundColor: theme.cardMuted, borderColor: theme.border, opacity: isProcessing ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && ambientVisual.logoutButton]}
             >
               <Text style={[[styles.smallButtonText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.smallButtonText]}>로그아웃</Text>
-            </FeedbackPressable>
+            </FeedbackPressable> : null}
             <Pressable
-              accessibilityLabel="회원 탈퇴"
+              accessibilityLabel={accountCleanupPending ? "계정 정리 다시 시도" : "회원 탈퇴"}
               accessibilityRole="button"
               disabled={isProcessing}
               onPress={() => setDangerConfirm("delete")}
               style={({ pressed }) => [styles.deleteButton, { opacity: isProcessing ? 0.55 : pressed ? 0.72 : 1 }, ambient && ambientVisual.deleteButton]}
             >
-              <Text style={[[styles.deleteButtonText, { color: theme.alert }], Platform.OS === "ios" && ambientVisual.deleteButtonText]}>회원 탈퇴</Text>
+              <Text style={[[styles.deleteButtonText, { color: theme.alert }], Platform.OS === "ios" && ambientVisual.deleteButtonText]}>{accountCleanupPending ? "계정 정리 다시 시도" : "회원 탈퇴"}</Text>
             </Pressable>
           </View>
         ) : null}
