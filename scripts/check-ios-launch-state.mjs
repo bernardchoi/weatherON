@@ -17,7 +17,7 @@ assert.doesNotMatch(localRestoreEffect, /restoreAccountSession/u);
 assert.match(localRestoreEffect, /setRoute\(persistedState\.onboardingCompleted \? "H1" : persistedState\.onboardingProgress\.route\)/u);
 assert.match(localRestoreEffect, /setAccountLinked\(persistedState\.accountLinked\)/u);
 
-const remoteRestoreStart = stateSource.indexOf("void restoreAccountSession().then");
+const remoteRestoreStart = stateSource.indexOf("void restoreAccountSession(isCurrent).then");
 assert.ok(remoteRestoreStart > localRestoreEnd, "remote account restore must run after the local restore effect");
 assert.match(stateSource.slice(localRestoreEnd, remoteRestoreStart), /if \(!appStateHydrated\) return/u);
 assert.match(stateSource, /return \{\n    appStateHydrated,/u);

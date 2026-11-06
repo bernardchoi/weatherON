@@ -108,7 +108,10 @@
     "check:ios-release-signing": "node scripts/check-ios-release-signing.mjs",
     "check:ios-service-env": "node scripts/check-ios-service-env.mjs",
     "check:ios-service-env-regression": "node scripts/check-ios-service-env.mjs --self-test",
-    "check:ios-deep-links": "node scripts/check-ios-deep-links.mjs"
+    "check:ios-deep-links": "node scripts/check-ios-deep-links.mjs",
+    "check:location-intent": "node --no-warnings scripts/check-location-intent-regressions.mjs",
+    "check:account-lifecycle": "node --no-warnings scripts/check-account-lifecycle-regressions.mjs",
+    "check:outfit-snapshot": "node --no-warnings scripts/check-outfit-snapshot-regressions.mjs"
   },
   "dependencies": {
     "@fontsource/manrope": "^5.2.8",

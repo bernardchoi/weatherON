@@ -3,6 +3,7 @@ import * as Crypto from "expo-crypto";
 import { Platform } from "../localization/react-native";
 import { getAccountRuntimeConfig } from "../config/accountEnv";
 import { normalizeBaseUrl } from "../utils/httpJson";
+import { readPendingAccountDeletion, writePendingAccountDeletion } from "./accountDeletionState";
 import {
   createAppIntegrityHeaders,
   ensureAppAttestEnrollment,
@@ -29,6 +30,7 @@ export type AccountSessionResult = {
 
 export type AccountRestoreResult =
   | { status: "signed-out"; account: null }
+  | { status: "cleanup-required"; account: null; serverDeleted: boolean }
   | { status: "authenticated"; account: AccountProfile; expiresAt: string }
   | { status: "offline"; account: null };
 
@@ -60,6 +62,16 @@ export type AccountProviderAvailability = { provider: Exclude<AccountProvider, "
 const sessionTokenKey = "weatheron.account.session.v1";
 const keychainService = "com.weatheron.mobile.account-session";
 let volatileWebSessionToken: string | null = null;
+// Serialize local credential/identity mutations so an already-started secure-store
+// write completes before a newer logout clears it. Network requests stay parallel.
+let sessionMutationTail: Promise<void> = Promise.resolve();
+function mutateSession(isCurrent: () => boolean, mutation: () => Promise<void>): Promise<void> {
+  const pending = sessionMutationTail.then(async () => {
+    if (isCurrent()) await mutation();
+  });
+  sessionMutationTail = pending.catch(() => {});
+  return pending;
+}
 
 export async function isAppleAccountSignInAvailable(): Promise<boolean> {
   if (Platform.OS !== "ios") return false;
@@ -67,7 +79,7 @@ export async function isAppleAccountSignInAvailable(): Promise<boolean> {
   return AppleAuthentication.isAvailableAsync();
 }
 
-export async function signInWithAppleAccount(expectedUserId?: string): Promise<AccountSessionResult> {
+export async function signInWithAppleAccount(expectedUserId?: string, isCurrent: () => boolean = () => true): Promise<AccountSessionResult> {
   if (Platform.OS !== "ios") {
     throw new AccountAuthError("apple_unavailable", "Apple 로그인은 현재 iOS 앱에서 사용할 수 있습니다.");
   }
@@ -102,7 +114,7 @@ export async function signInWithAppleAccount(expectedUserId?: string): Promise<A
         displayName: formatAppleDisplayName(credential.fullName),
       },
     });
-    await persistAuthenticatedSession(exchange, expectedUserId);
+    await persistAuthenticatedSession(exchange, expectedUserId, isCurrent);
     return { account: exchange.account, expiresAt: exchange.expiresAt };
   } catch (error) {
     if (isAppleCancellation(error)) throw new AccountAuthError("apple_canceled", "Apple 로그인을 취소했습니다.");
@@ -122,6 +134,7 @@ export async function listAvailableAccountProviders(): Promise<AccountProviderAv
 export async function signInWithOAuthAccount(
   provider: Exclude<AccountProvider, "apple">,
   expectedUserId?: string,
+  isCurrent: () => boolean = () => true,
 ): Promise<AccountSessionResult> {
   if (Platform.OS !== "ios" && Platform.OS !== "android") {
     throw new AccountAuthError("oauth_unavailable", "간편 로그인은 iOS와 Android 앱에서 사용할 수 있습니다.");
@@ -165,25 +178,34 @@ export async function signInWithOAuthAccount(
       code,
     },
   });
-  await persistAuthenticatedSession(exchange, expectedUserId);
+  await persistAuthenticatedSession(exchange, expectedUserId, isCurrent);
   return { account: exchange.account, expiresAt: exchange.expiresAt };
 }
 
-export async function restoreAccountSession(): Promise<AccountRestoreResult> {
+export async function restoreAccountSession(isCurrent: () => boolean = () => true): Promise<AccountRestoreResult> {
+  // Check before token/network access, including offline launches. Failure to
+  // read this guard must reject, never fall back to showing cached private data.
+  const deletion = await readPendingAccountDeletion();
+  if (deletion) return { status: "cleanup-required", account: null, serverDeleted: deletion === "server-deleted" };
   try {
     const token = await readSessionToken();
-    if (!token) return { status: "signed-out", account: null };
+    if (!isCurrent() || !token) return { status: "signed-out", account: null };
     const session = await accountRequest<AccountSessionResult>("/auth/session", { token });
-    await rememberIntegrityUser(session.account.userId);
+    if (!isCurrent()) return { status: "offline", account: null };
+    await mutateSession(isCurrent, () => rememberIntegrityUser(session.account.userId));
+    if (!isCurrent()) return { status: "offline", account: null };
     await ensureAppAttestEnrollment(token, session.account.userId).catch((error) => {
       console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
     });
     return { status: "authenticated", account: session.account, expiresAt: session.expiresAt };
   } catch (error) {
     const normalized = normalizeAccountError(error);
+    if (!isCurrent()) return { status: "offline", account: null };
     if (normalized.status === 401) {
-      await deleteSessionToken().catch(() => {});
-      await forgetIntegrityUser().catch(() => {});
+      await mutateSession(isCurrent, async () => {
+        await deleteSessionToken().catch(() => {});
+        await forgetIntegrityUser().catch(() => {});
+      });
       return { status: "signed-out", account: null };
     }
     return { status: "offline", account: null };
@@ -205,23 +227,79 @@ export async function acceptAccountTerms(): Promise<AccountProfile> {
   return response.account;
 }
 
-export async function signOutAccountSession(): Promise<void> {
+export async function signOutAccountSession(isCurrent: () => boolean = () => true): Promise<void> {
   const token = await readSessionToken();
   try {
     if (token) await accountRequest<{ signedOut: boolean }>("/auth/logout", { method: "POST", token });
   } catch {
     // 서버 연결이 끊겨도 이 기기의 세션은 즉시 제거한다.
   } finally {
-    await deleteSessionToken();
-    await forgetIntegrityUser();
+    await clearLocalAccountSession(isCurrent);
   }
 }
 
-export async function deleteAccountSession(): Promise<void> {
-  const token = await requireStoredSessionToken();
-  await accountRequest<{ deleted: boolean }>("/account/delete", { method: "POST", token });
-  await deleteSessionToken();
-  await forgetIntegrityUser();
+export async function clearLocalAccountSession(isCurrent: () => boolean = () => true): Promise<void> {
+  await mutateSession(isCurrent, async () => {
+    // Attempt both independent stores, but never hide a failure from the caller.
+    const results = await Promise.allSettled([deleteSessionToken(), forgetIntegrityUser()]);
+    const failed = results.find(result => result.status === "rejected");
+    if (failed?.status === "rejected") throw failed.reason;
+  });
+}
+
+export async function deleteAccountSession(
+  isCurrent: () => boolean = () => true,
+  onServerDeleted: () => void = () => {},
+): Promise<void> {
+  const pending = await readPendingAccountDeletion();
+  if (!isCurrent()) return;
+  if (pending === "server-deleted") {
+    onServerDeleted();
+    await clearLocalAccountSession(isCurrent);
+    return;
+  }
+  let token: string;
+  try { token = await requireStoredSessionToken(); }
+  catch (error) {
+    if (pending === "requested") throw new AccountAuthError("delete_result_unknown", "탈퇴 결과를 확인하지 못했어요. support@weatheron.app으로 문의해 주세요.");
+    throw error;
+  }
+  if (pending === "requested") {
+    // A prior process may have lost the response. Only a still-authenticated
+    // account proves that retrying the server request is necessary.
+    try {
+      const session = await accountRequest<AccountSessionResult>("/auth/session", { token });
+      if (!session.account?.userId) throw new Error("Invalid account session");
+    }
+    catch (error) {
+      throw new AccountAuthError("delete_result_unknown", normalizeAccountError(error).status === 401
+        ? "탈퇴 결과를 확인하지 못했어요. support@weatheron.app으로 문의해 주세요."
+        : "탈퇴 결과를 확인하지 못했어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.");
+    }
+  }
+  if (!isCurrent()) return;
+  // Durable intent must succeed before the irreversible request is sent.
+  await writePendingAccountDeletion("requested");
+  if (!isCurrent()) {
+    // No server request was sent. Do not leave an ambiguous deletion behind
+    // when a newer logout cancelled this operation during the durable write.
+    await writePendingAccountDeletion(null);
+    return;
+  }
+  let result: { deleted: boolean };
+  try { result = await accountRequest<{ deleted: boolean }>("/account/delete", { method: "POST", token }); }
+  catch (error) {
+    const rejected = normalizeAccountError(error);
+    if (rejected.status >= 400 && rejected.status < 500) await writePendingAccountDeletion(null);
+    throw error;
+  }
+  if (result.deleted !== true) throw new AccountAuthError("delete_response_invalid", "회원 탈퇴를 완료하지 못했습니다.");
+  // Publish the irreversible server acknowledgement before fallible local work.
+  // A retry can then finish local cleanup without needing the deleted account.
+  if (isCurrent()) onServerDeleted();
+  await writePendingAccountDeletion("server-deleted");
+  if (!isCurrent()) return;
+  await clearLocalAccountSession(isCurrent);
 }
 
 export async function requestAuthenticatedAccountJson<T>(
@@ -346,14 +424,17 @@ function normalizeAccountError(error: unknown): AccountAuthError {
   return new AccountAuthError("account_unknown_error", error instanceof Error ? error.message : "계정 요청에 실패했습니다.");
 }
 
-async function persistAuthenticatedSession(exchange: OAuthExchangeResponse, expectedUserId?: string): Promise<void> {
+async function persistAuthenticatedSession(exchange: OAuthExchangeResponse, expectedUserId?: string, isCurrent: () => boolean = () => true): Promise<void> {
   // Validate before replacing the existing keychain token or integrity identity.
   if (expectedUserId && exchange.account.userId !== expectedUserId) {
     await accountRequest("/auth/logout", { method: "POST", token: exchange.sessionToken }).catch(() => {});
     throw new AccountAuthError("reauth_account_mismatch", "현재 연결된 계정으로 다시 인증해 주세요. 저장 데이터는 유지됩니다.");
   }
-  await writeSessionToken(exchange.sessionToken);
-  await rememberIntegrityUser(exchange.account.userId);
+  await mutateSession(isCurrent, async () => {
+    await writeSessionToken(exchange.sessionToken);
+    await rememberIntegrityUser(exchange.account.userId);
+  });
+  if (!isCurrent()) return;
   await ensureAppAttestEnrollment(exchange.sessionToken, exchange.account.userId).catch((error) => {
     console.warn("App Attest enrollment deferred", error instanceof Error ? error.message : String(error));
   });
@@ -385,6 +466,7 @@ export function isAccountAuthCancellation(error: unknown): boolean {
 
 export function getAccountAuthDisplayMessage(error: unknown): string {
   if (!(error instanceof AccountAuthError)) return "계정 요청에 실패했습니다.";
+  if (error.code === "account_cleanup_required" || error.code === "delete_result_unknown") return error.message;
   if (error.code === "apple_canceled") return "Apple 로그인을 취소했습니다.";
   if (error.code === "oauth_canceled") return "로그인을 취소했습니다.";
   if (error.code === "apple_unavailable") return "Apple 로그인은 현재 iOS 앱에서 사용할 수 있습니다.";

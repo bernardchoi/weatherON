@@ -54,5 +54,9 @@ jobs:
           node scripts/check-correctness-batch.mjs
           node scripts/check-weather-outfit-regressions.mjs
           node scripts/check-review-regressions.mjs
+          npm run check:account-lifecycle
+          npm run check:outfit-snapshot
       - name: Check localization
-        run: npm run check:mobile-localization
+        run: |
+          npm run check:mobile-localization
+          node scripts/check-localization-native-exports.mjs

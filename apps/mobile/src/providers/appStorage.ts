@@ -161,6 +161,7 @@ const appStateStorageKey = "weatheron.appState.v1";
 const notificationStateStorageKey = "weatheron.notificationState.v1";
 const weatherProviderResultStorageKey = "weatheron.weatherProviderResult.v1";
 const specialAlertDeliveryStorageKey = "weatheron.specialAlertDelivery.v1";
+const accountDeletionStateStorageKey = "weatheron.accountDeletion.v1";
 const legacyStorageKeys = [
   appStateStorageKey,
   weatherProviderResultStorageKey,
@@ -444,6 +445,10 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
 }
 
 async function readStructuredValue(database: SQLiteExecutor, key: string): Promise<unknown | null> {
+  if (key === accountDeletionStateStorageKey) {
+    const row = await database.getFirstAsync<TextRow>("SELECT value FROM app_meta WHERE key = ?", key);
+    return row ? JSON.parse(row.value) : null;
+  }
   if (key === appStateStorageKey) return readPersistedAppState(database);
   if (key === notificationStateStorageKey) return readNotificationState(database);
   if (key === weatherProviderResultStorageKey) return readWeatherProviderResult(database);
@@ -452,6 +457,10 @@ async function readStructuredValue(database: SQLiteExecutor, key: string): Promi
 }
 
 async function writeStructuredValue(database: SQLiteExecutor, key: string, value: unknown): Promise<void> {
+  if (key === accountDeletionStateStorageKey) {
+    await database.runAsync("INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at", key, JSON.stringify(value), Date.now());
+    return;
+  }
   if (key === appStateStorageKey) {
     await writePersistedAppState(database, value);
     return;
@@ -495,7 +504,7 @@ async function readPersistedAppState(database: SQLiteExecutor): Promise<Record<s
     termsRequiredAccepted: boolSetting(settings, "termsRequiredAccepted"),
     locationReady: boolSetting(settings, "locationReady"),
     permissionReady: boolSetting(settings, "permissionReady"),
-    outfitSaved: boolSetting(settings, "outfitSaved"),
+    savedOutfitSnapshot: jsonObjectSetting(settings, "savedOutfitSnapshot"),
     styleProfileSaved: boolSetting(settings, "styleProfileSaved"),
     styleGender: textSetting(settings, "styleGender"),
     ageBand: textSetting(settings, "ageBand"),
@@ -539,7 +548,7 @@ async function writePersistedAppState(database: SQLiteExecutor, value: unknown) 
     termsRequiredAccepted: boolValue(record.termsRequiredAccepted),
     locationReady: boolValue(record.locationReady),
     permissionReady: boolValue(record.permissionReady),
-    outfitSaved: boolValue(record.outfitSaved),
+    savedOutfitSnapshot: JSON.stringify(record.savedOutfitSnapshot ?? null),
     styleProfileSaved: boolValue(record.styleProfileSaved),
     styleGender: textValue(record.styleGender),
     ageBand: textValue(record.ageBand),
@@ -598,6 +607,17 @@ function jsonSetting(settings: Map<string, AppSettingRow>, key: string): unknown
   try {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function jsonObjectSetting(settings: Map<string, AppSettingRow>, key: string): Record<string, unknown> | undefined {
+  const value = textSetting(settings, key);
+  if (!value) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : undefined;
   } catch {
     return undefined;
   }

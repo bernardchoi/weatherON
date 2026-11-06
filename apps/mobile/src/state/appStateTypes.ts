@@ -1,5 +1,6 @@
 // useWeatherOnAppState가 공개하는 타입·기본값 모음.
 // 화면들은 기존처럼 useWeatherOnAppState에서 재노출된 타입을 임포트한다.
+import type { SavedOutfitSnapshot } from "../utils/savedOutfit";
 import type { PlaceSearchResult } from "@weatheron/shared";
 import type { DestinationAlertCondition, DestinationTransportMode } from "@weatheron/shared";
 import type { OnboardingRouteId, P0RouteId } from "../navigation/routes";
@@ -55,6 +56,7 @@ export type AccountGateState = {
   resumeLabel: string;
   selectedDestinationName?: string;
   outfitVariant?: string;
+  outfitSnapshot?: SavedOutfitSnapshot;
 };
 
 export type AlertSettingsRouteState = {
@@ -75,6 +77,7 @@ export type PermissionGateState = {
   selectedDestinationName?: string;
   alertFocus?: AlertSettingsFocus;
   pendingAccountAction?: AccountPendingAction;
+  outfitSnapshot?: SavedOutfitSnapshot;
 };
 
 export type PermissionGateResultState = {

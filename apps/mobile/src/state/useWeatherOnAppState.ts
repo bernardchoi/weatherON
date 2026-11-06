@@ -1,4 +1,7 @@
 import { homeRouteRequestKey, finishHomeRouteRequest } from "../utils/homeUpdateState";
+import { createSavedOutfitSnapshot, getSavedOutfitPhotoUris, getUnusedOutfitPhotoUris, isCurrentOutfitSaved, type SavedOutfitSnapshot } from "../utils/savedOutfit";
+import { toStoredWardrobePhotoUri } from "../utils/wardrobePhotoUri";
+import { readPendingAccountDeletion, writePendingAccountDeletion } from "../providers/accountDeletionState";
 import { buildTodayOutfit } from "../utils/todayOutfit";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createNotificationSync } from "../providers/notificationSync";
@@ -36,6 +39,7 @@ import { createWidgetLocations } from "../providers/widgetLocations";
 import {
   AccountAuthError,
   acceptAccountTerms,
+  clearLocalAccountSession,
   deleteAccountSession,
   restoreAccountSession,
   getAccountAuthDisplayMessage,
@@ -144,6 +148,7 @@ import {
   shouldScheduleLocalNotification,
 } from "./appStateHelpers";
 import {
+  createClearedAccountState,
   normalizePersistedWeatherProviderResult,
   readPersistedAppState,
   readPersistedNotificationState,
@@ -217,6 +222,7 @@ export function useWeatherOnAppState() {
   const [storageRetryTick, setStorageRetryTick] = useState(0);
   const persistedStateRef = useRef<PersistedAppState | null>(null);
   const photoSaveInFlightRef = useRef<Promise<void> | null>(null);
+  const outfitSaveInFlightRef = useRef<Promise<void> | null>(null);
   const [leavingNowRoutes, setLeavingNowRoutes] = useState<Record<string, LeavingNowRouteState>>({});
   const [nowMinuteTick, setNowMinuteTick] = useState(() => Date.now());
   const [useDestinationWeather, setUseDestinationWeather] = useState(false);
@@ -300,12 +306,24 @@ export function useWeatherOnAppState() {
   const [accountProfile, setAccountProfile] = useState<AccountProfile | null>(null);
   const [accountAuthStatus, setAccountAuthStatus] = useState<AccountAuthStatus>("restoring");
   const [accountAuthMessage, setAccountAuthMessage] = useState<string | null>(null);
+  // Gate navigation can be cancelled without discarding an authenticated session.
   const accountActionRevisionRef = useRef(0);
+  const accountSessionRevisionRef = useRef(0);
   const accountActionInFlightRef = useRef(false);
+  const accountSessionReadyRef = useRef(false);
+  const accountDataClearingRef = useRef(false);
+  const accountDeletionCompletedRef = useRef(false);
+  const accountCleanupPendingRef = useRef(false);
+  useEffect(() => () => {
+    accountSessionRevisionRef.current += 1;
+    accountActionRevisionRef.current += 1;
+  }, []);
   const [termsRequiredAccepted, setTermsRequiredAccepted] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
   const [permissionReady, setPermissionReady] = useState(false);
-  const [outfitSaved, setOutfitSaved] = useState(false);
+  const [savedOutfitSnapshot, setSavedOutfitSnapshot] = useState<SavedOutfitSnapshot | null>(null);
+  const [outfitSavePending, setOutfitSavePending] = useState(false);
+  const [outfitSaveMessage, setOutfitSaveMessage] = useState<string | null>(null);
   const [gate, setGate] = useState<AccountGateState | null>(null);
   const [accountGateResult, setAccountGateResult] = useState<AccountGateResultState | null>(null);
   const [permissionGate, setPermissionGate] = useState<PermissionGateState | null>(null);
@@ -321,7 +339,10 @@ export function useWeatherOnAppState() {
   const localNotificationSync = useMemo(() => createNotificationSync(syncLocalWeatherNotifications), []);
   const placeSearchRequestSeqRef = useRef(0);
   const recentlyRemovedDestinationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const deviceLocationRequestInFlightRef = useRef(false);
+  const deviceLocationRequestInFlightRef = useRef<number | null>(null);
+  const deviceLocationRequestSequenceRef = useRef(0);
+  const locationIntentRevisionRef = useRef(0);
+  const locationMountedRef = useRef(false);
   const weatherLocationModeRef = useRef(weatherLocationMode);
   const previousRouteRef = useRef<AppRouteId | null>(null);
   const widgetSnapshotContentKeyRef = useRef("");
@@ -337,7 +358,6 @@ export function useWeatherOnAppState() {
     mode: WeatherProviderMode;
     refreshTick: number;
   } | null>(null);
-  weatherLocationModeRef.current = weatherLocationMode;
   const updateSavedDestinations = useCallback((update: (current: SavedDestination[]) => SavedDestination[]) => {
     const next = update(savedDestinationsRef.current);
     savedDestinationsRef.current = next;
@@ -416,9 +436,10 @@ export function useWeatherOnAppState() {
     }),
     [ageBand, fitPreference, selectedStyles, smartCareScenario, styleGender],
   );
+  const canReadAccountData = accountSessionReadyRef.current && accountLinked && accountAuthStatus !== "restoring" && accountAuthStatus !== "signing-out" && !accountDeletionCompletedRef.current && !accountCleanupPendingRef.current;
   const wardrobe = useMemo(
-    () => [...photoWardrobeItems, ...presetWardrobe].map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })),
-    [photoWardrobeItems, wardrobeOwnedItemIds],
+    () => [...(canReadAccountData ? photoWardrobeItems : []), ...presetWardrobe].map((item) => ({ ...item, owned: wardrobeOwnedItemIds.includes(item.id) })),
+    [canReadAccountData, photoWardrobeItems, wardrobeOwnedItemIds],
   );
   const recommendationWardrobe = useMemo(
     () => wardrobe.filter((item) => item.source === "preset" || item.owned),
@@ -521,34 +542,74 @@ export function useWeatherOnAppState() {
     setPermissionReady(result.granted);
   }, []);
 
-  const reconcileDeviceLocationPermission = useCallback(async () => {
-    // 사용자가 직접 요청한 권한 다이얼로그(applyCurrentLocationWeather)가 떠 있는 동안
-    // 앱 포그라운드 전환으로 이 동기화가 겹쳐 뛰면, 방금 받은 허용 결과를 되돌릴 수 있다.
-    if (deviceLocationRequestInFlightRef.current) return;
-    deviceLocationRequestInFlightRef.current = true;
+  const invalidateLocationRequest = useCallback(() => {
+    locationIntentRevisionRef.current += 1;
+    deviceLocationRequestInFlightRef.current = null;
+    if (locationMountedRef.current) {
+      setDeviceLocationState((current) => current.status === "requesting" ? initialDeviceLocationState : current);
+    }
+  }, []);
+
+  // Record user intent before React renders, including auto -> manual -> auto.
+  const recordLocationIntent = useCallback((mode: WeatherLocationMode) => {
+    invalidateLocationRequest();
+    weatherLocationModeRef.current = mode;
+    setWeatherLocationMode(mode);
+  }, [invalidateLocationRequest]);
+
+  useEffect(() => {
+    locationMountedRef.current = true;
+    return () => {
+      locationMountedRef.current = false;
+      invalidateLocationRequest();
+    };
+  }, [invalidateLocationRequest]);
+
+  const resolveLocationRequest = useCallback(async (request: () => Promise<DeviceLocationState>) => {
+    if (!locationMountedRef.current) return null;
+    const revision = locationIntentRevisionRef.current;
+    const requestId = ++deviceLocationRequestSequenceRef.current;
+    deviceLocationRequestInFlightRef.current = requestId;
+    const isCurrent = () => locationMountedRef.current
+      && revision === locationIntentRevisionRef.current
+      && deviceLocationRequestInFlightRef.current === requestId;
     try {
-      const result = await syncDeviceWeatherLocationPermission();
+      let result: DeviceLocationState;
+      try {
+        result = await request();
+      } catch {
+        result = { status: "error", message: "현재 위치 확인 실패 · 다시 시도해 주세요" };
+      }
+      if (!isCurrent()) return null;
       setDeviceLocationState(result);
       if (result.status === "granted" && result.location) {
         setLocationReady(true);
         setDeviceWeatherLocation(result.location);
-        return;
+      } else if (result.status === "denied") {
+        setLocationReady(false);
+        setDeviceWeatherLocation(null);
+        if (weatherLocationModeRef.current === "auto") {
+          weatherLocationModeRef.current = "manual";
+          setWeatherLocationMode("manual");
+          setUseDestinationWeather(false);
+        }
       }
-      // "error"/"unavailable"은 GPS 타임아웃 등 일시적 실패일 뿐 권한 철회가 아니다.
-      // 이를 denied와 동일하게 처리해 auto를 manual로 영구 전환하면, 실제로는 권한이
-      // 살아있는데도 기본 위치(성수동)로 조용히 되돌아가 버린다.
-      if (result.status !== "denied") return;
-      setLocationReady(false);
-      setDeviceWeatherLocation(null);
-      if (weatherLocationModeRef.current === "auto") {
-        setWeatherLocationMode("manual");
-        setUseDestinationWeather(false);
-        setWeatherRefreshTick((value) => value + 1);
-      }
+      // Transient GPS/network failures retain auto intent for foreground recovery.
+      setWeatherRefreshTick((value) => value + 1);
+      return result;
     } finally {
-      deviceLocationRequestInFlightRef.current = false;
+      // An older completion must never release a newer request's busy ownership.
+      if (deviceLocationRequestInFlightRef.current === requestId) {
+        deviceLocationRequestInFlightRef.current = null;
+      }
     }
   }, []);
+
+  const reconcileDeviceLocationPermission = useCallback(async () => {
+    // Do not race a user-triggered permission dialog on foreground transitions.
+    if (deviceLocationRequestInFlightRef.current) return null;
+    return resolveLocationRequest(syncDeviceWeatherLocationPermission);
+  }, [resolveLocationRequest]);
 
   useEffect(() => {
     let active = true;
@@ -559,6 +620,7 @@ export function useWeatherOnAppState() {
     ])
       .then(([persistedWeatherResult, persistedState, persistedNotificationState]) => {
         if (!active) return;
+        if (persistedState && !persistedState.accountLinked) persistedState = createClearedAccountState(persistedState, false);
         if (persistedWeatherResult) {
           persistedWeatherProviderResultRef.current = persistedWeatherResult;
           setWeatherProviderResult(persistedWeatherResult);
@@ -578,7 +640,7 @@ export function useWeatherOnAppState() {
         setTermsRequiredAccepted(persistedState.termsRequiredAccepted);
         setLocationReady(persistedState.locationReady);
         setPermissionReady(persistedState.permissionReady);
-        setOutfitSaved(persistedState.outfitSaved);
+        setSavedOutfitSnapshot(persistedState.accountLinked ? persistedState.savedOutfitSnapshot : null);
         setStyleProfileSaved(persistedState.styleProfileSaved);
         setStyleGender(persistedState.styleGender);
         setAgeBand(persistedState.ageBand);
@@ -586,7 +648,7 @@ export function useWeatherOnAppState() {
         setSelectedStyles(persistedState.selectedStyles);
         setSmartCareScenario(persistedState.smartCareScenario);
         setWardrobeOwnedItemIds(persistedState.wardrobeOwnedItemIds);
-        setPhotoWardrobeItems(persistedState.photoWardrobeItems);
+        setPhotoWardrobeItems(persistedState.accountLinked ? persistedState.photoWardrobeItems : []);
         setSelectedWardrobeItemId(persistedState.selectedWardrobeItemId);
         savedDestinationsRef.current = persistedState.savedDestinations;
         setSavedDestinations(persistedState.savedDestinations);
@@ -602,7 +664,7 @@ export function useWeatherOnAppState() {
         setPreviewDestinationAlertCondition(persistedState.previewDestinationAlertCondition);
         setPreviewDestinationSchedulePreference(persistedState.previewDestinationSchedulePreference);
         setPreviewDestinationTravelEstimate(persistedState.previewDestinationTravelEstimate);
-        setWeatherLocationMode(persistedState.weatherLocationMode);
+        recordLocationIntent(persistedState.weatherLocationMode);
         setTemperatureUnit(persistedState.temperatureUnit);
         setDistanceUnit(persistedState.distanceUnit);
         setTemperatureUnitSource(persistedState.temperatureUnitSource);
@@ -642,9 +704,23 @@ export function useWeatherOnAppState() {
     if (!appStateHydrated) return;
     let active = true;
     const revision = accountActionRevisionRef.current;
-    void restoreAccountSession().then((restoredAccount) => {
-      if (!active || revision !== accountActionRevisionRef.current) return;
+    const sessionRevision = accountSessionRevisionRef.current;
+    const isCurrent = () => active && sessionRevision === accountSessionRevisionRef.current;
+    void restoreAccountSession(isCurrent).then((restoredAccount) => {
+      if (!isCurrent() || revision !== accountActionRevisionRef.current) return;
+      if (restoredAccount.status === "cleanup-required") {
+        accountCleanupPendingRef.current = true;
+        accountDeletionCompletedRef.current = restoredAccount.serverDeleted;
+        accountSessionReadyRef.current = false;
+        setAccountAuthStatus("error");
+        setAccountAuthMessage(restoredAccount.serverDeleted
+          ? "계정은 삭제됐지만 기기 저장 정보를 정리하지 못했어요. 다시 시도해 주세요."
+          : "탈퇴 결과를 확인하지 못했어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.");
+        setRoute("A4");
+        return;
+      }
       if (restoredAccount.status === "authenticated") {
+        accountSessionReadyRef.current = true;
         setAccountLinked(true);
         setAccountProfile(restoredAccount.account);
         setTermsRequiredAccepted(restoredAccount.account.termsAccepted);
@@ -653,16 +729,31 @@ export function useWeatherOnAppState() {
         return;
       }
       if (restoredAccount.status === "offline" && locallyRestoredAccountLinkedRef.current) {
+        accountSessionReadyRef.current = true;
         setAccountProfile(null);
         setAccountAuthStatus("offline");
         setAccountAuthMessage("오프라인 상태예요. 연결되면 계정을 다시 확인해요.");
         return;
       }
+      accountSessionReadyRef.current = false;
+      accountSessionRevisionRef.current += 1;
       setAccountLinked(false);
       setAccountProfile(null);
       setTermsRequiredAccepted(false);
+      // Account-only content is never exposed to a signed-out session. Keep
+      // guest destinations, preset ownership and preferences unchanged.
+      setSavedOutfitSnapshot(null);
+      setPhotoWardrobeItems([]);
+      setWardrobeOwnedItemIds(current => current.filter(id => presetWardrobe.some(item => item.id === id)));
       setAccountAuthStatus("idle");
       setAccountAuthMessage(null);
+    }).catch(() => {
+      if (!isCurrent() || revision !== accountActionRevisionRef.current) return;
+      accountCleanupPendingRef.current = true;
+      accountSessionReadyRef.current = false;
+      setAccountAuthStatus("error");
+      setAccountAuthMessage("계정 정리 상태를 확인하지 못했어요. 다시 시도해 주세요.");
+      setRoute("A4");
     });
     return () => {
       active = false;
@@ -1237,7 +1328,7 @@ export function useWeatherOnAppState() {
     termsRequiredAccepted,
     locationReady,
     permissionReady,
-    outfitSaved,
+    savedOutfitSnapshot,
     styleProfileSaved,
     styleGender,
     ageBand,
@@ -1270,12 +1361,13 @@ export function useWeatherOnAppState() {
   };
 
   useEffect(() => {
-    if (!appStateHydrated || photoSaveInFlightRef.current) return;
+    if (!appStateHydrated || accountAuthStatus === "restoring" || accountDataClearingRef.current || photoSaveInFlightRef.current || outfitSaveInFlightRef.current) return;
     void savePersistedAppState(persistedStateRef.current!).catch(() => {
       // 기존 트랜잭션은 보존하며, 다음 상태 변경 때 다시 저장한다.
     });
   }, [
     accountLinked,
+    accountAuthStatus,
     adConsentMode,
     ageBand,
     alertPreferences,
@@ -1286,7 +1378,8 @@ export function useWeatherOnAppState() {
     onboardingCompleted,
     onboardingProgress,
     destinationSelectionReady,
-    outfitSaved,
+    savedOutfitSnapshot,
+    outfitSavePending,
     permissionReady,
     previewDestinationAlertCondition,
     previewDestinationCareEnabled,
@@ -1331,51 +1424,35 @@ export function useWeatherOnAppState() {
   }, []);
 
   const setLocationMode = useCallback((mode: WeatherLocationMode) => {
-    setWeatherLocationMode(mode);
+    recordLocationIntent(mode);
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
     setWeatherRefreshTick((value) => value + 1);
-  }, []);
+  }, [recordLocationIntent]);
 
   const selectWeatherLocation = useCallback((place: PlaceSearchResult) => {
     setManualWeatherLocation(createWeatherLocationFromPlace(place));
-    setWeatherLocationMode("manual");
+    recordLocationIntent("manual");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
     setWeatherRefreshTick((value) => value + 1);
-  }, []);
+  }, [recordLocationIntent]);
 
   const applyCurrentLocationWeather = useCallback(async (requestingMessage: string) => {
-    deviceLocationRequestInFlightRef.current = true;
-    setWeatherLocationMode("auto");
+    if (!locationMountedRef.current) return null;
+    recordLocationIntent("auto");
     setWeatherProviderMode("ready");
     setUseDestinationWeather(false);
     setDeviceLocationState({ status: "requesting", message: requestingMessage });
-    try {
-      const result = await requestDeviceWeatherLocation();
-      setDeviceLocationState(result);
-      if (result.status === "granted" && result.location) {
-        setLocationReady(true);
-        setDeviceWeatherLocation(result.location);
-        // 권한 다이얼로그 대기 중 자동 위치 동기화가 거부로 끝나면 모드가 manual로 되돌아갈 수 있어,
-        // 허용 성공 시 auto를 다시 확정한다.
-        setWeatherLocationMode("auto");
-      } else if (result.status === "denied") {
-        setLocationReady(false);
-        setDeviceWeatherLocation(null);
-        setWeatherLocationMode("manual");
-      }
-      // Transient GPS/network failures retain auto intent for foreground recovery.
-      setWeatherRefreshTick((value) => value + 1);
-      return result;
-    } finally {
-      deviceLocationRequestInFlightRef.current = false;
-    }
-  }, []);
+    return resolveLocationRequest(requestDeviceWeatherLocation);
+  }, [recordLocationIntent, resolveLocationRequest]);
 
   const requestCurrentLocation = useCallback(async () => {
     if (deviceLocationRequestInFlightRef.current) return;
-    await applyCurrentLocationWeather("위치 권한 및 현재 위치 확인 중");
+    const pending = applyCurrentLocationWeather("위치 권한 및 현재 위치 확인 중");
+    const revision = locationIntentRevisionRef.current;
+    const result = await pending;
+    if (!result || !locationMountedRef.current || revision !== locationIntentRevisionRef.current) return;
     setOnboardingProgress((current) => ({ ...current, locationHandled: true }));
   }, [applyCurrentLocationWeather]);
 
@@ -1388,29 +1465,9 @@ export function useWeatherOnAppState() {
 
   useEffect(() => {
     if (!appStateHydrated || weatherLocationMode !== "auto") return;
-    if (deviceWeatherLocation) return;
-    // 현재 위치 요청(권한 다이얼로그 포함)이 진행 중이면 동기화 결과가 요청 상태와 모드를 덮어쓰므로 건너뛴다.
-    if (deviceLocationRequestInFlightRef.current) return;
-    let active = true;
-    setDeviceLocationState({ status: "requesting", message: locationReady ? "현재 위치 재확인 중" : "위치 권한 동기화 중" });
-    syncDeviceWeatherLocationPermission().then((result) => {
-      if (!active) return;
-      setDeviceLocationState(result);
-      if (result.status === "granted" && result.location) {
-        setLocationReady(true);
-        setDeviceWeatherLocation(result.location);
-      } else if (result.status === "denied") {
-        setLocationReady(false);
-        setDeviceWeatherLocation(null);
-        setWeatherLocationMode("manual");
-      }
-      // Transient GPS/network failures retain auto intent for foreground recovery.
-      setWeatherRefreshTick((value) => value + 1);
-    });
-    return () => {
-      active = false;
-    };
-  }, [appStateHydrated, deviceWeatherLocation, locationReady, weatherLocationMode]);
+    if (deviceWeatherLocation || weatherLocationModeRef.current !== "auto") return;
+    void reconcileDeviceLocationPermission();
+  }, [appStateHydrated, deviceWeatherLocation, weatherLocationMode, reconcileDeviceLocationPermission]);
 
   const resetPlaceSearch = useCallback(() => {
     placeSearchRequestSeqRef.current += 1;
@@ -1440,6 +1497,7 @@ export function useWeatherOnAppState() {
   }, [dismissRemovedDestination, resetPlaceSearch, route]);
 
   const navigate = useCallback((nextRoute: AppRouteId) => {
+    if (route === "O3" && nextRoute !== "O3") invalidateLocationRequest();
     if (route === "O7" && nextRoute === "O5") setOnboardingProgress((current) => ({ ...current, locationHandled: true }));
     setAlertSettingsRouteState(null);
     if (nextRoute === "R1") setPolicyHubReturnRoute(route === "A4" ? "A4" : "M1");
@@ -1451,7 +1509,7 @@ export function useWeatherOnAppState() {
       setOverlayReturnRoutes((current) => ({ ...current, [nextRoute]: route }));
     }
     setRoute(isLaunchHiddenRoute(nextRoute) ? "H1" : nextRoute);
-  }, [route]);
+  }, [route, invalidateLocationRequest]);
 
   const returnFromDestinationAdd = useCallback(() => {
     setRoute(destinationAddReturnRoute);
@@ -1467,6 +1525,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const requestPermissionGate = useCallback((reason: PermissionGateReason, returnTo: PermissionReturnRouteId, alertFocus?: AlertSettingsFocus) => {
+    invalidateLocationRequest();
     const ready = reason === "location" ? locationReady : permissionReady;
     if (ready) {
       setPermissionGateResult(createPermissionGateResult(reason, returnTo));
@@ -1475,7 +1534,7 @@ export function useWeatherOnAppState() {
     }
     setPermissionGate(createPermissionGateState(reason, returnTo, selectedDestinationPlace.name, alertFocus));
     setRoute("O3");
-  }, [locationReady, permissionReady, selectedDestinationPlace.name]);
+  }, [locationReady, permissionReady, selectedDestinationPlace.name, invalidateLocationRequest]);
 
   const openPolicyDocument = useCallback((type: PolicyDocumentType) => {
     setSelectedPolicyDocument(type);
@@ -1487,31 +1546,71 @@ export function useWeatherOnAppState() {
     setRoute(policyDocumentReturnRoute);
   }, [policyDocumentReturnRoute]);
 
-  const clearLinkedAccountState = useCallback(async () => {
+  const clearLinkedAccountState = useCallback(async (isCurrent: () => boolean) => {
     await photoSaveInFlightRef.current?.catch(() => {});
+    await outfitSaveInFlightRef.current?.catch(() => {});
+    if (!isCurrent()) return;
+    const previousState = persistedStateRef.current!;
+    const clearedState = createClearedAccountState(previousState);
+    // Do not publish success, delete photo files, or remove the session before
+    // the account-data transaction commits. A failed write leaves a retryable
+    // signed-in state with the original data and files intact.
+    await savePersistedAppState(clearedState);
+    if (!isCurrent()) return;
+    persistedStateRef.current = clearedState;
     setAccountLinked(false);
     setAccountProfile(null);
     setTermsRequiredAccepted(false);
-    setOutfitSaved(false);
+    setSavedOutfitSnapshot(null);
+    setOutfitSaveMessage(null);
     updateSavedDestinations(() => []);
     setRecentlyRemovedDestination(null);
-    setWardrobeOwnedItemIds([]);
-    removePersistedWardrobePhotos((persistedStateRef.current?.photoWardrobeItems ?? []).map((item) => item.imageUrl));
+    setWardrobeOwnedItemIds(clearedState.wardrobeOwnedItemIds);
+    removePersistedWardrobePhotos([
+      ...previousState.photoWardrobeItems.map((item) => item.imageUrl),
+      ...getSavedOutfitPhotoUris(previousState.savedOutfitSnapshot),
+    ]);
     setPhotoWardrobeItems([]);
-    setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+    setSelectedWardrobeItemId(clearedState.selectedWardrobeItemId);
+    setOnboardingProgress(clearedState.onboardingProgress);
+    setDestinationSelectionReady(false);
+    setSelectedDestinationPlace(clearedState.selectedDestinationPlace);
+    setDepartureActivityIntentDestinationId(null);
+    setCommittedDepartureDestinationId(null);
+    setDepartureActivityReplacementDestinationId(null);
     setRecentlyRemovedWardrobeItemId(null);
     setAccountGateResult(null);
   }, [updateSavedDestinations]);
 
   const signOutAccount = useCallback(async () => {
+    const sessionWasReady = accountSessionReadyRef.current;
+    accountSessionReadyRef.current = false;
+    const sessionRevision = ++accountSessionRevisionRef.current;
+    accountActionRevisionRef.current += 1;
+    accountActionInFlightRef.current = true;
+    accountDataClearingRef.current = true;
+    const isCurrent = () => sessionRevision === accountSessionRevisionRef.current;
     setAccountAuthStatus("signing-out");
     setAccountAuthMessage(null);
     try {
-      await signOutAccountSession();
+      await clearLinkedAccountState(isCurrent);
+      if (!isCurrent()) return;
+      await signOutAccountSession(isCurrent);
+      if (isCurrent()) {
+        accountDeletionCompletedRef.current = false;
+        setAccountAuthStatus("idle");
+        setRoute("M1");
+      }
+    } catch {
+      if (!isCurrent()) return;
+      accountSessionReadyRef.current = sessionWasReady && persistedStateRef.current?.accountLinked === true;
+      setAccountAuthStatus("error");
+      setAccountAuthMessage("로그아웃을 완료하지 못했어요. 다시 시도해 주세요.");
     } finally {
-      await clearLinkedAccountState();
-      setAccountAuthStatus("idle");
-      setRoute("M1");
+      if (isCurrent()) {
+        accountDataClearingRef.current = false;
+        accountActionInFlightRef.current = false;
+      }
     }
   }, [clearLinkedAccountState]);
 
@@ -1547,7 +1646,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const savePhotoWardrobeItem = useCallback(async (item: WardrobeItem) => {
-    if (item.source !== "photo" || !appStateHydrated || photoSaveInFlightRef.current) {
+    if (item.source !== "photo" || !appStateHydrated || !accountSessionReadyRef.current || accountDataClearingRef.current || accountDeletionCompletedRef.current || photoSaveInFlightRef.current || outfitSaveInFlightRef.current) {
       throw new Error("사진을 저장할 수 없어요. 다시 시도해 주세요.");
     }
     const current = persistedStateRef.current!;
@@ -1573,6 +1672,9 @@ export function useWeatherOnAppState() {
     try {
       await save;
       persistedStateRef.current = { ...persistedStateRef.current!, photoWardrobeItems: nextItems, wardrobeOwnedItemIds: nextOwnedIds, selectedWardrobeItemId: item.id };
+      if (imageChanged && existingItem && !getSavedOutfitPhotoUris(persistedStateRef.current.savedOutfitSnapshot).includes(toStoredWardrobePhotoUri(existingItem.imageUrl))) {
+        removePersistedWardrobePhotos([existingItem.imageUrl]);
+      }
       setPhotoWardrobeItems(nextItems);
       setWardrobeOwnedItemIds((ids) => ids.includes(item.id) ? ids : [item.id, ...ids]);
       setSelectedWardrobeItemId(item.id);
@@ -1937,8 +2039,8 @@ export function useWeatherOnAppState() {
     updateSavedDestinations,
   ]);
 
-  const startAccountGate = useCallback((reason: GateReason, returnTo: AccountGateReturnRouteId, selectedDestinationName?: string) => {
-    setGate(createAccountGateState(reason, returnTo, selectedDestinationName, state.outfit.variant));
+  const startAccountGate = useCallback((reason: GateReason, returnTo: AccountGateReturnRouteId, selectedDestinationName?: string, outfitSnapshot?: SavedOutfitSnapshot) => {
+    setGate(createAccountGateState(reason, returnTo, selectedDestinationName, state.outfit.variant, outfitSnapshot));
     setRoute(accountLinked ? "A3" : "A2");
   }, [accountLinked, state.outfit.variant]);
 
@@ -2132,9 +2234,55 @@ export function useWeatherOnAppState() {
     setDestinationLimitNotice(false);
   }, [dismissRemovedDestination, recentlyRemovedDestination, updateSavedDestinations]);
 
-  const requestAccountGate = (reason: GateReason, returnTo: AccountGateReturnRouteId) => {
+  const saveOutfitSnapshot = useCallback(async (snapshot: SavedOutfitSnapshot | undefined): Promise<boolean> => {
+    if (outfitSaveInFlightRef.current) return false;
+    if (!snapshot || !appStateHydrated || !accountSessionReadyRef.current || accountDataClearingRef.current || accountDeletionCompletedRef.current || photoSaveInFlightRef.current) {
+      setOutfitSaveMessage("코디를 저장할 수 없어요. 다시 시도해 주세요.");
+      return false;
+    }
+    const sessionRevision = accountSessionRevisionRef.current;
+    const previousSnapshot = persistedStateRef.current!.savedOutfitSnapshot;
+    setOutfitSavePending(true);
+    setOutfitSaveMessage(null);
+    const save = savePersistedAppState({ ...persistedStateRef.current!, savedOutfitSnapshot: snapshot });
+    outfitSaveInFlightRef.current = save;
+    try {
+      await save;
+      if (sessionRevision !== accountSessionRevisionRef.current) return false;
+      persistedStateRef.current = { ...persistedStateRef.current!, savedOutfitSnapshot: snapshot };
+      removePersistedWardrobePhotos(getUnusedOutfitPhotoUris(previousSnapshot, snapshot, persistedStateRef.current.photoWardrobeItems));
+      setSavedOutfitSnapshot(snapshot);
+      return true;
+    } catch {
+      if (sessionRevision === accountSessionRevisionRef.current) {
+        const message = "코디를 저장하지 못했어요. 다시 시도해 주세요.";
+        setOutfitSaveMessage(message);
+        setAccountAuthMessage(message);
+      }
+      return false;
+    } finally {
+      if (outfitSaveInFlightRef.current === save) {
+        outfitSaveInFlightRef.current = null;
+        setOutfitSavePending(false);
+      }
+    }
+  }, [appStateHydrated]);
+
+  const requestAccountGate = async (reason: GateReason, returnTo: AccountGateReturnRouteId) => {
+    if (reason === "save-outfit" && accountAuthStatus === "restoring") {
+      setOutfitSaveMessage("계정을 확인하고 있어요. 잠시 후 다시 저장해 주세요.");
+      return;
+    }
+    const outfitSnapshot = reason === "save-outfit" ? createSavedOutfitSnapshot(state.outfit, state.weather) : undefined;
+    if (reason === "save-outfit" && !outfitSnapshot) {
+      setOutfitSaveMessage("날씨와 추천 품목을 확인한 뒤 코디를 저장해 주세요.");
+      return;
+    }
     if (accountLinked && termsRequiredAccepted) {
-      if (reason === "save-outfit") setOutfitSaved(true);
+      if (reason === "save-outfit") {
+        if (await saveOutfitSnapshot(outfitSnapshot ?? undefined)) setAccountGateResult(createAccountGateResult(reason, returnTo));
+        return;
+      }
       if (reason === "destination-care") {
         if (!permissionReady) {
           setPermissionGate(createPermissionGateState("destination-care", returnTo === "A4" ? "M1" : returnTo, selectedDestinationPlace.name, "destination"));
@@ -2148,16 +2296,16 @@ export function useWeatherOnAppState() {
       setRoute(returnTo);
       return;
     }
-    startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined);
+    startAccountGate(reason, returnTo, reason === "destination-care" ? selectedDestinationPlace.name : undefined, outfitSnapshot ?? undefined);
   };
 
   const dismissAccountGateResult = useCallback(() => {
     setAccountGateResult(null);
   }, []);
 
-  const completeAccountAction = (pendingGate: AccountGateState | null) => {
+  const completeAccountAction = async (pendingGate: AccountGateState | null) => {
     if (!pendingGate) return true;
-    if (pendingGate.reason === "save-outfit") setOutfitSaved(true);
+    if (pendingGate.reason === "save-outfit" && !await saveOutfitSnapshot(pendingGate.outfitSnapshot)) return false;
     if (pendingGate.reason === "destination-care") {
       if (!saveSelectedDestination(permissionReady)) {
         setAccountAuthMessage("목적지는 최대 3개까지 등록할 수 있어요.\n기존 목적지를 삭제한 뒤 추가해 주세요.");
@@ -2171,12 +2319,36 @@ export function useWeatherOnAppState() {
 
   const signInWithProvider = async (provider: AccountProvider) => {
     if (accountActionInFlightRef.current) return;
+    const sessionWasReady = accountSessionReadyRef.current;
     accountActionInFlightRef.current = true;
     const revision = ++accountActionRevisionRef.current;
+    const sessionRevision = ++accountSessionRevisionRef.current;
+    const isCurrent = () => sessionRevision === accountSessionRevisionRef.current;
+    accountSessionReadyRef.current = false;
     setAccountAuthStatus("signing-in");
     setAccountAuthMessage(null);
     try {
-      const result = provider === "apple" ? await signInWithAppleAccount() : await signInWithOAuthAccount(provider);
+      let pendingDeletion;
+      try { pendingDeletion = await readPendingAccountDeletion(); }
+      catch (error) { accountCleanupPendingRef.current = true; throw error; }
+      accountCleanupPendingRef.current = pendingDeletion !== null;
+      if (pendingDeletion === "requested" && !accountDeletionCompletedRef.current) {
+        throw new AccountAuthError("account_cleanup_required", "계정 정리를 완료한 뒤 다시 연결해 주세요.");
+      }
+      if (pendingDeletion === "server-deleted" || accountDeletionCompletedRef.current) {
+        await clearLocalAccountSession(isCurrent);
+        if (!isCurrent()) return;
+        await clearLinkedAccountState(isCurrent);
+        if (!isCurrent()) return;
+        await writePendingAccountDeletion(null);
+        if (!isCurrent()) return;
+        accountCleanupPendingRef.current = false;
+        accountDeletionCompletedRef.current = false;
+      }
+      const result = provider === "apple" ? await signInWithAppleAccount(undefined, isCurrent) : await signInWithOAuthAccount(provider, undefined, isCurrent);
+      if (!isCurrent()) return;
+      accountDeletionCompletedRef.current = false;
+      accountSessionReadyRef.current = true;
       setAccountLinked(true);
       setAccountProfile(result.account);
       setTermsRequiredAccepted(result.account.termsAccepted);
@@ -2187,46 +2359,89 @@ export function useWeatherOnAppState() {
         return;
       }
       const returnTo = gate?.returnTo ?? "H1";
-      if (completeAccountAction(gate)) setRoute(returnTo);
-      setGate(null);
+      const completed = await completeAccountAction(gate);
+      if (!isCurrent() || revision !== accountActionRevisionRef.current) return;
+      if (completed) {
+        setRoute(returnTo);
+        setGate(null);
+      }
     } catch (error) {
+      if (!isCurrent()) return;
+      accountSessionReadyRef.current = sessionWasReady && !accountDeletionCompletedRef.current && !accountCleanupPendingRef.current;
       const message = getAccountAuthDisplayMessage(error);
       setAccountAuthStatus(isAccountAuthCancellation(error) ? "idle" : "error");
       setAccountAuthMessage(message);
     } finally {
-      accountActionInFlightRef.current = false;
+      if (isCurrent()) accountActionInFlightRef.current = false;
     }
   };
 
   const deleteAccount = async () => {
-    if (accountAuthStatus === "signing-out" || accountAuthStatus === "signing-in") return;
+    if (accountActionInFlightRef.current) return;
+    const sessionWasReady = accountSessionReadyRef.current;
+    accountSessionReadyRef.current = false;
+    accountActionInFlightRef.current = true;
+    accountDataClearingRef.current = true;
+    const sessionRevision = ++accountSessionRevisionRef.current;
+    accountActionRevisionRef.current += 1;
+    const isCurrent = () => sessionRevision === accountSessionRevisionRef.current;
     setAccountAuthStatus("signing-out");
     setAccountAuthMessage(null);
     try {
-      await deleteAccountSession();
-      await clearLinkedAccountState();
+      // A retry after server success/local failure must not require a deleted
+      // account's token or submit another server deletion.
+      if (!accountDeletionCompletedRef.current) {
+        await deleteAccountSession(isCurrent, () => {
+          if (isCurrent()) { accountDeletionCompletedRef.current = true; accountCleanupPendingRef.current = true; }
+        });
+      } else {
+        await clearLocalAccountSession(isCurrent);
+      }
+      if (!isCurrent()) return;
+      accountDeletionCompletedRef.current = true;
+      await clearLinkedAccountState(isCurrent);
+      if (!isCurrent()) return;
+      await writePendingAccountDeletion(null);
+      if (!isCurrent()) return;
+      accountCleanupPendingRef.current = false;
+      accountDeletionCompletedRef.current = false;
       setAccountAuthStatus("idle");
       setRoute("M1");
     } catch (error) {
+      if (!isCurrent()) return;
+      const pendingDeletion = await readPendingAccountDeletion().catch(() => "requested" as const);
+      if (!isCurrent()) return;
+      accountCleanupPendingRef.current = pendingDeletion !== null;
+      if (pendingDeletion === "server-deleted") accountDeletionCompletedRef.current = true;
+      if (!accountDeletionCompletedRef.current && !accountCleanupPendingRef.current) accountSessionReadyRef.current = sessionWasReady;
       if (error instanceof AccountAuthError && error.code === "recent_auth_required" && accountProfile) {
         setAccountAuthStatus("signing-in");
         try {
           const result = accountProfile.provider === "apple"
-            ? await signInWithAppleAccount(accountProfile.userId)
-            : await signInWithOAuthAccount(accountProfile.provider, accountProfile.userId);
+            ? await signInWithAppleAccount(accountProfile.userId, isCurrent)
+            : await signInWithOAuthAccount(accountProfile.provider, accountProfile.userId, isCurrent);
+          if (!isCurrent()) return;
           setAccountProfile(result.account);
           // Reauthentication never implies deletion consent. Keep the dialog open
           // and require another explicit press after authentication completes.
           setAccountAuthStatus("ready");
           setAccountAuthMessage("본인 확인을 완료했어요. 삭제 내용을 확인한 뒤 탈퇴하기를 다시 눌러 주세요.");
         } catch (reauthError) {
+          if (!isCurrent()) return;
           setAccountAuthStatus("error");
           setAccountAuthMessage(getAccountAuthDisplayMessage(reauthError));
         }
         return;
       }
       setAccountAuthStatus("error");
-      setAccountAuthMessage(error instanceof Error ? error.message : "회원 탈퇴를 완료하지 못했습니다.");
+      setAccountAuthMessage(accountDeletionCompletedRef.current
+        ? "계정은 삭제됐지만 기기 저장 정보를 정리하지 못했어요. 다시 시도해 주세요."
+        : error instanceof Error ? error.message : "회원 탈퇴를 완료하지 못했습니다.");
+    } finally {
+      if (isCurrent()) {
+        accountDataClearingRef.current = false;
+        accountActionInFlightRef.current = false;
+      }
     }
   };
 
@@ -2234,24 +2449,34 @@ export function useWeatherOnAppState() {
     if (accountActionInFlightRef.current) return;
     accountActionInFlightRef.current = true;
     const revision = ++accountActionRevisionRef.current;
+    const sessionRevision = ++accountSessionRevisionRef.current;
+    const isCurrent = () => sessionRevision === accountSessionRevisionRef.current;
     setAccountAuthStatus("saving-terms");
     setAccountAuthMessage(null);
     try {
       const profile = await acceptAccountTerms();
+      if (!isCurrent()) return;
+      accountSessionReadyRef.current = true;
       setAccountProfile(profile);
       setTermsRequiredAccepted(profile.termsAccepted);
       setAccountAuthStatus("ready");
+      if (revision !== accountActionRevisionRef.current) return;
+      const returnTo = gate?.returnTo ?? "H1";
+      const completed = await completeAccountAction(gate);
+      if (!isCurrent() || revision !== accountActionRevisionRef.current) return;
+      if (completed) {
+        setRoute(returnTo);
+        setGate(null);
+      }
+
     } catch (error) {
+      if (!isCurrent()) return;
       setAccountAuthStatus("error");
       setAccountAuthMessage(error instanceof Error ? error.message : "약관 동의를 저장하지 못했습니다.");
       return;
     } finally {
-      accountActionInFlightRef.current = false;
+      if (isCurrent()) accountActionInFlightRef.current = false;
     }
-    if (revision !== accountActionRevisionRef.current) return;
-    const returnTo = gate?.returnTo ?? "H1";
-    if (completeAccountAction(gate)) setRoute(returnTo);
-    setGate(null);
   };
 
   const completePermissionGate = async () => {
@@ -2259,13 +2484,16 @@ export function useWeatherOnAppState() {
     let notificationCompleted = permissionReady;
     if (permissionGate?.reason === "location") {
       if (locationReady && deviceWeatherLocation) {
-        setWeatherLocationMode("auto");
+        recordLocationIntent("auto");
         setWeatherProviderMode("ready");
         setUseDestinationWeather(false);
         setDeviceLocationState({ status: "granted", message: "현재 위치 사용 가능", location: deviceWeatherLocation });
         setWeatherRefreshTick((value) => value + 1);
       } else {
-        const result = await applyCurrentLocationWeather("현재 위치 확인 중");
+        const pending = applyCurrentLocationWeather("현재 위치 확인 중");
+        const revision = locationIntentRevisionRef.current;
+        const result = await pending;
+        if (!result || !locationMountedRef.current || revision !== locationIntentRevisionRef.current) return;
         permissionCompleted = result.status === "granted";
       }
     }
@@ -2280,7 +2508,7 @@ export function useWeatherOnAppState() {
       setPreviewDestinationCareEnabled(permissionCompleted);
     }
     if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
-      if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
+      if (permissionGate.pendingAccountAction === "save-outfit" && !await saveOutfitSnapshot(permissionGate.outfitSnapshot)) return;
       if (permissionGate.pendingAccountAction === "destination-care") {
         if (!saveSelectedDestination(notificationCompleted)) return;
         setPreviewDestinationCareEnabled(notificationCompleted);
@@ -2299,14 +2527,14 @@ export function useWeatherOnAppState() {
     setPermissionGate(null);
   };
 
-  const skipPermissionGate = () => {
+  const skipPermissionGate = async () => {
     if (permissionGate) setPermissionGateResult(createPermissionGateSkipResult(permissionGate.reason, permissionGate.returnTo));
     if (permissionGate?.reason === "destination-care") {
       if (!saveSelectedDestination(false)) return;
       setPreviewDestinationCareEnabled(false);
     }
     if (permissionGate?.reason === "account-setup" && permissionGate.pendingAccountAction) {
-      if (permissionGate.pendingAccountAction === "save-outfit") setOutfitSaved(true);
+      if (permissionGate.pendingAccountAction === "save-outfit" && !await saveOutfitSnapshot(permissionGate.outfitSnapshot)) return;
       if (permissionGate.pendingAccountAction === "destination-care") {
         if (!saveSelectedDestination(false)) return;
         setPreviewDestinationCareEnabled(false);
@@ -2317,7 +2545,7 @@ export function useWeatherOnAppState() {
       setLocationReady(false);
       setDeviceWeatherLocation(null);
       setDeviceLocationState({ status: "denied", message: "위치 권한 나중에 설정" });
-      setWeatherLocationMode("manual");
+      recordLocationIntent("manual");
       setWeatherProviderMode("ready");
       setWeatherRefreshTick((value) => value + 1);
     }
@@ -2347,10 +2575,13 @@ export function useWeatherOnAppState() {
       accountActionRevisionRef.current += 1;
       setGate(null);
     }
-    if (route === "O3") setPermissionGate(null);
+    if (route === "O3") {
+      invalidateLocationRequest();
+      setPermissionGate(null);
+    }
     setRoute(backRoute);
     return true;
-  }, [backRoute, route]);
+  }, [backRoute, route, invalidateLocationRequest]);
 
   const canGoBack = route !== "A1" && route !== "H1" && route !== "O1" && route !== "O2";
 
@@ -2430,11 +2661,15 @@ export function useWeatherOnAppState() {
     accountLinked,
     accountProfile,
     accountAuthStatus,
+    accountCleanupPending: accountCleanupPendingRef.current,
     accountAuthMessage,
     termsRequiredAccepted,
     locationReady,
     permissionReady,
-    outfitSaved,
+    outfitSaved: canReadAccountData && isCurrentOutfitSaved(savedOutfitSnapshot, state.outfit, state.weather),
+    savedOutfitSnapshot: canReadAccountData ? savedOutfitSnapshot : null,
+    outfitSavePending,
+    outfitSaveMessage,
     accountGateResult,
     dismissAccountGateResult,
     permissionGateResult,

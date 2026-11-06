@@ -176,6 +176,7 @@ export function createAccountGateState(
   returnTo: AccountGateReturnRouteId,
   selectedDestinationName?: string,
   outfitVariant?: string,
+  outfitSnapshot?: AccountGateState["outfitSnapshot"],
 ): AccountGateState {
   return {
     reason,
@@ -184,6 +185,7 @@ export function createAccountGateState(
     resumeLabel: getAccountResumeLabel(reason),
     selectedDestinationName: reason === "destination-care" ? selectedDestinationName : undefined,
     outfitVariant: reason === "save-outfit" ? outfitVariant : undefined,
+    outfitSnapshot: reason === "save-outfit" ? outfitSnapshot : undefined,
   };
 }
 

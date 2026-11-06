@@ -20,7 +20,6 @@ import {
   persistWardrobePhoto,
   pickAndPrepareWardrobePhoto,
   removePreparedWardrobePhoto,
-  removePersistedWardrobePhotos,
   WARDROBE_PHOTO_POLICY_VERSION,
   type PreparedWardrobePhoto,
   type WardrobePhotoAnalysis,
@@ -157,9 +156,8 @@ export function WardrobePhotoRegistration({
             photoApprovedAt: existingItem?.photoApprovedAt,
           };
       await onSave({ id: itemId, source: "photo", ...draft, imageUrl, owned: true, ...approval });
-      if (preparedPhoto && existingItem?.imageUrl && existingItem.imageUrl !== imageUrl) {
-        removePersistedWardrobePhotos([existingItem.imageUrl]);
-      }
+      // The state owner cleans up replaced files after its durable commit, while
+      // retaining any image still referenced by the saved outfit snapshot.
       if (preparedPhoto) replacePreparedPhoto(null);
     } catch (error) {
       setStatus("error");
