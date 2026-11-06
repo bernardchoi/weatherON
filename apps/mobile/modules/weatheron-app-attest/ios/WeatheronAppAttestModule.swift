@@ -1,7 +1,8 @@
 import DeviceCheck
 import ExpoModulesCore
 
-public class WeatheronAppAttestModule: Module {
+// Adds no mutable state to BaseModule's inherited Sendable contract.
+public final class WeatheronAppAttestModule: Module, @unchecked Sendable {
   public func definition() -> ModuleDefinition {
     Name("WeatheronAppAttest")
 

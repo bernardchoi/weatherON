@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 
 // A JS bundle can compile even when its required Expo module is absent from iOS.
 // Compare the actual Expo autolinking resolution with the committed Pod graph.
@@ -14,6 +16,28 @@ const missing = resolved.modules.flatMap((module) => module.pods
   .filter((pod) => !new RegExp(`^  - ${escape(pod.podName)} \\(`, "m").test(lock))
   .map((pod) => `${module.packageName}: ${pod.podName}`));
 assert.deepEqual(missing, [], `iOS Pods do not include declared native modules: ${missing.join(", ")}`);
+
+// Check the install patch against the installed header, including repeat installs.
+const schedulerPath = "node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI-Cxx/include/RuntimeScheduler.h";
+const scheduler = readFileSync(schedulerPath, "utf8");
+const fixture = mkdtempSync(join(tmpdir(), "weatheron-native-patch-"));
+try {
+  mkdirSync(join(fixture, "node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI"), { recursive: true });
+  const header = join(fixture, schedulerPath);
+  mkdirSync(dirname(header), { recursive: true });
+  writeFileSync(header, scheduler.replaceAll("SWIFT_RETURNS_RETAINED ", ""));
+  const patch = () => execFileSync(process.execPath, [resolve("scripts/patch-expo-modules-jsi-swift.mjs")], { cwd: fixture });
+  patch();
+  const patched = readFileSync(header, "utf8");
+  assert.match(patched, /SWIFT_RETURNS_RETAINED RuntimeScheduler\(\)/u);
+  assert.match(patched, /SWIFT_RETURNS_RETAINED RuntimeScheduler\(void \*scheduler, ScheduleFn fn\)/u);
+  assert.match(patched, /  RuntimeScheduler\(const RuntimeScheduler &\) = delete;/u);
+  assert.equal(scheduler, patched, "postinstall must apply the ownership patch to the installed header");
+  patch();
+  assert.equal(readFileSync(header, "utf8"), patched, "repeat installs must not duplicate annotations");
+} finally {
+  rmSync(fixture, { recursive: true, force: true });
+}
 
 if (process.argv.includes("--installed")) {
   assert.equal(readFileSync("apps/mobile/ios/Pods/Manifest.lock", "utf8"), lock,

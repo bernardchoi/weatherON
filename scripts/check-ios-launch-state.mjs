@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import ts from "typescript";
 
 const appSource = readFileSync("apps/mobile/App.tsx", "utf8");
@@ -29,6 +29,13 @@ assert.match(storyboard, /firstAttribute="centerX"/u);
 assert.match(storyboard, /firstAttribute="centerY"/u);
 const images = JSON.parse(readFileSync("apps/mobile/ios/WeatherON/Images.xcassets/SplashCloud02.imageset/Contents.json", "utf8")).images;
 assert.ok(images.some((image) => image.appearances?.some((appearance) => appearance.value === "dark")));
+for (const name of ["SplashCloud02", "SplashScreenLogo"]) {
+  const directory = `apps/mobile/ios/WeatherON/Images.xcassets/${name}.imageset`;
+  const manifest = JSON.parse(readFileSync(`${directory}/Contents.json`, "utf8"));
+  assert.deepEqual(readdirSync(directory).filter((file) => file !== "Contents.json").sort(),
+    [...new Set(manifest.images.map((image) => image.filename).filter(Boolean))].sort(),
+    `${name} must contain exactly its registered images`);
+}
 assert.match(navigatorSource, /if \(!launchReady && !appState\.storageLoadError\) return/u);
 
 // Run the actual launch effect to verify readiness, accessibility and cancelled transitions.

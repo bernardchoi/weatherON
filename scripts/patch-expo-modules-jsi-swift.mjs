@@ -36,6 +36,11 @@ const files = [
 
 let patchedCount = 0;
 
+// Both constructors start at refCount 1; Swift must consume that owned reference.
+patchFile(join(packageRoot, "apple", "Sources", "ExpoModulesJSI-Cxx", "include", "RuntimeScheduler.h"),
+  (source) => source.replace(/^(  )(RuntimeScheduler\((?:void \*scheduler, ScheduleFn fn)?\))/gm,
+    "$1SWIFT_RETURNS_RETAINED $2"));
+
 // Expo Constants otherwise skips app.config generation when PROJECT_DIR contains spaces.
 patchFile(join(process.cwd(), "node_modules", "expo-constants", "scripts", "get-app-config-ios.sh"),
   (source) => source.replace('$(basename $PROJECT_DIR)', '$(basename "$PROJECT_DIR")'));
