@@ -1,0 +1,43 @@
+{
+  "canvas": [
+    1024,
+    1024
+  ],
+  "underlay": "underlay-1024.png",
+  "movingSprite": "arm-fan-1024.png",
+  "rotationOrigin": [
+    391.05759162303667,
+    731.2513089005236
+  ],
+  "maxAngleDegrees": 5,
+  "previewPeriodSeconds": 1.5,
+  "suggestedMotion": "sinusoidal -5 to +5; e.g. 2 cycles then quiet rest, product timing adjustable",
+  "reduceMotion": "angle=0, no timers",
+  "drawOrder": [
+    "underlay-1024.png fixed",
+    "arm-fan-1024.png rotate",
+    "head-front-1024.png fixed",
+    "fan-front-1024.png same rotate"
+  ],
+  "noNativeMaskOrFilterNeeded": true,
+  "sourceCoordinates": {
+    "canvas": [
+      1286,
+      1223
+    ],
+    "pivot": [
+      420,
+      760
+    ],
+    "normalization": {
+      "scale": 0.5497382198952879,
+      "translate": [
+        160.16753926701574,
+        313.4502617801047
+      ]
+    }
+  },
+  "warning": "Both moving layers must use same transform shared value and pivot, not independent timers.",
+  "movingFront": "fan-front-1024.png",
+  "fixedFront": "head-front-1024.png"
+}

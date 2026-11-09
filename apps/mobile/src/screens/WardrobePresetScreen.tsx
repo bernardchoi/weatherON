@@ -44,6 +44,7 @@ export function WardrobePresetScreen({
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
   const changeWardrobe = useWardrobeMotion();
+  const { fontScale } = useWindowDimensions();
   const toggleOwned = (id: string, owned: boolean) => changeWardrobe(() => onSetWardrobeItemOwned(id, owned));
   const presetItems = React.useMemo(() => wardrobeItems.filter((item) => item.source === "preset"), [wardrobeItems]);
   const selectedItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
@@ -140,7 +141,7 @@ export function WardrobePresetScreen({
       contentGap={Platform.OS === "ios" ? 12 : layout.destinationContentGap}
     >
       <Section compact={Platform.OS === "ios"} title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
-        <View style={[[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoEntryCard]}>
+        <View style={[[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoEntryCard, Platform.OS === "ios" && (fontScale > 1.3 || layout.width < 360) && { flexDirection: "column", alignItems: "stretch" }]}>
           <View style={styles.copy}>
             <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>사진 한 장으로 옷장에 쏙</Text>
             <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]}>
@@ -190,7 +191,7 @@ export function WardrobePresetScreen({
                 borderColor: theme.border,
               },
               cardShadow(theme),
-            ], Platform.OS === "ios" && ambientVisual.selectedCard]}
+            ], Platform.OS === "ios" && ambientVisual.selectedCard, Platform.OS === "ios" && fontScale > 1.3 && { flexDirection: "column", alignItems: "stretch" }]}
           >
             <View
               style={[[
@@ -374,18 +375,18 @@ function PresetCard({
       style={[[
         styles.presetCard,
         {
-          width: Platform.OS === "ios" ? layout.width < 350 || fontScale > 1.3 ? "47%" : layout.isTablet ? "23%" : "30.8%" : layout.wardrobeGridItemWidth,
+          width: Platform.OS === "ios" ? fontScale > 1.8 ? "100%" : layout.width < 350 || fontScale > 1.3 ? "47%" : layout.isTablet ? "23%" : "30.8%" : layout.wardrobeGridItemWidth,
           minHeight: Platform.OS === "ios" ? 0 : layout.wardrobePresetCardMinHeight,
           backgroundColor: theme.cardMuted,
           borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
         },
-      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && (item.owned || selected) && { borderWidth: 1, borderRadius: 16 }]}
+      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && { borderWidth: 1, borderRadius: 16, padding: 8, borderColor: item.owned ? theme.clear : selected ? theme.gold : "transparent" }]}
     >
       <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
         <View style={[[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.presetImageWrap]}>
           {imageSource ? <Image source={imageSource} style={[styles.presetImage, Platform.OS === "ios" && ambientVisual.presetImage]} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
-        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.presetName]} numberOfLines={2}>{item.name}</Text>
+        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.presetName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>
         <Text style={[[styles.presetMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.presetMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </FeedbackPressable>
       <AppButton
@@ -424,6 +425,7 @@ const styles = StyleSheet.create({
   },
   copy: {
     flex: 1,
+    minWidth: 0,
     gap: 4,
   },
   title: {

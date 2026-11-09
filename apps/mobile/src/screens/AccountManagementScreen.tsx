@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Platform, ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
+import { ProviderBrandIcon } from "../components/provider-brand-icon";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
 import type { P0ScreenProps } from "../navigation/types";
@@ -81,15 +82,18 @@ export function AccountManagementScreen({
           ], Platform.OS === "ios" && ambientVisual.profileCard]}
         >
           <View style={[[styles.profileVisual, { backgroundColor: theme.cardStrong }], ambient && [ambientVisual.profileVisual, { backgroundColor: theme.card, borderColor: theme.border }]]}>
-            <Image source={screenIcons.tabMy} style={[[styles.accountIcon, { tintColor: theme.sky }], Platform.OS === "ios" && ambientVisual.accountIcon]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />
+            {ambient && accountReady ? (
+              provider === "apple" ? <Text accessible={false} accessibilityElementsHidden allowFontScaling={false} style={{ fontFamily: "System", fontSize: 44, lineHeight: 54, color: theme.text }}>{"\uF8FF"}</Text>
+                : <View style={{ alignItems: "center", justifyContent: "center", width: 54, height: 54, borderRadius: 16, backgroundColor: provider === "kakao" ? "#FEE500" : provider === "naver" ? "#03A94D" : "transparent" }}><ProviderBrandIcon provider={provider} size={provider === "kakao" ? 30 : 36} /></View>
+            ) : <Image source={screenIcons.tabMy} style={[[styles.accountIcon, { tintColor: theme.sky }], ambient && ambientVisual.accountIcon]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />}
             <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
           </View>
           <View style={[styles.profileCopy, Platform.OS === "ios" && ambientVisual.profileCopy]}>
             <View style={[styles.profileTitleRow, Platform.OS === "ios" && ambientVisual.profileTitleRow]}>
               <Text style={[[styles.profileTitle, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.profileTitle]} numberOfLines={ambient ? undefined : 1}>{profileTitle}</Text>
-              <View style={[[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }], Platform.OS === "ios" && ambientVisual.statusPill]}>
+              {!(ambient && accountReady && !accountCleanupPending && accountAuthStatus !== "offline") && <View style={[[styles.statusPill, { borderColor: primaryTone, backgroundColor: `${primaryTone}18` }], Platform.OS === "ios" && ambientVisual.statusPill]}>
                 <Text style={[[styles.statusPillText, { color: primaryTone }], Platform.OS === "ios" && ambientVisual.statusPillText]}>{statusLabel}</Text>
-              </View>
+              </View>}
             </View>
             <Text style={[[styles.profileMeta, pageStyles.caption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.profileMeta]} numberOfLines={ambient ? undefined : 2}>{profileMeta}</Text>
             {accountAuthMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.profileMeta, pageStyles.caption, { color: accountAuthStatus === "error" ? theme.alert : theme.subtle }], Platform.OS === "ios" && ambientVisual.profileMeta]} numberOfLines={ambient ? undefined : 2}>{accountAuthMessage}</Text> : null}
@@ -191,8 +195,8 @@ function getProviderLabel(provider?: AccountProvider) {
 }
 
 function getProviderConnectedTitle(provider: AccountProvider) {
-  if (provider === "line") return "LINE으로 연결됐어요";
-  return `${getProviderLabel(provider)}로 연결됐어요`;
+  if (provider === "line") return "LINE으로 연결했어요";
+  return `${getProviderLabel(provider)}로 연결했어요`;
 }
 
 function ChevronRight({ color }: { color: string }) {

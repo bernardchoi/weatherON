@@ -243,7 +243,7 @@ function EmptyDestinationState({
         cardShadow(theme),
         pageStyles.card,
         { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border, borderColor: theme.border },
-      ], Platform.OS === "ios" && ambientVisual.emptyCard]}
+      ], Platform.OS === "ios" && [ambientVisual.emptyCard, { backgroundColor: theme.card }]]}
     >
       <View style={styles.emptyHeader}>
         <View style={[styles.emptyIconBox, { backgroundColor: theme.cardStrong }]}>
@@ -305,8 +305,8 @@ function EmptyBenefit({
     >
       <Image source={icon} style={[styles.emptyBenefitIcon, { tintColor: color }]} resizeMode="contain" />
       <View style={styles.emptyBenefitCopy}>
-        <Text style={[styles.emptyBenefitTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
-        <Text style={[styles.emptyBenefitBody, { color: theme.subtle }]} numberOfLines={1}>{body}</Text>
+        <Text style={[styles.emptyBenefitTitle, { color: theme.text }]}>{title}</Text>
+        <Text style={[styles.emptyBenefitBody, { color: theme.subtle }]}>{body}</Text>
       </View>
     </FeedbackPressable>
   );
@@ -320,10 +320,10 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
   const stacked = width < 360 || fontScale > 1.3;
   const isNight = useIsNightHour({ coordinate: item.place.coordinate, timeZone: resolveWeatherTimeZone(item.place.countryCode, item.place.timezone) });
   const weatherIcon = item.weatherCondition ? ambientWeatherIcon(item.weatherCondition, isNight, theme) : undefined;
-  const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 8, minHeight: stacked ? undefined : 112 }}>
+  const content = <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected }} accessibilityLabel={`${item.title} 목적지 상세 보기`} hapticFeedback="none" onPress={onOpen} style={{ gap: 14, minHeight: stacked ? undefined : 112 }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
       <Image source={selected ? ambientUiIcons.check : ambientUiIcons.location} accessible={false} style={{ width: 22, height: 22, tintColor: selected ? theme.clear : theme.muted }} />
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <RawText style={{ fontSize: 20, lineHeight: 26, fontWeight: "700", color: theme.text }}>{item.title}</RawText>
         <RawText style={[pageStyles.caption, { color: theme.muted }]}>{item.area}{item.label ? ` · ${translateText(getDestinationLabelText(item.label), language)}` : ""}</RawText>
       </View>
@@ -332,7 +332,7 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
     <View style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "flex-start" : "center", gap: 12 }}>
       <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
         <Text style={{ fontSize: item.departureTime.includes(":") ? 28 : 18, lineHeight: 32, fontWeight: "600", fontVariant: ["tabular-nums"], color: theme.text }}>{item.departureTime}{item.departureTime.includes(":") ? <Text style={[pageStyles.caption, { color: theme.muted }]}> 출발</Text> : null}</Text>
-        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalTime} {item.arrivalLabel}</Text>
+        <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.arrivalTime} {translateText(item.arrivalLabel, language)}</Text>
         {item.nowArrivalDescription ? <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.nowArrivalDescription}</Text> : null}
       </View>
       <View style={{ gap: 2, alignItems: stacked ? "flex-start" : "flex-end" }}>
@@ -343,8 +343,8 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
         <Text style={[pageStyles.caption, { color: theme.muted }]}>{item.weatherAvailable ? `현재 ${item.weatherCondition ? translateText(getConditionLabel(item.weatherCondition), language) : "날씨"}` : "날씨 확인 중"}</Text>
       </View>
     </View>
-    {item.weatherNotice ? <Text style={[pageStyles.caption, { color: theme.warm }]}>{item.weatherNotice}</Text> : null}
-    {selected ? <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border, paddingTop: 8, gap: 4, minHeight: stacked ? undefined : 52 }}>
+    {item.weatherNotice && !selected ? <Text style={[pageStyles.caption, { color: theme.warm }]}>{item.weatherNotice}</Text> : null}
+    {selected ? <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border, paddingTop: 12, gap: 6, minHeight: stacked ? undefined : 52 }}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 6 }}>
         <Image source={item.warningKind === "wind" ? ambientUiIcons.wind : ambientUiIcons.umbrella} accessible={false} style={{ width: 20, height: 20, tintColor: theme.clear }} />
         <Text style={[pageStyles.caption, { flex: 1, color: theme.text }]}>{item.weatherNotice ? item.weatherNotice : getDestinationActionText(item)}</Text>
@@ -353,7 +353,7 @@ function AmbientDestinationSummary({ item, theme, permissionReady, selected, fea
     </View> : null}
   </FeedbackPressable>;
   return selected
-    ? <AmbientControlSurface style={{ padding: 12, gap: 0 }}>{content}</AmbientControlSurface>
+    ? <AmbientControlSurface style={{ paddingHorizontal: 20, paddingVertical: 18, gap: 0 }}>{content}</AmbientControlSurface>
     : <View style={{ padding: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>{content}</View>;
 }
 
@@ -1004,11 +1004,11 @@ const ambientVisual = StyleSheet.create({
     "paddingVertical": 18
   },
   "emptyCard": {
-    "backgroundColor": "transparent",
     "borderWidth": 0,
-    "borderRadius": 0,
+    "borderLeftWidth": 0,
+    "borderRadius": 24,
     "shadowOpacity": 0,
-    "paddingHorizontal": 0,
+    "paddingHorizontal": 18,
     "paddingVertical": 18,
     "gap": 16
   },

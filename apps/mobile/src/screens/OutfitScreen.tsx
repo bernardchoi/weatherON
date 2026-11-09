@@ -67,7 +67,7 @@ export function OutfitScreen({
               </View>
             </FeedbackPressable>
           ))}
-          <View style={[styles.actions, ambient && { alignItems: "center", ...(fontScale > 1.3 ? { flexDirection: "column", alignItems: "stretch" } : {}), justifyContent: "space-between", borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }]}>
+          <View style={[styles.actions, ambient && { alignItems: "center", ...(fontScale > 1.3 || layout.width < 360 ? { flexDirection: "column", alignItems: "stretch" } : {}), justifyContent: "space-between", paddingTop: 4, gap: 12 }]}>
             {ambient ? <>
               <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 자세히 보기" onPress={() => openDetail()} style={styles.readingAction}>
                 <Image source={ambientUiIcons.tabOutfit} style={{ width: 26, height: 26, tintColor: theme.clear }} />

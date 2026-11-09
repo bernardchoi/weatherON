@@ -60,7 +60,7 @@ export function WardrobeScreen({
     return categoryMatch && seasonMatch && purposeMatch;
   });
   const { fontScale } = useWindowDimensions();
-  const wardrobeItemWidth = Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const wardrobeItemWidth = Platform.OS === "ios" && fontScale > 1.8 ? "100%" : Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
 
   return (
     <AppScreen
@@ -83,7 +83,7 @@ export function WardrobeScreen({
             styles.infoCard,
             Platform.OS !== "ios" && (layout.isShort || layout.isNarrow) ? styles.infoCardShort : null,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
-          ], Platform.OS === "ios" && ambientVisual.infoCard]}
+          ], Platform.OS === "ios" && ambientVisual.infoCard, Platform.OS === "ios" && fontScale > 1.3 && styles.infoCardShort]}
         >
           <View style={styles.copy}>
             {Platform.OS !== "ios" ? <Text style={[styles.title, { color: theme.clear }]}>{ownedItems.length}개 보유 중</Text> : null}
@@ -166,7 +166,7 @@ function WardrobeItemCard({
   const layout = useResponsiveLayout();
   const imageSource = getOutfitImageSource(item.imageUrl);
   const { fontScale } = useWindowDimensions();
-  const wardrobeItemWidth = Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
+  const wardrobeItemWidth = Platform.OS === "ios" && fontScale > 1.8 ? "100%" : Platform.OS === "ios" && (layout.width < 350 || fontScale > 1.3) ? "47%" : layout.isTablet ? layout.wardrobeGridItemWidth : "30.8%";
   const deleteControl = (
       <FeedbackPressable
         accessibilityLabel={`${item.name} 내 옷장에서 삭제`}
@@ -196,7 +196,7 @@ function WardrobeItemCard({
         <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell, { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md }]}>
           {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
         </View>
-        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={2}>{item.name}</Text>}
+        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>}
         {Platform.OS !== "ios" ? <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text> : null}
       </FeedbackPressable>
       {Platform.OS === "ios" ? <View style={ambientVisual.cardFooter}>
@@ -401,9 +401,10 @@ const ambientVisual = StyleSheet.create({
     "shadowOpacity": 0,
     "elevation": 0,
     "paddingHorizontal": 0,
-    "overflow": "visible"
+    "overflow": "visible",
+    "justifyContent": "space-between"
   },
-  cardFooter: { flexDirection: "row", alignItems: "center" },
+  cardFooter: { flexDirection: "row", alignItems: "center", gap: 4 },
   "cardMain": {
     "paddingHorizontal": 0,
     "paddingTop": 0,
@@ -441,7 +442,7 @@ const ambientVisual = StyleSheet.create({
     "height": 20
   },
   "grid": {
-    "rowGap": 12
+    "rowGap": 20
   },
   "emptyState": {
     "alignItems": "stretch",
