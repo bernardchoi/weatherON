@@ -347,7 +347,7 @@ export function HomeScreen({
             styles.homePlanCard,
             {
               paddingVertical: Platform.OS === "ios" ? 14 : layout.homePanelPadding,
-              marginTop: Platform.OS === "ios" ? viewportSpacing.planMargin : 0,
+              marginTop: Platform.OS === "ios" ? Math.max(20, viewportSpacing.planMargin) : 0,
               gap: Platform.OS === "ios" ? 8 : spacing.md,
               paddingHorizontal: Platform.OS === "ios" ? 18 : 0,
               backgroundColor: "transparent",
@@ -926,6 +926,14 @@ function HomeOutfitPreviewCard({
   const entrance = useAmbientEntrance(1);
   const openOutfit = useOutfitNavigation();
   const title = summary;
+  // Separate only an explicit forecast time already present in the recommendation.
+  // Never manufacture probability or precipitation amounts from commentary.
+  const adviceClauses = summary.split(" · ");
+  const forecastLabels = ["강수 가능", "눈 예보", "비 예보", "얼음·혼합 강수 예보"];
+  const timedForecast = adviceClauses.find(clause => /^오늘 \d{1,2}:\d{2} 무렵 /u.test(clause) && forecastLabels.includes(clause.split(" 무렵 ")[1]));
+  const forecastClock = timedForecast?.match(/\d{1,2}:\d{2}/u)?.[0];
+  const forecastKind = timedForecast?.split(" 무렵 ")[1];
+  const advice = adviceClauses.filter(clause => clause !== timedForecast);
   const itemNames = Object.values(outfit.items).filter(Boolean).map(item => translateText(item!.name)).join(" + ");
   const previewSummary = [forecastStatus ?? "", outfit.decisionText, itemNames].filter(Boolean).map(value => translateText(value)).join(" · ");
   // The approved Home composition pairs the recommended layer and footwear;
@@ -952,7 +960,17 @@ function HomeOutfitPreviewCard({
           : null}
       </View>
       </View>
-      <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>
+      {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 4 }}>
+        {advice.map((clause, index) => <Text key={`${index}-${clause}`} style={{ color: theme.text, fontSize: 18, lineHeight: 27 }}>{clause}</Text>)}
+        {timedForecast ? <View accessible accessibilityLabel={timedForecast} style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: theme.card, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Image source={ambientUiIcons.time} style={{ width: 20, height: 20, tintColor: theme.muted }} accessible={false} />
+            <Text style={{ fontSize: 22, lineHeight: 30, fontWeight: "600", color: theme.text, fontVariant: ["tabular-nums"] }}>{forecastClock}</Text>
+            <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>무렵</Text>
+          </View>
+          <Text style={{ fontSize: 15, lineHeight: 23, color: theme.muted, flexShrink: 1 }}>{`오늘 · ${translateText(forecastKind ?? "")}`}</Text>
+        </View> : null}
+      </View> : <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>}
     </FeedbackPressable>
   );
 }

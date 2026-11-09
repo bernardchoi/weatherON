@@ -435,7 +435,7 @@ export function DestinationCareScreen({
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
               <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
-              <Text style={[[styles.outfitTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitTitle]} numberOfLines={1}>{destinationOutfit.decisionText}</Text>
+              <Text style={[[styles.outfitTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitTitle]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{destinationOutfit.decisionText}</Text>
               <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]}>{destinationOutfitReason}</Text>
             </View>
             <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>

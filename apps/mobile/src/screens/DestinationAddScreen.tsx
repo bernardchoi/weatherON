@@ -179,7 +179,7 @@ export function DestinationAddScreen({
                 accessibilityRole="button"
                 key={suggestion}
                 onPress={() => onSearchPlaces(suggestion)}
-                style={[styles.suggestionRow, { borderTopColor: index === 0 ? "transparent" : theme.border }]}
+                style={[styles.suggestionRow, { borderTopColor: index === 0 ? "transparent" : theme.border }, Platform.OS === "ios" && { paddingVertical: 8 }]}
               >
                 <SearchGlyph color={theme.subtle} />
                 <QueryMatchedText value={suggestion} query={placeSearchQuery} style={[styles.suggestionText, { color: theme.text }]} matchColor={theme.sky} />
@@ -218,8 +218,8 @@ export function DestinationAddScreen({
                     <CategoryIcon color={selected ? theme.onAccent : theme.subtle} />
                   </View>
                   <View style={styles.resultHead}>
-                    <View style={styles.resultTitleRow}>
-                      <QueryMatchedText value={place.name} query={placeSearchQuery} style={[styles.resultName, { color: theme.text }]} matchColor={theme.sky} />
+                    <View style={[styles.resultTitleRow, Platform.OS === "ios" && { flexWrap: "wrap" }]}>
+                      <QueryMatchedText value={place.name} query={placeSearchQuery} style={[styles.resultName, { color: theme.text }, Platform.OS === "ios" && { flexBasis: "100%", minWidth: 0 }]} matchColor={theme.sky} />
                       {duplicate ? (
                         <View style={[styles.smallPill, { borderColor: theme.border }]}>
                           <Text style={[styles.smallPillText, { color: theme.gold }]}>동명이름</Text>
@@ -231,8 +231,8 @@ export function DestinationAddScreen({
                         </View>
                       ) : null}
                     </View>
-                    <RawText style={[[styles.resultAddress, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.resultAddress]} numberOfLines={1}>{place.address || getCountryLabel(place.countryCode)}</RawText>
-                    <Text style={[[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }], Platform.OS === "ios" && ambientVisual.resultMeta]} numberOfLines={1}>
+                    <RawText style={[[styles.resultAddress, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.resultAddress]}>{place.address || getCountryLabel(place.countryCode)}</RawText>
+                    <Text style={[[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }], Platform.OS === "ios" && ambientVisual.resultMeta]}>
                       {[
                         getPlaceDistanceLabel(place, placeSearchOrigin, state.weather.countryCode, distanceUnit),
                         getCategoryDetail(place.category),
@@ -369,11 +369,11 @@ function QueryMatchedText({
 }) {
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const start = normalizedQuery ? value.toLocaleLowerCase().indexOf(normalizedQuery) : -1;
-  if (start < 0) return <RawText style={style} numberOfLines={1}>{value}</RawText>;
+  if (start < 0) return <RawText style={style} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{value}</RawText>;
 
   const end = start + normalizedQuery.length;
   return (
-    <RawText style={style} numberOfLines={1}>
+    <RawText style={style} numberOfLines={Platform.OS === "ios" ? undefined : 1}>
       {value.slice(0, start)}
       <RawText style={{ color: matchColor }}>{value.slice(start, end)}</RawText>
       {value.slice(end)}
@@ -550,8 +550,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   searchClearButton: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -754,8 +754,8 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 8,
+    "gap": 0
   },
   "suggestionPanel": {
     "backgroundColor": "transparent",
@@ -763,11 +763,11 @@ const ambientVisual = StyleSheet.create({
     "borderRadius": 0,
     "shadowOpacity": 0,
     "paddingHorizontal": 0,
-    "paddingVertical": 18,
-    "gap": 16
+    "paddingVertical": 8,
+    "gap": 0
   },
   "resultRow": {
-    "paddingVertical": 18
+    "paddingVertical": 12
   },
   "resultAddress": {
     "fontSize": 14,

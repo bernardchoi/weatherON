@@ -112,7 +112,7 @@ export function OutfitDetailScreen({
       compactHeader
       contentPaddingTop={layout.weatherTopPadding}
       contentGap={layout.destinationContentGap}
-      contentPaddingBottom={0}
+      contentPaddingBottom={ambient ? 20 : 0}
     >
       {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
       {savedOutfitSnapshot ? <SavedOutfitPreview snapshot={savedOutfitSnapshot} /> : null}
@@ -165,7 +165,7 @@ export function OutfitDetailScreen({
             ) : null;
           })}
         </View>
-        {ambient ? <View style={{ gap: 12, paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>
+        {ambient ? <View style={{ gap: 12, paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.border }}>
           {ownershipSummary}
         </View> : null}
         <View style={[styles.detailHeading, ambient && { marginTop: 8 }]}>
@@ -183,10 +183,10 @@ export function OutfitDetailScreen({
                 accessibilityLabel={`${formatAdviceTime(item.time)} ${ambient ? item.text : presentation.copy}`}
                 style={[styles.timeAdviceCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }, ambient && { flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: "100%", backgroundColor: "transparent", borderWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 16, gap: 8 }]}
               >
-                {ambient ? <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+                {ambient ? <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
                   <Image source={presentation.icon === uiIconAssets.rain ? ambientUiIcons.umbrella : presentation.icon === uiIconAssets.shirt ? ambientUiIcons.tabOutfit : ambientUiIcons.check} style={{ width: 28, height: 28, tintColor: presentation.color }} resizeMode="contain" />
-                  <Text style={[pageStyles.body, { color: theme.text, flex: 1 }]}>{item.text}</Text>
-                  <Text style={[pageStyles.body, { color: theme.muted }]}>{formatAdviceTime(item.time)}</Text>
+                  <Text style={[pageStyles.body, { color: theme.text, flex: 1, minWidth: 0 }]}>{item.text}</Text>
+                  <Text style={[pageStyles.body, { color: theme.muted, ...(fontScale > 1.3 || layout.width < 360 ? { width: "100%" as const, paddingLeft: 40 } : {}) }]}>{formatAdviceTime(item.time)}</Text>
                 </View> : <>
                 <View style={styles.timeAdviceHeader}>
                   <Image source={presentation.icon} style={[styles.timeAdviceIcon, ambient && { width: 26, height: 26 }, { tintColor: presentation.color }]} resizeMode="contain" />

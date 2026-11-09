@@ -45,7 +45,7 @@ export function MyScreen({
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? `${getProviderLabel(accountProfile?.provider)} 연결됨` : needsTerms ? "필수 약관 확인 필요" : "연결 후 저장 기능 사용";
+  const profileBody = isAccountReady ? (accountProfile?.provider === "line" ? "LINE으로 연결했어요" : `${getProviderLabel(accountProfile?.provider)}로 연결했어요`) : needsTerms ? "필수 약관 확인 필요" : "연결 후 저장 기능 사용";
   const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
@@ -78,7 +78,7 @@ export function MyScreen({
             gap: ambient ? 8 : layout.settingsContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
-            ...(ambient ? { paddingBottom: 24 } : {}),
+            ...(ambient ? { paddingBottom: 20 } : {}),
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -107,7 +107,7 @@ export function MyScreen({
           </View>
           <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
-          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
+          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: isAccountReady ? 12 : 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
         </AmbientReveal> : <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"
