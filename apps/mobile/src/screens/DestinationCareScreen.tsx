@@ -396,14 +396,14 @@ export function DestinationCareScreen({
               accessibilityLabel={`${destinationName} ${directionsLabel}, ${transportMode === "auto" ? "외부 지도에서 이동수단 선택" : `${transportLabel}으로 전달`}`}
               accessibilityRole="button"
               onPress={() => void openDirections()}
-              style={[[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.quickAction]}
+              style={[[styles.quickAction, Platform.OS === "ios" ? null : styles.directionsQuickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && [ambientVisual.quickAction, { borderBottomColor: theme.border }]]}
             >
               <View style={[[styles.quickActionIconFrame, { backgroundColor: `${theme.clear}18` }], Platform.OS === "ios" && ambientVisual.quickActionIconFrame]}>
                 <Image source={screenIcons.depart} style={[[styles.quickActionIcon, { tintColor: theme.clear }], Platform.OS === "ios" && ambientVisual.quickActionIcon]} resizeMode="contain" />
               </View>
               <View style={styles.quickActionCopy}>
-                <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={1}>{directionsLabel}</Text>
-                <Text style={[[styles.quickActionMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
+                <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{directionsLabel}</Text>
+                <Text style={[[styles.quickActionMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{transportMode === "auto" ? "수단 선택" : transportLabel}</Text>
               </View>
               <Text style={[styles.quickActionChevron, { color: theme.clear }]}>›</Text>
             </FeedbackPressable>
@@ -411,14 +411,14 @@ export function DestinationCareScreen({
             {Platform.OS === "ios" || Platform.OS === "android" ? (
               <View
                 accessibilityLabel={`자동 카운트다운, ${liveActivityMeta}`}
-                style={[[styles.quickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.quickAction]}
+                style={[[styles.quickAction, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && [ambientVisual.quickAction, { borderBottomColor: theme.border }]]}
               >
                 <View style={[[styles.quickActionIconFrame, { backgroundColor: `${theme.gold}18` }], Platform.OS === "ios" && ambientVisual.quickActionIconFrame]}>
                   <Image source={screenIcons.clock} style={[[styles.quickActionIcon, { tintColor: theme.gold }], Platform.OS === "ios" && ambientVisual.quickActionIcon]} resizeMode="contain" />
                 </View>
                 <View style={styles.quickActionCopy}>
-                  <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={1}>자동 카운트다운</Text>
-                  <Text style={[[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={1}>{liveActivityMeta}</Text>
+                  <Text style={[[styles.quickActionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.quickActionTitle]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>자동 카운트다운</Text>
+                  <Text style={[[styles.quickActionMeta, { color: liveActivityNeedsPermission ? theme.warm : theme.subtle }], Platform.OS === "ios" && ambientVisual.quickActionMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{liveActivityMeta}</Text>
                 </View>
               </View>
             ) : null}
@@ -599,7 +599,7 @@ function SummaryChip({
         styles.summaryChip,
         { minHeight },
         glassSurface ? [styles.summaryChipGlass, glassSurface] : null,
-      ], Platform.OS === "ios" && ambientVisual.summaryChip]}
+      ], Platform.OS === "ios" && [ambientVisual.summaryChip, { borderBottomColor: theme.border }]]}
     >
       {glassSurface ? <IosGlassBackdrop theme={theme} role="chip" style={styles.summaryChipBackdrop} /> : null}
       <View style={[[styles.summaryIconFrame, { backgroundColor: `${color}18` }], Platform.OS === "ios" && ambientVisual.summaryIconFrame]}>

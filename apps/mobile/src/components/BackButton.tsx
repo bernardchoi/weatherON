@@ -6,7 +6,7 @@ import { androidMaterialRipple, androidMaterialSurface } from "../theme/androidM
 import { iosGlassSurface } from "../theme/iosGlass";
 import { radius } from "../theme/tokens";
 import { FeedbackPressable } from "./FeedbackPressable";
-import { IosGlassBackdrop } from "./IosGlassBackdrop";
+import { HomePlanMaterial } from "./HomePlanMaterial";
 
 type BackButtonProps = {
   onPress: () => void;
@@ -24,9 +24,9 @@ export function BackButton({ onPress, accessibilityLabel = "뒤로" }: BackButto
       accessibilityRole="button"
       android_ripple={androidMaterialRipple(theme)}
       onPress={onPress}
-      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface]}
+      style={[styles.backButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }, androidMaterialSurface(theme, "iconButton"), glassSurface, Platform.OS === "ios" && { borderWidth: 0 }]}
     >
-      {glassSurface ? <IosGlassBackdrop theme={theme} role="control" style={styles.glassBackdrop} /> : null}
+      {glassSurface ? <HomePlanMaterial theme={theme} cornerRadius={radius.sm} /> : null}
       {Platform.OS === "ios" ? <Image source={ambientUiIcons.back} accessible={false} style={[styles.filledChevron, { tintColor: theme.text }]} resizeMode="contain" /> : <ChevronLeft color={theme.text} />}
     </FeedbackPressable>
   );
@@ -50,9 +50,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
     overflow: "hidden",
-  },
-  glassBackdrop: {
-    borderRadius: radius.sm,
   },
   chevronLeft: {
     width: 16,

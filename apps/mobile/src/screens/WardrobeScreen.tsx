@@ -196,7 +196,7 @@ function WardrobeItemCard({
         <View style={[[styles.imageWell, { height: layout.wardrobeImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.imageWell, { backgroundColor: semanticColor(theme, "outfitImageSurface"), borderRadius: radius.md }]}>
           {imageSource ? <Image source={imageSource} style={[styles.itemImage, Platform.OS === "ios" && ambientVisual.itemImage]} resizeMode="contain" /> : item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]}>{item.name}</Text>}
         </View>
-        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.itemName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>}
+        {item.source === "photo" ? <RawText style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && [ambientVisual.itemName, { minHeight: 36 * fontScale }]]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</RawText> : <Text style={[[styles.itemName, { color: theme.text }], Platform.OS === "ios" && [ambientVisual.itemName, { minHeight: 36 * fontScale }]]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>}
         {Platform.OS !== "ios" ? <Text style={[styles.itemMeta, styles.cardMeta, { color: theme.muted }]} numberOfLines={1}>{getWardrobeCategoryLabel(item.category)}</Text> : null}
       </FeedbackPressable>
       {Platform.OS === "ios" ? <View style={ambientVisual.cardFooter}>
@@ -420,9 +420,10 @@ const ambientVisual = StyleSheet.create({
     "height": "94%"
   },
   "itemName": {
-    "fontSize": 15,
-    "lineHeight": 22,
-    "fontWeight": "600"
+    "fontSize": 13,
+    "lineHeight": 18,
+    "fontWeight": "600",
+    "minHeight": 36
   },
   "cardMeta": {
     "paddingRight": 0

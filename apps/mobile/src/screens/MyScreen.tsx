@@ -4,7 +4,6 @@ import React from "react";
 import { Image, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
 import { AmbientControlSurface } from "../components/AmbientControlSurface";
-import { AppButton } from "../components/AppButton";
 import { uiIconAssets } from "../assets";
 import { AppListGroup, AppListRow } from "../components/AppListRow";
 import { FeedbackPressable } from "../components/FeedbackPressable";
@@ -46,7 +45,7 @@ export function MyScreen({
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
   const profileBody = isAccountReady ? (accountProfile?.provider === "line" ? "LINE으로 연결했어요" : `${getProviderLabel(accountProfile?.provider)}로 연결했어요`) : needsTerms ? "필수 약관 확인 필요" : "연결 후 저장 기능 사용";
-  const profileAction = isAccountReady ? "관리" : needsTerms ? "약관 동의" : "계정 연결";
+  const profileAction = isAccountReady ? "계정 관리" : needsTerms ? "약관 동의" : "계정 연결";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
   const permissionTone: MenuTone =
@@ -107,7 +106,7 @@ export function MyScreen({
           </View>
           <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
-          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: isAccountReady ? 12 : 6 }}><AppButton label={profileAction} onPress={openProfile} variant={isAccountReady ? "outlined" : "filled"} size={isAccountReady ? "sm" : "md"} appearance="account" hapticFeedback="none" /></View>
+          <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: isAccountReady ? 12 : 6 }}><FeedbackPressable accessibilityRole="button" accessibilityLabel={profileAction} onPress={openProfile} hapticFeedback="none" style={{ minHeight: isAccountReady ? 44 : 52, paddingHorizontal: 24, paddingVertical: 10, borderRadius: radius.pill, borderWidth: isAccountReady ? StyleSheet.hairlineWidth : 0, borderColor: theme.border, backgroundColor: isAccountReady ? theme.cardStrong : "#FFBF45", alignItems: "center", justifyContent: "center" }}><Text style={{ color: isAccountReady ? theme.text : "#152E38", fontSize: isAccountReady ? 16 : 18, lineHeight: isAccountReady ? 23 : 25, fontWeight: "600", textAlign: "center" }}>{profileAction}</Text></FeedbackPressable></View>
         </AmbientReveal> : <FeedbackPressable
           accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
           accessibilityRole="button"

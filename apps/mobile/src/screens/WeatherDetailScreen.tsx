@@ -144,7 +144,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourlyList}>
             {hourly.slice(0, 12).map((item) => {
               const isNight = isNightAtForecastTime(item.time, daylightContext, weather.observedAt);
-              return <HourlyCard key={item.time} item={item} isNight={isNight} temperatureUnit={temperatureUnit} theme={theme} />;
+              return <HourlyCard key={item.time} item={item} current={Date.parse(item.time) <= currentTimeMs && currentTimeMs < Date.parse(item.time) + 3600000} isNight={isNight} temperatureUnit={temperatureUnit} theme={theme} />;
             })}
           </ScrollView>
         </ForecastPanel>
@@ -316,7 +316,7 @@ function getTone(theme: AppTheme, tone: ToneColor): string {
   return theme.clear;
 }
 
-function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWeather; isNight: boolean; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
+function HourlyCard({ item, current, isNight, temperatureUnit, theme }: { item: HourlyWeather; current: boolean; isNight: boolean; temperatureUnit: P0ScreenProps["temperatureUnit"]; theme: AppTheme }) {
   const color = getConditionColor(item.condition, theme, isNight);
   const icon = Platform.OS === "ios" ? ambientWeatherIcon(item.condition, isNight, theme) : undefined;
   const layout = useResponsiveLayout();
@@ -330,8 +330,9 @@ function HourlyCard({ item, isNight, temperatureUnit, theme }: { item: HourlyWea
           backgroundColor: theme.cardMuted,
           borderColor: theme.border,
         },
-      ], Platform.OS === "ios" && ambientVisual.hourlyCard]}
+      ], Platform.OS === "ios" && ambientVisual.hourlyCard, Platform.OS === "ios" && current && { borderWidth: 1, borderRadius: 12, borderColor: theme.border, backgroundColor: theme.cardMuted }]}
     >
+      {Platform.OS === "ios" && current ? <View accessible={false} style={{ position: "absolute", bottom: 3, alignSelf: "center", width: 16, height: 2, borderRadius: 1, backgroundColor: theme.muted }} /> : null}
       <Text style={[[styles.hourlyTime, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.hourlyTime]}>{formatTimeLabel(item.time)}</Text>
       <Image source={icon?.source ?? getConditionIcon(item.condition, isNight)} style={[styles.hourlyIcon, { tintColor: icon?.tintColor ?? color }]} resizeMode="contain" />
       <Text style={[styles.hourlyTemp, { color: theme.text }]}>{Platform.OS === "ios" && (item.available?.temp === false || !Number.isFinite(item.tempC)) ? "—" : formatTemperature(item.tempC, temperatureUnit)}</Text>

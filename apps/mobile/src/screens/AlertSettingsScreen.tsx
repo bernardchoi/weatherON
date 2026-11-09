@@ -110,11 +110,11 @@ export function AlertSettingsScreen({
                 },
                 pageStyles.title,
               ], Platform.OS === "ios" && ambientVisual.title]}
-              numberOfLines={1}
+              numberOfLines={Platform.OS === "ios" ? undefined : 1}
             >
               스마트 알림 설정
             </Text>
-            <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={1}>필요한 순간만 알아서 챙겨드려요</Text>
+            <Text style={[styles.subtitle, pageStyles.compactCaption, { color: theme.subtle }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>필요한 순간만 알아서 챙겨드려요</Text>
           </View>
         </View>
 
@@ -159,8 +159,8 @@ export function AlertSettingsScreen({
             </View>
             <View style={styles.heroCopy}>
               <Text style={[styles.heroKicker, { color: theme.gold }]}>내 일상에 맞춰</Text>
-              <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]} numberOfLines={1}>{alertReadiness.title}</Text>
-              <Text style={[[styles.heroBody, pageStyles.compactCaption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroBody]} numberOfLines={1}>{alertReadiness.body}</Text>
+              <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{alertReadiness.title}</Text>
+              <Text style={[[styles.heroBody, pageStyles.compactCaption, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.heroBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{alertReadiness.body}</Text>
             </View>
             <View style={[styles.switchTrack, { backgroundColor: smartCareEnabled ? theme.gold : theme.cardMuted }]}>
               <View style={[styles.switchKnob, { backgroundColor: smartCareEnabled ? theme.onAccent : theme.text }, smartCareEnabled ? styles.switchKnobOn : null]} />
@@ -191,7 +191,7 @@ export function AlertSettingsScreen({
               </Pressable>
             </View>
           ) : null}
-          <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }]}>
+          <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }, Platform.OS === "ios" && { borderBottomWidth: 0 }]}>
           <AlertSummaryRow
             icon="rain"
             title="비·특보 미리보기"
@@ -219,7 +219,7 @@ export function AlertSettingsScreen({
           />
           </View>
 
-          <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }]}>
+          <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, paddingVertical: 12, gap: 8, flexWrap: "wrap" }]}>
             <Text style={[styles.advancedTitle, { color: theme.text }]}>세부 알림 맞추기</Text>
             <Text style={[styles.advancedCount, pageStyles.compactCaption, { color: theme.subtle }]}>{permissionReady ? `${advancedEnabledCount}/6 사용 중` : "권한 없어 수신 불가"}</Text>
             <ChevronDown color={theme.subtle} open={advancedOpen} />
@@ -264,6 +264,7 @@ export function AlertSettingsScreen({
               body={`늦지 않도록 ${selectedDestinationAlertCondition.leadTimeMinutes}분 전에 알려드려요`}
               enabled={alertPreferences.destination}
               disabled={!deliveryReady || !destinationReady}
+              disabledReason={!destinationReady ? "목적지 필요" : undefined}
               onToggle={() => onToggleAlertPreference("destination")}
               theme={theme}
             />
@@ -288,7 +289,7 @@ export function AlertSettingsScreen({
             ) : null}
             <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
               <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
-              <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
+              <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
             </View>
             </View>
           ) : null}
@@ -352,7 +353,7 @@ function DeliveryLine({ label, value, tone, theme }: { label: string; value: str
   return (
     <View style={styles.deliveryLine}>
       <Text style={[styles.deliveryLineLabel, { color: theme.subtle }]}>{label}</Text>
-      <Text style={[styles.deliveryLineValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+      <Text style={[styles.deliveryLineValue, { color: theme.text }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{value}</Text>
       <View style={[styles.deliveryDot, { backgroundColor: color }]} />
     </View>
   );
@@ -390,7 +391,7 @@ function AlertSummaryRow({
       </View>
       <View style={styles.alertSummaryCopy}>
         <Text style={[[styles.alertSummaryTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.alertSummaryTitle]}>{title}</Text>
-        <Text style={[[styles.alertSummaryBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.alertSummaryBody]} numberOfLines={1}>{body}</Text>
+        <Text style={[[styles.alertSummaryBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.alertSummaryBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{body}</Text>
       </View>
       <View style={[[styles.alertSummaryStatus, { backgroundColor: `${color}20` }], Platform.OS === "ios" && ambientVisual.alertSummaryStatus]}>
         <Text style={[styles.statusPillText, { color }]}>{status}</Text>
@@ -404,6 +405,7 @@ function AdvancedToggleRow({
   body,
   enabled,
   disabled,
+  disabledReason,
   onToggle,
   theme,
 }: {
@@ -411,13 +413,14 @@ function AdvancedToggleRow({
   body: string;
   enabled: boolean;
   disabled: boolean;
+  disabledReason?: string;
   onToggle: () => void;
   theme: AppTheme;
 }) {
   const checked = enabled && !disabled;
   return (
     <Pressable
-      accessibilityLabel={`${title}, ${disabled ? "사용 불가" : checked ? "켜짐" : "꺼짐"}`}
+      accessibilityLabel={`${title}, ${disabled ? disabledReason ?? "사용 불가" : checked ? "켜짐" : "꺼짐"}`}
       accessibilityRole="switch"
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
@@ -425,8 +428,8 @@ function AdvancedToggleRow({
       style={[styles.advancedLine, { borderBottomColor: theme.border, opacity: disabled ? 0.5 : 1 }]}
     >
       <View style={styles.advancedCopy}>
-        <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}</Text>
-        <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={1}>{body}</Text>
+        <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}{disabledReason && Platform.OS === "ios" ? <Text style={{ fontSize: 12, fontWeight: "400", color: theme.muted }}>{` · ${disabledReason}`}</Text> : null}</Text>
+        <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{body}</Text>
       </View>
       <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
         <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />

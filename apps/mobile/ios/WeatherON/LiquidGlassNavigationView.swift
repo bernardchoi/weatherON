@@ -367,6 +367,7 @@ final class HomePlanGlassView: RCTViewManager {
 }
 
 final class HomePlanGlassSurfaceView: UIView {
+  @objc var materialCornerRadius: CGFloat = 24 { didSet { material.layer.cornerRadius = max(0, materialCornerRadius) } }
   @objc var isDarkTheme = false { didSet { updateMaterial() } }
   private let material = UIVisualEffectView()
   private var transparencyObserver: NSObjectProtocol?

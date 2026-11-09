@@ -57,7 +57,6 @@ export function OutfitScreen({
           {ambient && state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.currentAvailable) ? <AppButton label="날씨 다시 확인" onPress={onRefreshWeather} tone="secondary" size="sm" /> : null}
           <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={slot => openDetail(state.outfit.items[slot as keyof typeof state.outfit.items]?.id)} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
-          <AmbientControlSurface>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
             <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => openDetail()} style={[styles.advicePreview, { minHeight: 44, backgroundColor: ambient ? "transparent" : theme.card }]}>
               <View style={[styles.advicePreviewRow, ambient && fontScale > 1.3 && { flexWrap: "wrap" }]}>
@@ -67,6 +66,7 @@ export function OutfitScreen({
               </View>
             </FeedbackPressable>
           ))}
+          <AmbientControlSurface style={ambient ? { paddingHorizontal: 14, paddingVertical: 4 } : undefined}>
           <View style={[styles.actions, ambient && { alignItems: "center", ...(fontScale > 1.3 || layout.width < 360 ? { flexDirection: "column", alignItems: "stretch" } : {}), justifyContent: "space-between", paddingTop: 4, gap: 12 }]}>
             {ambient ? <>
               <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 자세히 보기" onPress={() => openDetail()} style={styles.readingAction}>
@@ -85,11 +85,11 @@ export function OutfitScreen({
           </AmbientControlSurface>
         </View>
         <View style={[styles.criteriaStats, { gap: 8 }, ambient && fontScale > 1.3 && { flexDirection: "column" }]}>
-          <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
+          <FeedbackPressable accessibilityRole="button" accessibilityLabel={`내 옷장 ${ownedItemCount}개 보기`} onPress={() => onNavigate("C2")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: 0, borderColor: theme.border }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <Image source={ambientUiIcons.wardrobe} style={{ width: 26, height: 26, tintColor: theme.muted }} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>내 옷장</Text></View>
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{ownedItemCount}개 보유</Text>
           </FeedbackPressable>
-          <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: ambient ? StyleSheet.hairlineWidth : 0, borderColor: theme.border }]}>
+          <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 스타일 기준 수정" onPress={() => onNavigate("O4")} style={[styles.criteriaStat, { backgroundColor: ambient ? "transparent" : theme.card, minHeight: 60, ...(ambient ? { borderRadius: 0 } : {}), ...(ambient && fontScale > 1.3 ? { flexGrow: 0, flexShrink: 0, flexBasis: "auto" } : {}), borderTopWidth: 0, borderColor: theme.border }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{ambient ? <StyleCriteriaIcon color={theme.muted} size={26} /> : null}<Text style={[pageStyles.body, { color: theme.text }]}>스타일 기준</Text></View>
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>

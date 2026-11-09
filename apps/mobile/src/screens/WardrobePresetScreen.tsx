@@ -212,9 +212,10 @@ export function WardrobePresetScreen({
               <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
             </View>
             <AppButton
-              label={previewItem.owned ? "해제" : "추가"}
+              label={Platform.OS === "ios" ? previewItem.owned ? "− 해제" : "+ 추가" : previewItem.owned ? "해제" : "추가"}
               accessibilityLabel={`${previewItem.name} ${previewItem.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
               onPress={() => toggleOwned(previewItem.id, !previewItem.owned)}
+              variant={Platform.OS === "ios" && previewItem.owned ? "outlined" : undefined}
               tone="warning"
               size="sm"
             />
@@ -380,22 +381,28 @@ function PresetCard({
           backgroundColor: theme.cardMuted,
           borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
         },
-      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && { borderWidth: 1, borderRadius: 16, padding: 8, borderColor: item.owned ? theme.clear : selected ? theme.gold : "transparent" }]}
+      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && { borderWidth: 1, borderRadius: item.owned || selected ? 14 : 0, padding: 0, gap: 0, overflow: "hidden", borderColor: item.owned ? theme.clear : selected ? theme.gold : "transparent" }]}
     >
-      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} style={styles.presetMain}>
+      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} accessibilityState={{ selected }} style={[styles.presetMain, Platform.OS === "ios" && { flex: 1, paddingBottom: 8 }]}>
         <View style={[[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.presetImageWrap]}>
           {imageSource ? <Image source={imageSource} style={[styles.presetImage, Platform.OS === "ios" && ambientVisual.presetImage]} resizeMethod="resize" resizeMode="contain" /> : null}
         </View>
-        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && ambientVisual.presetName]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>
-        <Text style={[[styles.presetMeta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.presetMeta]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
+        {Platform.OS === "ios" && item.owned ? <View pointerEvents="none" accessibilityElementsHidden style={[proposalStyles.ownedMark, { backgroundColor: theme.clear }]}><Text style={{ color: theme.onAccent, fontSize: 11, lineHeight: 14, fontWeight: "700" }}>✓</Text></View> : null}
+        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && [ambientVisual.presetName, { fontSize: 13, lineHeight: 18, paddingHorizontal: 4, minHeight: 36 * fontScale }]]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>
+        <Text style={[[styles.presetMeta, { color: theme.muted }], Platform.OS === "ios" && [ambientVisual.presetMeta, { paddingHorizontal: 4 }]]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
       </FeedbackPressable>
-      <AppButton
+      {Platform.OS === "ios" ? <FeedbackPressable
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+        onPress={onToggleOwned}
+        style={[proposalStyles.presetAction, { backgroundColor: item.owned ? theme.card : theme.clear, borderTopWidth: item.owned ? StyleSheet.hairlineWidth : 0, borderColor: theme.clear, borderRadius: item.owned ? 0 : 10 }]}
+      ><Text style={{ color: item.owned ? theme.clear : theme.onAccent, fontSize: 14, lineHeight: 20, fontWeight: "600", textAlign: "center" }}>{item.owned ? "− 해제" : "+ 추가"}</Text></FeedbackPressable> : <AppButton
         label={item.owned ? "해제" : "추가"}
         accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
         onPress={onToggleOwned}
         tone="secondary"
         size="sm"
-      />
+      />}
     </View>
   );
 }
@@ -662,4 +669,10 @@ const ambientVisual = StyleSheet.create({
     "lineHeight": 24,
     "fontWeight": "500"
   }
+});
+
+// Approved outfit study: one owned-card outline, no overlaid duplicate borders.
+const proposalStyles = StyleSheet.create({
+  ownedMark: { position: "absolute", top: 6, right: 6, width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center" },
+  presetAction: { minHeight: 44, paddingHorizontal: 4, paddingVertical: 10, alignItems: "center", justifyContent: "center" },
 });

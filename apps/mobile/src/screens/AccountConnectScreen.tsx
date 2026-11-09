@@ -112,7 +112,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
         </View>
 
         {isSigningIn ? <Text accessibilityLiveRegion="polite" style={[[styles.authStatus, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.authStatus]}>안전하게 계정을 연결하고 있어요</Text> : null}
-        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }], Platform.OS === "ios" && ambientVisual.authStatus]}>{authMessage}</Text> : null}
+        {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }], Platform.OS === "ios" && [ambientVisual.authStatus, { backgroundColor: theme.cardStrong, paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.md }]]}>{authMessage}</Text> : null}
 
         {showOtherMethods && otherProviders.length > 0 ? (
           <View style={[styles.providerList, Platform.OS === "ios" && ambientVisual.providerList]}>
@@ -123,7 +123,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
         ) : null}
 
         {otherProviders.length > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: showOtherMethods }} onPress={() => setShowOtherMethods((current) => !current)} style={({ pressed }) => [styles.otherButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent", opacity: pressed ? 0.72 : 1 }]}>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: showOtherMethods }} onPress={() => setShowOtherMethods((current) => !current)} style={({ pressed }) => [styles.otherButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent", opacity: pressed ? 0.72 : 1 }, Platform.OS === "ios" && { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 12, minHeight: 48, backgroundColor: theme.cardStrong }]}>
             <Text style={[[styles.otherText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.otherText]}>{showOtherMethods ? "계정 선택 줄이기" : "다른 계정으로 계속하기"}</Text>
           </Pressable>
         ) : null}
@@ -133,7 +133,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
           <Text style={[[styles.nextStepBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>약관을 확인하면 원래 화면으로 돌아가요</Text>
           <Text style={[[styles.nextStepBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>위치·알림 권한은 계정과 별도로 선택해요</Text>
         </View>
-        <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.laterButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }]}>
+        <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.laterButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }, Platform.OS === "ios" && { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 12, minHeight: 48, backgroundColor: theme.cardStrong }]}>
           <Text style={[[styles.laterText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.laterText]}>지금은 둘러보기</Text>
         </Pressable>
     </AppScreen>

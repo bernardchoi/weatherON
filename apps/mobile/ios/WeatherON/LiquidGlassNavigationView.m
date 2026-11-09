@@ -17,4 +17,5 @@ RCT_EXPORT_VIEW_PROPERTY(onPowerState, RCTDirectEventBlock)
 
 @interface RCT_EXTERN_MODULE(HomePlanGlassView, RCTViewManager)
 RCT_EXPORT_VIEW_PROPERTY(isDarkTheme, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(materialCornerRadius, CGFloat)
 @end

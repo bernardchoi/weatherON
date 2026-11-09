@@ -81,12 +81,12 @@ export function AccountManagementScreen({
             },
           ], Platform.OS === "ios" && ambientVisual.profileCard]}
         >
-          <View style={[[styles.profileVisual, { backgroundColor: theme.cardStrong }], ambient && [ambientVisual.profileVisual, { backgroundColor: theme.card, borderColor: theme.border }]]}>
+          <View style={[[styles.profileVisual, { backgroundColor: theme.cardStrong }], ambient && [ambientVisual.profileVisual, { backgroundColor: accountReady ? "transparent" : theme.card, borderColor: theme.border, borderWidth: accountReady ? 0 : StyleSheet.hairlineWidth }]]}>
             {ambient && accountReady ? (
-              provider === "apple" ? <Text accessible={false} accessibilityElementsHidden allowFontScaling={false} style={{ fontFamily: "System", fontSize: 44, lineHeight: 54, color: theme.text }}>{"\uF8FF"}</Text>
+              provider === "apple" ? <Image source={require("../../assets/providers/apple-logo-official.png")} accessible={false} accessibilityElementsHidden style={{ width: 54, height: 54 }} resizeMode="contain" />
                 : <View style={{ alignItems: "center", justifyContent: "center", width: 54, height: 54, borderRadius: 16, backgroundColor: provider === "kakao" ? "#FEE500" : provider === "naver" ? "#03A94D" : "transparent" }}><ProviderBrandIcon provider={provider} size={provider === "kakao" ? 30 : 36} /></View>
             ) : <Image source={screenIcons.tabMy} style={[[styles.accountIcon, { tintColor: theme.sky }], ambient && ambientVisual.accountIcon]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no" />}
-            <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />
+            {!(ambient && accountReady) && <View style={[styles.statusDot, { backgroundColor: primaryTone }]} />}
           </View>
           <View style={[styles.profileCopy, Platform.OS === "ios" && ambientVisual.profileCopy]}>
             <View style={[styles.profileTitleRow, Platform.OS === "ios" && ambientVisual.profileTitleRow]}>
@@ -139,7 +139,7 @@ export function AccountManagementScreen({
               hapticFeedback={ambient ? "none" : "automatic"}
               disabled={isProcessing}
               onPress={() => setDangerConfirm("logout")}
-              style={({ pressed }) => [styles.logoutButton, { backgroundColor: theme.cardMuted, borderColor: theme.border, opacity: isProcessing ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && ambientVisual.logoutButton]}
+              style={({ pressed }) => [styles.logoutButton, { backgroundColor: theme.cardMuted, borderColor: theme.border, opacity: isProcessing ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && [ambientVisual.logoutButton, { backgroundColor: theme.cardStrong }]]}
             >
               <Text style={[[styles.smallButtonText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.smallButtonText]}>로그아웃</Text>
             </FeedbackPressable> : null}

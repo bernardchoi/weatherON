@@ -180,6 +180,12 @@ export function DestinationListScreen({
 
         {hasDestinations ? (
           <View style={styles.secondaryActions}>
+            {Platform.OS === "ios" && savedDestinations.length >= 3 ? (
+              <View style={{ padding: 16, borderRadius: 12, backgroundColor: theme.card, gap: 6, alignItems: "center" }}>
+                <Text style={[pageStyles.body, { color: theme.text, textAlign: "center" }]}>목적지 {savedDestinations.length}/3 · 모두 등록했어요</Text>
+                <Text style={[styles.limitHint, { color: theme.muted, textAlign: "center" }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text>
+              </View>
+            ) : <>
             <FeedbackPressable
               accessibilityLabel="목록 하단 목적지 추가"
               accessibilityRole="button"
@@ -190,6 +196,8 @@ export function DestinationListScreen({
               <Text style={[styles.addDestinationText, { color: theme.clear }, Platform.OS === "ios" && { fontSize: 17, lineHeight: 24, fontWeight: "600" }]}>목적지 추가</Text>
             </FeedbackPressable>
             {savedDestinations.length >= 3 ? <Text style={[styles.limitHint, { color: theme.muted }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text> : null}
+            </>}
+
           </View>
         ) : null}
 
@@ -1006,10 +1014,10 @@ const ambientVisual = StyleSheet.create({
   "emptyCard": {
     "borderWidth": 0,
     "borderLeftWidth": 0,
-    "borderRadius": 24,
+    "borderRadius": 12,
     "shadowOpacity": 0,
-    "paddingHorizontal": 18,
-    "paddingVertical": 18,
+    "paddingHorizontal": 16,
+    "paddingVertical": 16,
     "gap": 16
   },
   "emptyBenefit": {

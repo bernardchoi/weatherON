@@ -7,7 +7,6 @@ import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { cardShadow, radius, spacing, type AppTheme } from "../theme/tokens";
-import { ambientPalette } from "../theme/ambientSurface";
 
 export function AppPermissionsScreen({
   deviceLocationState,
@@ -191,8 +190,8 @@ function PermissionCard({
         <Text style={[ambientVisual.permissionHelper, { color: theme.muted }]}>{helper}</Text>
       </View> : <Text style={[styles.permissionHelper, pageStyles.compactCaption, { color: theme.muted }]} numberOfLines={1}>{helper}</Text>}
       <View style={[[styles.permissionActions, { gap: actionGap }], Platform.OS === "ios" && ambientVisual.permissionActions]}>
-        <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" accessibilityState={{ disabled: primaryDisabled }} disabled={primaryDisabled} onPress={onPrimaryPress} style={({ pressed }) => [styles.primaryAction, { backgroundColor: ambient ? ambientPalette(theme).selected : `${color}22`, opacity: primaryDisabled ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && ambientVisual.primaryAction]}>
-          <Text style={[[styles.primaryActionText, { color }], Platform.OS === "ios" && ambientVisual.primaryActionText]}>{primaryLabel}</Text>
+        <Pressable accessibilityLabel={`${label} ${primaryLabel}`} accessibilityRole="button" accessibilityState={{ disabled: primaryDisabled }} disabled={primaryDisabled} onPress={onPrimaryPress} style={({ pressed }) => [styles.primaryAction, { backgroundColor: ambient ? "#26514F" : `${color}22`, opacity: primaryDisabled ? 0.55 : ambient && pressed ? 0.72 : 1 }, ambient && ambientVisual.primaryAction]}>
+          <Text style={[[styles.primaryActionText, { color }], Platform.OS === "ios" && [ambientVisual.primaryActionText, { color: "#E3FFF5" }]]}>{primaryLabel}</Text>
         </Pressable>
         {secondaryLabel ? (
           <Pressable accessibilityLabel={`${label} ${secondaryLabel}`} accessibilityRole="button" onPress={onSecondaryPress} style={({ pressed }) => [styles.secondaryAction, { backgroundColor: theme.cardStrong, borderColor: theme.border }, ambient && [ambientVisual.secondaryAction, { opacity: pressed ? 0.72 : 1 }]]}>

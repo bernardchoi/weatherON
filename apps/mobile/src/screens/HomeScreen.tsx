@@ -949,9 +949,9 @@ function HomeOutfitPreviewCard({
         <Text style={[styles.ambientOutfitTitle, { color: theme.text }, Platform.OS === "ios" && { fontSize: 24, lineHeight: 32, flexShrink: 1 }]}>오늘의 코디</Text>
         {Platform.OS === "ios" ? <Image source={ambientUiIcons.expand} style={{ width: 20, height: 20, tintColor: theme.text, transform: [{ rotate: "-90deg" }] }} /> : <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>보기</Text>}
       </View>
-      <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>{weatherBasis}{forecastStatus ? ` · ${translateText(forecastStatus)}` : ""}</Text>
+      <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>{weatherBasis}{forecastStatus ? ` · ${translateText(forecastStatus)}` : ""}</Text>
       </View>
-      <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: 96, width: layout.width < 390 || fontScale > 1.3 ? "100%" : "44%" }]}>
+      <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: 96, width: layout.width < 390 || fontScale > 1.3 ? "100%" : "38%" }]}>
         {photos.length ? photos.map((item, index) => <OutfitMotionImage key={index} outfitItemId={item!.id} imageKey={item!.imageUrl} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
           position: "absolute", width: photos.length > 1 ? index === 0 ? "56%" : "48%" : "80%",
           height: index === 0 ? 96 : 76,
@@ -962,13 +962,16 @@ function HomeOutfitPreviewCard({
       </View>
       {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 4 }}>
         {advice.map((clause, index) => <Text key={`${index}-${clause}`} style={{ color: theme.text, fontSize: 18, lineHeight: 27 }}>{clause}</Text>)}
-        {timedForecast ? <View accessible accessibilityLabel={timedForecast} style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: theme.card, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 12 }}>
+        {timedForecast ? <View accessible accessibilityLabel={timedForecast} style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: theme.card, flexDirection: layout.width < 360 || fontScale > 1.3 ? "column" : "row", alignItems: layout.width < 360 || fontScale > 1.3 ? "flex-start" : "center", gap: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Image source={ambientUiIcons.time} style={{ width: 20, height: 20, tintColor: theme.muted }} accessible={false} />
+            <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>오늘</Text>
             <Text style={{ fontSize: 22, lineHeight: 30, fontWeight: "600", color: theme.text, fontVariant: ["tabular-nums"] }}>{forecastClock}</Text>
             <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>무렵</Text>
           </View>
-          <Text style={{ fontSize: 15, lineHeight: 23, color: theme.muted, flexShrink: 1 }}>{`오늘 · ${translateText(forecastKind ?? "")}`}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1, borderLeftWidth: layout.width < 360 || fontScale > 1.3 ? 0 : 1, borderLeftColor: theme.border, paddingLeft: layout.width < 360 || fontScale > 1.3 ? 0 : 12 }}>
+            {forecastKind === "강수 가능" || forecastKind === "비 예보" ? <Image source={ambientUiIcons.droplet} accessible={false} style={{ width: 16, height: 20, tintColor: theme.muted }} /> : null}
+            <Text style={{ fontSize: 15, lineHeight: 23, color: theme.muted, flexShrink: 1 }}>{translateText(forecastKind ?? "")}</Text>
+          </View>
         </View> : null}
       </View> : <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>}
     </FeedbackPressable>

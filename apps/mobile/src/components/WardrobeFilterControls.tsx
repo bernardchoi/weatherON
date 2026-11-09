@@ -8,6 +8,7 @@ import { radius, spacing } from "../theme/tokens";
 import { IosSelectionRow } from "./IosSelectionRow";
 import { BottomSheet } from "./BottomSheet";
 import { triggerConfirmedSelectionHaptic } from "../utils/confirmedInteractionFeedback";
+import { HomePlanMaterial } from "./HomePlanMaterial";
 import { FeedbackPressable } from "./FeedbackPressable";
 
 // Keep the raster category module outside the Android evaluation path.
@@ -159,8 +160,9 @@ function WardrobeFilterSelect({
           borderColor: active ? theme.clear : theme.border,
         },
       ], Platform.OS === "ios" && ambientVisual.filterSelect,
-        Platform.OS === "ios" && { borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: active ? theme.cardStrong : "transparent" }]}
+        Platform.OS === "ios" && { borderWidth: 0, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: active ? theme.cardStrong : "transparent" }]}
     >
+      {Platform.OS === "ios" ? <HomePlanMaterial theme={theme} cornerRadius={radius.md} /> : null}
       <View style={[styles.filterSelectCopy, Platform.OS === "ios" && { flexDirection: "row", alignItems: "center", gap: 3 }]}>
         <Text style={[[styles.filterSelectLabel, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.filterSelectLabel]}>{label}</Text>
         <Text style={[[styles.filterSelectValue, { color: active ? theme.clear : theme.text }], Platform.OS === "ios" && ambientVisual.filterSelectValue]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{value}</Text>

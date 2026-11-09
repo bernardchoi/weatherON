@@ -1,7 +1,7 @@
 import { getPlaceSearchQueryAlias } from "@weatheron/shared";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
-import { Platform, Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "../localization/react-native";
+import { Platform, Keyboard, RawText, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type TextStyle } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
 import { MaterialSnackbar } from "../components/MaterialSnackbar";
 import { BackButton } from "../components/BackButton";
@@ -37,6 +37,8 @@ export function DestinationAddScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
+  const { width, fontScale } = useWindowDimensions();
+  const stackedResult = width < 360 || fontScale > 1.3;
   const [keyboardVisible, setKeyboardVisible] = React.useState(false);
   const [nearbyPlaces, setNearbyPlaces] = React.useState<P0ScreenProps["placeSearchResults"]>([]);
   const hasInput = placeSearchQuery.trim().length > 0;
@@ -116,7 +118,7 @@ export function DestinationAddScreen({
             gap: layout.destinationContentGap,
             paddingHorizontal: layout.screenHorizontalPadding,
             paddingTop: layout.weatherTopPadding,
-            paddingBottom: layout.destinationAddScrollBottomPadding,
+            paddingBottom: Math.max(layout.destinationAddScrollBottomPadding, 100 * fontScale),
           },
         ]}
         keyboardDismissMode="on-drag"
@@ -212,14 +214,14 @@ export function DestinationAddScreen({
                       backgroundColor: selected ? semanticColor(theme, "accentTint") : "transparent",
                       borderTopColor: index === 0 ? "transparent" : theme.border,
                     },
-                  ], Platform.OS === "ios" && ambientVisual.resultRow]}
+                  ], Platform.OS === "ios" && [ambientVisual.resultRow, { borderTopWidth: selected || index === 0 ? 0 : StyleSheet.hairlineWidth }]]}
                 >
                   <View style={[styles.resultGlyph, { backgroundColor: selected ? theme.gold : theme.cardMuted }]}>
                     <CategoryIcon color={selected ? theme.onAccent : theme.subtle} />
                   </View>
                   <View style={styles.resultHead}>
                     <View style={[styles.resultTitleRow, Platform.OS === "ios" && { flexWrap: "wrap" }]}>
-                      <QueryMatchedText value={place.name} query={placeSearchQuery} style={[styles.resultName, { color: theme.text }, Platform.OS === "ios" && { flexBasis: "100%", minWidth: 0 }]} matchColor={theme.sky} />
+                      <QueryMatchedText value={place.name} query={placeSearchQuery} style={[styles.resultName, { color: selected ? theme.sky : theme.text }, Platform.OS === "ios" && { minWidth: 0, ...(stackedResult ? { flexBasis: "100%" } : {}) }]} matchColor={theme.sky} />
                       {duplicate ? (
                         <View style={[styles.smallPill, { borderColor: theme.border }]}>
                           <Text style={[styles.smallPillText, { color: theme.gold }]}>동명이름</Text>
@@ -270,7 +272,8 @@ export function DestinationAddScreen({
               paddingHorizontal: layout.screenHorizontalPadding,
               paddingTop: layout.footerPaddingTop,
               paddingBottom: layout.footerPaddingBottom,
-              backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background,
+              backgroundColor: theme.background,
+              borderTopColor: theme.border,
             },
           ], Platform.OS === "ios" && ambientVisual.footer]}
         >

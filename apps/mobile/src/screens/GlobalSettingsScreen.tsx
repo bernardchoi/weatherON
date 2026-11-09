@@ -16,7 +16,6 @@ import {
 } from "../theme/androidMaterial";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, spacing } from "../theme/tokens";
-import { ambientPalette } from "../theme/ambientSurface";
 import { useConfirmedOptionFeedback } from "../hooks/useConfirmedOptionFeedback";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
@@ -207,7 +206,6 @@ function SegmentControl({
   const ambient = Platform.OS === "ios";
   const stacked = ambient && (width < 390 || fontScale > 1.15);
   const verticalOptions = stacked && (options.length > 2 || fontScale > 1.6);
-  const palette = ambientPalette(theme);
   const feedback = useConfirmedOptionFeedback(options.find(option => option.active)?.label ?? "");
   return (
     <View
@@ -218,7 +216,7 @@ function SegmentControl({
         layout.isShort && !fullWidth ? styles.segmentControlShort : null,
         { backgroundColor: theme.nav, borderColor: theme.border },
         androidMaterialSurface(theme, "surfaceContainer"),
-        ambient && { width: options.length > 2 ? 192 : 160, minHeight: 48, padding: 2, borderWidth: StyleSheet.hairlineWidth, backgroundColor: "transparent" },
+        ambient && { width: options.length > 2 ? 192 : 160, minHeight: 48, padding: 2, borderWidth: StyleSheet.hairlineWidth, backgroundColor: theme.card },
         ambient && (fullWidth || stacked) && { width: "100%" },
         verticalOptions && { flexDirection: "column", alignItems: "stretch" },
       ]}
@@ -236,7 +234,7 @@ function SegmentControl({
             styles.segmentOption,
             option.active ? androidMaterialSurface(theme, "secondaryContainer") : null,
             { backgroundColor: option.active ? androidMaterialColor(theme, "secondaryContainer") : "transparent" },
-            ambient && { minHeight: 44, backgroundColor: option.active ? palette.selected : "transparent" },
+            ambient && { minHeight: 44, backgroundColor: option.active ? "#FFD27A" : "transparent" },
             verticalOptions && { flex: 0, paddingVertical: 8 },
           ]}
         >
@@ -244,11 +242,11 @@ function SegmentControl({
             style={[[
               styles.segmentText,
               { color: option.active ? androidMaterialColor(theme, "onSecondaryContainer") : theme.subtle },
-            ], ambient && ambientVisual.segmentText, ambient && { color: option.active ? theme.clear : theme.subtle }]}
+            ], ambient && ambientVisual.segmentText, ambient && { color: option.active ? "#20333B" : theme.subtle }]}
           >
             {option.label}
           </Text>
-          {verticalOptions && option.active ? <Image source={ambientUiIcons.check} accessible={false} style={{ width: 16, height: 16, tintColor: theme.clear }} /> : null}
+          {verticalOptions && option.active ? <Image source={ambientUiIcons.check} accessible={false} style={{ width: 16, height: 16, tintColor: "#20333B" }} /> : null}
         </FeedbackPressable>
       ))}
     </View>

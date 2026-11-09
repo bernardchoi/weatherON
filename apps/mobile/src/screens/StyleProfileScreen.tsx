@@ -121,9 +121,11 @@ function ChoiceButton({ label, selected, onPress }: { label: string; selected: b
       onPress={onPress}
       style={[
         styles.choice,
+        Platform.OS === "ios" && { flexDirection: "row", alignItems: "center", justifyContent: "center" },
         { backgroundColor: selected ? semanticColor(theme, "accentTint") : semanticColor(theme, "surfacePassive"), borderColor: selected ? theme.gold : theme.border },
       ]}
     >
+      {Platform.OS === "ios" && selected ? <Text accessible={false} style={{ color: theme.text, marginRight: 5 }}>✓</Text> : null}
       <Text style={[[styles.choiceText, { color: selected ? theme.text : theme.muted }], Platform.OS === "ios" && ambientVisual.choiceText]}>{label}</Text>
     </Pressable>
   );
