@@ -82,6 +82,15 @@ target 'WeatherON' do
     # fmt 11.0.2 consteval fails with the Apple Clang bundled in Xcode 27 beta.
     # Limit this Pod to C++17; the rest of the React Native dependencies remain C++20.
     installer.pods_project.targets.each do |target|
+      if target.name == 'ExpoSQLite' && podfile_properties['expo.sqlite.useSQLCipher'] != 'true'
+        # Use Darwin's MIN/MAX and SQLite's documented iOS fallback for gethostuuid.
+        target.source_build_phase.files.each do |file|
+          next unless file.file_ref.path == 'sqlite3.c'
+          file.settings ||= {}
+          file.settings['COMPILER_FLAGS'] = [file.settings['COMPILER_FLAGS'], '-include sys/param.h -DHAVE_GETHOSTUUID=0'].compact.join(' ')
+        end
+      end
+
       if target.name == 'fmt'
         target.build_configurations.each do |config|
           config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'

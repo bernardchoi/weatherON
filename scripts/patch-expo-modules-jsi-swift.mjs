@@ -41,6 +41,32 @@ patchFile(join(packageRoot, "apple", "Sources", "ExpoModulesJSI-Cxx", "include",
   (source) => source.replace(/^(  )(RuntimeScheduler\((?:void \*scheduler, ScheduleFn fn)?\))/gm,
     "$1SWIFT_RETURNS_RETAINED $2"));
 
+const nodeModules = join(process.cwd(), "node_modules");
+patchFile(join(nodeModules, "expo-notifications/ios/ExpoNotifications/Notifications/Scheduling/SchedulerModule.swift"),
+  (source) => source.replace("let record: TriggerRecord?", "let record: (any TriggerRecord)?"));
+
+patchFile(join(nodeModules, "react-native-safe-area-context/ios/Fabric/RNCSafeAreaProviderComponentView.mm"),
+  (source) => source.replace(
+    `                .left = safeAreaInsets.left,
+                .bottom = safeAreaInsets.bottom,
+                .right = safeAreaInsets.right,`,
+    `                .right = safeAreaInsets.right,
+                .bottom = safeAreaInsets.bottom,
+                .left = safeAreaInsets.left,`,
+  ));
+
+patchFile(join(nodeModules, "react-native-svg/apple/Utils/RNSVGFabricConversions.h"),
+  (source) => source
+    .replace("static id RNSVGConvertFollyDynamicToId(", "static inline id RNSVGConvertFollyDynamicToId(")
+    .replace("static RNSVGVBMOS intToRNSVGVBMOS(", "static inline RNSVGVBMOS intToRNSVGVBMOS("));
+
+// The custom back-button image cache only calls this conversion in debug builds.
+patchFile(join(nodeModules, "react-native-screens/ios/RNSScreenStackHeaderConfig.mm"),
+  (source) => source.replace(
+    /(?<!#ifndef NDEBUG\n)^static RCTResizeMode resizeModeFromCppEquiv\([^\n]+\)\n\{[\s\S]*?^\}/m,
+    "#ifndef NDEBUG\n$&\n#endif",
+  ));
+
 // Expo Constants otherwise skips app.config generation when PROJECT_DIR contains spaces.
 patchFile(join(process.cwd(), "node_modules", "expo-constants", "scripts", "get-app-config-ios.sh"),
   (source) => source.replace('$(basename $PROJECT_DIR)', '$(basename "$PROJECT_DIR")'));
@@ -149,5 +175,5 @@ patchFile(join(expoModulesCoreRoot, "Core/SharedObjects/SharedObjectRegistry.swi
 );
 
 if (patchedCount > 0) {
-  console.log(`Patched Expo Swift declarations for Xcode 26 in ${patchedCount} files.`);
+  console.log(`Applied iOS build compatibility patches to ${patchedCount} files.`);
 }
