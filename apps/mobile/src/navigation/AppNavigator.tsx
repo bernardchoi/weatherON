@@ -316,6 +316,7 @@ export function AppNavigator() {
     onMarkAllNotificationsRead: appState.markAllNotificationsRead,
     onClearNotificationHistory: appState.clearNotificationHistory,
     onToggleAlertPreference: appState.toggleAlertPreference,
+    onToggleAlertPreferenceGroup: appState.toggleAlertPreferenceGroup,
     onEditDestinationAlertCondition: appState.editDestinationAlertCondition,
     onEditNotificationCondition: appState.editNotificationCondition,
     onOpenNotificationDeepLink: appState.openNotificationDeepLink,

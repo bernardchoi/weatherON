@@ -26,10 +26,13 @@ for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 44
  assert.ok(!nodes(open).includes(remove), 'Deletion must remain separate from opening item');
  const button = flatten(remove.props.style); assert.equal(button.width, 44); assert.equal(button.height, 44);
  if (os === 'ios') {
+  assert.equal(flatten(tree.props.style).justifyContent, 'flex-start', 'Card must not stretch copy away from footer');
+  const name = nodes(open).find(n => text(n) === item.name && n.type === 'Text');
+  assert.equal(flatten(name.props.style).minHeight, 0, 'Short names should not reserve a blank second line');
   assert.equal(button.position, 'relative'); assert.equal(button.top, undefined);
   assert.ok(nodes(tree).some(n => n.children?.includes(remove) && text(n).includes('겉옷')), 'Delete belongs in category footer');
  }
- const expectedColumns = os === 'ios' ? width < 350 || fontScale > 1.3 ? 2 : width >= 768 ? 4 : 3 : undefined;
+ const expectedColumns = os === 'ios' ? fontScale > 1.8 ? 1 : width < 350 || fontScale > 1.3 ? 2 : width >= 768 ? 4 : 3 : undefined;
  const ownedWidth = flatten(tree.props.style).width;
  if (expectedColumns) assert.ok(parseFloat(ownedWidth) * expectedColumns <= 100);
  const banner = env.RemovedItemBanner({ itemName: item.name, onRestore: () => restored++, theme: {} });
@@ -56,8 +59,10 @@ for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 44
  load('apps/mobile/src/screens/WardrobePresetScreen.tsx', env);
  for (const owned of [true, false]) {
   const preset = env.PresetCard({ item: { ...item, owned }, selected: true, onPreview: () => opened++, onToggleOwned: () => toggled++ });
-  const action = nodes(preset).find(n => n.type === 'AppButton');
-  action.props.onPress(); assert.equal(action.props.label, owned ? '해제' : '추가');
+  const action = nodes(preset).find(n => n.props.accessibilityLabel === `${item.name} ${owned ? '내 옷장에서 해제' : '내 옷장에 추가'}`);
+  assert.ok(action, 'Owned toggle is accessible');
+  action.props.onPress(); assert.equal(os === 'ios' ? text(action) : action.props.label, os === 'ios' ? (owned ? '− 해제' : '+ 추가') : (owned ? '해제' : '추가'));
+  if (os === 'ios') assert.ok(flatten(action.props.style).minHeight >= 44);
   if (os === 'ios') { assert.equal(flatten(preset.props.style).width, ownedWidth); assert.equal(flatten(preset.props.style).minHeight, 0); }
  }
  assert.equal(toggled, 2);

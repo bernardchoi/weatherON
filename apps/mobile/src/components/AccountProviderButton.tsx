@@ -52,7 +52,7 @@ export function AccountProviderButton({ provider, language, minHeight, onPress, 
   const background = kakao ? "#FEE500" : provider === "naver" ? "#03A94D" : line ? "#06C755" : theme.name === "dark" ? "#131314" : "#FFFFFF";
   const foreground = kakao ? "rgba(0,0,0,0.85)" : google ? theme.name === "dark" ? "#E3E3E3" : "#1F1F1F" : "#FFFFFF";
   const border = google ? theme.name === "dark" ? "#8E918F" : "#747775" : background;
-  const markSize = (provider === "naver" ? 18 : 20) * scale;
+  const markSize = (line ? 17.2 : provider === "naver" ? 18 : 20) * scale;
   return (
     <Pressable
       needsOffscreenAlphaCompositing
@@ -68,14 +68,9 @@ export function AccountProviderButton({ provider, language, minHeight, onPress, 
         opacity: disabled && !line ? 0.55 : pressed && !line ? 0.8 : 1,
       }]}
     >
-      <View style={line ? styles.lineGroup : styles.providerGroup}>
-        {line ? (
-          <View style={[styles.lineIcon, { width: height, borderRightColor: disabled ? "rgba(229,229,229,0.6)" : "rgba(0,0,0,0.08)" }]}>
-            <ProviderBrandIcon provider={provider} size={markSize} disabled={disabled} />
-          </View>
-        ) : null}
-        <View style={line ? [styles.lineContent, { paddingHorizontal: markSize }] : [styles.content, { paddingHorizontal: 16, gap: (google ? 12 : 8) * scale }]}>
-          {!line ? <ProviderBrandIcon provider={provider} size={markSize} /> : null}
+      <View style={styles.providerGroup}>
+        <View style={[styles.content, { paddingHorizontal: 16, gap: (line ? 9 : 12) * scale }]}>
+          <ProviderBrandIcon provider={provider} size={markSize} disabled={disabled} />
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -84,8 +79,8 @@ export function AccountProviderButton({ provider, language, minHeight, onPress, 
             style={[styles.label, {
               color: line && disabled ? "rgba(30,30,30,0.2)" : foreground,
               fontFamily: google ? "GoogleSans" : Platform.OS === "ios" ? "System" : "sans-serif",
-              fontSize: (google ? 14 : 16) * labelScaleCompensation,
-              lineHeight: (google ? 20 : 22) * labelScaleCompensation,
+              fontSize: 16 * labelScaleCompensation,
+              lineHeight: 22 * labelScaleCompensation,
               fontWeight: "500",
             }]}
           >{visibleLabel}</Text>

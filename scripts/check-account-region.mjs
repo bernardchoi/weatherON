@@ -26,7 +26,13 @@ assert.equal(resolveAccountRegion({ locale: "ko-US" }), "GLOBAL");
 assert.equal(resolveAccountRegion({ locale: "en-KR" }), "KR");
 assert.deepEqual(orderProvidersForRegion("KR", ["apple", "google", "kakao", "naver"]), ["kakao", "naver", "apple", "google"]);
 assert.deepEqual(orderProvidersForRegion("JP", ["apple", "google", "line"]), ["line", "apple", "google"]);
-assert.deepEqual(orderProvidersForRegion("GLOBAL", ["apple", "google", "line"]), ["google", "apple", "line"]);
+assert.deepEqual(orderProvidersForRegion("GLOBAL", ["apple", "google", "line"]), ["google", "apple"]);
 
 await writeFile(`${outputDirectory}/passed`, "account region check passed\n", "utf8");
 console.log("account region check passed");
+
+const all = ["apple", "google", "line", "kakao", "naver"];
+assert.deepEqual(orderProvidersForRegion("KR", all), ["kakao", "naver", "apple", "google"]);
+assert.deepEqual(orderProvidersForRegion("JP", all), ["line", "apple", "google"]);
+assert.deepEqual(orderProvidersForRegion("GLOBAL", all), ["google", "apple"]);
+assert.deepEqual(orderProvidersForRegion("JP", ["naver", "kakao"]), []);

@@ -1,6 +1,9 @@
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
+import { getAlertGroupState } from "../state/alertPreferenceGroups";
 import { ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
-import React, { useState } from "react";
+import React from "react";
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "../components/BackButton";
 import { isNotificationQaBuild } from "../config/buildVariant";
@@ -27,9 +30,9 @@ export function AlertSettingsScreen({
   alertPreferences,
   notificationDeliveryStatus,
   alertSettingsRouteState,
-  selectedDestinationAlertCondition,
   onToggleSmartCare,
   onToggleAlertPreference,
+  onToggleAlertPreferenceGroup,
   onSendTestNotification,
   onRequestPermissionGate,
   onReturnFromAlertSettings,
@@ -37,19 +40,10 @@ export function AlertSettingsScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const focusMeta = getAlertFocusMeta(alertSettingsRouteState?.focus ?? "general", alertSettingsRouteState?.returnTo);
   const destinationReady = savedDestinations.length > 0;
   const deliveryReady = smartCareEnabled && permissionReady;
   const notificationResult = getNotificationPermissionResult(permissionGateResult);
-  const advancedEnabledCount = [
-    permissionReady && alertPreferences.rainDetail,
-    deliveryReady && alertPreferences.weatherAlerts,
-    deliveryReady && alertPreferences.routine,
-    deliveryReady && alertPreferences.bedtime,
-    deliveryReady && destinationReady && alertPreferences.destination,
-    deliveryReady && alertPreferences.quietHours,
-  ].filter(Boolean).length;
   const latestTestNotification = notificationHistory.find((item) => item.notificationId === "local-test");
   const testNotificationReceived = notificationHistory.some((item) => item.notificationId === "local-test" && item.action === "received");
   const testNotificationOpened = notificationHistory.some((item) => item.notificationId === "local-test" && item.action === "open");
@@ -129,12 +123,7 @@ export function AlertSettingsScreen({
             </View>
           </View>
         ) : null}
-        {alertSettingsRouteState ? (
-          <View style={[styles.editNotice, { backgroundColor: theme.card, borderColor: getToneColor(theme, focusMeta.tone) }, cardShadow(theme), pageStyles.card]}>
-            <Text style={[styles.editNoticeTitle, { color: getToneColor(theme, focusMeta.tone) }]}>고급 알림 기준</Text>
-            <Text style={[styles.editNoticeBody, { color: theme.muted }]}>{focusMeta.editBody}</Text>
-          </View>
-        ) : null}
+
 
         <View
           style={[
@@ -184,115 +173,36 @@ export function AlertSettingsScreen({
             <View style={[styles.permissionNotice, { backgroundColor: `${theme.warm}16`, borderColor: `${theme.warm}55` }]}>
               <View style={styles.permissionNoticeCopy}>
                 <Text style={[styles.permissionNoticeTitle, { color: theme.text }]}>기기 알림 권한이 필요해요</Text>
-                <Text style={[styles.permissionNoticeBody, { color: theme.subtle }]}>스마트 알림 설정은 유지되지만 예약·수신과 세부 변경은 사용할 수 없어요</Text>
+                <Text style={[styles.permissionNoticeBody, { color: theme.subtle }]}>기기 설정에서 알림을 허용해 주세요</Text>
               </View>
               <Pressable accessibilityLabel={notificationDenied ? "기기 알림 설정 열기" : "알림 권한 허용"} accessibilityRole="button" onPress={openNotificationPermission} style={[styles.permissionNoticeButton, { backgroundColor: `${theme.warm}22` }]}>
                 <Text style={[styles.permissionNoticeButtonText, { color: theme.warm }]}>{notificationDenied ? "기기 설정 열기" : "알림 허용"}</Text>
               </Pressable>
             </View>
           ) : null}
-          <View style={[styles.alertList, { borderTopColor: theme.border, borderBottomColor: theme.border }, Platform.OS === "ios" && { borderBottomWidth: 0 }]}>
-          <AlertSummaryRow
-            icon="rain"
-            title="비·특보 미리보기"
-            body={permissionReady ? "비와 위험 날씨를 미리 알려드려요" : "권한을 켜면 바로 알려드려요"}
-            status={permissionReady ? "항상" : "권한 필요"}
-            tone={permissionReady ? "sky" : "clear"}
-            theme={theme}
-          />
-          <AlertSummaryRow
-            icon="sun"
-            title="하루 준비"
-            body={smartCareEnabled ? "외출 전과 자기 전에 챙겨드려요" : "스마트 알림이 쉬고 있어요"}
-            status={deliveryReady ? "자동" : smartCareEnabled ? "권한 필요" : "중지"}
-            tone="gold"
-            theme={theme}
-          />
-          <AlertSummaryRow
-            icon="route"
-            title="출발 타이밍"
-            body={destinationReady ? `${savedDestinations.length}곳의 출발 시간을 챙겨드려요` : "목적지를 추가하면 출발을 챙겨요"}
-            onPress={destinationReady ? undefined : () => onNavigate("P1")}
-            status={deliveryReady ? (destinationReady ? "준비" : "목적지 필요") : smartCareEnabled ? "권한 필요" : "중지"}
-            tone="clear"
-            theme={theme}
-          />
+          <View style={styles.advancedPanel}>
+            <AdvancedToggleRow title="날씨 알림" body="비와 위험한 날씨를 알려드려요"
+              enabled={getAlertGroupState(alertPreferences, "weather")} disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreferenceGroup("weather")} theme={theme} />
+            <AdvancedToggleRow title="하루 준비" body="아침과 자기 전에 날씨를 챙겨요"
+              enabled={getAlertGroupState(alertPreferences, "daily")} disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreferenceGroup("daily")} theme={theme} />
+            <AdvancedToggleRow title="출발 알림" body={destinationReady ? "목적지에 맞춰 출발을 챙겨요" : "목적지를 추가하면 알려드려요"}
+              enabled={getAlertGroupState(alertPreferences, "departure")} disabled={!deliveryReady}
+              onToggle={() => onToggleAlertPreferenceGroup("departure")} theme={theme} />
+            {!destinationReady ? <Pressable accessibilityRole="button" onPress={() => onNavigate("P1")} style={styles.deliveryAction}>
+              <Text style={[styles.deliveryActionText, { color: theme.gold }]}>목적지 추가</Text>
+            </Pressable> : null}
+            <Text style={[styles.advancedLineBody, { color: theme.subtle, paddingVertical: 12 }]}>
+              {alertPreferences.quietHours ? "밤 10시~아침 7시는 쉬고, 중요한 알림을 우선해요" : "기존 설정대로 방해 줄이기를 끈 상태예요"}
+            </Text>
+            {!alertPreferences.quietHours ? <Pressable accessibilityRole="button" onPress={() => onToggleAlertPreference("quietHours")} style={styles.deliveryAction}>
+              <Text style={[styles.deliveryActionText, { color: theme.gold }]}>방해 줄이기 적용</Text>
+            </Pressable> : null}
+            {isNotificationQaBuild ? <NotificationQaPanel enabled={permissionReady} testBody={testNotificationBody}
+              testStatusLabel={deliveryStatusLabel} actionLabel={testNotificationActionLabel} onSend={onSendTestNotification}
+              onRequestPermission={openNotificationPermission} theme={theme} /> : null}
           </View>
-
-          <Pressable accessibilityLabel={advancedOpen ? "세부 알림 닫기" : "세부 알림 열기"} accessibilityRole="button" onPress={() => setAdvancedOpen((current) => !current)} style={[styles.advancedButton, { borderTopColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, paddingVertical: 12, gap: 8, flexWrap: "wrap" }]}>
-            <Text style={[styles.advancedTitle, { color: theme.text }]}>세부 알림 맞추기</Text>
-            <Text style={[styles.advancedCount, pageStyles.compactCaption, { color: theme.subtle }]}>{permissionReady ? `${advancedEnabledCount}/6 사용 중` : "권한 없어 수신 불가"}</Text>
-            <ChevronDown color={theme.subtle} open={advancedOpen} />
-          </Pressable>
-
-          {advancedOpen ? (
-            <View style={styles.advancedPanel}>
-            <AdvancedToggleRow
-              title="강수 상세"
-              body={`강수 예보를 알려드려요 · ${selectedDestinationAlertCondition.rainThresholdPct}%`}
-              enabled={alertPreferences.rainDetail}
-              disabled={!permissionReady}
-              onToggle={() => onToggleAlertPreference("rainDetail")}
-              theme={theme}
-            />
-            <AdvancedToggleRow
-              title="기상특보 기준"
-              body="위험한 날씨가 오기 전에 알려드려요"
-              enabled={alertPreferences.weatherAlerts}
-              disabled={!deliveryReady}
-              onToggle={() => onToggleAlertPreference("weatherAlerts")}
-              theme={theme}
-            />
-            <AdvancedToggleRow
-              title="아침 준비"
-              body="우산과 옷차림을 아침에 챙겨드려요"
-              enabled={alertPreferences.routine}
-              disabled={!deliveryReady}
-              onToggle={() => onToggleAlertPreference("routine")}
-              theme={theme}
-            />
-            <AdvancedToggleRow
-              title="자기 전 체크"
-              body="내일 날씨와 코디를 밤 9시쯤 알려드려요"
-              enabled={alertPreferences.bedtime}
-              disabled={!deliveryReady}
-              onToggle={() => onToggleAlertPreference("bedtime")}
-              theme={theme}
-            />
-            <AdvancedToggleRow
-              title="목적지 출발"
-              body={`늦지 않도록 ${selectedDestinationAlertCondition.leadTimeMinutes}분 전에 알려드려요`}
-              enabled={alertPreferences.destination}
-              disabled={!deliveryReady || !destinationReady}
-              disabledReason={!destinationReady ? "목적지 필요" : undefined}
-              onToggle={() => onToggleAlertPreference("destination")}
-              theme={theme}
-            />
-            <AdvancedToggleRow
-              title="방해 줄이기"
-              body="꼭 필요한 알림만 하루 3번까지 보내요"
-              enabled={alertPreferences.quietHours}
-              disabled={!deliveryReady}
-              onToggle={() => onToggleAlertPreference("quietHours")}
-              theme={theme}
-            />
-            {isNotificationQaBuild ? (
-              <NotificationQaPanel
-                enabled={permissionReady}
-                testBody={testNotificationBody}
-                testStatusLabel={deliveryStatusLabel}
-                actionLabel={testNotificationActionLabel}
-                onSend={onSendTestNotification}
-                onRequestPermission={openNotificationPermission}
-                theme={theme}
-              />
-            ) : null}
-            <View style={[styles.historyLine, { borderTopColor: theme.border }]}>
-              <Text style={[styles.advancedLineTitle, { color: theme.text }]}>최근 이력</Text>
-              <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{notificationHistory[0]?.title ?? "아직 확인한 알림이 없어요"}</Text>
-            </View>
-            </View>
-          ) : null}
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -411,28 +321,31 @@ function AdvancedToggleRow({
 }: {
   title: string;
   body: string;
-  enabled: boolean;
+  enabled: boolean | "mixed";
   disabled: boolean;
   disabledReason?: string;
   onToggle: () => void;
   theme: AppTheme;
 }) {
-  const checked = enabled && !disabled;
+  const { language } = React.use(LocalizationContext);
+  const checked = enabled;
+  const mixed = enabled === "mixed";
   return (
     <Pressable
-      accessibilityLabel={`${title}, ${disabled ? disabledReason ?? "사용 불가" : checked ? "켜짐" : "꺼짐"}`}
-      accessibilityRole="switch"
+      accessibilityLabel={[title, disabled ? disabledReason ?? "사용 불가" : mixed ? "일부 켜짐" : checked ? "켜짐" : "꺼짐"].map((part) => translateText(part, language)).join(", ")}
+      accessibilityRole={mixed ? "checkbox" : "switch"}
+      accessibilityHint={mixed ? "기존 선택을 유지하고 있어요. 누르면 모두 꺼져요" : undefined}
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
       onPress={onToggle}
       style={[styles.advancedLine, { borderBottomColor: theme.border, opacity: disabled ? 0.5 : 1 }]}
     >
       <View style={styles.advancedCopy}>
-        <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}{disabledReason && Platform.OS === "ios" ? <Text style={{ fontSize: 12, fontWeight: "400", color: theme.muted }}>{` · ${disabledReason}`}</Text> : null}</Text>
+        <Text style={[styles.advancedLineTitle, { color: theme.text }]}>{title}{mixed ? <Text style={{ fontSize: 13, color: theme.subtle }}> · 일부 켜짐</Text> : null}{disabledReason && Platform.OS === "ios" ? <Text style={{ fontSize: 12, fontWeight: "400", color: theme.muted }}>{` · ${disabledReason}`}</Text> : null}</Text>
         <Text style={[[styles.advancedLineBody, pageStyles.compactCaption, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.advancedLineBody]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{body}</Text>
       </View>
       <View style={[styles.smallSwitchTrack, { backgroundColor: checked ? theme.gold : theme.cardMuted }]}>
-        <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, checked ? styles.smallSwitchKnobOn : null]} />
+        <View style={[styles.smallSwitchKnob, { backgroundColor: checked ? theme.onAccent : theme.text }, mixed ? { alignSelf: "center" } : checked ? styles.smallSwitchKnobOn : null]} />
       </View>
     </Pressable>
   );

@@ -90,7 +90,7 @@ export function OutfitDetailScreen({
             </View>
             <View style={styles.recommendationCopy}>
               <Text style={[styles.recommendationTitle, { color: theme.text }, ambient && pageStyles.body]}>추천 품목 {state.outfit.preparation.totalItemCount}개 중 {state.outfit.preparation.ownedItemCount}개 보유</Text>
-              <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{ambient ? "현재 날씨로 고른 옷 중 내 옷장에 있는 항목을 표시해요." : `${localize(getOutfitVariantLabel(state.outfit.variant))} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.`}</Text>
+              {!ambient ? <Text style={[styles.recommendationCaption, pageStyles.compactCaption, { color: theme.muted }]}>{`${localize(getOutfitVariantLabel(state.outfit.variant))} 중심의 규칙 기반 추천이에요. 보유 수는 날씨 적합도 점수가 아니에요.`}</Text> : null}
             </View>
           </View>
           {state.outfit.preparation.missingItemNames.length > 0 ? (
@@ -212,7 +212,7 @@ export function OutfitDetailScreen({
                     <Text style={[pageStyles.body, { color: theme.muted, flexGrow: 1 }]}>{reason.label}</Text>
                     <Text style={{ color: theme.text, fontSize: 23, lineHeight: 30, fontWeight: "600" }}>{reason.value}</Text>
                   </View>
-                  <Text style={[pageStyles.caption, { color: theme.muted, paddingLeft: 38 }]}>{reason.detail}</Text>
+                  {(state.outfitContext || reason.kind !== "wind") ? <Text style={[pageStyles.body, { color: theme.muted, paddingLeft: 38 }]}>{reason.detail}</Text> : null}
                 </> : <>
                 <View style={styles.reasonLabelRow}>
                   <Image source={ambient ? ambientUiIcons[reason.kind] : reason.icon} style={[styles.reasonIcon, ambient && { width: 26, height: 26 }, { tintColor: reason.color }]} resizeMode="contain" />

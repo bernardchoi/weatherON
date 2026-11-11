@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
-import { AppButton } from "../components/AppButton";
+import { Platform, Pressable, RawText, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { LocalizationContext } from "../localization/LocalizationProvider";
+import { translateText } from "../localization/localization";
 import { BackButton } from "../components/BackButton";
 import type { P0ScreenProps } from "../navigation/types";
 import type { PolicyDocumentType } from "../state/useWeatherOnAppState";
@@ -65,6 +66,14 @@ const policyDocuments: Record<Exclude<PolicyDocumentType, "open-source">, Policy
   },
 };
 
+// Only add headings where the original paragraph has no title prefix.
+const privacyHeadings: Partial<Record<number, string>> = {
+  2: "위치정보 전달과 보관",
+  4: "기기 사진 보관",
+  9: "이용자 권리",
+  11: "광고와 마케팅",
+};
+
 const openSourceGroups = [
   "React 19.2.3 · React Native 0.86.0 — Meta Platforms, Inc. — MIT",
   "Expo 57.0.8 · Apple Authentication · Blur · Clipboard · Crypto · File System · Font · Haptics · Image Manipulator · Image Picker · Location · Navigation Bar · Notifications · Secure Store · Splash Screen · SQLite · Status Bar · Web Browser · Metro Runtime — Expo / 650 Industries, Inc. — MIT",
@@ -81,13 +90,15 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
 
-export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentReturnRoute, onReturnFromPolicyDocument, onNavigate }: P0ScreenProps) {
+export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentReturnRoute, onReturnFromPolicyDocument }: P0ScreenProps) {
   const theme = useAppTheme();
+  const { language } = React.use(LocalizationContext);
   const layout = useResponsiveLayout();
   const [licenseExpanded, setLicenseExpanded] = useState(false);
   const isOpenSource = selectedPolicyDocument === "open-source";
   const document = policyDocuments[selectedPolicyDocument === "open-source" ? "terms" : selectedPolicyDocument];
   const title = isOpenSource ? "오픈소스 라이선스" : document.title;
+  const returnButtonLabel = policyDocumentReturnRoute === "A3" ? "약관 동의" : "정책 목록";
   const returnLabel = policyDocumentReturnRoute === "A3" ? "약관 동의로 돌아가기" : "정책 목록으로 돌아가기";
 
   return (
@@ -111,7 +122,12 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentRet
           {(isOpenSource ? openSourceGroups : document.points).map((point, index) => (
             <View key={point} style={[[styles.paragraph, index > 0 ? { borderTopColor: theme.border, borderTopWidth: StyleSheet.hairlineWidth } : null], Platform.OS === "ios" && ambientVisual.paragraph]}>
               <Text style={[[styles.paragraphNumber, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.paragraphNumber]}>{index + 1}</Text>
-              <Text selectable style={[[styles.paragraphText, { color: theme.text }], Platform.OS === "ios" && ambientVisual.paragraphText]}>{point}</Text>
+              <View style={styles.paragraphCopy}>
+                {!isOpenSource && selectedPolicyDocument === "privacy" && privacyHeadings[index] ? <Text style={[styles.paragraphHeading, { color: theme.text }]}>{privacyHeadings[index]}</Text> : null}
+                {isOpenSource ? (
+                  <OpenSourceNotice point={point} textColor={theme.text} mutedColor={theme.muted} />
+                ) : <RawText selectable style={[styles.paragraphText, { color: theme.text }, Platform.OS === "ios" && ambientVisual.paragraphText]}>{translateText(point, language).replace(/\. /g, ".\n\n")}</RawText>}
+              </View>
             </View>
           ))}
         </View>
@@ -126,11 +142,31 @@ export function PolicyDocumentScreen({ selectedPolicyDocument, policyDocumentRet
         ) : null}
 
         <View style={[styles.actions, Platform.OS === "ios" && ambientVisual.actions]}>
-          <AppButton label={returnLabel} accessibilityLabel={returnLabel} onPress={onReturnFromPolicyDocument} />
-          <AppButton label="MY로 이동" accessibilityLabel="MY로 이동" onPress={() => onNavigate("M1")} tone="secondary" />
+          <Pressable accessibilityRole="button" accessibilityLabel={returnLabel} onPress={onReturnFromPolicyDocument} style={styles.returnLink}>
+            <Text style={[styles.licenseButtonText, { color: theme.sky }]}>{returnButtonLabel}</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+function OpenSourceNotice({ point, textColor, mutedColor }: { point: string; textColor: string; mutedColor: string }) {
+  const [libraries, ...credits] = point.split(" — ");
+  // React + React Native stay together; only Expo's long module list is separated.
+  const isExpo = libraries.startsWith("Expo ");
+  const parts = libraries.split(" · ");
+  const label = isExpo ? parts[0] : libraries;
+  const versionMatch = !label.includes(" · ") ? label.match(/^(.*) (\d+\.\d+\.\d+)$/) : null;
+  return (
+    <>
+      <View style={styles.sourceTitleRow}>
+        <RawText selectable style={[styles.paragraphHeading, styles.sourceName, { color: textColor }]}>{versionMatch?.[1] ?? label}</RawText>
+        {versionMatch ? <RawText selectable style={[styles.paragraphHeading, { color: textColor }]}>{versionMatch[2]}</RawText> : null}
+      </View>
+      <RawText selectable style={[styles.sourceMetadata, { color: mutedColor }]}>{credits.join(" · ")}</RawText>
+      {isExpo ? <RawText selectable style={[styles.paragraphText, { color: textColor }]}>{parts.slice(1).join(" · ")}</RawText> : null}
+    </>
   );
 }
 
@@ -146,7 +182,13 @@ const styles = StyleSheet.create({
   documentBody: { borderRadius: radius.lg, borderWidth: 1, overflow: "hidden" },
   paragraph: { flexDirection: "row", gap: spacing.sm, padding: spacing.md },
   paragraphNumber: { width: 22, fontSize: 13, lineHeight: 23, fontWeight: "900" },
-  paragraphText: { flex: 1, fontSize: 15, lineHeight: 24, fontWeight: "500" },
+  paragraphCopy: { flex: 1, minWidth: 0, gap: 8 },
+  paragraphHeading: { fontSize: 17, lineHeight: 25, fontWeight: "600" },
+  sourceTitleRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 12, rowGap: 4 },
+  sourceName: { flexGrow: 1, flexShrink: 1 },
+  sourceMetadata: { fontSize: 14, lineHeight: 21 },
+  returnLink: { minHeight: 44, alignSelf: "flex-start", alignItems: "flex-start", justifyContent: "center", paddingVertical: spacing.sm },
+  paragraphText: { fontSize: 15, lineHeight: 24, fontWeight: "500" },
   licensePanel: { borderRadius: radius.lg, borderWidth: 1, overflow: "hidden" },
   licenseButton: { minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.md },
   licenseButtonText: { fontSize: 14, lineHeight: 19, fontWeight: "900" },
@@ -166,8 +208,8 @@ const ambientVisual = StyleSheet.create({
   },
   "paragraph": {
     "paddingHorizontal": 0,
-    "paddingVertical": 22,
-    "gap": 14
+    "paddingVertical": 16,
+    "gap": 8
   },
   "paragraphText": {
     "fontSize": 16,
@@ -178,7 +220,7 @@ const ambientVisual = StyleSheet.create({
     "fontSize": 16,
     "lineHeight": 27,
     "fontWeight": "600",
-    "width": 28
+    "width": 20
   },
   "summary": {
     "fontSize": 21,
