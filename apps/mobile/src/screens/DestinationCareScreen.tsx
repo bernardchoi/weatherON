@@ -4,8 +4,8 @@ import { forecastTime } from "../utils/homeOuting";
 import { formatRouteClock } from "../utils/travelEstimate";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
-import React, { useEffect, useRef, useState } from "react";
-import { AppState, Image, LocalizedView, Platform, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AppState, Image, LocalizedView, Platform, Pressable, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
@@ -72,8 +72,14 @@ export function DestinationCareScreen({
   const compactControls = width < 390 || fontScale > 1.15;
   const care = state.destinationCare;
   const destinationWeather = state.destinationWeatherById[selectedDestinationPlace.id] ?? care.destinationWeather;
-  const preferenceProfile = toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario });
-  const destinationOutfit = recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems);
+  const preferenceProfile = useMemo(
+    () => toUserPreferenceProfile({ styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario }),
+    [styleGender, ageBand, fitPreference, selectedStyles, smartCareScenario],
+  );
+  const destinationOutfit = useMemo(
+    () => recommendOutfit(destinationWeather, preferenceProfile, wardrobeItems),
+    [destinationWeather, preferenceProfile, wardrobeItems],
+  );
   const destinationOutfitReason = destinationOutfit.reasons[0] ?? "목적지 날씨 기준으로 다시 고름";
   const headerTitle = selectedDestinationPlace?.name ?? care.name;
   const selectedSavedDestination = savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id);
@@ -835,14 +841,15 @@ function RepeatSchedulePanel({
         {repeatDayOptions.map((option) => {
           const selected = repeatDays.includes(option.day);
           return (
-            <FeedbackPressable
+            <Pressable
               key={option.day}
               accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
               accessibilityRole="button"
               accessibilityState={{ selected }}
               onPress={() => onToggleRepeatDay(option.day)}
-              style={[
+              style={({ pressed }) => [
                 styles.repeatDayChip,
+                { opacity: pressed ? 0.55 : 1 },
                 {
                   backgroundColor: selected ? `${theme.clear}22` : theme.cardStrong,
                   borderColor: selected ? theme.clear : theme.border,
@@ -850,7 +857,7 @@ function RepeatSchedulePanel({
               ]}
             >
               <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>
-            </FeedbackPressable>
+            </Pressable>
           );
         })}
       </View>

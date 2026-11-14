@@ -78,10 +78,22 @@ let hostProps={route:'H1',enabled:true},h=host.render(hostProps),navigations=0;
 h.root.current={measureInWindow:cb=>cb(0,0,440,800)};
 const sourceRef={current:{measureInWindow:cb=>cb(200,220,100,100)}};
 h.context.register('H1','coat',{ref:sourceRef,source:{uri:'coat.png'},imageKey:'coat',natural:()=>({width:100,height:200})});
-h.context.open('H1','coat','C1',()=>navigations++);assert.equal(navigations,1);
-h=host.render(hostProps);assert.equal(h.pendingRoute,'C1');
-h.context.register('C1','coat',{ref:{current:{measureInWindow:cb=>cb(20,100,180,240)}},source:{uri:'coat.png'},imageKey:'coat',natural:()=>({width:100,height:200})});
-hostProps={...hostProps,route:'C1'};host.render(hostProps);h=host.render(hostProps);
+// Home opens a collection, not a selected item. Never measure, hide, or fly one image.
+let collectionNavigations=0, collectionMeasurements=0;
+const collectionRef={current:{measureInWindow:()=>collectionMeasurements++}};
+h.context.register('H1','collection',{ref:collectionRef,source:{uri:'coat.png'},imageKey:'coat',natural:()=>({width:100,height:200})});
+for(const enabled of [true,false]) {
+ hostProps.enabled=enabled; h=host.render(hostProps);
+ h.context.open('H1','collection','C1',()=>collectionNavigations++);
+ assert.equal(host.render(hostProps).context.transfer,null);
+}
+assert.equal(collectionNavigations,2,'Collection navigation is immediate with and without motion');
+assert.equal(collectionMeasurements,0,'Collection navigation must not wait for native image measurement');
+hostProps.enabled=true;h=host.render(hostProps);
+h.context.open('H1','coat','C4',()=>navigations++);assert.equal(navigations,1);
+h=host.render(hostProps);assert.equal(h.pendingRoute,'C4');
+h.context.register('C4','coat',{ref:{current:{measureInWindow:cb=>cb(20,100,180,240)}},source:{uri:'coat.png'},imageKey:'coat',natural:()=>({width:100,height:200})});
+hostProps={...hostProps,route:'C4'};host.render(hostProps);h=host.render(hostProps);
 assert.deepEqual(h.context.transfer.to,{x:50,y:100,width:120,height:240});
 assert.equal(h.overlay.props.transfer.from.width,50);assert.equal(h.overlay.props.transfer.to.width,120,'Image grows with intrinsic aspect ratio');
 const flightProps={...h.overlay.props,transfer:{...h.overlay.props.transfer,toScene:'C4'}};
@@ -95,22 +107,30 @@ h.overlay.props.onComplete();h=host.render(hostProps);assert.equal(h.context.tra
 // No native response still delivers input once, including accessibility interruption.
 hostProps={route:'H1',enabled:true};h=host.render(hostProps);
 let lateMeasure;sourceRef.current={measureInWindow:cb=>lateMeasure=cb};
-h.context.open('H1','coat','C1',()=>navigations++);hostProps.enabled=false;host.render(hostProps);
+h.context.open('H1','coat','C4',()=>navigations++);hostProps.enabled=false;host.render(hostProps);
 await new Promise(r=>setTimeout(r,100));assert.equal(navigations,2,'Changing Reduce Motion cannot trap pending navigation');
 lateMeasure(200,220,100,100);assert.equal(navigations,2,'Late measurement cannot deliver twice');
 // A later direct fallback cancels the prior pending action.
-hostProps.enabled=true;h=host.render(hostProps);h.context.open('H1','coat','C1',()=>navigations++);
+hostProps.enabled=true;h=host.render(hostProps);h.context.open('H1','coat','C4',()=>navigations++);
 h.context.open('H1','missing','C4',()=>navigations++);await new Promise(r=>setTimeout(r,100));assert.equal(navigations,3);
-sourceRef.current={measureInWindow:cb=>cb(500,0,100,100)};h.context.open('H1','coat','C1',()=>navigations++);
+sourceRef.current={measureInWindow:cb=>cb(500,0,100,100)};h.context.open('H1','coat','C4',()=>navigations++);
 h=host.render(hostProps);assert.equal(h.context.transfer,null,'Offscreen images use ordinary navigation');assert.equal(navigations,4);
-sourceRef.current={measureInWindow:cb=>cb(200,220,100,100)};h.context.open('H1','coat','C1',()=>navigations++);
-h=host.render(hostProps);hostProps.route='C4';host.render(hostProps);h=host.render(hostProps);assert.equal(h.context.transfer,null,'Unrelated navigation clears the image');
-hostProps.route='H1';h=host.render(hostProps);h.context.open('H1','coat','C1',()=>navigations++);
+sourceRef.current={measureInWindow:cb=>cb(200,220,100,100)};h.context.open('H1','coat','C4',()=>navigations++);
+h=host.render(hostProps);hostProps.route='M1';host.render(hostProps);h=host.render(hostProps);assert.equal(h.context.transfer,null,'Unrelated navigation clears the image');
+hostProps.route='H1';h=host.render(hostProps);h.context.open('H1','coat','C4',()=>navigations++);
 h=host.render(hostProps);h.onLayout({nativeEvent:{layout:{width:440,height:800}}});h.onLayout({nativeEvent:{layout:{width:800,height:440}}});assert.equal(host.render(hostProps).context.transfer,null,'Rotation discards old coordinates');
 h=host.render(hostProps);sourceRef.current={measureInWindow:cb=>lateMeasure=cb};let replacementNavigations=0;
-h.context.open('H1','coat','C1',()=>replacementNavigations++);
+h.context.open('H1','coat','C4',()=>replacementNavigations++);
 h.context.register('H1','coat',{ref:sourceRef,source:{uri:'updated.png'},imageKey:'updated',natural:()=>({width:100,height:200})});
 lateMeasure(200,220,100,100);assert.equal(replacementNavigations,1);assert.equal(host.render(hostProps).context.transfer,null,'A recommendation changed during measurement cannot fly the old image');
+// Returning to the grid also invalidates an unfinished single-item measurement.
+h=host.render(hostProps);let interruptedDetail=0,returnedToGrid=0;
+h.context.open('H1','coat','C4',()=>interruptedDetail++);
+h.context.open('H1','coat','C1',()=>returnedToGrid++);
+lateMeasure(200,220,100,100);
+await new Promise(r=>setTimeout(r,100));
+assert.equal(interruptedDetail,0,'A stale detail action must not reopen after returning to the grid');
+assert.equal(returnedToGrid,1);assert.equal(host.render(hostProps).context.transfer,null);
 host.dispose();
 
 animations=[];motion.value={enabled:false,motionAllowed:true,active:true,visit:1,scene:'H1'};
