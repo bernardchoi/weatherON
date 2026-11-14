@@ -20,7 +20,7 @@ type Props = {
   darkMode?: boolean;
 };
 /** Decorative only. The adjacent weather icon and text remain authoritative. */
-export function HomeWeatherMascot({ state, size, wind = 0, darkMode = false, accentColor = "#4B9EAD", ...policy }: Props) {
+export function HomeWeatherMascot({ state, size, wind = 0, darkMode: _darkMode = false, accentColor = "#4B9EAD", ...policy }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
   const previousState = useRef(state);
   const transitionRunning = useRef(false);
@@ -80,8 +80,6 @@ export function HomeWeatherMascot({ state, size, wind = 0, darkMode = false, acc
   return <View testID="home-weather-mascot" pointerEvents="none" accessible={false}
     accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={{ width: size, height: size, flexShrink: 0 }}>
-    {darkMode ? <View testID="home-mascot-dark-contrast" style={{ position: "absolute", left: size * .19, top: size * .30,
-      width: size * .62, height: size * .62, borderRadius: size * .31, backgroundColor: "rgba(255,245,216,0.07)" }} /> : null}
     {wind > 0 ? <Animated.View testID="home-mascot-wind" style={{ position: "absolute", left: size * .04, top: size * .35,
       opacity: Math.min(0.5, wind * 0.5), transform: [{ translateX: phase.interpolate({ inputRange: [0, 1], outputRange: [0, moving ? 2 : 0] }) }] }}>
       {(size <= 64 ? [0.23] : [0.18, 0.23, 0.14]).map((width, index) => <View key={index} style={{ width: size * width, height: size * .06,

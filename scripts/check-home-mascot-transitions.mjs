@@ -56,7 +56,7 @@ render({state:state('rain')});assert.ok(find('home-mascot-outgoing'));
 appStateListener('background');render();assert.equal(find('home-mascot-outgoing'),null,'background cancels transition');
 const backgroundCount=animations.length;render({state:state('cold')});assert.equal(animations.length,backgroundCount);
 appStateListener('active');render();assert.equal(find('home-mascot-outgoing'),null);
-render({darkMode:true});assert.ok(find('home-mascot-dark-contrast'));assert.equal(animations.length,backgroundCount,'contrast backdrop is static');
+render({darkMode:true});assert.equal(find('home-mascot-dark-contrast'),null);assert.equal(animations.length,backgroundCount,'contrast backdrop is static');
 render({darkMode:false});assert.equal(find('home-mascot-dark-contrast'),null);
 render({state:{...state('base'),clothing:'light'}});
 animations.at(-1)?.callback?.({finished:true});render();

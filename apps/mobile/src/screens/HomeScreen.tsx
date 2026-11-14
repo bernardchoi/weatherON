@@ -211,8 +211,8 @@ export function HomeScreen({
     tempAvailable: mascotCurrent.tempAvailable,
     daylight: mascotWeather.locationId === currentWeather.locationId ? ambientDaylight.phase : "unknown",
   }), mascotClothing);
-  // The header slot preserves the existing temperature/details and card hierarchy.
-  const mascotSize = fontScale > 1.3 || layout.width < 390 ? 56 : 80;
+  // Keep the character legible without squeezing the weather details.
+  const mascotSize = layout.width < 390 ? 120 : 144;
   useEffect(() => {
     if (!__DEV__) return;
     try {
@@ -292,7 +292,7 @@ export function HomeScreen({
       <AmbientHomeScrollView
         testID="home-scroll"
         scrollEventThrottle={Platform.OS === "ios" ? 64 : undefined}
-        onScroll={Platform.OS === "ios" ? Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }], { useNativeDriver: true, listener: event => { ambientScrollRef.current = (event as import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>).nativeEvent.contentOffset.y; const visible = ambientScrollRef.current < 120; if (visible !== mascotVisibleRef.current) { mascotVisibleRef.current = visible; setMascotVisible(visible); } } }) : undefined}
+        onScroll={Platform.OS === "ios" ? Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }], { useNativeDriver: true, listener: event => { ambientScrollRef.current = (event as import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>).nativeEvent.contentOffset.y; const visible = ambientScrollRef.current < 300; if (visible !== mascotVisibleRef.current) { mascotVisibleRef.current = visible; setMascotVisible(visible); } } }) : undefined}
         onScrollBeginDrag={() => { touchController.cancel(); if (Platform.OS === "ios") setAmbientScrolling(true); }}
         onScrollEndDrag={event => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); if (!event.nativeEvent.velocity?.y) setAmbientScrolling(false); } }}
         onMomentumScrollEnd={() => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); setAmbientScrolling(false); } }}
@@ -329,10 +329,6 @@ export function HomeScreen({
             </FeedbackPressable>
             <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-weather-update" pending={currentWeatherPending} label={refreshMessage || locationStatus.value} color={theme.muted} />
           </View>
-          {Platform.OS === "ios" ? <HomeWeatherMascot state={mascotState} size={mascotSize} darkMode={theme.name === "dark"}
-            active={homeMotionActive} visible={mascotVisible} reducedMotion={reducedMotion}
-            wind={homeMascotWind(mascotCurrent.windMs, mascotState.weather !== "neutral" && mascotCurrent.windAvailable !== false)} accentColor={theme.muted}
-            lowPowerMode={lowPowerMode} scrolling={ambientScrolling} /> : null}
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
             smartCareEnabled={smartCareEnabled}
@@ -343,6 +339,10 @@ export function HomeScreen({
 
         <View testID="home-decision-stack" style={styles.decisionStack}>
           <HomeDecisionHero
+            mascot={Platform.OS === "ios" ? <HomeWeatherMascot state={mascotState} size={mascotSize} darkMode={theme.name === "dark"}
+            active={homeMotionActive} visible={mascotVisible} reducedMotion={reducedMotion}
+            wind={homeMascotWind(mascotCurrent.windMs, mascotState.weather !== "neutral" && mascotCurrent.windAvailable !== false)} accentColor={theme.muted}
+            lowPowerMode={lowPowerMode} scrolling={ambientScrolling} /> : null}
             onReadingRegion={measureReadArea}
             heroGap={viewportSpacing.heroGap}
             current={current}
@@ -824,6 +824,7 @@ function getHeroTemperatureRange(
 function HomeDecisionHero({
   onReadingRegion,
   heroGap = 14,
+  mascot,
   current,
   feelsLikeAvailable,
   isNight,
@@ -838,6 +839,7 @@ function HomeDecisionHero({
 }: {
   onReadingRegion?: (id: string, node: Pick<View, "measureInWindow"> | null) => void;
   heroGap?: number;
+  mascot?: React.ReactNode;
   feelsLikeAvailable?: boolean;
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
   isNight: boolean;
@@ -855,7 +857,11 @@ function HomeDecisionHero({
   const detailsReadRef = useRef<View>(null);
   const companionReadRef = useRef<React.ElementRef<typeof Text>>(null);
   const weatherIcon = ambientWeatherIcon(current.condition, isNight, theme);
-  const expandedType = useWindowDimensions().fontScale > 1.3 || layout.width < 390;
+  const { fontScale: heroFontScale } = useWindowDimensions();
+  const expandedType = heroFontScale > 1.3 || layout.width < 390;
+  const stackedWeatherDetails = heroFontScale > 1.3 || layout.width < 320;
+  // A reserved display region can leave a pane narrower than an ordinary phone.
+  const temperatureSize = Math.min(layout.isShort ? 84 : 96, Math.max(0, layout.width - 2 * layout.screenHorizontalPadding) / 3);
   const { language } = React.use(LocalizationContext);
   const companionCopy = companionMessage === "오늘 날씨에 맞춰, 나갈 준비를 함께해요." ? "나갈 준비를 함께해요." : companionMessage;
   // Translate the intact key first, then break at the first sentence boundary.
@@ -865,20 +871,23 @@ function HomeDecisionHero({
   const heroIconSize = Platform.OS === "ios" ? 28 : 72;
   return (
       <View testID="home-weather" style={[styles.iosWeatherHero, { paddingVertical: Platform.OS === "ios" ? 2 : layout.homePanelPadding, gap: Platform.OS === "ios" ? heroGap : 8 }]}>
-        <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName} ${formatTemperature(current.tempC, temperatureUnit)}, ${getConditionLabel(current.condition)}. ${feelsLikeAvailable !== false && Number.isFinite(current.feelsLikeC) ? `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}` : "체감 정보 없음"}, 강수 ${current.rainProbabilityPct}%, 날씨 상세 보기`} onPress={onOpenForecast} style={[styles.iosWeatherMain, Platform.OS === "ios" && expandedType && { flexDirection: "column", alignItems: "flex-start", gap: 8 }]}>
+        <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${currentLocationName} ${formatTemperature(current.tempC, temperatureUnit)}, ${getConditionLabel(current.condition)}. ${feelsLikeAvailable !== false && Number.isFinite(current.feelsLikeC) ? `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}` : "체감 정보 없음"}, 강수 ${current.rainProbabilityPct}%, 날씨 상세 보기`} onPress={onOpenForecast} style={[styles.iosWeatherMain, Platform.OS === "ios" && (expandedType || Boolean(mascot)) && { flexDirection: "column", alignItems: "stretch", gap: 8 }]}>
           <View ref={copyReadRef} onLayout={() => onReadingRegion?.("hero-copy", copyReadRef.current)} style={[styles.iosWeatherCopy, Platform.OS === "ios" && { flex: 0 }, Platform.OS === "ios" && expandedType && { width: "100%" }]}>
             <HomeValueTransition value={`${current.tempC}:${temperatureUnit}`}>
-              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.iosTemperature, { color: theme.text, fontSize: Platform.OS === "ios" ? layout.isShort ? 84 : 96 : layout.isShort ? 76 : 94, lineHeight: Platform.OS === "ios" ? layout.isShort ? 84 : 92 : layout.isShort ? 84 : 102 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+              <Text testID="home-current-temperature" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={Platform.OS === "ios" ? 1.3 : undefined} style={[styles.iosTemperature, { color: theme.text, fontSize: Platform.OS === "ios" ? temperatureSize : layout.isShort ? 76 : 94, lineHeight: Platform.OS === "ios" ? layout.isShort ? 84 : 92 : layout.isShort ? 84 : 102 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
             </HomeValueTransition>
             {Platform.OS !== "ios" ? <><Text style={[styles.iosCondition, { color: theme.text }]}>{getConditionLabel(current.condition)}</Text><Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{todayMinMax ? getHeroTemperatureRange(todayMinMax, temperatureUnit) : ""}</Text></> : null}
           </View>
-          {Platform.OS === "ios" ? <View ref={detailsReadRef} onLayout={() => onReadingRegion?.("hero-details", detailsReadRef.current)} testID="home-weather-details" style={Platform.OS === "ios" ? { flex: 1, minWidth: 0, gap: 5, marginLeft: expandedType ? 0 : 24 } : styles.iosWeatherCopy}>
+          {Platform.OS === "ios" ? <View testID="home-weather-details-character" style={{ flexDirection: stackedWeatherDetails ? "column" : "row", alignItems: "center", gap: 12, width: "100%" }}>
+          <View ref={detailsReadRef} onLayout={() => onReadingRegion?.("hero-details", detailsReadRef.current)} testID="home-weather-details" style={Platform.OS === "ios" ? { flex: 1, minWidth: 0, gap: 5, alignSelf: stackedWeatherDetails ? "stretch" : "center", marginLeft: expandedType || mascot ? 0 : 24 } : styles.iosWeatherCopy}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               {Platform.OS === "ios" && weatherIcon ? <Image testID="home-weather-status-icon" accessibilityElementsHidden importantForAccessibility="no" accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize }} /> : null}
               <Text style={[styles.iosCondition, { color: theme.text }, Platform.OS === "ios" && { fontSize: 22, lineHeight: 30, flexShrink: 1 }]}>{getConditionLabel(current.condition)}</Text>
             </View>
             {Platform.OS === "ios" ? <Text testID="home-feels-like" style={{ color: theme.muted, fontSize: 18, lineHeight: 26 }}>{feelsLikeAvailable !== false && Number.isFinite(current.feelsLikeC) ? `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}` : "체감 정보 없음"}{weatherStatus ? ` · ${weatherStatus}` : ""}</Text> : null}
             <Text style={[styles.iosSecondaryText, { color: theme.muted }, Platform.OS === "ios" && { fontSize: 16, lineHeight: 24 }]}>{todayMinMax ? getHeroTemperatureRange(todayMinMax, temperatureUnit) : ""}</Text>
+          </View>
+          {mascot ? <View testID="home-weather-character-slot" pointerEvents="none" style={{ flexShrink: 0, alignSelf: stackedWeatherDetails ? "flex-end" : "center" }}>{mascot}</View> : null}
           </View>
           : null}
           {Platform.OS !== "ios" && weatherIcon ? <Image accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize, marginHorizontal: 12 }} /> : null}
