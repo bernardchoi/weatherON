@@ -1,3 +1,4 @@
+import { ProfileCharacterImage, ProfileCharacterPicker, useProfileCharacter, useProfileCharacterCopy } from "../components/ProfileCharacterPicker";
 import { AmbientReveal } from "../components/AmbientReveal";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
@@ -35,6 +36,9 @@ export function MyScreen({
   onRequireAccount,
 }: P0ScreenProps) {
   const theme = useAppTheme();
+  const character = useProfileCharacter();
+  const characterCopy = useProfileCharacterCopy();
+  const [characterPickerOpen, setCharacterPickerOpen] = React.useState(false);
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
   const { fontScale } = useWindowDimensions();
@@ -103,7 +107,7 @@ export function MyScreen({
 
         {ambient ? <AmbientReveal order={1} testID="my-profile" style={ambientVisual.account}>
           <View style={[ambientVisual.avatar, { width: accountSize, height: accountSize, backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            {character.id === "default" ? <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : <ProfileCharacterImage id={character.id} size={accountSize * 0.92} />}
           </View>
           <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
@@ -133,7 +137,7 @@ export function MyScreen({
               pageStyles.quietIcon,
             ]}
           >
-            <PersonGlyph color={isAccountReady ? theme.success : theme.sky} />
+            {character.id === "default" ? <PersonGlyph color={isAccountReady ? theme.success : theme.sky} /> : <ProfileCharacterImage id={character.id} size={layout.isShort ? 40 : 48} />}
           </View>
           <View style={styles.profileCopy}>
             <Text style={[styles.profileName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
@@ -144,6 +148,8 @@ export function MyScreen({
           </View>
           <Chevron color={theme.subtle} />
         </FeedbackPressable>}
+
+        <FeedbackPressable testID="my-character-picker" accessibilityRole="button" accessibilityLabel={characterCopy.choose} onPress={() => setCharacterPickerOpen(true)} style={{ minHeight: 48, alignItems: "center", justifyContent: "center", padding: 8 }}><Text style={{ color: theme.text, fontSize: 16 }}>{characterCopy.choose}</Text></FeedbackPressable>
 
         {recommendation && !ambient ? (
           <FeedbackPressable
@@ -231,6 +237,7 @@ export function MyScreen({
         <Text style={[styles.appVersion, { color: theme.subtle }, ambient && ambientVisual.version]}>WeatherON v1.0.0</Text>
 
       </ScrollView>
+      <ProfileCharacterPicker visible={characterPickerOpen} onClose={() => setCharacterPickerOpen(false)} state={character} />
     </View>
   );
 }
