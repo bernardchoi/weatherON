@@ -183,7 +183,7 @@ export function DestinationListScreen({
             {Platform.OS === "ios" && savedDestinations.length >= 3 ? (
               <View style={{ padding: 16, borderRadius: 12, backgroundColor: theme.card, gap: 6, alignItems: "center" }}>
                 <Text style={[pageStyles.body, { color: theme.text, textAlign: "center" }]}>목적지 {savedDestinations.length}/3 · 모두 등록했어요</Text>
-                <Text style={[styles.limitHint, { color: theme.muted, textAlign: "center" }]}>목적지는 최대 3개까지 등록할 수 있어요. 기존 목적지를 삭제한 뒤 추가해 주세요.</Text>
+                <Text style={[styles.limitHint, { color: theme.muted, textAlign: "center" }]}>기존 목적지를 삭제한 뒤 추가해 주세요.</Text>
               </View>
             ) : <>
             <FeedbackPressable

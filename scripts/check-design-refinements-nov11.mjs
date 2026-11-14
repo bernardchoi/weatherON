@@ -1,0 +1,21 @@
+// Read-only source contract checks; does not substitute for native visual QA.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+import { execFileSync } from 'node:child_process';
+const read=p=>fs.readFileSync(p,'utf8');
+const care=read('apps/mobile/src/screens/DestinationCareScreen.tsx');
+assert.equal((care.match(/styles.journeyStopCentered/g)||[]).length,2);
+assert.match(care,/journeyStopCentered: \{ alignItems: "center" \}/);
+assert.match(care,/fontScale > 1.15 && \{ flexDirection: "column"/);
+for (const notice of ['교통·배차 미반영 · 출발 전 지도에서 확인','이전 조회 결과','출발 예상시각 지남 · 시간 변경 필요','카카오맵에는 출발시각이 자동 반영되지 않아요.']) assert.ok(care.includes(notice),notice);
+assert.ok(care.includes('departureActivityPreservedForOtherPlan'));
+assert.match(care,/destinationOutfit\.preparation\.missingItemNames/);
+const provider=read('apps/mobile/src/components/AccountProviderButton.tsx');
+assert.ok(!provider.slice(0,provider.indexOf('const styles')).includes('styles.lineIcon'));
+assert.match(provider,/line \? 17\.2/);
+assert.match(provider,/AppleAuthentication\.AppleAuthenticationButton/);
+const policyPath='apps/mobile/src/screens/PolicyDocumentScreen.tsx';
+const extract=(s,names)=>{const ast=ts.createSourceFile('x.tsx',s,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);return ast.statements.filter(ts.isVariableStatement).flatMap(n=>n.declarationList.declarations).filter(n=>names.includes(n.name.getText(ast))).map(n=>n.initializer.getText(ast));};
+assert.deepEqual(extract(read(policyPath),['policyDocuments','openSourceGroups','mitLicenseText']),extract(execFileSync('git',['show','HEAD:'+policyPath],{encoding:'utf8'}),['policyDocuments','openSourceGroups','mitLicenseText']));
+console.log('PASS Nov 11 design: paired centered times, large-type stacking, essential route warnings, LINE separator-free layout/native Apple, legal source text preserved. Native pixels not tested.');

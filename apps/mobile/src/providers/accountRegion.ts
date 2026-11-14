@@ -23,9 +23,9 @@ export function orderProvidersForRegion(
   availableProviders: AccountProvider[],
 ): AccountProvider[] {
   const priority: Record<AccountRegion, AccountProvider[]> = {
-    KR: ["kakao", "naver", "apple", "google", "line"],
-    JP: ["line", "apple", "google", "kakao", "naver"],
-    GLOBAL: ["google", "apple", "line", "kakao", "naver"],
+    KR: ["kakao", "naver", "apple", "google"],
+    JP: ["line", "apple", "google"],
+    GLOBAL: ["google", "apple"],
   };
   const available = new Set(availableProviders);
   return priority[region].filter((provider) => available.has(provider));

@@ -1,3 +1,4 @@
+import type { AlertPreferenceGroup } from "../state/alertPreferenceGroups";
 import type { getDestinationLeavingNowTiming } from "../state/appStateHelpers";
 import type { DemoState } from "../data/demoState";
 import type { AppRouteId, P0RouteId } from "./routes";
@@ -165,6 +166,7 @@ export type P0ScreenProps = {
   onMarkNotificationRead: (id: string) => void;
   onMarkAllNotificationsRead: () => void;
   onClearNotificationHistory: () => void;
+  onToggleAlertPreferenceGroup: (group: AlertPreferenceGroup) => void;
   onToggleAlertPreference: (key: AlertPreferenceKey) => void;
   onEditDestinationAlertCondition: (placeId: string) => void;
   onEditNotificationCondition: (id: string, route: P0RouteId) => void;

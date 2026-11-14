@@ -165,7 +165,7 @@ export function AccountManagementScreen({
                 <Text selectable style={[[styles.confirmBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.confirmBody]}>
                   {dangerConfirm === "delete"
                     ? "서버 계정 데이터와 이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제돼요. 되돌릴 수 없어요."
-                    : "이 기기의 저장 목적지·코디 상태·옷장 사진이 삭제되고 계정 연결이 해제돼요. 서버 계정은 유지돼요."}
+                    : "이 기기의 목적지·코디 상태·옷장 사진은 삭제돼요. 계정은 유지돼요."}
                 </Text>
                 {accountAuthMessage ? (
                   <Text accessibilityLiveRegion="polite" selectable style={[[styles.confirmError, { color: theme.alert }], Platform.OS === "ios" && ambientVisual.confirmError]}>{accountAuthMessage}</Text>

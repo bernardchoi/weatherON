@@ -1,3 +1,4 @@
+import { toggleAlertGroup, type AlertPreferenceGroup } from "./alertPreferenceGroups";
 import { homeRouteRequestKey, finishHomeRouteRequest } from "../utils/homeUpdateState";
 import { createSavedOutfitSnapshot, getSavedOutfitPhotoUris, getUnusedOutfitPhotoUris, isCurrentOutfitSaved, type SavedOutfitSnapshot } from "../utils/savedOutfit";
 import { toStoredWardrobePhotoUri } from "../utils/wardrobePhotoUri";
@@ -1786,6 +1787,10 @@ export function useWeatherOnAppState() {
     setNotificationHistory([]);
   }, []);
 
+  const toggleAlertPreferenceGroup = useCallback((group: AlertPreferenceGroup) => {
+    setAlertPreferences((current) => toggleAlertGroup(current, group));
+  }, []);
+
   const toggleAlertPreference = useCallback((key: AlertPreferenceKey) => {
     setAlertPreferences((current) => ({ ...current, [key]: !current[key] }));
   }, []);
@@ -2738,6 +2743,7 @@ export function useWeatherOnAppState() {
     markAllNotificationsRead,
     clearNotificationHistory,
     toggleAlertPreference,
+    toggleAlertPreferenceGroup,
     editDestinationAlertCondition,
     editNotificationCondition,
     openNotificationDeepLink,

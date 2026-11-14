@@ -27,6 +27,7 @@ export function MyScreen({
   permissionReady,
   permissionGateResult,
   smartCareEnabled,
+  alertPreferences,
   temperatureUnit,
   distanceUnit,
   themeMode,
@@ -44,7 +45,7 @@ export function MyScreen({
   const isAccountReady = accountLinked && termsRequiredAccepted;
   const needsTerms = accountLinked && !termsRequiredAccepted;
   const profileTitle = isAccountReady ? "연결된 계정" : needsTerms ? "약관 동의 필요" : "게스트 모드";
-  const profileBody = isAccountReady ? (accountProfile?.provider === "line" ? "LINE으로 연결했어요" : `${getProviderLabel(accountProfile?.provider)}로 연결했어요`) : needsTerms ? "필수 약관 확인 필요" : "연결 후 저장 기능 사용";
+  const profileBody = isAccountReady ? (accountProfile?.provider === "line" ? "LINE으로 연결했어요" : `${getProviderLabel(accountProfile?.provider)}로 연결했어요`) : needsTerms ? "필수 약관 확인 필요" : "계정을 연결하면 저장할 수 있어요";
   const profileAction = isAccountReady ? "계정 관리" : needsTerms ? "약관 동의" : "계정 연결";
   const alertState = getAlertState(smartCareEnabled, permissionReady, permissionGateResult);
   const locationState = getLocationState(locationReady, weatherLocationMode);
@@ -178,8 +179,9 @@ export function MyScreen({
             ambientLayout="menu"
             icon={ambient ? ambientUiIcons.permissions : uiIconAssets.myPermissions}
             title="앱 권한 관리"
-            subtitle={`위치 ${ambient ? translateText(locationState.status, language) : locationState.status} · 알림 ${ambient ? translateText(alertState.status, language) : alertState.status}`}
-            value={permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
+            subtitle={`위치 ${ambient ? translateText(locationState.status, language) : locationState.status} · 알림 ${ambient ? translateText(permissionReady ? "허용됨" : "확인 필요", language) : alertState.status}`}
+            right={ambient ? <Chevron color={theme.subtle} /> : undefined}
+            value={ambient ? undefined : permissionTone === "clear" ? "정상" : permissionTone === "warm" ? "확인" : "설정"}
             tone={permissionTone}
             onPress={() => onNavigate("M4")}
           />
@@ -188,8 +190,9 @@ export function MyScreen({
             ambientLayout="menu"
             icon={ambient ? ambientUiIcons.notifications : uiIconAssets.myAlerts}
             title="스마트 알림 설정"
-            subtitle={alertState.meta}
-            value={alertState.status}
+            subtitle={ambient ? getAlertPreferenceSummary(smartCareEnabled, alertPreferences, language) : alertState.meta}
+            right={ambient ? <Chevron color={theme.subtle} /> : undefined}
+            value={ambient ? undefined : alertState.status}
             tone={alertState.tone}
             divider
             onPress={() => onNavigate("M2")}
@@ -200,7 +203,8 @@ export function MyScreen({
             icon={ambient ? ambientUiIcons.settings : uiIconAssets.myDisplay}
             title="표시 설정"
             subtitle={globalSettingsSummary}
-            value="관리"
+            right={ambient ? <Chevron color={theme.subtle} /> : undefined}
+            value={ambient ? undefined : "관리"}
             tone="sky"
             divider
             onPress={() => onNavigate("M3")}
@@ -217,7 +221,8 @@ export function MyScreen({
             icon={ambient ? ambientUiIcons.policyDocument : uiIconAssets.myPolicy}
             title="정책 및 법적 고지"
             subtitle="개인정보 · 약관 · 오픈소스"
-            value="보기"
+            right={ambient ? <Chevron color={theme.subtle} /> : undefined}
+            value={ambient ? undefined : "보기"}
             tone="sky"
             onPress={() => onNavigate("R1")}
           />
@@ -228,6 +233,16 @@ export function MyScreen({
       </ScrollView>
     </View>
   );
+}
+
+function getAlertPreferenceSummary(enabled: boolean, preferences: P0ScreenProps["alertPreferences"], language: AppLanguage) {
+  if (!enabled) return "알림 꺼짐";
+  const active = [
+    (preferences.rainDetail || preferences.weatherAlerts) && "날씨",
+    (preferences.routine || preferences.bedtime) && "일상 준비",
+    preferences.destination && "출발",
+  ].filter((label): label is string => Boolean(label));
+  return active.length ? active.map((label) => translateText(label, language)).join(" · ") : "선택한 알림 없음";
 }
 
 function getAlertState(

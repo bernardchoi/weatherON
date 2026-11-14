@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
-import { ambientUiIcons } from "../ambientAssets";
+import { Platform, Pressable, StyleSheet, Text, View } from "../localization/react-native";
 import { AppScreen } from "../components/AppScreen";
 import { AccountProviderButton as ProviderButton } from "../components/AccountProviderButton";
 import { listAvailableAccountProviders, type AccountProvider, type AccountProviderAvailability } from "../providers/accountAuth";
-import { getAccountRegionLabel, orderProvidersForRegion, resolveAccountButtonLanguage, resolveAccountRegion } from "../providers/accountRegion";
+import { orderProvidersForRegion, resolveAccountButtonLanguage, resolveAccountRegion } from "../providers/accountRegion";
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import type { AccountAuthStatus, AccountGateState } from "../state/useWeatherOnAppState";
 import { useAppTheme } from "../theme/AppThemeContext";
@@ -24,7 +23,6 @@ type AccountConnectScreenProps = {
 export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, onCancel }: AccountConnectScreenProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
-  const [showOtherMethods, setShowOtherMethods] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [availability, setAvailability] = useState<AccountProviderAvailability[]>([]);
   const [providerCheckComplete, setProviderCheckComplete] = useState(false);
@@ -59,9 +57,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
     if (appleAvailable) available.push("apple");
     return orderProvidersForRegion(region, available);
   }, [appleAvailable, availability, region]);
-  const recommendedProviders = orderedProviders.slice(0, 3);
-  const otherProviders = orderedProviders.slice(3);
-  const providerLoadFailed = providerCheckComplete && availability.length === 0;
+  const providerLoadFailed = providerCheckComplete && orderedProviders.length === 0;
 
   return (
     <AppScreen
@@ -73,8 +69,6 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
       contentPaddingTop={layout.weatherTopPadding}
     >
         <View style={[[styles.hero, pageStyles.card, { padding: layout.accountPanelPadding, backgroundColor: theme.card, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.hero]}>
-          {Platform.OS === "ios" ? <Image source={ambientUiIcons.tabMy} accessible={false} style={{ width: 88, height: 88, tintColor: theme.muted, marginBottom: 12 }} /> : null}
-          <Text style={[[styles.heroKicker, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.heroKicker]}>계정 연결</Text>
           <Text style={[[styles.heroTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.heroTitle]}>저장 기능을 계속 사용해요</Text>
         </View>
 
@@ -88,13 +82,8 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
           </View>
         ) : null}
 
-        <View style={styles.sectionHeader}>
-          <Text style={[[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.sectionTitle]}>로그인 방법</Text>
-          <Text style={[[styles.sectionMeta, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.sectionMeta]}>{getAccountRegionLabel(region)} 추천 순서</Text>
-        </View>
-
         <View style={[styles.providerList, Platform.OS === "ios" && ambientVisual.providerList]}>
-          {recommendedProviders.map((provider) => (
+          {orderedProviders.map((provider) => (
             <ProviderButton key={provider} provider={provider} language={buttonLanguage} minHeight={Math.max(48, layout.accountProviderMinHeight)} disabled={isSigningIn} onPress={() => void onSignIn(provider)} theme={theme} />
           ))}
           {providerLoadFailed || !providerCheckComplete ? (
@@ -114,23 +103,7 @@ export function AccountConnectScreen({ gate, authStatus, authMessage, onSignIn, 
         {isSigningIn ? <Text accessibilityLiveRegion="polite" style={[[styles.authStatus, { color: theme.sky }], Platform.OS === "ios" && ambientVisual.authStatus]}>안전하게 계정을 연결하고 있어요</Text> : null}
         {authMessage ? <Text accessibilityLiveRegion="polite" selectable style={[[styles.authStatus, { color: authStatus === "error" ? theme.alert : theme.muted }], Platform.OS === "ios" && [ambientVisual.authStatus, { backgroundColor: theme.cardStrong, paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.md }]]}>{authMessage}</Text> : null}
 
-        {showOtherMethods && otherProviders.length > 0 ? (
-          <View style={[styles.providerList, Platform.OS === "ios" && ambientVisual.providerList]}>
-            {otherProviders.map((provider) => (
-              <ProviderButton key={provider} provider={provider} language={buttonLanguage} minHeight={Math.max(48, layout.accountProviderMinHeight)} disabled={isSigningIn} onPress={() => void onSignIn(provider)} theme={theme} />
-            ))}
-          </View>
-        ) : null}
-
-        {otherProviders.length > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: showOtherMethods }} onPress={() => setShowOtherMethods((current) => !current)} style={({ pressed }) => [styles.otherButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, backgroundColor: showOtherMethods ? theme.cardStrong : "transparent", opacity: pressed ? 0.72 : 1 }, Platform.OS === "ios" && { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 12, minHeight: 48, backgroundColor: theme.cardStrong }]}>
-            <Text style={[[styles.otherText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.otherText]}>{showOtherMethods ? "계정 선택 줄이기" : "다른 계정으로 계속하기"}</Text>
-          </Pressable>
-        ) : null}
-
         <View style={[[styles.nextStep, pageStyles.card, { backgroundColor: theme.cardMuted }], Platform.OS === "ios" && ambientVisual.nextStep]}>
-          <Text style={[[styles.nextStepTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.nextStepTitle]}>다음 단계</Text>
-          <Text style={[[styles.nextStepBody, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>약관을 확인하면 원래 화면으로 돌아가요</Text>
           <Text style={[[styles.nextStepBody, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.nextStepBody]}>위치·알림 권한은 계정과 별도로 선택해요</Text>
         </View>
         <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.laterButton, pageStyles.card, { borderColor: theme.border, borderWidth: 1, opacity: pressed ? 0.72 : 1 }, Platform.OS === "ios" && { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 12, minHeight: 48, backgroundColor: theme.cardStrong }]}>

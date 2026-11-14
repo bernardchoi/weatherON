@@ -132,21 +132,21 @@ export function WardrobePresetScreen({
   return (
     <AppScreen
       title="아이템 추가"
-      subtitle="프리셋에서 골라 내 옷장에 추가"
-      badge={`${ownedCount}/${presetItems.length}`}
+      subtitle={Platform.OS === "ios" ? undefined : "프리셋에서 골라 내 옷장에 추가"}
+      badge={Platform.OS === "ios" ? undefined : `${ownedCount}/${presetItems.length}`}
       onBack={onGoBack}
       showWordmark={false}
       compactHeader
       contentPaddingTop={layout.weatherTopPadding}
       contentGap={Platform.OS === "ios" ? 12 : layout.destinationContentGap}
     >
-      <Section compact={Platform.OS === "ios"} title="내 옷 사진" caption="내 옷으로 완성하는 오늘의 코디" accent="clear">
+      <Section compact={Platform.OS === "ios"} title="내 옷 사진" caption={Platform.OS === "ios" ? undefined : "내 옷으로 완성하는 오늘의 코디"} accent="clear">
         <View style={[[styles.photoEntryCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.photoEntryCard, Platform.OS === "ios" && (fontScale > 1.3 || layout.width < 360) && { flexDirection: "column", alignItems: "stretch" }]}>
           <View style={styles.copy}>
             <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>사진 한 장으로 옷장에 쏙</Text>
-            <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]}>
+            {Platform.OS !== "ios" ? <Text style={[styles.copyText, { color: theme.muted }]}>
               {accountLinked ? "옷 정보는 확인하고 바꿀 수 있어요" : "로그인하고 내 옷을 추가해 보세요"}
-            </Text>
+            </Text> : null}
           </View>
           <AppButton label={accountLinked ? "사진으로 추가" : "로그인하고 추가"} onPress={openPhotoRegistration} tone="warning" size="sm" />
         </View>
@@ -164,7 +164,7 @@ export function WardrobePresetScreen({
         />
       </View>
 
-      <Section compact={Platform.OS === "ios"} title="필터" caption="아이템·계절·목적 기준" accent="sky">
+      <Section compact={Platform.OS === "ios"} title="필터" caption={Platform.OS === "ios" ? undefined : "아이템·계절·목적 기준"} accent="sky">
         <WardrobeFilterControls
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
@@ -209,7 +209,7 @@ export function WardrobePresetScreen({
             </View>
             <View style={styles.copy}>
               <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{previewItem.name}</Text>
-              <Text style={[[styles.copyText, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.copyText]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
+              <Text style={[styles.copyText, { color: theme.muted }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
             </View>
             <AppButton
               label={Platform.OS === "ios" ? previewItem.owned ? "− 해제" : "+ 추가" : previewItem.owned ? "해제" : "추가"}

@@ -274,11 +274,11 @@ export function DestinationCareScreen({
             </FeedbackPressable>
           </View>
           <View style={[styles.journey, { borderColor: theme.border }, fontScale > 1.15 && { flexDirection: "column", alignItems: "stretch" }]}>
-            <View style={styles.journeyStop}>
+            <View style={[styles.journeyStop, Platform.OS === "ios" && styles.journeyStopCentered]}>
               <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{timeBasis === "departure" ? "출발" : "출발 예상"}</Text>
               <Text style={[styles.journeyTime, { color: theme.gold }]}>{departureReady ? departureTime : "—"}</Text>
             </View>
-            <View style={styles.journeyLeg}>
+            <View style={[styles.journeyLeg, Platform.OS === "ios" && styles.journeyLegCompact]}>
               <Text style={[styles.journeyLabel, { color: theme.muted }]}>{movementTimeLabel}</Text>
               <View style={styles.journeyTrack}>
                 <View style={[styles.journeyDot, { backgroundColor: theme.gold }]} />
@@ -286,7 +286,7 @@ export function DestinationCareScreen({
                 <Text style={{ color: theme.sky }}>›</Text>
               </View>
             </View>
-            <View style={styles.journeyStop}>
+            <View style={[styles.journeyStop, Platform.OS === "ios" && styles.journeyStopCentered]}>
               <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{departureReady && care.departureAdvice?.arrivalAt ? `${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather).split(" ")[0]} 도착 예상` : "도착 예상"}</Text>
               <Text style={[styles.journeyTime, { color: theme.text }]}>{departureReady && care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : "—"}</Text>
             </View>
@@ -359,7 +359,7 @@ export function DestinationCareScreen({
             style={styles.detailPanelHeader}
           >
             <View style={styles.conditionCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.muted }]}>알림 일정</Text>
+              <Text style={[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }]}>알림 일정</Text>
               <Text style={[styles.conditionSummary, { color: theme.text }]}>{alertTimingCopy}</Text>
             </View>
             <Text style={[styles.settingsChevron, { color: theme.gold }]}>{detailPanelOpen ? "닫기" : "열기"}</Text>
@@ -383,7 +383,7 @@ export function DestinationCareScreen({
               </View>
 
               {!permissionReady ? (
-                <Text style={[styles.routeNotice, { color: theme.warm }]}>조회와 길찾기는 가능함. 알림을 켤 때만 권한이 필요함</Text>
+                <Text style={[styles.routeNotice, { color: theme.warm }]}>알림을 받으려면 권한을 허용해 주세요.</Text>
               ) : null}
 
             </>
@@ -434,9 +434,9 @@ export function DestinationCareScreen({
         <AmbientReveal order={2} testID="care-outfit" style={[[styles.outfitPanel, { backgroundColor: theme.card, borderColor: theme.border }, cardShadow(theme), pageStyles.card], Platform.OS === "ios" && ambientVisual.outfitPanel]}>
           <View style={styles.outfitHeader}>
             <View style={styles.outfitCopy}>
-              <Text style={[styles.sectionTitle, { color: theme.clear }]}>목적지 코디</Text>
+              <Text style={[styles.sectionTitle, pageStyles.sectionTitle, { color: theme.text }]}>목적지 코디</Text>
               <Text style={[[styles.outfitTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.outfitTitle]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{destinationOutfit.decisionText}</Text>
-              <Text style={[[styles.outfitReason, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.outfitReason]}>{destinationOutfitReason}</Text>
+              {Platform.OS !== "ios" ? <Text style={[styles.outfitReason, { color: theme.muted }]}>{destinationOutfitReason}</Text> : null}
             </View>
             <View style={[styles.outfitMatchPill, { backgroundColor: theme.cardStrong }]}>
               <Text style={[styles.outfitMatchText, { color: theme.clear }]}>보유 {destinationOutfit.preparation.ownedItemCount}/{destinationOutfit.preparation.totalItemCount}</Text>
@@ -459,7 +459,7 @@ export function DestinationCareScreen({
             style={[[styles.deleteDestinationButton, { backgroundColor: theme.cardStrong, borderColor: theme.warm }], Platform.OS === "ios" && ambientVisual.deleteDestinationButton]}
           >
             <Text style={[styles.deleteDestinationTitle, { color: theme.warm }]}>목적지 삭제</Text>
-            <Text style={[styles.deleteDestinationBody, { color: theme.muted }]}>삭제 후 출발 목록에서 바로 복구 가능</Text>
+            <Text style={[styles.deleteDestinationBody, { color: theme.muted }]}>삭제 후 출발 목록에서 되돌릴 수 있어요.</Text>
           </FeedbackPressable>
         ) : null}
 
@@ -1050,9 +1050,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   journeyStop: { flex: 1, minWidth: 0, gap: 6 },
+  journeyStopCentered: { alignItems: "center" },
+  journeyLegCompact: { flex: 0.7 },
   journeyLeg: { flex: 0.8, minWidth: 0, gap: 6, alignItems: "center" },
-  journeyLabel: { fontSize: 12, lineHeight: 18 },
-  journeyTime: { fontSize: 24, lineHeight: 32, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  journeyLabel: { fontSize: 14, lineHeight: 20, textAlign: "center" },
+  journeyTime: { fontSize: 28, lineHeight: 36, fontWeight: "600", fontVariant: ["tabular-nums"] },
   journeyTrack: { flexDirection: "row", alignItems: "center", width: "100%", gap: 4 },
   journeyDot: { width: 6, height: 6, borderRadius: 3 },
   journeyLine: { flex: 1, height: 1 },
@@ -1614,14 +1616,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   conditionSummary: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "900",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
   routeNotice: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "400",
   },
   detailButton: {
     minWidth: 54,
