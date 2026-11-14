@@ -1,3 +1,6 @@
+import { HomeWeatherMascot } from "../components/HomeWeatherMascot";
+import { resolveMascotClothing, withMascotClothing } from "../utils/mascotOutfit";
+import { homeMascotWind, resolveHomeMascotState } from "../utils/homeMascotState";
 import { ambientMotion } from "../theme/ambientMotion";
 import { AmbientChange, AmbientReveal, useAmbientEntrance } from "../components/AmbientReveal";
 import { OutfitMotionImage, useOutfitNavigation } from "../components/OutfitMotion";
@@ -167,6 +170,8 @@ export function HomeScreen({
   const ambientScrollOffset = useRef(new Animated.Value(0)).current;
   const [meteorScrollY, setMeteorScrollY] = useState(0);
   const [ambientScrolling, setAmbientScrolling] = useState(false);
+  const [mascotVisible, setMascotVisible] = useState(true);
+  const mascotVisibleRef = useRef(true);
   const ambientScrollRef = useRef(0);
   const measureReadArea = useCallback((id: string, node: Pick<View, "measureInWindow"> | null) => {
     if (Platform.OS !== "ios") return;
@@ -187,6 +192,27 @@ export function HomeScreen({
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
   const reliableWeather = snapshotReliable(currentWeather, forecastNow);
+  // Clothing and props share the card's scoped place/time, not origin weather.
+  const mascotWeather = state.outfitContext?.weather ?? state.weather;
+  const mascotCurrent = mascotWeather.current;
+  const mascotReliable = snapshotReliable(mascotWeather, forecastNow)
+    && (state.outfitContext?.reliable ?? true);
+  const mascotClothing = resolveMascotClothing(state.outfit, {
+    reliable: mascotReliable,
+    currentAvailable: state.outfitContext?.currentAvailable ?? (mascotCurrent.tempAvailable !== false && Number.isFinite(mascotCurrent.tempC)),
+    pending: isWeatherLoading,
+    weatherSnapshotId: mascotWeather.id ?? mascotWeather.locationId,
+  });
+  const mascotState = withMascotClothing(resolveHomeMascotState({
+    condition: mascotCurrent.atmosphere?.kind ?? mascotCurrent.condition,
+    reliable: mascotReliable && !mascotWeather.locationUnverified && mascotWeather.source !== "fallback" && mascotCurrent.atmosphere?.conditionAvailable !== false,
+    pending: isWeatherLoading,
+    tempC: mascotCurrent.tempC,
+    tempAvailable: mascotCurrent.tempAvailable,
+    daylight: mascotWeather.locationId === currentWeather.locationId ? ambientDaylight.phase : "unknown",
+  }), mascotClothing);
+  // The header slot preserves the existing temperature/details and card hierarchy.
+  const mascotSize = fontScale > 1.3 || layout.width < 390 ? 56 : 80;
   useEffect(() => {
     if (!__DEV__) return;
     try {
@@ -266,7 +292,7 @@ export function HomeScreen({
       <AmbientHomeScrollView
         testID="home-scroll"
         scrollEventThrottle={Platform.OS === "ios" ? 64 : undefined}
-        onScroll={Platform.OS === "ios" ? Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }], { useNativeDriver: true, listener: event => { ambientScrollRef.current = (event as import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>).nativeEvent.contentOffset.y; } }) : undefined}
+        onScroll={Platform.OS === "ios" ? Animated.event([{ nativeEvent: { contentOffset: { y: ambientScrollOffset } } }], { useNativeDriver: true, listener: event => { ambientScrollRef.current = (event as import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>).nativeEvent.contentOffset.y; const visible = ambientScrollRef.current < 120; if (visible !== mascotVisibleRef.current) { mascotVisibleRef.current = visible; setMascotVisible(visible); } } }) : undefined}
         onScrollBeginDrag={() => { touchController.cancel(); if (Platform.OS === "ios") setAmbientScrolling(true); }}
         onScrollEndDrag={event => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); if (!event.nativeEvent.velocity?.y) setAmbientScrolling(false); } }}
         onMomentumScrollEnd={() => { if (Platform.OS === "ios") { setMeteorScrollY(ambientScrollRef.current); setAmbientScrolling(false); } }}
@@ -303,6 +329,10 @@ export function HomeScreen({
             </FeedbackPressable>
             <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-weather-update" pending={currentWeatherPending} label={refreshMessage || locationStatus.value} color={theme.muted} />
           </View>
+          {Platform.OS === "ios" ? <HomeWeatherMascot state={mascotState} size={mascotSize} darkMode={theme.name === "dark"}
+            active={homeMotionActive} visible={mascotVisible} reducedMotion={reducedMotion}
+            wind={homeMascotWind(mascotCurrent.windMs, mascotState.weather !== "neutral" && mascotCurrent.windAvailable !== false)} accentColor={theme.muted}
+            lowPowerMode={lowPowerMode} scrolling={ambientScrolling} /> : null}
           <NotificationBellButton
             unreadCount={unreadNotificationCount}
             smartCareEnabled={smartCareEnabled}

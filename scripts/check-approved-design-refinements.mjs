@@ -15,10 +15,11 @@ for (const source of ['새로운 중요 경고 · 알 수 없는 예보', '오�
  const result = split(source); assert.equal(result.timedForecast, undefined); assert.equal(result.advice.join(' · '), source);
 }
 assert.match(home, /Math.max\(20, viewportSpacing.planMargin\)/);
+assert.match(home, /HomeWeatherMascot/); // Existing approved character integration is retained.
 assert.match(read('AccountManagement'), /ProviderBrandIcon/);
 assert.match(read('AccountManagement'), /LINE으로 연결했어요/);
 assert.match(read('AccountManagement'), /accountAuthStatus !== "offline"/);
 const native = fs.readFileSync('apps/mobile/ios/WeatherON/LiquidGlassNavigationView.swift','utf8');
 assert.match(native, /UIGlassEffect\(style: \.regular\)/);
 assert.match(native, /isReduceTransparencyEnabled/);
-console.log('PASS approved design: four explicit forecast kinds, unknown warnings retained, account identity/status, native Glass and transparency fallback. Native device appearance remains unverified.');
+console.log('PASS approved design: four explicit forecast kinds, unknown warnings retained, character integration, account identity/status, native Glass and transparency fallback. Native device appearance remains unverified.');

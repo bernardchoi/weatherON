@@ -1,0 +1,39 @@
+{
+  "sourceSize": [
+    1199,
+    1312
+  ],
+  "canvas": [
+    1024,
+    1024
+  ],
+  "sourceImageLibraryId": "libfile_3b374661c7d08191bec6b2c2275e95e4",
+  "outerTransform": {
+    "translate": [
+      106.73684210526318,
+      28.105263157894797
+    ],
+    "scale": 0.7368421052631579
+  },
+  "rotationOrigin": [
+    720,
+    940
+  ],
+  "maxAngleDegrees": 0.6,
+  "topPath": "M0 0 H1199 V390 H640 L670 487 L620 487 L590 400 L510 390 L470 480 L0 500Z",
+  "movingLowerPath": "M815 785 L850 850 H960 V1110 H800 V990 H700 V895 H750 L805 870Z",
+  "stationaryCutLowerPath": "M815 785 L850 850 H960 V1110 H800 V990 H730 V895 H750 L805 870Z",
+  "headPath": "M535 394 C575 405 625 450 617 478 C733 500 788 590 815 709 C844 779 843 827 788 867 C719 908 406 911 340 873 C266 840 247 802 275 732 C313 617 379 504 497 478 C490 445 514 420 535 394Z",
+  "drawOrder": [
+    "source masked white canvas minus topPath and stationaryCutLowerPath",
+    "source clipped to union(topPath,movingLowerPath) rotated together",
+    "source clipped to headPath foreground"
+  ],
+  "nativeNotes": [
+    "use maskUnits=userSpaceOnUse width1199 height1312",
+    "unique ids for each instance",
+    "no SVG filters required",
+    "hold angle0 when reducedMotion is not false",
+    "rotation<=.6; not independent umbrella bending"
+  ]
+}
