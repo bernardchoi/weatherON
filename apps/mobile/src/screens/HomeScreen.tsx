@@ -1,4 +1,5 @@
 import { HomeWeatherMascot } from "../components/HomeWeatherMascot";
+import { resolveMascotClothing, withMascotClothing } from "../utils/mascotOutfit";
 import { homeMascotWind, resolveHomeMascotState } from "../utils/homeMascotState";
 import { ambientMotion } from "../theme/ambientMotion";
 import { AmbientChange, AmbientReveal, useAmbientEntrance } from "../components/AmbientReveal";
@@ -191,14 +192,25 @@ export function HomeScreen({
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
   const reliableWeather = snapshotReliable(currentWeather, forecastNow);
-  const mascotState = resolveHomeMascotState({
-    condition: current.atmosphere?.kind ?? current.condition,
-    reliable: reliableWeather && !currentWeather.locationUnverified && currentWeather.source !== "fallback" && current.atmosphere?.conditionAvailable !== false,
-    pending: currentWeatherPending,
-    tempC: current.tempC,
-    tempAvailable: current.tempAvailable,
-    daylight: ambientDaylight.phase,
+  // Clothing and props share the card's scoped place/time, not origin weather.
+  const mascotWeather = state.outfitContext?.weather ?? state.weather;
+  const mascotCurrent = mascotWeather.current;
+  const mascotReliable = snapshotReliable(mascotWeather, forecastNow)
+    && (state.outfitContext?.reliable ?? true);
+  const mascotClothing = resolveMascotClothing(state.outfit, {
+    reliable: mascotReliable,
+    currentAvailable: state.outfitContext?.currentAvailable ?? (mascotCurrent.tempAvailable !== false && Number.isFinite(mascotCurrent.tempC)),
+    pending: isWeatherLoading,
+    weatherSnapshotId: mascotWeather.id ?? mascotWeather.locationId,
   });
+  const mascotState = withMascotClothing(resolveHomeMascotState({
+    condition: mascotCurrent.atmosphere?.kind ?? mascotCurrent.condition,
+    reliable: mascotReliable && !mascotWeather.locationUnverified && mascotWeather.source !== "fallback" && mascotCurrent.atmosphere?.conditionAvailable !== false,
+    pending: isWeatherLoading,
+    tempC: mascotCurrent.tempC,
+    tempAvailable: mascotCurrent.tempAvailable,
+    daylight: mascotWeather.locationId === currentWeather.locationId ? ambientDaylight.phase : "unknown",
+  }), mascotClothing);
   // The header slot preserves the existing temperature/details and card hierarchy.
   const mascotSize = fontScale > 1.3 || layout.width < 390 ? 56 : 80;
   useEffect(() => {
@@ -317,9 +329,9 @@ export function HomeScreen({
             </FeedbackPressable>
             <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-weather-update" pending={currentWeatherPending} label={refreshMessage || locationStatus.value} color={theme.muted} />
           </View>
-          {Platform.OS === "ios" ? <HomeWeatherMascot state={mascotState} size={mascotSize}
+          {Platform.OS === "ios" ? <HomeWeatherMascot state={mascotState} size={mascotSize} darkMode={theme.name === "dark"}
             active={homeMotionActive} visible={mascotVisible} reducedMotion={reducedMotion}
-            wind={homeMascotWind(current.windMs, mascotState.weather !== "neutral" && current.windAvailable !== false)} accentColor={theme.muted}
+            wind={homeMascotWind(mascotCurrent.windMs, mascotState.weather !== "neutral" && mascotCurrent.windAvailable !== false)} accentColor={theme.muted}
             lowPowerMode={lowPowerMode} scrolling={ambientScrolling} /> : null}
           <NotificationBellButton
             unreadCount={unreadNotificationCount}

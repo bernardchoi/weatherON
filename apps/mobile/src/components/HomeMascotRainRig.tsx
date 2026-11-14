@@ -1,11 +1,13 @@
 import React, { useId } from "react";
 import { Animated, StyleSheet } from "../localization/react-native";
 import Svg, { Defs, Mask, Rect, Path, ClipPath, G, Image as SvgImage } from "react-native-svg";
+import { HomeMascotClothing } from "./HomeMascotClothing";
+import type { MascotClothing } from "../utils/mascotOutfit";
 import contract from "../../assets/characters/rain-rig-contract.json";
 const source = require("../../assets/characters/rain-rig-source.png");
 
 /** Source-mask rig: umbrella, hand and arm move together; body/head stay fixed. */
-export function HomeMascotRainRig({ size, phase, moving }: { size: number; phase: Animated.Value; moving: boolean }) {
+export function HomeMascotRainRig({ size, phase, moving, clothing }: { size: number; phase: Animated.Value; moving: boolean; clothing?: MascotClothing }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const { translate, scale } = contract.outerTransform;
   const groupTransform = `translate(${translate[0]} ${translate[1]}) scale(${scale})`;
@@ -20,6 +22,7 @@ export function HomeMascotRainRig({ size, phase, moving }: { size: number; phase
       </Mask></Defs>
       <G transform={groupTransform}><G mask={`url(#${id}body)`}>{picture}</G></G>
     </Svg>
+    <HomeMascotClothing size={size} clothing={clothing} rainPose />
     <Animated.View testID="home-mascot-umbrella-part" style={[StyleSheet.absoluteFill, {
       transformOrigin: [origin[0], origin[1], 0], transform: [{ rotate: phase.interpolate({ inputRange: [0, 1],
         outputRange: moving ? ["-0.6deg", "0.6deg"] : ["0deg", "0deg"] }) }],

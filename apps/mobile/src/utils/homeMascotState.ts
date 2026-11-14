@@ -5,6 +5,7 @@ export type HomeMascotState = {
   daylight: "day" | "night" | "twilight" | "unknown";
   thermal: "normal" | "cold" | "hot";
   asset: "base" | "rain" | "cold" | "heat";
+  clothing?: import("./mascotOutfit").MascotClothing;
 };
 export function resolveHomeMascotState(input: {
   condition: string;

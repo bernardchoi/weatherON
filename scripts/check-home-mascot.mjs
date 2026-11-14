@@ -36,7 +36,7 @@ for (const name of ['main-fullbody','main-rain','main-cold','main-heat']) {
  equal(png.subarray(1,4).toString(),'PNG'); equal(png.readUInt32BE(16),1024); equal(png.readUInt32BE(20),1024); equal(png[25],6);
 }
 const home = readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');
-for (const required of ['!currentWeather.locationUnverified','currentWeather.source !== "fallback"','current.atmosphere?.conditionAvailable !== false','active={homeMotionActive}','visible={mascotVisible}','scrolling={ambientScrolling}']) { assert.ok(home.includes(required)); checks++; }
+for (const required of ['!mascotWeather.locationUnverified','mascotWeather.source !== "fallback"','mascotCurrent.atmosphere?.conditionAvailable !== false','active={homeMotionActive}','visible={mascotVisible}','scrolling={ambientScrolling}']) { assert.ok(home.includes(required)); checks++; }
 const component = readFileSync('apps/mobile/src/components/HomeWeatherMascot.tsx','utf8');
 for (const required of ['subscription.remove()','animation.stop()','phase.stopAnimation()','useNativeDriver: true','isInteraction: false','pointerEvents="none"','accessibilityElementsHidden']) { assert.ok(component.includes(required)); checks++; }
 console.log(`PASS: ${checks} home mascot state/asset/integration checks. Device rendering and performance remain unverified.`);
@@ -48,7 +48,7 @@ const fakeAnimated = {
   loop: () => ({ start() { starts++; }, stop() { stops++; } }),
 };
 const React = { createElement: (type, props, ...children) => ({type,props,children}),
-  useRef: value => ({current:value}), useState: value => [value,()=>{}], useEffect: fn => effects.push(fn) };
+  useRef: value => ({current:value}), useState: value => [value,()=>{}], useEffect: fn => effects.push(fn), useLayoutEffect: fn => effects.push(fn) };
 const native = { Animated: fakeAnimated, AppState: {currentState:'active', addEventListener:()=>({remove(){removals++;}})},
   Easing:{inOut:x=>x,sin:0}, StyleSheet:{absoluteFill:{}}, View:'View' };
 const rendered = {};
@@ -60,6 +60,7 @@ new Function('exports','require',js)(rendered,name => {
  if(name.includes('homeMascotState')) return exports;
  if(name.includes('HomeMascotFanRig')) return {HomeMascotFanRig:'FanRig'};
  if(name.includes('HomeMascotRainRig')) return {HomeMascotRainRig:'RainRig'};
+ if(name.includes('HomeMascotClothing')) return {HomeMascotClothing:'Clothing'};
  if(name.includes('mascotBlink')) return {scheduleMascotBlink:()=>()=>{}};
  throw new Error(name);
 });
@@ -99,7 +100,7 @@ console.log(`PASS: blink lifecycle and source-mask rig contract; ${checks} asser
 equal(resolve({...base,tempC:36,tempAvailable:false}).thermal,'normal');
 equal(resolve({...base,tempC:36,tempAvailable:false}).asset,'base');
 equal(resolve({...base,tempC:36,tempAvailable:true}).asset,'heat');
-assert.ok(home.includes('tempAvailable: current.tempAvailable'));checks++;
+assert.ok(home.includes('tempAvailable: mascotCurrent.tempAvailable'));checks++;
 console.log(`PASS: unavailable current temperature never selects heat; ${checks} assertions.`);
 
 const fan=JSON.parse(readFileSync('apps/mobile/assets/characters/heat-fan-contract.json','utf8'));
@@ -112,6 +113,7 @@ const fanModule={};
 new Function('exports','require',ts.transpileModule(fanSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React,esModuleInterop:true}}).outputText)(fanModule,name=>{
  if(name==='react')return React;
  if(name.includes('localization'))return {...native,Image:'Image'};
+ if(name.includes('HomeMascotClothing'))return {HomeMascotClothing:'Clothing'};
  if(name.includes('heat-fan-contract'))return fan;
  if(name.includes('characterAssets'))return {homeCharacterAssets:{heat:4}};
  if(name.endsWith('.png'))return name;
@@ -123,3 +125,11 @@ console.log(`PASS: actual fan component motion gate/cleanup; ${checks} assertion
 equal(fan.rotationOrigin,[391.05759162303667,731.2513089005236]);
 equal((fanSource.match(/frame, movingStyle/g)||[]).length,2);
 console.log(`PASS: v11 shared transform/pivot and four-layer buffers; ${checks} assertions.`);
+
+// Night uses the same approved frames with a calmer cadence, never permanent sleepy eyes.
+let nightPending; const nightFrames=[]; const nightDelays=[];
+const stopNight=blinkExports.scheduleMascotBlink(frame=>nightFrames.push(frame),{set(fn,ms){nightPending=fn;nightDelays.push(ms);return nightDelays.length;},clear(){}},'night');
+for(let i=0;i<4;i++)nightPending();
+equal(nightFrames,['half','closed','half','open']); equal(nightDelays,[8000,110,140,110,8000]);
+stopNight();nightPending();equal(nightFrames.length,4);
+console.log('PASS: relaxed night cadence reuses approved eye frames and cancels cleanly.');
