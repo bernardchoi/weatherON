@@ -78,7 +78,7 @@ function storageHarness({ failSql = 0, failRead = false, failCommit = false, fai
       files.delete(uri);
     },
   };
-  const api = load("apps/mobile/src/providers/appStorage.ts", ["readAppValue", "writeAppValue", "migrateLegacyStorage"], { testDatabase: database, fileSystem }, [
+  const api = load("apps/mobile/src/providers/appStorage.ts", ["readAppValue", "writeAppValue", "migrateLegacyStorage"], { testDatabase: database, fileSystem, profileCharacterStorageKey: load("apps/mobile/src/state/profileCharacter.ts", ["profileCharacterStorageKey"]).profileCharacterStorageKey }, [
     ['import("expo-sqlite")', "Promise.resolve({ openDatabaseAsync: async () => testDatabase })"],
     ['import("expo-file-system/legacy")', "Promise.resolve(fileSystem)"],
   ]);

@@ -55,6 +55,7 @@ const sqlite = {
   withTransactionAsync: async fn => { db.exec("BEGIN"); try { await fn(); db.exec("COMMIT"); } catch (e) { db.exec("ROLLBACK"); throw e; } },
 };
 const storage = load("apps/mobile/src/providers/appStorage.ts", {
+  "../state/profileCharacter": load("apps/mobile/src/state/profileCharacter.ts"),
   "../localization/react-native": { Platform: { OS: "ios" } },
   "expo-sqlite": { openDatabaseAsync: async () => sqlite },
   "expo-file-system/legacy": { documentDirectory: "file:///test/", getInfoAsync: async () => ({ exists: false }) },
