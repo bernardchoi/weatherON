@@ -3,7 +3,7 @@ import { resolveMascotClothing, withMascotClothing } from "../utils/mascotOutfit
 import { homeMascotWind, resolveHomeMascotState } from "../utils/homeMascotState";
 import { ambientMotion } from "../theme/ambientMotion";
 import { AmbientChange, AmbientReveal, useAmbientEntrance } from "../components/AmbientReveal";
-import { OutfitMotionImage, useOutfitNavigation } from "../components/OutfitMotion";
+import { OutfitMotionImage } from "../components/OutfitMotion";
 import { HomeUpdateStatus } from "../components/HomeUpdateStatus";
 import { homeRouteStatus } from "../utils/homeUpdateState";
 import { getDestinationTiming } from "../state/appStateHelpers";
@@ -954,7 +954,6 @@ function HomeOutfitPreviewCard({
   const tightLayout = isHomeTightLayout(layout);
   const { fontScale } = useWindowDimensions();
   const entrance = useAmbientEntrance(1);
-  const openOutfit = useOutfitNavigation();
   const title = summary;
   // Separate only an explicit forecast time already present in the recommendation.
   // Never manufacture probability or precipitation amounts from commentary.
@@ -971,7 +970,7 @@ function HomeOutfitPreviewCard({
   const photos = (Platform.OS === "ios" ? [outfit.items.outer ?? outfit.items.top, outfit.items.shoes] : Object.values(outfit.items))
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
-    <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={() => openOutfit(photos[0]?.id, "C1", onPress)}
+    <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={onPress}
       style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
       <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>

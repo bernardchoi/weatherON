@@ -69,6 +69,9 @@ export function useOutfitTransitionHost(route: string, enabled: boolean) {
     layout: target,
     open(scene, itemId, toScene, navigate) {
       clearTimers(); const nextRevision = ++revision.current; measuringTarget.current = null;
+      // A collection has no single selected item: never fly just its first image
+      // across the screen or wait for image measurement before opening the grid.
+      if (toScene === "C1") { finish(nextRevision); navigate(); return; }
       const image = images.current.get(`${scene}:${itemId}`), natural = image?.natural();
       if (!environment.current.enabled || environment.current.route !== scene || !image?.ref.current || !root.current || !natural) { finish(nextRevision); navigate(); return; }
       let delivered = false;

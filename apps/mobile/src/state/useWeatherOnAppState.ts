@@ -257,9 +257,15 @@ export function useWeatherOnAppState() {
   const [previewDestinationCareEnabled, setPreviewDestinationCareEnabled] = useState(true);
   const [previewDestinationAlertCondition, setPreviewDestinationAlertCondition] = useState<DestinationAlertCondition>(defaultDestinationAlertCondition);
   const [selectedDestinationPlace, setSelectedDestinationPlace] = useState<PlaceSearchResult>(getDefaultDestinationPlace());
-  const [previewDestinationSchedulePreference, setPreviewDestinationSchedulePreference] = useState<DestinationSchedulePreference>(() =>
+  const [previewDestinationSchedulePreference, setPreviewDestinationSchedulePreferenceState] = useState<DestinationSchedulePreference>(() =>
     getDefaultDestinationSchedulePreference(getDefaultDestinationPlace()),
   );
+  // Keep event-time state current even when several taps arrive before React renders.
+  const previewDestinationSchedulePreferenceRef = useRef(previewDestinationSchedulePreference);
+  const setPreviewDestinationSchedulePreference = useCallback((next: DestinationSchedulePreference) => {
+    previewDestinationSchedulePreferenceRef.current = next;
+    setPreviewDestinationSchedulePreferenceState(next);
+  }, []);
   const [previewDestinationTravelEstimate, setPreviewDestinationTravelEstimate] = useState<DestinationTravelEstimate>(() =>
     createDefaultTravelEstimate(seongsuWeatherLocation, getDefaultDestinationPlace()),
   );
@@ -2116,7 +2122,10 @@ export function useWeatherOnAppState() {
     }
   }, [departureActivityIntentDestinationId, permissionReady, savedDestinations, updateSavedDestinations]);
 
-  const setSelectedDestinationSchedulePreference = useCallback((nextPreference: DestinationSchedulePreference) => {
+  const setSelectedDestinationSchedulePreference = useCallback((update: DestinationSchedulePreference | ((current: DestinationSchedulePreference) => DestinationSchedulePreference)) => {
+    const currentPreference = savedDestinationsRef.current.find((destination) => destination.place.id === selectedDestinationPlace.id)?.schedulePreference
+      ?? previewDestinationSchedulePreferenceRef.current;
+    const nextPreference = typeof update === "function" ? update(currentPreference) : update;
     setPreviewDestinationSchedulePreference(nextPreference);
     if (destinationSaved) {
       updateSavedDestinations((current) =>
@@ -2141,43 +2150,37 @@ export function useWeatherOnAppState() {
   }, [destinationSaved, selectedDestinationPlace.id, updateSavedDestinations]);
 
   const setSelectedDestinationTargetArrivalTime = useCallback((targetArrivalTime: string) => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
     if (!isValidTimeText(targetArrivalTime)) return;
-    setSelectedDestinationSchedulePreference({ ...currentPreference, targetArrivalTime });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+    setSelectedDestinationSchedulePreference((current) => ({ ...current, targetArrivalTime }));
+  }, [setSelectedDestinationSchedulePreference]);
 
   const setSelectedDestinationTimeBasis = useCallback((timeBasis: DestinationSchedulePreference["timeBasis"]) => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    setSelectedDestinationSchedulePreference({ ...currentPreference, timeBasis });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+    setSelectedDestinationSchedulePreference((current) => ({ ...current, timeBasis }));
+  }, [setSelectedDestinationSchedulePreference]);
 
   const setSelectedDestinationTransportMode = useCallback((transportMode: DestinationTransportMode) => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    setSelectedDestinationSchedulePreference({ ...currentPreference, transportMode });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+    setSelectedDestinationSchedulePreference((current) => ({ ...current, transportMode }));
+  }, [setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeat = useCallback(() => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    const repeatEnabled = !currentPreference.repeatEnabled;
-    setSelectedDestinationSchedulePreference({
-      ...currentPreference,
-      repeatEnabled,
-      repeatDays: repeatEnabled && currentPreference.repeatDays.length === 0 ? [getTodayRepeatDay()] : currentPreference.repeatDays,
+    setSelectedDestinationSchedulePreference((currentPreference) => {
+      const repeatEnabled = !currentPreference.repeatEnabled;
+      return {
+        ...currentPreference,
+        repeatEnabled,
+        repeatDays: repeatEnabled && currentPreference.repeatDays.length === 0 ? [getTodayRepeatDay()] : currentPreference.repeatDays,
+      };
     });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+  }, [setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeatDay = useCallback((day: DestinationRepeatDay) => {
-    const currentPreference = selectedSavedDestination?.schedulePreference ?? previewDestinationSchedulePreference;
-    const hasDay = currentPreference.repeatDays.includes(day);
-    const repeatDays = hasDay
-      ? currentPreference.repeatDays.filter((item) => item !== day)
-      : [...currentPreference.repeatDays, day].sort(compareRepeatDays);
-    setSelectedDestinationSchedulePreference({
-      ...currentPreference,
-      repeatEnabled: repeatDays.length > 0,
-      repeatDays,
+    setSelectedDestinationSchedulePreference((currentPreference) => {
+      const repeatDays = currentPreference.repeatDays.includes(day)
+        ? currentPreference.repeatDays.filter((item) => item !== day)
+        : [...currentPreference.repeatDays, day].sort(compareRepeatDays);
+      return { ...currentPreference, repeatEnabled: repeatDays.length > 0, repeatDays };
     });
-  }, [previewDestinationSchedulePreference, selectedSavedDestination?.schedulePreference, setSelectedDestinationSchedulePreference]);
+  }, [setSelectedDestinationSchedulePreference]);
 
   const removeSavedDestination = useCallback((placeId: string) => {
     const current = savedDestinationsRef.current;
