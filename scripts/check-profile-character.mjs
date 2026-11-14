@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import ts from 'typescript';
+import { loadImage,createCanvas } from '@napi-rs/canvas';
+function load(path,imports={}){const exports={};const source=ts.transpileModule(readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('exports','require',source)(exports,name=>{assert.ok(name in imports);return imports[name]});return exports;}
+const model=load('apps/mobile/src/state/profileCharacter.ts');
+for(const id of model.profileCharacterIds) assert.equal(model.normalizeProfileCharacter(model.profileCharacterRecord(id)),id);
+for(const value of [null,undefined,'rain',{},[],{version:2,id:'rain'},{version:1,id:'unknown'},{version:1,id:'__proto__'}]) assert.equal(model.normalizeProfileCharacter(value),'default');
+assert.throws(()=>model.profileCharacterRecord('invalid'));
+const map=new Map([['other-setting','{"keep":true}']]);globalThis.localStorage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v)};
+const web=load('apps/mobile/src/providers/appStorage.web.ts');
+assert.equal(await web.readAppValue(model.profileCharacterStorageKey,true),null);
+assert.equal(map.size,1,'initial read must not write defaults');
+await web.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord('wind'),true);
+assert.equal(model.normalizeProfileCharacter(await web.readAppValue(model.profileCharacterStorageKey,true)),'wind');
+assert.equal(map.get('other-setting'),'{"keep":true}');
+await web.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord('mist'),true);
+assert.equal(model.normalizeProfileCharacter(await web.readAppValue(model.profileCharacterStorageKey,true)),'mist');
+map.set(model.profileCharacterStorageKey,'broken JSON');await assert.rejects(web.readAppValue(model.profileCharacterStorageKey,true));
+globalThis.localStorage={getItem:()=>{throw Error('read denied')},setItem:()=>{throw Error('quota')}};
+await assert.rejects(web.readAppValue(model.profileCharacterStorageKey,true));await assert.rejects(web.writeAppValue(model.profileCharacterStorageKey,{id:'rain'},true));delete globalThis.localStorage;
+const manifest=JSON.parse(readFileSync('apps/mobile/assets/characters/profile/provenance.json'));
+assert.equal(manifest.characters.length,6);
+for(const row of manifest.characters){
+ const file=`apps/mobile/assets/characters/profile/${row.id}.png`;assert.equal(createHash('sha256').update(readFileSync(file)).digest('hex'),row.sha256);
+ assert.equal(row.source,row.id==='wind'||row.id==='mist'?'WeatherON-wind-mist-12-generation-source.png':'WeatherON-profile-11-proposal.png');
+ const image=await loadImage(file);assert.equal(image.width,512);assert.equal(image.height,512);const c=createCanvas(512,512),ctx=c.getContext('2d');ctx.drawImage(image,0,0);assert.equal(ctx.getImageData(0,0,1,1).data[3],0);
+}
+console.log('PASS: 8 choices, malformed/future values, no initial overwrite, persistence, unrelated data preservation, storage errors, 6 provenance hashes/alpha canvases.');
+// Exercise the actual native storage module against an in-memory SQLite engine.
+const { build } = await import('esbuild');
+const { DatabaseSync } = await import('node:sqlite');
+const db=new DatabaseSync(':memory:');
+let failWrites=false;
+const adapter={execAsync:async sql=>db.exec(sql),getAllAsync:async(sql,...args)=>db.prepare(sql).all(...args),getFirstAsync:async(sql,...args)=>db.prepare(sql).get(...args)??null,runAsync:async(sql,...args)=>{if(failWrites&&sql.startsWith('INSERT INTO app_meta'))throw Error('disk full');return db.prepare(sql).run(...args)},withTransactionAsync:async task=>{db.exec('BEGIN');try{await task();db.exec('COMMIT')}catch(e){db.exec('ROLLBACK');throw e}}};
+globalThis.__profileTestDB=adapter;
+const bundle=await build({entryPoints:['apps/mobile/src/providers/appStorage.ts'],bundle:true,platform:'node',format:'cjs',write:false,plugins:[{name:'native-boundary',setup(b){b.onResolve({filter:/localization\/react-native$/},()=>({path:'platform',namespace:'test'}));b.onResolve({filter:/^expo-file-system\/legacy$/},()=>({path:'fs',namespace:'test'}));b.onResolve({filter:/^expo-sqlite$/},()=>({path:'sqlite',namespace:'test'}));b.onLoad({filter:/.*/,namespace:'test'},a=>({contents:a.path==='platform'?'export const Platform={OS:"ios"};':a.path==='fs'?'export const documentDirectory="file:///test/"; export const getInfoAsync=async()=>({exists:false});':'export const openDatabaseAsync=async()=>globalThis.__profileTestDB;'}));}}]});
+const nativeModule={exports:{}};new Function('module','exports','require',bundle.outputFiles[0].text)(nativeModule,nativeModule.exports,()=>{});const native=nativeModule.exports;
+assert.equal(await native.readAppValue(model.profileCharacterStorageKey,true),null);
+db.prepare('INSERT INTO app_meta(key,value,updated_at) VALUES(?,?,?)').run('other-setting','keep',0);
+await native.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord('wind'),true);
+assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'wind');
+assert.equal(db.prepare('SELECT value FROM app_meta WHERE key=?').get('other-setting').value,'keep');
+failWrites=true;await assert.rejects(native.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord('rain'),true));
+assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'wind','failed write must retain previous selection');
+failWrites=false;await Promise.all(['rain','mist','solar'].map(id=>native.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord(id),true)));
+assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'solar');
+db.close();delete globalThis.__profileTestDB;
+console.log('PASS: actual native appStorage SQL branch, read/write, unrelated rows, rollback after disk failure, serialized writes.');
+let saved=model.profileCharacterRecord('wind'),release;let reads=0;
+const persistence=load('apps/mobile/src/state/profileCharacterPersistence.ts',{'./profileCharacter':model,'../providers/appStorage':{readAppValue:async()=>{reads++;return saved},writeAppValue:async(k,value)=>{await new Promise(r=>{release=r});saved=value}}});
+const writing=persistence.writeProfileCharacter('mist');await Promise.resolve();const remountedRead=persistence.readProfileCharacter();await Promise.resolve();assert.equal(reads,0,'remount must wait for old instance write');release();await writing;assert.equal(await remountedRead,'mist');
+console.log('PASS: remount during delayed write reads new selection, not stale selection.');

@@ -1,3 +1,4 @@
+import { profileCharacterStorageKey } from "../state/profileCharacter";
 type SQLiteDatabase = import("expo-sqlite").SQLiteDatabase;
 import { Platform } from "../localization/react-native";
 
@@ -445,7 +446,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
 }
 
 async function readStructuredValue(database: SQLiteExecutor, key: string): Promise<unknown | null> {
-  if (key === accountDeletionStateStorageKey) {
+  if (key === accountDeletionStateStorageKey || key === profileCharacterStorageKey) {
     const row = await database.getFirstAsync<TextRow>("SELECT value FROM app_meta WHERE key = ?", key);
     return row ? JSON.parse(row.value) : null;
   }
@@ -457,7 +458,7 @@ async function readStructuredValue(database: SQLiteExecutor, key: string): Promi
 }
 
 async function writeStructuredValue(database: SQLiteExecutor, key: string, value: unknown): Promise<void> {
-  if (key === accountDeletionStateStorageKey) {
+  if (key === accountDeletionStateStorageKey || key === profileCharacterStorageKey) {
     await database.runAsync("INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at", key, JSON.stringify(value), Date.now());
     return;
   }

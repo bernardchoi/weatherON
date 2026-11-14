@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "sourceFiles": [
+    {
+      "name": "WeatherON-profile-11-proposal.png",
+      "sha256": "2b41a3d8c771b7301a3d75713c8af939eaaa4bc5e16e02eeed78779665f8aefc"
+    },
+    {
+      "name": "WeatherON-wind-mist-12-generation-source.png",
+      "sha256": "04bbbf903f608b62163a7b8c79c7e9197c9368f26b0fc133cdcc3d7e92d7b93a"
+    }
+  ],
+  "characters": [
+    {
+      "id": "solar",
+      "source": "WeatherON-profile-11-proposal.png",
+      "crop": [
+        60,
+        30,
+        490,
+        490
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "cc25d23f04f408611db59ece8d575f2f48ad8076c6de275fa45ea1d8e0d63042"
+    },
+    {
+      "id": "rain",
+      "source": "WeatherON-profile-11-proposal.png",
+      "crop": [
+        550,
+        30,
+        980,
+        490
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "38e3ea40541b617b810fd36cae0d373734b82eb48ec54fdf403b2c44d21f1ed5"
+    },
+    {
+      "id": "storm",
+      "source": "WeatherON-profile-11-proposal.png",
+      "crop": [
+        1020,
+        30,
+        1470,
+        490
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "1b27563fc0f19a8245c7d28193726d06f416cde4db85c840aedf51d3f6d09835"
+    },
+    {
+      "id": "wind",
+      "source": "WeatherON-wind-mist-12-generation-source.png",
+      "crop": [
+        50,
+        520,
+        500,
+        960
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "4941bb9733fb9e7739a7b96d5b847f6a6d94b2fa42976715b29abc8c307f2749"
+    },
+    {
+      "id": "frost",
+      "source": "WeatherON-profile-11-proposal.png",
+      "crop": [
+        550,
+        520,
+        980,
+        960
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "f44d8492613974195ca46fdb3273d25ec8bbc2db807db2eddd4c62e4fe8e7d88"
+    },
+    {
+      "id": "mist",
+      "source": "WeatherON-wind-mist-12-generation-source.png",
+      "crop": [
+        1010,
+        540,
+        1460,
+        960
+      ],
+      "canvas": [
+        512,
+        512
+      ],
+      "operation": "unscaled crop centered on transparent canvas",
+      "sha256": "84e6449a56dfed47be29d16134df94269ce8b66072436f15c3bd6606f7a360ea"
+    }
+  ]
+}
