@@ -2,6 +2,7 @@ require File.join(File.dirname(`node --print "require.resolve('expo/package.json
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 
 require 'json'
+require_relative '../../../scripts/patch-libwebp-build66'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
 
 ENV['RCT_NEW_ARCH_ENABLED'] = '0' if podfile_properties['newArchEnabled'] == 'false'
@@ -44,6 +45,8 @@ target 'WeatherON' do
   )
 
   post_install do |installer|
+    patch_weatheron_libwebp(installer.sandbox.root.to_s)
+
     react_native_post_install(
       installer,
       config[:reactNativePath],

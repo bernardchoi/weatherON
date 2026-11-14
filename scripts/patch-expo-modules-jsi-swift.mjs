@@ -67,6 +67,36 @@ patchFile(join(nodeModules, "react-native-screens/ios/RNSScreenStackHeaderConfig
     "#ifndef NDEBUG\n$&\n#endif",
   ));
 
+// Build 66: migrate deprecated Worklets conversion without changing the old Any fallback.
+// `from` obtains the runtime before testing JavaScriptRepresentable and returns undefined
+// for unsupported values. Preserve both details rather than only renaming the call.
+for (const name of ["DynamicSerializableType", "DynamicWorkletType"]) {
+  patchFile(join(expoModulesCoreRoot, "Worklets/Core", `${name}.swift`),
+    (source) => source.replace(
+      "    return try JavaScriptValue.from(value, runtime: appContext.runtime)",
+      `    let runtime = try appContext.runtime
+    guard let representable = value as? JavaScriptRepresentable else {
+      return .undefined
+    }
+    return JavaScriptValue.representing(value: representable, in: runtime)`,
+    ));
+}
+
+// None is deliberately excluded by callers. Keep the assertion and existing fallback
+// for invalid input, but make this known enum case explicit to the compiler.
+patchFile(join(nodeModules, "react-native-screens/ios/conversion/RNSConversions-Tabs.mm"),
+  (source) => source.replace(
+    "  switch (systemItem) {\n    case RNSTabsScreenSystemItemBookmarks:",
+    "  switch (systemItem) {\n    case RNSTabsScreenSystemItemNone:\n      break;\n    case RNSTabsScreenSystemItemBookmarks:",
+  ));
+
+// The unique FileSystemManager conformer and its MediaHandler caller use nonoptional
+// directory strings/URLs. State that existing contract in the Objective-C interface.
+patchFile(join(expoModulesCoreRoot, "Interfaces/FileSystem/EXFileSystemInterface.h"),
+  (source) => source.includes("NS_ASSUME_NONNULL_BEGIN") ? source : source
+    .replace("@protocol EXFileSystemInterface", "NS_ASSUME_NONNULL_BEGIN\n\n@protocol EXFileSystemInterface")
+    .replace("\n@end", "\n@end\n\nNS_ASSUME_NONNULL_END"));
+
 // Expo Constants otherwise skips app.config generation when PROJECT_DIR contains spaces.
 patchFile(join(process.cwd(), "node_modules", "expo-constants", "scripts", "get-app-config-ios.sh"),
   (source) => source.replace('$(basename $PROJECT_DIR)', '$(basename "$PROJECT_DIR")'));
