@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -z "${SSL_CERT_FILE:-}" ] && [ -r /etc/ssl/cert.pem ]; then
+  export SSL_CERT_FILE=/etc/ssl/cert.pem
+fi
+exec python3 "$@"

@@ -1,0 +1,5 @@
+market:
+  python: ".agents/bin/market-python"
+  path: "~/.local/share/weatheron-oma/last30days/skills/last30days"
+voice:
+  backend: voicestudio
