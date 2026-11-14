@@ -2,6 +2,25 @@
 
 2026-11-14 로컬 Mac에서 스킬 33개를 각각 새 Codex 세션에서 호출하고 지정한 작업의 산출물을 확인함. 스킬·훅 설치 기준은 `main`의 `94178970`, 시장조사·음성·보안 연동 설정과 보안 후보 판정 기준은 `7f573a21`임.
 
+## Codex 훅 실행 결과
+
+새 WeatherON Codex 세션에서 등록된 훅 6개가 모두 활성 상태였음. 프롬프트를 제출하고 `pwd`를 실행한 뒤 턴을 종료했고, 서브에이전트 1개를 실행해 시작과 종료 이벤트도 확인함. [훅 등록 설정](../../.codex/hooks.json)
+
+| 훅 | 실제 이벤트 | 실행 결과 |
+|---|---|---|
+| UserPromptSubmit | 프롬프트 제출 | completed |
+| PreToolUse | `pwd` 실행 전 | completed |
+| PostToolUse | `pwd` 종료 코드 0 반환 후 | completed |
+| Stop | 턴 종료 | completed |
+| SubagentStart | 서브에이전트 시작 | completed · 132ms |
+| SubagentStop | 서브에이전트 종료 | completed · 141ms |
+
+## WAV와 QA 자료 로컬 보존
+
+사용자가 직접 청취한 `tmp/integration-retest/oma-voice/weatheron-rain-ko.wav`의 SHA-256은 정리 전후 모두 `bd0447d89a110f31e044c661bf46e437c4c54964cff03e57c728847186a08453`이었음. WAV와 검증 기록 1개, 기존 QA 자료 12,559개를 합한 12,561개 파일의 존재를 확인함. 기존 QA 자료는 정리 전후 경로·크기·수정 시각이 일치함.
+
+로컬 `.git/info/exclude`에 보존 파일의 개별 경로만 등록함. `docs/qa/artifacts/`와 `tmp/`에 테스트 파일을 하나씩 만들자 `git status -uall`에 두 파일만 표시됐고, 둘을 삭제한 뒤 작업 트리가 깨끗해졌음.
+
 ## OMA_BIN 실행 경로 검토
 
 **현재 WeatherON 로컬 환경에서 수정 불필요로 판정함.** Deepsec의 훅 전용 규칙은 실행 파일을 환경변수로 선택하는 코드 한 곳을 검출함. 훅 래퍼는 상위 프로세스에서 받은 `OMA_BIN`을 사용할 수 있으나, 등록된 훅 6개의 명령은 고정돼 있고 프롬프트나 도구 입력이 해당 변수에 대입되는 경로는 발견되지 않았음. 확인 당시 변수는 설정되지 않았고 `oma`는 사용자 계정에 설치한 CLI로 해석됐음. [훅 래퍼](../../.codex/hooks/oma-hook.sh) · [등록된 명령](../../.codex/hooks.json) · [검출 규칙](../../.deepsec/generated-matchers.ts)
