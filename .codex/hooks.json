@@ -1,0 +1,78 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-UserPromptSubmit",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'UserPromptSubmit'",
+            "timeout": 21
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-PreToolUse",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'PreToolUse' --matcher 'Bash|apply_patch|Edit|Write'",
+            "timeout": 26
+          }
+        ],
+        "matcher": "Bash|apply_patch|Edit|Write"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-PostToolUse",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'PostToolUse' --matcher 'apply_patch|Edit|Write|Bash'",
+            "timeout": 24
+          }
+        ],
+        "matcher": "apply_patch|Edit|Write|Bash"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-Stop",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'Stop'",
+            "timeout": 40
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-SubagentStart",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'SubagentStart'",
+            "timeout": 8
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "name": "oma-hook-SubagentStop",
+            "type": "command",
+            "command": "'.codex/hooks/oma-hook.sh' --vendor 'codex' --event 'SubagentStop'",
+            "timeout": 8
+          }
+        ]
+      }
+    ]
+  }
+}

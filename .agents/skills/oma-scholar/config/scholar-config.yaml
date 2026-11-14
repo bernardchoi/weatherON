@@ -1,0 +1,8 @@
+# oma-scholar configuration
+#
+# Shipped default for `scholar.base_url` in .agents/oma-config.yaml, which wins
+# and which `oma update` preserves. The `oma scholar` CLI always talks to
+# https://knows.academy; this value applies only to raw HTTP calls made
+# against a self-hosted Knows instance.
+api:
+  base_url: https://knows.academy
