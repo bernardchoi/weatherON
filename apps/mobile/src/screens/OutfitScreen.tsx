@@ -5,7 +5,6 @@ import { AmbientControlSurface } from "../components/AmbientControlSurface";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
 import { FeedbackPressable } from "../components/FeedbackPressable";
-import { useOutfitNavigation } from "../components/OutfitMotion";
 import { OutfitGrid } from "../components/OutfitGrid";
 import { StyleCriteriaIcon } from "../components/StyleCriteriaIcon";
 import type { P0ScreenProps } from "../navigation/types";
@@ -29,8 +28,7 @@ export function OutfitScreen({
   onRefreshWeather,
 }: P0ScreenProps) {
   const theme = useAppTheme();
-  const openOutfit = useOutfitNavigation();
-  const openDetail = (itemId = Object.values(state.outfit.items).find(Boolean)?.id) => openOutfit(itemId, "C4", () => onNavigate("C4"));
+  const openDetail = () => onNavigate("C4");
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
   const { language } = React.use(LocalizationContext);
@@ -55,10 +53,10 @@ export function OutfitScreen({
           {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
           <Text testID="outfit-summary" style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)}</Text>
           {ambient && state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.currentAvailable) ? <AppButton label="날씨 다시 확인" onPress={onRefreshWeather} tone="secondary" size="sm" /> : null}
-          <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={slot => openDetail(state.outfit.items[slot as keyof typeof state.outfit.items]?.id)} />
+          <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={openDetail} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
           {state.outfit.timeAdvice.slice(0, 1).map((item) => (
-            <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={() => openDetail()} style={[styles.advicePreview, { minHeight: 44, backgroundColor: ambient ? "transparent" : theme.card }]}>
+            <FeedbackPressable key={item.time} accessibilityRole="button" accessibilityLabel="시간별 코디 조언 상세 보기" onPress={openDetail} style={[styles.advicePreview, { minHeight: 44, backgroundColor: ambient ? "transparent" : theme.card }]}>
               <View style={[styles.advicePreviewRow, ambient && fontScale > 1.3 && { flexWrap: "wrap" }]}>
                 {ambient ? <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} /> : null}
                 <Text style={[pageStyles.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
@@ -69,7 +67,7 @@ export function OutfitScreen({
           <AmbientControlSurface style={ambient ? { paddingHorizontal: 14, paddingVertical: 4 } : undefined}>
           <View style={[styles.actions, ambient && { alignItems: "center", ...(fontScale > 1.3 || layout.width < 360 ? { flexDirection: "column", alignItems: "stretch" } : {}), justifyContent: "space-between", paddingTop: 4, gap: 12 }]}>
             {ambient ? <>
-              <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 자세히 보기" onPress={() => openDetail()} style={styles.readingAction}>
+              <FeedbackPressable accessibilityRole="button" accessibilityLabel="코디 자세히 보기" onPress={openDetail} style={styles.readingAction}>
                 <Image source={ambientUiIcons.tabOutfit} style={{ width: 26, height: 26, tintColor: theme.clear }} />
                 <Text style={[pageStyles.body, { color: theme.clear, fontWeight: "700", flexShrink: 1 }]}>코디 자세히 보기</Text>
               </FeedbackPressable>
@@ -78,7 +76,7 @@ export function OutfitScreen({
                 <Text style={[pageStyles.body, { color: theme.text, flexShrink: 1 }]}>우산 추천</Text>
               </FeedbackPressable>
             </> : <>
-              <AppButton label="코디 자세히 보기" onPress={() => openDetail()} size="sm" />
+              <AppButton label="코디 자세히 보기" onPress={openDetail} size="sm" />
               <AppButton label="우산 추천" onPress={() => onNavigate("H4")} tone="secondary" size="sm" />
             </>}
           </View>
