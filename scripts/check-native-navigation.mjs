@@ -83,11 +83,12 @@ const dynamicBack=new Function('route','gate','permissionGate','policyHubReturnR
 const resolveBack=(route)=>dynamicBack(route,{returnTo:'C1'},{returnTo:'M4'},'A4','R1','C1','G1',r=>r==='H4',{H4:'C1'},getBackRoute);
 for (const [from,to] of [['A4','M1'],['A2','C1'],['O3','M4'],['R2','R1'],['R1','A4'],['O4','C1'],['H4','C1']]) assert.equal(resolveBack(from),to);
 for (const route of ['A4','A2','O3','H1']) {
-  let destination,accountCleared=false,permissionCleared=false;
-  const back=new Function('route','backRoute','setRoute','setGate','setPermissionGate','accountActionRevisionRef',`return (${backCallback})();`);
-  back(route,resolveBack(route),r=>destination=r,()=>accountCleared=true,()=>permissionCleared=true,{current:0});
+  let destination,accountCleared=false,permissionCleared=false,locationInvalidations=0;
+  const back=new Function('route','backRoute','setRoute','setGate','setPermissionGate','accountActionRevisionRef','invalidateLocationRequest',`return (${backCallback})();`);
+  back(route,resolveBack(route),r=>destination=r,()=>accountCleared=true,()=>permissionCleared=true,{current:0},()=>{locationInvalidations++;});
   assert.equal(destination,route==='H1'?undefined:resolveBack(route));
   assert.equal(accountCleared,route==='A2');
   assert.equal(permissionCleared,route==='O3');
+  assert.equal(locationInvalidations,route==='O3'?1:0,'Only leaving the location permission screen invalidates the pending request');
 }
 console.log('Back actions: shared native/explicit destinations and gate cleanup passed');

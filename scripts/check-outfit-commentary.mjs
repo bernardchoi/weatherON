@@ -147,7 +147,13 @@ for(const fontScale of [1,1.6,2]) for(const language of ['ko','en','ja']) {
  const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','summarizeHomeOutfit','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons','const useAmbientEntrance = () => ({});const useOutfitNavigation=()=> (_id,_target,navigate)=>navigate();const OutfitMotionImage=Image;'+jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),summarizeHomeOutfit,v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
  const tree=render({outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
  const nodes=[];function visit(n){if(Array.isArray(n))return n.forEach(visit);if(!n||typeof n!=='object')return;nodes.push(n);n.children?.forEach(visit);}visit(tree);
- const comment=nodes.find(n=>n.children?.includes(summarizeHomeOutfit(outfit.decisionText)));assert.ok(comment);assert.equal(comment.props.numberOfLines,undefined);assert.equal(comment.props.adjustsFontSizeToFit,undefined);
+ const expectedClauses = summarizeHomeOutfit(outfit.decisionText).split(' · ');
+ const comments = nodes.filter(n => n.type === 'span' && expectedClauses.includes(n.children[0]));
+ assert.deepEqual(comments.map(n => n.children[0]), expectedClauses, 'Home displays every advice clause in order');
+ for (const comment of comments) {
+   assert.equal(comment.props.numberOfLines, undefined);
+   assert.equal(comment.props.adjustsFontSizeToFit, undefined);
+ }
  const images=nodes.filter(n=>n.type==='img'&&n.props.resizeMode==='contain');assert.deepEqual(images.map(n=>n.props.source),[outfit.items.outer.imageUrl,outfit.items.shoes.imageUrl]);
  const row=nodes.find(n=>n.props?.style?.flexDirection);assert.equal(row.props.style.flexDirection,fontScale>1.3?'column':'row');
 }
