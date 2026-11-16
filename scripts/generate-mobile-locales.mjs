@@ -11,6 +11,13 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "온비": "ONBY",
+    "솔라": "Solar",
+    "레인": "Rain",
+    "스톰": "Storm",
+    "윈드": "Wind",
+    "프로스트": "Frost",
+    "미스트": "Mist",
     "강수 최대 {0}%": "Precipitation up to {0}%",
     "기온 차엔 겉옷을 더하고 빼요": "Add or remove a layer as temperatures change",
     "더울 땐 겉옷 벗고 물 챙겨요": "When warm, shed a layer and bring water",
@@ -171,6 +178,13 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "온비": "オンビ",
+    "솔라": "ソーラー",
+    "레인": "レイン",
+    "스톰": "ストーム",
+    "윈드": "ウィンド",
+    "프로스트": "フロスト",
+    "미스트": "ミスト",
     "강수 최대 {0}%": "降水確率 最大{0}%",
     "기온 차엔 겉옷을 더하고 빼요": "気温に合わせて上着で調節しましょう",
     "더울 땐 겉옷 벗고 물 챙겨요": "暑い時は上着を脱いで、水も用意しましょう",
