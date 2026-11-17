@@ -1,4 +1,4 @@
-import { ProfileCharacterImage, ProfileCharacterPicker, useProfileCharacter, useProfileCharacterCopy } from "../components/ProfileCharacterPicker";
+import { ProfileCharacterButton, ProfileCharacterPicker, useProfileCharacter } from "../components/ProfileCharacterPicker";
 import { AmbientReveal } from "../components/AmbientReveal";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
@@ -37,13 +37,13 @@ export function MyScreen({
 }: P0ScreenProps) {
   const theme = useAppTheme();
   const character = useProfileCharacter();
-  const characterCopy = useProfileCharacterCopy();
   const [characterPickerOpen, setCharacterPickerOpen] = React.useState(false);
   const ambient = Platform.OS === "ios";
   const layout = useResponsiveLayout();
   const { fontScale } = useWindowDimensions();
   const { language } = React.use(LocalizationContext);
-  const accountSize = fontScale > 1.4 ? 88 : layout.height >= 900 ? 120 : 104;
+  const accountSize = layout.height >= 900 ? 144 : 136;
+  const stackedProfile = fontScale > 1.2 || layout.width < 400;
   const profileTitleFontSize = fontScale > 1.5 ? 21 : 24;
   const profileTitleLineHeight = fontScale > 1.5 ? 29 : 32;
   const isAccountReady = accountLinked && termsRequiredAccepted;
@@ -106,16 +106,11 @@ export function MyScreen({
         </AmbientReveal>
 
         {ambient ? <AmbientReveal order={1} testID="my-profile" style={ambientVisual.account}>
-          <View style={[ambientVisual.avatar, { width: accountSize, height: accountSize, backgroundColor: theme.card, borderColor: theme.border }]}>
-            {character.id === "default" ? <Image source={ambientUiIcons.tabMy} style={[{ width: accountSize * 0.6, height: accountSize * 0.6, tintColor: theme.muted }]} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : <ProfileCharacterImage id={character.id} size={accountSize * 0.92} />}
-          </View>
+          <ProfileCharacterButton id={character.id} size={accountSize} onPress={() => setCharacterPickerOpen(true)} />
           <Text style={{ fontSize: profileTitleFontSize, lineHeight: profileTitleLineHeight, fontWeight: "700", color: theme.text, textAlign: "center" }}>{profileTitle}</Text>
           <Text style={[pageStyles.caption, { color: theme.muted, textAlign: "center" }]}>{profileBody}</Text>
           <View style={{ alignSelf: isAccountReady ? "center" : "stretch", marginTop: isAccountReady ? 12 : 6 }}><FeedbackPressable accessibilityRole="button" accessibilityLabel={profileAction} onPress={openProfile} hapticFeedback="none" style={{ minHeight: isAccountReady ? 44 : 52, paddingHorizontal: 24, paddingVertical: 10, borderRadius: radius.pill, borderWidth: isAccountReady ? StyleSheet.hairlineWidth : 0, borderColor: theme.border, backgroundColor: isAccountReady ? theme.cardStrong : "#FFBF45", alignItems: "center", justifyContent: "center" }}><Text style={{ color: isAccountReady ? theme.text : "#152E38", fontSize: isAccountReady ? 16 : 18, lineHeight: isAccountReady ? 23 : 25, fontWeight: "600", textAlign: "center" }}>{profileAction}</Text></FeedbackPressable></View>
-        </AmbientReveal> : <FeedbackPressable
-          accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"}
-          accessibilityRole="button"
-          onPress={openProfile}
+        </AmbientReveal> : <View
           style={[
             styles.profileCard,
             {
@@ -124,32 +119,21 @@ export function MyScreen({
               padding: layout.settingsPanelPadding,
               backgroundColor: theme.card,
               borderColor: isAccountReady ? theme.success : theme.border,
+              flexDirection: stackedProfile ? "column" : "row",
             },
             cardShadow(theme),
         pageStyles.card,
           ]}
         >
-          <View
-            style={[
-              styles.avatar,
-              layout.isShort ? styles.avatarShort : null,
-              { backgroundColor: theme.card, borderColor: isAccountReady ? theme.success : theme.sky },
-              pageStyles.quietIcon,
-            ]}
-          >
-            {character.id === "default" ? <PersonGlyph color={isAccountReady ? theme.success : theme.sky} /> : <ProfileCharacterImage id={character.id} size={layout.isShort ? 40 : 48} />}
+          <ProfileCharacterButton id={character.id} size={accountSize} onPress={() => setCharacterPickerOpen(true)} />
+          <View style={[styles.profileCopy, stackedProfile && { flex: 0 }]}>
+            <Text style={[styles.profileName, pageStyles.sectionTitle, { color: theme.text }]}>{profileTitle}</Text>
+            <Text style={[styles.profileEmail, pageStyles.caption, { color: theme.subtle }]}>{profileBody}</Text>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={isAccountReady ? "계정 관리" : needsTerms ? "약관 동의 이어가기" : "계정 연결"} onPress={openProfile} style={[styles.profilePill, { minHeight: 48, paddingVertical: 10, backgroundColor: "transparent", borderColor: theme.border }]}>
+              <Text style={[styles.profilePillText, pageStyles.caption, { color: theme.text, textAlign: "center" }]}>{profileAction}</Text>
+            </FeedbackPressable>
           </View>
-          <View style={styles.profileCopy}>
-            <Text style={[styles.profileName, pageStyles.sectionTitle, { color: theme.text }]} numberOfLines={1}>{profileTitle}</Text>
-            <Text style={[styles.profileEmail, pageStyles.caption, { color: theme.subtle }]} numberOfLines={1}>{profileBody}</Text>
-          </View>
-          <View style={[styles.profilePill, { backgroundColor: "transparent", borderColor: theme.border }]}>
-            <Text style={[styles.profilePillText, pageStyles.caption, { color: theme.text }]}>{profileAction}</Text>
-          </View>
-          <Chevron color={theme.subtle} />
-        </FeedbackPressable>}
-
-        <FeedbackPressable testID="my-character-picker" accessibilityRole="button" accessibilityLabel={characterCopy.choose} onPress={() => setCharacterPickerOpen(true)} style={{ minHeight: 48, alignItems: "center", justifyContent: "center", padding: 8 }}><Text style={{ color: theme.text, fontSize: 16 }}>{characterCopy.choose}</Text></FeedbackPressable>
+        </View>}
 
         {recommendation && !ambient ? (
           <FeedbackPressable
@@ -324,15 +308,6 @@ function getProviderLabel(provider?: AccountProvider) {
   return "계정";
 }
 
-function PersonGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.personGlyph} accessibilityElementsHidden>
-      <View style={[styles.personHead, { borderColor: color }]} />
-      <View style={[styles.personBody, { borderColor: color }]} />
-    </View>
-  );
-}
-
 function Chevron({ color }: { color: string }) {
   return (
     <View style={styles.chevron} accessibilityElementsHidden>
@@ -345,7 +320,6 @@ function Chevron({ color }: { color: string }) {
 const ambientVisual = StyleSheet.create({
   title: { fontSize: 28, lineHeight: 36 },
   account: { alignItems: "center", gap: 6, paddingVertical: 8 },
-  avatar: { borderRadius: radius.pill, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth },
   version: { fontSize: 14, lineHeight: 20, fontWeight: "400" },
 });
 
@@ -409,41 +383,9 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "900",
   },
-  avatar: {
-    width: 52,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 2,
-  },
-  avatarShort: {
-    width: 44,
-    height: 44,
-  },
-  personGlyph: {
-    width: 26,
-    height: 26,
-    alignItems: "center",
-  },
-  personHead: {
-    width: 10,
-    height: 10,
-    borderWidth: 1.7,
-    borderRadius: 999,
-  },
-  personBody: {
-    position: "absolute",
-    bottom: 1,
-    width: 20,
-    height: 12,
-    borderWidth: 1.7,
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
-    borderBottomWidth: 0,
-  },
   profileCopy: {
     flex: 1,
+    alignSelf: "stretch",
     gap: 4,
   },
   profileName: {
