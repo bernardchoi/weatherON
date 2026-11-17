@@ -52,6 +52,40 @@ try {
 if (process.argv.includes("--installed")) {
   assert.equal(readFileSync("apps/mobile/ios/Pods/Manifest.lock", "utf8"), lock,
     "Installed Pods differ from Podfile.lock; regenerate iOS integration before building");
+  if (process.platform === "darwin") {
+    const podsProjectPath = "apps/mobile/ios/Pods/Pods.xcodeproj/project.pbxproj";
+    const { objects } = JSON.parse(execFileSync("plutil", ["-convert", "json", "-o", "-", podsProjectPath],
+      { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }));
+    if (/^  - React-Core-prebuilt \(/m.test(lock)) {
+      for (const name of ["ExpoSQLite", "ExpoModulesCore", "ExpoModulesWorklets", "ExpoSecureStore"]) {
+        const target = Object.values(objects).find(item => item.isa === "PBXNativeTarget" && item.name === name);
+        for (const id of objects[target.buildConfigurationList].buildConfigurations) {
+          const paths = objects[id].buildSettings.HEADER_SEARCH_PATHS;
+          assert.match(paths?.[0] ?? "", /React-Core-prebuilt\/React\.framework\/Headers\/React_Core/u, name);
+          assert.ok(paths.includes("$(inherited)"), name);
+        }
+      }
+    }
+    const sdk = execFileSync("xcrun", ["--sdk", "iphoneos", "--show-sdk-path"], { encoding: "utf8" }).trim();
+    const tasks = "node_modules/expo-file-system/ios/Legacy/EXSessionTasks";
+    execFileSync("xcrun", ["clang", "-target", "arm64-apple-ios16.4", "-isysroot", sdk, "-fobjc-arc",
+      "-Iapps/mobile/ios/Pods/Headers/Public/ExpoModulesCore", "-Iapps/mobile/ios/Pods/Headers/Public",
+      "-Werror=nullability-completeness", "-Werror=nonnull", "-Werror=incompatible-pointer-types",
+      "-fsyntax-only", "-x", "objective-c", `${tasks}/EXTaskHandlersManager.m`,
+      `${tasks}/EXSessionCancelableUploadTaskDelegate.m`, "-"], {
+      input: `#import <ExpoFileSystem/EXSessionCancelableUploadTaskDelegate.h>
+#import <ExpoFileSystem/EXSessionResumableDownloadTaskDelegate.h>
+void checkTransfers(EXSessionTaskDelegate *delegate, NSURLSession *session, NSURLSessionTask *task,
+                    EXPromiseResolveBlock resolve, EXPromiseRejectBlock reject, NSURL *url) {
+  [delegate URLSession:session task:task didCompleteWithError:nil];
+  (void)[[EXSessionCancelableUploadTaskDelegate alloc] initWithResolve:resolve reject:reject
+      onSendCallback:nil resumableManager:nil uuid:@"upload"];
+  (void)[[EXSessionResumableDownloadTaskDelegate alloc] initWithResolve:resolve reject:reject localUrl:url
+      shouldCalculateMd5:NO onWriteCallback:nil resumableManager:nil uuid:@"download"];
+}
+`,
+    });
+  }
   const podsProject = readFileSync("apps/mobile/ios/Pods/Pods.xcodeproj/project.pbxproj", "utf8");
   const sqliteConfig = JSON.parse(readFileSync("apps/mobile/ios/Podfile.properties.json", "utf8"));
   if (sqliteConfig["expo.sqlite.useLibSQL"] !== "true" && sqliteConfig["expo.sqlite.useSQLCipher"] !== "true") {

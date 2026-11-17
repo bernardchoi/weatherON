@@ -2136,6 +2136,7 @@ export function useWeatherOnAppState() {
         ),
       );
     }
+    return nextPreference;
   }, [destinationSaved, selectedDestinationPlace.id, updateSavedDestinations]);
 
   const setSelectedDestinationLabel = useCallback((label: DestinationLabel | null) => {
@@ -2163,7 +2164,7 @@ export function useWeatherOnAppState() {
   }, [setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeat = useCallback(() => {
-    setSelectedDestinationSchedulePreference((currentPreference) => {
+    return setSelectedDestinationSchedulePreference((currentPreference) => {
       const repeatEnabled = !currentPreference.repeatEnabled;
       return {
         ...currentPreference,
@@ -2174,7 +2175,7 @@ export function useWeatherOnAppState() {
   }, [setSelectedDestinationSchedulePreference]);
 
   const toggleSelectedDestinationRepeatDay = useCallback((day: DestinationRepeatDay) => {
-    setSelectedDestinationSchedulePreference((currentPreference) => {
+    return setSelectedDestinationSchedulePreference((currentPreference) => {
       const repeatDays = currentPreference.repeatDays.includes(day)
         ? currentPreference.repeatDays.filter((item) => item !== day)
         : [...currentPreference.repeatDays, day].sort(compareRepeatDays);

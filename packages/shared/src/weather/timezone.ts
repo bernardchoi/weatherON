@@ -1,7 +1,18 @@
+const forecastDateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function forecastDateFormatter(timeZone: string) {
+  let formatter = forecastDateFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+    forecastDateFormatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
 export function isValidIanaTimeZone(value?: string): value is string {
   if (!value?.trim()) return false;
   try {
-    new Intl.DateTimeFormat("en-US", { timeZone: value }).format(0);
+    forecastDateFormatter(value);
     return true;
   } catch {
     return false;
@@ -13,6 +24,6 @@ export function getForecastLocalDate(value: string, timeZone: string): string {
   if (!/(?:Z|[+-]\d{2}:?\d{2})$/u.test(value)) return value.slice(0, 10);
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "";
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date).map((part) => [part.type, part.value]));
+  const parts = Object.fromEntries(forecastDateFormatter(timeZone).formatToParts(date).map((part) => [part.type, part.value]));
   return `${parts.year}-${parts.month}-${parts.day}`;
 }

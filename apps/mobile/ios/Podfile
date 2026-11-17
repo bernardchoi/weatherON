@@ -58,6 +58,16 @@ target 'WeatherON' do
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results
       .each do |pod_name, target_installation_result|
+      # Swift imports React from this framework. Prefer its own headers to the duplicate Pods symlinks.
+      pod = target_installation_result.target
+      if pod.uses_swift? && pod.recursive_dependent_targets.any? { |dependency| dependency.pod_name == 'React-Core-prebuilt' }
+        react_headers = '"$(PODS_XCFRAMEWORKS_BUILD_DIR)/React-Core-prebuilt/React.framework/Headers/React_Core"'
+        target_installation_result.native_target.build_configurations.each do |config|
+          paths = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
+          config.build_settings['HEADER_SEARCH_PATHS'] = [react_headers, *Array(paths)]
+        end
+      end
+
       target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
         resource_bundle_target.build_configurations.each do |config|
           config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'

@@ -116,9 +116,6 @@ export function DestinationCareScreen({
   const ctaLabel = getCareCtaLabel(permissionReady, destinationCareEnabled);
   const transportLabel = getTransportModeLabel(transportMode);
   const walkUnavailable = selectedDestinationTravelEstimate.transportMode === "walk" && isWalkUnavailable(selectedDestinationTravelEstimate.distanceMeters);
-  const repeatEnabled = selectedDestinationSchedulePreference.repeatEnabled;
-  const repeatDays = selectedDestinationSchedulePreference.repeatDays;
-  const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
   const destinationName = selectedDestinationPlace?.name ?? destinationWeather.locationName;
   const usesKakaoMap = selectedDestinationPlace.countryCode === "KR";
   const directionsLabel = usesKakaoMap ? "카카오맵 길찾기" : "Google 지도 길찾기";
@@ -347,9 +344,8 @@ export function DestinationCareScreen({
             <Text style={[styles.decisionBody, pageStyles.caption, { color: theme.muted }]}>시간은 목적지 현지 시각 기준이에요.</Text>
           ) : null}
           <RepeatSchedulePanel
-            repeatEnabled={repeatEnabled}
-            repeatDays={repeatDays}
-            repeatSummary={repeatSummary}
+            key={selectedDestinationPlace.id}
+            preference={selectedDestinationSchedulePreference}
             onToggleRepeat={onToggleDestinationRepeat}
             onToggleRepeatDay={onToggleDestinationRepeatDay}
             theme={theme}
@@ -800,20 +796,18 @@ function TransportDropdown({
 }
 
 function RepeatSchedulePanel({
-  repeatEnabled,
-  repeatDays,
-  repeatSummary,
+  preference,
   onToggleRepeat,
   onToggleRepeatDay,
   theme,
 }: {
-  repeatEnabled: boolean;
-  repeatDays: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"];
-  repeatSummary: string;
-  onToggleRepeat: () => void;
-  onToggleRepeatDay: (day: P0ScreenProps["selectedDestinationSchedulePreference"]["repeatDays"][number]) => void;
+  preference: P0ScreenProps["selectedDestinationSchedulePreference"];
+  onToggleRepeat: P0ScreenProps["onToggleDestinationRepeat"];
+  onToggleRepeatDay: P0ScreenProps["onToggleDestinationRepeatDay"];
   theme: AppTheme;
 }) {
+  const [{ repeatEnabled, repeatDays }, showSelection] = React.useOptimistic(preference);
+  const repeatSummary = getRepeatSummary(repeatEnabled, repeatDays);
   return (
     <View style={[[styles.settingsPanel, { backgroundColor: theme.cardMuted, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.settingsPanel]}>
       <View style={[styles.settingsRow, Platform.OS === "ios" && ambientVisual.settingsRow]}>
@@ -830,7 +824,7 @@ function RepeatSchedulePanel({
           accessibilityLabel={repeatEnabled ? "반복 알림 끄기" : "반복 알림 켜기"}
           accessibilityRole="switch"
           accessibilityState={{ checked: repeatEnabled }}
-          onPress={onToggleRepeat}
+          onPress={() => React.startTransition(() => showSelection(onToggleRepeat()))}
           style={[styles.repeatSwitch, { backgroundColor: repeatEnabled ? theme.clear : theme.cardMuted, borderColor: repeatEnabled ? theme.clear : theme.border }]}
         >
           <Text style={[styles.repeatSwitchText, { color: repeatEnabled ? theme.background : theme.subtle }]}>{repeatEnabled ? "ON" : "OFF"}</Text>
@@ -846,14 +840,14 @@ function RepeatSchedulePanel({
               accessibilityLabel={`${option.label} 반복 알림 ${selected ? "선택됨" : "선택 안 됨"}`}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              onPress={() => onToggleRepeatDay(option.day)}
+              onPress={() => React.startTransition(() => showSelection(onToggleRepeatDay(option.day)))}
               style={({ pressed }) => [
                 styles.repeatDayChip,
-                { opacity: pressed ? 0.55 : 1 },
                 {
                   backgroundColor: selected ? `${theme.clear}22` : theme.cardStrong,
                   borderColor: selected ? theme.clear : theme.border,
                 },
+                pressed && { backgroundColor: selected ? `${theme.clear}38` : theme.border },
               ]}
             >
               <Text style={[styles.repeatDayText, { color: selected ? theme.clear : theme.subtle }]}>{option.shortLabel}</Text>

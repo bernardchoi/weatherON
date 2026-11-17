@@ -34,6 +34,25 @@ const demo = load("apps/mobile/src/data/demoState.ts", {
 let now = Date.parse("2026-07-01T12:00:00+09:00");
 const base = { ...shared.gangneungClearSnapshot, timezone: "Asia/Seoul", observedAt: new Date(now).toISOString(), source: "openmeteo", stale: false,
   current: { ...shared.gangneungClearSnapshot.current, tempC: 30, feelsLikeC: 50 }, hourly: [] };
+// Schedule edits evaluate the same forecast for the origin and each saved destination.
+const forecast = { ...base, hourly: Array.from({ length: 48 }, (_, hour) => ({
+  ...shared.gangneungClearSnapshot.hourly[0], time: new Date(now + hour * 3_600_000).toISOString(),
+})) };
+const rules = shared.defaultNotificationRules.filter((rule) => rule.type === "destination");
+const DateTimeFormat = Intl.DateTimeFormat;
+let formatterCount = 0;
+try {
+  Intl.DateTimeFormat = new Proxy(DateTimeFormat, {
+    construct(target, args) { formatterCount++; return Reflect.construct(target, args); },
+  });
+  shared.evaluateNotificationRules(forecast, { nowMs: now });
+  assert.ok(formatterCount <= 3, `Forecast allocated ${formatterCount} date formatters`);
+  formatterCount = 0;
+  shared.evaluateNotificationRules(forecast, { rules, destinationWeather: forecast, nowMs: now });
+  assert.equal(formatterCount, 0, "destination-only evaluation should reuse the zone and skip heatwave analysis");
+} finally {
+  Intl.DateTimeFormat = DateTimeFormat;
+}
 const day = (date, maxTempC) => ({ date, maxTempC, minTempC: 25, rainProbabilityPct: 0, precipitationMm: 0, windMs: 1, condition: "clear" });
 const heat = (weather, nowMs = now) => shared.evaluateNotificationRules(weather, { nowMs }).filter((n) => n.type === "heatwave" && n.active);
 const build = (weather, nowMs = now, officialSpecialAlert) => demo.buildDemoStateFromWeatherResult({ current: weather, destination: weather, destinationSnapshots: [], officialSpecialAlert, status: "ready", message: "", retryable: false, fallbackUsed: false }, false, { notificationNow: nowMs });

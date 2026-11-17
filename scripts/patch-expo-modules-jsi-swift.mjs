@@ -97,6 +97,31 @@ patchFile(join(expoModulesCoreRoot, "Interfaces/FileSystem/EXFileSystemInterface
     .replace("@protocol EXFileSystemInterface", "NS_ASSUME_NONNULL_BEGIN\n\n@protocol EXFileSystemInterface")
     .replace("\n@end", "\n@end\n\nNS_ASSUME_NONNULL_END"));
 
+// URLSession supplies a nil error on success, and both progress callbacks are optional.
+const transferTasks = join(nodeModules, "expo-file-system/ios/Legacy/EXSessionTasks");
+for (const name of ["Task", "DownloadTask", "CancelableUploadTask", "ResumableDownloadTask"]) {
+  patchFile(join(transferTasks, `EXSession${name}Delegate.h`),
+    (source) => source.includes("NS_ASSUME_NONNULL_BEGIN") ? source : source
+      .replace(/^(typedef|@interface)/m, "NS_ASSUME_NONNULL_BEGIN\n\n$1")
+      .replaceAll("(nonatomic, strong, readonly)", "(nonatomic, strong, readonly, null_unspecified)")
+      .replace("didCompleteWithError:(NSError *)", "didCompleteWithError:(nullable NSError *)")
+      .replace("parseServerResponse:(NSURLResponse *)", "parseServerResponse:(null_unspecified NSURLResponse *)")
+      .replace("onSendCallback:(EXUpload", "onSendCallback:(nullable EXUpload")
+      .replace("onWriteCallback:(EXDownload", "onWriteCallback:(nullable EXDownload")
+      .replace("resumableManager:(EXTaskHandlersManager *)", "resumableManager:(nullable EXTaskHandlersManager *)")
+      .replace("\n@end", "\n@end\n\nNS_ASSUME_NONNULL_END"));
+}
+
+patchFile(join(transferTasks, "EXTaskHandlersManager.m"), source => source.replace(
+  "if ([task isKindOfClass:[NSURLSessionUploadTask class]]) {\n    return (NSURLSessionDownloadTask *)task;",
+  "if ([task isKindOfClass:[NSURLSessionUploadTask class]]) {\n    return (NSURLSessionUploadTask *)task;",
+));
+
+// The dispatcher registers this delegate only with the URLSessionUploadTask returned by createUploadTask.
+patchFile(join(transferTasks, "EXSessionCancelableUploadTaskDelegate.m"), source => source.replace(
+  "_onSendCallback(task, bytesSent", "_onSendCallback((NSURLSessionUploadTask *)task, bytesSent",
+));
+
 // Expo Constants otherwise skips app.config generation when PROJECT_DIR contains spaces.
 patchFile(join(process.cwd(), "node_modules", "expo-constants", "scripts", "get-app-config-ios.sh"),
   (source) => source.replace('$(basename $PROJECT_DIR)', '$(basename "$PROJECT_DIR")'));

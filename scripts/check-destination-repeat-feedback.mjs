@@ -27,12 +27,12 @@ function harness(saved) {
 for (const saved of [false, true]) {
   const h = harness(saved);
   // All events share the SAME callbacks: no render in between.
-  for (const day of [...days].reverse()) h.toggleSelectedDestinationRepeatDay(day);
+  for (const day of [...days].reverse()) assert.equal(h.toggleSelectedDestinationRepeatDay(day), h.current());
   assert.deepEqual(h.current().repeatDays, days);
   assert.equal(h.current().repeatEnabled, true);
   h.toggleSelectedDestinationRepeatDay("mon"); h.toggleSelectedDestinationRepeatDay("mon");
   assert.deepEqual(h.current().repeatDays, days);
-  h.toggleSelectedDestinationRepeat();
+  assert.equal(h.toggleSelectedDestinationRepeat(), h.current());
   assert.equal(h.current().repeatEnabled, false);
   assert.deepEqual(h.current().repeatDays, days); // off preserves selected days
   h.toggleSelectedDestinationRepeat();
@@ -61,6 +61,7 @@ const chips = screen.slice(screen.indexOf("<View style={styles.repeatDayRow}>"),
 assert.match(chips, /<Pressable/);
 assert.doesNotMatch(chips, /FeedbackPressable|onPressIn=|setTimeout/);
 assert.match(chips, /accessibilityState=\{\{ selected \}\}/);
-assert.match(chips, /opacity: pressed \? 0.55 : 1/);
+assert.doesNotMatch(chips, /opacity:/);
+assert.match(chips, /borderColor: selected \? theme.clear : theme.border/);
 assert.match(screen, /minWidth: 44/);
 console.log("PASS destination repeat feedback: rapid taps, off/on, last day, saved/preview, serialization, unrelated destination, accessibility and motion-free press");

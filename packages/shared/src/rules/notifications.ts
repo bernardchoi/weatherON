@@ -127,7 +127,10 @@ export function evaluateNotificationRules(
   const destinationWeather = options.destinationWeather;
   const destinationCondition = options.destinationAlertCondition ?? defaultDestinationAlertCondition;
   const destinationShoes = destinationWeather ? recommendShoes(destinationWeather, options.destinationCategory) : undefined;
-  const weatherAlertSignals = getWeatherAlertSignals(weather, options);
+  const weatherAlertSignals = {
+    heatwave: rules.some((rule) => rule.type === "heatwave") ? getHeatwaveSignal(weather, options) : undefined,
+    heavyRain: rules.some((rule) => rule.type === "heavy-rain") ? getHeavyRainSignal(weather) : undefined,
+  };
   const hailRisk = hasHailRisk(weather);
   const rainNotificationActive = getMaxRainProbabilityPct(weather) >= RAIN_NOTIFICATION_THRESHOLD_PCT || hailRisk;
 
@@ -311,13 +314,6 @@ function getWeatherAlertSignal(rule: NotificationRule, signals: WeatherAlertSign
   if (!signal) return undefined;
   const expectedLevel: WeatherAlertLevel = rule.id.endsWith("warning") ? "warning" : "advisory";
   return signal.level === expectedLevel ? signal : undefined;
-}
-
-function getWeatherAlertSignals(weather: WeatherSnapshot, options: NotificationEvaluationOptions): WeatherAlertSignals {
-  return {
-    heatwave: getHeatwaveSignal(weather, options),
-    heavyRain: getHeavyRainSignal(weather),
-  };
 }
 
 function getHeatwaveSignal(weather: WeatherSnapshot, options: NotificationEvaluationOptions): WeatherAlertSignal | undefined {
