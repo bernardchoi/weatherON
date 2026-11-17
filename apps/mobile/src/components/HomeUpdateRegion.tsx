@@ -44,9 +44,10 @@ export function HomeUpdateRegion({ visible, contentKey, children, spacing, testI
     }
     const duration = visible ? ambientMotion.disclosureOpen : ambientMotion.disclosureClose;
     const animation = Animated.parallel([
-      // Only this measured card region uses the layout (JS) driver.
+      // Keep both values on the JS driver: a native opacity on this same
+      // Animated.View would promote its unsupported height node to native.
       Animated.timing(height, { toValue: targetHeight, duration, easing: Easing.out(Easing.cubic), useNativeDriver: false, isInteraction: false }),
-      Animated.timing(opacity, { toValue: visible ? 1 : 0, duration, easing: Easing.out(Easing.cubic), useNativeDriver: true, isInteraction: false }),
+      Animated.timing(opacity, { toValue: visible ? 1 : 0, duration, easing: Easing.out(Easing.cubic), useNativeDriver: false, isInteraction: false }),
     ]);
     animation.start(({ finished }) => {
       if (finished && revision.current === current && !latest.current.visible && latest.current.contentKey === contentKey) {

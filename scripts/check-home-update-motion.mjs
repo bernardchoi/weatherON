@@ -85,7 +85,13 @@ const native = {
     parallel(tracks) {
       const animation = {
         tracks, stopped: false,
-        start(callback) { this.callback = callback; },
+        start(callback) {
+          // RN AnimatedStyle promotes every sibling value when one uses native.
+          // A JS layout value on this same view must never be promoted.
+          assert.ok(tracks.every(track => track.config.useNativeDriver === false),
+            'Measured height/opacity style must remain JS-owned on entry, exit and reversal');
+          this.callback = callback;
+        },
         stop() { this.stopped = true; this.callback?.({ finished: false }); },
         advance(fraction) {
           for (const track of tracks) track.value.setValue(track.value.value + (track.config.toValue - track.value.value) * fraction);
@@ -139,7 +145,7 @@ measure(tree, 32); tree = test.render({ ...props, visible: true });
 let opening = animations.at(-1);
 assert.equal(opening.tracks[0].config.toValue, 32);
 assert.equal(opening.tracks[0].config.useNativeDriver, false);
-assert.equal(opening.tracks[1].config.useNativeDriver, true);
+assert.equal(opening.tracks[1].config.useNativeDriver, false, 'One measured Animated.View must not mix JS height with native opacity');
 assert.ok(opening.tracks.every(track => track.config.isInteraction === false && track.config.delay === undefined));
 opening.advance(0.4);
 const partial = tree.props.style.height.value;
