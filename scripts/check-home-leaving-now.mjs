@@ -22,7 +22,7 @@ const { getDestinationTiming, getDestinationLeavingNowTiming } = load("apps/mobi
 const { forecastTime } = load("apps/mobile/src/utils/homeOuting.ts");
 const home = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === "HomeScreen");
 const statements = home.body.statements;
-const start = statements.findIndex(n => ts.isVariableStatement(n) && n.declarationList.declarations[0].name.getText(ast) === "departureSummary");
+const start = statements.findIndex(n => ts.isVariableStatement(n) && n.declarationList.declarations[0].name.getText(ast) === "compactSameDestination");
 const end = statements.findIndex(n => ts.isVariableStatement(n) && n.declarationList.declarations[0].name.getText(ast) === "refreshMessage");
 assert.ok(start >= 0 && end > start);
 const declarations = statements.slice(start, end).map(n => n.getText(ast)).join("\n");
@@ -89,7 +89,7 @@ for (const destinationReady of [true, false]) {
   const state = { destinationCare: { departureAdvice: routeAdvice } };
   const before = JSON.stringify(state);
   const context = {
-    result: null, state, destinationReady, homeDepartureAt, homeSchedulePreference: schedule,
+    result: null, state, destinationReady, homeDepartureAt, homeSchedulePreference: schedule, sameHomeDestination: false, forecastNow: now,
     outingWeather: { countryCode: "KR", timezone: "Asia/Seoul" }, getHomeDepartureSummary, forecastTime,
     Date: class extends Date { static now() { return now; } }, layout: { width: 375 }, fontScale: 1,
     React: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }) },

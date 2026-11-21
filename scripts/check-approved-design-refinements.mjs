@@ -14,7 +14,9 @@ for (const kind of ['강수 가능', '눈 예보', '비 예보', '얼음·혼합
 for (const source of ['새로운 중요 경고 · 알 수 없는 예보', '오늘 오후 비 가능', '내일 21:00 무렵 강수 가능']) {
  const result = split(source); assert.equal(result.timedForecast, undefined); assert.equal(result.advice.join(' · '), source);
 }
-assert.match(home, /Math.max\(20, viewportSpacing.planMargin\)/);
+assert.match(home, /marginTop: Platform.OS === "ios" \? viewportSpacing.planMargin/);
+assert.match(home, /testID="home-outfit-precipitation" style=\{\{ flexDirection: "row", alignItems: "center", gap: 6 \}\}/);
+assert.match(home, /오늘 \{forecastClock\} 무렵 \{forecastKind\}/);
 assert.match(home, /HomeWeatherMascot/); // Existing approved character integration is retained.
 assert.match(read('AccountManagement'), /ProviderBrandIcon/);
 assert.match(read('AccountManagement'), /LINE으로 연결했어요/);

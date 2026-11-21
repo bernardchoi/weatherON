@@ -24,9 +24,9 @@ const theme = () => dark ? { text: '#fff', muted: '#ccc', border: '#666', card: 
 const model = load('apps/mobile/src/state/profileCharacter.ts');
 const localePolicy = load('apps/mobile/src/localization/localePolicy.ts');
 const expectedNames = {
-  ko: ['기본', '온비', '솔라', '레인', '스톰', '윈드', '프로스트', '미스트'],
-  en: ['Default', 'ONBY', 'Solar', 'Rain', 'Storm', 'Wind', 'Frost', 'Mist'],
-  ja: ['標準', 'オンビ', 'ソーラー', 'レイン', 'ストーム', 'ウィンド', 'フロスト', 'ミスト'],
+  ko: ['캐릭터 없음', '온비', '솔라', '레인', '스톰', '윈드', '프로스트', '미스트'],
+  en: ['No character', 'ONBY', 'Solar', 'Rain', 'Storm', 'Wind', 'Frost', 'Mist'],
+  ja: ['キャラクターなし', 'オンビ', 'ソーラー', 'レイン', 'ストーム', 'ウィンド', 'フロスト', 'ミスト'],
 };
 const presentation = load('apps/mobile/src/utils/profileCharacterPresentation.ts');
 const picker = load('apps/mobile/src/components/ProfileCharacterPicker.tsx', {
@@ -77,7 +77,7 @@ async function main() {
   console.log('PASS: approved names in all 3 locales, actual locale preference order/English fallback, unchanged 8 IDs/storage key/v1 selection records.');
   // Check actual PNG alpha pixels, not just square frame sizes. Every motif and
   // even isolated source specks must fit; body centers/heights are separate.
-  for (const size of [64, 80, 96]) {
+  for (const size of [64, 80, 88, 96]) {
     let heroHeight;
     for (const [id, frame] of Object.entries(presentation.profileCharacterFraming)) {
       const path = id === 'main' ? 'apps/mobile/assets/characters/main-fullbody.png'
@@ -106,31 +106,50 @@ async function main() {
     }
   }
   assert.equal(picker.ProfileCharacterImage({ id: 'default', size: 96 }), null);
-  console.log('PASS: actual alpha bounds of all 7 PNGs fit at 64/80/96pt; body centers align and companion height is 72% of main.');
+  console.log('PASS: actual alpha bounds of all 7 PNGs fit at 64/80/88/96pt; body centers align and companion height is 72% of main.');
 
   const labels = { ko: '캐릭터 선택', en: 'Choose character', ja: 'キャラクターを選ぶ' };
+  const changeLabels = { ko: '캐릭터 변경', en: 'Change character', ja: 'キャラクターを変更' };
   for (language of Object.keys(labels)) for (dark of [false, true]) {
     for (const width of [320, 360, 390, 430, 768]) for (const fontScale of [1, 1.2, 1.21, 1.6, 2, 3.2]) {
       dimensions = { width, height: 568, fontScale };
-      for (const id of model.profileCharacterIds) {
+      for (const size of [136, 144]) for (const id of model.profileCharacterIds) {
         let opened = 0;
-        const button = picker.ProfileCharacterButton({ id, size: 136, onPress: () => opened++ });
+        const button = picker.ProfileCharacterButton({ id, size, onPress: () => opened++ });
         const tree = nodes(button), texts = tree.filter(n => n.type === 'Text');
         assert.equal(button.props.accessibilityRole, 'button'); assert.equal(button.props.accessible, true);
-        assert.equal(button.props.accessibilityLabel, labels[language]);
-        assert.equal(button.props.accessibilityValue.text, expectedNames[language][model.profileCharacterIds.indexOf(id)]);
+        const name = expectedNames[language][model.profileCharacterIds.indexOf(id)];
+        assert.equal(button.props.accessibilityLabel, id === 'default' ? labels[language] : changeLabels[language]);
+        assert.equal(button.props.accessibilityValue?.text, id === 'default' ? undefined : name);
         assert.equal(tree.filter(n => n.type === 'Button').length, 1, 'one touch/accessibility target');
-        assert.equal(texts.length, 1); assert.equal(texts[0].props.children[0], labels[language]);
+        assert.equal(texts.length, 1); assert.equal(texts[0].props.children[0], id === 'default' ? labels[language] : name);
         assert.equal(texts[0].props.numberOfLines, undefined); assert.notEqual(texts[0].props.allowFontScaling, false);
         assert.ok(tree.some(n => n.props.accessibilityElementsHidden && n.props.importantForAccessibility === 'no-hide-descendants'));
         button.props.onPress(); assert.equal(opened, 1);
+        const portrait = id === 'default' ? tree.find(n => n.type === 'Image') : tree.find(n => n.type === picker.ProfileCharacterImage);
+        const imageSize = id === 'default' ? portrait.props.style.height : portrait.props.size;
+        assert.equal(imageSize, id === 'default' ? (fontScale > 1.2 ? 80 : 64) : (fontScale > 1.2 ? 96 : size - 56));
         if (fontScale > 1.2) {
           assert.equal(button.props.style.height, undefined, 'large text needs intrinsic button height');
           assert.equal(button.props.style.width, '100%');
         } else {
-          assert.equal(button.props.style.height, 136); assert.equal(button.props.style.borderRadius, 68);
-          // At most 2 scaled caption lines + separate 64pt artwork + gap/padding.
-          assert.ok(64 + 4 + 2 * 16 * fontScale + 24 <= 136);
+          assert.equal(button.props.style.height, size); assert.equal(button.props.style.borderRadius, size / 2);
+          const { paddingVertical, borderWidth } = button.props.style;
+          assert.ok(imageSize + 4 + 2 * 16 * fontScale + 2 * (paddingVertical + borderWidth) <= size,
+            'the portrait and even two scaled caption lines fit without enlarging the circle');
+          if (id !== 'default') {
+            // Check the full artwork after centering the normal one-line label
+            // inside the button, not just its rectangular image container.
+            const frame = presentation.profileCharacterFraming[id];
+            const layout = presentation.profileCharacterImageLayout(id, imageSize);
+            const scale = layout.width / frame.canvas;
+            const top = (size - imageSize - 4 - 16 * fontScale) / 2;
+            const left = (size - imageSize) / 2;
+            for (const x of [frame.art[0], frame.art[2]]) for (const y of [frame.art[1], frame.art[3]]) {
+              assert.ok(Math.hypot(left + layout.left + x * scale - size / 2, top + layout.top + y * scale - size / 2) <= size / 2 - borderWidth,
+                `${id}: art bounds must fit the circle at ${size}pt / ${fontScale}x`);
+            }
+          }
         }
       }
       for (const [ready, error, saving] of [[true, false, false], [false, false, false], [false, true, false], [true, true, false], [true, false, true]]) {

@@ -1,3 +1,5 @@
+import type { PlaceSearchResult } from "@weatheron/shared";
+import type { WeatherLocationPreset } from "../providers/weatherLocations";
 import type { DestinationTravelEstimate } from "../state/appStateTypes";
 
 export type HomeUpdateState = { routePending: boolean; currentWeatherPending: boolean; destinationWeatherPending: boolean; currentWeatherRevision?: number };
@@ -18,4 +20,22 @@ export function homeRouteStatus(estimate: DestinationTravelEstimate, pending: bo
 export function finishHomeRouteRequest(current: Record<string, number>, key: string, revision: number) {
   if (current[key] !== revision) return current;
   const next = { ...current }; delete next[key]; return next;
+}
+
+// Match the selected point, not a shared forecast grid or display name alone.
+// The second branch tolerates GPS/geocoder drift only with the same full address.
+export function homeDestinationMatchesOrigin(origin: WeatherLocationPreset | null | undefined, destination: PlaceSearchResult) {
+  if (!origin || origin.countryCode !== destination.countryCode) return false;
+  if (origin.countryIsoCode && destination.countryIsoCode && origin.countryIsoCode !== destination.countryIsoCode) return false;
+  const a = origin.coordinate, b = destination.coordinate;
+  if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)
+    || Math.abs(a.latitude) > 90 || Math.abs(b.latitude) > 90 || Math.abs(a.longitude) > 180 || Math.abs(b.longitude) > 180) return false;
+  if (origin.locationId === destination.id) return true;
+  const radians = Math.PI / 180;
+  const h = Math.sin((b.latitude - a.latitude) * radians / 2) ** 2
+    + Math.cos(a.latitude * radians) * Math.cos(b.latitude * radians) * Math.sin((b.longitude - a.longitude) * radians / 2) ** 2;
+  const meters = 12_742_000 * Math.asin(Math.min(1, Math.sqrt(Math.max(0, h))));
+  const normalize = (value: string) => value.normalize("NFKC").replace(/\s+/gu, "");
+  const address = normalize(destination.address);
+  return meters < 1 || (meters <= 75 && /\d/u.test(address) && normalize(origin.locationName) === address);
 }

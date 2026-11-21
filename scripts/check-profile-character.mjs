@@ -46,6 +46,9 @@ failWrites=true;await assert.rejects(native.writeAppValue(model.profileCharacter
 assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'wind','failed write must retain previous selection');
 failWrites=false;await Promise.all(['rain','mist','solar'].map(id=>native.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord(id),true)));
 assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'solar');
+await native.writeAppValue(model.profileCharacterStorageKey,model.profileCharacterRecord('default'),true);
+assert.equal(model.normalizeProfileCharacter(await native.readAppValue(model.profileCharacterStorageKey,true)),'default','removing a character persists the default');
+assert.equal(db.prepare('SELECT value FROM app_meta WHERE key=?').get('other-setting').value,'keep');
 db.close();delete globalThis.__profileTestDB;
 console.log('PASS: actual native appStorage SQL branch, read/write, unrelated rows, rollback after disk failure, serialized writes.');
 let saved=model.profileCharacterRecord('wind'),release;let reads=0;

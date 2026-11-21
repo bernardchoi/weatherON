@@ -29,10 +29,11 @@ function visit(node) {
 }
 visit(homeAst);
 const routeVisible = (label, extra = {}) => {
-  const scope = { destinationReady: true, Platform: { OS: 'ios' }, routePending: false, showDepartureExplanation: false, routeStatus: label, ...extra };
+  const scope = { destinationReady: true, Platform: { OS: 'ios' }, routePending: false, compactSameDestination: false, showDepartureExplanation: false, routeStatus: label, ...extra };
   return new Function(...Object.keys(scope), `return (${routeVisibility});`)(...Object.values(scope));
 };
 assert.equal(routeVisible('조회한 경로 기준'), false);
+assert.equal(routeVisible('경로 확인 실패 · 다시 시도해 주세요', { compactSameDestination: true }), false);
 assert.equal(routeVisible('경로 확인 실패 · 다시 시도해 주세요'), true, 'Failure cannot disappear behind a retained ready ETA');
 assert.equal(routeVisible('이전 조회 기준 · 다시 확인 필요'), true);
 assert.equal(routeVisible('조회한 경로 기준', { routePending: true }), true);
