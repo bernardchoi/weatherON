@@ -20,18 +20,18 @@ const assets = {
 };
 const copy = {
   ko: {
-    title: "프로필 캐릭터", note: "이 기기에만 저장돼요", close: "닫기", retry: "다시 시도", error: "저장소에 접근하지 못했어요. 다시 시도해 주세요.", saving: "저장 중", selected: "선택됨", choose: "캐릭터 선택",
-    default: "기본", main: "온비", solar: "솔라", rain: "레인", storm: "스톰", wind: "윈드", frost: "프로스트", mist: "미스트",
+    title: "프로필 캐릭터", note: "이 기기에만 저장돼요", close: "닫기", retry: "다시 시도", error: "저장소에 접근하지 못했어요. 다시 시도해 주세요.", saving: "저장 중", selected: "선택됨", choose: "캐릭터 선택", change: "캐릭터 변경",
+    default: "캐릭터 없음", main: "온비", solar: "솔라", rain: "레인", storm: "스톰", wind: "윈드", frost: "프로스트", mist: "미스트",
   },
   en: {
-    title: "Profile character", note: "Saved only on this device", close: "Close", retry: "Retry", error: "Storage is unavailable. Please try again.", saving: "Saving", selected: "Selected", choose: "Choose character",
-    default: "Default", main: "ONBY", solar: "Solar", rain: "Rain", storm: "Storm", wind: "Wind", frost: "Frost", mist: "Mist",
+    title: "Profile character", note: "Saved only on this device", close: "Close", retry: "Retry", error: "Storage is unavailable. Please try again.", saving: "Saving", selected: "Selected", choose: "Choose character", change: "Change character",
+    default: "No character", main: "ONBY", solar: "Solar", rain: "Rain", storm: "Storm", wind: "Wind", frost: "Frost", mist: "Mist",
   },
   ja: {
-    title: "プロフィールキャラクター", note: "この端末にのみ保存されます", close: "閉じる", retry: "再試行", error: "保存できませんでした。もう一度お試しください。", saving: "保存中", selected: "選択中", choose: "キャラクターを選ぶ",
-    default: "標準", main: "オンビ", solar: "ソーラー", rain: "レイン", storm: "ストーム", wind: "ウィンド", frost: "フロスト", mist: "ミスト",
+    title: "プロフィールキャラクター", note: "この端末にのみ保存されます", close: "閉じる", retry: "再試行", error: "保存できませんでした。もう一度お試しください。", saving: "保存中", selected: "選択中", choose: "キャラクターを選ぶ", change: "キャラクターを変更",
+    default: "キャラクターなし", main: "オンビ", solar: "ソーラー", rain: "レイン", storm: "ストーム", wind: "ウィンド", frost: "フロスト", mist: "ミスト",
   },
-} satisfies Record<AppLanguage, Record<ProfileCharacterId | "title" | "note" | "close" | "retry" | "error" | "saving" | "selected" | "choose", string>>;
+} satisfies Record<AppLanguage, Record<ProfileCharacterId | "title" | "note" | "close" | "retry" | "error" | "saving" | "selected" | "choose" | "change", string>>;
 export function ProfileCharacterImage({ id, size }: { id: ProfileCharacterId; size: number }) {
   return id === "default" ? null : <View style={{ width: size, height: size, overflow: "hidden" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
     <Image source={assets[id]} resizeMode="contain" style={{ position: "absolute", ...profileCharacterImageLayout(id, size) }} />
@@ -42,13 +42,16 @@ export function ProfileCharacterButton({ id, size, onPress }: { id: ProfileChara
   const t = useProfileCharacterCopy();
   const { fontScale } = useWindowDimensions();
   const expanded = fontScale > 1.2;
-  const imageSize = expanded ? 80 : 64;
+  const hasCharacter = id !== "default";
+  // Give selected artwork more of the existing circle while reserving two
+  // caption lines. The empty state and full-width large-text layout stay put.
+  const imageSize = hasCharacter ? (expanded ? 96 : size - 56) : (expanded ? 80 : 64);
   return <FeedbackPressable
     testID="my-character-picker"
     accessible
     accessibilityRole="button"
-    accessibilityLabel={t.choose}
-    accessibilityValue={{ text: t[id] }}
+    accessibilityLabel={hasCharacter ? t.change : t.choose}
+    accessibilityValue={hasCharacter ? { text: t[id] } : undefined}
     onPress={onPress}
     style={{
       ...(expanded ? { width: "100%" as const, minHeight: 48 } : { width: size, height: size }),
@@ -56,7 +59,8 @@ export function ProfileCharacterButton({ id, size, onPress }: { id: ProfileChara
       borderWidth: 1,
       borderColor: theme.border,
       backgroundColor: theme.card,
-      padding: 12,
+      paddingHorizontal: 12,
+      paddingVertical: hasCharacter && !expanded ? 5 : 12,
       gap: 4,
       alignItems: "center",
       justifyContent: "center",
@@ -67,7 +71,7 @@ export function ProfileCharacterButton({ id, size, onPress }: { id: ProfileChara
       <View style={{ width: expanded ? 104 : imageSize, height: expanded ? 104 : imageSize, borderRadius: 52, alignItems: "center", justifyContent: "center", ...(expanded ? { borderWidth: 1, borderColor: theme.border } : {}) }}>
         {id === "default" ? <Image source={ambientUiIcons.tabMy} resizeMode="contain" style={{ width: imageSize, height: imageSize, tintColor: theme.muted }} /> : <ProfileCharacterImage id={id} size={imageSize} />}
       </View>
-      <Text style={{ color: theme.text, fontSize: expanded ? 16 : 12, lineHeight: expanded ? 23 : 16, fontWeight: "600", textAlign: "center", alignSelf: "stretch" }}>{t.choose}</Text>
+      <Text style={{ color: theme.text, fontSize: expanded ? 16 : 12, lineHeight: expanded ? 23 : 16, fontWeight: "600", textAlign: "center", alignSelf: "stretch" }}>{hasCharacter ? t[id] : t.choose}</Text>
     </View>
   </FeedbackPressable>;
 }

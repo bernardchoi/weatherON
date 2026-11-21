@@ -5,7 +5,7 @@ export function resolveHomeViewportSpacing(availableHeight: number) {
   return {
     contentGap: compact ? 6 : 8,
     topPadding: compact ? 12 : 18,
-    planMargin: compact ? 18 : 24,
+    planMargin: compact ? 8 : 12,
     planGap: compact ? 14 : 16,
     heroGap: compact ? 6 : 10,
     outfitTop: compact ? 8 : 12,

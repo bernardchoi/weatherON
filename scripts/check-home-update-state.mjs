@@ -4,6 +4,16 @@ import ts from 'typescript';
 import { buildSync } from 'esbuild';
 function load(file) { const m={exports:{}};new Function('module','exports',buildSync({entryPoints:[file],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(m,m.exports);return m.exports; }
 const model=load('apps/mobile/src/utils/homeUpdateState.ts');
+const origin={locationId:'gps',locationName:'고양시 덕양구 예시로 123',countryCode:'KR',coordinate:{latitude:37.65,longitude:126.89}};
+const place={id:'poi',address:'고양시 덕양구 예시로 123',countryCode:'KR',coordinate:{latitude:37.6504,longitude:126.89}};
+assert.equal(model.homeDestinationMatchesOrigin(origin,place),true,'matching full address allows bounded GPS drift');
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,address:'other building'}),false,'distance alone cannot erase actual routing');
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,coordinate:{...place.coordinate,latitude:37.66}}),false,'same address at distant coordinates is not enough');
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,address:'',coordinate:{...origin.coordinate}}),true);
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',address:''}),true);
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',countryCode:'JP'}),false);
+assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',coordinate:{latitude:NaN,longitude:126.89}}),false);
+assert.equal(model.homeDestinationMatchesOrigin(null,place),false);
 const helpers=load('apps/mobile/src/state/appStateHelpers.ts');
 const travel=load('apps/mobile/src/utils/travelEstimate.ts');
 const key = (id,time='09:00',mode='drive')=>model.homeRouteRequestKey({locationId:'origin'},{id},{timeBasis:'arrival',targetArrivalTime:time,transportMode:mode},'2090-01-01T00:00:00Z');

@@ -12,15 +12,15 @@ function visit(n){
  ts.forEachChild(n,visit);
 }visit(ast);
 assert.ok(expressions.stackedPlanControls&&expressions.showDepartureExplanation,'Plan must split long route explanation from bounded controls');
-const jsx=(type,props,...children)=>({type,props:props??{},children});
+const jsx=(type,props,...children)=>type==='UpdateRegion' ? (props.visible ? children[0](true) : null) : ({type,props:props??{},children});
 const flatten=s=>Object.assign({},...[s].flat(Infinity).filter(Boolean));
 function nodes(n,out=[]){if(!n||typeof n!=='object')return out;if(Array.isArray(n)){n.forEach(x=>nodes(x,out));return out;}out.push(n);nodes(n.children,out);return out;}
-function text(n){if(typeof n==='string')return n;if(!n)return '';return(Array.isArray(n)?n:n.children??[]).map(text).join('');}
+function text(n){if(typeof n==='string'||typeof n==='number')return String(n);if(!n)return '';return(Array.isArray(n)?n:n.children??[]).map(text).join('');}
 const code=s=>ts.transpileModule(s,{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText;
 for(const width of [320,375,390,440])for(const fontScale of [1,1.3,1.6,2])for(const status of ['ready','fallback','loading','unavailable']){
  const name='검증용 아주 긴 목적지 이름 Test destination';const body='경로를 다시 확인해야 하는 긴 설명입니다. '.repeat(4);
  const selected={place:{id:'test',name}};
- const env={lowPowerMode:false,homeMotionActive:true,HomeUpdateStatus:'UpdateStatus',destinationWeatherPending:false,routePending:false,routeStatus:'조회한 경로 기준',React:{createElement:jsx},Platform:{OS:'ios'},StyleSheet:{hairlineWidth:0.5},theme:{text:'#fff',muted:'#aaa'},spacing:{xs:4,sm:8,md:16},radius:{md:16,pill:999},pageStyles:{},layout:{width,isNarrow:width<390,isShort:false},fontScale,viewportSpacing:{planMargin:18,planGap:12},readPlanRef:{},measureReadArea(){},savedDestinations:[selected],selectedDestination:selected,destinationReady:true,state:{destinationCare:{departureAdvice:{travelStatus:status}}},departureSummary:{value:status==='loading'?'경로 확인 중':'20:17',body},departureSummaryLabel:'도착 예정 시간',departureExplanation:`도착 예상 · 이동 50분 · 여유 20분 · 조회 15:25 · ${body}`,routeAdvice:{travelStatus:status},homeSchedulePreference:{timeBasis:'departure'},isHomeTightLayout:()=>false,ambientUiIcons:{time:'time',location:'location',expand:'expand'},onSelectHomeDestinationPlace(){},onNavigate(){},onOpenRainForecast(){},rainContext:{},rainForecast:{summary:'',maxProbability:0,reliable:true,covered:true},preparation:{status:'',evidence:'',rainEvidence:false},targetAt:undefined,companionMessage:'보온 겉옷',companionBasis:'목적지 도착 무렵',summarizeHomeOutfit:s=>s,forecastNow:0,outingWeather:{locationName:'Test'},getDisplayLocationName:s=>s,basisLabel:'도착 기준',View:'View',Text:'Text',RawText:'RawText',Image:'Image',HomePlanMaterial:'Glass',DestinationSelectorCard:'Selector',HomeValueTransition:'Value',FeedbackPressable:'Pressable',BottomSheet:'Sheet',IosSelectionSheet:'Sheet',IosSelectionRow:'Row',DestinationLabelPill:'Pill',useResponsiveLayout:()=>({width}),useReducedMotion:()=>false,useConfirmedOptionFeedback:()=>({request(){},isConfirmed:()=>false}),useState:v=>[v,()=>{}],getDestinationTypeIcon:()=>'',getDestinationSelectorMeta:()=>'',uiIconAssets:{check:''}};
+ const env={lowPowerMode:false,homeMotionActive:true,HomeUpdateStatus:'UpdateStatus',HomeUpdateRegion:'UpdateRegion',preparationPending:false,preparationStatus:"",useOriginForSamePlace:false,compactSameDestination:false,routePending:false,routeStatus:'조회한 경로 기준',React:{createElement:jsx},Platform:{OS:'ios'},StyleSheet:{hairlineWidth:0.5},theme:{text:'#fff',muted:'#aaa'},spacing:{xs:4,sm:8,md:16},radius:{md:16,pill:999},pageStyles:{},layout:{width,isNarrow:width<390,isShort:false},fontScale,viewportSpacing:{planMargin:18,planGap:12},readPlanRef:{},measureReadArea(){},savedDestinations:[selected],selectedDestination:selected,homeDestinationPlace:selected.place,destinationReady:true,state:{destinationCare:{departureAdvice:{travelStatus:status}}},departureSummary:{value:status==='loading'?'경로 확인 중':'20:17',body},departureSummaryLabel:'도착 예정 시간',departureExplanation:`도착 예상 · 이동 50분 · 여유 20분 · 조회 15:25 · ${body}`,routeAdvice:{travelStatus:status},homeSchedulePreference:{timeBasis:'departure'},isHomeTightLayout:()=>false,ambientUiIcons:{time:'time',location:'location',expand:'expand'},onSelectHomeDestinationPlace(){},onNavigate(){},onOpenRainForecast(){},rainContext:{},rainForecast:{summary:'',maxProbability:0,reliable:true,covered:true},preparation:{status:'',evidence:'',rainEvidence:false},targetAt:undefined,companionMessage:'보온 겉옷',companionBasis:'목적지 도착 무렵',summarizeHomeOutfit:s=>s,forecastNow:0,outingWeather:{locationName:'Test'},getDisplayLocationName:s=>s,basisLabel:'도착 기준',View:'View',Text:'Text',RawText:'RawText',Image:'Image',HomePlanMaterial:'Glass',DestinationSelectorCard:'Selector',HomeValueTransition:'Value',FeedbackPressable:'Pressable',BottomSheet:'Sheet',IosSelectionSheet:'Sheet',IosSelectionRow:'Row',DestinationLabelPill:'Pill',useResponsiveLayout:()=>({width}),useReducedMotion:()=>false,useConfirmedOptionFeedback:()=>({request(){},isConfirmed:()=>false}),useState:v=>[v,()=>{}],getDestinationTypeIcon:()=>'',getDestinationSelectorMeta:()=>'',uiIconAssets:{check:''}};
  env.styles={};for(const property of styles.properties){const key=property.name.getText(ast);if(/destinationSelect|destinationChipTitle|destinationEmpty|destinationSheet|iosDeparture|ambientDeparture|iosSecondaryText|homePlanCard/.test(key))env.styles[key]=vm.runInNewContext('('+property.initializer.getText(ast)+')',env);}
  env.onRefreshWeather=()=>{};
  env.AmbientReveal='Reveal';env.AmbientChange='Change';
@@ -39,10 +39,19 @@ for(const width of [320,375,390,440])for(const fontScale of [1,1.3,1.6,2])for(co
  assert.ok(!all.some(n=>n.props.testID==='home-preparation-update'),'Healthy weather needs no repeated status row');
  const weatherLink=all.find(n=>n.props.accessibilityLabel?.includes('강수 예보 보기'));
  assert.ok(weatherLink);assert.equal(flatten(weatherLink.props.style).minHeight,44);
- if(width===390&&fontScale===1&&status==='ready')for(const update of [{routePending:true},{routeStatus:'이전 조회 기준 · 다시 확인 필요'},{destinationWeatherPending:true}]){
+ if(width===390&&fontScale===1&&status==='ready')for(const update of [{routePending:true},{routeStatus:'이전 조회 기준 · 다시 확인 필요'},{preparationPending:true}]){
   const updated=nodes(vm.runInNewContext(code('('+plan.getText(ast)+')'),{...env,...update}));
-  const id=update.destinationWeatherPending?'home-preparation-update':'home-route-update';
+  const id=update.preparationPending?'home-preparation-update':'home-route-update';
   assert.ok(updated.some(n=>n.props.testID===id),'Keep actual loading and stale-weather/route guidance visible');
+ }
+ if(width===390&&fontScale===1&&status==='ready'){
+  const compact={...env,useOriginForSamePlace:true,compactSameDestination:true,showDepartureExplanation:false,routeStatus:'경로 확인 실패 · 다시 시도해 주세요',departureSummary:{value:'현재 위치와 같은 곳',body:''}};
+  const render=changes=>nodes(vm.runInNewContext(code('('+plan.getText(ast)+')'),{...compact,...changes}));
+  const same=render({});
+  assert.ok(same.some(n=>n.props.accessibilityLabel==='현재 위치와 같은 곳'));
+  assert.ok(!same.some(n=>['home-route-update','home-departure-explanation','home-plan-preparation','home-preparation-update'].includes(n.props.testID)));
+  assert.ok(same.some(n=>n.props.accessibilityLabel?.includes('강수 예보 보기')));
+  assert.ok(render({preparationStatus:'최근 정보 · 새로 확인 필요'}).some(n=>n.props.testID==='home-preparation-update'));
  }
  const fn=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='DestinationSelectorCard');
  env.input={savedDestinations:[selected],selectedDestinationId:'test',theme:env.theme,onSelect(){},onAdd(){}};
@@ -52,8 +61,30 @@ for(const width of [320,375,390,440])for(const fontScale of [1,1.3,1.6,2])for(co
  const title=children.find(n=>n.type==='RawText'&&text(n)===name);assert.equal(title.props.numberOfLines,1);assert.equal(flatten(title.props.style).fontSize,24);
  const expand=children.find(n=>n.props.source==='expand');assert.equal(flatten(expand.props.style).flexShrink,0);
 }
+const outfitCard = ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='HomeOutfitPreviewCard');
+const outfitEnv = {
+  React:{createElement:jsx}, Platform:{OS:'ios'}, FeedbackPressable:'Pressable', View:'View', Text:'Text', Image:'Image',
+  styles:{}, ambientUiIcons:{expand:'expand',droplet:'drop'}, useAmbientEntrance:()=>({}), isHomeTightLayout:()=>false,
+  translateText:s=>s, getDisplayLocationName:s=>s, getOutfitImageSource:()=>null,
+};
+for (const width of [320, 390, 440]) for(const fontScale of [1,1.6]) {
+  const summary='겉옷을 챙겨요 · 오늘 12:00 무렵 강수 가능';
+  const input={viewportSpacing:{outfitTop:8,outfitBottom:8},outfit:{decisionText:summary,items:{}},summary,
+    weatherBasis:'현재 위치',locationName:'Test',theme:{},onPress(){}};
+  const render=changes=>vm.runInNewContext(code(outfitCard.getText(ast)+'\nHomeOutfitPreviewCard(input)'),{
+    ...outfitEnv,input:{...input,...changes},useResponsiveLayout:()=>({width}),useWindowDimensions:()=>({fontScale}),
+  });
+  const withRain=render({}), noRain=render({summary:'겉옷을 챙겨요'});
+  const forecast=nodes(withRain).find(n=>n.props.testID==='home-outfit-precipitation');
+  assert.equal(text(forecast),'오늘 12:00 무렵 강수 가능');
+  assert.equal(nodes(forecast).filter(n=>n.type==='Text').length,1,'One wrapping forecast label rather than a nested mini-card');
+  assert.equal(nodes(forecast).find(n=>n.type==='Text').props.numberOfLines,undefined);
+  assert.ok(!nodes(noRain).some(n=>n.props.testID==='home-outfit-precipitation'));
+  assert.equal(flatten(withRain.props.style).paddingTop,flatten(noRain.props.style).paddingTop,'Forecast must not change outer card padding');
+  assert.ok(text(withRain).includes('겉옷을 챙겨요'));
+}
 for(const value of ['경로 확인 필요','도착 시간 변경 필요','출발 시간 변경 필요']) {
- assert.equal(vm.runInNewContext(expressions.showDepartureExplanation,{destinationReady:true,routeAdvice:{travelStatus:'ready'},departureSummary:{value}}),true,'Ready route must retain invalid/past schedule guidance');
+ assert.equal(vm.runInNewContext(expressions.showDepartureExplanation,{destinationReady:true,compactSameDestination:false,routeAdvice:{travelStatus:'ready'},departureSummary:{value}}),true,'Ready route must retain invalid/past schedule guidance');
 }
 assert.equal(vm.runInNewContext(expressions.showDepartureExplanation,{destinationReady:false}),false,'No route warning without a destination');
 console.log('PASS: actual Home plan/selector JSX at 320–440pt and 1–2x text; long name accessible, 44pt selector, fixed chevron, bounded time, full-width untruncated status. Native line measurement remains device QA.');

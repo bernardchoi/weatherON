@@ -6,7 +6,7 @@ import { AmbientChange, AmbientReveal, useAmbientEntrance } from "../components/
 import { OutfitMotionImage } from "../components/OutfitMotion";
 import { HomeUpdateStatus } from "../components/HomeUpdateStatus";
 import { HomeUpdateRegion } from "../components/HomeUpdateRegion";
-import { homeRouteStatus } from "../utils/homeUpdateState";
+import { homeDestinationMatchesOrigin, homeRouteStatus } from "../utils/homeUpdateState";
 import { getDestinationTiming } from "../state/appStateHelpers";
 import { writeAmbientTouchEvidence } from "../debug/ambientTouchEvidence";
 import { File, Paths } from "expo-file-system";
@@ -185,13 +185,20 @@ export function HomeScreen({
     }));
   }, []);
   const forecastNow = useForecastNow();
-  const outingWeather = destinationReady ? state.destinationCare.destinationWeather : currentWeather;
+  const validHomeTiming = Boolean(placeSearchOrigin && getDestinationTiming(selectedDestinationTravelEstimate, homeSchedulePreference, homeDestinationPlace.timezone, forecastNow, placeSearchOrigin.countryCode, homeDestinationPlace.countryCode, placeSearchOrigin.locationId));
+  const sameHomeDestination = Platform.OS === "ios" && destinationReady && locationReady
+    && homeDestinationMatchesOrigin(placeSearchOrigin, homeDestinationPlace)
+    && !(validHomeTiming && selectedDestinationTravelEstimate.status === "ready" && selectedDestinationTravelEstimate.travelMinutes > 0);
   const targetMs = Date.parse(state.destinationCare.departureAdvice?.arrivalAt ?? "");
   const targetAt = destinationReady && Number.isFinite(targetMs) ? new Date(targetMs).toISOString() : undefined;
-  const basisLabel = destinationReady ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
+  const useOriginForSamePlace = sameHomeDestination && !targetAt;
+  const outingWeather = destinationReady && !useOriginForSamePlace ? state.destinationCare.destinationWeather : currentWeather;
+  const basisLabel = destinationReady && !useOriginForSamePlace ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
+  const preparationStatus = useOriginForSamePlace && preparation.status === "도착 시각 미확인 · 현재 기준" ? "" : preparation.status;
+  const preparationPending = !useOriginForSamePlace && destinationWeatherPending;
   const reliableWeather = snapshotReliable(currentWeather, forecastNow);
   // Clothing and props share the card's scoped place/time, not origin weather.
   const mascotWeather = state.outfitContext?.weather ?? state.weather;
@@ -226,7 +233,8 @@ export function HomeScreen({
   }, [reliableWeather, isWeatherLoading, current.condition, ambientDaylight.phase]);
   const companionMessage = preparation.copy;
   const companionBasis = `${preparation.basis === "목적지 도착 무렵" && homeSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}`;
-  const departureSummary = getHomeDepartureSummary(
+  const compactSameDestination = sameHomeDestination && !(Date.parse(homeDepartureAt ?? "") < forecastNow);
+  const departureSummary = compactSameDestination ? { value: "현재 위치와 같은 곳", body: "", soon: false } : getHomeDepartureSummary(
     state.destinationCare,
     destinationReady,
     homeDepartureAt,
@@ -235,14 +243,14 @@ export function HomeScreen({
   );
   const routeAdvice = state.destinationCare.departureAdvice;
   const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분` : "");
-  const departureExplanation = routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
+  const departureExplanation = compactSameDestination ? "" : routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
-  const showDepartureExplanation = destinationReady && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
+  const showDepartureExplanation = destinationReady && !compactSameDestination && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "출발 예상";
   const refreshMessage = currentWeatherPending ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
-  const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, Boolean(placeSearchOrigin && getDestinationTiming(selectedDestinationTravelEstimate, homeSchedulePreference, homeDestinationPlace.timezone, forecastNow, placeSearchOrigin.countryCode, homeDestinationPlace.countryCode, placeSearchOrigin.locationId)), routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
+  const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, validHomeTiming, routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
@@ -377,8 +385,8 @@ export function HomeScreen({
           style={[
             styles.homePlanCard,
             {
-              paddingVertical: Platform.OS === "ios" ? 14 : layout.homePanelPadding,
-              marginTop: Platform.OS === "ios" ? Math.max(20, viewportSpacing.planMargin) : 0,
+              paddingVertical: Platform.OS === "ios" ? 10 : layout.homePanelPadding,
+              marginTop: Platform.OS === "ios" ? viewportSpacing.planMargin : 0,
               gap: Platform.OS === "ios" ? 8 : spacing.md,
               paddingHorizontal: Platform.OS === "ios" ? 18 : 0,
               backgroundColor: "transparent",
@@ -404,7 +412,7 @@ export function HomeScreen({
             <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={Platform.OS === "ios" ? "" : `${selectedDestination?.place.id}:${departureSummary.value}`}>
               <FeedbackPressable
                 accessibilityRole="button"
-                accessibilityLabel={`이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
+                accessibilityLabel={compactSameDestination ? departureSummary.value : `이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
                 onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
                 style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && [styles.ambientDepartureChip, { borderWidth: 0, paddingHorizontal: 0, borderTopWidth: 0 }]]}
               >
@@ -420,18 +428,18 @@ export function HomeScreen({
             </HomeValueTransition>
           ) : null}
           </AmbientChange>
-          {Platform.OS === "ios" && destinationReady ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
+          {Platform.OS === "ios" && destinationReady && !useOriginForSamePlace ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
             <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
           </AmbientChange> : null}
-          <HomeUpdateRegion testID="home-route-update-region" contentKey={homeDestinationPlace.id} spacing={Platform.OS === "ios" ? 8 : spacing.md} visible={destinationReady && (Platform.OS !== "ios" || routePending || showDepartureExplanation || /이전 조회|실패|다시 확인/.test(routeStatus))}>
+          <HomeUpdateRegion testID="home-route-update-region" contentKey={homeDestinationPlace.id} spacing={Platform.OS === "ios" ? 8 : spacing.md} visible={destinationReady && !compactSameDestination && (Platform.OS !== "ios" || routePending || showDepartureExplanation || /이전 조회|실패|다시 확인/.test(routeStatus))}>
             {present => <View>
               <HomeUpdateStatus active={present && homeMotionActive && !lowPowerMode} testID="home-route-update" pending={routePending} label={routeStatus} color={theme.muted} onRetry={!routePending && /실패|다시 확인/.test(routeStatus) ? onRefreshWeather : undefined} />
               {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
             </View>}
           </HomeUpdateRegion>
           {Platform.OS === "ios" ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${preparation.evidence}:${rainForecast.maxProbability}`} order={2} testID="home-outing-check" style={{ gap: 8 }}>
-            <HomeUpdateRegion testID="home-preparation-update-region" contentKey={homeDestinationPlace.id} spacing={8} visible={Boolean(destinationWeatherPending || preparation.status)}>
-              {present => <HomeUpdateStatus active={present && homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={destinationWeatherPending} label={destinationWeatherPending ? "목적지 날씨 확인 중" : preparation.status} color={theme.muted} />}
+            <HomeUpdateRegion testID="home-preparation-update-region" contentKey={homeDestinationPlace.id} spacing={8} visible={Boolean(preparationPending || preparationStatus)}>
+              {present => <HomeUpdateStatus active={present && homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={preparationPending} label={preparationPending ? "목적지 날씨 확인 중" : preparationStatus} color={theme.muted} />}
             </HomeUpdateRegion>
             <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
               <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{preparation.evidence ? `${preparation.evidence} · ` : ""}{!preparation.rainEvidence && rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수 최대 ${rainForecast.maxProbability}%` : "강수 예보"} ›</Text>
@@ -985,7 +993,7 @@ function HomeOutfitPreviewCard({
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
     <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={onPress}
-      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, padding: 18, marginTop: 14, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
+      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, paddingHorizontal: 18, paddingTop: viewportSpacing.outfitTop, paddingBottom: viewportSpacing.outfitBottom, marginTop: 8, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
       <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>
       <View style={styles.ambientOutfitHeading}>
@@ -1003,18 +1011,11 @@ function HomeOutfitPreviewCard({
           : null}
       </View>
       </View>
-      {Platform.OS === "ios" ? <View style={{ gap: 8, marginTop: 4 }}>
-        {advice.map((clause, index) => <Text key={`${index}-${clause}`} style={{ color: theme.text, fontSize: 18, lineHeight: 27 }}>{clause}</Text>)}
-        {timedForecast ? <View accessible accessibilityLabel={timedForecast} style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: theme.card, flexDirection: layout.width < 360 || fontScale > 1.3 ? "column" : "row", alignItems: layout.width < 360 || fontScale > 1.3 ? "flex-start" : "center", gap: 12 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>오늘</Text>
-            <Text style={{ fontSize: 22, lineHeight: 30, fontWeight: "600", color: theme.text, fontVariant: ["tabular-nums"] }}>{forecastClock}</Text>
-            <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>무렵</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1, borderLeftWidth: layout.width < 360 || fontScale > 1.3 ? 0 : 1, borderLeftColor: theme.border, paddingLeft: layout.width < 360 || fontScale > 1.3 ? 0 : 12 }}>
-            {forecastKind === "강수 가능" || forecastKind === "비 예보" ? <Image source={ambientUiIcons.droplet} accessible={false} style={{ width: 16, height: 20, tintColor: theme.muted }} /> : null}
-            <Text style={{ fontSize: 15, lineHeight: 23, color: theme.muted, flexShrink: 1 }}>{translateText(forecastKind ?? "")}</Text>
-          </View>
+      {Platform.OS === "ios" ? <View style={{ gap: 3 }}>
+        {advice.map((clause, index) => <Text key={`${index}-${clause}`} style={{ color: theme.text, fontSize: 17, lineHeight: 24 }}>{clause}</Text>)}
+        {timedForecast && forecastClock && forecastKind ? <View testID="home-outfit-precipitation" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {forecastKind === "강수 가능" || forecastKind === "비 예보" ? <Image source={ambientUiIcons.droplet} accessible={false} style={{ width: 14, height: 17, tintColor: theme.muted }} /> : null}
+          <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 20, flexShrink: 1, fontVariant: ["tabular-nums"] }}>오늘 {forecastClock} 무렵 {forecastKind}</Text>
         </View> : null}
       </View> : <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>}
     </FeedbackPressable>
