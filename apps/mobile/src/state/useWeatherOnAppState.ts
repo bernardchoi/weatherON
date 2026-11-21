@@ -1698,7 +1698,7 @@ export function useWeatherOnAppState() {
   }, []);
 
   const openWardrobeAdd = useCallback(() => {
-    setSelectedWardrobeItemId(presetWardrobe[0]?.id ?? "");
+    setSelectedWardrobeItemId("");
     navigate("C3");
   }, [navigate]);
 

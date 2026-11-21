@@ -34,7 +34,7 @@ type WardrobeFilterControlsProps = {
   categoryFilter: WardrobeCategoryFilter;
   seasonFilter: WardrobeSeasonFilter;
   purposeFilter: WardrobePurposeFilter;
-  onCategoryChange: (value: WardrobeCategoryFilter) => void;
+  onCategoryChange?: (value: WardrobeCategoryFilter) => void;
   onSeasonChange: (value: WardrobeSeasonFilter) => void;
   onPurposeChange: (value: WardrobePurposeFilter) => void;
 };
@@ -63,7 +63,7 @@ export function WardrobeFilterControls({
 
   const selectFilterValue = (value: string) => {
     pendingSelection.current = Platform.OS === "ios" && openFilter && value !== filterConfig.activeValue ? { filter: openFilter, value } : null;
-    if (openFilter === "category") onCategoryChange(value as WardrobeCategoryFilter);
+    if (openFilter === "category") onCategoryChange?.(value as WardrobeCategoryFilter);
     if (openFilter === "season") onSeasonChange(value as WardrobeSeasonFilter);
     if (openFilter === "purpose") onPurposeChange(value as WardrobePurposeFilter);
     setOpenFilter(null);
@@ -72,12 +72,12 @@ export function WardrobeFilterControls({
   return (
     <>
       <View style={[styles.filterSelectorRow, Platform.OS === "ios" && (width < 360 || fontScale > 1.3) && { flexDirection: "column" }]} >
-        <WardrobeFilterSelect
+        {onCategoryChange && <WardrobeFilterSelect
           label="종류"
           value={getCategoryFilterLabel(categoryFilter)}
           active={categoryFilter !== "all"}
           onPress={() => setOpenFilter("category")}
-        />
+        />}
         <WardrobeFilterSelect
           label="계절"
           value={getSeasonFilterLabel(seasonFilter)}

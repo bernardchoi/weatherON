@@ -1055,13 +1055,15 @@ const { demoResults } = await import(pathToFileURL(providerBundle).href);
 const { departureSummary, departureWaitingSummary } = await import(pathToFileURL(companionBundle).href);
 const assetRegistrySource = await readFile("apps/mobile/src/assets.ts", "utf8");
 
-assert.equal(results.presetWardrobeIds.length, 54);
+assert.equal(results.presetWardrobeIds.length, 74);
 assert.ok(results.presetWardrobeIds.includes("outer-packable-windbreaker"));
 assert.ok(results.presetWardrobeIds.includes("outer-light-trench-coat"));
 assert.ok(results.presetWardrobeIds.includes("outer-zip-hoodie"));
 assert.ok(results.presetWardrobeIds.includes("bottom-pleated-skirt"));
 assert.ok(results.presetWardrobeIds.includes("shoes-low-sneakers"));
 assert.ok(results.presetWardrobeIds.includes("accessory-navy-cap"));
+assert.ok(results.presetWardrobeIds.includes("accessory-sand-bucket-hat"));
+assert.ok(results.presetWardrobeIds.includes("outer-olive-puffer-vest"));
 for (const key of ["GLOBAL:park", "GLOBAL:hotel", "GLOBAL:airport", "GLOBAL:dining", "GLOBAL:shopping", "GLOBAL:rail", "GLOBAL:mountain", "GLOBAL:beach"]) {
   assert.ok(assetRegistrySource.includes(`"${key}"`));
 }

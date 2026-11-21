@@ -1,5 +1,7 @@
 import React from "react";
-import { AccessibilityInfo, Animated, Image, LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, useWindowDimensions, View } from "../localization/react-native";
+import { Image, Platform, StyleSheet, Text, TextInput, useWindowDimensions, View } from "../localization/react-native";
+import { BottomSheet } from "../components/BottomSheet";
+import { translateText } from "../localization/localization";
 import { outfitImageAssets } from "../assets";
 import { AppButton } from "../components/AppButton";
 import { AppScreen } from "../components/AppScreen";
@@ -9,14 +11,13 @@ import { Section } from "../components/Section";
 import { WardrobePhotoRegistration } from "../components/WardrobePhotoRegistration";
 import {
   WardrobeFilterControls,
-  type WardrobeCategoryFilter,
   type WardrobePurposeFilter,
   type WardrobeSeasonFilter,
 } from "../components/WardrobeFilterControls";
 import type { P0ScreenProps } from "../navigation/types";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
-import { cardShadow, radius, spacing } from "../theme/tokens";
+import { radius, spacing } from "../theme/tokens";
 import { formatOutfitTags, getWardrobeCategoryLabel } from "../utils/outfitLabels";
 import type { WardrobeItem } from "@weatheron/shared";
 
@@ -24,12 +25,7 @@ const wardrobeCategories = ["outer", "top", "bottom", "shoes", "accessory"] as c
 
 type WardrobeCategory = (typeof wardrobeCategories)[number];
 
-const accordionLayout = {
-  duration: 180,
-  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-  update: { type: LayoutAnimation.Types.easeInEaseOut },
-  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-};
+let lastCategory: WardrobeCategory = "outer";
 
 export function WardrobePresetScreen({
   wardrobeItems,
@@ -50,12 +46,11 @@ export function WardrobePresetScreen({
   const selectedItem = wardrobeItems.find((item) => item.id === selectedWardrobeItemId);
   const selectedPhotoItem = selectedItem?.source === "photo" ? selectedItem : undefined;
   const [query, setQuery] = React.useState("");
-  const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategoryFilter>("all");
+  const [categoryFilter, setCategoryFilter] = React.useState<WardrobeCategory>(lastCategory);
   const [seasonFilter, setSeasonFilter] = React.useState<WardrobeSeasonFilter>("all");
   const [purposeFilter, setPurposeFilter] = React.useState<WardrobePurposeFilter>("all");
-  const [previewId, setPreviewId] = React.useState(selectedPhotoItem ? presetItems[0]?.id ?? "" : selectedWardrobeItemId || presetItems[0]?.id || "");
-  const [expandedCategory, setExpandedCategory] = React.useState<WardrobeCategory | null>("outer");
-  const [reduceMotionEnabled, setReduceMotionEnabled] = React.useState(true);
+  const [previewId, setPreviewId] = React.useState<string | null>(selectedItem?.source === "preset" ? selectedItem.id : null);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [photoMode, setPhotoMode] = React.useState(Boolean(selectedPhotoItem));
 
   const ownedCount = presetItems.filter((item) => item.owned).length;
@@ -63,50 +58,20 @@ export function WardrobePresetScreen({
 
   const filteredItems = React.useMemo(
     () => presetItems.filter((item) => {
-      const categoryMatch = categoryFilter === "all" || item.category === categoryFilter;
+      const categoryMatch = Boolean(normalizedQuery) || item.category === categoryFilter;
       const seasonMatch = seasonFilter === "all" || item.seasons.includes(seasonFilter);
       const purposeMatch = purposeFilter === "all" || item.purposes.includes(purposeFilter);
-      const queryMatch = normalizedQuery.length === 0 || item.name.toLowerCase().includes(normalizedQuery);
+      const queryMatch = normalizedQuery.length === 0 || translateText(item.name).toLowerCase().includes(normalizedQuery) || item.name.toLowerCase().includes(normalizedQuery);
       return categoryMatch && seasonMatch && purposeMatch && queryMatch;
     }),
     [categoryFilter, normalizedQuery, presetItems, purposeFilter, seasonFilter],
   );
-  const groupedItems = React.useMemo(
-    () => Object.fromEntries(
-      wardrobeCategories.map((category) => [category, filteredItems.filter((item) => item.category === category)]),
-    ) as Record<WardrobeCategory, WardrobeItem[]>,
-    [filteredItems],
-  );
-
-  const previewItem = presetItems.find((item) => item.id === previewId) ?? filteredItems[0];
+  const previewItem = presetItems.find(item => item.id === previewId);
+  const tileWidth = fontScale > 1.8 ? "100%" : fontScale > 1.3 ? "50%" : "33.33%";
 
   React.useEffect(() => {
     if (selectedPhotoItem) setPhotoMode(true);
   }, [selectedPhotoItem]);
-
-  React.useEffect(() => {
-    if (categoryFilter !== "all") return;
-    if (expandedCategory === null || groupedItems[expandedCategory].length > 0) return;
-    setExpandedCategory(wardrobeCategories.find((category) => groupedItems[category].length > 0) ?? null);
-  }, [categoryFilter, expandedCategory, groupedItems]);
-
-  React.useEffect(() => {
-    if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.(true);
-    let active = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (active) setReduceMotionEnabled(enabled);
-    }).catch(() => {});
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
-    return () => {
-      active = false;
-      subscription.remove();
-    };
-  }, []);
-
-  const toggleCategory = (category: WardrobeCategory) => {
-    if (!reduceMotionEnabled) LayoutAnimation.configureNext(accordionLayout);
-    setExpandedCategory((current) => current === category ? null : category);
-  };
 
   if (photoMode) {
     return (
@@ -164,101 +129,53 @@ export function WardrobePresetScreen({
         />
       </View>
 
-      <Section compact={Platform.OS === "ios"} title="필터" caption={Platform.OS === "ios" ? undefined : "아이템·계절·목적 기준"} accent="sky">
-        <WardrobeFilterControls
-          categoryFilter={categoryFilter}
-          seasonFilter={seasonFilter}
-          purposeFilter={purposeFilter}
-          onCategoryChange={setCategoryFilter}
-          onSeasonChange={setSeasonFilter}
-          onPurposeChange={setPurposeFilter}
-        />
-      </Section>
+      <FeedbackPressable accessibilityRole="button" accessibilityState={{ expanded: filtersOpen }}
+        onPress={() => setFiltersOpen(!filtersOpen)} style={styles.filterButton}>
+        <Text style={{ color: theme.text }}>{["필터", ...[seasonFilter, purposeFilter].filter(value => value !== "all").map(value => formatOutfitTags([value]))].map(value => translateText(value)).join(" · ")}</Text>
+      </FeedbackPressable>
+      {filtersOpen && <WardrobeFilterControls categoryFilter="all" seasonFilter={seasonFilter} purposeFilter={purposeFilter}
+        onSeasonChange={setSeasonFilter} onPurposeChange={setPurposeFilter} />}
 
-      {previewItem ? (
-        <Section compact={Platform.OS === "ios"}
-          title="미리보기"
-          caption={`${getWardrobeCategoryLabel(previewItem.category)} · ${formatOutfitTags(previewItem.seasons)} · ${formatOutfitTags(previewItem.purposes)}`}
-          accent="clear"
-        >
-          <View
-            style={[[
-              styles.selectedCard,
-              {
-                gap: layout.outfitCardGap,
-                padding: layout.isShort || layout.isNarrow ? 8 : spacing.sm,
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              },
-              cardShadow(theme),
-            ], Platform.OS === "ios" && ambientVisual.selectedCard, Platform.OS === "ios" && fontScale > 1.3 && { flexDirection: "column", alignItems: "stretch" }]}
-          >
-            <View
-              style={[[
-                styles.selectedImageWrap,
-                {
-                  width: layout.isShort || layout.isNarrow ? 54 : 58,
-                  height: layout.isShort || layout.isNarrow ? 54 : 58,
-                  backgroundColor: theme.cardMuted,
-                },
-              ], Platform.OS === "ios" && ambientVisual.selectedImageWrap]}
-            >
-              {outfitImageAssets[previewItem.imageUrl] ? (
-                <Image source={outfitImageAssets[previewItem.imageUrl]} style={styles.selectedImage} resizeMethod="resize" resizeMode="contain" />
-              ) : null}
-            </View>
-            <View style={styles.copy}>
-              <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{previewItem.name}</Text>
-              <Text style={[styles.copyText, { color: theme.muted }]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{formatOutfitTags(previewItem.weatherTags)}</Text>
-            </View>
-            <AppButton
-              label={Platform.OS === "ios" ? previewItem.owned ? "− 해제" : "+ 추가" : previewItem.owned ? "해제" : "추가"}
-              accessibilityLabel={`${previewItem.name} ${previewItem.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
-              onPress={() => toggleOwned(previewItem.id, !previewItem.owned)}
-              variant={Platform.OS === "ios" && previewItem.owned ? "outlined" : undefined}
-              tone="warning"
-              size="sm"
-            />
-          </View>
-        </Section>
-      ) : null}
-
-      <Section compact={Platform.OS === "ios"}
-        title="프리셋 전체"
-        caption={categoryFilter === "all" ? `${filteredItems.length}개 · 카테고리를 열어 확인` : `${filteredItems.length}개 · 카드를 눌러 미리보고 바로 추가`}
-        accent="gold"
-      >
-        {filteredItems.length === 0 ? (
-          <Text style={[[styles.empty, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.empty]}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>
-        ) : categoryFilter === "all" ? (
-          <View style={styles.categoryList}>
-            {wardrobeCategories.map((category) => (
-              <PresetCategory
-                key={category}
-                category={category}
-                items={groupedItems[category]}
-                expanded={expandedCategory === category}
-                selectedItemId={previewItem?.id}
-                onToggle={() => toggleCategory(category)}
-                onPreview={setPreviewId}
-                onToggleOwned={toggleOwned}
-              />
-            ))}
-          </View>
+      {!normalizedQuery && <View accessibilityRole="tablist" style={styles.tabs}>
+        {wardrobeCategories.map(category => (
+          <FeedbackPressable key={category} accessibilityRole="tab" accessibilityState={{ selected: categoryFilter === category }}
+            onPress={() => { lastCategory = category; setCategoryFilter(category); }}
+            style={[styles.tab, { borderColor: categoryFilter === category ? theme.clear : theme.border }]}>
+            <Text style={{ color: categoryFilter === category ? theme.clear : theme.text }}>{getWardrobeCategoryLabel(category)}</Text>
+          </FeedbackPressable>
+        ))}
+      </View>}
+      <View style={!normalizedQuery && styles.grid}>
+        {filteredItems.length === 0 && <Text style={{ color: theme.muted }}>조건에 맞는 아이템이 없음 · 필터를 초기화해줘</Text>}
+        {filteredItems.map(item => normalizedQuery ? (
+          <PresetRow key={item.id} item={item} selected={previewId === item.id}
+            onPreview={() => setPreviewId(item.id)} onToggleOwned={() => toggleOwned(item.id, !item.owned)} />
         ) : (
-          <View style={[styles.presetGrid, Platform.OS === "ios" && ambientVisual.presetGrid]}>
-            {filteredItems.map((item) => (
-              <PresetCard
-                key={item.id}
-                item={item}
-                selected={item.id === previewItem?.id}
-                onPreview={() => setPreviewId(item.id)}
-                onToggleOwned={() => toggleOwned(item.id, !item.owned)}
-              />
-            ))}
+          <View key={item.id} style={[styles.tile, { width: tileWidth }]}>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${item.name} 상세 보기`}
+              onPress={() => setPreviewId(item.id)} style={[styles.tileBody, { backgroundColor: theme.cardMuted }]}>
+              <Image source={outfitImageAssets[item.imageUrl]} resizeMode="contain" style={styles.tilePhoto} />
+              <Text style={[styles.tileName, { color: theme.text }]}>{item.name}</Text>
+            </FeedbackPressable>
+            <FeedbackPressable accessibilityRole="button" accessibilityState={{ selected: item.owned }}
+              accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
+              onPress={() => toggleOwned(item.id, !item.owned)} style={styles.tileAction}>
+              <Text style={[styles.mark, { color: item.owned ? theme.onAccent : theme.text, backgroundColor: item.owned ? theme.clear : theme.card }]}>{item.owned ? "✓" : "+"}</Text>
+            </FeedbackPressable>
           </View>
-        )}
-      </Section>
+        ))}
+      </View>
+      <BottomSheet visible={Boolean(previewItem)} onClose={() => setPreviewId(null)} accessibilityLabel={previewItem?.name ?? "미리보기"}>
+        {previewItem && <View style={styles.detail}>
+          <Text style={[styles.title, { color: theme.text }]}>{previewItem.name}</Text>
+          <Image source={outfitImageAssets[previewItem.imageUrl]} resizeMode="contain" style={styles.detailPhoto} />
+          <Text style={{ color: theme.text }}>{formatOutfitTags(previewItem.seasons)}</Text>
+          <Text style={{ color: theme.text }}>{formatOutfitTags(previewItem.purposes)}</Text>
+          <Text style={{ color: theme.text }}>{formatOutfitTags(previewItem.weatherTags)}</Text>
+          <AppButton label={previewItem.owned ? "내 옷장에서 해제" : "내 옷장에 추가"} onPress={() => toggleOwned(previewItem.id, !previewItem.owned)} />
+          <AppButton label="닫기" tone="secondary" onPress={() => setPreviewId(null)} />
+        </View>}
+      </BottomSheet>
 
       <Section compact={Platform.OS === "ios"} title="빠른 이동" caption="옷장 반영은 코디 추천과 상세에도 반영됨">
         <View style={styles.actions}>
@@ -270,93 +187,7 @@ export function WardrobePresetScreen({
   );
 }
 
-function PresetCategory({
-  category,
-  items,
-  expanded,
-  selectedItemId,
-  onToggle,
-  onPreview,
-  onToggleOwned,
-}: {
-  category: WardrobeCategory;
-  items: WardrobeItem[];
-  expanded: boolean;
-  selectedItemId?: string;
-  onToggle: () => void;
-  onPreview: (itemId: string) => void;
-  onToggleOwned: (itemId: string, owned: boolean) => void;
-}) {
-  const theme = useAppTheme();
-  const layout = useResponsiveLayout();
-  const categoryLabel = getWardrobeCategoryLabel(category);
-  const contentOpacity = React.useRef(new Animated.Value(expanded ? 1 : 0)).current;
-
-  React.useEffect(() => {
-    if (!expanded) {
-      contentOpacity.stopAnimation();
-      contentOpacity.setValue(0);
-      return;
-    }
-    contentOpacity.setValue(0);
-    const animation = Animated.timing(contentOpacity, {
-      toValue: 1,
-      duration: 180,
-      useNativeDriver: true,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [contentOpacity, expanded]);
-
-  return (
-    <View
-      style={[[
-        styles.categoryCard,
-        {
-          gap: layout.outfitCardGap,
-          padding: layout.isShort || layout.isNarrow ? 10 : 12,
-          backgroundColor: theme.cardMuted,
-          borderColor: expanded ? theme.gold : theme.border,
-        },
-      ], Platform.OS === "ios" && ambientVisual.categoryCard]}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${categoryLabel} ${items.length}개 ${expanded ? "접기" : "펼치기"}`}
-        accessibilityState={{ expanded }}
-        onPress={onToggle}
-        style={[styles.categoryHeader, Platform.OS === "ios" && ambientVisual.categoryHeader]}
-      >
-        <View style={styles.categoryCopy}>
-          <Text style={[[styles.categoryTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.categoryTitle]}>{categoryLabel}</Text>
-          <Text style={[[styles.categoryCount, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.categoryCount]}>{items.length}개</Text>
-        </View>
-        <Text style={[[styles.categoryToggle, { color: theme.gold }], Platform.OS === "ios" && ambientVisual.categoryToggle]}>{expanded ? "접기" : "펼치기"}</Text>
-      </Pressable>
-      {expanded ? (
-        items.length > 0 ? (
-          <Animated.View style={{ opacity: contentOpacity }}>
-          <View style={[styles.presetGrid, Platform.OS === "ios" && ambientVisual.presetGrid]}>
-            {items.map((item) => (
-              <PresetCard
-                key={item.id}
-                item={item}
-                selected={item.id === selectedItemId}
-                onPreview={() => onPreview(item.id)}
-                onToggleOwned={() => onToggleOwned(item.id, !item.owned)}
-              />
-            ))}
-          </View>
-          </Animated.View>
-        ) : (
-          <Text style={[[styles.categoryEmpty, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.categoryEmpty]}>현재 조건에 맞는 아이템 없음</Text>
-        )
-      ) : null}
-    </View>
-  );
-}
-
-function PresetCard({
+function PresetRow({
   item,
   selected,
   onPreview,
@@ -368,41 +199,27 @@ function PresetCard({
   onToggleOwned: () => void;
 }) {
   const theme = useAppTheme();
-  const layout = useResponsiveLayout();
   const imageSource = outfitImageAssets[item.imageUrl];
-  const { fontScale } = useWindowDimensions();
   return (
-    <View
-      style={[[
-        styles.presetCard,
-        {
-          width: Platform.OS === "ios" ? fontScale > 1.8 ? "100%" : layout.width < 350 || fontScale > 1.3 ? "47%" : layout.isTablet ? "23%" : "30.8%" : layout.wardrobeGridItemWidth,
-          minHeight: Platform.OS === "ios" ? 0 : layout.wardrobePresetCardMinHeight,
-          backgroundColor: theme.cardMuted,
-          borderColor: item.owned ? theme.clear : selected ? theme.gold : theme.border,
-        },
-      ], Platform.OS === "ios" && ambientVisual.presetCard, Platform.OS === "ios" && { borderWidth: 1, borderRadius: item.owned || selected ? 14 : 0, padding: 0, gap: 0, overflow: "hidden", borderColor: item.owned ? theme.clear : selected ? theme.gold : "transparent" }]}
-    >
-      <FeedbackPressable accessibilityLabel={`${item.name} 상세 보기`} accessibilityRole="button" onPress={onPreview} accessibilityState={{ selected }} style={[styles.presetMain, Platform.OS === "ios" && { flex: 1, paddingBottom: 8 }]}>
-        <View style={[[styles.presetImageWrap, { height: layout.wardrobePresetImageHeight, backgroundColor: theme.cardStrong }], Platform.OS === "ios" && ambientVisual.presetImageWrap]}>
-          {imageSource ? <Image source={imageSource} style={[styles.presetImage, Platform.OS === "ios" && ambientVisual.presetImage]} resizeMethod="resize" resizeMode="contain" /> : null}
-        </View>
-        {Platform.OS === "ios" && item.owned ? <View pointerEvents="none" accessibilityElementsHidden style={[proposalStyles.ownedMark, { backgroundColor: theme.clear }]}><Text style={{ color: theme.onAccent, fontSize: 11, lineHeight: 14, fontWeight: "700" }}>✓</Text></View> : null}
-        <Text style={[[styles.presetName, { color: theme.text }], Platform.OS === "ios" && [ambientVisual.presetName, { fontSize: 13, lineHeight: 18, paddingHorizontal: 4, minHeight: 36 * fontScale }]]} numberOfLines={Platform.OS === "ios" ? undefined : 2}>{item.name}</Text>
-        <Text style={[[styles.presetMeta, { color: theme.muted }], Platform.OS === "ios" && [ambientVisual.presetMeta, { paddingHorizontal: 4 }]]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>{getWardrobeCategoryLabel(item.category)}</Text>
-      </FeedbackPressable>
-      {Platform.OS === "ios" ? <FeedbackPressable
+    <View style={[styles.presetRow, { borderColor: theme.border }]}>
+      <FeedbackPressable
+        accessibilityLabel={`${item.name} 상세 보기`}
         accessibilityRole="button"
-        accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
-        onPress={onToggleOwned}
-        style={[proposalStyles.presetAction, { backgroundColor: item.owned ? theme.card : theme.clear, borderTopWidth: item.owned ? StyleSheet.hairlineWidth : 0, borderColor: theme.clear, borderRadius: item.owned ? 0 : 10 }]}
-      ><Text style={{ color: item.owned ? theme.clear : theme.onAccent, fontSize: 14, lineHeight: 20, fontWeight: "600", textAlign: "center" }}>{item.owned ? "− 해제" : "+ 추가"}</Text></FeedbackPressable> : <AppButton
+        accessibilityState={{ selected }}
+        onPress={onPreview}
+        style={styles.presetMain}
+      >
+        {imageSource ? <Image source={imageSource} style={styles.thumbnail} resizeMode="contain" resizeMethod="resize" /> : null}
+        <Text style={[styles.presetName, { color: selected ? theme.gold : theme.text }]}>{item.name}</Text>
+      </FeedbackPressable>
+      <AppButton
         label={item.owned ? "해제" : "추가"}
         accessibilityLabel={`${item.name} ${item.owned ? "내 옷장에서 해제" : "내 옷장에 추가"}`}
         onPress={onToggleOwned}
         tone="secondary"
+        variant={item.owned ? "outlined" : undefined}
         size="sm"
-      />}
+      />
     </View>
   );
 }
@@ -444,102 +261,35 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "800",
   },
-  selectedCard: {
-    minHeight: 78,
+  filterButton: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start", paddingHorizontal: 12 },
+  tabs: { flexDirection: "row", flexWrap: "wrap" },
+  tab: { flexGrow: 1, minHeight: 44, paddingHorizontal: 6, justifyContent: "center", alignItems: "center", borderBottomWidth: 2 },
+  grid: { flexDirection: "row", flexWrap: "wrap" },
+  tile: { padding: 3 },
+  tileBody: { flex: 1, padding: 6, borderRadius: radius.md },
+  tilePhoto: { width: "100%", height: 94 },
+  tileName: { fontSize: 13, fontWeight: "600", paddingVertical: 4 },
+  tileAction: { position: "absolute", top: 3, right: 3, width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  mark: { overflow: "hidden", borderRadius: 14, minWidth: 28, textAlign: "center", fontSize: 18, lineHeight: 28 },
+  detail: { gap: spacing.sm },
+  detailPhoto: { width: "100%", height: 190 },
+  presetRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    padding: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  selectedImageWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-  },
-  selectedImage: {
-    width: "92%",
-    height: "92%",
-  },
-  presetGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    columnGap: 8,
-    rowGap: 10,
-  },
-  categoryList: {
     gap: spacing.sm,
-  },
-  categoryCard: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  categoryHeader: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: 2,
-  },
-  categoryCopy: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  categoryTitle: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "900",
-  },
-  categoryCount: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-  categoryToggle: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
-  categoryEmpty: {
-    paddingHorizontal: spacing.xs,
-    paddingBottom: spacing.xs,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  presetCard: {
-    minHeight: 162,
-    justifyContent: "space-between",
-    gap: 8,
-    padding: 8,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   presetMain: {
-    gap: 6,
-  },
-  presetImageWrap: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 48,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.sm,
+    gap: spacing.sm,
+    paddingVertical: 4,
   },
-  presetImage: {
-    width: "92%",
-    height: "92%",
-  },
-  presetName: {
-    minHeight: 32,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "900",
-  },
-  presetMeta: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "800",
-  },
+  thumbnail: { width: 38, height: 38 },
+  presetName: { flex: 1, fontSize: 15, fontWeight: "600" },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -572,22 +322,6 @@ const ambientVisual = StyleSheet.create({
     "minHeight": 52,
     "borderRadius": 20
   },
-  "selectedCard": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "borderRadius": 0,
-    "shadowOpacity": 0,
-    "elevation": 0,
-    "paddingHorizontal": 0,
-    "paddingVertical": 4,
-    "gap": 16
-  },
-  "selectedImageWrap": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "width": 64,
-    "height": 72
-  },
   "title": {
     "fontSize": 16,
     "lineHeight": 24,
@@ -597,82 +331,5 @@ const ambientVisual = StyleSheet.create({
     "fontSize": 14,
     "lineHeight": 21,
     "fontWeight": "400"
-  },
-  "categoryCard": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "borderRadius": 0,
-    "shadowOpacity": 0,
-    "elevation": 0,
-    "paddingHorizontal": 0,
-    "paddingVertical": 4,
-    "gap": 16
-  },
-  "categoryHeader": {
-    "minHeight": 44
-  },
-  "categoryTitle": {
-    "fontSize": 19,
-    "lineHeight": 27,
-    "fontWeight": "600"
-  },
-  "categoryCount": {
-    "fontSize": 14,
-    "lineHeight": 21,
-    "fontWeight": "400"
-  },
-  "categoryToggle": {
-    "fontSize": 14,
-    "lineHeight": 21,
-    "fontWeight": "400"
-  },
-  "categoryEmpty": {
-    "fontSize": 14,
-    "lineHeight": 21,
-    "fontWeight": "400"
-  },
-  "presetCard": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "borderRadius": 0,
-    "shadowOpacity": 0,
-    "elevation": 0,
-    "paddingHorizontal": 0,
-    "padding": 0,
-    "gap": 6
-  },
-  "presetImageWrap": {
-    "backgroundColor": "transparent",
-    "borderWidth": 0,
-    "height": 100
-  },
-  "presetImage": {
-    "width": "94%",
-    "height": "94%"
-  },
-  "presetName": {
-    "fontSize": 15,
-    "lineHeight": 22,
-    "fontWeight": "600",
-    "minHeight": 0
-  },
-  "presetMeta": {
-    "fontSize": 14,
-    "lineHeight": 21,
-    "fontWeight": "400"
-  },
-  "presetGrid": {
-    "rowGap": 12
-  },
-  "empty": {
-    "fontSize": 16,
-    "lineHeight": 24,
-    "fontWeight": "500"
   }
-});
-
-// Approved outfit study: one owned-card outline, no overlaid duplicate borders.
-const proposalStyles = StyleSheet.create({
-  ownedMark: { position: "absolute", top: 6, right: 6, width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  presetAction: { minHeight: 44, paddingHorizontal: 4, paddingVertical: 10, alignItems: "center", justifyContent: "center" },
 });

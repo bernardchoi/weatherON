@@ -58,12 +58,16 @@ for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 44
  }
  load('apps/mobile/src/screens/WardrobePresetScreen.tsx', env);
  for (const owned of [true, false]) {
-  const preset = env.PresetCard({ item: { ...item, owned }, selected: true, onPreview: () => opened++, onToggleOwned: () => toggled++ });
+  const preset = env.PresetRow({ item: { ...item, owned }, selected: true, onPreview: () => opened++, onToggleOwned: () => toggled++ });
   const action = nodes(preset).find(n => n.props.accessibilityLabel === `${item.name} ${owned ? '내 옷장에서 해제' : '내 옷장에 추가'}`);
   assert.ok(action, 'Owned toggle is accessible');
-  action.props.onPress(); assert.equal(os === 'ios' ? text(action) : action.props.label, os === 'ios' ? (owned ? '− 해제' : '+ 추가') : (owned ? '해제' : '추가'));
-  if (os === 'ios') assert.ok(flatten(action.props.style).minHeight >= 44);
-  if (os === 'ios') { assert.equal(flatten(preset.props.style).width, ownedWidth); assert.equal(flatten(preset.props.style).minHeight, 0); }
+  action.props.onPress(); assert.equal(action.props.label, owned ? '해제' : '추가');
+  const preview = nodes(preset).find(n => n.props.accessibilityLabel?.endsWith('상세 보기'));
+  assert.ok(!nodes(preview).includes(action));
+  preview.props.onPress();
+  assert.equal(preview.props.accessibilityState.selected, true);
+  assert.equal(flatten(preset.props.style).flexDirection, 'row');
+  assert.ok(flatten(preview.props.style).minHeight >= 44);
  }
  assert.equal(toggled, 2);
  load('apps/mobile/src/components/Section.tsx', env);
@@ -72,4 +76,4 @@ for (const os of ['ios', 'android']) for (const width of [320, 360, 375, 390, 44
   if (os === 'ios') assert.equal(flatten(section.children[0].props.style).gap, contentGap ?? (compact ? 10 : 20));
  }
 }
-console.log('PASS actual wardrobe/preset/Section JSX: iOS/Android, 320–768pt, 1–2x type, matching columns, separate 44pt delete footer, open/delete/restore/add/remove callbacks and compact/default sections. Native text measurement remains device QA.');
+console.log('PASS actual wardrobe/preset/Section JSX: iOS/Android, 320–768pt, 1–2x type, compact preset rows, separate 44pt delete footer, open/delete/restore/add/remove callbacks and compact/default sections. Native text measurement remains device QA.');

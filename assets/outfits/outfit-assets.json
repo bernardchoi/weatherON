@@ -546,5 +546,214 @@
     "asset": "weatheron-outfit-brown-leather-gloves-v1.png",
     "source": "weatheron-outfit-brown-leather-gloves-source-v1.png",
     "weatherTags": ["cold", "wind", "winter", "formal"]
+  },
+  {
+    "id": "olivePufferVest",
+    "category": "outer",
+    "nameKo": "올리브 패딩 베스트",
+    "asset": "weatheron-outfit-olive-puffer-vest-v1.png",
+    "source": "weatheron-outfit-olive-puffer-vest-source-v1.png",
+    "weatherTags": [
+      "cold"
+    ]
+  },
+  {
+    "id": "sandBucketHat",
+    "category": "accessory",
+    "nameKo": "샌드 버킷햇",
+    "asset": "weatheron-outfit-sand-bucket-hat-v1.png",
+    "source": "weatheron-outfit-sand-bucket-hat-source-v1.png",
+    "weatherTags": [
+      "heat",
+      "dry"
+    ]
+  },
+  {
+    "id": "mintSunHoodie",
+    "category": "top",
+    "nameKo": "민트 썬 후디",
+    "asset": "weatheron-outfit-mint-sun-hoodie-v1.png",
+    "source": "weatheron-outfit-mint-sun-hoodie-source-v1.png",
+    "weatherTags": [
+      "heat",
+      "dry"
+    ]
+  },
+  {
+    "id": "mustardRainPoncho",
+    "category": "outer",
+    "nameKo": "머스터드 레인 판초",
+    "asset": "weatheron-outfit-mustard-rain-poncho-v1.png",
+    "source": "weatheron-outfit-mustard-rain-poncho-source-v1.png",
+    "weatherTags": [
+      "rain"
+    ]
+  },
+  {
+    "id": "shellRainPants",
+    "category": "bottom",
+    "nameKo": "방수 셸 팬츠",
+    "asset": "weatheron-outfit-shell-rain-pants-v1.png",
+    "source": "weatheron-outfit-shell-rain-pants-source-v1.png",
+    "weatherTags": [
+      "rain",
+      "wind"
+    ]
+  },
+  {
+    "id": "leatherHikingBoots",
+    "category": "shoes",
+    "nameKo": "브라운 하이킹 부츠",
+    "asset": "weatheron-outfit-leather-hiking-boots-v1.png",
+    "source": "weatheron-outfit-leather-hiking-boots-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "tortoiseshellSunglasses",
+    "category": "accessory",
+    "nameKo": "토터스셸 선글라스",
+    "asset": "weatheron-outfit-tortoiseshell-sunglasses-v1.png",
+    "source": "weatheron-outfit-tortoiseshell-sunglasses-source-v1.png",
+    "weatherTags": [
+      "dry",
+      "heat"
+    ]
+  },
+  {
+    "id": "fleeceNeckWarmer",
+    "category": "accessory",
+    "nameKo": "버건디 플리스 넥워머",
+    "asset": "weatheron-outfit-fleece-neck-warmer-v1.png",
+    "source": "weatheron-outfit-fleece-neck-warmer-source-v1.png",
+    "weatherTags": [
+      "cold",
+      "wind"
+    ]
+  },
+  {
+    "id": "navyTailoredBlazer",
+    "category": "outer",
+    "nameKo": "네이비 테일러드 블레이저",
+    "asset": "weatheron-outfit-navy-tailored-blazer-v1.png",
+    "source": "weatheron-outfit-navy-tailored-blazer-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "roseCrepeBlouse",
+    "category": "top",
+    "nameKo": "로즈 반소매 블라우스",
+    "asset": "weatheron-outfit-rose-crepe-blouse-v1.png",
+    "source": "weatheron-outfit-rose-crepe-blouse-source-v1.png",
+    "weatherTags": [
+      "heat",
+      "dry"
+    ]
+  },
+  {
+    "id": "charcoalPleatedTrousers",
+    "category": "bottom",
+    "nameKo": "차콜 투턱 슬랙스",
+    "asset": "weatheron-outfit-charcoal-pleated-trousers-v1.png",
+    "source": "weatheron-outfit-charcoal-pleated-trousers-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "sageHarringtonJacket",
+    "category": "outer",
+    "nameKo": "세이지 해링턴 재킷",
+    "asset": "weatheron-outfit-sage-harrington-jacket-v1.png",
+    "source": "weatheron-outfit-sage-harrington-jacket-source-v1.png",
+    "weatherTags": [
+      "wind",
+      "dry"
+    ]
+  },
+  {
+    "id": "denimALineSkirt",
+    "category": "bottom",
+    "nameKo": "데님 A라인 스커트",
+    "asset": "weatheron-outfit-denim-a-line-skirt-v1.png",
+    "source": "weatheron-outfit-denim-a-line-skirt-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "burgundyMaryJanes",
+    "category": "shoes",
+    "nameKo": "버건디 메리제인 플랫",
+    "asset": "weatheron-outfit-burgundy-mary-janes-v1.png",
+    "source": "weatheron-outfit-burgundy-mary-janes-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "blueSeersuckerShirt",
+    "category": "top",
+    "nameKo": "블루 시어서커 반팔 셔츠",
+    "asset": "weatheron-outfit-blue-seersucker-shirt-v1.png",
+    "source": "weatheron-outfit-blue-seersucker-shirt-source-v1.png",
+    "weatherTags": [
+      "heat",
+      "dry"
+    ]
+  },
+  {
+    "id": "khakiStraightChinos",
+    "category": "bottom",
+    "nameKo": "카키 스트레이트 치노 팬츠",
+    "asset": "weatheron-outfit-khaki-straight-chinos-v1.png",
+    "source": "weatheron-outfit-khaki-straight-chinos-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "tobaccoChukkaBoots",
+    "category": "shoes",
+    "nameKo": "토바코 스웨이드 처카 부츠",
+    "asset": "weatheron-outfit-tobacco-chukka-boots-v1.png",
+    "source": "weatheron-outfit-tobacco-chukka-boots-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "indigoChoreJacket",
+    "category": "outer",
+    "nameKo": "인디고 초어 재킷",
+    "asset": "weatheron-outfit-indigo-chore-jacket-v1.png",
+    "source": "weatheron-outfit-indigo-chore-jacket-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "forestRugbyShirt",
+    "category": "top",
+    "nameKo": "포레스트 스트라이프 럭비 셔츠",
+    "asset": "weatheron-outfit-forest-rugby-shirt-v1.png",
+    "source": "weatheron-outfit-forest-rugby-shirt-source-v1.png",
+    "weatherTags": [
+      "dry"
+    ]
+  },
+  {
+    "id": "espressoCorduroyTrousers",
+    "category": "bottom",
+    "nameKo": "에스프레소 코듀로이 팬츠",
+    "asset": "weatheron-outfit-espresso-corduroy-trousers-v1.png",
+    "source": "weatheron-outfit-espresso-corduroy-trousers-source-v1.png",
+    "weatherTags": [
+      "cold",
+      "dry"
+    ]
   }
 ]
