@@ -63,7 +63,7 @@ export const ambientScreenIconOverrides = {
   tabMy: ambientUiIcons.tabMy,
   check: ambientUiIcons.check,
 };
-const weather = {
+export const ambientHeroWeather = {
   light: {
     "sun": require("../../../assets/ambient-surface-runtime-v1/hero/light/sun.png"),
     "cloud": require("../../../assets/ambient-surface-runtime-v1/hero/light/cloud.png"),
@@ -94,7 +94,7 @@ export function ambientWeatherIcon(condition: string, isNight: boolean, theme: A
   if (condition === "cloud") return { source: assets.cloud };
   if (condition === "rain") return { source: assets.rain };
   // Provider storm means heavy rain here, not necessarily lightning.
-  if (condition === "storm") return { source: weather[theme.name]["heavy-rain"] };
+  if (condition === "storm") return { source: ambientHeroWeather[theme.name]["heavy-rain"] };
   if (condition === "snow") return { source: assets.snow };
   if (condition === "sleet") return { source: assets.sleet };
   if (condition === "hail") return { source: assets.hail };
