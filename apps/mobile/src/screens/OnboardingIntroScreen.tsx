@@ -20,7 +20,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
   return (
     <AppScreen
       title="날씨 보고, 가볍게 나가요"
-      subtitle="오늘 챙길 것만 한눈에 보여드림"
+      subtitle={Platform.OS === "ios" ? "옷차림부터 나설 시간까지 한눈에 확인해요" : "오늘 챙길 것만 한눈에 보여드림"}
       badge="1 / 4"
       contentGap={Platform.OS === "ios" ? 12 : undefined}
       showWordmark={false}
@@ -35,32 +35,51 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
         />
       }
     >
-      {Platform.OS === "ios" ? <OnboardingAmbientScene /> : (
-        <View style={[styles.brandHero, {
-          backgroundColor: theme.cardStrong, borderColor: theme.border,
-          padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
-        }, cardShadow(theme)]}>
-          <View style={styles.brandTop}>
-            <Text style={[styles.heroCopy, { color: theme.muted }]}>5초 외출 브리핑</Text>
+      {Platform.OS === "ios" ? (
+        <View style={[styles.briefing, { backgroundColor: theme.cardMuted }]}>
+          <OnboardingAmbientScene />
+          <View style={styles.briefingCopy}>
+            <Text style={{ color: theme.muted, fontSize: 15, fontWeight: "600" }}>외출 브리핑 예시</Text>
+            <Text style={{ color: theme.text, fontSize: layout.isShort ? 22 : 28, fontWeight: "700" }}>비 오는 아침, 이렇게 나가요</Text>
           </View>
-          <Image source={onboardingAssets.ready} style={[styles.heroVisual, { height: layout.onboardingHeroVisualHeight }]}
-            resizeMode="cover" accessibilityLabel="날씨에 맞춘 코디, 우산, 출발 알림을 보여주는 일러스트" />
+          <View style={[styles.briefingItems, { borderColor: theme.border }]}>
+            <OnboardingVisualStrip intro items={[
+              { label: "코디", value: "가벼운 겉옷", icon: screenIcons.shirt, tone: "clear" },
+              { label: "준비물", value: "접이식 우산", icon: screenIcons.umbrella, tone: "sky" },
+              { label: "출발", value: "08:10", icon: screenIcons.depart, tone: "gold" },
+            ]} />
+          </View>
         </View>
-      )}
+      ) : (
+        <>
+          <View style={[styles.brandHero, {
+            backgroundColor: theme.cardStrong, borderColor: theme.border,
+            padding: layout.isShort || layout.isNarrow ? spacing.xs : spacing.sm,
+          }, cardShadow(theme)]}>
+            <View style={styles.brandTop}>
+              <Text style={[styles.heroCopy, { color: theme.muted }]}>5초 외출 브리핑</Text>
+            </View>
+            <Image source={onboardingAssets.ready} style={[styles.heroVisual, { height: layout.onboardingHeroVisualHeight }]}
+              resizeMode="cover" accessibilityLabel="날씨에 맞춘 코디, 우산, 출발 알림을 보여주는 일러스트" />
+          </View>
 
-      <OnboardingVisualStrip
-        intro={Platform.OS === "ios"}
-        items={[
-          { label: "코디", value: "날씨에 딱 맞게", icon: screenIcons.shirt, tone: "clear" },
-          { label: "비 준비", value: "우산·신발까지", icon: screenIcons.umbrella, tone: "sky" },
-          { label: "출발 예시", value: "08:10", icon: screenIcons.depart, tone: "gold" },
-        ]}
-      />
+          <OnboardingVisualStrip
+            items={[
+              { label: "코디", value: "날씨에 딱 맞게", icon: screenIcons.shirt, tone: "clear" },
+              { label: "비 준비", value: "우산·신발까지", icon: screenIcons.umbrella, tone: "sky" },
+              { label: "출발 예시", value: "08:10", icon: screenIcons.depart, tone: "gold" },
+            ]}
+          />
+        </>
+      )}
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  briefing: { borderRadius: 20, overflow: "hidden" },
+  briefingCopy: { gap: 6, paddingHorizontal: 18, paddingVertical: 14 },
+  briefingItems: { borderTopWidth: StyleSheet.hairlineWidth, marginHorizontal: 12, paddingVertical: 14 },
   brandHero: {
     justifyContent: "center",
     gap: spacing.sm,
