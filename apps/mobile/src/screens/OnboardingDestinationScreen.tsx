@@ -1,7 +1,9 @@
 import React from "react";
 import { Platform, Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
+import { filledV3Weather } from "../filledV3Assets";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
+import { OnboardingAmbientScene } from "../components/OnboardingAmbientScene";
 import { AppScreen } from "../components/AppScreen";
 import { OnboardingFooter } from "../components/OnboardingFooter";
 import { OnboardingVisualStrip } from "../components/OnboardingVisualStrip";
@@ -46,6 +48,7 @@ export function OnboardingDestinationScreen({
       title="가는 곳까지 미리 챙겨요"
       subtitle="출발지와 목적지 날씨를 한눈에 비교해드림"
       badge="4 / 4"
+      contentGap={Platform.OS === "ios" ? 12 : undefined}
       showWordmark={false}
       footer={
         <OnboardingFooter
@@ -62,15 +65,20 @@ export function OnboardingDestinationScreen({
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
 
-      <Image
+      {Platform.OS === "ios" ? <OnboardingAmbientScene destination /> : <Image
         source={onboardingAssets.destinationCare}
-        style={[[styles.destinationVisual, { height: layout.onboardingDestinationVisualHeight }], Platform.OS === "ios" && ambientVisual.destinationVisual]}
+        style={[styles.destinationVisual, { height: layout.onboardingDestinationVisualHeight }]}
         resizeMode="cover"
         accessibilityLabel="목적지 날씨와 출발 시간 비교 예시"
-      />
+      />}
 
       <OnboardingVisualStrip
-        items={[
+        rows={Platform.OS === "ios"}
+        items={Platform.OS === "ios" ? [
+          { label: "날씨", value: "출발지와 목적지 날씨 비교", icon: filledV3Weather.compact[theme.name].cloud, tone: "sky" },
+          { label: "출발", value: "나설 시간 안내", icon: screenIcons.depart, tone: "gold" },
+          { label: "준비물", value: "우산 등 준비물 확인", icon: ambientUiIcons.umbrella, tone: "clear" },
+        ] : [
           { label: "날씨", value: "양쪽을 한눈에", icon: screenIcons.rain, tone: "sky" },
           { label: "출발", value: "나설 시간 안내", icon: screenIcons.depart, tone: "gold" },
           { label: "준비물", value: "미리 챙기기", icon: screenIcons.umbrella, tone: "clear" },
@@ -92,7 +100,7 @@ export function OnboardingDestinationScreen({
       >
         <View style={styles.copy}>
           {canUseSelection ? <RawText style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{selectedDestinationPlace.name}</RawText> : <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>장소 검색 후 선택</Text>}
-          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]} numberOfLines={1}>
+          <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>
             {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만 골라보세요"}
           </Text>
         </View>
@@ -151,9 +159,6 @@ const ambientVisual = StyleSheet.create({
     "paddingHorizontal": 0,
     "paddingVertical": 18,
     "gap": 16
-  },
-  "destinationVisual": {
-    "borderRadius": 20
   },
   "title": {
     "fontSize": 21,

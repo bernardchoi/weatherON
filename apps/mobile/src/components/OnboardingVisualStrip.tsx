@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, Image, type ImageSourcePropType, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, useWindowDimensions, type ImageSourcePropType, StyleSheet, Text, View } from "../localization/react-native";
 import { useAppTheme } from "../theme/AppThemeContext";
 import { useResponsiveLayout } from "../theme/responsiveLayout";
 import { radius, semanticColor, spacing } from "../theme/tokens";
@@ -16,14 +16,35 @@ export type OnboardingVisualItem = {
 type OnboardingVisualStripProps = {
   items: OnboardingVisualItem[];
   rows?: boolean;
+  intro?: boolean;
 };
 
-export function OnboardingVisualStrip({ items, rows = false }: OnboardingVisualStripProps) {
+export function OnboardingVisualStrip({ items, rows = false, intro = false }: OnboardingVisualStripProps) {
   const theme = useAppTheme();
   const layout = useResponsiveLayout();
 
+  const { fontScale, width } = useWindowDimensions();
+  if (rows || intro) {
+    const horizontalItems = rows || (width - layout.screenHorizontalPadding * 2) / fontScale < 235;
+    return (
+      <View style={{ flexDirection: horizontalItems ? "column" : "row", gap: 8 }}>
+        {items.map(item => (
+          <View key={item.label} accessible accessibilityLabel={rows ? item.value : `${item.label} ${item.value}`}
+            style={horizontalItems ? styles.featureRow : styles.featureColumn}>
+            <Image source={item.icon} accessible={false} resizeMode="contain"
+              style={{ width: 32, height: 32, tintColor: theme[item.tone] }} />
+            <View style={horizontalItems ? styles.rowCopy : styles.columnCopy}>
+              {intro && <Text style={{ color: theme.muted, fontSize: 15, fontWeight: "600" }}>{item.label}</Text>}
+              <Text style={{ color: theme.text, fontSize: rows ? 19 : 16, fontWeight: "600",
+                textAlign: horizontalItems ? "left" : "center" }}>{item.value}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  }
   return (
-    <View style={[styles.row, rows && { flexDirection: "column", gap: 20 }]}>
+    <View style={styles.row}>
       {items.map((item) => {
         const accent = theme[item.tone];
         return (
@@ -37,7 +58,7 @@ export function OnboardingVisualStrip({ items, rows = false }: OnboardingVisualS
               {
                 backgroundColor: Platform.OS === "ios" ? "transparent" : theme.cardStrong,
                 borderColor: theme.border,
-                minHeight: rows ? 110 : layout.onboardingVisualItemMinHeight,
+                minHeight: layout.onboardingVisualItemMinHeight,
                 paddingVertical: layout.isShort || layout.isNarrow ? 6 : spacing.sm,
               },
             ]}
@@ -56,8 +77,8 @@ export function OnboardingVisualStrip({ items, rows = false }: OnboardingVisualS
                 source={item.icon}
                 style={{
                   tintColor: accent,
-                  width: rows ? 44 : layout.onboardingVisualIconSize,
-                  height: rows ? 44 : layout.onboardingVisualIconSize,
+                  width: layout.onboardingVisualIconSize,
+                  height: layout.onboardingVisualIconSize,
                 }}
                 resizeMode="contain"
                 accessible={false}
@@ -73,6 +94,10 @@ export function OnboardingVisualStrip({ items, rows = false }: OnboardingVisualS
 }
 
 const styles = StyleSheet.create({
+  featureRow: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 5 },
+  featureColumn: { flex: 1, alignItems: "center", gap: 6 },
+  rowCopy: { flex: 1, gap: 2 },
+  columnCopy: { alignItems: "center", gap: 2, alignSelf: "stretch" },
   row: {
     flexDirection: "row",
     gap: spacing.xs,

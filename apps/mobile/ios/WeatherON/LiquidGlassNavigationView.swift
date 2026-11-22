@@ -2,10 +2,12 @@ import React
 import UIKit
 import CoreImage
 
+// These managers have no UIKit initialization. Fabric mounts their views on main.
+// Synchronous main-queue setup during lazy registration can deadlock native animations.
 @objc(LiquidGlassNavigationView)
 final class LiquidGlassNavigationView: RCTViewManager {
   override func view() -> UIView! { LiquidGlassNavigationSurfaceView() }
-  @objc override static func requiresMainQueueSetup() -> Bool { true }
+  @objc override static func requiresMainQueueSetup() -> Bool { false }
 }
 
 // Keep the glass and its touches in UIKit: an RN responder above it prevents
@@ -132,7 +134,7 @@ final class LiquidGlassNavigationSurfaceView: UIView {
 @objc(ReservedRegionObserverView)
 final class ReservedRegionObserverViewManager: RCTViewManager {
   override func view() -> UIView! { ReservedRegionObserverSurfaceView() }
-  @objc override static func requiresMainQueueSetup() -> Bool { true }
+  @objc override static func requiresMainQueueSetup() -> Bool { false }
 }
 
 final class ReservedRegionObserverSurfaceView: UIView {
@@ -236,7 +238,7 @@ struct AmbientSurfaceTextureGenerator {
 @objc(AmbientSurfaceTextureView)
 final class AmbientSurfaceTextureView: RCTViewManager {
   override func view() -> UIView! { AmbientSurfaceTextureSurfaceView() }
-  @objc override static func requiresMainQueueSetup() -> Bool { true }
+  @objc override static func requiresMainQueueSetup() -> Bool { false }
 }
 
 final class AmbientSurfaceTextureSurfaceView: UIView {
@@ -363,7 +365,7 @@ final class AmbientSurfaceTextureSurfaceView: UIView {
 @objc(HomePlanGlassView)
 final class HomePlanGlassView: RCTViewManager {
   override func view() -> UIView! { HomePlanGlassSurfaceView() }
-  @objc override static func requiresMainQueueSetup() -> Bool { true }
+  @objc override static func requiresMainQueueSetup() -> Bool { false }
 }
 
 final class HomePlanGlassSurfaceView: UIView {
