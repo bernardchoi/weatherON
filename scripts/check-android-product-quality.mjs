@@ -334,8 +334,8 @@ for (const relativePath of [
   assertSourceIncludes(relativePath, ["footer={", "<OnboardingFooter", "primaryLabel=", "secondaryLabel="]);
 }
 assertSourceIncludes("apps/mobile/src/screens/OnboardingIntroScreen.tsx", ['primaryLabel="다음"', 'secondaryLabel="건너뛰기"']);
-assertSourceIncludes("apps/mobile/src/screens/OnboardingOutfitScreen.tsx", ['locationSetupComplete ? "다음" : "현재 위치 사용"', 'locationSetupComplete ? "건너뛰기" : "나중에"']);
-assertSourceIncludes("apps/mobile/src/screens/SmartCareOnboardingScreen.tsx", ['notificationSetupComplete ? "다음" : "알림 켜기"', 'notificationSetupComplete ? "건너뛰기" : "나중에"']);
+assertSourceIncludes("apps/mobile/src/screens/OnboardingOutfitScreen.tsx", ['locationSetupComplete ? "다음" : "현재 위치 사용"', 'locationSetupComplete ? "소개 마치고 홈으로" : "위치는 나중에"']);
+assertSourceIncludes("apps/mobile/src/screens/SmartCareOnboardingScreen.tsx", ['notificationSetupComplete ? "다음" : "알림 켜기"', 'notificationSetupComplete ? "소개 마치고 홈으로" : "알림은 나중에"']);
 assertSourceIncludes("apps/mobile/src/components/OnboardingFooter.tsx", ['tone="warning"', 'tone="secondary"', 'variant="text"']);
 assertSourceExcludes("apps/mobile/src/screens/DestinationAddScreen.tsx", [
   'onRequireAccount("destination-care", "G1")',

@@ -19,7 +19,7 @@ assert.equal(parsedExpoConfig.name, "WeatherON");
 assert.equal(parsedExpoConfig.android?.package, "com.weatheron.mobile");
 assert.equal(Number.isInteger(parsedExpoConfig.android?.versionCode), true);
 assert.ok(parsedExpoConfig.android.versionCode >= 1);
-assert.ok(parsedExpoConfig.android?.permissions?.includes("ACCESS_FINE_LOCATION"));
+assert.ok(parsedExpoConfig.android?.permissions?.includes("android.permission.ACCESS_FINE_LOCATION"));
 assert.equal(parsedExpoConfig.extra?.enableNotificationQaTools, false);
 
 const qaExpoConfig = await runCapture("npx", ["expo", "config", "--json", "--type", "public"], {
