@@ -1293,7 +1293,6 @@
   "알림 설정에서 실제 수신까지 확인 가능": "You can check everything from notification settings to actual receipt.",
   "알림 설정에서 언제든 바꿀 수 있어요": "You can change it at any time in notification settings.",
   "알림 설정으로 돌아가기": "Return to notification settings",
-  "알림 설정을 건너뛰고 홈으로 이동": "Skip notification settings and go home",
   "알림 센터": "Notification Center",
   "알림 수신과 설정 화면 이동까지 확인했어요": "I confirmed receiving notifications and moving to the settings screen.",
   "알림 수신을 확인했어요": "I confirmed receiving the notification",
@@ -1449,7 +1448,6 @@
   "오늘 예보 일부 미확인": "Part of today's forecast is unavailable",
   "오늘 이 날씨엔": "In this weather today",
   "오늘 입기 좋은 세트": "A great set to wear today",
-  "오늘 입기 좋은 조합": "A good combination to wear today",
   "오늘 입을 옷과 나갈 시간을 빠르게 정해드려요": "Let’s quickly decide what to wear today and when to go out.",
   "오늘 입을 옷의 무드를 정함": "Deciding the mood of what to wear today",
   "오늘 장소 준비 가이드 · 목적지 기준": "Today's venue preparation guide · Destination criteria",
@@ -1487,7 +1485,6 @@
   "온도를 확인한 뒤 옷차림을 추천해요": "We’ll suggest an outfit after checking the temperature",
   "온보딩": "Onboarding",
   "온보딩 시작": "Start onboarding",
-  "온보딩을 건너뛰고 홈으로 이동": "Skip onboarding and go home",
   "온보딩을 완료하고 홈으로 이동": "Complete onboarding and go home",
   "온비": "ONBY",
   "온스퀘어": "On Square",
@@ -2298,5 +2295,12 @@
   "WeatherON 시작 중": "Starting WeatherON",
   "WeatherON 알림": "WeatherON Notifications",
   "WeatherON 프리미엄": "WeatherON Premium",
-  "WeatherON이 필요한 순간 알려드릴게요": "We'll let you know the moment you need WeatherON."
+  "WeatherON이 필요한 순간 알려드릴게요": "We'll let you know the moment you need WeatherON.",
+  "기본 위치": "Default location",
+  "날씨 예시": "Weather preview",
+  "소개 마치고 홈으로": "Finish and go to Home",
+  "위치는 나중에": "Set location later",
+  "출발 예시": "Example departure",
+  "코디 예시": "Outfit preview",
+  "현재 날씨": "Current weather"
 }

@@ -23,6 +23,10 @@ export function OnboardingOutfitScreen({ state, locationReady, onboardingProgres
   const locationSetupComplete = locationReady || locationRequestHandled;
   const locationSkipped = locationRequestHandled && !locationReady;
 
+  const { weather, outfitContext } = state;
+  const preview = weather.source === "fallback" || weather.locationUnverified;
+  const temperature = outfitContext ? outfitContext.temperature?.value : weather.current.feelsLikeAvailable === false ? undefined : weather.current.feelsLikeC;
+  const rain = weather.current.rainProbabilityPct;
   return (
     <AppScreen
       title="오늘, 뭐 입을지 고민 끝"
@@ -34,10 +38,10 @@ export function OnboardingOutfitScreen({ state, locationReady, onboardingProgres
           primaryLabel={locationSetupComplete ? "다음" : "현재 위치 사용"}
           primaryAccessibilityLabel={locationSetupComplete ? "알림 안내 단계로 이동" : "현재 위치 권한 요청"}
           onPrimary={() => (locationSetupComplete ? onNavigate("O5") : void onRequestCurrentLocation())}
-          secondaryLabel={locationSetupComplete ? "건너뛰기" : "나중에"}
+          secondaryLabel={locationSetupComplete ? "소개 마치고 홈으로" : "위치는 나중에"}
           secondaryAccessibilityLabel={
             locationSetupComplete
-              ? "온보딩을 건너뛰고 홈으로 이동"
+              ? "소개 마치고 홈으로"
               : "위치 권한을 나중에 설정하고 알림 안내 단계로 이동"
           }
           onSecondary={() => (locationSetupComplete ? onCompleteOnboarding("H1") : onNavigate("O5"))}
@@ -48,10 +52,11 @@ export function OnboardingOutfitScreen({ state, locationReady, onboardingProgres
         <View style={[styles.progressFill, { backgroundColor: theme.gold }]} />
       </View>
 
+      <Text style={[styles.previewLabel, { color: theme.muted }]}>{weather.locationName}<Text> · </Text><Text>{preview ? "날씨 예시" : outfitContext && !outfitContext.reliable ? "최근 관측 기준" : "현재 날씨"}</Text></Text>
       <OnboardingVisualStrip
         items={[
-          { label: "체감", value: `${Math.round(state.weather.current.feelsLikeC)}°`, icon: screenIcons.clearNight, tone: "clear" },
-          { label: "강수", value: `${state.weather.current.rainProbabilityPct}%`, icon: screenIcons.rain, tone: "sky" },
+          { label: outfitContext?.temperature?.basis === "air" ? "기온" : "체감", value: temperature != null && Number.isFinite(temperature) ? `${Math.round(temperature)}°` : "—", icon: screenIcons.clearNight, tone: "clear" },
+          { label: "강수", value: weather.current.rainProbabilityAvailable !== false && Number.isFinite(rain) ? `${rain}%` : "—", icon: screenIcons.rain, tone: "sky" },
           { label: "추천", value: `${outfitItems.length}개`, icon: screenIcons.shirt, tone: "gold" },
         ]}
       />
@@ -72,14 +77,13 @@ export function OnboardingOutfitScreen({ state, locationReady, onboardingProgres
             <Image source={screenIcons.shirt} style={[styles.heroIcon, { tintColor: theme.clear }]} resizeMode="contain" />
           </View>
           <View style={styles.copy}>
-            <Text style={[[styles.previewLabel, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.previewLabel]}>오늘 입기 좋은 조합</Text>
+            <Text style={[[styles.previewLabel, { color: theme.clear }], Platform.OS === "ios" && ambientVisual.previewLabel]}>{preview ? "코디 예시" : outfitContext?.status ?? "제공된 예보 기준"}</Text>
             <Text style={[[styles.previewTitle, { color: theme.text }], Platform.OS === "ios" && ambientVisual.previewTitle]}>{state.outfit.decisionText}</Text>
           </View>
         </View>
         <OutfitGrid outfit={state.outfit} maxItems={2} compact dense={layout.isShort || layout.isNarrow} />
         <View style={styles.pillRow}>
           <StatusPill label={getOutfitVariantLabel(state.outfit.variant)} tone="clear" />
-          <StatusPill label={state.weather.current.rainProbabilityPct > 0 ? "비 대비" : "강수 없음"} tone="sky" />
         </View>
       </View>
 

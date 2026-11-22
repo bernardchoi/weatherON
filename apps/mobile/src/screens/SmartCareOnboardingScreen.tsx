@@ -48,10 +48,10 @@ export function SmartCareOnboardingScreen({
           primaryLabel={notificationSetupComplete ? "다음" : "알림 켜기"}
           primaryAccessibilityLabel={notificationSetupComplete ? "목적지 안내 단계로 이동" : "알림 권한 요청"}
           onPrimary={() => (notificationSetupComplete ? onCompleteSmartCareOnboarding() : void onRequestNotificationPermission())}
-          secondaryLabel={notificationSetupComplete ? "건너뛰기" : "나중에"}
+          secondaryLabel={notificationSetupComplete ? "소개 마치고 홈으로" : "알림은 나중에"}
           secondaryAccessibilityLabel={
             notificationSetupComplete
-              ? "알림 설정을 건너뛰고 홈으로 이동"
+              ? "소개 마치고 홈으로"
               : "알림 권한을 나중에 설정하고 목적지 안내 단계로 이동"
           }
           onSecondary={() => (notificationSetupComplete ? onCompleteOnboarding("H1") : onCompleteSmartCareOnboarding())}

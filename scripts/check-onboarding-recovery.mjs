@@ -47,6 +47,7 @@ const sqlite = {
 };
 const storage = load('apps/mobile/src/providers/appStorage.ts', {
   '../localization/react-native': { Platform: { OS:'ios' } },
+  '../state/profileCharacter': load('apps/mobile/src/state/profileCharacter.ts', {}),
   'expo-sqlite': { openDatabaseAsync: async () => sqlite },
   'expo-file-system/legacy': { documentDirectory:'file:///isolated/', getInfoAsync:async()=>({exists:false}) },
 });

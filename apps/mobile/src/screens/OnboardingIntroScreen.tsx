@@ -60,7 +60,7 @@ export function OnboardingIntroScreen({ onNavigate, onCompleteOnboarding }: P0Sc
         items={[
           { label: "코디", value: "날씨에 딱 맞게", icon: screenIcons.shirt, tone: "clear" },
           { label: "비 준비", value: "우산·신발까지", icon: screenIcons.umbrella, tone: "sky" },
-          { label: "출발", value: "08:10", icon: screenIcons.depart, tone: "gold" },
+          { label: "출발 예시", value: "08:10", icon: screenIcons.depart, tone: "gold" },
         ]}
       />
     </AppScreen>

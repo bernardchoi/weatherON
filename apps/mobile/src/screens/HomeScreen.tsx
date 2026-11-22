@@ -193,7 +193,9 @@ export function HomeScreen({
   const targetAt = destinationReady && Number.isFinite(targetMs) ? new Date(targetMs).toISOString() : undefined;
   const useOriginForSamePlace = sameHomeDestination && !targetAt;
   const outingWeather = destinationReady && !useOriginForSamePlace ? state.destinationCare.destinationWeather : currentWeather;
-  const basisLabel = destinationReady && !useOriginForSamePlace ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : "현재 위치";
+  const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode, currentWeather.locationId);
+  const originBasis = locationStatus.value === "내 위치로 보는 중" ? "현재 위치" : locationStatus.value;
+  const basisLabel = destinationReady && !useOriginForSamePlace ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : originBasis;
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
@@ -251,7 +253,6 @@ export function HomeScreen({
     : departureSummary.soon ? "이제 나갈 준비해요" : "출발 예상";
   const refreshMessage = currentWeatherPending ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, validHomeTiming, routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
-  const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
   const refreshFromPull = useCallback(() => {
@@ -376,7 +377,7 @@ export function HomeScreen({
         </View>
 
         {HOME_OUTFIT_CARD_VISIBLE ? (
-          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} summary={summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText("현재 위치") : translateText("목적지")} forecastStatus={state.outfitContext?.status ?? "제공된 예보 기준"} theme={theme} onPress={() => onNavigate("C1")} />
+          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} summary={summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText(originBasis) : translateText("목적지")} forecastStatus={state.outfitContext?.status ?? "제공된 예보 기준"} theme={theme} onPress={() => onNavigate("C1")} />
         ) : null}
 
         <View
@@ -491,7 +492,9 @@ export function HomeScreen({
 function getHomeLocationStatus(
   locationReady: boolean,
   weatherLocationMode: P0ScreenProps["weatherLocationMode"],
+  locationId: string,
 ): { value: string; tone: "clear" | "sky" | "warm" } {
+  if (locationId === defaultSeoulWeatherLocation.locationId) return { value: "기본 위치", tone: "sky" };
   if (locationReady && weatherLocationMode === "auto") return { value: "내 위치로 보는 중", tone: "clear" };
   if (weatherLocationMode === "manual") return { value: "직접 고른 지역", tone: "sky" };
   return { value: "위치 확인 필요", tone: "warm" };
