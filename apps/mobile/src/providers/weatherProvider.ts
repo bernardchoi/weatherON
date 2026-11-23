@@ -7,6 +7,7 @@ import {
   openMeteoFixture,
   type WeatherSnapshot,
 } from "@weatheron/shared";
+import { normalizeKmaBulletin } from "./kmaAlertBulletin";
 import { Platform } from "../localization/react-native";
 import { getWeatherRuntimeConfig } from "../config/weatherEnv";
 import { fixtureWeatherClient, runtimeWeatherClient, type WeatherClient } from "./weatherClient";
@@ -31,6 +32,7 @@ export type OfficialSpecialAlert = {
   title?: string;
   reason?: string;
   issuedAt?: string;
+  effectiveAt?: string;
   regionName?: string;
   rawStatus?: string;
 };
@@ -410,8 +412,16 @@ function createInactiveOfficialSpecialAlert(rawStatus?: string): OfficialSpecial
   return { source: "kma", active: false, ...(rawStatus ? { rawStatus } : {}) };
 }
 
-function normalizeKmaOfficialSpecialAlert(payload: unknown, location: WeatherLocationPreset): OfficialSpecialAlert {
-  const candidates = extractKmaAlertRecords(payload)
+export function normalizeKmaOfficialSpecialAlert(payload: unknown, location: WeatherLocationPreset, now = Date.now()): OfficialSpecialAlert {
+  if (payload && typeof payload === "object") {
+    const resultCode = readStringField(payload as Record<string, unknown>, ["response.header.resultCode", "header.resultCode"]);
+    if (resultCode && !["00", "0", "03", "3"].includes(resultCode)) return createInactiveOfficialSpecialAlert("feed_unavailable");
+    if (resultCode === "03" || resultCode === "3") return createInactiveOfficialSpecialAlert();
+  }
+  const records = extractKmaAlertRecords(payload);
+  const bulletin = normalizeKmaBulletin(records, location, readStringField, now);
+  if (bulletin) return bulletin.sort(compareOfficialSpecialAlerts)[0] ?? createInactiveOfficialSpecialAlert();
+  const candidates = records
     .map(parseKmaOfficialSpecialAlertRecord)
     .filter((alert): alert is OfficialSpecialAlert => Boolean(alert))
     .filter((alert) => matchesOfficialAlertLocation(alert, location));
@@ -470,8 +480,9 @@ function parseKmaOfficialSpecialAlertRecord(record: Record<string, unknown>): Of
 
 function resolveKmaSpecialAlertType(raw: string | undefined, haystack: string): OfficialSpecialAlert["type"] | undefined {
   const code = raw?.trim().toUpperCase();
+  if (code === "O") return undefined; // KMA Hub: storm surge, not heatwave.
   if (code === "R" || code === "2" || code === "02" || haystack.includes("호우")) return "heavy-rain";
-  if (code === "H" || code === "O" || code === "12" || haystack.includes("폭염")) return "heatwave";
+  if (code === "H" || code === "12" || haystack.includes("폭염")) return "heatwave";
   return undefined;
 }
 

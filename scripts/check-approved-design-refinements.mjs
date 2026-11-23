@@ -4,19 +4,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const read = name => fs.readFileSync(`apps/mobile/src/screens/${name}Screen.tsx`, 'utf8');
 const home = read('Home');
-const parser = home.slice(home.indexOf('const adviceClauses ='), home.indexOf('const itemNames =', home.indexOf('const adviceClauses =')));
-const split = new Function('summary', `${parser};return {advice,timedForecast,forecastClock,forecastKind};`);
-for (const kind of ['강수 가능', '눈 예보', '비 예보', '얼음·혼합 강수 예보']) {
- const result = split(`움직이기 편한 차림이 좋아요 · 방수 겉옷을 챙겨요 · 오늘 21:00 무렵 ${kind}`);
- assert.equal(result.forecastClock, '21:00'); assert.equal(result.forecastKind, kind);
- assert.deepEqual(result.advice, ['움직이기 편한 차림이 좋아요','방수 겉옷을 챙겨요']);
-}
-for (const source of ['새로운 중요 경고 · 알 수 없는 예보', '오늘 오후 비 가능', '내일 21:00 무렵 강수 가능']) {
- const result = split(source); assert.equal(result.timedForecast, undefined); assert.equal(result.advice.join(' · '), source);
-}
-assert.match(home, /marginTop: Platform.OS === "ios" \? viewportSpacing.planMargin/);
-assert.match(home, /testID="home-outfit-precipitation" style=\{\{ flexDirection: "row", alignItems: "center", gap: 6 \}\}/);
-assert.match(home, /오늘 \{forecastClock\} 무렵 \{forecastKind\}/);
+const precipitation = fs.readFileSync('apps/mobile/src/components/OutfitPrecipitationRow.tsx', 'utf8');
+assert.match(home, /marginTop: Platform.OS === "ios" \? \(density.compact \? 2 : viewportSpacing.planMargin\)/);
+assert.match(home, /<OutfitPrecipitationRow testID="home-outfit-precipitation" forecast=\{precipitation\}/);
+assert.match(read('Outfit'), /<OutfitPrecipitationRow testID="outfit-precipitation"/);
+assert.match(precipitation, /borderTopWidth: StyleSheet.hairlineWidth/);
 assert.match(home, /HomeWeatherMascot/); // Existing approved character integration is retained.
 assert.match(read('AccountManagement'), /ProviderBrandIcon/);
 assert.match(read('AccountManagement'), /LINE으로 연결했어요/);

@@ -12,7 +12,7 @@ import { writeAmbientTouchEvidence } from "../debug/ambientTouchEvidence";
 import { File, Paths } from "expo-file-system";
 import { createAmbientTouchController, type AmbientContact, type AmbientTouchSample } from "../utils/ambientTouch";
 import type { AmbientReadRegion } from "../utils/ambientSky";
-import { resolveHomeViewportSpacing } from "../theme/homeViewport";
+import { resolveHomeCardDensity, resolveHomeViewportSpacing } from "../theme/homeViewport";
 import { HomeViewportContext } from "../components/HomeViewportContext";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Animated, AppState, Easing, Image, Platform, Pressable, RawText, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
@@ -45,7 +45,8 @@ import { androidMaterialColor, androidMaterialSurface } from "../theme/androidMa
 import { formatTemperature, formatTemperatureDelta } from "../utils/units";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { getHomeDepartureSummary } from "../utils/homeCompanion";
-import { summarizeHomeOutfit } from "../utils/homeOutfitSummary";
+import { OutfitPrecipitationRow } from "../components/OutfitPrecipitationRow";
+import { buildOutfitPreview, summarizeHomeOutfit } from "../utils/homeOutfitSummary";
 import { buildHomePreparation, buildRainForecast, forecastTime, hasFeelsLike, snapshotReliable } from "../utils/homeOuting";
 import { useForecastNow } from "../hooks/useForecastNow";
 import { getConditionLabel } from "../utils/weatherPresentation";
@@ -120,6 +121,7 @@ export function HomeScreen({
   const [contentHeight, setContentHeight] = useState(0);
   const { fontScale } = useWindowDimensions();
   const viewportSpacing = resolveHomeViewportSpacing(viewportHeight);
+  const density = resolveHomeCardDensity(Platform.OS === "ios" ? viewportHeight : 0, layout.width, fontScale);
   // Debug evidence is limited to layout numbers; never user content or stored records.
   useEffect(() => {
     if (!__DEV__ || Platform.OS !== "ios" || viewportHeight === 0 || contentHeight === 0) return;
@@ -188,18 +190,21 @@ export function HomeScreen({
   const validHomeTiming = Boolean(placeSearchOrigin && getDestinationTiming(selectedDestinationTravelEstimate, homeSchedulePreference, homeDestinationPlace.timezone, forecastNow, placeSearchOrigin.countryCode, homeDestinationPlace.countryCode, placeSearchOrigin.locationId));
   const sameHomeDestination = Platform.OS === "ios" && destinationReady && locationReady
     && homeDestinationMatchesOrigin(placeSearchOrigin, homeDestinationPlace)
-    && !(validHomeTiming && selectedDestinationTravelEstimate.status === "ready" && selectedDestinationTravelEstimate.travelMinutes > 0);
+    && !(validHomeTiming && selectedDestinationTravelEstimate.destinationPlaceId === homeDestinationPlace.id && selectedDestinationTravelEstimate.status === "ready" && selectedDestinationTravelEstimate.travelMinutes > 0);
   const targetMs = Date.parse(state.destinationCare.departureAdvice?.arrivalAt ?? "");
   const targetAt = destinationReady && Number.isFinite(targetMs) ? new Date(targetMs).toISOString() : undefined;
   const useOriginForSamePlace = sameHomeDestination && !targetAt;
   const outingWeather = destinationReady && !useOriginForSamePlace ? state.destinationCare.destinationWeather : currentWeather;
   const locationStatus = getHomeLocationStatus(locationReady, weatherLocationMode, currentWeather.locationId);
   const originBasis = locationStatus.value === "내 위치로 보는 중" ? "현재 위치" : locationStatus.value;
-  const basisLabel = destinationReady && !useOriginForSamePlace ? homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상" : originBasis;
+  const basisLabel = destinationReady && !useOriginForSamePlace
+    ? !targetAt && Platform.OS === "ios" ? "목적지 현재 날씨" : homeSchedulePreference.timeBasis === "arrival" ? "도착 기준" : "도착 예상"
+    : originBasis;
   const rainContext = { locationId: outingWeather.locationId, targetAt, basisLabel };
   const rainForecast = buildRainForecast(outingWeather, rainContext, forecastNow);
   const preparation = buildHomePreparation(outingWeather, targetAt, destinationReady, forecastNow, value => formatTemperature(value, temperatureUnit));
   const preparationStatus = useOriginForSamePlace && preparation.status === "도착 시각 미확인 · 현재 기준" ? "" : preparation.status;
+  const preparationBasisInline = density.compact && destinationReady && preparationStatus === "도착 시각 미확인 · 현재 기준";
   const preparationPending = !useOriginForSamePlace && destinationWeatherPending;
   const reliableWeather = snapshotReliable(currentWeather, forecastNow);
   // Clothing and props share the card's scoped place/time, not origin weather.
@@ -222,7 +227,7 @@ export function HomeScreen({
     daylight: mascotWeather.locationId === currentWeather.locationId ? ambientDaylight.phase : "unknown",
   }), mascotClothing);
   // Share the full weather summary's height, rather than adding a separate row.
-  const mascotSize = Math.min(layout.width < 390 ? 152 : 176, Math.max(0, layout.width - 2 * layout.screenHorizontalPadding));
+  const mascotSize = Math.min(density.mascotMax, layout.width < 360 ? (density.compact ? 110 : 152) : layout.width < 390 ? 152 : 176, Math.max(0, layout.width - 2 * layout.screenHorizontalPadding));
   useEffect(() => {
     if (!__DEV__) return;
     try {
@@ -236,23 +241,36 @@ export function HomeScreen({
   const companionMessage = preparation.copy;
   const companionBasis = `${preparation.basis === "목적지 도착 무렵" && homeSchedulePreference.timeBasis === "departure" ? "목적지 도착 예상" : preparation.basis}${targetAt && preparation.basis === "목적지 도착 무렵" ? ` · ${forecastTime(targetMs, outingWeather)}` : ""}`;
   const compactSameDestination = sameHomeDestination && !(Date.parse(homeDepartureAt ?? "") < forecastNow);
-  const departureSummary = compactSameDestination ? { value: "현재 위치와 같은 곳", body: "", soon: false } : getHomeDepartureSummary(
+  const departureSummary = compactSameDestination ? { value: weatherLocationMode === "manual" ? "선택한 위치와 같은 곳" : "현재 위치와 같은 곳", body: "", soon: false } : getHomeDepartureSummary(
     state.destinationCare,
     destinationReady,
     homeDepartureAt,
-    Date.now(),
+    forecastNow,
     homeSchedulePreference.timeBasis,
   );
   const routeAdvice = state.destinationCare.departureAdvice;
   const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분` : "");
   const departureExplanation = compactSameDestination ? "" : routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
-  const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
+  const stackedPlanControls = layout.width < (density.compact ? 370 : 390) || fontScale > 1.3;
+  const planGap = Platform.OS === "ios" ? density.cardGap : spacing.md;
   const showDepartureExplanation = destinationReady && !compactSameDestination && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
   const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
     ? "도착 예정 시간"
     : departureSummary.soon ? "이제 나갈 준비해요" : "출발 예상";
+  const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, validHomeTiming, routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined, forecastNow);
+  const routeNeedsRetry = !routePending && /실패|다시 확인/.test(routeStatus);
+  const compactRouteRetriesHere = density.compact && routeNeedsRetry && !compactSameDestination
+    && departureSummary.value === "경로 확인 필요" && !routeAdvice?.nowArrivalDescription;
+  const compactRoutePendingHere = density.compact && routePending && !validHomeTiming && departureSummary.value === "경로 확인 중"
+    && !routeAdvice?.nowArrivalDescription;
+  const departureDisplay = compactRouteRetriesHere && selectedDestinationTravelEstimate.status === "error" ? "경로 확인 실패" : departureSummary.value;
+  const showPlanPreparation = destinationReady && !useOriginForSamePlace && (!density.compact
+    || Boolean(targetAt && !preparationPending && (!preparation.status || preparation.status === "일부 예보 미확인") && !compactSameDestination));
+  const showFullRouteExplanation = showDepartureExplanation && (!density.compact || Boolean(routeAdvice?.nowArrivalDescription));
+  const showRouteRegion = destinationReady && !compactSameDestination && !compactRouteRetriesHere && !compactRoutePendingHere
+    && (Platform.OS !== "ios" || routePending || showFullRouteExplanation || /이전 조회|실패|다시 확인/.test(routeStatus));
+  const alertWeatherProvider = !isWeatherLoading && (state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed);
   const refreshMessage = currentWeatherPending ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
-  const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, validHomeTiming, routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
 
   const refreshFromPull = useCallback(() => {
@@ -355,6 +373,8 @@ export function HomeScreen({
             lowPowerMode={lowPowerMode} scrolling={ambientScrolling} /> : null}
             onReadingRegion={measureReadArea}
             heroGap={viewportSpacing.heroGap}
+            density={density}
+            mascotSize={mascotSize}
             current={current}
             feelsLikeAvailable={hasFeelsLike(currentWeather)}
             isNight={isNight}
@@ -370,6 +390,7 @@ export function HomeScreen({
           {activeWeatherAlert ? (
             <SpecialWeatherAlertCard
               alert={activeWeatherAlert}
+              compact={density.compact}
               theme={theme}
               onPress={() => onNavigate("H3")}
             />
@@ -377,7 +398,7 @@ export function HomeScreen({
         </View>
 
         {HOME_OUTFIT_CARD_VISIBLE ? (
-          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} outfit={state.outfit} summary={summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText(originBasis) : translateText("목적지")} forecastStatus={state.outfitContext?.status ?? "제공된 예보 기준"} theme={theme} onPress={() => onNavigate("C1")} />
+          <HomeOutfitPreviewCard onReadingLayout={event => { if (Platform.OS === "ios") { const area = { ...event.nativeEvent.layout }; setReadRegions(old => ({ ...old, "outfit-card": area })); } }} viewportSpacing={viewportSpacing} density={density} outfit={state.outfit} summary={summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)} locationName={state.weather.locationName} weatherBasis={state.weather.locationId === state.destinationCare.originWeather.locationId ? translateText(originBasis) : translateText("목적지")} forecastStatus={state.outfitContext?.status ?? "제공된 예보 기준"} theme={theme} onPress={() => onNavigate("C1")} />
         ) : null}
 
         <View
@@ -386,9 +407,9 @@ export function HomeScreen({
           style={[
             styles.homePlanCard,
             {
-              paddingVertical: Platform.OS === "ios" ? 10 : layout.homePanelPadding,
-              marginTop: Platform.OS === "ios" ? viewportSpacing.planMargin : 0,
-              gap: Platform.OS === "ios" ? 8 : spacing.md,
+              paddingVertical: Platform.OS === "ios" ? (density.compact ? 6 : 10) : layout.homePanelPadding,
+              marginTop: Platform.OS === "ios" ? (density.compact ? 2 : viewportSpacing.planMargin) : 0,
+              gap: planGap,
               paddingHorizontal: Platform.OS === "ios" ? 18 : 0,
               backgroundColor: "transparent",
               borderColor: theme.border,
@@ -398,8 +419,8 @@ export function HomeScreen({
           ]}
         >
           {Platform.OS === "ios" ? <HomePlanMaterial theme={theme} /> : null}
-          <AmbientReveal testID="home-plan-content" order={2} style={{ gap: Platform.OS === "ios" ? 8 : spacing.md }}>
-          <AmbientChange changeKey={`${selectedDestination?.place.id}:${departureSummary.value}`} testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: stackedPlanControls ? "column" : "row", alignItems: stackedPlanControls ? "stretch" : "center", gap: 14 } : undefined}>
+          <AmbientReveal testID="home-plan-content" order={2} style={{ gap: planGap }}>
+          <AmbientChange changeKey={`${selectedDestination?.place.id}:${departureSummary.value}`} testID="home-plan-controls" style={Platform.OS === "ios" ? { flexDirection: stackedPlanControls ? "column" : "row", alignItems: stackedPlanControls ? "stretch" : "center", gap: density.compact ? 8 : 14 } : undefined}>
           <View style={{ flex: 1, minWidth: 0 }}>
           <DestinationSelectorCard
             savedDestinations={savedDestinations}
@@ -413,37 +434,40 @@ export function HomeScreen({
             <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={Platform.OS === "ios" ? "" : `${selectedDestination?.place.id}:${departureSummary.value}`}>
               <FeedbackPressable
                 accessibilityRole="button"
-                accessibilityLabel={compactSameDestination ? departureSummary.value : `이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
-                onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
-                style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && [styles.ambientDepartureChip, { borderWidth: 0, paddingHorizontal: 0, borderTopWidth: 0 }]]}
+                accessibilityState={{ busy: routePending && !compactSameDestination }}
+                accessibilityLabel={compactSameDestination ? departureSummary.value : compactRouteRetriesHere ? `${routeStatus}. ${departureExplanation}` : `이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
+                onPress={compactRouteRetriesHere ? onRefreshWeather : () => onNavigate(destinationReady ? "G2" : "P1")}
+                style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && [styles.ambientDepartureChip, { borderWidth: 0, paddingHorizontal: 0, borderTopWidth: 0 }], density.compact && { paddingVertical: 2 }]}
               >
-                <View style={styles.ambientDepartureRow}>
+                {compactRoutePendingHere ? <HomeUpdateStatus active={homeMotionActive && !lowPowerMode} testID="home-route-update" pending={true} label={departureDisplay} color={theme.muted} /> : <View style={styles.ambientDepartureRow}>
                   <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
                   <View style={Platform.OS === "ios" ? styles.ambientDepartureInline : { flex: 1, minWidth: 0 }}>
                     {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummaryLabel}</Text> : null}
-                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? homeSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
+                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureDisplay}{compactRouteRetriesHere ? " ›" : ""}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? homeSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
                   </View>
-                </View>
+                </View>}
                 {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureExplanation}</Text> : null}
               </FeedbackPressable>
             </HomeValueTransition>
           ) : null}
           </AmbientChange>
-          {Platform.OS === "ios" && destinationReady && !useOriginForSamePlace ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
-            <Text style={{ color: theme.text, fontSize: 18, lineHeight: 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
+          {Platform.OS === "ios" && showPlanPreparation ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
+            <Text numberOfLines={density.compact ? 2 : undefined} style={{ color: theme.text, fontSize: density.compact ? 15 : 18, lineHeight: density.compact ? 21 : 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
           </AmbientChange> : null}
-          <HomeUpdateRegion testID="home-route-update-region" contentKey={homeDestinationPlace.id} spacing={Platform.OS === "ios" ? 8 : spacing.md} visible={destinationReady && !compactSameDestination && (Platform.OS !== "ios" || routePending || showDepartureExplanation || /이전 조회|실패|다시 확인/.test(routeStatus))}>
+          <HomeUpdateRegion testID="home-route-update-region" contentKey={homeDestinationPlace.id} spacing={planGap} visible={showRouteRegion}>
             {present => <View>
               <HomeUpdateStatus active={present && homeMotionActive && !lowPowerMode} testID="home-route-update" pending={routePending} label={routeStatus} color={theme.muted} onRetry={!routePending && /실패|다시 확인/.test(routeStatus) ? onRefreshWeather : undefined} />
-              {Platform.OS === "ios" && showDepartureExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
+              {Platform.OS === "ios" && showFullRouteExplanation ? <Text testID="home-departure-explanation" style={[styles.iosSecondaryText, { color: theme.muted }]}>{routeAdvice?.nowArrivalDescription ?? departureSummary.body}</Text> : null}
             </View>}
           </HomeUpdateRegion>
-          {Platform.OS === "ios" ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${preparation.evidence}:${rainForecast.maxProbability}`} order={2} testID="home-outing-check" style={{ gap: 8 }}>
-            <HomeUpdateRegion testID="home-preparation-update-region" contentKey={homeDestinationPlace.id} spacing={8} visible={Boolean(preparationPending || preparationStatus)}>
+          {Platform.OS === "ios" ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${preparation.evidence}:${rainForecast.maxProbability}`} order={2} testID="home-outing-check" style={{ gap: planGap }}>
+            <HomeUpdateRegion testID="home-preparation-update-region" contentKey={homeDestinationPlace.id} spacing={planGap} visible={Boolean(preparationPending || (preparationStatus && !preparationBasisInline && !(density.compact && !destinationReady)))}>
               {present => <HomeUpdateStatus active={present && homeMotionActive && !lowPowerMode} testID="home-preparation-update" pending={preparationPending} label={preparationPending ? "목적지 날씨 확인 중" : preparationStatus} color={theme.muted} />}
             </HomeUpdateRegion>
-            <FeedbackPressable accessibilityRole="button" accessibilityLabel={`${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
-              <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{preparation.evidence ? `${preparation.evidence} · ` : ""}{!preparation.rainEvidence && rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수 최대 ${rainForecast.maxProbability}%` : "강수 예보"} ›</Text>
+            <FeedbackPressable accessibilityRole="button" accessibilityLabel={preparationStatus
+              ? `${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${preparationStatus}. ${rainForecast.summary}. 강수 예보 보기`
+              : `${getDisplayLocationName(outingWeather.locationName)} ${basisLabel}. ${rainForecast.summary}. 강수 예보 보기`} onPress={() => onOpenRainForecast?.(rainContext)} style={{ minHeight: 44, flexDirection: fontScale > 1.3 ? "column" : "row", alignItems: fontScale > 1.3 ? "flex-start" : "center", gap: 6 }}>
+              <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{preparation.evidence ? `${preparation.evidence} · ` : ""}{!preparation.rainEvidence && rainForecast.maxProbability !== undefined && rainForecast.reliable && rainForecast.covered ? `강수 최대 ${rainForecast.maxProbability}%` : "강수 예보"}{preparationBasisInline ? <Text style={{ color: theme.muted, fontSize: 12 }}>{` · ${translateText("현재 기준", language)}`}</Text> : null} ›</Text>
             </FeedbackPressable>
           </AmbientChange> : destinationReady ? <HomeValueTransition value={`${selectedDestination?.place.id}:${state.destinationCare.destinationWeather.current.rainProbabilityPct}:${homeDecision.rainCompactTitle}:${homeDecision.packTitle}`}>
           <View style={[styles.visualDecisionGrid, isHomeTightLayout(layout) && styles.visualDecisionGridCompact]}>
@@ -472,8 +496,7 @@ export function HomeScreen({
           </AmbientReveal>
         </View>
 
-        <View style={styles.cardStack}>
-          {!isWeatherLoading && (state.weatherProvider.status !== "ready" || state.weatherProvider.retryable || state.weatherProvider.fallbackUsed) ? (
+        {alertWeatherProvider ? <View style={styles.cardStack}>
             <WeatherStatusPanel
               status={state.weatherProvider.status}
               message={state.weatherProvider.message}
@@ -482,8 +505,7 @@ export function HomeScreen({
               onSetMode={onSetWeatherProviderMode}
               onRetry={onRefreshWeather}
             />
-          ) : null}
-        </View>
+        </View> : null}
       </AmbientHomeScrollView>
     </View>
   );
@@ -840,6 +862,8 @@ function getHeroTemperatureRange(
 function HomeDecisionHero({
   onReadingRegion,
   heroGap = 14,
+  density,
+  mascotSize,
   mascot,
   current,
   feelsLikeAvailable,
@@ -855,6 +879,8 @@ function HomeDecisionHero({
 }: {
   onReadingRegion?: (id: string, node: Pick<View, "measureInWindow"> | null) => void;
   heroGap?: number;
+  density: ReturnType<typeof resolveHomeCardDensity>;
+  mascotSize: number;
   mascot?: React.ReactNode;
   feelsLikeAvailable?: boolean;
   current: P0ScreenProps["state"]["destinationCare"]["originWeather"]["current"];
@@ -874,11 +900,11 @@ function HomeDecisionHero({
   const companionReadRef = useRef<React.ElementRef<typeof Text>>(null);
   const weatherIcon = ambientWeatherIcon(current.condition, isNight, theme);
   const { fontScale: heroFontScale } = useWindowDimensions();
-  const stackedWeatherDetails = heroFontScale > 1.3 || layout.width < 360;
+  const stackedWeatherDetails = heroFontScale > 1.3 || layout.width < (density.compact ? 320 : 360);
   // A reserved display region can leave a pane narrower than an ordinary phone.
   const weatherContentWidth = Math.max(0, layout.width - 2 * layout.screenHorizontalPadding);
-  const characterWidth = mascot && !stackedWeatherDetails ? Math.min(layout.width < 390 ? 152 : 176, weatherContentWidth) + 12 : 0;
-  const temperatureSize = Math.min(layout.isShort ? 84 : 96, Math.max(0, weatherContentWidth - characterWidth) / 2);
+  const characterWidth = mascot && !stackedWeatherDetails ? Math.min(mascotSize, weatherContentWidth) + 12 : 0;
+  const temperatureSize = Math.min(density.compact ? density.heroTemperature : layout.isShort ? 84 : 96, Math.max(0, weatherContentWidth - characterWidth) / 2);
   const { language } = React.use(LocalizationContext);
   const companionCopy = companionMessage === "오늘 날씨에 맞춰, 나갈 준비를 함께해요." ? "나갈 준비를 함께해요." : companionMessage;
   // Translate the intact key first, then break at the first sentence boundary.
@@ -889,14 +915,14 @@ function HomeDecisionHero({
   return (
       <View testID="home-weather" style={[styles.iosWeatherHero, { paddingVertical: Platform.OS === "ios" ? 2 : layout.homePanelPadding, gap: Platform.OS === "ios" ? heroGap : 8 }]}>
         <FeedbackPressable testID="home-weather-main" accessibilityRole="button" accessibilityLabel={`${currentLocationName} ${formatTemperature(current.tempC, temperatureUnit)}, ${getConditionLabel(current.condition)}. ${feelsLikeAvailable !== false && Number.isFinite(current.feelsLikeC) ? `체감 ${formatTemperature(current.feelsLikeC, temperatureUnit)}` : "체감 정보 없음"}, 강수 ${current.rainProbabilityPct}%, 날씨 상세 보기`} onPress={onOpenForecast} style={[styles.iosWeatherMain, Platform.OS === "ios" && { flexDirection: stackedWeatherDetails ? "column" : "row", alignItems: stackedWeatherDetails ? "stretch" : "center", gap: 12 }]}>
-          <View testID="home-weather-summary" style={[styles.iosWeatherCopy, Platform.OS === "ios" && { flex: stackedWeatherDetails ? 0 : 1, minWidth: 0, gap: 8 }]}>
+          <View testID="home-weather-summary" style={[styles.iosWeatherCopy, Platform.OS === "ios" && { flex: stackedWeatherDetails ? 0 : 1, minWidth: 0, gap: density.compact ? 4 : 8 }]}>
           <View ref={copyReadRef} onLayout={() => onReadingRegion?.("hero-copy", copyReadRef.current)} style={Platform.OS !== "ios" ? { gap: 2 } : undefined}>
             <HomeValueTransition value={`${current.tempC}:${temperatureUnit}`}>
-              <Text testID="home-current-temperature" numberOfLines={Platform.OS === "ios" ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== "ios"} minimumFontScale={0.8} maxFontSizeMultiplier={Platform.OS === "ios" ? 1.3 : undefined} style={[styles.iosTemperature, { color: theme.text, fontSize: Platform.OS === "ios" ? temperatureSize : layout.isShort ? 76 : 94, lineHeight: Platform.OS === "ios" ? layout.isShort ? 84 : 92 : layout.isShort ? 84 : 102 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
+              <Text testID="home-current-temperature" numberOfLines={Platform.OS === "ios" ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== "ios"} minimumFontScale={0.8} maxFontSizeMultiplier={Platform.OS === "ios" ? 1.3 : undefined} style={[styles.iosTemperature, { color: theme.text, fontSize: Platform.OS === "ios" ? temperatureSize : layout.isShort ? 76 : 94, lineHeight: Platform.OS === "ios" ? density.compact ? density.heroLine : layout.isShort ? 84 : 92 : layout.isShort ? 84 : 102 }]}>{formatTemperature(current.tempC, temperatureUnit)}</Text>
             </HomeValueTransition>
             {Platform.OS !== "ios" ? <><Text style={[styles.iosCondition, { color: theme.text }]}>{getConditionLabel(current.condition)}</Text><Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{todayMinMax ? getHeroTemperatureRange(todayMinMax, temperatureUnit) : ""}</Text></> : null}
           </View>
-          {Platform.OS === "ios" ? <View ref={detailsReadRef} onLayout={() => onReadingRegion?.("hero-details", detailsReadRef.current)} testID="home-weather-details" style={{ minWidth: 0, gap: 5 }}>
+          {Platform.OS === "ios" ? <View ref={detailsReadRef} onLayout={() => onReadingRegion?.("hero-details", detailsReadRef.current)} testID="home-weather-details" style={{ minWidth: 0, gap: density.compact ? 2 : 5 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               {Platform.OS === "ios" && weatherIcon ? <Image testID="home-weather-status-icon" accessibilityElementsHidden importantForAccessibility="no" accessibilityIgnoresInvertColors source={weatherIcon.source} resizeMode="contain" style={{ tintColor: weatherIcon.tintColor, width: heroIconSize, height: heroIconSize }} /> : null}
               <Text style={[styles.iosCondition, { color: theme.text }, Platform.OS === "ios" && { fontSize: 22, lineHeight: 30, flexShrink: 1 }]}>{getConditionLabel(current.condition)}</Text>
@@ -957,6 +983,7 @@ function VisualDecisionCard({
 function HomeOutfitPreviewCard({
   onReadingLayout,
   viewportSpacing,
+  density,
   outfit,
   summary,
   forecastStatus,
@@ -967,6 +994,7 @@ function HomeOutfitPreviewCard({
 }: {
   onReadingLayout?: (event: import("react-native").LayoutChangeEvent) => void;
   viewportSpacing: ReturnType<typeof resolveHomeViewportSpacing>;
+  density: ReturnType<typeof resolveHomeCardDensity>;
   outfit: P0ScreenProps["state"]["outfit"];
   summary: string;
   forecastStatus?: string;
@@ -979,15 +1007,7 @@ function HomeOutfitPreviewCard({
   const tightLayout = isHomeTightLayout(layout);
   const { fontScale } = useWindowDimensions();
   const entrance = useAmbientEntrance(1);
-  const title = summary;
-  // Separate only an explicit forecast time already present in the recommendation.
-  // Never manufacture probability or precipitation amounts from commentary.
-  const adviceClauses = summary.split(" · ");
-  const forecastLabels = ["강수 가능", "눈 예보", "비 예보", "얼음·혼합 강수 예보"];
-  const timedForecast = adviceClauses.find(clause => /^오늘 \d{1,2}:\d{2} 무렵 /u.test(clause) && forecastLabels.includes(clause.split(" 무렵 ")[1]));
-  const forecastClock = timedForecast?.match(/\d{1,2}:\d{2}/u)?.[0];
-  const forecastKind = timedForecast?.split(" 무렵 ")[1];
-  const advice = adviceClauses.filter(clause => clause !== timedForecast);
+  const { advice, precipitation } = buildOutfitPreview(summary, forecastStatus);
   const itemNames = Object.values(outfit.items).filter(Boolean).map(item => translateText(item!.name)).join(" + ");
   const previewSummary = [forecastStatus ?? "", outfit.decisionText, itemNames].filter(Boolean).map(value => translateText(value)).join(" · ");
   // The approved Home composition pairs the recommended layer and footwear;
@@ -996,8 +1016,8 @@ function HomeOutfitPreviewCard({
     .filter(item => getOutfitImageSource(item?.imageUrl)).slice(0, 2);
   return (
     <FeedbackPressable testID="home-outfit-card" onLayout={onReadingLayout} accessibilityLabel={`${getDisplayLocationName(locationName)} 기준 코디. ${previewSummary}. 코디 자세히 보기`} accessibilityRole="button" onPress={onPress}
-      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, paddingHorizontal: 18, paddingTop: viewportSpacing.outfitTop, paddingBottom: viewportSpacing.outfitBottom, marginTop: 8, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
-      <View style={Platform.OS === "ios" ? { flexDirection: layout.width < 390 || fontScale > 1.3 ? "column" : "row", alignItems: "center", gap: 16 } : undefined}>
+      style={[styles.ambientOutfit, { borderColor: theme.border }, Platform.OS === "ios" && { borderTopWidth: 0, borderRadius: 24, paddingHorizontal: 18, paddingTop: viewportSpacing.outfitTop, paddingBottom: viewportSpacing.outfitBottom, marginTop: density.compact ? 0 : 8, gap: density.cardGap, backgroundColor: theme.reducedTransparency ? theme.card : theme.name === "dark" ? `${theme.materialTint}0C` : "#FFFFFF26" }, entrance]}>
+      <View style={Platform.OS === "ios" ? { flexDirection: density.stackOutfit ? "column" : "row", alignItems: "center", gap: density.compact ? 8 : 16 } : undefined}>
       <View style={{ flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 8 }}>
       <View style={styles.ambientOutfitHeading}>
         <Text style={[styles.ambientOutfitTitle, { color: theme.text }, Platform.OS === "ios" && { fontSize: 24, lineHeight: 32, flexShrink: 1 }]}>오늘의 코디</Text>
@@ -1005,32 +1025,32 @@ function HomeOutfitPreviewCard({
       </View>
       <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 22 }}>{weatherBasis}{forecastStatus ? ` · ${translateText(forecastStatus)}` : ""}</Text>
       </View>
-      <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: 96, width: layout.width < 390 || fontScale > 1.3 ? "100%" : "38%" }]}>
-        {photos.length ? photos.map((item, index) => <OutfitMotionImage key={index} outfitItemId={item!.id} imageKey={item!.imageUrl} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
+      {photos.length ? <View style={[styles.ambientOutfitPhotos, Platform.OS === "ios" && { height: density.outfitPhotoHeight, width: density.stackOutfit ? "100%" : "38%" }]}>
+        {photos.map((item, index) => <OutfitMotionImage key={index} outfitItemId={item!.id} imageKey={item!.imageUrl} source={getOutfitImageSource(item?.imageUrl)} resizeMode="contain" style={Platform.OS === "ios" ? {
           position: "absolute", width: photos.length > 1 ? index === 0 ? "56%" : "48%" : "80%",
-          height: index === 0 ? 96 : 76,
+          height: index === 0 ? density.outfitPhotoHeight : Math.round(density.outfitPhotoHeight * .8),
           left: index === 0 ? "0%" : undefined, right: index === 1 ? "0%" : undefined, bottom: 0,
-        } : { width: photos.length > 1 ? "46%" : "80%", height: tightLayout ? 100 : 132 }} />)
-          : null}
+        } : { width: photos.length > 1 ? "46%" : "80%", height: tightLayout ? 100 : 132 }} />)}
+      </View> : null}
       </View>
-      </View>
-      {Platform.OS === "ios" ? <View style={{ gap: 3 }}>
-        {advice.map((clause, index) => <Text key={`${index}-${clause}`} style={{ color: theme.text, fontSize: 17, lineHeight: 24 }}>{clause}</Text>)}
-        {timedForecast && forecastClock && forecastKind ? <View testID="home-outfit-precipitation" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          {forecastKind === "강수 가능" || forecastKind === "비 예보" ? <Image source={ambientUiIcons.droplet} accessible={false} style={{ width: 14, height: 17, tintColor: theme.muted }} /> : null}
-          <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 20, flexShrink: 1, fontVariant: ["tabular-nums"] }}>오늘 {forecastClock} 무렵 {forecastKind}</Text>
-        </View> : null}
-      </View> : <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{title}</Text>}
+      {Platform.OS === "ios" ? <View style={{ gap: 2 }}>
+        <Text testID="home-outfit-advice" numberOfLines={fontScale > 1.3 ? undefined : 2} style={{ color: theme.text, fontSize: 16, lineHeight: 22 }}>
+          {advice.map(clause => translateText(clause)).join("\n")}
+        </Text>
+        <OutfitPrecipitationRow testID="home-outfit-precipitation" forecast={precipitation} theme={theme} />
+      </View> : <Text style={[styles.iosSecondaryText, { color: theme.text, fontSize: 18, lineHeight: 26 }]}>{summary}</Text>}
     </FeedbackPressable>
   );
 }
 
 function SpecialWeatherAlertCard({
   alert,
+  compact,
   theme,
   onPress,
 }: {
   alert: P0ScreenProps["state"]["officialSpecialAlert"];
+  compact: boolean;
   theme: AppTheme;
   onPress: () => void;
 }) {
@@ -1047,9 +1067,9 @@ function SpecialWeatherAlertCard({
       style={[
         styles.specialAlertCard,
         {
-          minHeight: layout.homeSpecialAlertMinHeight,
+          minHeight: compact ? 44 : layout.homeSpecialAlertMinHeight,
           paddingHorizontal: layout.homeSpecialAlertPaddingHorizontal,
-          paddingVertical: layout.homeSpecialAlertPaddingVertical,
+          paddingVertical: compact ? 4 : layout.homeSpecialAlertPaddingVertical,
           backgroundColor: `${accent}16`,
           borderColor: `${accent}70`,
         },
@@ -1080,7 +1100,7 @@ function SpecialWeatherAlertCard({
         </Text>
       </View>
       <View style={styles.specialAlertCopy}>
-        {tightLayout ? null : <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>}
+        {tightLayout || compact ? null : <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>}
         <Text
           style={[
             styles.specialAlertTitle,

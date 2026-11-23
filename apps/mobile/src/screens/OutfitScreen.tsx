@@ -16,7 +16,8 @@ import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
 import type { AppLanguage } from "../localization/localePolicy";
 import { getConditionLabel } from "../utils/weatherPresentation";
-import { summarizeHomeOutfit } from "../utils/homeOutfitSummary";
+import { OutfitPrecipitationRow } from "../components/OutfitPrecipitationRow";
+import { buildOutfitPreview, summarizeHomeOutfit } from "../utils/homeOutfitSummary";
 import { useForecastNow } from "../hooks/useForecastNow";
 
 export function OutfitScreen({
@@ -35,6 +36,8 @@ export function OutfitScreen({
   const conditionLabel = ambient ? translateText(getConditionLabel(state.weather.current.condition), language) : getConditionLabel(state.weather.current.condition);
   const { fontScale } = useWindowDimensions();
   const forecastNow = useForecastNow();
+  const fullSummary = summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone);
+  const preview = buildOutfitPreview(fullSummary, state.outfitContext?.status);
   const ownedItemCount = wardrobeItems.filter((item) => item.owned).length;
   const recommendedItems = Object.values(state.outfit.items).filter(Boolean);
   const ownedRecommendedCount = recommendedItems.filter((item) => item?.owned).length;
@@ -51,7 +54,10 @@ export function OutfitScreen({
       <AppScreen title="코디" titleStyle={ambient ? { fontSize: 28, lineHeight: 36, fontWeight: "700" } : undefined} subtitle={state.outfitContext?.temperature?.basis === "air" ? `${ambient ? translateText(weatherLine, language) : weatherLine} · 현재 기온 기준` : weatherLine} showWordmark={false} compactHeader contentGap={ambient ? 12 : layout.destinationContentGap} contentPaddingTop={layout.weatherTopPadding + (44 - pageStyles.title.lineHeight) / 2} contentPaddingBottom={ambient ? 20 : 8}>
         <View style={{ gap: ambient ? 10 : 12 }}>
           {state.outfitContext ? <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{state.outfitContext.status}{state.outfitContext.observedLabel ? <Text>{` · 관측 ${state.outfitContext.observedLabel}`}</Text> : null}</Text> : null}
-          <Text testID="outfit-summary" style={[pageStyles.body, { color: theme.text }, ambient && { fontSize: 23, lineHeight: 32, fontWeight: "700", marginVertical: 4 }]}>{summarizeHomeOutfit(state.outfit.decisionText, forecastNow, state.weather.timezone)}</Text>
+          {ambient ? <View style={{ gap: 2 }}>
+            <Text testID="outfit-summary" numberOfLines={fontScale > 1.3 ? undefined : 2} style={[pageStyles.body, { color: theme.text }, { fontSize: 18, lineHeight: 25, fontWeight: "700" }]}>{preview.advice.map(clause => translateText(clause, language)).join("\n")}</Text>
+            <OutfitPrecipitationRow testID="outfit-precipitation" forecast={preview.precipitation} theme={theme} />
+          </View> : <Text style={[pageStyles.body, { color: theme.text }]}>{fullSummary}</Text>}
           {ambient && state.outfitContext && (!state.outfitContext.reliable || !state.outfitContext.currentAvailable) ? <AppButton label="날씨 다시 확인" onPress={onRefreshWeather} tone="secondary" size="sm" /> : null}
           <OutfitGrid outfit={state.outfit} maxItems={4} mainVisual={ambient} dense singleRow={!ambient && layout.isShort} onItemPress={openDetail} />
           <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{wardrobeCaption}</Text>
@@ -60,7 +66,7 @@ export function OutfitScreen({
               <View style={[styles.advicePreviewRow, ambient && fontScale > 1.3 && { flexWrap: "wrap" }]}>
                 {ambient ? <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} /> : null}
                 <Text style={[pageStyles.compactCaption, { color: theme.clear }]}>{formatAdviceTime(item.time)}</Text>
-                <Text style={[pageStyles.compactCaption, { color: theme.text, flex: 1, minWidth: 0 }]}>{item.text}</Text>
+                <Text style={[pageStyles.compactCaption, { color: theme.text, flex: 1, minWidth: 0 }]} numberOfLines={!ambient || fontScale > 1.3 ? undefined : 2}>{ambient ? buildOutfitPreview(summarizeHomeOutfit(item.text, forecastNow, state.weather.timezone)).advice.map(clause => translateText(clause, language)).join("\n") : item.text}</Text>
               </View>
             </FeedbackPressable>
           ))}

@@ -12,6 +12,16 @@ for(const available of [450,600,757,790,850]){
   assert.equal(values.planMargin,available<800?8:12);
   assert.ok(!('fontSize' in values)&&!('height' in values));
 }
+const density=context.exports.resolveHomeCardDensity;
+for(const height of [0,390,580,679,680,757,799,800,950])
+for(const width of [288,320,335,375,390,440,744])
+for(const scale of [1,1.3,1.31,2,3.12]) {
+ const d=density(height,width,scale);
+ assert.equal(d.compact,height>0&&height<800&&scale<=1.3);
+ assert.equal(d.stackOutfit,scale>1.3||width<(d.compact?335:390));
+ if (d.compact) assert.ok(d.outfitPhotoHeight<96&&d.heroLine<92);
+ if (scale>1.3) assert.equal(d.outfitPhotoHeight,96);
+}
 const source=fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');
 const ast=ts.createSourceFile('HomeScreen.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 let scroll;
@@ -27,4 +37,4 @@ assert.ok(attrs.includes('onContentSizeChange={(_, height) => setContentHeight(h
 assert.ok(!/scrollEnabled|maximumZoomScale|height:|maxHeight:|overflow:/.test(attrs),'Keep natural scrolling and uncapped content for small screens, large text, translated/status content.');
 assert.ok(source.includes('state.weatherProvider.status !== "ready"'));
 assert.ok(source.includes('<SpecialWeatherAlertCard'));
-console.log('PASS: real measured viewport drives whitespace only; 450–850pt bounds; ScrollView retains natural overflow and refresh; mandatory weather states remain. Physical small-screen/large-font scrolling is not proven by this source check.');
+console.log('PASS: real measured viewport drives spacing and compact visual density; 450–850pt bounds; ScrollView retains natural overflow and refresh; mandatory weather states remain. Physical small-screen/large-font scrolling is not proven by this source check.');

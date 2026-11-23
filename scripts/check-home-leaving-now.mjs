@@ -86,12 +86,14 @@ for (const destinationReady of [true, false]) {
     routeMessage: "예정 경로 안내", routeUpdatedAt: "2026-11-02T08:00:00+09:00",
     nowArrivalDescription: description,
   };
-  const state = { destinationCare: { departureAdvice: routeAdvice } };
+  const state = { weatherProvider: { status: "ready" }, destinationCare: { departureAdvice: routeAdvice } };
   const before = JSON.stringify(state);
   const context = {
     result: null, state, destinationReady, homeDepartureAt, homeSchedulePreference: schedule, sameHomeDestination: false, forecastNow: now,
     outingWeather: { countryCode: "KR", timezone: "Asia/Seoul" }, getHomeDepartureSummary, forecastTime,
-    Date: class extends Date { static now() { return now; } }, layout: { width: 375 }, fontScale: 1,
+    density: { compact: false, cardGap: 8 }, useOriginForSamePlace: false, targetAt: undefined, preparationPending: false, preparation: {status:""}, weatherLocationMode:"device", spacing: { md: 16 }, routePending: false,
+    validHomeTiming: false, selectedDestinationTravelEstimate: { status: "idle" }, homeRouteStatus: () => "경로 확인 필요",
+    isWeatherLoading: false, onRefreshWeather() {}, Date: class extends Date { static now() { return now; } }, layout: { width: 375 }, fontScale: 1,
     React: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }) },
     Platform: { OS: platform }, styles: {}, theme: {}, selectedDestination: { place: { id: "test" } },
     HomeValueTransition: "Transition", FeedbackPressable: "Pressable", View: "View", Image: "Image", Text: "Text",

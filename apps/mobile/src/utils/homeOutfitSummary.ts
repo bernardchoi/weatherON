@@ -57,3 +57,31 @@ export function summarizeHomeOutfit(decisionText: string, now = 0, timeZone = "U
   }
   return clauses.map(clause => thermalPhrases[clause]?.[variant] ?? shortClauses[clause] ?? clause).join(" · ");
 }
+
+const timedPrecipitation = /^오늘 (?:[01]?\d|2[0-3]):[0-5]\d 무렵 (?:강수 가능|눈 예보|비 예보|얼음·혼합 강수 예보)$/u;
+const forecastUncertain = "일부 예보는 더 확인해 주세요";
+const freezing = "두툼한 겉옷에 목도리도 챙겨요";
+const swing = "기온 차가 커요, 겉옷으로 조절해요";
+const hotPeriod = "더울 땐 겉옷 벗고 물 챙겨요";
+const urgentAdvice = /^(?:우박 주의|눈|얼음·혼합 강수|강수·강풍|강한 강수)/u;
+
+/** Compact presentation only. The original decision and detail remain intact. */
+export function buildOutfitPreview(summary: string, forecastStatus?: string): {
+  advice: string[];
+  precipitation?: string;
+} {
+  const clauses = [...new Set(summary.split(" · ").map(clause => clause.trim()).filter(Boolean))];
+  const precipitation = clauses.find(clause => timedPrecipitation.test(clause));
+  const showsCoverage = forecastStatus === "오늘 예보 일부 미확인" || forecastStatus === "오늘 남은 시간 예보 없음";
+  const [base, ...extras] = clauses.filter(clause => !timedPrecipitation.test(clause) && !(showsCoverage && clause === forecastUncertain));
+  if (!base) return { advice: [], precipitation };
+  const weather = extras.find(clause => clause !== swing && clause !== hotPeriod && clause !== forecastUncertain);
+  const thermal = base === freezing && extras.includes(swing) ? "두툼하게 겹쳐 입고 목도리도 챙겨요" : base;
+  // A second line is chosen deliberately rather than cutting the original
+  // forecast sentence at an arbitrary character or hiding a critical warning.
+  const second = weather && urgentAdvice.test(weather) ? weather
+    : weather && extras.includes(hotPeriod) ? hotPeriod
+    : weather ?? extras.find(clause => clause !== swing || thermal === base);
+  const action = weather && urgentAdvice.test(weather) ? [weather, thermal] : [thermal, second];
+  return { advice: action.filter((clause): clause is string => Boolean(clause)), precipitation };
+}

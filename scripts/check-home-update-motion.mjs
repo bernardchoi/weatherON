@@ -10,9 +10,12 @@ assert.ok(/<HomeUpdateRegion\s+testID="home-preparation-update-region"/.test(hom
 
 // Evaluate the actual Home visibility boundary, including failure over a retained ETA.
 const homeAst = ts.createSourceFile('HomeScreen.tsx', home, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-let routeVisibility;
+let routeVisibility, routeVisibilityPolicy;
 const busyPolicies = [];
 function visit(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(homeAst) === "showRouteRegion") {
+    routeVisibilityPolicy = node.initializer.getText(homeAst);
+  }
   if (ts.isJsxOpeningElement(node) && node.tagName.getText(homeAst) === 'HomeUpdateRegion') {
     const attrs = node.attributes.properties;
     if (attrs.some(attr => attr.name?.getText(homeAst) === 'testID' && attr.initializer?.text === 'home-route-update-region')) {
@@ -28,9 +31,10 @@ function visit(node) {
   ts.forEachChild(node, visit);
 }
 visit(homeAst);
+assert.equal(routeVisibility, "showRouteRegion");
 const routeVisible = (label, extra = {}) => {
-  const scope = { destinationReady: true, Platform: { OS: 'ios' }, routePending: false, compactSameDestination: false, showDepartureExplanation: false, routeStatus: label, ...extra };
-  return new Function(...Object.keys(scope), `return (${routeVisibility});`)(...Object.values(scope));
+  const scope = { destinationReady: true, Platform: { OS: 'ios' }, routePending: false, compactSameDestination: false, compactRoutePendingHere:false, compactRouteRetriesHere:false, showFullRouteExplanation: false, routeStatus: label, ...extra };
+  return new Function(...Object.keys(scope), `return (${routeVisibilityPolicy});`)(...Object.values(scope));
 };
 assert.equal(routeVisible('조회한 경로 기준'), false);
 assert.equal(routeVisible('경로 확인 실패 · 다시 시도해 주세요', { compactSameDestination: true }), false);
@@ -39,8 +43,11 @@ assert.equal(routeVisible('이전 조회 기준 · 다시 확인 필요'), true)
 assert.equal(routeVisible('조회한 경로 기준', { routePending: true }), true);
 assert.equal(routeVisible('조회한 경로 기준', { destinationReady: false }), false);
 assert.equal(routeVisible('조회한 경로 기준', { Platform: { OS: 'android' } }), true);
-assert.equal(busyPolicies.length, 2);
-for (const expression of busyPolicies) {
+assert.equal(routeVisible('조회한 경로 기준', { routePending: true, compactRoutePendingHere: true }), false, 'Inline busy slot replaces duplicate region');
+assert.equal(routeVisible('경로 확인 실패', { compactRouteRetriesHere: true }), false);
+assert.equal(busyPolicies.length, 3);
+assert.ok(busyPolicies.includes('homeMotionActive && !lowPowerMode'), 'Inline status still respects Home motion policy');
+for (const expression of busyPolicies.filter(p=>p.includes("present"))) {
   const busyActive = new Function('present', 'homeMotionActive', 'lowPowerMode', `return (${expression});`);
   assert.equal(busyActive(false, true, false), false, 'Both exiting slots stop busy motion immediately');
   assert.equal(busyActive(true, true, false), true);

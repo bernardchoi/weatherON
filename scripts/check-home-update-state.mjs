@@ -14,6 +14,16 @@ assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',addres
 assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',countryCode:'JP'}),false);
 assert.equal(model.homeDestinationMatchesOrigin(origin,{...place,id:'gps',coordinate:{latitude:NaN,longitude:126.89}}),false);
 assert.equal(model.homeDestinationMatchesOrigin(null,place),false);
+// An iOS reverse-geocoder label can duplicate a neighborhood and omit a district.
+const lotOrigin={...origin,locationName:'서울특별시 예시로3가 예시로3가 51-7'};
+const lotPlace={...place,address:'서울 용산구 예시로3가 51-7',coordinate:{latitude:37.6502,longitude:126.89}};
+assert.equal(model.homeDestinationMatchesOrigin(lotOrigin,lotPlace),true);
+for(const address of ['서울 용산구 예시로3가 51-8','부산 용산구 예시로3가 51-7','서울 용산구 예시로2가 51-7','서울 용산구 예시로3가','Office']) {
+  assert.equal(model.homeDestinationMatchesOrigin(lotOrigin,{...lotPlace,address}),false,address);
+}
+assert.equal(model.homeDestinationMatchesOrigin(lotOrigin,{...lotPlace,address:'서울 용산구 예시로3가 51-8',coordinate:lotOrigin.coordinate}),false,'Conflicting numbered premises override coincident geocoder points');
+assert.equal(model.homeDestinationMatchesOrigin({...lotOrigin,locationName:'서울특별시 마포구 예시로3가 51-7'},lotPlace),false,'Conflicting explicit districts must not match');
+assert.equal(model.homeDestinationMatchesOrigin(lotOrigin,{...lotPlace,coordinate:{latitude:37.6505,longitude:126.89}}),false,'Numbered alias alone does not extend the GPS drift cap');
 const helpers=load('apps/mobile/src/state/appStateHelpers.ts');
 const travel=load('apps/mobile/src/utils/travelEstimate.ts');
 const key = (id,time='09:00',mode='drive')=>model.homeRouteRequestKey({locationId:'origin'},{id},{timeBasis:'arrival',targetArrivalTime:time,transportMode:mode},'2090-01-01T00:00:00Z');

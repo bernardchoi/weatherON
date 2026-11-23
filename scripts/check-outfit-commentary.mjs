@@ -9,7 +9,7 @@ function bundle(file, external = []) {
   return m.exports;
 }
 const s = bundle('packages/shared/src/index.ts');
-const { summarizeHomeOutfit } = bundle('apps/mobile/src/utils/homeOutfitSummary.ts');
+const { summarizeHomeOutfit, buildOutfitPreview } = bundle('apps/mobile/src/utils/homeOutfitSummary.ts');
 const { buildTodayOutfit } = bundle('apps/mobile/src/utils/todayOutfit.ts');
 const { buildHomePreparation } = bundle('apps/mobile/src/utils/homeOuting.ts');
 const { translateText } = bundle('apps/mobile/src/localization/localization.ts', ['expo-localization']);
@@ -136,7 +136,7 @@ for(const sample of samples) for(const language of ['ko','en','ja']) {
  const translated=translateText(sample.copy,language);assert.ok(translated.length);
  if(language!=='ko') assert.doesNotMatch(translated,/[가-힣]/u,`${sample.name} ${language}`);
 }
-// Execute the real preview JSX: item images, shared decision, provenance and uncapped text.
+// Execute the real preview JSX: item images, scoped copy and Dynamic Type.
 const home=fs.readFileSync('apps/mobile/src/screens/HomeScreen.tsx','utf8');
 const ast=ts.createSourceFile('home.tsx',home,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const fn=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='HomeOutfitPreviewCard');
@@ -144,16 +144,16 @@ const jsx=ts.transpileModule(fn.getText(ast),{compilerOptions:{module:ts.ModuleK
 const createElement=(type,props,...children)=>({type,props,children});
 for(const fontScale of [1,1.6,2]) for(const language of ['ko','en','ja']) {
  const {outfit,outfitContext}=buildTodayOutfit(cold,s.defaultPreferenceProfile,s.presetWardrobe,now);
- const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','summarizeHomeOutfit','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons','const useAmbientEntrance = () => ({});const useOutfitNavigation=()=> (_id,_target,navigate)=>navigate();const OutfitMotionImage=Image;'+jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),summarizeHomeOutfit,v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
- const tree=render({outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
+ const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','buildOutfitPreview','OutfitPrecipitationRow','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons','const useAmbientEntrance = () => ({});const useOutfitNavigation=()=> (_id,_target,navigate)=>navigate();const OutfitMotionImage=Image;'+jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),buildOutfitPreview,'PrecipitationRow',v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
+ const tree=render({viewportSpacing:{outfitTop:8,outfitBottom:8},outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
  const nodes=[];function visit(n){if(Array.isArray(n))return n.forEach(visit);if(!n||typeof n!=='object')return;nodes.push(n);n.children?.forEach(visit);}visit(tree);
- const expectedClauses = summarizeHomeOutfit(outfit.decisionText).split(' · ');
- const comments = nodes.filter(n => n.type === 'span' && expectedClauses.includes(n.children[0]));
- assert.deepEqual(comments.map(n => n.children[0]), expectedClauses, 'Home displays every advice clause in order');
- for (const comment of comments) {
-   assert.equal(comment.props.numberOfLines, undefined);
-   assert.equal(comment.props.adjustsFontSizeToFit, undefined);
- }
+ const expected = buildOutfitPreview(summarizeHomeOutfit(outfit.decisionText), outfitContext.status);
+ const advice = nodes.find(n=>n.props?.testID==='home-outfit-advice');
+ assert.equal(advice.children.join('').trim(), expected.advice.map(clause=>translateText(clause,language)).join('\n'));
+ assert.equal(advice.props.numberOfLines, fontScale > 1.3 ? undefined : 2);
+ assert.equal(advice.props.adjustsFontSizeToFit, undefined);
+ const forecast = nodes.find(n=>n.props?.testID==='home-outfit-precipitation');
+ assert.equal(forecast.props.forecast, expected.precipitation);
  const images=nodes.filter(n=>n.type==='img'&&n.props.resizeMode==='contain');assert.deepEqual(images.map(n=>n.props.source),[outfit.items.outer.imageUrl,outfit.items.shoes.imageUrl]);
  const row=nodes.find(n=>n.props?.style?.flexDirection);assert.equal(row.props.style.flexDirection,fontScale>1.3?'column':'row');
 }
@@ -166,8 +166,34 @@ function findHeadline(node) {
  ts.forEachChild(node, findHeadline);
 }
 findHeadline(outfitAst); assert.ok(headline);
-const renderHeadline = new Function('React', 'Text', 'pageStyles', 'theme', 'ambient', 'state', 'forecastNow', 'summarizeHomeOutfit', ts.transpileModule(`const headline = (${headline});`, { compilerOptions: { jsx: ts.JsxEmit.React } }).outputText + '\nreturn headline;');
-const rendered = renderHeadline({ createElement }, 'Text', { body: {} }, {}, true, { outfit: { decisionText: screenshotCopy }, weather: { timezone: 'Asia/Seoul' } }, now, summarizeHomeOutfit);
-assert.equal(rendered.children[0], summarizeHomeOutfit(screenshotCopy, now, 'Asia/Seoul'));
-assert.equal(rendered.props.numberOfLines, undefined, 'The shorter headline still wraps at large text sizes');
-console.log('PASS reported cold/swing headline uses the same short copy on Home and Outfit; hydration, freezing, rain/wind and future forecast warnings remain visible.');
+const renderHeadline = new Function('React', 'Text', 'pageStyles', 'theme', 'ambient', 'fontScale', 'preview', 'translateText', 'language', ts.transpileModule(`const headline = (${headline});`, { compilerOptions: { jsx: ts.JsxEmit.React } }).outputText + '\nreturn headline;');
+const photo = '영하의 추위라 두툼한 보온 겉옷과 목도리를 챙겨요 · 강수 가능성에 대비해 젖지 않을 겉옷을 챙겨요 · 확인된 기온 차가 커서 겉옷을 벗고 입으며 조절해요 · 오늘 08:00 무렵 비 예보';
+const photoPreview = buildOutfitPreview(summarizeHomeOutfit(photo));
+assert.deepEqual(photoPreview, {advice: ['두툼하게 겹쳐 입고 목도리도 챙겨요','강수에 대비해 방수 겉옷을 챙겨요'], precipitation:'오늘 08:00 무렵 비 예보'});
+for(const fontScale of [1,1.6]) {
+ const rendered = renderHeadline({createElement},'Text',{body:{}},{},true,fontScale,photoPreview,translateText,'ko');
+ assert.equal(rendered.children[0],photoPreview.advice.join('\n'));
+ assert.equal(rendered.props.numberOfLines,fontScale>1.3?undefined:2);
+}
+const thermal = ['두툼한 겉옷에 목도리도 챙겨요','따뜻한 상의와 겉옷을 챙겨요','시원한 옷에 물도 챙겨요','가벼운 겉옷을 걸쳐요','가볍고 편하게 입어요'];
+const weatherActions = ['', '우박 주의, 실내에서 잠시 기다려요', '눈·바람엔 미끄럼 적은 신발이 좋아요', '눈 오는 날엔 미끄럼 적은 신발이 좋아요',
+ '얼음·혼합 강수엔 방수와 미끄럼을 살펴요', '강수·강풍엔 방수 겉옷을 챙겨요', '강한 강수엔 방수 겉옷과 신발이 좋아요',
+ '비에 대비해 우산을 챙겨요', '강수에 대비해 방수 겉옷을 챙겨요', '바람을 막도록 겉옷을 여며요',
+ '먼지에 대비해 마스크를 챙겨요', '햇빛이 강해 모자나 선크림을 챙겨요'];
+const forecasts = ['', ...['비 예보','강수 가능','눈 예보','얼음·혼합 강수 예보'].map(kind=>`오늘 08:00 무렵 ${kind}`)];
+let checked = 0;
+for(const base of thermal) for(const action of weatherActions) for(const swing of ['', '기온 차가 커요, 겉옷으로 조절해요'])
+for(const heat of ['', '더울 땐 겉옷 벗고 물 챙겨요']) for(const forecast of forecasts) {
+ const preview = buildOutfitPreview([base,action,swing,heat,forecast].filter(Boolean).join(' · '));
+ assert.ok(preview.advice.length>=1 && preview.advice.length<=2);
+ assert.equal(preview.precipitation,forecast||undefined);
+ assert.ok(preview.advice.every(value=>!value.includes('08:00')));
+ if (/^(우박|눈|얼음|강수·강풍|강한 강수)/u.test(action)) assert.ok(preview.advice.includes(action), 'Safety advice is retained');
+ for (const language of ['en','ja']) for (const copy of [...preview.advice,preview.precipitation].filter(Boolean)) {
+   assert.doesNotMatch(translateText(copy,language),/[가-힣]/u);
+ }
+ checked++;
+}
+assert.deepEqual(buildOutfitPreview('온도를 확인한 뒤 옷차림을 추천해요'),{advice:['온도를 확인한 뒤 옷차림을 추천해요'],precipitation:undefined});
+assert.equal(buildOutfitPreview('가벼운 겉옷을 걸쳐요 · 일부 예보는 더 확인해 주세요','오늘 예보 일부 미확인').advice.length,1);
+console.log(`PASS: Home and Outfit compaction, forecast separation, Dynamic Type and ${checked} condition combinations with KO/EN/JA.`);
