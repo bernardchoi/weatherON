@@ -8,7 +8,7 @@ import {
   type WeatherSnapshot,
 } from "@weatheron/shared";
 import { japanWeatherAlertStatus, normalizeJapanWeatherAlerts, type JapanWeatherAlertResult } from "./japanWeatherAlerts";
-import { normalizeKmaBulletin } from "./kmaAlertBulletin";
+import { matchesKmaBulletinArea, normalizeKmaBulletin } from "./kmaAlertBulletin";
 import { Platform } from "../localization/react-native";
 import { getWeatherRuntimeConfig } from "../config/weatherEnv";
 import { fixtureWeatherClient, runtimeWeatherClient, type WeatherClient } from "./weatherClient";
@@ -38,13 +38,17 @@ export type OfficialSpecialAlert = {
   rawStatus?: string;
 };
 
-export type WeatherProviderResult = {
+type OfficialSpecialAlertResult = {
+  officialSpecialAlert: OfficialSpecialAlert;
+  officialSpecialAlerts: OfficialSpecialAlert[];
+};
+
+export type WeatherProviderResult = OfficialSpecialAlertResult & {
   /** Transient per-location work; never interpreted as data freshness. */
   pendingLocationIds?: string[];
   current: WeatherSnapshot;
   destination: WeatherSnapshot;
   destinationSnapshots: WeatherSnapshot[];
-  officialSpecialAlert: OfficialSpecialAlert;
   japanWeatherAlerts?: JapanWeatherAlertResult;
   status: WeatherProviderStatus;
   message: string;
@@ -105,7 +109,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
       ]));
       const pending = new Set(locations.map((location) => location.locationId));
       const failed = new Set<string>();
-      let officialSpecialAlert = createInactiveOfficialSpecialAlert();
+      let kmaAlerts = selectOfficialSpecialAlerts([]);
       const japanAlertEnabled = ios && (options.currentLocation ?? currentLocation).countryCode === "JP";
       const japanLocationId = (options.currentLocation ?? currentLocation).locationId;
       let japanWeatherAlerts = japanAlertEnabled
@@ -116,7 +120,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         const fallbackUsed = fallback || [current, ...destinationSnapshots].some((snapshot) => snapshot.source === "fallback");
         const status = failed.size ? "error" : pending.size ? "stale" : mode;
         return {
-          current, destination: destinationSnapshots[0], destinationSnapshots, officialSpecialAlert,
+          current, destination: destinationSnapshots[0], destinationSnapshots, ...kmaAlerts,
           ...(japanWeatherAlerts ? { japanWeatherAlerts } : {}),
           pendingLocationIds: [...pending],
           status, message: getProviderMessage(status, fallbackUsed), retryable: status !== "ready", fallbackUsed,
@@ -159,7 +163,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           }),
         ] : []),
         fetchOfficialSpecialAlert(client, currentLocation).then((alert) => {
-          officialSpecialAlert = alert;
+          kmaAlerts = alert;
           publish();
         }),
       ]);
@@ -192,7 +196,7 @@ export function getFallbackSnapshots(status: WeatherProviderStatus = "fallback")
     current,
     destination,
     destinationSnapshots: [destination],
-    officialSpecialAlert: createInactiveOfficialSpecialAlert(),
+    ...selectOfficialSpecialAlerts([]),
     status,
     message: getProviderMessage(status, true),
     retryable: true,
@@ -298,14 +302,14 @@ async function fetchJapanWeatherAlerts(client: WeatherClient, location: WeatherL
   }
 }
 
-async function fetchOfficialSpecialAlert(client: WeatherClient, location: WeatherLocationPreset): Promise<OfficialSpecialAlert> {
+async function fetchOfficialSpecialAlert(client: WeatherClient, location: WeatherLocationPreset): Promise<OfficialSpecialAlertResult> {
   if (location.countryCode !== "KR" || typeof client.fetchKmaSpecialAlert !== "function") {
-    return createInactiveOfficialSpecialAlert();
+    return selectOfficialSpecialAlerts([]);
   }
   try {
-    return normalizeKmaOfficialSpecialAlert(await client.fetchKmaSpecialAlert(), location);
+    return normalizeKmaOfficialSpecialAlerts(await client.fetchKmaSpecialAlert(), location);
   } catch {
-    return createInactiveOfficialSpecialAlert("fetch_failed");
+    return selectOfficialSpecialAlerts([], "fetch_failed");
   }
 }
 
@@ -441,22 +445,38 @@ function createInactiveOfficialSpecialAlert(rawStatus?: string): OfficialSpecial
 }
 
 export function normalizeKmaOfficialSpecialAlert(payload: unknown, location: WeatherLocationPreset, now = Date.now()): OfficialSpecialAlert {
+  return normalizeKmaOfficialSpecialAlerts(payload, location, now).officialSpecialAlert;
+}
+
+export function normalizeKmaOfficialSpecialAlerts(payload: unknown, location: WeatherLocationPreset, now = Date.now()): OfficialSpecialAlertResult {
   if (payload && typeof payload === "object") {
     const resultCode = readStringField(payload as Record<string, unknown>, ["response.header.resultCode", "header.resultCode"]);
-    if (resultCode && !["00", "0", "03", "3"].includes(resultCode)) return createInactiveOfficialSpecialAlert("feed_unavailable");
-    if (resultCode === "03" || resultCode === "3") return createInactiveOfficialSpecialAlert();
+    if (resultCode && !["00", "0", "03", "3"].includes(resultCode)) return selectOfficialSpecialAlerts([], "feed_unavailable");
+    if (resultCode === "03" || resultCode === "3") return selectOfficialSpecialAlerts([]);
   }
   const records = extractKmaAlertRecords(payload);
   const bulletin = normalizeKmaBulletin(records, location, readStringField, now);
-  if (bulletin) return bulletin.sort(compareOfficialSpecialAlerts)[0] ?? createInactiveOfficialSpecialAlert();
+  if (bulletin) return selectOfficialSpecialAlerts(bulletin);
   const candidates = records
     .map(parseKmaOfficialSpecialAlertRecord)
     .filter((alert): alert is OfficialSpecialAlert => Boolean(alert))
     .filter((alert) => matchesOfficialAlertLocation(alert, location));
-  const activeAlerts = candidates.filter((alert) => alert.active && alert.type && alert.level);
-  if (!activeAlerts.length) return createInactiveOfficialSpecialAlert();
-  activeAlerts.sort(compareOfficialSpecialAlerts);
-  return activeAlerts[0];
+  return selectOfficialSpecialAlerts(candidates);
+}
+
+function selectOfficialSpecialAlerts(candidates: OfficialSpecialAlert[], rawStatus?: string): OfficialSpecialAlertResult {
+  const seen = new Set<OfficialSpecialAlert["type"]>();
+  // The bulletin is already reduced to the latest effective snapshot.
+  // Keep the highest-priority record per hazard, not only the overall winner.
+  const officialSpecialAlerts = candidates
+    .filter(alert => alert.active && alert.type && alert.level)
+    .sort(compareOfficialSpecialAlerts)
+    .filter(alert => {
+      if (seen.has(alert.type)) return false;
+      seen.add(alert.type);
+      return true;
+    });
+  return { officialSpecialAlerts, officialSpecialAlert: officialSpecialAlerts[0] ?? createInactiveOfficialSpecialAlert(rawStatus) };
 }
 
 function extractKmaAlertRecords(value: unknown): Array<Record<string, unknown>> {
@@ -534,6 +554,11 @@ function isReleasedOrPreliminaryKmaAlert(commandRaw: string | undefined, haystac
 
 function matchesOfficialAlertLocation(alert: OfficialSpecialAlert, location: WeatherLocationPreset): boolean {
   if (!alert.regionName) return true;
+  // The legacy structured response can carry the same exact KMA scopes.
+  // Don't use substring/coordinate guesses for the ambiguous former-city name.
+  if (/^광주(?:광역시|동부|서부)?\s*(?:\(|$)|^전남광주(?:통합특별시)?\s*\(\s*광주(?:동부|서부)/u.test(alert.regionName)) {
+    return matchesKmaBulletinArea(alert.regionName, location);
+  }
   const region = normalizeKoreanRegionText(alert.regionName);
   const locationName = normalizeKoreanRegionText(location.locationName);
   const locationParts = locationName.split(/\s+/u).filter(Boolean);

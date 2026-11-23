@@ -141,7 +141,13 @@ export async function readPersistedWeatherProviderResult(
 
 export function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
   if (![result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) return;
-  const { pendingLocationIds: _pending, japanWeatherAlerts: _transientAlerts, ...snapshotResult } = result;
+  const {
+    pendingLocationIds: _pending,
+    japanWeatherAlerts: _transientJapanAlerts,
+    officialSpecialAlert: _primaryKmaAlert,
+    officialSpecialAlerts: _transientKmaAlerts,
+    ...snapshotResult
+  } = result;
   void writeAppValue(weatherProviderResultStorageKey, snapshotResult);
 }
 
@@ -191,6 +197,7 @@ export function normalizePersistedWeatherProviderResult(value: unknown): Weather
     destination: normalizePersistedSnapshotForPlatform(markPersistedWeatherSnapshotStale(value.destination)),
     destinationSnapshots: value.destinationSnapshots.filter(isWeatherSnapshot).map(markPersistedWeatherSnapshotStale).map(normalizePersistedSnapshotForPlatform),
     officialSpecialAlert: createInactiveOfficialSpecialAlert(),
+    officialSpecialAlerts: [],
     status: "stale",
     message: "최근 저장 예보 기준 추천",
     retryable: true,

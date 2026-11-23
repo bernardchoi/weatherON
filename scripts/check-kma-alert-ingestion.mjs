@@ -5,7 +5,7 @@ import ts from "typescript";
 function load(path, imports = {}, source = readFileSync(path, "utf8")) {
   const exports = {};
   const out = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   new Function("exports", "require", out)(exports, name => {
     assert.ok(name in imports, "Unexpected dependency: " + name);
@@ -16,7 +16,7 @@ function load(path, imports = {}, source = readFileSync(path, "utf8")) {
 const japanAlerts = load("apps/mobile/src/providers/japanWeatherAlerts.ts");
 const zones = load("apps/mobile/src/providers/kmaAlertZones.ts");
 const bulletin = load("apps/mobile/src/providers/kmaAlertBulletin.ts", { "./kmaAlertZones": zones });
-const { normalizeKmaOfficialSpecialAlert: normalize } = load("apps/mobile/src/providers/weatherProvider.ts", {
+const { normalizeKmaOfficialSpecialAlert: normalize, normalizeKmaOfficialSpecialAlerts: normalizeAll } = load("apps/mobile/src/providers/weatherProvider.ts", {
   "@weatheron/shared": {}, "./japanWeatherAlerts": japanAlerts, "./kmaAlertBulletin": bulletin, "../localization/react-native": {}, "../config/weatherEnv": {},
   "./weatherClient": {}, "./weatherLocations": {},
 });
@@ -81,6 +81,30 @@ assert.equal(alert("고양시", { wrn: "H", lvl: "W", titl: "폭염중대경보 
 assert.equal(alert("고양시", { wrn: "H", lvl: "W", content: "폭염중대경보 기준 안내", regKo: "고양" }).level, "warning");
 assert.equal(alert("고양시", { wrn: "H", lvl: "4", regKo: "고양" }).active, false, "undocumented codes are not guessed");
 
+// Mixed hazards remain independent; overlapping zones for one hazard do not duplicate it.
+const mixed = {
+  ...record,
+  t6: "o 폭염 중대 경보： 경기(고양)<br>o 호우경보 : 경기도(고양)<br>o 호우주의보 : 고양<br>o 호우경보 : 고양",
+};
+const both = normalizeAll(payload(mixed), location("고양시"), now);
+assert.deepEqual(both.officialSpecialAlerts.map(a => [a.type, a.level]), [
+  ["heatwave", "critical"], ["heavy-rain", "warning"],
+]);
+assert.equal(both.officialSpecialAlert, both.officialSpecialAlerts[0]);
+assert.deepEqual(normalizeAll(payload(mixed, {
+  ...issued, tmFc: "202611230755", t6: "o 호우주의보 : 고양",
+}), location("고양시"), now).officialSpecialAlerts.map(a => a.type), ["heavy-rain"]);
+assert.deepEqual(normalizeAll(payload(mixed, { ...issued, tmFc: "202611230755", t6: "" }),
+  location("고양시"), now).officialSpecialAlerts, []);
+assert.deepEqual(normalizeAll({ response: { header: { resultCode: "30" } } },
+  location("고양시"), now).officialSpecialAlerts, []);
+const structuredBoth = normalizeAll(payload(
+  { wrn: "H", lvl: "W", regKo: "고양" },
+  { wrn: "R", lvl: "A", regKo: "고양" },
+  { wrn: "R", lvl: "W", regKo: "고양" },
+), location("고양시"), now);
+assert.deepEqual(structuredBoth.officialSpecialAlerts.map(a => a.title), ["호우경보", "폭염경보"]);
+
 const homePath = "apps/mobile/src/screens/HomeScreen.tsx";
 const home = ts.createSourceFile(homePath, readFileSync(homePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const copyFunction = home.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "getHomeSpecialAlertCopy");
@@ -91,11 +115,88 @@ assert.deepEqual(homeCopy(chronological("2026-07-28T11:00:00+09:00")), {
 });
 assert.equal(homeCopy(chronological("2026-07-28T16:00:00+09:00")).title, "오늘은 더위 조심해요");
 
+// Render the real card and screen functions into inspectable JSX trees.
+const jsx = (type, props) => ({ type, ...props });
+const jsxRuntime = { "react/jsx-runtime": { jsx, jsxs: jsx } };
+const uiGlobals = `
+const styles = {}, ambientVisual = {}, pageStyles = {}, screenIcons = {}, uiIconAssets = {};
+const Platform = { OS: "ios" };
+const View = "View", Text = "Text", ScrollView = "ScrollView", Pressable = "Pressable", Image = "Image";
+const FeedbackPressable = "FeedbackPressable", CompactSection = "CompactSection", BackButton = "BackButton";
+const useAppTheme = () => ({});
+const useResponsiveLayout = () => ({});
+const isHomeTightLayout = () => true;
+const translateText = (copy) => copy;
+const useMemo = (factory) => factory();
+const buildInbox = () => [];
+const EmptyState = "EmptyState";
+`;
+function getFunction(source, name) {
+  const fn = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
+  assert.ok(fn, name + " must exist");
+  return fn.getText(source);
+}
+function allChildren(node) {
+  if (Array.isArray(node)) return node.flatMap(allChildren);
+  if (!node || typeof node !== "object") return [];
+  return [node, ...allChildren(node.children)];
+}
+const cardFactory = load(homePath, jsxRuntime, uiGlobals + copyFunction.getText(home) + "\nexport " +
+  getFunction(home, "SpecialWeatherAlertCard")).SpecialWeatherAlertCard;
+const renderCard = (count, onPress = () => {}) => cardFactory({ alert: both.officialSpecialAlert, additionalCount: count,
+  compact: true, theme: {}, onPress });
+let opened = 0;
+const mixedCard = renderCard(1, () => opened++);
+assert.match(mixedCard.accessibilityLabel, /폭염중대경보.*외 1건/u);
+assert.ok(allChildren(mixedCard).some(node => node.type === "Text" && node.children === "외 1건"));
+assert.ok(!allChildren(renderCard(0)).some(node => node.children === "외 0건"));
+mixedCard.onPress();
+assert.equal(opened, 1);
+assert.match(readFileSync(homePath, "utf8"), /<SpecialWeatherAlertCard[\s\S]*?onPress=\{\(\) => onNavigate\("H3"\)\}/u);
+
+const inboxPath = "apps/mobile/src/screens/NotificationCenterScreen.tsx";
+const inboxSource = ts.createSourceFile(inboxPath, readFileSync(inboxPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const renderInbox = load(inboxPath, jsxRuntime, uiGlobals + getFunction(inboxSource, "NotificationCenterScreen")).NotificationCenterScreen;
+const renderSections = (alerts, notifications = []) => allChildren(renderInbox({ state: { officialSpecialAlerts: alerts, notifications },
+  savedDestinations: [], readNotificationIds: [], notificationHistory: [], permissionReady: true, smartCareEnabled: false }))
+  .filter(node => node.type === "CompactSection");
+const mixedSection = renderSections(both.officialSpecialAlerts)[0];
+assert.equal(mixedSection.title, "현재 기상 특보");
+assert.deepEqual(allChildren(mixedSection).filter(node => node.type === "Text")
+  .map(node => node.children).filter(copy => /경보$/u.test(copy)), ["폭염중대경보", "호우경보"]);
+assert.equal(renderSections([both.officialSpecialAlert]).length, 1);
+assert.deepEqual(renderSections([]), []);
+assert.equal(renderSections([], [{ active: true, reason: "기존 날씨 안내" }])[0].title, "지금 확인할 날씨");
+
 const reading = (area) => ({ ...record, t6: "o 호우주의보 : " + area });
 const zoneAlert = (area, locationName, kmaAdministrativeArea) => normalize(
   payload(reading(area)), { ...location(locationName), kmaAdministrativeArea }, now,
 );
 const cases = [
+  ...["광주광역시", "전남광주통합특별시"].flatMap(parent =>
+    ["동구", "서구", "남구", "북구", "광산구"].flatMap(district => [
+      ["광주", parent + " " + district, true],
+      ["광주동부", parent + " " + district, district !== "광산구"],
+      ["광주서부", parent + " " + district, district === "광산구"],
+    ])),
+  ["광주", "전남광주통합특별시 서구 내방로 111", true],
+  ["광주", "전남광주통합특별시 광주광역시 광산구", true],
+  ["광주", "전남광주통합특별시", false],
+  ["광주", "전남광주통합특별시 나주시 서구전시장", false],
+  ["광주", "경기도 광주시", false],
+  ["광주", "부산광역시 서구", false],
+  ["광주", "전라남도 광양시", false],
+  ["광주동부", "서구", false],
+  ["광주동부", "전남광주통합특별시 나주시 서구", false],
+  ["광주(동부)", "전남광주통합특별시 북구", true],
+  ["전남광주통합특별시(광주서부)", "전남광주통합특별시 광산구", true],
+  ["전남광주통합특별시(광주서부)", "전남광주통합특별시 순천시", false],
+  ["전라남도(광주서부)", "전남광주통합특별시 광산구", false],
+  ["광주(서구)", "전남광주통합특별시 서구", true],
+  ["광주(서구)", "전남광주통합특별시 북구 서구", false],
+  ["광주(광주동부 제외)", "전남광주통합특별시 광산구", true],
+  ["광주(광주동부 제외)", "전남광주통합특별시 순천시", false],
+  ["전남광주통합특별시(광양)", "전남광주통합특별시 광양시", true],
   ["서울(서울동남권)", "서울특별시 강동구 천호동", true],
   ["서울(동남권)", "서울 송파구 잠실동", true],
   ["서울동남권", "서울특별시 강동구 천호동", true],
@@ -162,6 +263,17 @@ assert.equal(place.locationName, "아무 이름");
 assert.equal(place.kmaAdministrativeArea, "경기도 파주시 문산읍");
 assert.equal(normalize(payload(reading("경기도(파주동북부)")), place, now).active, true);
 
+const gwangjuPlace = createWeatherLocationFromPlace({
+  id: "gwangju-hall", coordinate: location("").coordinate, countryCode: "KR",
+  name: "시청", address: "전남광주통합특별시 서구 내방로 111",
+});
+assert.equal(gwangjuPlace.kmaAdministrativeArea, "전남광주통합특별시 서구");
+assert.equal(normalize(payload(reading("광주동부")), gwangjuPlace, now).active, true);
+assert.equal(normalize(payload({ wrn: "R", lvl: "W", regKo: "광주동부" }), gwangjuPlace, now).active, true);
+assert.equal(normalize(payload({ wrn: "R", lvl: "W", regKo: "광주동부" }),
+  location("전남광주통합특별시 나주시"), now).active, false);
+assert.equal(zoneAlert("광주동부", "전남광주통합특별시 서구 시청", "전남광주통합특별시 순천시").active, false);
+
 let geocodes = 0;
 const { requestDeviceWeatherLocation } = load("apps/mobile/src/providers/deviceLocation.ts", {
   "expo-location": {
@@ -182,4 +294,4 @@ assert.equal(device.status, "granted");
 assert.equal(geocodes, 1);
 assert.equal(device.location.kmaAdministrativeArea, "서울 강동구");
 assert.equal(normalize(payload(reading("서울(서울동남권)")), device.location, now).active, true);
-console.log(`PASS: KMA bulletin, critical heat lifecycle and Home copy, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);
+console.log(`PASS: KMA bulletin, concurrent hazards, critical heat lifecycle and Home copy, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);

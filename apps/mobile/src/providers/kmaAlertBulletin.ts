@@ -1,6 +1,6 @@
 import type { OfficialSpecialAlert } from "./weatherProvider";
 import type { WeatherLocationPreset } from "./weatherLocations";
-import { canonicalRegion, matchKmaExcludedZone, matchKmaNamedZone, provinces } from "./kmaAlertZones";
+import { canonicalRegion, matchKmaExcludedZone, matchKmaGwangjuScope, matchKmaNamedZone, provinces } from "./kmaAlertZones";
 
 type RecordReader = (record: Record<string, unknown>, keys: string[]) => string | undefined;
 const bulletinKeys = new Set(["t6", "t7", "tmef"]);
@@ -31,7 +31,7 @@ function splitAreas(value: string): string[] {
   return depth === 0 ? [...parts, part.trim()].filter(Boolean) : [];
 }
 
-function matchesArea(area: string, location: WeatherLocationPreset): boolean {
+export function matchesKmaBulletinArea(area: string, location: WeatherLocationPreset): boolean {
   // Prefer administrative data over user-facing place names or POI text.
   const address: string[] = (location.kmaAdministrativeArea ?? location.locationName).match(/[가-힣]+(?:[0-9]+[가-힣]+)*/gu) ?? [];
   const names = new Set(address.map(canonicalRegion));
@@ -43,7 +43,9 @@ function matchesArea(area: string, location: WeatherLocationPreset): boolean {
     const zone = matchKmaNamedZone(group[1], address);
     if (zone !== undefined) return zone;
     if (outer === "전국") return true;
-    if (outer === "광주" && (province || address.includes("광주시"))) return false;
+    const cityScope = matchKmaGwangjuScope(group[1], address);
+    if (cityScope !== undefined) return cityScope;
+    if (outer === "광주") return false;
     return names.has(outer);
   }
   if (provinces.has(outer) && province && outer !== province) return false;
@@ -56,13 +58,17 @@ function matchesArea(area: string, location: WeatherLocationPreset): boolean {
     if (exclusion) return matchKmaExcludedZone(outer, exclusion[1], address);
   }
   if (children.some(child => /제외/u.test(child) && !child.includes("("))) return false;
+  const gwangjuScope = matchKmaGwangjuScope(group[1], address);
   return children.some(child => {
     if (child.includes("(")) {
       const nested = child.match(/^(완도(?:군)?)\s*\([가-힣\s]+제외\)$/u);
-      return Boolean(nested && ["전라남", "전남광주"].includes(outer) && matchesArea(child, location));
+      return Boolean(nested && ["전라남", "전남광주"].includes(outer) && matchesKmaBulletinArea(child, location));
     }
     const zone = matchKmaNamedZone(child, address, outer);
     if (zone !== undefined) return zone;
+    if (gwangjuScope !== undefined) {
+      return matchKmaGwangjuScope(group[1], address, child) === true;
+    }
     const childName = canonicalRegion(child);
     return /^[가-힣]+$/u.test(child) && names.has(childName)
       && (provinces.has(outer) ? !ambiguousCities.has(childName) || province === outer : names.has(outer));
@@ -101,7 +107,7 @@ export function normalizeKmaBulletin(
     if (severity === "중대경보" && hazard !== "폭염") continue;
     // Stop at non-bulletin paragraphs, and allow whitespace in wrapped lists.
     const areas = splitAreas(description.split(/\n\s*\n/u)[0].replace(/\s+/gu, " ").trim().replace(/[.]$/u, ""));
-    const area = areas.find(candidate => matchesArea(candidate, location));
+    const area = areas.find(candidate => matchesKmaBulletinArea(candidate, location));
     if (!area) continue;
     alerts.push({
       source: "kma",

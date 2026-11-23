@@ -391,6 +391,7 @@ export function HomeScreen({
           {activeWeatherAlert ? (
             <SpecialWeatherAlertCard
               alert={activeWeatherAlert}
+              additionalCount={Math.max(0, state.officialSpecialAlerts.length - 1)}
               compact={density.compact}
               theme={theme}
               onPress={() => onNavigate("H3")}
@@ -1050,11 +1051,13 @@ function HomeOutfitPreviewCard({
 
 function SpecialWeatherAlertCard({
   alert,
+  additionalCount,
   compact,
   theme,
   onPress,
 }: {
   alert: P0ScreenProps["state"]["officialSpecialAlert"];
+  additionalCount: number;
   compact: boolean;
   theme: AppTheme;
   onPress: () => void;
@@ -1064,9 +1067,13 @@ function SpecialWeatherAlertCard({
   const isHeavyRain = alert.type === "heavy-rain";
   const accent = isHeavyRain ? theme.skyLite : theme.warm;
   const copy = getHomeSpecialAlertCopy(alert);
+  const countLabel = additionalCount > 0 ? translateText(`외 ${additionalCount}건`) : null;
   return (
     <FeedbackPressable
-      accessibilityLabel={`${copy.title}. ${copy.body}. 특보 기준 상세 보기`}
+      accessibilityLabel={[
+        translateText(`${copy.title}. ${copy.body}. 특보 기준 상세 보기`),
+        countLabel,
+      ].filter(Boolean).join(" · ")}
       accessibilityRole="button"
       onPress={onPress}
       style={[
@@ -1106,19 +1113,23 @@ function SpecialWeatherAlertCard({
       </View>
       <View style={styles.specialAlertCopy}>
         {tightLayout || compact ? null : <Text style={[styles.specialAlertLabel, { color: accent }]}>날씨 주의</Text>}
-        <Text
-          style={[
-            styles.specialAlertTitle,
-            {
-              color: theme.text,
-              fontSize: layout.homeSpecialAlertTitleFontSize,
-              lineHeight: layout.homeSpecialAlertTitleLineHeight,
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {copy.title}
-        </Text>
+        <View style={styles.specialAlertTitleRow}>
+          <Text
+            style={[
+              styles.specialAlertTitle,
+              countLabel && styles.specialAlertTitleWithCount,
+              {
+                color: theme.text,
+                fontSize: layout.homeSpecialAlertTitleFontSize,
+                lineHeight: layout.homeSpecialAlertTitleLineHeight,
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {copy.title}
+          </Text>
+          {countLabel ? <Text style={[styles.specialAlertCount, { color: theme.text }]}>{countLabel}</Text> : null}
+        </View>
         <Text
           style={[
             styles.specialAlertBody,
@@ -1524,6 +1535,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
+  },
+  specialAlertTitleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    columnGap: 6,
+    alignItems: "baseline",
+  },
+  specialAlertTitleWithCount: {
+    flexShrink: 1,
+  },
+  specialAlertCount: {
+    fontSize: 12,
+    fontWeight: "700",
   },
   specialAlertTitle: {
     fontWeight: "900",

@@ -28,6 +28,7 @@ export function NotificationCenterScreen({
     state.notifications.filter((item) => shouldScheduleLocalNotification(item, alertPreferences)),
     { reducedInterruptions: alertPreferences.quietHours },
   ) : [];
+  const officialAlerts = state.officialSpecialAlerts;
   const conditions = state.notifications.filter((item) => item.active && !item.scheduledAt);
 
   return <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
@@ -38,6 +39,18 @@ export function NotificationCenterScreen({
         <Pressable accessibilityLabel="알림 설정" accessibilityRole="button" onPress={() => onNavigate("M2")} style={[[styles.settingsButton, { backgroundColor: theme.cardStrong, borderColor: theme.border }], Platform.OS === "ios" && ambientVisual.settingsButton]}><Image source={screenIcons.settings} style={[styles.settingsIcon, { tintColor: theme.text }]} /></Pressable>
       </View>
 
+      {officialAlerts.length ? (
+        <CompactSection theme={theme} title="현재 기상 특보" detail="공식 발표">
+          {officialAlerts.map((alert) => (
+            <View key={alert.type} style={styles.officialAlertRow}>
+              <Text style={[styles.compactRow, { color: theme.text, fontWeight: "700" }]}>{alert.title ?? "기상 특보"}</Text>
+              {!alert.reason || alert.reason !== alert.title ? (
+                <Text style={[styles.compactRow, { color: theme.muted }]}>{alert.reason ?? "자세한 내용을 확인해 주세요"}</Text>
+              ) : null}
+            </View>
+          ))}
+        </CompactSection>
+      ) : null}
       {!permissionReady ? <PermissionOff theme={theme} onPress={() => onNavigate("M2")} /> : null}
       {unread.length ? <View style={styles.markAllRow}><Pressable accessibilityLabel="모든 알림 읽음 표시" accessibilityRole="button" onPress={onMarkAllNotificationsRead} hitSlop={8}><Text style={[styles.markAll, { color: theme.sky }]}>모두 읽음</Text></Pressable></View> : null}
       {inbox.length === 0 ? <EmptyState theme={theme} permissionReady={permissionReady} /> : <View style={styles.inbox}>{groupByDate(inbox).map((group) => <View key={group.label} style={styles.dateGroup}><Text style={[styles.dateLabel, { color: theme.subtle }]}>{group.label}</Text>{group.items.map((item) => {
@@ -46,7 +59,7 @@ export function NotificationCenterScreen({
         return <NotificationRow key={item.id} item={item} read={read} targetExists={targetExists} theme={theme} onOpen={() => item.route && onOpenNotificationDeepLink(item.id, item.route)} onRead={() => onMarkNotificationRead(item.id)} />;
       })}</View>)}</View>}
       {scheduled.length ? <CompactSection theme={theme} title="예정된 알림" detail={scheduled.length + "개"}>{scheduled.slice(0, 3).map((item) => <Text key={item.id} style={[styles.compactRow, { color: theme.muted }]} numberOfLines={2}>{item.title + " · " + formatDate(item.scheduledAt)}</Text>)}</CompactSection> : null}
-      {(state.officialSpecialAlert.active || conditions.length > 0) ? <CompactSection theme={theme} title={state.officialSpecialAlert.active ? "현재 기상 특보" : "지금 확인할 날씨"} detail={state.officialSpecialAlert.active ? "공식 발표" : undefined}>{<Text style={[styles.compactRow, { color: theme.muted }]}>{state.officialSpecialAlert.active ? (state.officialSpecialAlert.title ?? "기상 특보") + " · " + (state.officialSpecialAlert.reason ?? "자세한 내용을 확인해 주세요") : conditions.map((item) => item.conditionSummary ?? item.reason).join(" · ")}</Text>}</CompactSection> : null}
+      {!officialAlerts.length && conditions.length ? <CompactSection theme={theme} title="지금 확인할 날씨"><Text style={[styles.compactRow, { color: theme.muted }]}>{conditions.map((item) => item.conditionSummary ?? item.reason).join(" · ")}</Text></CompactSection> : null}
       {notificationHistory.length ? <Pressable accessibilityLabel="알림 내역 모두 지우기" accessibilityRole="button" onPress={onClearNotificationHistory} hitSlop={8} style={[styles.clearHistory, Platform.OS === "ios" && ambientVisual.clearHistory]}><Text style={[[styles.clearHistoryText, { color: theme.subtle }], Platform.OS === "ios" && ambientVisual.clearHistoryText]}>알림 내역 모두 지우기</Text></Pressable> : null}
     </ScrollView>
   </View>;
@@ -87,6 +100,7 @@ const styles = StyleSheet.create({
   markAllRow: { alignItems: "flex-end", marginTop: spacing.xs }, markAll: { minHeight: 36, paddingHorizontal: spacing.xs, textAlignVertical: "center", fontSize: 13, fontWeight: "700" }, inbox: { gap: spacing.lg }, dateGroup: { gap: spacing.sm }, dateLabel: { fontSize: 13, fontWeight: "700", marginLeft: spacing.xs },
   row: { minHeight: 86, flexDirection: "row", gap: spacing.sm, borderWidth: 1, borderRadius: radius.lg, padding: spacing.md }, iconBox: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center" }, icon: { width: 21, height: 21 }, rowCopy: { flex: 1, minWidth: 0, gap: 2 }, rowMain: { flex: 1, gap: 2, paddingRight: 58 }, titleLine: { flexDirection: "row", alignItems: "flex-start", gap: 7 }, unreadDot: { width: 7, height: 7, borderRadius: radius.pill, marginTop: 6, flexShrink: 0 }, rowTitle: { flex: 1, fontSize: 16, lineHeight: 22, fontWeight: "700" }, rowMeta: { fontSize: 13, lineHeight: 19 }, pastLabel: { fontSize: 12, lineHeight: 17 }, rowActions: { position: "absolute", right: 0, top: 0, alignItems: "flex-end", gap: spacing.xs }, openHint: { minHeight: 28, fontSize: 13, fontWeight: "700", textAlignVertical: "center" }, readAction: { minHeight: 28, fontSize: 12, textAlignVertical: "center" },
   empty: { paddingVertical: spacing.xl, paddingHorizontal: spacing.md, borderTopWidth: 1, borderBottomWidth: 1, gap: spacing.xs }, emptyTitle: { fontSize: 17, fontWeight: "700" }, emptyBody: { fontSize: 13, lineHeight: 19 }, permission: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm }, permissionCopy: { flex: 1 }, permissionTitle: { fontSize: 15, fontWeight: "700" }, permissionBody: { marginTop: 2, fontSize: 12, lineHeight: 17 }, permissionAction: { minHeight: 36, paddingHorizontal: spacing.xs, textAlignVertical: "center", fontSize: 13, fontWeight: "700" },
+  officialAlertRow: { paddingVertical: spacing.xs },
   compactSection: { borderTopWidth: 1, paddingTop: spacing.md, gap: spacing.xs }, compactHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: spacing.sm }, compactTitle: { fontSize: 16 }, compactDetail: { fontSize: 12, fontWeight: "700", textAlign: "right" }, compactRow: { fontSize: 13, lineHeight: 20 }, clearHistory: { alignSelf: "center", minHeight: 36, justifyContent: "center", paddingHorizontal: spacing.sm, marginTop: spacing.sm }, clearHistoryText: { fontSize: 12, textDecorationLine: Platform.OS === "ios" ? "none" : "underline" },
 });
 

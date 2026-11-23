@@ -19,6 +19,22 @@ const busanZones = {
   부산서부: "강서구 사하구 영도구 서구 동구 중구",
 };
 
+const gwangjuZones = {
+  광주동부: "동구 서구 남구 북구",
+  광주서부: "광산구",
+};
+const gwangjuDistricts = new Set(Object.values(gwangjuZones).join(" ").split(" "));
+
+function readGwangjuDistrict([parent, first, second]: string[]): string | undefined {
+  if (!parent) return undefined;
+  const merged = canonicalRegion(parent) === "전남광주";
+  if (parent !== "광주" && parent !== "광주광역시" && !merged) return undefined;
+  // Some geocoders include the former city name after the new upper area.
+  const district = merged && (first === "광주" || first === "광주광역시")
+    ? second : first;
+  return district && gwangjuDistricts.has(district) ? district : undefined;
+}
+
 export const administrativeSuffix = /(?:특별자치도|특별자치시|통합특별시|특별시|광역시|자치도|[도시군구])$/u;
 const provinceAliases: Readonly<Record<string, string>> = {
   충북: "충청북", 충남: "충청남", 전라북: "전북",
@@ -61,6 +77,7 @@ const zones: Readonly<Record<string, Zone>> = {
   ...zonedMembers("서울", seoulZones, /구$/u),
   ...zonedMembers("파주", pajuZones, /[읍면]$/u),
   ...zonedMembers("부산", busanZones, /[구군]$/u),
+  ...zonedMembers("광주", gwangjuZones, /구$/u),
   완도여서도: { parent: "완도", member: ([town, village]) => {
     if (!wandoTownships.has(town)) return "unknown";
     if (town !== "청산면") return "out";
@@ -72,6 +89,10 @@ const zones: Readonly<Record<string, Zone>> = {
 function matchZone(zone: Zone, address: string[]): Scope {
   const [head, second] = address;
   if (!head) return "unknown";
+  if (zone.parent === "광주") {
+    const district = readGwangjuDistrict(address);
+    return district ? zone.member([district]) : "unknown";
+  }
   if (zone.parent === "파주" || zone.parent === "완도") {
     const requiredUpper = zone.parent === "파주" ? ["경기"] : ["전라남", "전남광주"];
     if (canonicalRegion(head) === zone.parent) return zone.member(address.slice(1));
@@ -87,7 +108,8 @@ function resolveZone(label: string, outer?: string): Zone | undefined {
   if (!Object.hasOwn(zones, qualified)) return undefined;
   const zone = zones[qualified];
   if (!outer || outer === zone.parent || (outer === "경기" && zone.parent === "파주")
-    || (["전라남", "전남광주"].includes(outer) && zone.parent === "완도")) return zone;
+    || (["전라남", "전남광주"].includes(outer) && zone.parent === "완도")
+    || (outer === "전남광주" && zone.parent === "광주")) return zone;
   return undefined;
 }
 
@@ -103,6 +125,13 @@ export function readKmaAdministrativeArea(value: string): string | undefined {
     if (result.at(-1) !== token) result.push(token);
   }
   return result.length ? result.join(" ") : undefined;
+}
+
+/** A former-city scope requires exact district evidence, not the combined province alone. */
+export function matchKmaGwangjuScope(label: string, address: string[], child?: string): boolean | undefined {
+  if (canonicalRegion(label) !== "광주" || label === "광주시") return undefined;
+  const district = readGwangjuDistrict(address);
+  return Boolean(district && (!child || district === (child.endsWith("구") ? child : child + "구")));
 }
 
 /** undefined means no special case is defined; false is a conservative non-match. */
