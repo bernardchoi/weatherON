@@ -29,7 +29,7 @@ export type OfficialSpecialAlert = {
   source: "kma";
   active: boolean;
   type?: "heatwave" | "heavy-rain";
-  level?: "advisory" | "warning";
+  level?: "advisory" | "warning" | "critical";
   title?: string;
   reason?: string;
   issuedAt?: string;
@@ -488,10 +488,16 @@ function parseKmaOfficialSpecialAlertRecord(record: Record<string, unknown>): Of
   if (isReleasedOrPreliminaryKmaAlert(commandRaw, haystack)) return null;
 
   const type = resolveKmaSpecialAlertType(typeRaw, haystack);
-  const level = resolveKmaSpecialAlertLevel(levelRaw, haystack);
+  // The public API docs do not specify a numeric code for this tier.
+  // Only trust an explicit heat alert label, never a mention in the body.
+  const criticalHeatLabel = /폭염\s*중대\s*경보/u;
+  const level = type === "heatwave" && (criticalHeatLabel.test(title ?? "")
+    || criticalHeatLabel.test(levelRaw ?? "") || /^중대\s*경보$/u.test(levelRaw ?? ""))
+    ? "critical"
+    : resolveKmaSpecialAlertLevel(levelRaw, haystack);
   if (!type || !level) return null;
 
-  const officialTitle = `${type === "heavy-rain" ? "호우" : "폭염"}${level === "warning" ? "경보" : "주의보"}`;
+  const officialTitle = `${type === "heavy-rain" ? "호우" : "폭염"}${level === "critical" ? "중대경보" : level === "warning" ? "경보" : "주의보"}`;
   const reason = cleanKmaText(contents ?? title ?? [regionName, issuedAt].filter(Boolean).join(" · "));
   return {
     source: "kma",
@@ -551,8 +557,9 @@ function inferKoreanRegionNamesFromCoordinate(location: WeatherLocationPreset): 
 }
 
 function compareOfficialSpecialAlerts(left: OfficialSpecialAlert, right: OfficialSpecialAlert): number {
-  const leftLevel = left.level === "warning" ? 2 : 1;
-  const rightLevel = right.level === "warning" ? 2 : 1;
+  const severityRank = { advisory: 1, warning: 2, critical: 3 };
+  const leftLevel = left.level ? severityRank[left.level] : 0;
+  const rightLevel = right.level ? severityRank[right.level] : 0;
   if (leftLevel !== rightLevel) return rightLevel - leftLevel;
   const leftType = left.type === "heavy-rain" ? 2 : 1;
   const rightType = right.type === "heavy-rain" ? 2 : 1;

@@ -94,9 +94,11 @@ export function normalizeKmaBulletin(
   const alerts: OfficialSpecialAlert[] = [];
   const sections = text.split(/(?:^|\s)[o○●]\s*(?=[가-힣])/u);
   for (const section of sections) {
-    const match = section.trim().match(/^(호우|폭염)\s*(경보|주의보)\s*[:：]\s*([\s\S]+)$/u);
+    const match = section.trim().match(/^(호우|폭염)\s*(중대\s*경보|경보|주의보)\s*[:：]\s*([\s\S]+)$/u);
     if (!match) continue;
-    const [, hazard, severity, description] = match;
+    const [, hazard, rawSeverity, description] = match;
+    const severity = rawSeverity.replace(/\s+/gu, "");
+    if (severity === "중대경보" && hazard !== "폭염") continue;
     // Stop at non-bulletin paragraphs, and allow whitespace in wrapped lists.
     const areas = splitAreas(description.split(/\n\s*\n/u)[0].replace(/\s+/gu, " ").trim().replace(/[.]$/u, ""));
     const area = areas.find(candidate => matchesArea(candidate, location));
@@ -105,7 +107,7 @@ export function normalizeKmaBulletin(
       source: "kma",
       active: true,
       type: hazard === "호우" ? "heavy-rain" : "heatwave",
-      level: severity === "경보" ? "warning" : "advisory",
+      level: severity === "중대경보" ? "critical" : severity === "경보" ? "warning" : "advisory",
       title: `${hazard}${severity}`,
       reason: area,
       regionName: area,

@@ -11,6 +11,9 @@ const korean = /[가-힣]/u;
 const preservedKoreanTargets = new Set(["개인정보 보호책임자: 최대현 · support@weatheron.app"]);
 const overrides = {
   en: {
+    "폭염중대경보": "Extreme heat warning",
+    "중대경보": "Critical warning",
+    "야외 활동을 피하고 실내에서 쉬어요": "Avoid outdoor activity and rest indoors",
     "온비": "ONBY",
     "솔라": "Solar",
     "레인": "Rain",
@@ -178,6 +181,9 @@ const overrides = {
     "저장한 {0}곳 · 눌러서 바꿔보기": "plural:{0} saved location · Tap to change|{0} saved locations · Tap to change",
   },
   ja: {
+    "폭염중대경보": "猛暑重大警報",
+    "중대경보": "重大警報",
+    "야외 활동을 피하고 실내에서 쉬어요": "屋外での活動を避け、室内で休みましょう",
     "온비": "オンビ",
     "솔라": "ソーラー",
     "레인": "レイン",

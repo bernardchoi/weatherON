@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
 
-function load(path, imports = {}) {
+function load(path, imports = {}, source = readFileSync(path, "utf8")) {
   const exports = {};
-  const out = ts.transpileModule(readFileSync(path, "utf8"), {
+  const out = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   new Function("exports", "require", out)(exports, name => {
@@ -48,6 +48,49 @@ assert.equal(alert("고양시", { ...record, t6: "o 호우주의보 : 경기(김
 assert.equal(normalize({ response: { header: { resultCode: "30" } } }, location("고양시"), now).rawStatus, "feed_unavailable");
 assert.equal(alert("고양시", { wrn: "O", lvl: "W", regKo: "고양" }).active, false);
 assert.equal(alert("고양시", { wrn: "H", lvl: "W", regKo: "고양" }).title, "폭염경보");
+// Trimmed archived bulletin sections, not authenticated API payloads.
+// https://www.weatheri.co.kr/special/special01_f.php?go=072810
+// https://www.weatheri.co.kr/special/special01_f.php?go=072816
+const julyLocation = location("전라남도 광양시");
+const july = (...records) => (at) => normalize(payload(...records), julyLocation, Date.parse(at));
+const beforeDowngrade = {
+  tmFc: "202607281000", tmEf: "202607281100", tmSeq: 1,
+  t6: "o 폭염중대경보 : 전라남도(광양)\n o 폭염경보 : 전라남도(담양)",
+};
+const downgraded = {
+  tmFc: "202607281600", tmEf: "202607281600", tmSeq: 2,
+  t6: "o 폭염중대경보 : 경상북도(경산)\n o 폭염경보 : 전라남도(광양)",
+};
+const release = {
+  tmFc: "202607281750", tmEf: "202607281800", tmSeq: 3,
+  t6: "o 폭염중대경보 : 경상북도(경산)",
+};
+const chronological = july(release, downgraded, beforeDowngrade);
+assert.equal(chronological("2026-07-28T10:59:59+09:00").active, false);
+assert.equal(chronological("2026-07-28T11:00:00+09:00").level, "critical");
+assert.equal(chronological("2026-07-28T15:59:59+09:00").title, "폭염중대경보");
+assert.equal(chronological("2026-07-28T16:00:00+09:00").title, "폭염경보");
+assert.equal(chronological("2026-07-28T17:59:59+09:00").level, "warning");
+assert.equal(chronological("2026-07-28T18:00:00+09:00").active, false);
+assert.equal(alert("고양시", { ...record, t6: "o 폭염 중대 경보： 경기(고양)<br>o 호우경보 : 경기도(고양)" }).title, "폭염중대경보");
+assert.equal(alert("고양시", { ...record, t6: "o 호우 중대경보 : 고양" }).active, false);
+assert.equal(alert("고양시", { ...record, t6: "o 폭염중대경보 해제 : 고양" }).active, false);
+assert.equal(alert("고양시", { ...record, t6: "o 특보 없음", t7: "o 폭염중대경보 : 고양" }).active, false);
+assert.equal(alert("고양시", { wrn: "H", lvl: "W", titl: "폭염 중대경보 발표", regKo: "고양" }).level, "critical");
+assert.equal(alert("고양시", { wrn: "H", lvl: "W", titl: "폭염중대경보 해제", regKo: "고양" }).active, false);
+assert.equal(alert("고양시", { wrn: "H", lvl: "W", content: "폭염중대경보 기준 안내", regKo: "고양" }).level, "warning");
+assert.equal(alert("고양시", { wrn: "H", lvl: "4", regKo: "고양" }).active, false, "undocumented codes are not guessed");
+
+const homePath = "apps/mobile/src/screens/HomeScreen.tsx";
+const home = ts.createSourceFile(homePath, readFileSync(homePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const copyFunction = home.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "getHomeSpecialAlertCopy");
+assert.ok(copyFunction);
+const { getHomeSpecialAlertCopy: homeCopy } = load(homePath, {}, "export " + copyFunction.getText(home));
+assert.deepEqual(homeCopy(chronological("2026-07-28T11:00:00+09:00")), {
+  title: "폭염중대경보", body: "야외 활동을 피하고 실내에서 쉬어요",
+});
+assert.equal(homeCopy(chronological("2026-07-28T16:00:00+09:00")).title, "오늘은 더위 조심해요");
+
 const reading = (area) => ({ ...record, t6: "o 호우주의보 : " + area });
 const zoneAlert = (area, locationName, kmaAdministrativeArea) => normalize(
   payload(reading(area)), { ...location(locationName), kmaAdministrativeArea }, now,
@@ -139,4 +182,4 @@ assert.equal(device.status, "granted");
 assert.equal(geocodes, 1);
 assert.equal(device.location.kmaAdministrativeArea, "서울 강동구");
 assert.equal(normalize(payload(reading("서울(서울동남권)")), device.location, now).active, true);
-console.log(`PASS: KMA bulletin, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);
+console.log(`PASS: KMA bulletin, critical heat lifecycle and Home copy, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);

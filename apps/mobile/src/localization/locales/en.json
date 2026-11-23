@@ -2322,5 +2322,8 @@
   "링크를 열지 못했어요": "Couldn’t open the link",
   "일본 기상청에서 확인": "Check Japan Meteorological Agency",
   "일본 특보 확인 불가": "Japan weather alerts unavailable",
-  "특보 원문 보기": "Read the original alert"
+  "특보 원문 보기": "Read the original alert",
+  "야외 활동을 피하고 실내에서 쉬어요": "Avoid outdoor activity and rest indoors",
+  "중대경보": "Critical warning",
+  "폭염중대경보": "Extreme heat warning"
 }

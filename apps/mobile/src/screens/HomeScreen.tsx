@@ -1139,6 +1139,13 @@ function SpecialWeatherAlertCard({
 }
 
 function getHomeSpecialAlertCopy(alert: P0ScreenProps["state"]["officialSpecialAlert"]) {
+  if (alert.type === "heatwave" && alert.level === "critical") {
+    return {
+      title: "폭염중대경보",
+      body: "야외 활동을 피하고 실내에서 쉬어요",
+    };
+  }
+
   const isWarning = alert.level === "warning";
   const reason = alert.reason ?? "";
   const tempMatch = reason.match(/(\d+)℃/u)?.[1];
