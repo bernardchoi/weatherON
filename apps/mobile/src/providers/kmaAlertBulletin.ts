@@ -1,19 +1,10 @@
 import type { OfficialSpecialAlert } from "./weatherProvider";
 import type { WeatherLocationPreset } from "./weatherLocations";
+import { canonicalRegion, matchKmaExcludedZone, matchKmaNamedZone, provinces } from "./kmaAlertZones";
 
 type RecordReader = (record: Record<string, unknown>, keys: string[]) => string | undefined;
 const bulletinKeys = new Set(["t6", "t7", "tmef"]);
-const administrativeSuffix = /(?:특별자치도|특별자치시|특별시|광역시|자치도|[도시군구])$/u;
-const regionName = (value: string) => value.trim().replace(administrativeSuffix, "");
-const provinceAliases: Record<string, string> = { 경기: "경기", 강원: "강원", 충북: "충청북", 충남: "충청남", 전북: "전북", 전라북: "전북", 전남: "전라남", 경북: "경상북", 경남: "경상남" };
-
-const provinces = new Set(["경기", "강원", "충청북", "충청남", "전북", "전라남", "경상북", "경상남", "제주"]);
 const ambiguousCities = new Set(["고성", "광주", "중", "동", "서", "남", "북", "강서"]);
-
-function canonicalRegion(value: string): string {
-  const name = regionName(value);
-  return provinceAliases[name] ?? name;
-}
 
 function parseKst(value?: string): number {
   const parts = value?.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$/u);
@@ -41,27 +32,37 @@ function splitAreas(value: string): string[] {
 }
 
 function matchesArea(area: string, location: WeatherLocationPreset): boolean {
-  // A GPS bounding box or city substring is not proof for an official alert.
-  const address: string[] = location.locationName.match(/[가-힣]+/gu) ?? [];
+  // Prefer administrative data over user-facing place names or POI text.
+  const address: string[] = (location.kmaAdministrativeArea ?? location.locationName).match(/[가-힣]+(?:[0-9]+[가-힣]+)*/gu) ?? [];
   const names = new Set(address.map(canonicalRegion));
   const province = [...names].find(name => provinces.has(name));
   const group = area.match(/^([가-힣]+)\s*(?:\((.*)\))?$/u);
   if (!group) return false;
   const outer = canonicalRegion(group[1]);
   if (!group[2]) {
+    const zone = matchKmaNamedZone(group[1], address);
+    if (zone !== undefined) return zone;
     if (outer === "전국") return true;
     if (outer === "광주" && (province || address.includes("광주시"))) return false;
     return names.has(outer);
   }
   if (provinces.has(outer) && province && outer !== province) return false;
-  // "경기도(고양, 파주)" names cities; "서울(동남권 제외)" needs an
-  // explicit match for the exclusion before we can confidently show an alert.
   const children = splitAreas(group[2]);
   if (!children.length) return false;
-  const exceptions = children.filter(child => /제외/u.test(child) && !child.includes("("));
-  if (exceptions.length) return false;
+  // Recognize only a documented, complete exclusion rule. A partial or
+  // ambiguous address never proves the location lies outside an exclusion.
+  if (children.length === 1) {
+    const exclusion = children[0].match(/^([가-힣\s]+?)\s*제외$/u);
+    if (exclusion) return matchKmaExcludedZone(outer, exclusion[1], address);
+  }
+  if (children.some(child => /제외/u.test(child) && !child.includes("("))) return false;
   return children.some(child => {
-    if (/제외/u.test(child)) return false;
+    if (child.includes("(")) {
+      const nested = child.match(/^(완도(?:군)?)\s*\([가-힣\s]+제외\)$/u);
+      return Boolean(nested && ["전라남", "전남광주"].includes(outer) && matchesArea(child, location));
+    }
+    const zone = matchKmaNamedZone(child, address, outer);
+    if (zone !== undefined) return zone;
     const childName = canonicalRegion(child);
     return /^[가-힣]+$/u.test(child) && names.has(childName)
       && (provinces.has(outer) ? !ambiguousCities.has(childName) || province === outer : names.has(outer));

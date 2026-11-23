@@ -1,4 +1,5 @@
 import "./check-kma-alert-ingestion.mjs";
+import "./check-japan-weather-alerts.mjs";
 import "./check-weather-guidance.mjs";
 import "./check-outfit-cold-forecast.mjs";
 import assert from "node:assert/strict";

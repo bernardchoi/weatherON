@@ -7,6 +7,7 @@ import {
   openMeteoFixture,
   type WeatherSnapshot,
 } from "@weatheron/shared";
+import { japanWeatherAlertStatus, normalizeJapanWeatherAlerts, type JapanWeatherAlertResult } from "./japanWeatherAlerts";
 import { normalizeKmaBulletin } from "./kmaAlertBulletin";
 import { Platform } from "../localization/react-native";
 import { getWeatherRuntimeConfig } from "../config/weatherEnv";
@@ -44,6 +45,7 @@ export type WeatherProviderResult = {
   destination: WeatherSnapshot;
   destinationSnapshots: WeatherSnapshot[];
   officialSpecialAlert: OfficialSpecialAlert;
+  japanWeatherAlerts?: JapanWeatherAlertResult;
   status: WeatherProviderStatus;
   message: string;
   retryable: boolean;
@@ -104,6 +106,10 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
       const pending = new Set(locations.map((location) => location.locationId));
       const failed = new Set<string>();
       let officialSpecialAlert = createInactiveOfficialSpecialAlert();
+      const japanAlertEnabled = ios && (options.currentLocation ?? currentLocation).countryCode === "JP";
+      const japanLocationId = (options.currentLocation ?? currentLocation).locationId;
+      let japanWeatherAlerts = japanAlertEnabled
+        ? japanWeatherAlertStatus(japanLocationId, mode === "ready" ? "checking" : "unavailable") : undefined;
       function result(): WeatherProviderResult {
         const current = snapshots.get(currentLocation.locationId)!;
         const destinationSnapshots = destinationLocations.map((location) => snapshots.get(location.locationId)!);
@@ -111,6 +117,7 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         const status = failed.size ? "error" : pending.size ? "stale" : mode;
         return {
           current, destination: destinationSnapshots[0], destinationSnapshots, officialSpecialAlert,
+          ...(japanWeatherAlerts ? { japanWeatherAlerts } : {}),
           pendingLocationIds: [...pending],
           status, message: getProviderMessage(status, fallbackUsed), retryable: status !== "ready", fallbackUsed,
         };
@@ -145,6 +152,12 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
           pending.delete(location.locationId);
           publish();
         }),
+        ...(japanAlertEnabled && mode === "ready" ? [
+          fetchJapanWeatherAlerts(client, currentLocation, options.language).then((alerts) => {
+            japanWeatherAlerts = alerts;
+            publish();
+          }),
+        ] : []),
         fetchOfficialSpecialAlert(client, currentLocation).then((alert) => {
           officialSpecialAlert = alert;
           publish();
@@ -268,6 +281,21 @@ function shouldRefreshLifestyleIndex(
   if (location.countryCode !== "KR") return false;
   const current = snapshot.current;
   return typeof current.uvIndex !== "number" || typeof current.pm10 !== "number" || typeof current.pm25 !== "number";
+}
+
+async function fetchJapanWeatherAlerts(client: WeatherClient, location: WeatherLocationPreset, language?: string) {
+  if (typeof client.fetchWeatherKitJapanAlerts !== "function") return japanWeatherAlertStatus(location.locationId, "unavailable");
+  try {
+    const payload = await client.fetchWeatherKitJapanAlerts({
+      latitude: location.coordinate.latitude,
+      longitude: location.coordinate.longitude,
+      timezone: location.timezone,
+      language,
+    });
+    return normalizeJapanWeatherAlerts(payload, location.locationId);
+  } catch {
+    return japanWeatherAlertStatus(location.locationId, "unavailable");
+  }
 }
 
 async function fetchOfficialSpecialAlert(client: WeatherClient, location: WeatherLocationPreset): Promise<OfficialSpecialAlert> {

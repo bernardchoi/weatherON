@@ -1,3 +1,4 @@
+import { readKmaAdministrativeArea } from "../providers/kmaAlertZones";
 import { getTravelMinutesForTransport, resolveTravelTiming, resolveLeavingNowTiming, getLeavingNowDescription, type LeavingNowRouteState } from "../utils/travelEstimate";
 // useWeatherOnAppState에서 사용하는 순수 헬퍼 모음. React 상태에 의존하지 않는다.
 import { placeSearchFixtures, type PlaceSearchResult } from "@weatheron/shared";
@@ -155,7 +156,11 @@ export function getAlertSettingsFocusFromRoute(route: P0RouteId): AlertSettingsF
 }
 
 export function createWeatherLocationFromPlace(place: PlaceSearchResult): WeatherLocationPreset {
-  if (place.countryCode === "KR") return { ...createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id), countryIsoCode: place.countryIsoCode };
+  if (place.countryCode === "KR") return {
+    ...createKmaWeatherLocationFromCoordinate(place.coordinate, place.name, place.id),
+    countryIsoCode: place.countryIsoCode,
+    kmaAdministrativeArea: readKmaAdministrativeArea(place.address),
+  };
   return {
     locationId: place.id,
     locationName: place.name,

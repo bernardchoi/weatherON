@@ -187,6 +187,7 @@ export function buildDemoStateFromWeatherResult(
     umbrella,
     notifications: [...notifications, ...destinationNotifications],
     officialSpecialAlert: weatherProviderResult.officialSpecialAlert,
+    japanWeatherAlerts: weatherProviderResult.japanWeatherAlerts,
     destinationCare,
     destinationWeatherById,
     weatherProvider: {

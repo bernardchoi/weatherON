@@ -141,7 +141,7 @@ export async function readPersistedWeatherProviderResult(
 
 export function savePersistedWeatherProviderResult(result: WeatherProviderResult) {
   if (![result.current, ...result.destinationSnapshots].some((snapshot) => snapshot.source !== "fallback")) return;
-  const { pendingLocationIds: _pending, ...snapshotResult } = result;
+  const { pendingLocationIds: _pending, japanWeatherAlerts: _transientAlerts, ...snapshotResult } = result;
   void writeAppValue(weatherProviderResultStorageKey, snapshotResult);
 }
 

@@ -41,6 +41,7 @@ export type WeatherClient = {
   fetchKmaSpecialAlert?: () => Promise<unknown>;
   fetchOpenMeteoForecast: (params: FetchOpenMeteoForecastParams) => Promise<OpenMeteoResponse>;
   fetchLifestyleIndex?: (params: FetchLifestyleIndexParams) => Promise<LifestyleIndexResponse>;
+  fetchWeatherKitJapanAlerts?: (params: FetchWeatherKitForecastParams) => Promise<unknown>;
   fetchWeatherKitForecast?: (params: FetchWeatherKitForecastParams) => Promise<WeatherKitResponse>;
 };
 
@@ -242,6 +243,17 @@ export function createProxyWeatherClient(options: ProxyWeatherClientOptions): We
       const payload = await fetchJson<LifestyleIndexResponse>(url, timeoutMs, options.fetchImpl, headers);
       if (!payload.current) throw new Error("Lifestyle index response is empty");
       return payload;
+    },
+    async fetchWeatherKitJapanAlerts(params) {
+      if (!isValidIanaTimeZone(params.timezone)) throw new Error("WeatherKit request requires a valid IANA timezone");
+      const url = new URL("/weather/weatherkit", normalizeBaseUrl(options.weatherApiBaseUrl));
+      url.searchParams.set("latitude", String(params.latitude));
+      url.searchParams.set("longitude", String(params.longitude));
+      url.searchParams.set("timezone", params.timezone);
+      url.searchParams.set("language", params.language ?? "ja");
+      url.searchParams.set("countryCode", "JP");
+      url.searchParams.set("dataSets", "weatherAlerts");
+      return fetchJson<unknown>(url, timeoutMs, options.fetchImpl, headers);
     },
     async fetchWeatherKitForecast(params) {
       if (!isValidIanaTimeZone(params.timezone)) {

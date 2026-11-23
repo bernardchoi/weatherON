@@ -1,3 +1,4 @@
+import { JapanWeatherAlertCard } from "../components/JapanWeatherAlertCard";
 import { HomeWeatherMascot } from "../components/HomeWeatherMascot";
 import { resolveMascotClothing, withMascotClothing } from "../utils/mascotOutfit";
 import { homeMascotWind, resolveHomeMascotState } from "../utils/homeMascotState";
@@ -394,6 +395,10 @@ export function HomeScreen({
               theme={theme}
               onPress={() => onNavigate("H3")}
             />
+          ) : null}
+          {Platform.OS === "ios" && placeSearchOrigin?.countryCode === "JP" && state.japanWeatherAlerts
+            && state.japanWeatherAlerts.locationId === placeSearchOrigin.locationId ? (
+            <JapanWeatherAlertCard key={placeSearchOrigin.locationId} result={state.japanWeatherAlerts} now={forecastNow} theme={theme} />
           ) : null}
         </View>
 

@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { canonicalRegion, readKmaAdministrativeArea } from "./kmaAlertZones";
 import { resolveTimezoneFromCoordinate } from "./placeSearchClient";
 import { createKmaWeatherLocationFromCoordinate, type KmaWeatherLocationPreset } from "./weatherLocations";
 
@@ -65,6 +66,7 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
         ? await resolveTimezoneFromCoordinate(coordinate)
         : "Asia/Seoul";
     if (!timezone) throw new Error("Current location timezone could not be resolved");
+    const kmaAdministrativeArea = countryCode === "KR" ? getKmaDeviceAdministrativeArea(address) : undefined;
     return {
       status: "granted",
       message: "현재 위치 반영",
@@ -77,7 +79,7 @@ async function resolveDeviceWeatherLocation(shouldRequestPermission: boolean): P
               countryCode,
               timezone,
             }
-          : kmaLocation,
+          : kmaAdministrativeArea ? { ...kmaLocation, kmaAdministrativeArea } : kmaLocation,
     };
   } catch {
     return {
@@ -121,6 +123,25 @@ async function resolveDeviceAddress(coordinate: { latitude: number; longitude: n
   } catch {
     return null;
   }
+}
+
+function getKmaDeviceAdministrativeArea(address: Location.LocationGeocodedAddress | null): string | undefined {
+  if (!address) return undefined;
+  // Use the address already returned with the weather location, not another lookup.
+  const components = [address.region, address.city, address.subregion, address.district]
+    .filter((part): part is string => Boolean(part?.trim()));
+  const unique = [...new Map(components.map(part => [canonicalRegion(part), part])).values()];
+  const structured = readKmaAdministrativeArea(unique.join(" "));
+  const formatted = readKmaAdministrativeArea(address.formattedAddress ?? "");
+  if (!structured) return formatted;
+  if (!formatted) return structured;
+  const structuredUnits = structured.split(" ");
+  const formattedUnits = formatted.split(" ");
+  // A consistent formatted path can provide an additional village; do not
+  // replace nonmatching structured districts with unrelated free text.
+  return formattedUnits.length > structuredUnits.length
+    && structuredUnits.every((part, index) => canonicalRegion(part) === canonicalRegion(formattedUnits[index]))
+    ? formatted : structured;
 }
 
 function formatDeviceLocationName(address?: Location.LocationGeocodedAddress | null) {

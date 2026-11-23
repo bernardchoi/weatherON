@@ -27,7 +27,9 @@ const location = (id, latitude) => ({ locationId: id, locationName: id, countryC
 const home = location("home", 35), away = location("away", 36), other = location("other", 37);
 const now = Date.now();
 const payload = (temperature, time = now) => ({ currentWeather: { asOf: new Date(time).toISOString(), temperature, conditionCode: "Clear", humidity: 0.5 } });
+const japanAlertBindings = load("apps/mobile/src/providers/japanWeatherAlerts.ts", ["japanWeatherAlertStatus", "normalizeJapanWeatherAlerts"]);
 const weatherBindings = {
+  ...japanAlertBindings,
   Platform: { OS: "ios" }, getWeatherRuntimeConfig: () => ({ clientMode: "proxy" }),
   runtimeWeatherClient: {}, fixtureWeatherClient: {},
   defaultSeoulWeatherLocation: home, seongsuWeatherLocation: home,

@@ -978,7 +978,8 @@ export function useWeatherOnAppState() {
     const applyResult = (result: WeatherProviderResult) => {
       if (active) {
         const persistedWeatherResult = persistedWeatherProviderResultRef.current;
-        const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult) ? persistedWeatherResult : result;
+        const nextResult = shouldKeepPersistedWeatherResult(result, persistedWeatherResult)
+          ? { ...persistedWeatherResult, japanWeatherAlerts: result.japanWeatherAlerts } : result;
         weatherLoadedFromNetworkRef.current = true;
         currentWeatherSnapshotRef.current = nextResult.current;
         previousWeatherRequestRef.current = {

@@ -53,7 +53,11 @@ assert.equal(openMeteo.normalizeOpenMeteoWeather({ current: { temperature_2m: 7 
 assert.equal(openMeteo.normalizeOpenMeteoWeather({ current: { weather_code: 96, temperature_2m: 7 } }, { locationId: "test", locationName: "test", countryCode: "GLOBAL", timezone: "UTC" }).current.condition, "storm", "Android keeps the prior Open-Meteo result");
 
 const androidLocation = { locationId: "legacy-android", locationName: "Legacy Android", countryCode: "GLOBAL", timezone: "America/Los_Angeles", coordinate: { latitude: 37, longitude: -122 } };
+const japanAlerts = load("apps/mobile/src/providers/japanWeatherAlerts.ts");
+const zones = load("apps/mobile/src/providers/kmaAlertZones.ts");
+const bulletin = load("apps/mobile/src/providers/kmaAlertBulletin.ts", { "./kmaAlertZones": zones });
 const weatherProvider = load("apps/mobile/src/providers/weatherProvider.ts", {
+  "./japanWeatherAlerts": japanAlerts, "./kmaAlertBulletin": bulletin,
   "@weatheron/shared": { normalizeKmaWeather: () => { throw new Error("KMA should not run"); }, normalizeOpenMeteoWeather: openMeteo.normalizeOpenMeteoWeather, normalizeWeatherKitWeather: weatherKit.normalizeWeatherKitWeather, openMeteoFixture: { current: { weather_code: 0, temperature_2m: 0 } }, applyLifestyleIndex: (snapshot) => snapshot, isValidIanaTimeZone: () => true },
   "../localization/react-native": { Platform: { OS: "android" } },
   "../config/weatherEnv": { getWeatherRuntimeConfig: () => ({ clientMode: "fixture" }) },
@@ -74,7 +78,7 @@ assert.equal(androidResult.current.daily[0].condition, "storm");
 const androidPersistence = load("apps/mobile/src/state/persistedAppState.ts", {
   "@weatheron/shared": { presetWardrobe: [] },
   "../localization/react-native": { Platform: { OS: "android" } },
-  "../providers/appStorage": {}, "../utils/wardrobePhotoUri": {}, "../providers/weatherProvider": {},
+  "../providers/appStorage": {}, "../utils/wardrobePhotoUri": {}, "../utils/savedOutfit": {}, "../providers/weatherProvider": {},
   "../providers/weatherLocations": {}, "../utils/destination-visual-resolver": {}, "./appStateHelpers": {}, "./appStateTypes": {},
 });
 const stagedSnapshot = {

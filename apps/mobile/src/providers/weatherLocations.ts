@@ -5,6 +5,8 @@ export type WeatherLocationPreset = {
   locationName: string;
   countryCode: CountryCode;
   countryIsoCode?: string;
+  /** Optional on-device administrative path, without street/house details. */
+  kmaAdministrativeArea?: string;
   coordinate: GeoCoordinate;
   timezone: string;
 };
@@ -19,6 +21,7 @@ export type KmaWeatherLocationPreset = WeatherLocationPreset & {
 export const seongsuWeatherLocation: KmaWeatherLocationPreset = withKmaGrid({
   locationId: "kr-seoul-seongsu",
   locationName: "서울 성수동",
+  kmaAdministrativeArea: "서울특별시 성동구 성수동",
   countryCode: "KR",
   coordinate: {
     latitude: 37.5446,

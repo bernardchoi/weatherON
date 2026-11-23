@@ -13,9 +13,11 @@ function load(path, imports = {}) {
   });
   return exports;
 }
-const bulletin = load("apps/mobile/src/providers/kmaAlertBulletin.ts");
+const japanAlerts = load("apps/mobile/src/providers/japanWeatherAlerts.ts");
+const zones = load("apps/mobile/src/providers/kmaAlertZones.ts");
+const bulletin = load("apps/mobile/src/providers/kmaAlertBulletin.ts", { "./kmaAlertZones": zones });
 const { normalizeKmaOfficialSpecialAlert: normalize } = load("apps/mobile/src/providers/weatherProvider.ts", {
-  "@weatheron/shared": {}, "./kmaAlertBulletin": bulletin, "../localization/react-native": {}, "../config/weatherEnv": {},
+  "@weatheron/shared": {}, "./japanWeatherAlerts": japanAlerts, "./kmaAlertBulletin": bulletin, "../localization/react-native": {}, "../config/weatherEnv": {},
   "./weatherClient": {}, "./weatherLocations": {},
 });
 const location = (locationName) => ({ locationName, countryCode: "KR", coordinate: { latitude: 37.6, longitude: 127.1 } });
@@ -46,4 +48,95 @@ assert.equal(alert("고양시", { ...record, t6: "o 호우주의보 : 경기(김
 assert.equal(normalize({ response: { header: { resultCode: "30" } } }, location("고양시"), now).rawStatus, "feed_unavailable");
 assert.equal(alert("고양시", { wrn: "O", lvl: "W", regKo: "고양" }).active, false);
 assert.equal(alert("고양시", { wrn: "H", lvl: "W", regKo: "고양" }).title, "폭염경보");
-console.log("PASS: KMA ingestion, effective time, snapshot replacement, locally scoped regions, provisional exclusion and structured type codes.");
+const reading = (area) => ({ ...record, t6: "o 호우주의보 : " + area });
+const zoneAlert = (area, locationName, kmaAdministrativeArea) => normalize(
+  payload(reading(area)), { ...location(locationName), kmaAdministrativeArea }, now,
+);
+const cases = [
+  ["서울(서울동남권)", "서울특별시 강동구 천호동", true],
+  ["서울(동남권)", "서울 송파구 잠실동", true],
+  ["서울동남권", "서울특별시 강동구 천호동", true],
+  ["서울(서울동남권)", "서울특별시 마포구 공덕동", false],
+  ["서울(서울동남권)", "서울특별시", false],
+  ["경기도(서울동남권)", "서울특별시 강동구 천호동", false],
+  ["서울동북권", "서울특별시 성동구 성수동", true],
+  ["서울서남권", "부산광역시 강서구", false],
+  ["서울서북권", "서울 중구 명동", true],
+  ["서울(동남권 제외)", "서울특별시 마포구 공덕동", true],
+  ["서울(동남권 제외)", "서울특별시 강동구 천호동", false],
+  ["경기도(파주동북부)", "경기도 파주시 문산읍", true],
+  ["경기도(파주동북부)", "경기 파주시 조리읍", false],
+  ["파주동북부", "파주시 법원읍", true],
+  ["파주(동북부)", "파주시 법원읍", false], // unpublished label, never guess
+  ["경기도(파주동북부, 고양)", "고양시 삼송동", true],
+  ["파주동북부", "경기도 파주시", false],
+  ["파주동북부", "문산읍", false],
+  ["파주동북부", "경기도 양주시 문산읍", false],
+  ["파주서북부", "경기도 파주시 진동면", true],
+  ["파주남부", "경기도 파주시 광탄면", true],
+  ["부산(부산동부 제외)", "부산광역시 연제구 거제동", true],
+  ["부산(부산동부 제외)", "부산광역시 해운대구 우동", false],
+  ["부산(부산동부 제외)", "부산광역시", false],
+  ["부산(미확인구역 제외)", "부산 연제구", false],
+  ["부산(부산동부 제외, 미확인 제외)", "부산 연제구", false],
+  ["부산(부산중부)", "부산광역시 연제구", true],
+  ["부산(부산중부)", "광주광역시 북구", false],
+  ["완도(여서도 제외)", "전라남도 완도군 완도읍", true],
+  ["전라남도(완도(여서도 제외))", "전라남도 완도군 완도읍", true],
+  ["전라남도(완도군(여서도 제외))", "전남광주통합특별시 완도군 신지면", true],
+  ["완도군(여서도 제외)", "전라남도 완도군 청산면 여서리", false],
+  ["완도군(여서도 제외)", "전라남도 완도군 청산면 도청리", true],
+  ["완도군(여서도 제외)", "전라남도 완도군 청산면", false],
+  ["완도군(여서도 제외)", "전라남도 완도군", false],
+  ["완도여서도", "전라남도 완도군 청산면 여서리", true],
+  ["완도여서도", "전라남도 완도군 완도읍", false],
+  ["완도", "전라남도 완도군 완도읍", true],
+  ["전라남도(완도(여서도 제외), 광양)", "전라남도 광양시", true],
+];
+for (const [area, name, expected] of cases) {
+  assert.equal(zoneAlert(area, name).active, expected, area + " / " + name);
+}
+assert.equal(normalize(payload({ ...record, t6: "o 폭염주의보 : 부산(부산동부 제외)" }), location("부산 연제구"), now).type, "heatwave");
+assert.equal(zoneAlert("서울동남권", "카페", zones.readKmaAdministrativeArea("대한민국 서울특별시 강동구 천호대로 100")).active, true);
+assert.equal(zoneAlert("서울동남권", "서울 강동구 전시장", "서울특별시 마포구").active, false);
+assert.equal(zones.readKmaAdministrativeArea("서울특별시 마포구 공덕동 공덕로 123-4"), "서울특별시 마포구 공덕동");
+assert.equal(zones.readKmaAdministrativeArea("부산광역시 연제구 카페 해운대구"), "부산광역시 연제구");
+assert.equal(zones.readKmaAdministrativeArea("카페 서울특별시 마포구"), undefined);
+
+const locationProvider = load("apps/mobile/src/providers/weatherLocations.ts", {
+  "@weatheron/shared": { convertWgs84ToKmaGrid: () => ({ nx: 60, ny: 127 }) },
+});
+const { createWeatherLocationFromPlace } = load("apps/mobile/src/state/appStateHelpers.ts", {
+  "@weatheron/shared": {}, "../utils/travelEstimate": {}, "../navigation/routes": {},
+  "../navigation/routeLabels": {}, "../utils/zonedDateTime": {},
+  "../providers/weatherLocations": locationProvider, "../providers/kmaAlertZones": zones,
+});
+const place = createWeatherLocationFromPlace({
+  id: "test", coordinate: location("").coordinate, countryCode: "KR",
+  name: "아무 이름", address: "경기도 파주시 문산읍 길 10",
+});
+assert.equal(place.locationName, "아무 이름");
+assert.equal(place.kmaAdministrativeArea, "경기도 파주시 문산읍");
+assert.equal(normalize(payload(reading("경기도(파주동북부)")), place, now).active, true);
+
+let geocodes = 0;
+const { requestDeviceWeatherLocation } = load("apps/mobile/src/providers/deviceLocation.ts", {
+  "expo-location": {
+    hasServicesEnabledAsync: async () => true,
+    requestForegroundPermissionsAsync: async () => ({ granted: true }),
+    getCurrentPositionAsync: async () => ({ coords: location("").coordinate }),
+    Accuracy: { Balanced: 3 },
+    reverseGeocodeAsync: async () => {
+      geocodes++;
+      return [{ region: "서울특별시", city: "서울", district: "강동구",
+        name: "아무 건물", street: "천호대로", isoCountryCode: "KR" }];
+    },
+  },
+  "./placeSearchClient": {}, "./weatherLocations": locationProvider, "./kmaAlertZones": zones,
+});
+const device = await requestDeviceWeatherLocation();
+assert.equal(device.status, "granted");
+assert.equal(geocodes, 1);
+assert.equal(device.location.kmaAdministrativeArea, "서울 강동구");
+assert.equal(normalize(payload(reading("서울(서울동남권)")), device.location, now).active, true);
+console.log(`PASS: KMA bulletin, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);

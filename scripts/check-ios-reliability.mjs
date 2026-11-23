@@ -241,7 +241,9 @@ const location = (id, latitude) => ({ locationId: id, locationName: id, countryC
 const home = location("home", 35), away = location("away", 36), other = location("other", 37);
 const now = Date.now();
 const payload = (temperature, time = now) => ({ currentWeather: { asOf: new Date(time).toISOString(), temperature, conditionCode: "Clear", humidity: 0.5 } });
+const japanAlertBindings = load("apps/mobile/src/providers/japanWeatherAlerts.ts", ["japanWeatherAlertStatus", "normalizeJapanWeatherAlerts"]);
 const weatherBindings = {
+  ...japanAlertBindings,
   Platform: { OS: "ios" }, getWeatherRuntimeConfig: () => ({ clientMode: "proxy" }),
   runtimeWeatherClient: {}, fixtureWeatherClient: {},
   defaultSeoulWeatherLocation: home, seongsuWeatherLocation: home,
@@ -300,7 +302,7 @@ oldJob.resolve(payload(1, now - 10_000)); await oldRequest;
 assert.equal((await racingWeather.getSnapshots("error", options)).current.current.tempC, 30, "late older observation cannot poison cache");
 
 const persistedApi = load("apps/mobile/src/state/persistedAppState.ts", ["shouldKeepPersistedWeatherResult", "savePersistedWeatherProviderResult", "readPersistedWeatherProviderResult"], {
-  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.deepEqual(value, Object.fromEntries(Object.entries(partial).filter(([key]) => key !== "pendingLocationIds"))); }, weatherProviderResultStorageKey: "weather",
+  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.deepEqual(value, Object.fromEntries(Object.entries(partial).filter(([key]) => !["pendingLocationIds", "japanWeatherAlerts"].includes(key)))); }, weatherProviderResultStorageKey: "weather",
 });
 assert.equal(persistedApi.shouldKeepPersistedWeatherResult(partial, { ...partial, current: old }), false);
 persistedApi.savePersistedWeatherProviderResult(partial);
