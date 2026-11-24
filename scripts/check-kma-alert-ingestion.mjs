@@ -105,6 +105,71 @@ const structuredBoth = normalizeAll(payload(
 ), location("고양시"), now);
 assert.deepEqual(structuredBoth.officialSpecialAlerts.map(a => a.title), ["호우경보", "폭염경보"]);
 
+const makeSnapshot = (_payload, input) => ({
+  ...input, source: "weatherkit", observedAt: new Date().toISOString(), current: {}, hourly: [], daily: [],
+});
+const { createWeatherProvider, getKmaAlertPresentation } = load("apps/mobile/src/providers/weatherProvider.ts", {
+  "@weatheron/shared": { isValidIanaTimeZone: () => true, normalizeWeatherKitWeather: makeSnapshot, normalizeOpenMeteoWeather: makeSnapshot },
+  "./japanWeatherAlerts": japanAlerts, "./kmaAlertBulletin": bulletin, "../localization/react-native": { Platform: { OS: "ios" } },
+  "../config/weatherEnv": {}, "./weatherClient": {}, "./weatherLocations": {},
+});
+const kmaLocation = { ...location("고양시 삼송동"), locationId: "goyang", timezone: "Asia/Seoul" };
+const otherKmaLocation = { ...kmaLocation, locationId: "seoul", locationName: "서울" };
+const activePayload = payload(
+  { wrn: "H", lvl: "W", regKo: "고양" },
+  { wrn: "R", lvl: "W", regKo: "고양" },
+);
+async function kmaRefresh(settle) {
+  let resolve, reject, forecastPublished;
+  const alertResponse = new Promise((res, rej) => { resolve = res; reject = rej; });
+  const firstUpdate = new Promise(res => { forecastPublished = res; });
+  let calls = 0;
+  const provider = createWeatherProvider({
+    fetchWeatherKitForecast: async () => ({}),
+    fetchKmaSpecialAlert: () => {
+      calls += 1;
+      return calls === 1 ? Promise.resolve(activePayload) : alertResponse;
+    },
+  }, { platform: "ios" });
+  const options = { currentLocation: kmaLocation, destinationLocation: kmaLocation };
+  const previous = await provider.getSnapshots("ready", options);
+  assert.equal(previous.kmaAlertFeed.status, "active");
+  assert.equal(previous.officialSpecialAlerts.length, 2);
+  const pending = provider.getSnapshots("ready", { ...options, onUpdate: forecastPublished });
+  const first = await firstUpdate;
+  assert.equal(first.status, "ready", "forecast publishes without waiting for KMA");
+  assert.equal(first.kmaAlertFeed?.status, "checking");
+  assert.deepEqual(first.officialSpecialAlerts, []);
+  assert.equal(getKmaAlertPresentation(previous, otherKmaLocation, "checking").kmaAlertFeed.locationId, "seoul");
+  assert.deepEqual(getKmaAlertPresentation(previous, otherKmaLocation, "checking").officialSpecialAlerts, []);
+  assert.equal(getKmaAlertPresentation(previous, { ...otherKmaLocation, countryCode: "JP" }, "checking").kmaAlertFeed, undefined);
+  settle(resolve, reject);
+  const result = await pending;
+  assert.equal(calls, 2, "one KMA request per eligible refresh");
+  assert.equal(result.status, "ready");
+  return result;
+}
+const restored = await kmaRefresh(resolve => resolve(activePayload));
+assert.equal(restored.kmaAlertFeed.status, "active");
+assert.equal(restored.officialSpecialAlerts.length, 2);
+for (const confirmEmpty of [payload(), { response: { header: { resultCode: "03" } } }]) {
+  const cleared = await kmaRefresh(resolve => resolve(confirmEmpty));
+  assert.equal(cleared.kmaAlertFeed.status, "none");
+  assert.deepEqual(cleared.officialSpecialAlerts, []);
+}
+for (const unavailable of [
+  (_resolve, reject) => reject(Error("network failed")),
+  resolve => resolve({ response: { header: { resultCode: "30" } } }),
+  resolve => resolve({ response: { header: { resultCode: "00" }, body: { changedShape: true } } }),
+]) {
+  const failed = await kmaRefresh(unavailable);
+  assert.equal(failed.kmaAlertFeed.status, "unavailable");
+  assert.deepEqual(failed.officialSpecialAlerts, []);
+}
+const noKmaClient = createWeatherProvider({ fetchWeatherKitForecast: async () => ({}) }, { platform: "ios" });
+assert.equal((await noKmaClient.getSnapshots("ready", { currentLocation: kmaLocation, destinationLocation: kmaLocation })).kmaAlertFeed.status, "unavailable");
+assert.equal((await noKmaClient.getSnapshots("error", { currentLocation: kmaLocation, destinationLocation: kmaLocation })).kmaAlertFeed.status, "unavailable");
+
 const homePath = "apps/mobile/src/screens/HomeScreen.tsx";
 const home = ts.createSourceFile(homePath, readFileSync(homePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const copyFunction = home.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "getHomeSpecialAlertCopy");
@@ -122,6 +187,7 @@ const uiGlobals = `
 const styles = {}, ambientVisual = {}, pageStyles = {}, screenIcons = {}, uiIconAssets = {};
 const Platform = { OS: "ios" };
 const View = "View", Text = "Text", ScrollView = "ScrollView", Pressable = "Pressable", Image = "Image";
+const Linking = { openURL: async () => {} };
 const FeedbackPressable = "FeedbackPressable", CompactSection = "CompactSection", BackButton = "BackButton";
 const useAppTheme = () => ({});
 const useResponsiveLayout = () => ({});
@@ -157,7 +223,7 @@ assert.match(readFileSync(homePath, "utf8"), /<SpecialWeatherAlertCard[\s\S]*?on
 const inboxPath = "apps/mobile/src/screens/NotificationCenterScreen.tsx";
 const inboxSource = ts.createSourceFile(inboxPath, readFileSync(inboxPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const renderInbox = load(inboxPath, jsxRuntime, uiGlobals + getFunction(inboxSource, "NotificationCenterScreen")).NotificationCenterScreen;
-const renderSections = (alerts, notifications = []) => allChildren(renderInbox({ state: { officialSpecialAlerts: alerts, notifications },
+const renderSections = (alerts, notifications = [], status) => allChildren(renderInbox({ state: { officialSpecialAlerts: alerts, notifications, kmaAlertFeed: status ? { status } : undefined },
   savedDestinations: [], readNotificationIds: [], notificationHistory: [], permissionReady: true, smartCareEnabled: false }))
   .filter(node => node.type === "CompactSection");
 const mixedSection = renderSections(both.officialSpecialAlerts)[0];
@@ -167,6 +233,19 @@ assert.deepEqual(allChildren(mixedSection).filter(node => node.type === "Text")
 assert.equal(renderSections([both.officialSpecialAlert]).length, 1);
 assert.deepEqual(renderSections([]), []);
 assert.equal(renderSections([], [{ active: true, reason: "기존 날씨 안내" }])[0].title, "지금 확인할 날씨");
+
+for (const [status, copy] of [
+  ["checking", "기상청 특보를 확인하고 있어요."],
+  ["unavailable", "기상청 특보를 확인하지 못했어요."],
+  ["none", "표시할 호우·폭염 특보가 없어요."],
+]) {
+  const [section, ordinary] = renderSections([], [{ active: true, reason: "기존 날씨 안내" }], status);
+  assert.equal(section.title, "현재 기상 특보");
+  assert.equal(ordinary.title, "지금 확인할 날씨");
+  assert.ok(allChildren(section).some(node => node.children === copy));
+  assert.equal(allChildren(section).some(node => node.accessibilityRole === "link"), status === "unavailable");
+}
+assert.match(readFileSync(inboxPath, "utf8"), /https:\/\/www\.weather\.go\.kr\/w\/special-report\/overall\.do/u);
 
 const reading = (area) => ({ ...record, t6: "o 호우주의보 : " + area });
 const zoneAlert = (area, locationName, kmaAdministrativeArea) => normalize(
@@ -294,4 +373,4 @@ assert.equal(device.status, "granted");
 assert.equal(geocodes, 1);
 assert.equal(device.location.kmaAdministrativeArea, "서울 강동구");
 assert.equal(normalize(payload(reading("서울(서울동남권)")), device.location, now).active, true);
-console.log(`PASS: KMA bulletin, concurrent hazards, critical heat lifecycle and Home copy, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);
+console.log(`PASS: KMA bulletin, concurrent hazards, critical heat lifecycle, availability and Home/inbox copy, ${cases.length} named/excluded scopes and existing GPS/search address paths.`);

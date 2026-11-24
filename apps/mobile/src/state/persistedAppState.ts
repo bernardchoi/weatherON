@@ -144,6 +144,7 @@ export function savePersistedWeatherProviderResult(result: WeatherProviderResult
   const {
     pendingLocationIds: _pending,
     japanWeatherAlerts: _transientJapanAlerts,
+    kmaAlertFeed: _transientKmaAlertFeed,
     officialSpecialAlert: _primaryKmaAlert,
     officialSpecialAlerts: _transientKmaAlerts,
     ...snapshotResult

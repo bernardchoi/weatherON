@@ -188,6 +188,7 @@ export function buildDemoStateFromWeatherResult(
     notifications: [...notifications, ...destinationNotifications],
     officialSpecialAlert: weatherProviderResult.officialSpecialAlert,
     officialSpecialAlerts: weatherProviderResult.officialSpecialAlerts,
+    kmaAlertFeed: weatherProviderResult.kmaAlertFeed,
     japanWeatherAlerts: weatherProviderResult.japanWeatherAlerts,
     destinationCare,
     destinationWeatherById,

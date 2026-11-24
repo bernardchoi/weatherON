@@ -1,6 +1,6 @@
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import React, { useMemo } from "react";
-import { Platform, Image, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
+import { Platform, Image, Linking, LocalizedView, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { uiIconAssets } from "../assets";
 import { BackButton } from "../components/BackButton";
 import type { P0RouteId } from "../navigation/routes";
@@ -29,6 +29,7 @@ export function NotificationCenterScreen({
     { reducedInterruptions: alertPreferences.quietHours },
   ) : [];
   const officialAlerts = state.officialSpecialAlerts;
+  const kmaStatus = state.kmaAlertFeed?.status;
   const conditions = state.notifications.filter((item) => item.active && !item.scheduledAt);
 
   return <View style={[styles.shell, { backgroundColor: Platform.OS === "ios" ? "transparent" : theme.background }]}>
@@ -49,6 +50,21 @@ export function NotificationCenterScreen({
               ) : null}
             </View>
           ))}
+        </CompactSection>
+      ) : kmaStatus === "checking" || kmaStatus === "unavailable" || kmaStatus === "none" ? (
+        <CompactSection theme={theme} title="현재 기상 특보">
+          <Text style={[styles.compactRow, { color: theme.muted }]} accessibilityLiveRegion="polite">
+            {kmaStatus === "checking" ? translateText("기상청 특보를 확인하고 있어요.")
+              : kmaStatus === "unavailable" ? translateText("기상청 특보를 확인하지 못했어요.")
+                : translateText("표시할 호우·폭염 특보가 없어요.")}
+          </Text>
+          {kmaStatus === "unavailable" ? (
+            <Pressable accessibilityRole="link" onPress={() => {
+              void Linking.openURL("https://www.weather.go.kr/w/special-report/overall.do").catch(() => {});
+            }} hitSlop={8}>
+              <Text style={[styles.compactRow, { color: theme.sky }]}>{translateText("기상청 특보 보기")}</Text>
+            </Pressable>
+          ) : null}
         </CompactSection>
       ) : null}
       {!permissionReady ? <PermissionOff theme={theme} onPress={() => onNavigate("M2")} /> : null}

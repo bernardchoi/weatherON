@@ -43,7 +43,11 @@ type OfficialSpecialAlertResult = {
   officialSpecialAlerts: OfficialSpecialAlert[];
 };
 
-export type WeatherProviderResult = OfficialSpecialAlertResult & {
+export type KmaAlertStatus = "checking" | "active" | "none" | "unavailable";
+type KmaAlertFeed = { locationId: string; status: KmaAlertStatus };
+type KmaAlertPresentation = OfficialSpecialAlertResult & { kmaAlertFeed?: KmaAlertFeed };
+
+export type WeatherProviderResult = KmaAlertPresentation & {
   /** Transient per-location work; never interpreted as data freshness. */
   pendingLocationIds?: string[];
   current: WeatherSnapshot;
@@ -110,6 +114,11 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
       const pending = new Set(locations.map((location) => location.locationId));
       const failed = new Set<string>();
       let kmaAlerts = selectOfficialSpecialAlerts([]);
+      const checkKma = !fallback && currentLocation.countryCode === "KR" && typeof client.fetchKmaSpecialAlert === "function";
+      const canFetch = mode !== "error" && !(stale && locations.every((location) => cache.has(location.locationId)));
+      let kmaAlertFeed: KmaAlertFeed | undefined = !fallback && currentLocation.countryCode === "KR"
+        ? { locationId: currentLocation.locationId, status: checkKma && canFetch ? "checking" : "unavailable" }
+        : undefined;
       const japanAlertEnabled = ios && (options.currentLocation ?? currentLocation).countryCode === "JP";
       const japanLocationId = (options.currentLocation ?? currentLocation).locationId;
       let japanWeatherAlerts = japanAlertEnabled
@@ -122,11 +131,12 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
         return {
           current, destination: destinationSnapshots[0], destinationSnapshots, ...kmaAlerts,
           ...(japanWeatherAlerts ? { japanWeatherAlerts } : {}),
+          ...(kmaAlertFeed ? { kmaAlertFeed } : {}),
           pendingLocationIds: [...pending],
           status, message: getProviderMessage(status, fallbackUsed), retryable: status !== "ready", fallbackUsed,
         };
       }
-      if (mode === "error" || (stale && locations.every((location) => cache.has(location.locationId)))) {
+      if (!canFetch) {
         pending.clear();
         return result();
       }
@@ -162,10 +172,14 @@ export function createWeatherProvider(client: WeatherClient = runtimeWeatherClie
             publish();
           }),
         ] : []),
-        fetchOfficialSpecialAlert(client, currentLocation).then((alert) => {
-          kmaAlerts = alert;
+        ...(checkKma ? [fetchOfficialSpecialAlert(client, currentLocation).then((alerts) => {
+          kmaAlerts = alerts;
+          kmaAlertFeed = {
+            locationId: currentLocation.locationId,
+            status: alerts.officialSpecialAlerts.length ? "active" : alerts.officialSpecialAlert.rawStatus ? "unavailable" : "none",
+          };
           publish();
-        }),
+        })] : []),
       ]);
       return result();
     },
@@ -307,10 +321,50 @@ async function fetchOfficialSpecialAlert(client: WeatherClient, location: Weathe
     return selectOfficialSpecialAlerts([]);
   }
   try {
-    return normalizeKmaOfficialSpecialAlerts(await client.fetchKmaSpecialAlert(), location);
+    const payload = await client.fetchKmaSpecialAlert();
+    const alerts = normalizeKmaOfficialSpecialAlerts(payload, location);
+    if (alerts.officialSpecialAlerts.length || alerts.officialSpecialAlert.rawStatus) return alerts;
+    return isRecognizedKmaResponse(payload) ? alerts : selectOfficialSpecialAlerts([], "unrecognized_feed");
   } catch {
     return selectOfficialSpecialAlerts([], "fetch_failed");
   }
+}
+
+// An HTTP 200 error page or a changed payload shape does not confirm a clear.
+function isRecognizedKmaResponse(payload: unknown): boolean {
+  if (Array.isArray(payload) && payload.length === 0) return true;
+  if (!payload || typeof payload !== "object") return false;
+  const record = payload as Record<string, unknown>;
+  const code = readStringField(record, ["response.header.resultCode", "header.resultCode"]);
+  if (code === "03" || code === "3") return true;
+  const count = readFieldValue(record, ["response.body.totalCount", "body.totalCount"]);
+  if ((code === "00" || code === "0") && (count === 0 || count === "0")) return true;
+  const items = readFieldValue(record, ["response.body.items.item", "response.body.items", "body.items.item", "body.items", "items.item", "items", "item"]);
+  if (Array.isArray(items) && items.length === 0) return true;
+  return extractKmaAlertRecords(payload).some((row) =>
+    typeof row.t6 === "string"
+    || Boolean(readStringField(row, ["wrn", "warnVar", "warnCode", "warningCode", "warn"])
+      && readStringField(row, ["regKo", "regName", "areaName", "regionName", "stnName", "region"])),
+  );
+}
+
+/** Live alert state belongs to a location, not to the forecast cache. */
+export function getKmaAlertPresentation(
+  result: KmaAlertPresentation,
+  location: Pick<WeatherLocationPreset, "locationId" | "countryCode"> | null,
+  fallbackStatus: "checking" | "unavailable",
+): KmaAlertPresentation {
+  if (location?.countryCode !== "KR") return { ...selectOfficialSpecialAlerts([]), kmaAlertFeed: undefined };
+  const { locationId } = location;
+  if (result.kmaAlertFeed?.locationId !== locationId) {
+    return { ...selectOfficialSpecialAlerts([]), kmaAlertFeed: { locationId, status: fallbackStatus } };
+  }
+  return {
+    ...(result.kmaAlertFeed.status === "active"
+      ? { officialSpecialAlert: result.officialSpecialAlert, officialSpecialAlerts: result.officialSpecialAlerts }
+      : selectOfficialSpecialAlerts([])),
+    kmaAlertFeed: result.kmaAlertFeed,
+  };
 }
 
 async function fetchOpenMeteoSnapshot(

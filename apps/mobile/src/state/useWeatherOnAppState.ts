@@ -17,7 +17,7 @@ import {
   syncDeviceWeatherLocationPermission,
   type DeviceLocationState,
 } from "../providers/deviceLocation";
-import { getFallbackSnapshots, runtimeWeatherProvider } from "../providers/weatherProvider";
+import { getFallbackSnapshots, getKmaAlertPresentation, runtimeWeatherProvider } from "../providers/weatherProvider";
 import type { WeatherProviderMode, WeatherProviderResult } from "../providers/weatherProvider";
 import {
   defaultSeoulWeatherLocation,
@@ -408,6 +408,14 @@ export function useWeatherOnAppState() {
       ? storedDestinationTravelEstimate
       : { ...storedDestinationTravelEstimate, status: destinationTravelEstimateRequestStatus };
   const activeWeatherLocation = getActiveWeatherLocation(weatherLocationMode, manualWeatherLocation, deviceWeatherLocation);
+  const activeKmaAlertLocationId = (weatherLocationMode === "manual" || deviceWeatherLocation) && activeWeatherLocation.countryCode === "KR"
+    ? activeWeatherLocation.locationId
+    : undefined;
+  const kmaAlertPresentation = useMemo(() => getKmaAlertPresentation(
+    weatherProviderResult,
+    activeKmaAlertLocationId ? { locationId: activeKmaAlertLocationId, countryCode: "KR" } : null,
+    weatherProviderMode === "ready" ? "checking" : "unavailable",
+  ), [weatherProviderResult, activeKmaAlertLocationId, weatherProviderMode]);
   const selectedDestinationTravelMinutes = getTravelMinutesForTransport(
     selectedDestinationTravelEstimate,
     selectedDestinationSchedulePreference.transportMode,
@@ -770,7 +778,7 @@ export function useWeatherOnAppState() {
   const state = useMemo(
     () => {
       const hasSavedDestination = savedDestinations.length > 0;
-      const base = buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
+      const base = buildDemoStateFromWeatherResult({ ...weatherProviderResult, ...kmaAlertPresentation }, useDestinationWeather, {
         hasDestination: hasSavedDestination,
         destinationCareEnabled: hasSavedDestination ? destinationCareEnabled : false,
         wardrobe: recommendationWardrobe,
@@ -818,6 +826,7 @@ export function useWeatherOnAppState() {
       userPreferenceProfile,
       recommendationWardrobe,
       weatherProviderResult,
+      kmaAlertPresentation,
       nowMinuteTick,
     ],
   );
@@ -849,7 +858,7 @@ export function useWeatherOnAppState() {
     );
     const timing = placeSearchOrigin ? getDestinationTiming(travelEstimate, activeDestination.schedulePreference, activeDestination.place.timezone, nowMinuteTick, activeWeatherLocation.countryCode, activeDestination.place.countryCode, placeSearchOrigin.locationId) : undefined;
     const bufferMinutes = timing ? timing.bufferSeconds / 60 : undefined;
-    const base = buildDemoStateFromWeatherResult(weatherProviderResult, useDestinationWeather, {
+    const base = buildDemoStateFromWeatherResult({ ...weatherProviderResult, ...kmaAlertPresentation }, useDestinationWeather, {
       hasDestination: true,
       destinationCareEnabled: true,
       wardrobe: recommendationWardrobe,
@@ -882,6 +891,7 @@ export function useWeatherOnAppState() {
       : base;
   }, [
     activeWeatherLocation.countryCode,
+    kmaAlertPresentation,
     homeDepartureDestination,
     destinationLeavingNow,
     nowMinuteTick,
@@ -967,6 +977,16 @@ export function useWeatherOnAppState() {
     // 홈 저장 목적지 전환은 이미 받은 목적지 스냅샷만 바꿔 보여준다.
     // 선택값을 이 요청의 의존성으로 두면 칩을 누를 때마다 전체 날씨 요청이 다시 발생한다.
     const destinationLocation = savedDestinationWeatherLocations[0] ?? fallbackDestinationWeatherLocation;
+    // Do not present an old active alert as current while a new request checks
+    // it; this feed does not provide a reliable explicit expiry on every alert.
+    setWeatherProviderResult(previous => ({
+      ...previous,
+      ...getKmaAlertPresentation(
+        { ...previous, kmaAlertFeed: undefined },
+        currentLocation,
+        weatherProviderMode === "ready" ? "checking" : "unavailable",
+      ),
+    }));
     setPendingWeatherLocations([currentLocation.locationId, ...savedDestinationWeatherLocations.map(item => item.locationId), destinationLocation.locationId]);
     const previousRequest = previousWeatherRequestRef.current;
     const currentSnapshot = previousRequest?.currentLocationId === currentLocation.locationId
@@ -983,6 +1003,7 @@ export function useWeatherOnAppState() {
             ...persistedWeatherResult,
             officialSpecialAlert: result.officialSpecialAlert,
             officialSpecialAlerts: result.officialSpecialAlerts,
+            kmaAlertFeed: result.kmaAlertFeed,
             japanWeatherAlerts: result.japanWeatherAlerts,
           } : result;
         weatherLoadedFromNetworkRef.current = true;
