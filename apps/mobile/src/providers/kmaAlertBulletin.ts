@@ -75,27 +75,38 @@ export function matchesKmaBulletinArea(area: string, location: WeatherLocationPr
   });
 }
 
+type KmaBulletinResult = { alerts: OfficialSpecialAlert[]; unavailable?: true };
+
 /** Undefined means this is not the bulletin schema, so the structured path may run. */
 export function normalizeKmaBulletin(
   records: Record<string, unknown>[],
   location: WeatherLocationPreset,
   read: RecordReader,
   now: number,
-): OfficialSpecialAlert[] | undefined {
+): KmaBulletinResult | undefined {
   const bulletins = records.filter(record => Object.keys(record).some(key => bulletinKeys.has(key.toLowerCase())));
   if (!bulletins.length) return undefined;
-  const effective = bulletins.map(record => ({
+  const oldest = now - 7 * 86_400_000;
+  const snapshots = bulletins.map(record => ({
     text: read(record, ["t6"]),
     published: parseKst(read(record, ["tmFc"])),
     effective: parseKst(read(record, ["tmEf"])),
     sequence: Number(read(record, ["tmSeq"]) ?? 0),
-  })).filter(item => item.published <= now && item.effective <= now
-    && item.published >= now - 7 * 86_400_000)
+  }));
+  const effective = snapshots
+    .filter(item => item.published <= now && item.effective <= now && item.published >= oldest)
     .sort((a, b) => b.published - a.published || b.sequence - a.sequence || b.effective - a.effective);
   // Each t6 is a full snapshot. Never resurrect older alerts once superseded,
   // and never treat t7 (preliminary) or other notes as active.
   const latest = effective[0];
-  if (!latest?.text) return [];
+  // Nonempty t6 cannot confirm a clear if the snapshot may be current but a
+  // required time is unreadable. Only disregard provably old or future rows.
+  const uncertain = snapshots.some(item => item.text
+    && (!Number.isFinite(item.published) || !Number.isFinite(item.effective))
+    && !(item.published > now || item.effective > now || item.published < oldest
+      || (latest && item.published < latest.published)));
+  if (uncertain) return { alerts: [], unavailable: true };
+  if (!latest?.text) return { alerts: [] };
   const text = latest.text.replace(/<br\s*\/?\s*>/giu, "\n").replace(/\r/gu, "");
   const alerts: OfficialSpecialAlert[] = [];
   const sections = text.split(/(?:^|\s)[o○●]\s*(?=[가-힣])/u);
@@ -122,5 +133,5 @@ export function normalizeKmaBulletin(
       rawStatus: "getPwnStatus",
     });
   }
-  return alerts;
+  return { alerts };
 }

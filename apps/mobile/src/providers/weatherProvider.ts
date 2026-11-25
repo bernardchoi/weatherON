@@ -510,7 +510,9 @@ export function normalizeKmaOfficialSpecialAlerts(payload: unknown, location: We
   }
   const records = extractKmaAlertRecords(payload);
   const bulletin = normalizeKmaBulletin(records, location, readStringField, now);
-  if (bulletin) return selectOfficialSpecialAlerts(bulletin);
+  if (bulletin) {
+    return selectOfficialSpecialAlerts(bulletin.alerts, bulletin.unavailable ? "feed_unavailable" : undefined);
+  }
   const candidates = records
     .map(parseKmaOfficialSpecialAlertRecord)
     .filter((alert): alert is OfficialSpecialAlert => Boolean(alert))

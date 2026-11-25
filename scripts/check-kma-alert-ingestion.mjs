@@ -37,7 +37,21 @@ assert.equal(alert("고양시", record, { ...issued, tmFc: "202611230755", t6: "
 assert.equal(alert("고양시", { ...record, tmEf: "202611230801" }).active, false);
 assert.equal(alert("고양시", { ...record, tmFc: "202611230801" }).active, false);
 assert.equal(alert("고양시", { ...record, tmFc: "202611150700", tmEf: "202611150730" }).active, false);
-assert.equal(alert("고양시", { ...record, tmEf: "202611310730" }).active, false);
+assert.equal(alert("고양시", { ...record, tmEf: "202611310730" }).rawStatus, "feed_unavailable");
+assert.equal(alert("고양시", { ...record, tmFc: undefined }).rawStatus, "feed_unavailable");
+assert.equal(alert("고양시", { ...record, tmEf: undefined }).rawStatus, "feed_unavailable");
+assert.equal(alert("고양시", record, { ...record, tmFc: "202611230755", tmEf: "bad" }).rawStatus,
+  "feed_unavailable", "a possibly newer snapshot may supersede the active one");
+assert.equal(alert("고양시", record, { ...record, tmFc: "202611230659", tmEf: "bad" }).active,
+  true, "a provably older malformed snapshot cannot supersede a valid active one");
+assert.equal(alert("고양시", record, { ...record, tmEf: "bad" }).rawStatus,
+  "feed_unavailable", "equal publication time does not prove the malformed row is superseded");
+assert.equal(alert("고양시", { ...record, tmFc: "202611230801", tmEf: "bad" }).rawStatus,
+  undefined, "a future publication cannot be current");
+assert.equal(alert("고양시", { ...record, tmFc: "202611150700", tmEf: "bad" }).rawStatus,
+  undefined, "an expired publication cannot be current");
+assert.equal(alert("고양시", { ...record, tmFc: undefined, tmEf: "202611230801" }).rawStatus,
+  undefined, "a known future effective time cannot be current");
 assert.equal(alert("고양시", { ...record, t6: "o 호우경보 : 경기도(김포, 고양 제외)" }).active, false);
 assert.equal(alert("김포시", { ...record, t6: "o 호우경보 : 경기도(김포, 고양 제외)" }).active, false);
 assert.equal(alert("경기도 광주시", { ...record, t6: "o 호우경보 : 광주" }).active, false);
@@ -152,13 +166,21 @@ async function kmaRefresh(settle) {
 const restored = await kmaRefresh(resolve => resolve(activePayload));
 assert.equal(restored.kmaAlertFeed.status, "active");
 assert.equal(restored.officialSpecialAlerts.length, 2);
-for (const confirmEmpty of [payload(), { response: { header: { resultCode: "03" } } }]) {
+const refreshTime = new Date(Date.now() + 9 * 3_600_000 - 60_000).toISOString().slice(0, 16).replace(/\D/gu, "");
+const liveBulletin = { tmFc: refreshTime, tmEf: refreshTime, t6: "o 호우경보 : 고양" };
+for (const confirmEmpty of [
+  payload(), { response: { header: { resultCode: "03" } } },
+  payload({ ...liveBulletin, t6: "o 특보 없음" }),
+  payload({ ...liveBulletin, t6: "o 강풍주의보 : 고양" }),
+]) {
   const cleared = await kmaRefresh(resolve => resolve(confirmEmpty));
   assert.equal(cleared.kmaAlertFeed.status, "none");
   assert.deepEqual(cleared.officialSpecialAlerts, []);
 }
 for (const unavailable of [
   (_resolve, reject) => reject(Error("network failed")),
+  resolve => resolve(payload({ ...liveBulletin, tmEf: "202611310730" })),
+  resolve => resolve(payload({ ...liveBulletin, tmFc: undefined })),
   resolve => resolve({ response: { header: { resultCode: "30" } } }),
   resolve => resolve({ response: { header: { resultCode: "00" }, body: { changedShape: true } } }),
 ]) {
