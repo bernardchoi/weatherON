@@ -244,13 +244,20 @@ export function HomeScreen({
     homeSchedulePreference.timeBasis,
   );
   const routeAdvice = state.destinationCare.departureAdvice;
-  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeAdvice?.arrivalAt ? `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상 · 이동 ${routeAdvice.travelMinutes}분` : "");
+  const plansArrival = homeSchedulePreference.timeBasis === "arrival";
+  const routeArrivalLabel = routeAdvice?.arrivalAt
+    ? plansArrival ? `목표 도착 ${routeAdvice.targetArrivalTime}` : `${forecastTime(Date.parse(routeAdvice.arrivalAt), outingWeather)} 도착 예상`
+    : "";
+  const routeTimeline = routeAdvice?.nowArrivalDescription ?? (routeArrivalLabel ? `${routeArrivalLabel} · 예상 소요 ${routeAdvice?.travelMinutes}분` : "");
   const departureExplanation = compactSameDestination ? "" : routeAdvice?.nowArrivalDescription ?? `${routeTimeline} · ${departureSummary.body} · ${routeAdvice?.routeMessage ?? "경로 확인 필요"}${routeAdvice?.routeUpdatedAt ? ` · 조회 ${forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather)}` : ""}`;
   const stackedPlanControls = layout.width < 390 || fontScale > 1.3;
   const showDepartureExplanation = destinationReady && !compactSameDestination && (Boolean(routeAdvice?.nowArrivalDescription) || routeAdvice?.travelStatus !== "ready" || !/^\d{2}:\d{2}$/.test(departureSummary.value));
-  const departureSummaryLabel = homeSchedulePreference.timeBasis === "departure"
-    ? "도착 예정 시간"
-    : departureSummary.soon ? "이제 나갈 준비해요" : "출발 예상";
+  const departureSummaryLabel = !plansArrival ? "도착 예상" : routeAdvice?.travelStatus === "ready" ? "추천 출발" : "출발 예상";
+  const homeTimingText = /^\d{2}:\d{2}$/.test(departureSummary.value)
+    ? !plansArrival ? `도착 예상 ${departureSummary.value}`
+      : routeAdvice?.travelStatus === "ready" ? `추천 출발 ${departureSummary.value}`
+      : `출발 예상 ${departureSummary.value}`
+    : departureSummary.value;
   const refreshMessage = currentWeatherPending ? "날씨 확인 중이에요" : refreshCompletedAt > Date.now() - 10_000 ? "방금 확인했어요" : "";
   const routeStatus = homeRouteStatus(selectedDestinationTravelEstimate, routePending, validHomeTiming, routeAdvice?.routeUpdatedAt ? forecastTime(Date.parse(routeAdvice.routeUpdatedAt), outingWeather) : undefined);
   const selectedDestination = homeDestination ?? savedDestinations.find((destination) => destination.place.id === selectedDestinationPlace.id) ?? savedDestinations[0] ?? null;
@@ -413,7 +420,7 @@ export function HomeScreen({
             <HomeValueTransition testID="home-departure-control" style={Platform.OS === "ios" ? { minWidth: 0, flexShrink: 1, maxWidth: stackedPlanControls ? "100%" : "48%" } : undefined} value={Platform.OS === "ios" ? "" : `${selectedDestination?.place.id}:${departureSummary.value}`}>
               <FeedbackPressable
                 accessibilityRole="button"
-                accessibilityLabel={compactSameDestination ? departureSummary.value : `이동 안내 ${departureSummaryLabel} ${departureSummary.value}. ${departureExplanation}`}
+                accessibilityLabel={compactSameDestination ? departureSummary.value : [homeTimingText, departureExplanation].filter(Boolean).map(text => translateText(text, language)).join(". ")}
                 onPress={() => onNavigate(destinationReady ? "G2" : "P1")}
                 style={[styles.iosDeparture, { borderColor: theme.border }, isHomeTightLayout(layout) && styles.iosDepartureCompact, Platform.OS === "ios" && [styles.ambientDepartureChip, { borderWidth: 0, paddingHorizontal: 0, borderTopWidth: 0 }]]}
               >
@@ -421,7 +428,7 @@ export function HomeScreen({
                   <Image source={ambientUiIcons.time} style={{ width: 24, height: 24, tintColor: theme.muted }} />
                   <View style={Platform.OS === "ios" ? styles.ambientDepartureInline : { flex: 1, minWidth: 0 }}>
                     {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureSummaryLabel}</Text> : null}
-                    <Text style={[styles.ambientDepartureValue, { color: theme.text }]}>{departureSummary.value}{Platform.OS === "ios" && /^\d{2}:\d{2}$/.test(departureSummary.value) ? homeSchedulePreference.timeBasis === "departure" ? " 도착" : " 출발" : ""}</Text>
+                    <Text numberOfLines={Platform.OS === "ios" && homeTimingText !== departureSummary.value && fontScale <= 1.3 ? 1 : undefined} adjustsFontSizeToFit={Platform.OS === "ios" && homeTimingText !== departureSummary.value && fontScale <= 1.3} minimumFontScale={0.8} style={[styles.ambientDepartureValue, { color: theme.text }]}>{Platform.OS === "ios" ? homeTimingText : departureSummary.value}</Text>
                   </View>
                 </View>
                 {Platform.OS !== "ios" ? <Text style={[styles.iosSecondaryText, { color: theme.muted }]}>{departureExplanation}</Text> : null}
@@ -1214,7 +1221,7 @@ const styles = StyleSheet.create({
   ambientPreparationRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   ambientPreparationAction: { flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 },
   ambientForecastChip: { minHeight: 44, paddingHorizontal: 18, borderWidth: StyleSheet.hairlineWidth, borderRadius: 24, justifyContent: "center" },
-  ambientDepartureValue: { fontSize: Platform.OS === "ios" ? 18 : 20, lineHeight: 27, fontWeight: Platform.OS === "ios" ? "500" : "600", fontVariant: ["tabular-nums"] },
+  ambientDepartureValue: { flexShrink: 1, fontSize: Platform.OS === "ios" ? 18 : 20, lineHeight: 27, fontWeight: Platform.OS === "ios" ? "500" : "600", fontVariant: ["tabular-nums"] },
   ambientOutfit: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16, paddingBottom: 12, gap: 8 },
   ambientOutfitHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   ambientOutfitTitle: { fontSize: 22, lineHeight: 30, fontWeight: "700" },

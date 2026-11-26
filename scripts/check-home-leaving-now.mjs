@@ -91,6 +91,7 @@ for (const destinationReady of [true, false]) {
   const context = {
     result: null, state, destinationReady, homeDepartureAt, homeSchedulePreference: schedule, sameHomeDestination: false, forecastNow: now,
     outingWeather: { countryCode: "KR", timezone: "Asia/Seoul" }, getHomeDepartureSummary, forecastTime,
+    translateText: value => value, language: "ko",
     Date: class extends Date { static now() { return now; } }, layout: { width: 375 }, fontScale: 1,
     React: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }) },
     Platform: { OS: platform }, styles: {}, theme: {}, selectedDestination: { place: { id: "test" } },
@@ -120,6 +121,10 @@ for (const destinationReady of [true, false]) {
   }
   const button = all.find(n => n.type === "Pressable");
   if (description) assert.ok(button.props.accessibilityLabel.includes(description), label);
+  if (!past && travelStatus === "ready") {
+    assert.match(button.props.accessibilityLabel, timeBasis === "arrival" ? /^추천 출발 10:00.*목표 도착 10:40.*예상 소요 40분/ : /^도착 예상 10:40.*예상 소요 40분/, label);
+    if (platform === "ios") assert.match(text, timeBasis === "arrival" ? /^추천 출발 10:00$/ : /^도착 예상 10:40$/, label);
+  }
   const iosExplanation = all.find(n => n.props.testID === "home-departure-explanation");
   if (iosExplanation) {
     assert.equal(iosExplanation.props.numberOfLines, undefined, `${label}: preserve full status/query time`);

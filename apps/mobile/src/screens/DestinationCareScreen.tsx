@@ -1,10 +1,12 @@
 import { AmbientReveal } from "../components/AmbientReveal";
 import { AmbientDisclosure } from "../components/AmbientDisclosure";
 import { forecastTime } from "../utils/homeOuting";
+import { translateText } from "../localization/localization";
 import { formatRouteClock } from "../utils/travelEstimate";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import { pageStyles } from "../theme/pageStyles";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "react-native";
 import { AppState, Image, LocalizedView, Platform, Pressable, RawText, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { recommendOutfit } from "@weatheron/shared";
 import { uiIconAssets } from "../assets";
@@ -137,6 +139,16 @@ export function DestinationCareScreen({
   const movementTimeLabel = routeTimingReady
     ? `약 ${travelMinutes}분`
     : selectedDestinationTravelEstimate.status === "loading" ? "확인 중" : "경로 확인 전";
+  const showTransitTimingBasis = departureReady
+    && selectedDestinationTravelEstimate.status === "ready"
+    && selectedDestinationTravelEstimate.provider === "kakao-transit"
+    && selectedDestinationTravelEstimate.timingBasis === "route"
+    && (travelMinutes ?? 0) > 0;
+  const showTransitTimingDetails = () => Alert.alert(
+    translateText("시간 계산 기준"),
+    translateText("조회된 경로 중 가장 짧은 소요시간으로 계산해요. 선택한 시간대의 배차나 환승 대기는 반영하지 않아요. 출발 전 지도에서 확인해 주세요."),
+    [{ text: translateText("확인") }],
+  );
   const departureDecision = targetTimeReady ? "경로 확인 전" : `${timeBasis === "departure" ? "출발" : "도착"} 시간 변경 필요`;
   const liveActivityMeta = departureActivityMatchesCurrentPlan
     ? departureActivityStatus.automaticEndScheduled === false
@@ -278,7 +290,7 @@ export function DestinationCareScreen({
           </View>
           <View style={[styles.journey, { borderColor: theme.border }, fontScale > 1.15 && { flexDirection: "column", alignItems: "stretch" }]}>
             <View style={[styles.journeyStop, Platform.OS === "ios" && styles.journeyStopCentered]}>
-              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{timeBasis === "departure" ? "출발" : "출발 예상"}</Text>
+              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{timeBasis === "departure" ? "출발" : care.departureAdvice?.travelStatus === "ready" ? "추천 출발" : "출발 예상"}</Text>
               <Text style={[styles.journeyTime, { color: theme.gold }]}>{departureReady ? departureTime : "—"}</Text>
             </View>
             <View style={[styles.journeyLeg, Platform.OS === "ios" && styles.journeyLegCompact]}>
@@ -290,13 +302,25 @@ export function DestinationCareScreen({
               </View>
             </View>
             <View style={[styles.journeyStop, Platform.OS === "ios" && styles.journeyStopCentered]}>
-              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{departureReady && care.departureAdvice?.arrivalAt ? `${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather).split(" ")[0]} 도착 예상` : "도착 예상"}</Text>
-              <Text style={[styles.journeyTime, { color: theme.text }]}>{departureReady && care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : "—"}</Text>
+              <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{timeBasis === "arrival" ? "목표 도착" : departureReady && care.departureAdvice?.arrivalAt ? `${forecastTime(Date.parse(care.departureAdvice.arrivalAt), destinationWeather).split(" ")[0]} 도착 예상` : "도착 예상"}</Text>
+              <Text style={[styles.journeyTime, { color: theme.text }]}>{timeBasis === "arrival" ? selectedTargetTime : departureReady && care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : "—"}</Text>
             </View>
           </View>
           <View style={styles.routeStatus}>
             {selectedDestinationTravelEstimate.cacheStatus === "stale" ? <Text style={[styles.routeNotice, { color: theme.warm }]}>이전 조회 결과</Text> : null}
-            {selectedDestinationTravelEstimate.message.includes("미반영") ? (
+            {showTransitTimingBasis ? (
+              <FeedbackPressable
+                testID="care-transit-timing-basis"
+                accessibilityRole="button"
+                accessibilityLabel="조회 경로 중 최단 기준"
+                accessibilityHint="시간 계산 기준 보기"
+                onPress={showTransitTimingDetails}
+                style={styles.routeBasisButton}
+              >
+                <Text style={[styles.routeNotice, { color: theme.muted }]}>조회 경로 중 최단 기준</Text>
+                <RawText accessible={false} style={[styles.routeNotice, { color: theme.sky }]}>ⓘ</RawText>
+              </FeedbackPressable>
+            ) : selectedDestinationTravelEstimate.message.includes("미반영") ? (
               <Text style={[styles.routeNotice, { color: theme.muted }]}>교통·배차 미반영 · 출발 전 지도에서 확인</Text>
             ) : <Text style={[styles.routeNotice, { color: theme.muted }]}>{selectedDestinationTravelEstimate.message}</Text>}
             {selectedDestinationTravelEstimate.updatedAt ? <Text style={[styles.journeyLabel, { color: theme.subtle }]}>{`조회 ${formatRouteClock(selectedDestinationTravelEstimate.updatedAt, selectedDestinationPlace.timezone)}`}</Text> : null}
@@ -1621,6 +1645,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "500",
   },
+  routeBasisButton: { minHeight: 44, minWidth: 44, maxWidth: "100%", flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: spacing.xs },
   routeNotice: {
     fontSize: 14,
     lineHeight: 20,
