@@ -302,7 +302,7 @@ oldJob.resolve(payload(1, now - 10_000)); await oldRequest;
 assert.equal((await racingWeather.getSnapshots("error", options)).current.current.tempC, 30, "late older observation cannot poison cache");
 
 const persistedApi = load("apps/mobile/src/state/persistedAppState.ts", ["shouldKeepPersistedWeatherResult", "savePersistedWeatherProviderResult", "readPersistedWeatherProviderResult"], {
-  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.deepEqual(value, Object.fromEntries(Object.entries(partial).filter(([key]) => !["pendingLocationIds", "japanWeatherAlerts"].includes(key)))); }, weatherProviderResultStorageKey: "weather",
+  Platform: { OS: "ios" }, readAppValue: async () => partial, writeAppValue: async (_, value) => { assert.deepEqual(value, Object.fromEntries(Object.entries(partial).filter(([key]) => !["pendingLocationIds", "japanWeatherAlerts", "kmaAlertFeed", "officialSpecialAlert", "officialSpecialAlerts"].includes(key)))); }, weatherProviderResultStorageKey: "weather",
 });
 assert.equal(persistedApi.shouldKeepPersistedWeatherResult(partial, { ...partial, current: old }), false);
 persistedApi.savePersistedWeatherProviderResult(partial);
@@ -367,8 +367,9 @@ const oldCleanup = effect(...Object.values(hookContext));
 oldCleanup();
 hookContext.manualWeatherLocation = away;
 const newCleanup = effect(...Object.values(hookContext));
+const shownBeforeObsoleteResult = shown.length;
 hookJobs[0].opts.onUpdate(partial); hookJobs[0].resolve(partial); await flush();
-assert.equal(shown.length, 0); assert.equal(persistedWrites.length, 0);
+assert.equal(shown.length, shownBeforeObsoleteResult); assert.equal(persistedWrites.length, 0);
 assert.deepEqual(loading, [true, true]);
 assert.equal(pendingLocations.length,2,'Obsolete result cannot clear newer location work');
 assert.equal(completionRevisions.length,0,'Obsolete result cannot acknowledge a newer refresh');

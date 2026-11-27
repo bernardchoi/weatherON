@@ -94,6 +94,7 @@ for (const destinationReady of [true, false]) {
     density: { compact: false, cardGap: 8 }, useOriginForSamePlace: false, targetAt: undefined, preparationPending: false, preparation: {status:""}, weatherLocationMode:"device", spacing: { md: 16 }, routePending: false,
     validHomeTiming: false, selectedDestinationTravelEstimate: { status: "idle" }, homeRouteStatus: () => "경로 확인 필요",
     isWeatherLoading: false, onRefreshWeather() {}, Date: class extends Date { static now() { return now; } }, layout: { width: 375 }, fontScale: 1,
+    translateText: value => value, language: "ko",
     React: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }) },
     Platform: { OS: platform }, styles: {}, theme: {}, selectedDestination: { place: { id: "test" } },
     HomeValueTransition: "Transition", FeedbackPressable: "Pressable", View: "View", Image: "Image", Text: "Text",
@@ -122,6 +123,10 @@ for (const destinationReady of [true, false]) {
   }
   const button = all.find(n => n.type === "Pressable");
   if (description) assert.ok(button.props.accessibilityLabel.includes(description), label);
+  if (!past && travelStatus === "ready") {
+    assert.match(button.props.accessibilityLabel, timeBasis === "arrival" ? /^추천 출발 10:00.*목표 도착 10:40.*예상 소요 40분/ : /^도착 예상 10:40.*예상 소요 40분/, label);
+    if (platform === "ios") assert.match(text, timeBasis === "arrival" ? /^추천 출발 10:00$/ : /^도착 예상 10:40$/, label);
+  }
   const iosExplanation = all.find(n => n.props.testID === "home-departure-explanation");
   if (iosExplanation) {
     assert.equal(iosExplanation.props.numberOfLines, undefined, `${label}: preserve full status/query time`);

@@ -10,6 +10,7 @@ function bundle(file, external = []) {
 }
 const s = bundle('packages/shared/src/index.ts');
 const { summarizeHomeOutfit, buildOutfitPreview } = bundle('apps/mobile/src/utils/homeOutfitSummary.ts');
+const { resolveHomeCardDensity } = bundle('apps/mobile/src/theme/homeViewport.ts');
 const { buildTodayOutfit } = bundle('apps/mobile/src/utils/todayOutfit.ts');
 const { buildHomePreparation } = bundle('apps/mobile/src/utils/homeOuting.ts');
 const { translateText } = bundle('apps/mobile/src/localization/localization.ts', ['expo-localization']);
@@ -145,7 +146,7 @@ const createElement=(type,props,...children)=>({type,props,children});
 for(const fontScale of [1,1.6,2]) for(const language of ['ko','en','ja']) {
  const {outfit,outfitContext}=buildTodayOutfit(cold,s.defaultPreferenceProfile,s.presetWardrobe,now);
  const render=new Function('React','useResponsiveLayout','isHomeTightLayout','useWindowDimensions','Platform','getOutfitImageSource','translateText','buildOutfitPreview','OutfitPrecipitationRow','getDisplayLocationName','FeedbackPressable','View','Text','Image','styles','ambientUiIcons','const useAmbientEntrance = () => ({});const useOutfitNavigation=()=> (_id,_target,navigate)=>navigate();const OutfitMotionImage=Image;'+jsx+';return HomeOutfitPreviewCard;')({createElement},()=>({width:390}),()=>false,()=>({fontScale}),{OS:'ios'},url=>url,v=>translateText(v,language),buildOutfitPreview,'PrecipitationRow',v=>v,'button','div','span','img',new Proxy({},{get:()=>({})}),{expand:'expand'});
- const tree=render({viewportSpacing:{outfitTop:8,outfitBottom:8},outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
+ const tree=render({density:resolveHomeCardDensity(780,390,fontScale),viewportSpacing:{outfitTop:8,outfitBottom:8},outfit,summary:summarizeHomeOutfit(outfit.decisionText),forecastStatus:outfitContext.status,locationName:'P2',weatherBasis:'목적지',theme:{},onPress(){}});
  const nodes=[];function visit(n){if(Array.isArray(n))return n.forEach(visit);if(!n||typeof n!=='object')return;nodes.push(n);n.children?.forEach(visit);}visit(tree);
  const expected = buildOutfitPreview(summarizeHomeOutfit(outfit.decisionText), outfitContext.status);
  const advice = nodes.find(n=>n.props?.testID==='home-outfit-advice');
