@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Image, Platform, StyleSheet, Text, RawText, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
@@ -260,6 +261,7 @@ export function OutfitDetailScreen({
         {outfitSaveMessage ? <Text accessibilityRole="alert" style={[pageStyles.compactCaption, { color: theme.warm }]}>{localize(outfitSaveMessage)}</Text> : null}
       </Section>
       </AmbientControlSurface>
+    <AppleWeatherAttribution modified source={(state.outfitContext?.weather ?? state.weather).source} />
     </AppScreen>
   );
 }

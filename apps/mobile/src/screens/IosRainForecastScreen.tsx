@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Image, Platform, StyleSheet, Text, View } from "../localization/react-native";
 import { AppScreen } from "../components/AppScreen";
@@ -43,6 +44,7 @@ export function IosRainForecastScreen({ state, rainForecastContext, onGoBack, al
       <Text style={{ color: theme.muted, fontSize: 12 }}>표시된 시간대의 예보예요. 이후 비 그침은 확인되지 않았어요.</Text>
       {weather ? <Text style={{ color: theme.muted, fontSize: 12 }}>{forecastTime(Date.parse(weather.observedAt), weather)} 자료 기준</Text> : null}
     </View>
+  <AppleWeatherAttribution source={weather.source} />
   </AppScreen>;
 }
 const styles = StyleSheet.create({

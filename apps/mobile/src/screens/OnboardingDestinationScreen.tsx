@@ -1,3 +1,4 @@
+import { GoogleMapsAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Platform, Image, RawText, StyleSheet, Text, View } from "../localization/react-native";
 import { onboardingAssets, uiIconAssets } from "../assets";
@@ -99,6 +100,7 @@ export function OnboardingDestinationScreen({
         ], Platform.OS === "ios" && ambientVisual.destinationCard]}
       >
         <View style={styles.copy}>
+          {canUseSelection ? <GoogleMapsAttribution provider={selectedDestinationPlace.provider} /> : null}
           {canUseSelection ? <RawText style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{selectedDestinationPlace.name}</RawText> : <Text style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>장소 검색 후 선택</Text>}
           <Text style={[[styles.body, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.body]} numberOfLines={Platform.OS === "ios" ? undefined : 1}>
             {canUseSelection ? selectedDestinationPlace.address : "자주 가는 곳 하나만 골라보세요"}

@@ -1,3 +1,4 @@
+import { GoogleMapsAttribution } from "../components/ProviderAttribution";
 import { getPlaceSearchQueryAlias } from "@weatheron/shared";
 import { pageStyles } from "../theme/pageStyles";
 import React from "react";
@@ -233,6 +234,7 @@ export function DestinationAddScreen({
                         </View>
                       ) : null}
                     </View>
+                  <GoogleMapsAttribution provider={place.provider} />
                     <RawText style={[[styles.resultAddress, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.resultAddress]}>{place.address || getCountryLabel(place.countryCode)}</RawText>
                     <Text style={[[styles.resultMeta, { color: selected ? theme.sky : theme.subtle }], Platform.OS === "ios" && ambientVisual.resultMeta]}>
                       {[
@@ -444,8 +446,6 @@ function getOverseasDistanceLabel(countryCode: string) {
 }
 
 function getProviderLabel(provider: string) {
-  // Kakao/Google은 검색 결과의 데이터 출처일 뿐 사용자 의사결정에 의미가 없어 표기하지 않는다.
-  // "좌표 검색"(openmeteo)과 "추천"(fixture)만 남긴다 — 둘 다 결과의 성격(좌표 근사 · 큐레이션된 장소)을 알려줘 의미가 있다.
   if (provider === "openmeteo") return "좌표 검색";
   if (provider === "fixture") return "추천";
   return "";

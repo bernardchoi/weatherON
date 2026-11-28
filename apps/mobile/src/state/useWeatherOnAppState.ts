@@ -1,3 +1,4 @@
+import { isGoogleProvider } from "../utils/googleMapsContent";
 import { toggleAlertGroup, type AlertPreferenceGroup } from "./alertPreferenceGroups";
 import { homeRouteRequestKey, finishHomeRouteRequest } from "../utils/homeUpdateState";
 import { createSavedOutfitSnapshot, getSavedOutfitPhotoUris, getUnusedOutfitPhotoUris, isCurrentOutfitSaved, type SavedOutfitSnapshot } from "../utils/savedOutfit";
@@ -495,20 +496,24 @@ export function useWeatherOnAppState() {
           kind: "destination",
           coordinate: destination.place.coordinate,
           timeZone: destination.place.timezone,
-          departureTime,
-          arrivalTime,
-          departureAt: timing?.departureAt,
-          arrivalAt: timing?.arrivalAt,
-          durationSeconds: timing?.durationSeconds,
-          bufferSeconds: timing?.bufferSeconds,
-          routeMessage: translateText(destination.travelEstimate.cacheStatus === "stale" || Date.parse(destination.travelEstimate.expiresAt ?? "") <= nowMinuteTick ? `이전 조회 결과 · ${destination.travelEstimate.message}` : destination.travelEstimate.message, localePolicy.language),
-          routeUpdatedAt: destination.travelEstimate.updatedAt,
-          nowArrivalAt: destinationLeavingNow[destination.place.id]?.nowArrivalAt,
-          nowArrivalDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalDescription ?? "", localePolicy.language) || undefined,
-          nowArrivalReferenceDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalReferenceDescription ?? "", localePolicy.language) || undefined,
-          nowRouteUpdatedAt: destinationLeavingNow[destination.place.id]?.nowRouteUpdatedAt,
-          nowRouteExpiresAt: destinationLeavingNow[destination.place.id]?.nowRouteExpiresAt,
-          travelMinutes,
+          // The widget snapshot is written to the shared app group.
+          ...(placeSearchOrigin?.countryCode === "KR" && destination.place.countryCode === "KR"
+            && !isGoogleProvider(destination.travelEstimate.provider) ? {
+            departureTime,
+            arrivalTime,
+            departureAt: timing?.departureAt,
+            arrivalAt: timing?.arrivalAt,
+            durationSeconds: timing?.durationSeconds,
+            bufferSeconds: timing?.bufferSeconds,
+            routeMessage: translateText(destination.travelEstimate.cacheStatus === "stale" || Date.parse(destination.travelEstimate.expiresAt ?? "") <= nowMinuteTick ? `이전 조회 결과 · ${destination.travelEstimate.message}` : destination.travelEstimate.message, localePolicy.language),
+            routeUpdatedAt: destination.travelEstimate.updatedAt,
+            nowArrivalAt: destinationLeavingNow[destination.place.id]?.nowArrivalAt,
+            nowArrivalDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalDescription ?? "", localePolicy.language) || undefined,
+            nowArrivalReferenceDescription: translateText(destinationLeavingNow[destination.place.id]?.nowArrivalReferenceDescription ?? "", localePolicy.language) || undefined,
+            nowRouteUpdatedAt: destinationLeavingNow[destination.place.id]?.nowRouteUpdatedAt,
+            nowRouteExpiresAt: destinationLeavingNow[destination.place.id]?.nowRouteExpiresAt,
+            travelMinutes,
+          } : {}),
           transportMode: destination.schedulePreference.transportMode,
           deepLink: getWeatheronDestinationDeepLink(destination.place.id),
         },
@@ -1129,7 +1134,8 @@ export function useWeatherOnAppState() {
         if (!targetAt) continue;
         const leavingNow = Boolean(destinationLeavingNow[place.id]);
         const nowKey = getLeavingNowRouteKey(origin, place, schedule.transportMode);
-        const previousNow = leavingNowRoutes[nowKey]?.result;
+        const lastNow = leavingNowRoutes[nowKey]?.result;
+        const previousNow = isGoogleProvider(lastNow?.provider) ? undefined : lastNow;
         const key = leavingNow ? `now:${nowKey}` : homeRouteRequestKey(origin, place, schedule, targetAt);
         const updateNow = (value: LeavingNowRouteState) => setLeavingNowRoutes(current => ({
           ...Object.fromEntries(Object.entries(current).filter(([key]) => key !== nowKey).slice(-31)), [nowKey]: value,
@@ -1184,7 +1190,7 @@ export function useWeatherOnAppState() {
             continue;
           }
           // Retain a previous result with its original timestamp and visible failure provenance.
-          const estimate: DestinationTravelEstimate = stored.status === "ready"
+          const estimate: DestinationTravelEstimate = stored.status === "ready" && !isGoogleProvider(stored.provider)
             ? { ...stored, cacheStatus: "stale", message: `이전 조회 결과 · 갱신 실패 · ${stored.message.replace(/^이전 조회 결과 · 갱신 실패 · /, "")}` }
             : createDefaultTravelEstimate(origin, place, "error");
           if (place.id === selectedDestinationPlace.id) { setPreviewDestinationTravelEstimate(estimate); setDestinationTravelEstimateRequestStatus("idle"); }
@@ -1214,6 +1220,7 @@ export function useWeatherOnAppState() {
       intentDestinationId: departureActivityIntentDestinationId,
       savedDestinations,
       buildInput: (destination) => {
+        if (isGoogleProvider(destination.travelEstimate.provider)) return null;
         // A route response may be newer than the last minute tick.
         const nowMs = Date.now();
         const targetTimeIso = getRouteArrivalTimeIso(
@@ -1598,6 +1605,7 @@ export function useWeatherOnAppState() {
     setSavedOutfitSnapshot(null);
     setOutfitSaveMessage(null);
     updateSavedDestinations(() => []);
+    setManualWeatherLocation(clearedState.manualWeatherLocation);
     setRecentlyRemovedDestination(null);
     setWardrobeOwnedItemIds(clearedState.wardrobeOwnedItemIds);
     removePersistedWardrobePhotos([

@@ -1,3 +1,4 @@
+import { GoogleMapsAttribution, AppleWeatherAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
 import { BackButton } from "../components/BackButton";
@@ -49,6 +50,8 @@ export function DestinationGuideScreen({ state, selectedDestinationPlace, destin
           </Text>
         </View>
 
+        <GoogleMapsAttribution provider={selectedDestinationPlace.provider} />
+        <AppleWeatherAttribution modified source={[care.originWeather.source, care.destinationWeather.source].includes("weatherkit") ? "weatherkit" : undefined} />
         <View style={styles.weatherCompare}>
           <WeatherTile
             label={weatherDisplay.originLabel}

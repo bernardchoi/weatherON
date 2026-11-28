@@ -77,6 +77,7 @@ const server = createServer(async (request, response) => {
       (key) => process.env[key],
       (name) => getHeaderValue(request.headers[name]),
     );
+    if (url.pathname === "/places/search" || url.pathname === "/routes/estimate") response.setHeader("Cache-Control", "no-store");
     sendJson(response, result.status, result.payload);
   } catch (error) {
     const message = error instanceof Error ? error.message : "weather_proxy_error";

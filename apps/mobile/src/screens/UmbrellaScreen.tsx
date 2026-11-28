@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution } from "../components/ProviderAttribution";
 import { ambientScreenIconOverrides, ambientUiIcons } from "../ambientAssets";
 import React, { useEffect } from "react";
 import { Platform, Image, Pressable, ScrollView, StyleSheet, Text, View } from "../localization/react-native";
@@ -165,6 +166,7 @@ export function UmbrellaScreen({ state, umbrellaReviewed, onReviewUmbrella, onGo
           </View>
         </Panel>}
 
+      <AppleWeatherAttribution modified source={state.weather.source} />
       </ScrollView>
     </View>
   );

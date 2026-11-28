@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution, GoogleMapsAttribution } from "../components/ProviderAttribution";
 import { AmbientReveal } from "../components/AmbientReveal";
 import { LocalizationContext } from "../localization/LocalizationProvider";
 import { translateText } from "../localization/localization";
@@ -29,6 +30,8 @@ import { useIsNightHour } from "../utils/useIsNightHour";
 import { resolveWeatherTimeZone } from "../utils/weatherDaylight";
 
 type DestinationCardModel = {
+  weatherSource?: string;
+  routeProvider?: string;
   nowArrivalDescription?: string;
   actionText?: string;
   weatherCondition: string | null;
@@ -155,8 +158,8 @@ export function DestinationListScreen({
         <AmbientReveal order={1} testID="departure-content" style={styles.destinationList}>
           {hasDestinations ? (
             visibleCards.map((item) => (
-              Platform.OS === "ios" ? <AmbientDestinationSummary key={item.id} item={item} theme={theme} permissionReady={permissionReady} selected={selectedDestinationPlace.id === item.id} featured={selectedCard?.id === item.id} onOpen={() => openDestination(item.place)} /> : <DestinationCard
-                key={item.id}
+              <View key={item.id}>
+              {Platform.OS === "ios" ? <AmbientDestinationSummary item={item} theme={theme} permissionReady={permissionReady} selected={selectedDestinationPlace.id === item.id} featured={selectedCard?.id === item.id} onOpen={() => openDestination(item.place)} /> : <DestinationCard
                 item={item}
                 paddingHorizontal={layout.destinationCardPaddingHorizontal}
                 paddingVertical={layout.destinationCardPaddingVertical}
@@ -167,7 +170,10 @@ export function DestinationListScreen({
                   onSelectDestinationPlace(item.place);
                   onNavigate("G2");
                 }}
-              />
+              />}
+              <GoogleMapsAttribution provider={item.place.provider === "google" ? "google" : item.routeProvider} />
+              <AppleWeatherAttribution modified source={item.weatherSource} />
+              </View>
             ))
           ) : (
             <EmptyDestinationState
@@ -511,6 +517,8 @@ function buildDestinationCards(
     return {
       ...getDestinationWeatherPresentation(destinationWeatherById[destination.place.id]),
       ...(Platform.OS === "ios" ? { weatherNotice: !available ? "도착 시각 예보 확인 필요" : null, actionText: available ? `${forecastTime(Date.parse(arrivalAt!), destinationWeather)} 도착 무렵 · ${preparation.evidence || preparation.copy.replace(/\n/g, " ")}` : "도착 시각 예보 확인 필요" } : {}),
+      weatherSource: destinationWeather.source,
+      routeProvider: destination.travelEstimate.provider,
       id: destination.place.id,
       title: destination.place.name,
       area: getAreaLabel(destination.place),

@@ -45,7 +45,9 @@ export async function handleWeatherProxyRequest(request, env = {}) {
       (name) => request.headers.get(name),
       { runtime: "cloudflare-worker" },
     );
-    return jsonResponse(result.payload, result.status);
+    const response = jsonResponse(result.payload, result.status);
+    if (url.pathname === "/places/search" || url.pathname === "/routes/estimate") response.headers.set("Cache-Control", "no-store");
+    return response;
   } catch (error) {
     return jsonResponse(
       { error: "weather_proxy_error", message: error instanceof Error ? error.message : "weather_proxy_error" },

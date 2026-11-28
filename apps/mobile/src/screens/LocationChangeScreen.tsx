@@ -1,3 +1,4 @@
+import { GoogleMapsAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Platform, Pressable, RawText, StyleSheet, Text, TextInput, View } from "../localization/react-native";
 import { AppButton } from "../components/AppButton";
@@ -120,6 +121,7 @@ export function LocationChangeScreen({
                     <RawText style={[[styles.title, { color: theme.text }], Platform.OS === "ios" && ambientVisual.title]}>{place.name}</RawText>
                     {place.id === state.weather.locationId ? <StatusPill label="현재" tone="clear" /> : null}
                   </View>
+                  <GoogleMapsAttribution provider={place.provider} />
                   <RawText style={[[styles.meta, { color: theme.muted }], Platform.OS === "ios" && ambientVisual.meta]}>{place.address}</RawText>
                 </View>
                 <Text style={[styles.chevron, { color: theme.subtle }]}>›</Text>

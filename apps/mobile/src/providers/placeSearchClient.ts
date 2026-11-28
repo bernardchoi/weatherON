@@ -313,7 +313,7 @@ async function ensurePlaceTimezones(
       return;
     }
     const cacheKey = getTimezoneCoordinateKey(place.coordinate.latitude, place.coordinate.longitude);
-    const cached = timezoneLookupCache.get(cacheKey);
+    const cached = place.provider === "google" ? undefined : timezoneLookupCache.get(cacheKey);
     if (cached && Date.now() - cached.resolvedAt <= TIMEZONE_CACHE_TTL_MS) {
       resolvedTimezones.set(index, cached.timezone);
       return;
@@ -335,11 +335,11 @@ async function ensurePlaceTimezones(
         options.fetchImpl,
       );
       const results = Array.isArray(payload) ? payload : [payload];
-      unresolved.forEach(({ index, cacheKey }, resultIndex) => {
+      unresolved.forEach(({ index, cacheKey, place }, resultIndex) => {
         const timezone = results[resultIndex]?.timezone;
         if (!isValidIanaTimeZone(timezone)) return;
         resolvedTimezones.set(index, timezone);
-        timezoneLookupCache.set(cacheKey, { timezone, resolvedAt: Date.now() });
+        if (place.provider !== "google") timezoneLookupCache.set(cacheKey, { timezone, resolvedAt: Date.now() });
       });
       enforceTimezoneCacheLimit();
     } catch {

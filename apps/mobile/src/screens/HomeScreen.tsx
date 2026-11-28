@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution, GoogleMapsAttribution } from "../components/ProviderAttribution";
 import { JapanWeatherAlertCard } from "../components/JapanWeatherAlertCard";
 import { HomeWeatherMascot } from "../components/HomeWeatherMascot";
 import { resolveMascotClothing, withMascotClothing } from "../utils/mascotOutfit";
@@ -395,6 +396,8 @@ export function HomeScreen({
             theme={theme}
             onOpenForecast={() => onNavigate("H6")}
           />
+          <AppleWeatherAttribution modified source={currentWeather.source} />
+          <GoogleMapsAttribution provider={currentWeather.locationId.startsWith("google-") ? "google" : undefined} />
           {activeWeatherAlert ? (
             <SpecialWeatherAlertCard
               alert={activeWeatherAlert}
@@ -464,6 +467,7 @@ export function HomeScreen({
             </HomeValueTransition>
           ) : null}
           </AmbientChange>
+          <GoogleMapsAttribution provider={homeDestinationPlace.provider === "google" ? "google" : selectedDestinationTravelEstimate.provider} />
           {Platform.OS === "ios" && showPlanPreparation ? <AmbientChange changeKey={`${selectedDestination?.place.id}:${companionMessage}`} order={1} testID="home-plan-preparation" style={{ gap: 6 }}>
             <Text numberOfLines={density.compact ? 2 : undefined} style={{ color: theme.text, fontSize: density.compact ? 15 : 18, lineHeight: density.compact ? 21 : 26 }}>{summarizeHomeOutfit(companionMessage, forecastNow, outingWeather.timezone)}</Text>
           </AmbientChange> : null}

@@ -1,3 +1,4 @@
+import { isGoogleProvider } from "../utils/googleMapsContent";
 import type { TodayOutfitContext } from "../utils/todayOutfit";
 import {
   buildDestinationCare,
@@ -300,6 +301,7 @@ function getDestinationNotificationTiming(
   if (!targetArrivalTime || !isValidTimeText(targetArrivalTime)) return null;
 
   const estimate = destination.travelEstimate;
+  if (isGoogleProvider(estimate?.provider ?? estimate?.travelProvider)) return null;
   if (!estimate || !canScheduleTravelEstimate({ ...estimate, provider: estimate.provider ?? estimate.travelProvider, status: estimate.status ?? estimate.travelStatus }, nowMs)) return null;
   const timing = getDestinationTiming(
     { ...estimate, provider: estimate.provider ?? estimate.travelProvider, status: estimate.status ?? estimate.travelStatus ?? "idle", travelMinutes: estimate.travelMinutes ?? 0, distanceMeters: estimate.distanceMeters ?? 0 },

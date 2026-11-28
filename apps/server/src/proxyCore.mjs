@@ -311,6 +311,8 @@ async function searchPlaces(params, readEnvValue) {
       }
       return curatedResults;
     },
+    places => !places.some(place => place.provider === "google"),
+    !getGoogleMapsApiKey(readEnvValue),
   );
 }
 
@@ -334,7 +336,7 @@ async function estimateRoute(params, readEnvValue) {
   const now = Date.now();
   const cached = routeEstimateCache.get(cacheKey);
   if (cached && Date.parse(cached.payload.expiresAt) > now) return { ...cached.payload, cacheStatus: "cached" };
-  if (pendingCacheFetches.has(cacheKey)) return pendingCacheFetches.get(cacheKey);
+  if (domestic && pendingCacheFetches.has(cacheKey)) return pendingCacheFetches.get(cacheKey);
   const request = (async () => {
     let result;
     try {
@@ -376,13 +378,13 @@ async function estimateRoute(params, readEnvValue) {
       ...result, transportMode, requestKind: arrivalTime || departureTime ? "scheduled" : "now", requestArrivalTime: arrivalTime ?? undefined, requestDepartureTime: departureTime ?? undefined,
       bufferSeconds: arrivalTime ? bufferSeconds : 0, updatedAt, expiresAt: new Date(Date.parse(updatedAt) + Math.max(0, ttl)).toISOString(), cacheStatus: "fresh",
     };
-    if (payload.status === "ready") {
+    if (payload.status === "ready" && domestic && !payload.provider.startsWith("google")) {
       routeEstimateCache.set(cacheKey, { payload, cachedAt: Date.now() });
       enforceCacheLimit(routeEstimateCache);
     }
     return payload;
   })().finally(() => pendingCacheFetches.delete(cacheKey));
-  pendingCacheFetches.set(cacheKey, request);
+  if (domestic) pendingCacheFetches.set(cacheKey, request);
   return request;
 }
 
@@ -531,6 +533,8 @@ async function ensurePlaceTimezones(places, readEnvValue) {
       getUrlCacheKey("timezone", url),
       readNumberEnv(readEnvValue, "TIMEZONE_CACHE_TTL_MS", DEFAULT_TIMEZONE_CACHE_TTL_MS),
       () => fetchJson(url, readEnvValue),
+      () => unresolved.every(({ place }) => place.provider !== "google"),
+      unresolved.every(({ place }) => place.provider !== "google"),
     );
     const results = Array.isArray(payload) ? payload : [payload];
     unresolved.forEach(({ index }, resultIndex) => {
@@ -1193,17 +1197,19 @@ async function fetchJson(url, readEnvValue, headers = {}) {
   }
 }
 
-async function fetchCachedJson(cache, key, ttlMs, fetcher) {
+async function fetchCachedJson(cache, key, ttlMs, fetcher, canCache = () => true, sharePending = true) {
   const now = Date.now();
   const cached = cache.get(key);
   if (cached && now - cached.cachedAt <= ttlMs) return cached.payload;
-  const pending = pendingCacheFetches.get(key);
+  const pending = sharePending && pendingCacheFetches.get(key);
   if (pending) return pending;
   const request = (async () => {
     try {
       const payload = await fetcher();
-      cache.set(key, { payload, cachedAt: Date.now() });
-      enforceCacheLimit(cache);
+      if (canCache(payload)) {
+        cache.set(key, { payload, cachedAt: Date.now() });
+        enforceCacheLimit(cache);
+      }
       return payload;
     } catch (error) {
       // 만료된 캐시라도 프로바이더 대체 응답(픽스처)보다는 실제 데이터가 낫다.
@@ -1214,7 +1220,7 @@ async function fetchCachedJson(cache, key, ttlMs, fetcher) {
       pendingCacheFetches.delete(key);
     }
   })();
-  pendingCacheFetches.set(key, request);
+  if (sharePending) pendingCacheFetches.set(key, request);
   return request;
 }
 

@@ -1,3 +1,6 @@
+import { appStateStorageKey } from "../state/appStateTypes";
+import { normalizePersistedAppState } from "../state/persistedAppState";
+
 export async function readAppValue<T>(key: string, throwOnError = false): Promise<T | null> {
   const storage = getWebStorage();
   if (!storage) {
@@ -6,7 +9,15 @@ export async function readAppValue<T>(key: string, throwOnError = false): Promis
   }
   try {
     const rawValue = storage.getItem(key);
-    return rawValue ? (JSON.parse(rawValue) as T) : null;
+    if (!rawValue) return null;
+    const value = JSON.parse(rawValue);
+    if (key === appStateStorageKey && rawValue.includes('"google')) {
+      const normalized = normalizePersistedAppState(value);
+      const cleaned = JSON.stringify(normalized);
+      if (cleaned !== rawValue) storage.setItem(key, cleaned);
+      return normalized as T;
+    }
+    return value as T;
   } catch (error) {
     if (throwOnError) throw error;
     return null;

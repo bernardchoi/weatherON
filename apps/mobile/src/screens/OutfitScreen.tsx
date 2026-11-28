@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution } from "../components/ProviderAttribution";
 import React from "react";
 import { Image, Platform, StyleSheet, Text, View, useWindowDimensions } from "../localization/react-native";
 import { ambientUiIcons } from "../ambientAssets";
@@ -98,6 +99,7 @@ export function OutfitScreen({
             <Text style={[pageStyles.compactCaption, { color: theme.muted }]}>{styleProfileSaved ? selectedStyles[0] ?? "수정하기" : "나에게 맞게 설정"}</Text>
           </FeedbackPressable>
         </View>
+      <AppleWeatherAttribution modified source={(state.outfitContext?.weather ?? state.weather).source} />
       </AppScreen>
     );
 }

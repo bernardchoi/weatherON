@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution } from "../components/ProviderAttribution";
 import { forecastTime, snapshotReliable } from "../utils/homeOuting";
 import { ambientScreenIconOverrides, ambientUiIcons, ambientWeatherIcon } from "../ambientAssets";
 import React from "react";
@@ -162,6 +163,7 @@ export function WeatherDetailScreen({ state, temperatureUnit, placeSearchOrigin,
         </ForecastPanel>
 
         <View style={styles.bottomSpacer} />
+      <AppleWeatherAttribution source={weather.source} />
       </ScrollView>
     </View>
   );

@@ -1,3 +1,4 @@
+import { isGoogleProvider } from "../utils/googleMapsContent";
 // 앱 상태·알림 상태·날씨 결과의 영속화(읽기/쓰기)와 저장값 정규화.
 // 저장소가 손상되거나 구버전 형식이어도 앱이 깨지지 않도록 모든 필드를 타입 가드로 걸러 읽는다.
 import { presetWardrobe, type PlaceSearchResult, type WardrobeItem } from "@weatheron/shared";
@@ -119,6 +120,9 @@ export function createClearedAccountState(state: PersistedAppState, clearDestina
     selectedWardrobeItemId: presetIds.has(state.selectedWardrobeItemId) ? state.selectedWardrobeItemId : presetWardrobe[0]?.id ?? "",
     ...(clearDestinations ? {
       savedDestinations: [],
+      ...(state.manualWeatherLocation?.locationId.startsWith("google-") ? {
+        manualWeatherLocation: defaultSeoulWeatherLocation,
+      } : {}),
       departureActivityIntentDestinationId: null,
       onboardingProgress: { ...state.onboardingProgress, destinationSelected: false },
       selectedDestinationPlace: getDefaultDestinationPlace(),
@@ -317,7 +321,7 @@ export function normalizePersistedAppState(value: unknown): PersistedAppState {
     : [];
   const defaultSelectedDestinationPlace = savedDestinations[0]?.place ?? getDefaultDestinationPlace();
   const selectedDestinationPlace = record.onboardingCompleted !== true && record.onboardingProgress?.destinationSelected === true && isPlaceSearchResult(record.selectedDestinationPlace)
-    ? normalizePlaceSearchResultCategory(record.selectedDestinationPlace)
+    ? normalizeStoredPlace(record.selectedDestinationPlace)
     : normalizeSelectedDestinationPlace(record.selectedDestinationPlace, savedDestinations, defaultSelectedDestinationPlace);
   const departureActivityIntentDestinationId = typeof record.departureActivityIntentDestinationId === "string"
     && savedDestinations.some((destination) => destination.place.id === record.departureActivityIntentDestinationId && destination.careEnabled)
@@ -435,7 +439,7 @@ function normalizeSelectedDestinationPlace(
   fallbackPlace: PlaceSearchResult,
 ): PlaceSearchResult {
   if (!isPlaceSearchResult(value)) return fallbackPlace;
-  if (savedDestinations.length === 0) return normalizePlaceSearchResultCategory(value);
+  if (savedDestinations.length === 0) return normalizeStoredPlace(value);
   return savedDestinations.find((destination) => destination.place.id === value.id)?.place ?? fallbackPlace;
 }
 
@@ -462,11 +466,23 @@ export function normalizeDestinationAlertCondition(value: unknown): DestinationA
   };
 }
 
+// A saved Google destination retains its place ID and address fields for this
+// user's weather location. The geocoder supplies an address component or the user-entered query as the label.
+function normalizeStoredPlace(place: PlaceSearchResult): PlaceSearchResult {
+  if (place.provider !== "google") return normalizePlaceSearchResultCategory(place);
+  return {
+    id: place.id, provider: place.provider, name: place.name,
+    address: place.address, coordinate: { latitude: place.coordinate.latitude, longitude: place.coordinate.longitude },
+    countryCode: place.countryCode, countryIsoCode: place.countryIsoCode, timezone: place.timezone,
+    category: place.category,
+  };
+}
+
 function normalizeSavedDestination(value: unknown): SavedDestination | null {
   if (!value || typeof value !== "object") return null;
   const record = value as Partial<SavedDestination>;
   if (!isPlaceSearchResult(record.place) || typeof record.careEnabled !== "boolean" || !isDestinationAlertCondition(record.alertCondition)) return null;
-  const place = normalizePlaceSearchResultCategory(record.place);
+  const place = normalizeStoredPlace(record.place);
   return {
     place,
     label: isDestinationLabel(record.label) ? record.label : null,
@@ -509,6 +525,9 @@ function isDestinationTransportMode(value: unknown): value is DestinationTranspo
 export function normalizeDestinationTravelEstimate(value: unknown, origin: WeatherLocationPreset, place: PlaceSearchResult): DestinationTravelEstimate {
   if (!value || typeof value !== "object") return createDefaultTravelEstimate(origin, place);
   const record = value as Partial<DestinationTravelEstimate>;
+  if (isGoogleProvider(record.provider)) {
+    return { ...createDefaultTravelEstimate(origin, place, "idle"), travelMinutes: 0, updatedAt: "" };
+  }
   // Migrate old automatic margins without changing route identity, freshness or
   // selected settings. Current-departure lookups retain their actual timestamps.
   const arrivalTarget = validStoredRouteTime(record.requestArrivalTime);

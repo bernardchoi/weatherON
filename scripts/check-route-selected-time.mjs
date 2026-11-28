@@ -256,7 +256,7 @@ console.log('PASS target-aligned policy matrix: 08:40/50m→07:50, legacy 0/5/20
 // SQL migration and persistence use actual SQLite, not an imitation of SQL.
 const storageSource = fs.readFileSync('apps/mobile/src/providers/appStorage.ts', 'utf8');
 const ast = ts.createSourceFile('appStorage.ts', storageSource, ts.ScriptTarget.Latest, true);
-const names = ['ensureDestinationScheduleColumns', 'writeSavedDestinations', 'replaceDestinationRepeatDays', 'writeDestinationPreview', 'travelEstimateFromRow', 'objectRecord', 'textValue', 'numberValue', 'boolValue', 'arrayValue', 'stringArray', 'parseJsonArray', 'resolveStoredTimeZone'];
+const names = ['clearStoredGoogleRoutes', 'ensureDestinationScheduleColumns', 'writeSavedDestinations', 'replaceDestinationRepeatDays', 'writeDestinationPreview', 'travelEstimateFromRow', 'objectRecord', 'textValue', 'numberValue', 'boolValue', 'arrayValue', 'stringArray', 'parseJsonArray', 'resolveStoredTimeZone'];
 const selectedCode = ast.statements.filter(node => ts.isFunctionDeclaration(node) && names.includes(node.name?.text)).map(node => node.getText(ast)).join('\n');
 const db = new DatabaseSync(':memory:');
 for (const sql of storageSource.match(/CREATE TABLE IF NOT EXISTS (?:destinations|destination_preview|destination_repeat_days|preview_repeat_days)\s*\([\s\S]*?;/g)) db.exec(sql.replace(/\s*travel_result_json TEXT NOT NULL DEFAULT '\{\}',/g, ''));
@@ -276,6 +276,19 @@ for (const table of ['destinations', 'destination_preview']) {
   assert.equal(restored.durationSeconds, 2400); assert.equal(restored.updatedAt, verified.updatedAt); assert.equal(restored.expiresAt, verified.expiresAt);
   assert.equal(restored.requestArrivalTime, verified.requestArrivalTime); assert.equal(restored.bufferSeconds, 0);
   assert.equal(helpers.getDestinationTiming(restored, schedule, place.timezone, scheduleNow, 'KR', 'KR', 'origin').departureAt, timing.departureAt);
+}
+for (const [table, provider] of [['destinations', 'google'], ['destination_preview', 'google-transit']]) {
+  db.prepare(`UPDATE ${table} SET travel_provider = ?`).run(provider);
+}
+await sqlContext.clearStoredGoogleRoutes(database);
+await sqlContext.clearStoredGoogleRoutes(database);
+for (const table of ['destinations', 'destination_preview']) {
+  const row = db.prepare(`SELECT * FROM ${table}`).get();
+  assert.equal(row.travel_status, 'idle');
+  assert.equal(row.travel_minutes, 0);
+  assert.equal(row.travel_distance_meters, 0);
+  assert.equal(row.travel_result_json, '{}');
+  assert.equal(row.travel_route_options_json, '[]');
 }
 const legacy = persistence.normalizeDestinationTravelEstimate({ provider: 'kakao', status: 'ready', travelMinutes: 40, distanceMeters: 1000 }, { locationId: 'origin' }, place);
 assert.equal(legacy.updatedAt, '', 'unknown original lookup must not become now');
@@ -328,6 +341,7 @@ let destinations = [saved];
 const attempts = { current: new Map() };
 const requests = [];
 const context = {
+  ...load("apps/mobile/src/utils/googleMapsContent.ts"),
     ...load("apps/mobile/src/utils/homeUpdateState.ts"), homeRouteRevisionRef: { current: 0 }, setHomeRouteRequests() {},
   appStateHydrated: true, AppState: { currentState: 'active' }, placeSearchOrigin: { coordinate: { latitude: 37.5, longitude: 127 }, locationId: 'origin', countryCode: 'KR' },
   routeRequests: [{ place, schedule }], nowMinuteTick: scheduleNow,
@@ -387,6 +401,7 @@ function findBuilder(node) {
 }
 findBuilder(stateAst); assert.ok(buildInputSource);
 const nativeContext = {
+  ...load("apps/mobile/src/utils/googleMapsContent.ts"),
   Date: TestDate,
   getRouteArrivalTimeIso: helpers.getRouteArrivalTimeIso, getDestinationTiming: helpers.getDestinationTiming,
   canScheduleTravelEstimate: travel.canScheduleTravelEstimate,

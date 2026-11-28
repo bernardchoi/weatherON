@@ -439,6 +439,7 @@ async function openDatabase(): Promise<SQLiteDatabase | null> {
     await ensureDestinationLabelColumn(database);
     await ensureWeatherSnapshotColumns(database);
     await migrateLegacyStorage(database);
+    await clearStoredGoogleRoutes(database);
     return database;
   } catch {
     return null;
@@ -1187,6 +1188,15 @@ async function ensureDestinationScheduleColumns(database: SQLiteDatabase) {
     if (!rows.some((row) => row.name === "travel_route_options_json")) {
       await database.runAsync(`ALTER TABLE ${table} ADD COLUMN travel_route_options_json TEXT NOT NULL DEFAULT '[]'`);
     }
+  }
+}
+
+async function clearStoredGoogleRoutes(database: SQLiteDatabase) {
+  for (const table of ["destinations", "destination_preview"] as const) {
+    await database.runAsync(`UPDATE ${table} SET travel_provider = 'fallback', travel_status = 'idle',
+      travel_minutes = 0, travel_distance_meters = 0, travel_message = '', travel_updated_at = '',
+      travel_route_options_json = '[]', travel_result_json = '{}'
+      WHERE travel_provider IN ('google', 'google-transit')`);
   }
 }
 

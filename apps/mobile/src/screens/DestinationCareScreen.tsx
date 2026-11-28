@@ -1,3 +1,4 @@
+import { AppleWeatherAttribution, GoogleMapsAttribution } from "../components/ProviderAttribution";
 import { AmbientReveal } from "../components/AmbientReveal";
 import { AmbientDisclosure } from "../components/AmbientDisclosure";
 import { forecastTime } from "../utils/homeOuting";
@@ -306,7 +307,9 @@ export function DestinationCareScreen({
               <Text style={[styles.journeyTime, { color: theme.text }]}>{timeBasis === "arrival" ? selectedTargetTime : departureReady && care.departureAdvice?.arrivalAt ? formatRouteClock(care.departureAdvice.arrivalAt, selectedDestinationPlace.timezone) : "—"}</Text>
             </View>
           </View>
+          <AppleWeatherAttribution modified source={destinationWeather.source} />
           <View style={styles.routeStatus}>
+            <GoogleMapsAttribution provider={selectedDestinationPlace.provider === "google" ? "google" : selectedDestinationTravelEstimate.provider} />
             {selectedDestinationTravelEstimate.cacheStatus === "stale" ? <Text style={[styles.routeNotice, { color: theme.warm }]}>이전 조회 결과</Text> : null}
             {showTransitTimingBasis ? (
               <FeedbackPressable

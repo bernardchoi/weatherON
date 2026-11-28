@@ -67,6 +67,9 @@ try {
   assert.deepEqual(shared.localizePlaceSearchResult(selected, 'ja'), selected);
   assert.deepEqual(shared.localizePlaceSearchResult({ ...selected, countryCode: 'JP', name: 'Cafe near Tokyo Station', timezone: 'Asia/Tokyo' }, 'ko').name, 'Cafe near Tokyo Station');
 
+  const beforeRepeat = calls.filter(url => url.hostname === 'maps.googleapis.com').length;
+  await search('Tokyo Station Cafe London');
+  assert.equal(calls.filter(url => url.hostname === 'maps.googleapis.com').length, beforeRepeat + 1);
   await search('Tokyo Cafe constraint fixture');
   upstream = { status: 'OK', results: [candidate('Japan-cafe', 'JP', 35.68, 139.76)] };
   assert.equal((await search('Tokyo Cafe constraint fixture', { countryCode: 'JP' }))[0].countryCode, 'JP', 'inferred region must not share cache with explicit country filter');
@@ -88,7 +91,14 @@ try {
   assert.deepEqual(await search('provider-outage-fixture'), []);
   upstream = { status: 'OK', results: [candidate('recovered', 'GB', 51.5, -.12)] };
   assert.equal((await search('provider-outage-fixture'))[0].provider, 'google', 'outage fallback must not be cached');
+  upstream = { status: 'OK', rows: [{ elements: [{ status: 'OK', distance: { value: 800 }, duration: { value: 60 } }] }] };
+  const routeUrl = new URL('https://fixture/routes/estimate?originCountryCode=GLOBAL&destinationCountryCode=GLOBAL&origin=51.51,-0.12&destination=51.6,-0.15&transportMode=drive');
+  const readRoute = async () => (await handleProxyRoute(routeUrl, key => env[key], () => null)).payload;
+  assert.equal((await readRoute()).durationSeconds, 60);
+  upstream.rows[0].elements[0].duration.value = 120;
+  assert.equal((await readRoute()).durationSeconds, 120, 'second request must call Google again');
   upstream = { status: 'ZERO_RESULTS', rows: [{ elements: [{ status: 'ZERO_RESULTS' }] }] };
+  assert.notEqual((await readRoute()).status, 'ready', 'failure cannot replay a previous Google route');
   for (const [originCountryCode, destinationCountryCode, origin, destination, mode] of [
     ['KR', 'GLOBAL', '37.5,127', '51.5,-.12', 'drive'],
     ['KR', 'GLOBAL', '37.5,127', '51.5,-.12', 'transit'],
@@ -115,6 +125,14 @@ await isolated.savePersistedAppState(persisted.normalizePersistedAppState({ save
 const restored = await isolated.readPersistedAppState();
 assert.deepEqual(restored.savedDestinations[0].place, selected);
 assert.deepEqual(restored.selectedDestinationPlace, selected);
+for (const provider of ['google', 'google-transit']) {
+  const travelEstimate = { provider, status: 'ready', durationSeconds: 655, distanceMeters: 877, message: 'private route fixture' };
+  const place = { ...selected, distanceMeters: 999, rawProviderPayload: 'search fixture' };
+  await isolated.savePersistedAppState({ ...restored, selectedDestinationPlace: place, savedDestinations: [{ ...saved, place, travelEstimate }], previewDestinationTravelEstimate: travelEstimate });
+  const raw = JSON.stringify([...storage.values()]);
+  for (const forbidden of ['private route fixture', 'search fixture', '"distanceMeters":999', '"durationSeconds":655']) assert.ok(!raw.includes(forbidden));
+  assert.equal((await isolated.readPersistedAppState()).savedDestinations[0].travelEstimate.status, 'idle');
+}
 // Exercise real SQLite migration, close/reopen, and both selected/manual location tables.
 const storageSource = fs.readFileSync('apps/mobile/src/providers/appStorage.ts', 'utf8');
 const storageAst = ts.createSourceFile('appStorage.ts', storageSource, ts.ScriptTarget.Latest, true);
@@ -185,11 +203,12 @@ function notification(snapshot, route = estimate) {
   const state = demo.buildDemoStateFromWeatherResult({ ...result, current: snapshot, destination: snapshot, destinationSnapshots: [snapshot] }, false, { hasDestination: true, destination: destination.place, savedDestinations: [{ ...destination, alertCondition: { ...destination.alertCondition, leadTimeMinutes: 0 }, travelEstimate: route }], notificationNow: now });
   return state.notifications.find(item => item.type === 'destination');
 }
-const active = notification(snapshot);
+const active = notification(snapshot, { ...estimate, provider: "kakao" });
+assert.equal(notification(snapshot).active, false);
 assert.equal(active.active, true);
 assert.equal(active.scheduledAt, timing.departureAt);
 for (const bad of [{ ...snapshot, stale: true }, { ...snapshot, source: 'fallback' }, { ...snapshot, locationUnverified: true }, { ...snapshot, locationId: 'other-place' }]) {
-  const item = notification(bad);
+  const item = notification(bad, { ...estimate, provider: "kakao" });
   assert.equal(item.active, false);
   assert.equal(item.scheduledAt, undefined);
 }
