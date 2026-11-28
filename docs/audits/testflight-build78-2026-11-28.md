@@ -14,3 +14,4 @@
 
 배포 시점 원격 main은 1f1b1704이며 빌드 소스 8cab7491 이후 변경은 빌드 77·78 기록 두 파일뿐임. 미병합 브랜치, 열린 PR, stash 없음. 기존 Android 검사 수정 및 .agents 자료는 iOS 빌드 범위에서 제외함.
 배포 후 병합된 작업 브랜치와 별도 worktree를 정리해 로컬과 origin에는 main 브랜치만, worktree 목록에는 main 작업 폴더 1개만 남았음(정리 직후 SHA 8accb0fb).
+배포 기록 커밋 `3698859f`에서 GitHub Source checks를 수동 실행해 통과함. [실행 기록](https://github.com/bernardchoi/weatherON/actions/runs/46120652563)
