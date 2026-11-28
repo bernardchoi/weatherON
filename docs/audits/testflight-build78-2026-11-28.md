@@ -13,3 +13,4 @@
 2026-11-28 KST. 동일한 1.0.0 (78)을 [외부테스트 그룹](https://appstoreconnect.apple.com/teams/19c9676b-22bb-4167-9c5f-493731b432a0/apps/6789612592/testflight/groups/60aec856-481b-49db-95ab-a82f214c3e8e/builds)에 추가함. 한국어 테스트 내용 입력 후 자동 공지 옵션을 켠 상태로 심사 제출함. 그룹 빌드 목록에서 1.0.0 (78), iOS, 테스트 중, 90일 후 만료 확인함. 그룹 테스터 6명이며 실제 설치·실행 여부는 미확인임.
 
 배포 시점 원격 main은 1f1b1704이며 빌드 소스 8cab7491 이후 변경은 빌드 77·78 기록 두 파일뿐임. 미병합 브랜치, 열린 PR, stash 없음. 기존 Android 검사 수정 및 .agents 자료는 iOS 빌드 범위에서 제외함.
+배포 후 병합된 작업 브랜치와 별도 worktree를 정리해 로컬과 origin에는 main 브랜치만, worktree 목록에는 main 작업 폴더 1개만 남았음(정리 직후 SHA 8accb0fb).
