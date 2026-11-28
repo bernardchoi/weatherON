@@ -561,6 +561,20 @@ assert.equal(fromClient.departureAt, timing.departureAt);
 assert.equal(fromClient.message, verified.message, 'client must not overwrite server prediction provenance');
 assert.equal(fromClient.updatedAt, verified.updatedAt, 'cache read must not fabricate a lookup timestamp');
 assert.equal(fromClient.expiresAt, verified.expiresAt);
+// Production build 79 received valid London durations from a Worker predating requestKind.
+const londonLookup = { origin: { latitude: 51.5072, longitude: -0.1276 }, destination: { latitude: 51.4994, longitude: -0.1273 }, transportMode: 'drive' };
+const legacyLondon = { provider: 'google', status: 'ready', transportMode: 'drive', timingBasis: 'current', durationSeconds: 840, travelMinutes: 14, distanceMeters: 2100, message: '현재 교통 기준 추정', updatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60000).toISOString(), cacheStatus: 'fresh' };
+async function classifyLegacyRoute(response, params = londonLookup) {
+  const client = clients.createProxyTravelEstimateClient({ apiBaseUrl: 'https://mock', fetchImpl: async () => new Response(JSON.stringify(response)) });
+  return (await client.estimateRoute(params)).requestKind;
+}
+assert.equal(await classifyLegacyRoute(legacyLondon), 'now');
+for (const overrides of [{ requestArrivalTime: actualTarget }, { requestDepartureTime: actualTarget }, { targetArrivalAt: actualTarget }, { cacheStatus: 'stale' }, { cacheStatus: 'cached' }, { status: 'error' }]) {
+  assert.equal(await classifyLegacyRoute({ ...legacyLondon, ...overrides }), undefined);
+}
+assert.equal(await classifyLegacyRoute(legacyLondon, { ...londonLookup, arrivalTime: actualTarget }), undefined);
+assert.equal(await classifyLegacyRoute(legacyLondon, { ...londonLookup, departureTime: actualTarget }), undefined);
+assert.equal(await classifyLegacyRoute({ ...legacyLondon, requestKind: 'scheduled' }), 'scheduled');
 const invalidClient = clients.createProxyTravelEstimateClient({ apiBaseUrl: 'https://mock', fetchImpl: async () => new Response(JSON.stringify({ ...verified, durationSeconds: -1 })) });
 await assert.rejects(() => invalidClient.estimateRoute({ origin: place.coordinate, destination: place.coordinate }), /Invalid route response/);
 assert.equal((await clients.fallbackTravelEstimateClient.estimateRoute({ origin: place.coordinate, destination: place.coordinate, transportMode: 'transit' })).status, 'error');

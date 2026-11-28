@@ -123,6 +123,13 @@ export function createProxyTravelEstimateClient(options: ProxyTravelEstimateClie
       } : {};
       return {
         ...result, ...aligned, bufferSeconds: 0,
+        // The legacy Worker echoes both schedule fields but omits requestKind.
+        // Classify only a fresh response to this exact unscheduled fetch.
+        requestKind: result.requestKind ?? (
+          !params.arrivalTime && !params.departureTime && !result.requestArrivalTime && !result.requestDepartureTime
+          && !result.targetArrivalAt && result.status === "ready" && result.cacheStatus === "fresh"
+            ? "now" : undefined
+        ),
         // Server query timestamps and prediction provenance survive cache reads.
         updatedAt: result.updatedAt ?? "",
         durationSeconds: result.durationSeconds ?? result.travelMinutes * 60,
