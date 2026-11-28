@@ -607,6 +607,11 @@ const currentResult = (seconds, mode = 'transit') => ({
   timingBasis: mode === 'drive' ? 'current' : 'route', durationSeconds: seconds, travelMinutes: Math.ceil(seconds / 60),
   departureAt: new Date(now).toISOString(), updatedAt: new Date(now).toISOString(), expiresAt: new Date(now + 60000).toISOString(),
 });
+const londonResultAtReceipt = { ...legacyLondon, requestKind: 'now', updatedAt: new Date(now + 45).toISOString(), expiresAt: new Date(now + 60045).toISOString() };
+assert.equal(travel.isLeavingNowRouteResult(londonResultAtReceipt, now), true, 'fresh London response with observed phone-to-Worker clock skew');
+assert.equal(travel.isLeavingNowRouteResult({ ...londonResultAtReceipt, updatedAt: new Date(now + 1001).toISOString() }, now), false);
+assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: londonResultAtReceipt }, now).nowArrivalAt, new Date(now + 840000).toISOString());
+assert.equal(travel.resolveLeavingNowTiming({ status: 'ready', result: londonResultAtReceipt }, now + 60046).nowArrivalReference, true);
 const currentKey = travel.getLeavingNowRouteKey(origin, place, 'transit');
 assert.equal(currentKey, travel.getLeavingNowRouteKey({ ...origin, coordinate: { longitude: origin.coordinate.longitude, latitude: origin.coordinate.latitude } }, place, 'transit'));
 const currentTiming = () => helpers.getDestinationLeavingNowTiming(verified, schedule, place.timezone, now, 'KR', 'KR', 'origin', nowStates[currentKey]);

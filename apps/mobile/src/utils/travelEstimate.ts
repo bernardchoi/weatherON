@@ -13,11 +13,14 @@ export function getLeavingNowRouteKey(origin: WeatherLocationPreset, place: Plac
   return JSON.stringify([origin.locationId, origin.coordinate.latitude, origin.coordinate.longitude, origin.countryCode, place.id, place.coordinate.latitude, place.coordinate.longitude, place.countryCode, transportMode === "auto" ? "drive" : transportMode]);
 }
 
+// Worker timestamps and the device wall clock can disagree even for a just-received response.
+const routeClockSkewToleranceMs = 1000;
+
 export function isLeavingNowRouteResult(result: TravelEstimateResult | undefined, nowMs: number): result is TravelEstimateResult {
   return Boolean(result && result.requestKind === "now" && !result.requestArrivalTime && !result.requestDepartureTime
     && result.status === "ready" && result.provider !== "fallback" && (result.timingBasis === "current" || result.timingBasis === "route")
     && Number.isFinite(result.durationSeconds) && result.durationSeconds! >= 0 && result.durationSeconds! <= 7 * 86400
-    && Number.isFinite(Date.parse(result.updatedAt)) && Date.parse(result.updatedAt) <= nowMs
+    && Number.isFinite(Date.parse(result.updatedAt)) && Date.parse(result.updatedAt) <= nowMs + routeClockSkewToleranceMs
     && Number.isFinite(Date.parse(result.expiresAt ?? "")));
 }
 
